@@ -1,6 +1,0 @@
-V_S  =$9006; unused
-V_W  =$9002; unused
-init  =$1000; unused
-charset  =$1001; unused
-V_RAMR  =$9004; unused
-V_RAMW  =$9000; unused
