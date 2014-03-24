@@ -1,0 +1,52 @@
+*=$0200
+!src "../bios/defs.h.a"
+!src "../bios/bios.h.a"
+adrl	= $f0
+adrh	= $f1
+buf	= $f2
+
+;   jsr lcdclear
+	
+	lda #<msg
+	sta msgptr
+	lda #>msg
+	sta msgptr+1
+   jsr lcdstring
+
+	lda #$00
+	sta adrl
+	lda #$20
+	sta adrh
+   ldy adrl
+-	lda #$0f
+	sta (adrl),y
+	lda (adrl),y
+	cmp #$0f
+	bne +
+	lda #$f0
+	sta (adrl),y
+	lda (adrl),y
+	cmp #$f0
+	bne +
+	lda #$00
+	sta (adrl),y
+	lda (adrl),y
+	cmp #$00
+	bne +
+	lda #$ff
+	sta (adrl),y
+	lda (adrl),y
+	cmp #$ff
+	bne +
+	iny
+   bne -
+	inc adrh
+	jmp -
++	lda adrh
+	jsr lcdhex
+	tya
+	jsr lcdhex
+-	jmp -	
+msg	!text "Mem ", $00
+
+	!byte $00,$00,$00,$00,$00

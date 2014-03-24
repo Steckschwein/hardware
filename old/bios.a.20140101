@@ -1,0 +1,452 @@
+!to "bios.bin", plain
+!cpu 65c02
+
+*= $e000		; ROM Start
+count 		= 19998 ; jiffy count 100Hz for 2MHz system
+;count		= 29997 ; jiffy count 100Hz for 3MHz system
+
+
+;----------------------------------------------------------------------------------------------
+; zeropage locations 
+;----------------------------------------------------------------------------------------------
+kitt_direction = $f8
+hours	  = $f9
+minutes   = $fa
+seconds	  = $fb
+jiffies   = $fc
+MSGBASE = $fe
+;----------------------------------------------------------------------------------------------
+
+
+;----------------------------------------------------------------------------------------------
+; LCD 
+;----------------------------------------------------------------------------------------------
+LCD 	= $d300
+LCD0   	= LCD 		; LCD control register
+LCD1	= LCD0+1 	; LCD data register
+;----------------------------------------------------------------------------------------------
+
+
+;----------------------------------------------------------------------------------------------
+; ACIA 
+;----------------------------------------------------------------------------------------------
+acia 		= $d000
+txdata		= acia
+rxdata		= acia
+aciast		= acia+1 	; ACIA status register
+aciacmd		= acia+2 	; ACIA command register
+aciactl		= acia+3 	; ACIA control register
+;----------------------------------------------------------------------------------------------
+
+
+
+;----------------------------------------------------------------------------------------------
+; VIA1 
+;----------------------------------------------------------------------------------------------
+via1		= $d100
+via1porta	= via1+1
+via1portb	= via1
+via1ddrb 	= via1+2
+via1ddra	= via1+3
+via1t1cl	= via1+4
+via1t1ch	= via1+5
+via1acr		= via1 + $0b
+via1ifr		= via1 + $0d
+via1ier		= via1 + $0e
+;----------------------------------------------------------------------------------------------
+
+
+main
+    lda #'o'
+    jsr echo
+    
+    lda #'k'
+    jsr echo
+    
+    lda #$0a
+	jsr echo
+	;jsr knightrider
+	jsr waste_cycles
+	jmp main
+
+echo
+	pha
+    lda #$10
+txfull 
+	bit aciast ; wait for tdre bit = 1
+    beq txfull
+    pla
+    sta txdata
+    rts
+
+;----------------------------------------------------------------------------------------------
+; RESET Routine. Call subroutines to init all components 
+;----------------------------------------------------------------------------------------------
+do_reset
+	sei
+	jsr memtest
+	jsr io_init
+
+	jsr LINIT
+	
+	jsr clr
+	
+	lda #<kittmsg1
+	sta MSGBASE
+
+	lda #>kittmsg1
+	sta MSGBASE+1
+
+	jsr strout
+
+	stz kitt_direction
+	stz hours
+	stz minutes
+	stz seconds
+	
+	cli 
+
+
+
+	jmp main
+
+;----------------------------------------------------------------------------------------------
+; IO_INIT Routine. Subroutine to init IO devices
+;----------------------------------------------------------------------------------------------
+io_init
+	; VIA1
+	; set via1 port b to output 
+	lda #$ff
+	sta via1ddrb
+
+	lda #$01
+	sta via1portb
+
+	lda #<count
+    sta via1t1cl            ; set low byte of count
+    lda #>count
+    sta via1t1ch            ; set high byte of count
+
+	lda #%11000000
+    sta via1ier             ; enable VIA1 T1 interrupts
+
+ 	lda #%01000000
+    sta via1acr             ; T1 continuous, PB7 disabled
+
+    ; ACIA
+    ; set 1 stop bit, 8 bit data, internal clock, 19200bps
+    lda #%00011111
+    sta aciactl
+	
+	; set no parity, no echo, no tx interrupts, rts low, no rx interrupts, dtr low  
+    lda #%00001011
+    sta aciacmd
+
+	rts
+
+
+	
+;----------------------------------------------------------------------------------------------
+; knightrider Routine. Commence Lightshow.
+;----------------------------------------------------------------------------------------------
+knightrider
+	pha
+
+	lda kitt_direction
+	bne back
+
+	clc
+
+	lda via1portb
+	rol 
+	sta via1portb
+
+	cmp #%10000000
+	bne end
+
+	lda #$01
+	sta kitt_direction
+	bra end
+
+back
+	clc
+
+	lda via1portb
+	ror 
+	sta via1portb
+
+	cmp #$01
+	bne end
+
+	stz kitt_direction
+	
+end	pla
+	rts
+
+;----------------------------------------------------------------------------------------------
+; IO_NMI Routine. Handle NMI
+;----------------------------------------------------------------------------------------------
+do_nmi
+	rti
+
+;----------------------------------------------------------------------------------------------
+; IO_IRQ Routine. Handle IRQ
+;----------------------------------------------------------------------------------------------
+do_irq
+	pha
+
+	; VIA1 T1 will overflow 100 times per second.
+	lda #%01000000      ; via1 timer1
+	and via1ifr
+	beq +				; not via1? bye or check for other interrupts
+
+	bit via1t1cl            ; clears interrupt
+	
+	jsr clock
+
++	pla
+	rti
+
+;----------------------------------------------------------------------------------------------
+; CLOCK Routine. Update Clock variables every 100 times.
+;----------------------------------------------------------------------------------------------
+clock
+	pha
+
+	inc jiffies
+	lda jiffies
+    cmp #100            ; reached 1 second?
+    bne +            ; if not, done for now
+
+	;lda #$00
+	;sta jiffies	
+	stz jiffies
+
+	jsr clock_out
+	
+	inc seconds
+	lda seconds
+	cmp #60
+	bne +
+
+	stz seconds
+
+	inc minutes
+	lda minutes
+	cmp #60
+	bne +
+
+	stz minutes
+
+	inc hours
+	lda hours
+	cmp #24
+	bne +
+
+	stz hours
+
++	pla
+	rts
+
+clock_out
+	jsr clr
+
+	lda hours
+	jsr LCDHEX
+
+	lda #':'
+	jsr chrout
+
+	lda minutes
+	jsr LCDHEX
+
+	lda #':'
+	jsr chrout
+
+	lda seconds
+	jsr LCDHEX
+
+	rts
+
+;----------------------------------------------------------------------------------------------
+; Delay loop. burn cycles like hell
+;----------------------------------------------------------------------------------------------
+!zone cyclewaster {
+waste_cycles
+	phx
+	phy
+	ldy #$1f
+--	ldx #$ff
+-	!for i,10{
+	nop
+}
+	DEX
+	bne -
+	dey
+	bne --
+	plx
+	ply
+	rts
+}
+
+;----------------------------------------------------------------------------------------------
+; Test memory (zeropage only atm)
+;----------------------------------------------------------------------------------------------
+memtest
+	pha
+
+	lda #$ff
+	jsr check_zeropage
+
+	lda #$00
+	jsr check_zeropage
+
+	pla
+	rts
+
+;----------------------------------------------------------------------------------------------
+; Check zeropage. Endless loop in case of failure.
+;----------------------------------------------------------------------------------------------
+
+check_zeropage
+	phx
+	ldx #$00
+store
+	sta $00,x
+	cmp $00,x
+	bne stop
+	INX
+	cpx #$ff
+	bne store
+	plx
+	rts
+stop
+	bra stop
+
+;----------------------------------------------------------------------------------------------
+; *** LCD initialisation
+;----------------------------------------------------------------------------------------------
+!zone lcd {
+LINIT     LDX #$04            ;do function set 4 times
+LINIT0    LDA #$38            ;function set: 8 bit, 2 lines, 5x7
+          STA LCD0
+          JSR LCDBUSY         ;wait for busy flag to clear
+          DEX
+          BNE LINIT0
+          LDA #$06            ;entry mode set: increment, no shift
+          STA LCD0
+          JSR LCDBUSY
+          LDA #$0E            ;display on, cursor on, blink off
+          STA LCD0
+          JSR LCDBUSY
+          LDA #$01            ;clear display
+          STA LCD0
+          JSR LCDBUSY
+          LDA #$80            ;DDRAM address set: $00
+          STA LCD0
+          JSR LCDBUSY
+          RTS
+
+          ; *** Clear LCD display and return cursor to home
+; registers preserved
+LCDCLEAR  PHA
+          LDA #$01
+          STA LCD0
+          JSR LCDBUSY
+          LDA #$80
+          STA LCD0
+          JSR LCDBUSY
+          PLA
+          RTS
+
+; *** Wait for LCD busy bit to clear
+; registers preserved
+LCDBUSY   PHA
+LCDBUSY0  LDA LCD0            ;read from LCD register 0
+          AND #$80            ;check bit 7 (busy)
+          BNE LCDBUSY0
+          PLA
+          RTS
+
+; *** Print character on LCD (40 character)
+; registers preserved
+LCDPRINT  PHA
+          STA LCD1            ;output the character
+          JSR LCDBUSY
+          LDA LCD0            ;get current DDRAM address
+          AND #$7F
+          ;CMP #$13          ;wrap from pos $13 (line 1 char 20)...
+          cmp #$10
+          BNE LCDPRINT0
+          LDA #$c0            ;...to $40 (line 2 char 1)
+          STA LCD0
+          JSR LCDBUSY
+LCDPRINT0 PLA
+          RTS
+
+; *** Print string on LCD
+; registers preserved
+LCDSTRING PHA                 ;save A, Y to stack
+          TYA
+          PHA
+          LDY #$00
+LCDSTR0   LDA (MSGBASE),Y
+          BEQ LCDSTR1
+          JSR LCDPRINT
+          INY
+          BNE LCDSTR0
+LCDSTR1   PLA                 ;restore A, Y
+          TAY
+          PLA
+          RTS
+
+; *** Print 2 digit hex number on LCD
+; A, X registers preserved
+LCDHEX    PHA
+          LSR                ;shift high nybble into low nybble
+          LSR 
+          LSR 
+          LSR 
+          TAY
+          LDA HEXASCII,Y      ;convert to ASCII
+          JSR LCDPRINT        ;print value on the LCD
+          PLA                 ;restore original value
+          PHA
+          AND #$0F            ;select low nybble
+          TAY
+          LDA HEXASCII,Y      ;convert to ASCII
+          JSR LCDPRINT        ;print value on the LCD
+          PLA
+          RTS
+
+; *** Lookup table for HEX to ASCII
+HEXASCII	!text "0123456789ABCDEF"
+
+}
+
+; Text
+kittmsg1	!text "Knight Rider RULES!"
+			!byte $00
+irqmsg		!text "IRQ!"
+			!byte $00
+nmimsg		!text "#IRQs: $"
+			!byte $00
+
+; Jump table
+*=$ffe0
+strout	jmp LCDSTRING
+chrout	jmp LCDPRINT
+clr 	jmp LCDCLEAR
+
+; $FFFA/$FFFB NMI Vector
+*= $fffa
+ !byte <do_nmi
+ !byte >do_nmi
+; $FFFC/$FFFD reset vector
+;*= $fffc
+ !byte <do_reset
+ !byte >do_reset
+; $FFFE/$FFFF IRQ vector
+;*= $fffe
+ !byte <do_irq
+ !byte >do_irq

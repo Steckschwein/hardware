@@ -1,0 +1,36 @@
+*=$1000
+!src "../bios/defs.h.a"
+!src "../bios/bios.h.a"
+
+	stz tmp0
+	stz tmp1
+
+	lda #$ff
+	sta via1ddrb
+	sta via1ddra
+
+	lda #$01
+	sta via1portb
+
+	sei
+	; Set IRQ Vector
+	lda #<irq
+	sta irqvec
+
+	lda #>irq
+	sta irqvec+1
+	cli
+
+	
+-	
+	jmp -
+irq
+	inc tmp0
+	lda tmp0
+	cmp #$64
+	bne +
+	stz tmp0
+	jsr lcdclear
+	jsr clockout
+	
++	jmp irqhandler

@@ -1,0 +1,5 @@
+do_reset	= $e000
+init_lcd	= $e000	; unused
+lcdctl	= $d200
+lcddata	= $d201
+i	= $200	; unused

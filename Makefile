@@ -1,0 +1,3 @@
+all: 
+
+include vdp/Makefile

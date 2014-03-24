@@ -1,0 +1,19 @@
+*=$1000
+!src "../bios/defs.h.a"
+!src "../bios/bios.h.a"
+; sdcard pin assignment:
+; SD   | Signal | VIA Port B
+;   1  |    /CS |          1
+;   2  | CMD/DI |          6
+;   5  |    CLK |	   0
+;   7  | DAT/DO |          7
+
+	lda #%01111111
+	sta via1ddrb
+	lda #%00111111
+	sta via1portb
+	
+-
+	dec via1portb
+	inc  via1portb
+	jmp -	

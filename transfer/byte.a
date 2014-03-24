@@ -1,0 +1,129 @@
+*=$1000
+!src "../bios/defs.h.a"
+!src "../bios/bios.h.a"
+	
+addr = tmp0
+
+; transfer routine addresses
+startaddr	= $0700
+endaddr     = $0702
+length		= $0704
+
+
+main
+;	sei 
+	jsr lcdclear
+
+	; load start address
+	jsr chrin
+	sta startaddr
+	
+	jsr chrin
+	sta startaddr+1
+
+	lda #'O'
+	jsr chrout
+	lda #'K'
+	jsr chrout
+
+
+	lda startaddr+1
+	jsr lcdhex
+
+	lda startaddr
+	jsr lcdhex
+
+	
+	lda #' '
+	jsr lcdprint
+
+
+	; load number of bytes to be uploaded
+	jsr chrin
+	sta length
+	
+	jsr chrin
+	sta length+1
+
+	lda #'O'
+	jsr chrout
+	lda #'K'
+	jsr chrout
+
+	lda length+1
+	jsr lcdhex
+
+	lda length
+	jsr lcdhex
+
+	
+	lda #' '
+	jsr lcdprint
+	
+
+
+	
+	; calculate end address
+	clc
+	lda length
+	adc startaddr
+	sta endaddr
+
+	lda length+1
+	adc startaddr+1
+	sta endaddr+1
+
+	lda endaddr+1
+	jsr lcdhex
+
+	lda endaddr
+	jsr lcdhex
+
+	
+	lda #' '
+	jsr lcdprint
+
+	lda startaddr
+	sta addr
+	lda startaddr+1
+	sta addr+1	
+
+	ldy #$00
+-	jsr chrin
+	sta (addr),y
+
+	iny	
+	cpy #$00
+	bne +
+	inc addr+1
++		
+
+	; msb of current address equals msb of end address?
+	lda addr+1
+	cmp endaddr+1
+	bne - ; no? read next byte
+
+	; yes? compare y to lsb of endaddr
+	cpy endaddr
+	bne - ; no? read next byte
+
+	; yes? write OK and jump to start addr	
+
+done
+
+	lda #'O'
+	jsr chrout
+	lda #'K'
+	jsr chrout
+
+	jmp (startaddr)
+
+;startaddr	!word $ffff
+;length		!word $ffff
+;endaddr		!word $ffff
+
+!byte $00
+!byte $00
+!byte $00
+!byte $00
+!byte $00

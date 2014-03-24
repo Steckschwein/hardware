@@ -1,0 +1,159 @@
+*=$1000
+!src "../bios/defs.h.a"
+!src "../bios/bios.h.a"
+	
+;----------------------------------------------------------------------------------------------
+; UART1 	
+;----------------------------------------------------------------------------------------------
+
+uart1		= $d300
+uart1rxtx	= uart1+0
+uart1ier	= uart1+0
+uart1dll	= uart1+0
+uart1dlh	= uart1+1
+uart1iir	= uart1+2
+uart1fcr	= uart1+2
+uart1lcr	= uart1+3
+uart1mcr	= uart1+4
+uart1lsr	= uart1+5
+uart1msr	= uart1+6
+uart1scr	= uart1+7
+;----------------------------------------------------------------------------------------------
+
+main
+	sei 
+	jsr lcdclear
+
+	lda #<uart_text
+	sta msgptr
+	
+	lda #>uart_text
+	sta msgptr+1
+	
+	jsr lcdstring
+
+	jsr uart_init
+
+	lda #<uart_test
+	sta msgptr
+	
+	lda #>uart_test
+	sta msgptr+1
+
+	jsr uart_tx_string
+	jsr lcdstring
+-
+	jsr uart_rx
+;	jsr lcdprint
+	jsr uart_tx
+	jmp -
+uart_text	!text "Uart: ", $00
+uart_test	!text "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLNMOPQRSTUVWXYZ1234567890",  $0a, $0d, $00
+
+uart_tx_string 
+	pha                 ;save a, y to stack
+    phx
+    phy
+
+        ldy #$00
+-       lda (msgptr),y
+        beq +
+
+--	ldx uart1lsr
+	cpx #$20
+	bne --
+
+	sta uart1rxtx
+	
+        iny
+        bne -
+
++       ply                 ;restore a, y
+	plx
+        pla
+        rts
+
+uart_tx
+	tax
+
+-	lda uart1lsr
+	and #$20
+	beq -
+
+	txa
+	sta uart1rxtx
+	
+	rts
+
+uart_rx
+-	lda uart1lsr 
+	and #$1f
+	cmp #$01
+	bne -
+	
+	lda uart1rxtx
+ 
+	rts
+
+uart_init
+	; ok, we detected a 16550A, i.e. a chip 
+	; with working FIFO
+	lda #%10000000
+	sta uart1lcr
+
+
+	ldx #17*2	; 38400 BAUD
+	;ldx #11*2	; 2400 BAUD
+
+	lda divisor,x
+	sta uart1dll	
+
+	lda divisor+1,x
+	sta uart1dlh
+
+	lda #%00000011	; 8N1
+
+	sta uart1lcr
+
+ 	;lda #87		; no FIFO enable and 
+ 	;lda #7		; no FIFO enable and 
+				; clear FIFOs, 
+	;sta uart1fcr	; trigger at 1 byte
+	lda #0
+	sta uart1fcr	; trigger at 1 byte
+	sta uart1ier	; polled mode (so far) 
+	sta uart1mcr	; reset DTR, RTS
+	and #%00001100			; keep OUT1, OUT2 values
+	sta uart1mcr		; reset DTR, RTS
+	clc
+
+	lda #'Y'
+	jsr lcdprint
+	rts
+
+;	divisor values for 1.8432 MHz Crystal
+;	value		; baud	; #
+divisor	!word -1 	; dunno	; 0
+	!word 2304	; 50	; 1
+	!word 1536	; 75	; 2	
+	!word 1047	; 110	; 3
+	!word 857	; 134.5	; 4
+	!word 768	; 150	; 5
+	!word 384 	; 300	; 6
+	!word 192	; 600	; 7
+	!word 96	; 1200	; 8
+	!word 64	; 1800	; 9
+	!word 58	; 2000	; 10
+	!word 48	; 2400	; 11
+	!word 32	; 3600	; 12
+	!word 24	; 4800	; 13
+	!word 16	; 7200	; 14
+	!word 12	; 9600	; 15
+	!word 6		; 19200	; 16
+	!word 3		; 38400	; 17
+	!word 2		; 56000	; 18
+!byte $00
+!byte $00
+!byte $00
+!byte $00
+!byte $00

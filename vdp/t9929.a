@@ -1,0 +1,227 @@
+*=$1000
+!source "t9929.h.a"
+	jsr vdp_init
+   jsr vdp_memtest
+vdp_init_bytes	!byte 0,$07,$01,$08,$01,$06,$00,$07
+vdp_init:
+   ;reg 0 0 - ext. video off, 
+   ;reg 1 c0 - 4416/4116 DRAM, int disabled, video on, text mode, size 1, magnitude off
+   ;reg 2 
+   ;reg 3
+   ;reg 4
+   ;reg 5
+   ;reg 6
+   ;reg 7 7 - cyan background color
+   ldx   #$00
+   ldy	#$80
+-  lda   vdp_init_bytes,x
+   sta   a_vreg_w      ; write data to vdp
+   sty   a_vreg_w      ; write the register number to vdp, 80 - reg0 , 81 - reg1 ... see datasheet page 4.1
+   iny
+   inx
+   cpx   #$08
+   bne   -
+   rts
+
+msg	!text "Mem ", $00 
+adrl	= $f0
+adrh	= $f1
+vdp_memtest_pattern = $f2
+; pointer for string output functions 
+msgptr 		= $fe 
+vdp_memtest:
+--
+	jsr lcdclear
+   lda a_vreg
+   jsr lcdhex
+   ldy #$ff
+   ldx #$ff
+-  nop
+   dey
+   bne   -
+   dex
+   bne   -
+   
+;-  lda a_vreg
+;   and #$80
+;   bne -
+   
+   lda #$20
+   jsr lcdprint
+   jsr vdp_vram_read
+   jsr lcdhex
+
+   ldx   #$96
+   jsr   vdp_vram_write
+   lda   #$69
+   sta   a_vram_w
+   lda   #$11
+   sta   a_vram_w
+   
+   lda   #$20
+   jsr   lcdprint
+   jsr   vdp_vram_read
+   jsr   lcdhex
+   lda   a_vram
+   jsr   lcdhex
+   lda   a_vram
+   jsr   lcdhex
+   
+-   jmp   -
+
+   jsr lcdclear  
+  
+	lda #<msg
+	sta msgptr
+	lda #>msg
+	sta msgptr+1
+	jsr lcdstring
+   
+   lda #$00
+   sta adrh
+   ldx #$00
+-	stx a_vreg_w  ;low byte vram adress
+   lda adrh
+   ora #$40
+   sta a_vreg_w  ;high byte vram 
+   lda #$f0
+   sta a_vram_w
+   stx a_vreg_w
+   lda adrh
+   sta a_vreg_w
+   lda a_vram
+	cmp #$f0
+	bne +
+	inx
+   bne -
+	inc adrh
+   lda adrh
+   cmp #$40
+   bne -
++	jsr lcdhex
+   lda #$20
+   jsr lcdprint
+   lda adrh
+	jsr lcdhex
+	txa
+	jsr lcdhex
+   rts
+   
+vdp_vram_write:
+   lda   #$00
+   sta   a_vreg_w
+   lda   #$42
+   sta   a_vreg_w
+   stx   a_vram_w
+   rts   
+vdp_vram_read:
+   lda   #$00
+   sta   a_vreg_w
+   lda   #$02
+   sta   a_vreg_w
+   lda   a_vram
+   rts
+   
+vdp_bgcolor:
+	stx   a_vreg
+	lda   #vreg_r7
+	sta   a_vreg
+	rts
+vdp_post:
+   dex
+   bne   vdp_post
+   dey
+   sty   $d400
+   lda   #88
+   sta   $d400
+   jsr	lcdclear
+   tya
+   jsr	lcdprint
+   rts
+   
+;   !source "char.a"
+   
+; TODO FIXME - JUSTT FOR TESTING
+; LCD 
+;----------------------------------------------------------------------------------------------
+lcdctl		= $d200
+lcddata		= lcdctl+1
+; *** Clear LCD display and return cursor to home
+; registers preserved
+lcdclear  pha
+			lda #$01
+			sta lcdctl
+			jsr lcdbusy
+			lda #$80
+			sta lcdctl
+			jsr lcdbusy
+			pla
+			rts
+
+; *** Wait for LCD busy bit to clear
+; registers preserved
+lcdbusy   pha
+-			lda lcdctl            ;read from lcd register 0
+			and #$80            ;check bit 7 (busy)
+			bne -
+			pla
+			rts
+
+; *** Print character on LCD (40 character)
+; registers preserved
+lcdprint  pha
+			sta lcddata            ;output the character
+			jsr lcdbusy
+			lda lcdctl            ;get current ddram address
+			and #$7f
+			cmp #$28          	;wrap from pos $13 (line 1 char 20)...
+			bne +
+			lda #$c0            	;...to $40 (line 2 char 1)
+			sta lcdctl
+			jsr lcdbusy
++			pla
+			rts
+         
+; *** print string on lcd
+; registers preserved
+lcdstring
+         pha                 ;save a, y to stack
+			tya
+			pha
+			ldy #$00
+-		  	lda (msgptr),y
+			beq +
+			jsr lcdprint
+			iny
+			bne -
++			pla                 ;restore a, y
+			tay
+			pla
+			rts          
+         
+; *** Print 2 digit hex number on LCD
+; A, X registers preserved
+; *** Lookup table for HEX to ASCII
+hexascii	!text "0123456789ABCDEF"
+lcdhex 
+         pha
+			lsr                ;shift high nybble into low nybble
+			lsr 
+			lsr 
+			lsr 
+			tay
+			lda hexascii,y      ;convert to ascii
+			jsr lcdprint        ;print value on the lcd
+			pla                 ;restore original value
+			pha
+			and #$0f            ;select low nybble
+			tay
+			lda hexascii,y      ;convert to ascii
+			jsr lcdprint        ;print value on the lcd
+			pla
+			rts          
+!byte $00
+!byte $00
+!byte $00
+!byte $00
+!byte $00

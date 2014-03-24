@@ -1,0 +1,22 @@
+*=$1000
+!src "../bios/defs.h.a"
+!src "../bios/bios.h.a"
+	
+
+main
+;	sei 
+	jsr lcdclear
+
+-
+	jsr uart_rx
+	jsr lcdhex
+
+	lda #' '
+	jsr lcdprint
+	jmp -
+
+!byte $00
+!byte $00
+!byte $00
+!byte $00
+!byte $00
