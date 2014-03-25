@@ -8,12 +8,37 @@
 ;   5  |    CLK |	   0
 ;   7  | DAT/DO |          7
 
+	sei
 	lda #%01111111
 	sta via1ddrb
 	lda #%00111111
 	sta via1portb
 	
--
+-	lda #66
+	ldx #$07
+	clc
+--
+	ror
+	pha
+	bcs one
+
+zero	
+	lda #%10111111
+	and via1portb
+	sta via1portb
+	bra clk
+
+one	lda #%01000000
+	ora via1portb	
+	sta via1portb
+	
+clk
 	dec via1portb
-	inc  via1portb
+	inc via1portb
+
+	pla
+
+	dex
+	bne --
+
 	jmp -	
