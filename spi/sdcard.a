@@ -11,15 +11,16 @@
 	sei
 	lda #%01111111
 	sta via1ddrb
-	lda #%00111111
+	lda #%00111101
 	sta via1portb
 	
--	lda #66
-	ldx #$07
+-	lda #90
+	ldx #$08
 	clc
 --
+	
 	ror
-	pha
+	tay
 	bcs one
 
 zero	
@@ -34,11 +35,11 @@ one	lda #%01000000
 	
 clk
 	dec via1portb
+	tya
 	inc via1portb
-
-	pla
 
 	dex
 	bne --
 
-	jmp -	
+	nop
+	bra -	
