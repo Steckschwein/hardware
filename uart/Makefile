@@ -1,11 +1,7 @@
-all: uart
+all: uart.bin test.bin
 clean:
 	rm *.bin
 
-bios: bios.bin
-uart: uart.bin
-minimal: minimal.bin
-minibios: minibios.bin
 
 test: test.bin
 memtest: memtest.bin

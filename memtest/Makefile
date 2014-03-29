@@ -1,4 +1,4 @@
-all: memtest.bin
+all: memtest.bin test.bin
 clean:
 	rm *.bin *.labels
 

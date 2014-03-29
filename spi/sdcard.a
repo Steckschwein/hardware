@@ -13,8 +13,55 @@
 	sta via1ddrb
 	lda #%00111101
 	sta via1portb
+
+wait74
+	ldx #74
+
+-	dec via1portb
+	nop
+	inc via1portb
+
+	dex
+	bne -
+
 	
--	lda #90
+
+	ldx #$00
+-	lda cmd0,x
+	jsr spibyte
+	inx
+	cpx #$06
+	bne -
+
+	;lda #%01000001
+	;ora via1portb
+;	sta via1portb
+
+
+;	ldx #$00
+;-	lda cmd58,x
+;	jsr spibyte
+;	inx
+;	cpx #$06
+;	bne -
+
+;	lda #%01000000
+;	ora via1portb
+;	sta via1portb
+	jmp wait74
+
+loop
+	dec via1portb
+	nop
+	inc via1portb
+	nop
+	jmp loop	
+	
+
+spibyte	
+	pha
+	phx
+	phy
 	ldx #$08
 	clc
 --
@@ -40,6 +87,11 @@ clk
 
 	dex
 	bne --
-
-	nop
-	bra -	
+	ply
+	plx
+	pla
+	rts
+; cmd0 reset card to SPI mode
+cmd0	!byte %01000000, %00000000, %00000000, %00000000, %00000000, %10010101
+; cmd58 requests the contents of the operating conditions register for the connected card
+cmd58	!byte %01111010, %00000000, %00000000, %00000000, %00000000, %01110101

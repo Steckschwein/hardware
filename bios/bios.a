@@ -1,82 +1,5 @@
 *= $e000			; ROM Start
-count 		= 19998 ; jiffy count 100Hz for 2MHz system
-;count		= 29997 ; jiffy count 100Hz for 3MHz system
-
-linebuf		= $0800
-
-;----------------------------------------------------------------------------------------------
-; zeropage locations 
-;----------------------------------------------------------------------------------------------
-
-; IRQ vector
-irqvec		= $e0
-
-; general purpose temp variables
-tmp0		= $f0
-tmp1		= $f1
-tmp2		= $f2
-tmp3		= $f3
-tmp4		= $f4
-tmp5		= $f5
-tmp6		= $f6
-tmp7		= $f7
-
-; time variables
-hours	  	= $f9
-minutes   	= $fa
-seconds	  	= $fb
-jiffies   	= $fc
-
-; pointer for string output functions 
-msgptr 		= $fe
-
-; transfer routine addresses
-addr 		= $e2
-startaddr	= $0700
-endaddr     = $0702
-length		= $0704
-
-
-;----------------------------------------------------------------------------------------------
-; UART
-;----------------------------------------------------------------------------------------------
-uart1		= $d000
-uart1rxtx	= uart1+0
-uart1ier	= uart1+0
-uart1dll	= uart1+0
-uart1dlh	= uart1+1
-uart1iir	= uart1+2
-uart1fcr	= uart1+2
-uart1lcr	= uart1+3
-uart1mcr	= uart1+4
-uart1lsr	= uart1+5
-uart1msr	= uart1+6
-uart1scr	= uart1+7
-;----------------------------------------------------------------------------------------------
-
-
-;----------------------------------------------------------------------------------------------
-; VIA1 
-;----------------------------------------------------------------------------------------------
-via1		= $d100
-via1porta	= via1+1
-via1portb	= via1
-via1ddrb 	= via1+2
-via1ddra	= via1+3
-via1t1cl	= via1+4
-via1t1ch	= via1+5
-via1acr		= via1 + $0b
-via1ifr		= via1 + $0d
-via1ier		= via1 + $0e
-;----------------------------------------------------------------------------------------------
-
-;----------------------------------------------------------------------------------------------
-; LCD 
-;-------------------------------------------------------------------------------------------	---
-lcdctl		= $d200
-lcddata		= lcdctl+1
-;----------------------------------------------------------------------------------------------
-
+!src "defs.h.a"
 read_data
 		
 			lda #<txt
@@ -185,7 +108,7 @@ read_data
 			jsr chrout
 
 			jmp (startaddr)
-txt			!text "BIOS 293 3 ", $00
+txt			!text "BIOS 293 4 ", $00
 
 main	
 		    lda #<hellomsg
@@ -255,7 +178,7 @@ handlecommand
 +			cmp #'c'
 			bne +
 
-			jsr clock_out
+			jsr i_clockout
 +			cmp #'z'
 			bne +
 
@@ -526,7 +449,7 @@ clock
 +			pla
 			rts
 
-clock_out	pha
+i_clockout	pha
 			lda hours
 			jsr lcddec
 
@@ -707,8 +630,6 @@ i_lcdhex    pha
 			pla
 			rts
 
-; *** Lookup table for HEX to ASCII
-hexascii	!text "0123456789ABCDEF"
 
 ;----------------------------------------------------------------------------------------------
 ; init UART
@@ -754,7 +675,7 @@ init_uart
 ;----------------------------------------------------------------------------------------------
 ; send byte in A 
 ;----------------------------------------------------------------------------------------------
-uart_tx
+i_uart_tx
 	pha
 
 -	lda uart1lsr
@@ -771,7 +692,7 @@ uart_tx
 ; receive byte, store in A 
 ;----------------------------------------------------------------------------------------------
 
-uart_rx
+i_uart_rx
 -	lda uart1lsr 
 	and #$1f
 	cmp #$01
@@ -847,7 +768,15 @@ i_lcddec
 
    rts
 
+;----------------------------------------------------------------------------------------------
+; Tables and lookup data
+;----------------------------------------------------------------------------------------------
+
+; Lookup table for HEX to ASCII
+hexascii	!text "0123456789ABCDEF"
+; Lookup table for decimal to ASCII
 dec_tbl		!byte 128,160,200
+
 ;----------------------------------------------------------------------------------------------
 ;	divisor values for 1.8432 MHz Crystal
 ;	value		; baud	; #
@@ -879,16 +808,17 @@ uart_divisor
 *=$ff00
 strout 		jmp i_strout
 chrhex 		jmp i_chrhex
-chrout		jmp uart_tx
-chrin		jmp uart_rx
+chrout		jmp i_uart_tx
+chrin		jmp i_uart_rx
 lcdbusy 	jmp i_lcdbusy
 lcdclear	jmp i_lcdclear
 lcdprint 	jmp i_lcdprint
 lcdstring 	jmp i_lcdstring
 lcdhex 		jmp i_lcdhex 
 lcddec 		jmp i_lcddec
+lcddecz 	jmp i_lcddecz
 irqhandler  jmp i_irqhandler
-clockout    jmp clock_out
+clockout    jmp i_clockout
 ;----------------------------------------------------------------------------------------------
 
 ;----------------------------------------------------------------------------------------------
