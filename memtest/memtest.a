@@ -12,9 +12,9 @@ pattern = $f2
 	sta   adrh
    ldy   #$00
    jsr   mem_ca
--	lda pattern
-   sta (adrl),y
-	lda (adrl),y
+-	lda   pattern
+   sta   (adrl),y
+	lda   (adrl),y
 	cmp   pattern
 	bne   +
    inc   pattern
@@ -26,11 +26,11 @@ pattern = $f2
 	inc   adrh
    jsr   mem_ca
 	jmp   -
-+	tax            ;save erroneous pattern
++	pha            ;save erroneous pattern
    jsr   mem_ca
    lda   #$20
    jsr   lcdprint   
-   txa   
+   pla   
    jsr   lcdhex
 -	jmp -	
 mem_ca:
