@@ -38,22 +38,9 @@ length		= $0704
 
 
 ;----------------------------------------------------------------------------------------------
-
-;----------------------------------------------------------------------------------------------
-; ACIA 
-;----------------------------------------------------------------------------------------------
-acia 		= $d000
-txdata		= acia
-rxdata		= acia
-aciast		= acia+1 	; ACIA status register
-aciacmd		= acia+2 	; ACIA command register
-aciactl		= acia+3 	; ACIA control register
-;----------------------------------------------------------------------------------------------
-
-;----------------------------------------------------------------------------------------------
 ; UART
 ;----------------------------------------------------------------------------------------------
-uart1		= $d300
+uart1		= $d000
 uart1rxtx	= uart1+0
 uart1ier	= uart1+0
 uart1dll	= uart1+0
@@ -65,31 +52,6 @@ uart1mcr	= uart1+4
 uart1lsr	= uart1+5
 uart1msr	= uart1+6
 uart1scr	= uart1+7
-;----------------------------------------------------------------------------------------------
-
-
-;	divisor values for 1.8432 MHz Crystal
-;	value		; baud	; #
-uart_divisor	
-	!word -1 	; dunno	; 0
-	!word 2304	; 50	; 1
-	!word 1536	; 75	; 2	
-	!word 1047	; 110	; 3
-	!word 857	; 134.5	; 4
-	!word 768	; 150	; 5
-	!word 384 	; 300	; 6
-	!word 192	; 600	; 7
-	!word 96	; 1200	; 8
-	!word 64	; 1800	; 9
-	!word 58	; 2000	; 10
-	!word 48	; 2400	; 11
-	!word 32	; 3600	; 12
-	!word 24	; 4800	; 13
-	!word 16	; 7200	; 14
-	!word 12	; 9600	; 15
-	!word 6		; 19200	; 16
-	!word 3		; 38400	; 17
-	!word 2		; 56000	; 18
 ;----------------------------------------------------------------------------------------------
 
 
@@ -223,7 +185,7 @@ read_data
 			jsr chrout
 
 			jmp (startaddr)
-txt			!text "Send data!", $00
+txt			!text "BIOS 293 3 ", $00
 
 main	
 		    lda #<hellomsg
@@ -448,7 +410,7 @@ do_reset
 
 			; init IO devices
 			jsr init_lcd
-			jsr init_via1
+;			jsr init_via1
 			jsr init_uart
 
 
@@ -463,7 +425,7 @@ do_reset
 			stz minutes
 			stz seconds
 			
-			cli 
+;			cli 
 
 			jmp read_data
 			
@@ -775,7 +737,7 @@ init_uart
  	;lda #7		; no FIFO enable and 
 				; clear FIFOs, 
 	;sta uart1fcr	; trigger at 1 byte
-	; The above will not disable the fifo.
+	; The above will not disabl e the fifo.
 	; This will:
 	lda #0
 	sta uart1fcr	; FIFO off
@@ -818,43 +780,6 @@ uart_rx
 	lda uart1rxtx
  
 	rts
-
-;----------------------------------------------------------------------------------------------
-; init ACIA
-;----------------------------------------------------------------------------------------------
-init_acia
-			pha
-		    ; ACIA
-		    ; set 1 stop bit, 8 bit data, internal clock, 19200bps
-		    lda #%00011111
-		    sta aciactl
-			
-			; set no parity, no echo, no tx interrupts, rts low, no rx interrupts, dtr low  
-		    lda #%00001011
-		    sta aciacmd
-
-		    pla
-			rts
-;----------------------------------------------------------------------------------------------
-; RXBYTE - receive byte from ACIA and store it in A
-;----------------------------------------------------------------------------------------------
-rxbyte		lda #$08
-rxfull		bit aciast
-			beq rxfull
-			lda rxdata
-			rts
-
-;----------------------------------------------------------------------------------------------
-; TXBYTE - send byte in A via ACIA
-;----------------------------------------------------------------------------------------------
-txbyte		pha
-    		lda #$10
-txfull	 	bit aciast ; wait for tdre bit = 1
-		    beq txfull
-		    pla
-		    sta txdata
-		    rts
-;----------------------------------------------------------------------------------------------
 
 ;----------------------------------------------------------------------------------------------
 ; LCDDECZ - output byte in A as decimal ASCII with leading zeros
@@ -923,6 +848,30 @@ i_lcddec
    rts
 
 dec_tbl		!byte 128,160,200
+;----------------------------------------------------------------------------------------------
+;	divisor values for 1.8432 MHz Crystal
+;	value		; baud	; #
+uart_divisor	
+	!word -1 	; dunno	; 0
+	!word 2304	; 50	; 1
+	!word 1536	; 75	; 2	
+	!word 1047	; 110	; 3
+	!word 857	; 134.5	; 4
+	!word 768	; 150	; 5
+	!word 384 	; 300	; 6
+	!word 192	; 600	; 7
+	!word 96	; 1200	; 8
+	!word 64	; 1800	; 9
+	!word 58	; 2000	; 10
+	!word 48	; 2400	; 11
+	!word 32	; 3600	; 12
+	!word 24	; 4800	; 13
+	!word 16	; 7200	; 14
+	!word 12	; 9600	; 15
+	!word 6		; 19200	; 16
+	!word 3		; 38400	; 17
+	!word 2		; 56000	; 18
+;----------------------------------------------------------------------------------------------
 
 ;----------------------------------------------------------------------------------------------
 ; Jump table
