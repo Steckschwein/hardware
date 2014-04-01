@@ -36,7 +36,8 @@ OE       = /RW                                        ; - output enable (active 
          + G1*/A1*/A0
 /CSROM   = G1*A2*A1*A0                                ; $e000-$ffff
          + G1*A2*A1*/A0
-/CSUART  = G1*A2*/A1*A0* /B3*/B2*/B1*/B0			      ; $d000 - UART
+/CSUART  = G1*A2*/A1*A0 * /B3*/B2*/B1*/B0			      ; $d000 - UART
+;/CSUART  = G1*A2*/A1*A0 * /B3*/B2*B1*B0			      ; $d300 - UART
 /CSVIA   = G1 * A2*/A1*A0 * /B3*/B2*/B1*B0				; $d100
 ELCD     = PHI2 * G1 * A2*/A1*A0 * /B3*/B2*B1*/B0		; $d200 - LCD-Display at $d200
 /VDPCSR  = /OE  * G1 * A2*/A1*A0 * /B3*B2*/B1*/B0		; $d400 - Video CSR     1101 0100 d400
