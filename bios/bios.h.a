@@ -12,4 +12,5 @@ chrout	= $ff06	; ?
 uart_rx = $e3f6 ; ?
 uart_tx = $e3e9 ; unused
 uart_divisor    = $e000
-irqhandler      = $ff1e ; ?
+irqhandler	= $ff21	; ?
+
