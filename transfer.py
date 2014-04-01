@@ -5,7 +5,8 @@ import sys
 import time
 import struct
 
-baudrate=38400
+#baudrate=38400
+baudrate=115200
 
 try:
 	filename 	= sys.argv[1]
