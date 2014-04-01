@@ -1,7 +1,7 @@
 *= $e000			; ROM Start
 !src "defs.h.a"
+
 read_data
-		
 			lda #<txt
 			sta msgptr
 
@@ -17,22 +17,21 @@ read_data
 			jsr chrin
 			sta startaddr+1
 
+
+			lda startaddr+1
+			jsr i_lcdhex
+			lda startaddr
+			jsr i_lcdhex
+
+			lda #' '
+			jsr lcdprint
+
 			lda #'O'
 			jsr chrout
 			lda #'K'
 			jsr chrout
 
-
-			lda startaddr+1
-			jsr lcdhex
-
-			lda startaddr
-			jsr lcdhex
-
-			
-			lda #' '
-			jsr lcdprint
-
+			;jsr strout
 
 			; load number of bytes to be uploaded
 			jsr chrin
@@ -41,22 +40,16 @@ read_data
 			jsr chrin
 			sta length+1
 
-			lda #'O'
-			jsr chrout
-			lda #'K'
-			jsr chrout
-
 			lda length+1
-			jsr lcdhex
+			jsr i_lcdhex
 
 			lda length
-			jsr lcdhex
-
+			jsr i_lcdhex
 			
 			lda #' '
 			jsr lcdprint
 
-				; calculate end address
+			; calculate end address
 			clc
 			lda length
 			adc startaddr
@@ -67,11 +60,10 @@ read_data
 			sta endaddr+1
 
 			lda endaddr+1
-			jsr lcdhex
+			jsr i_lcdhex
 
 			lda endaddr
-			jsr lcdhex
-
+			jsr i_lcdhex
 			
 			lda #' '
 			jsr lcdprint
@@ -80,6 +72,13 @@ read_data
 			sta addr
 			lda startaddr+1
 			sta addr+1	
+
+			lda #'O'
+			jsr chrout
+			lda #'K'
+			jsr chrout
+
+			; jsr strout
 
 
 			ldy #$00
@@ -107,229 +106,26 @@ read_data
 			lda #'K'
 			jsr chrout
 
+			; jsr strout
+
 			jmp (startaddr)
-txt			!text "BIOS 293 4 ", $00
-
-main	
-		    lda #<hellomsg
-			sta msgptr
-
-			lda #>hellomsg
-			sta msgptr+1
-
-			jsr strout
+txt			!text "BIOS 014b "
+			!byte $00
 
 
-			jsr lcdclear
-			
-			lda #<readymsg
-			sta msgptr
-
-			lda #>readymsg
-			sta msgptr+1
-
-			jsr lcdstring
-
-
-			stz linebuf
-
---			ldx #$00 
-			jsr prompt
--           jsr chrin
-            cmp #$0d
-            beq +
-            jsr chrout
-            jsr lcdprint
-            sta linebuf,x
-            inx
-            lda #$00
-            sta linebuf,x
-            bra -
-
-+			ldx #$00
-			jsr handlecommand			
-
-			bra --
-
-hellomsg	!text $0a, $0d
-			!text "65c02 CPU @ 2MHz", $0a, $0d
-			!text "32k RAM   @ $0000-$7FFF", $0a, $0d
-			!text "8k  ROM   @ $E000-$FFFF", $0a, $0d
-			!text "IO        @ $D000-$DFFF", $0a, $0d
-			!text "   ACIA   @ $D000-$D003", $0a, $0d
-			!text "   VIA    @ $D100-$D103", $0a, $0d
-			!text "   LCD    @ $D300-$D301", $0a, $0d
-readymsg	!text "READY.", 0
-crlf		!text $0a, $0d, $00
-memfail     !text "MEMORY CHECK FAILED!", $00
-
-
-handlecommand
-			pha
-
-			lda #$0a
-			jsr chrout
-
-			lda #$0d
-			jsr chrout
-
-			lda linebuf
-
-+			cmp #'c'
-			bne +
-
-			jsr i_clockout
-+			cmp #'z'
-			bne +
-
-			jsr dump_zp			
-
-+			cmp #'r'
-			bne +
-
-			jsr dump_regs
-					
-+			cmp #'u'
-			bne +
-
-			jmp read_data
-
-+			cmp #'x'
-			bne +
-
-			jmp main
-
-+			lda #$0a
-		    jsr chrout
-		    lda #$0d
-		    jsr chrout
-
-			lda #<linebuf
-			sta msgptr
-
-			lda #>linebuf
-			sta msgptr+1
-
-			jsr strout
-
-			pla
-			rts
-
-
-prompt	    pha
-            lda #<+
-            sta msgptr
-            lda #>+
-            sta msgptr+1
-               
-            jsr strout
-
-            pla
-            rts
-+	        !text $0a, $0d, "> ", $00
-
-dump_regs
-			pha
-			lda #'A'
-			jsr chrout
-			lda #':'
-			jsr chrout
-
-			pla
-			jsr chrhex
-			
-			pha
-			lda #' '
-			jsr chrout
-			lda #'X'
-			jsr chrout
-			lda #':'
-			jsr chrout
-
-			txa
-			jsr chrhex
-
-			lda #' '
-			jsr chrout
-			lda #'Y'
-			jsr chrout
-			lda #':'
-			jsr chrout
-
-			tya
-			jsr chrhex
-
-			lda #<crlf
-			sta msgptr
-
-			lda #>crlf
-			sta msgptr+1
-
-			jsr strout
-			pla
-			rts
-
-dump_zp		pha
-			phx
-			phy
-
-
-			ldx #$00
-			ldy #$08
-			sty tmp0
-
-			; our IO-routines will alter the ZP, so copy the current ZP to somewhere else
--			lda $00,x
-			sta $0300,x
-			
-			cpx #$ff
-			inx
-			bne -
-			
--			txa 		; Output ZP address
-			jsr chrhex
-
-			lda #':'
-			jsr chrout
-
-			lda $0300,x ; output byte
-			jsr chrhex
-
-			lda #' '
-			jsr chrout
-
-			dec tmp0 
-			bne +
-
-			jsr newline
-			ldy #$08
-			sty tmp0
-
-+			inx
-			bne -
-
-			jsr newline
-
-			ply
-			plx
-			pla
-			rts
-
-newline		pha
-
-			lda #$0a
-			jsr chrout
-
-			lda #$0d
-			jsr chrout
-
-			pla
-			rts
 ;----------------------------------------------------------------------------------------------
 ; RESET Routine. Call subroutines to init all components 
 ;----------------------------------------------------------------------------------------------
 do_reset
+			; disable interrupt
 			sei
+
+			; clear decimal flag
+			cld
+
+			; init stack pointer
+			ldx #$ff
+			txs
 
 			; init IO devices
 			jsr init_lcd
@@ -347,6 +143,8 @@ do_reset
 			stz hours
 			stz minutes
 			stz seconds
+
+
 			
 ;			cli 
 
@@ -385,7 +183,7 @@ init_via1
 ; IO_NMI Routine. Handle NMI
 ;----------------------------------------------------------------------------------------------
 do_nmi 
-			jsr dump_zp
+			;jmp read_data
 			rti
 
 ;----------------------------------------------------------------------------------------------
@@ -614,6 +412,10 @@ i_lcdstring pha                 ;save a, y to stack
 ; *** Print 2 digit hex number on LCD
 ; A, X registers preserved
 i_lcdhex    pha
+			phy
+			phx
+			
+			tax
 			lsr                ;shift high nybble into low nybble
 			lsr 
 			lsr 
@@ -621,12 +423,15 @@ i_lcdhex    pha
 			tay
 			lda hexascii,y      ;convert to ascii
 			jsr lcdprint        ;print value on the lcd
-			pla                 ;restore original value
-			pha
+			
+			txa                 ;restore original value
 			and #$0f            ;select low nybble
 			tay
 			lda hexascii,y      ;convert to ascii
 			jsr lcdprint        ;print value on the lcd
+			
+			plx
+			ply
 			pla
 			rts
 
@@ -640,8 +445,11 @@ init_uart
 	lda #%10000000
 	sta uart1lcr
 
+	ldx #19*2	; 115200 BAUD
 
-	ldx #17*2	; 38400 BAUD
+;	ldx #17*2	; 38400 BAUD
+;	ldx #15*2	; 9600 BAUD
+
 	;ldx #11*2	; 2400 BAUD
 
 	lda uart_divisor,x
@@ -655,9 +463,9 @@ init_uart
 	sta uart1lcr
 
  	;lda #87		; no FIFO enable and 
- 	;lda #7		; no FIFO enable and 
+ 	lda #7		; no FIFO enable and 
 				; clear FIFOs, 
-	;sta uart1fcr	; trigger at 1 byte
+	sta uart1fcr	; trigger at 1 byte
 	; The above will not disabl e the fifo.
 	; This will:
 	lda #0
@@ -677,15 +485,20 @@ init_uart
 ;----------------------------------------------------------------------------------------------
 i_uart_tx
 	pha
+	phx
+
+	tax
 
 -	lda uart1lsr
 	and #$20
 	beq -
 
-	pla
-	sta uart1rxtx
+	stx uart1rxtx
 	
+	plx
+	pla
 	rts
+
 ;----------------------------------------------------------------------------------------------
 
 ;----------------------------------------------------------------------------------------------
@@ -771,9 +584,9 @@ i_lcddec
 ;----------------------------------------------------------------------------------------------
 ; Tables and lookup data
 ;----------------------------------------------------------------------------------------------
-
 ; Lookup table for HEX to ASCII
 hexascii	!text "0123456789ABCDEF"
+
 ; Lookup table for decimal to ASCII
 dec_tbl		!byte 128,160,200
 
@@ -800,6 +613,7 @@ uart_divisor
 	!word 6		; 19200	; 16
 	!word 3		; 38400	; 17
 	!word 2		; 56000	; 18
+	!word 1 	; 115200; 19
 ;----------------------------------------------------------------------------------------------
 
 ;----------------------------------------------------------------------------------------------
