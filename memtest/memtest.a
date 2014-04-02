@@ -1,9 +1,9 @@
 *=$0200
 !src "../bios/defs.h.a"
 !src "../bios/bios.h.a"
-adrl	= $f0
-adrh	= $f1
-pattern = $f2
+adrl	= tmp0
+adrh	= tmp1
+pattern = tmp2
    
 	lda   #$00
 	sta   adrl
@@ -34,18 +34,16 @@ pattern = $f2
    jsr   lcdhex
 -	jmp -	
 mem_ca:
-   tya
-   pha
-   jsr lcdclear   
-	lda #<msg
-	sta msgptr
-	lda #>msg
-	sta msgptr+1
-   jsr lcdstring
+   phy
+   jsr   lcdclear
+	lda   #<msg
+	sta   msgptr
+	lda   #>msg
+	sta   msgptr+1
+   jsr   lcdstring
    lda   adrh
    jsr   lcdhex
    pla
    jsr   lcdhex
-   tya
    rts
 msg	!text "Mem ", $00
