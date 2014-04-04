@@ -11,21 +11,26 @@
 	sei
 	lda #%01111111
 	sta via1ddrb
-	lda #%00111101
+	lda #%01111110
 	sta via1portb
 
 wait74
 	ldx #74
 
--	dec via1portb
+-	inc via1portb
 	nop
-	inc via1portb
+	dec via1portb
 
 	dex
 	bne -
 
+	; set CS line to LOW
+	lda #%11111101
+	and via1portb	
+	sta via1portb
 	
 
+	; send CMD0 - init SD card to SPI mode
 	ldx #$00
 -	lda cmd0,x
 	jsr spibyte
@@ -33,22 +38,21 @@ wait74
 	cpx #$06
 	bne -
 
-	;lda #%01000001
-	;ora via1portb
-;	sta via1portb
+	lda #%01000001
+	ora via1portb
+	sta via1portb
 
 
-;	ldx #$00
-;-	lda cmd58,x
-;	jsr spibyte
-;	inx
-;	cpx #$06
-;	bne -
+; 	ldx #$00
+; -	lda cmd58,x
+; 	jsr spibyte
+; 	inx
+; 	cpx #$06
+; 	bne -
 
-;	lda #%01000000
-;	ora via1portb
-;	sta via1portb
-	jmp wait74
+	; lda #%01000000
+	; ora via1portb
+	; sta via1portb
 
 loop
 	dec via1portb
@@ -65,8 +69,8 @@ spibyte
 	ldx #$08
 	clc
 --
-	
-	ror
+	asl
+
 	tay
 	bcs one
 
@@ -81,9 +85,9 @@ one	lda #%01000000
 	sta via1portb
 	
 clk
-	dec via1portb
-	tya
 	inc via1portb
+	tya
+	dec via1portb
 
 	dex
 	bne --
