@@ -3,5 +3,5 @@ clean:
 	rm *.jed *.fus *.chp *.pin
 
 
-%.jed: %.0.1.pld
+%.jed: %.pld
 	galasm $< 
