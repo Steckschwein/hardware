@@ -1,11 +1,22 @@
 *=$1000
 !source "t9929.h.a"
+VDP_WAIT_CYCLES = 4300; 4300µs after vertical blank int, means 0,0043s / 0,0000005s (time for one cpu cycle at 2Mhz) = 8600cycles = 4300 NOP's -
 	jsr vdp_init
-   jsr vdp_memtest
-vdp_init_bytes	!byte 0,$07,$01,$08,$01,$06,$00,$07
+   ;jsr vdp_memtest
+   jsr vdp_memtest_2
+-
+;   lda  #$00
+ ;  sta  a_vreg_w
+;   lda  #$40
+ ;  sta  a_vreg_w
+  ; lda  #69
+   ;sta   a_vram_w
+   jmp   -
+
+vdp_init_bytes	!byte 0,$d0,$02,$00,$00,$20,$00,$f5
 vdp_init:
    ;reg 0 0 - ext. video off, 
-   ;reg 1 c0 - 4416/4116 DRAM, int disabled, video on, text mode, size 1, magnitude off
+   ;reg 1 c0 - 4108/4116 DRAM, int disabled, video on, text mode, size 1, magnitude off
    ;reg 2 
    ;reg 3
    ;reg 4
@@ -16,21 +27,80 @@ vdp_init:
    ldy	#$80
 -  lda   vdp_init_bytes,x
    sta   a_vreg_w      ; write data to vdp
+   jsr   nops
    sty   a_vreg_w      ; write the register number to vdp, 80 - reg0 , 81 - reg1 ... see datasheet page 4.1
    iny
    inx
    cpx   #$08
    bne   -
    rts
+   
+vdp_memtest_2:
+   jsr   lcdclear
+   
+   lda   #$00
+   sta   adrl
+   sta   adrh
+   lda   #$96
+   sta   pattern
+   
+;   jsr   vdp_wait_vb
+   
+   lda   a_vreg
+   jsr   print_x   
 
+   jsr   vdp_vram_read
+   ldx   #$96
+   jsr   vdp_vram_write
+   +nops 16
+   lda   #$69
+   sta   a_vram_w
+   +nops 16
+   lda   #$f0
+   sta   a_vram_w
+   +nops 16
+   lda   #$0f
+   sta   a_vram_w
+   
+   jsr   vdp_vram_read
+   pha
+   +nops 8
+   lda   a_vram
+   pha
+   +nops 8
+   lda   a_vram
+   pha
+   +nops 8
+   lda   a_vram
+   jsr   print_x
+   pla
+   jsr   print_x
+   pla
+   jsr   print_x
+   pla
+   jsr   print_x
+   
+   rts
+    
+;   cmp   pattern
+;   bne   -
+;   inc   pattern
+;   lda   $f2
+;   cmp   #$02
+;   bne   l1
+;   inc   $f0
+;   lda   $f0
+;   cmp   #$ff
+;   bne   l1
+
+   rts
 msg	!text "Mem ", $00 
-adrl	= $f0
-adrh	= $f1
-vdp_memtest_pattern = $f2
+msgptr   =  $0
+adrl  !byte 0
+adrh  !byte 0
+pattern  !byte 0
 ; pointer for string output functions 
-msgptr 		= $fe 
-vdp_memtest:
---
+vdp_memtest
 	jsr lcdclear
    lda a_vreg
    jsr lcdhex
@@ -41,17 +111,13 @@ vdp_memtest:
    bne   -
    dex
    bne   -
-   
-;-  lda a_vreg
-;   and #$80
-;   bne -
-   
-   lda #$20
-   jsr lcdprint
-   jsr vdp_vram_read
-   jsr lcdhex
 
-   ldx   #$96
+   lda   #$20
+   jsr   lcdprint
+   
+   jsr   vdp_wait_vb
+   
+   lda   #$96
    jsr   vdp_vram_write
    lda   #$69
    sta   a_vram_w
@@ -66,8 +132,8 @@ vdp_memtest:
    jsr   lcdhex
    lda   a_vram
    jsr   lcdhex
-   
--   jmp   -
+
+   rts
 
    jsr lcdclear  
   
@@ -108,17 +174,20 @@ vdp_memtest:
    rts
    
 vdp_vram_write:
-   lda   #$00
+   lda   adrl
    sta   a_vreg_w
-   lda   #$42
+   lda   adrh
+   ora   #$40
    sta   a_vreg_w
+   +nops 16
    stx   a_vram_w
-   rts   
+   rts
 vdp_vram_read:
-   lda   #$00
+   lda   adrl
    sta   a_vreg_w
-   lda   #$02
+   lda   adrh
    sta   a_vreg_w
+   +nops 16
    lda   a_vram
    rts
    
@@ -137,7 +206,22 @@ vdp_post:
    jsr	lcdclear
    tya
    jsr	lcdprint
-   rts
+   rts   
+vdp_wait_vb:
+-  lda   a_vreg
+   and   #$80
+   bne -
+     ldx   #10
+l1:    ldy   #172
+l2:   dey
+      bne   l2
+      dex
+      bne   l1
+      rts
+      
+nops:
+   +nops 16
+   rts   
    
 ;   !source "char.a"
    
@@ -148,7 +232,9 @@ lcdctl		= $d200
 lcddata		= lcdctl+1
 ; *** Clear LCD display and return cursor to home
 ; registers preserved
-lcdclear  pha
+lcdclear 
+         php
+         pha
 			lda #$01
 			sta lcdctl
 			jsr lcdbusy
@@ -156,11 +242,13 @@ lcdclear  pha
 			sta lcdctl
 			jsr lcdbusy
 			pla
+         plp
 			rts
 
 ; *** Wait for LCD busy bit to clear
 ; registers preserved
-lcdbusy   pha
+lcdbusy   
+         pha
 -			lda lcdctl            ;read from lcd register 0
 			and #$80            ;check bit 7 (busy)
 			bne -
@@ -169,7 +257,8 @@ lcdbusy   pha
 
 ; *** Print character on LCD (40 character)
 ; registers preserved
-lcdprint  pha
+lcdprint  
+         pha
 			sta lcddata            ;output the character
 			jsr lcdbusy
 			lda lcdctl            ;get current ddram address
@@ -199,6 +288,11 @@ lcdstring
 			pla
 			rts          
          
+print_x:
+         jsr   lcdhex
+         lda   #$20
+         jsr   lcdprint
+         rts
 ; *** Print 2 digit hex number on LCD
 ; A, X registers preserved
 ; *** Lookup table for HEX to ASCII
@@ -217,7 +311,7 @@ lcdhex
 			and #$0f            ;select low nybble
 			tay
 			lda hexascii,y      ;convert to ascii
-			jsr lcdprint        ;print value on the lcd
+			jsr lcdprint        ;print value on the lcd      
 			pla
 			rts          
 !byte $00
