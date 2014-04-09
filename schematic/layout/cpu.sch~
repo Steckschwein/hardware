@@ -475,7 +475,7 @@ C 52000 44600 1 0 0 gal22v10.sym
 T 52695 48100 5 10 0 1 0 0 1
 device=gal22v10d
 T 52900 47100 5 10 1 1 0 0 1
-refdes=U?
+refdes=U7
 T 52000 44600 5 10 1 1 0 0 1
 footprint=DIP24N
 }
