@@ -1,0 +1,28 @@
+*=$c000
+	
+main
+
+!for i,256 {
+	nop
+}
+!for i,256 {
+	cmp #$c9
+}
+
+	jmp main
+
+;----------------------------------------------------------------------------------------------
+; Interrupt vectors
+;----------------------------------------------------------------------------------------------
+; $FFFA/$FFFB NMI Vector
+*= $fffa
+!byte <main
+!byte >main
+; $FFFC/$FFFD reset vector
+;*= $fffc
+!byte <main
+!byte >main
+; $FFFE/$FFFF IRQ vector
+;*= $fffe
+!byte <main
+!byte >main
