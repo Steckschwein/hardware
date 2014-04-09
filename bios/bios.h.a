@@ -1,16 +1,9 @@
-chrhex	= $ff03	; ?
-lcdhex	= $ff18	; unused
-lcddec	= $ff1b	; ?
-lcdprint	= $ff12	; ?
-lcdbusy	= $ff0c	; ?
-clockout        = $ff21 ; unused
-lcdclear	= $ff0f	; ?
-chrin	= $ff09	; ?
-strout	= $ff00	; ?
-lcdstring	= $ff15	; ?
-chrout	= $ff06	; ?
-uart_rx = $e3f6 ; ?
-uart_tx = $e3e9 ; unused
-uart_divisor    = $e000
-irqhandler	= $ff21	; ?
-
+lcdhex	= $ff0f	; unused
+lcddec	= $ff12	; unused
+lcdprint	= $ff09	; ?
+irqhandler	= $ff18	; ?
+lcdclear	= $ff06	; unused
+chrin	= $ff03	; ?
+lcdstring	= $ff0c	; ?
+chrout	= $ff00	; ?
+lcddecz	= $ff15	; unused

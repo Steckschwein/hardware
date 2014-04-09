@@ -78,8 +78,6 @@ read_data
 			lda #'K'
 			jsr chrout
 
-			; jsr strout
-
 
 			ldy #$00
 -			jsr chrin
@@ -109,7 +107,7 @@ read_data
 			; jsr strout
 
 			jmp (startaddr)
-txt			!text "BIOS 014b "
+txt			!text "BIOS 0404b "
 			!byte $00
 
 
@@ -129,7 +127,7 @@ do_reset
 
 			; init IO devices
 			jsr init_lcd
-;			jsr init_via1
+			jsr init_via1
 			jsr init_uart
 
 
@@ -139,44 +137,13 @@ do_reset
 
 			lda #>irqhandler
 			sta irqvec+1
-			
-			stz hours
-			stz minutes
-			stz seconds
 
 
 			
 ;			cli 
 
 			jmp read_data
-			
-;----------------------------------------------------------------------------------------------
-; init VIA1
-;----------------------------------------------------------------------------------------------
-init_via1
-			pha
-			; VIA1
-			lda #%00000000
-			sta via1ddra
-			sta via1ddrb
-
-			lda #$01
-			sta via1portb
-
-			lda #<count
-			sta via1t1cl            ; set low byte of count
-			lda #>count
-			sta via1t1ch            ; set high byte of count
-			
-			lda #%11000000
-			sta via1ier             ; enable VIA1 T1 interrupts
-
-			lda #%01000000
-		 	sta via1acr             ; T1 continuous, PB7 disabled
-		 	
-		 	pla
-		 	rts
-
+		
 
 
 ;----------------------------------------------------------------------------------------------
@@ -196,143 +163,79 @@ do_irq
 i_irqhandler
 			pha
 
-			; VIA1 T1 will overflow 100 times per second.
-			lda #%01000000      ; via1 timer1
-			and via1ifr
-			beq +				; not via1? bye or check for other interrupts
-
-			bit via1t1cl            ; clears interrupt
-			
-			jsr clock
-
 +			pla
 			rti
 
 ;----------------------------------------------------------------------------------------------
-; CLOCK Routine. Update Clock variables every 100 times.
+; init VIA1 - set all ports to input
 ;----------------------------------------------------------------------------------------------
-clock
+init_via1
 			pha
+			; VIA1
+			lda #%00000000
+			sta via1ddra
+			sta via1ddrb
 
-			inc jiffies
-			lda jiffies
-		    cmp #100            ; reached 1 second?
-		    bne +            ; if not, done for now
+			lda #$00
+			sta via1ier             ; enable VIA1 T1 interrupts
 
-			;lda #$00
-			;sta jiffies	
-			stz jiffies
+
+			; lda #<count
+			; sta via1t1cl            ; set low byte of count
+			; lda #>count
+			; sta via1t1ch            ; set high byte of count
 			
-			inc seconds
-			lda seconds
-			cmp #60
-			bne +
+			; lda #%11000000
+			; sta via1ier             ; enable VIA1 T1 interrupts
 
-			stz seconds
-
-			inc minutes
-			lda minutes
-			cmp #60
-			bne +
-
-			stz minutes
-
-			inc hours
-			lda hours
-			cmp #24
-			bne +
-
-			stz hours
-
-+			pla
-			rts
-
-i_clockout	pha
-			lda hours
-			jsr lcddec
-
-			lda #':'
-			jsr lcdprint
-
-			lda minutes
-			jsr lcddec
-
-			lda #':'
-			jsr lcdprint
-
-			lda seconds
-			jsr lcddec
-
-			pla
-			rts
+			; lda #%01000000
+		 ; 	sta via1acr             ; T1 continuous, PB7 disabled
+		 	
+		 	pla
+		 	rts
 
 ;----------------------------------------------------------------------------------------------
-; Test memory (zeropage only atm)
+; init UART
 ;----------------------------------------------------------------------------------------------
-memtest
-			lda #$ff
-			jsr check_zeropage
-			rts
+init_uart
+	; ok, we detected a 16550A, i.e. a chip 
+	; with working FIFO
+	lda #%10000000
+	sta uart1lcr
 
-;----------------------------------------------------------------------------------------------
-; Check zeropage. A contains 0 if ok, != 0 if error
-;----------------------------------------------------------------------------------------------
+	ldx #19*2	; 115200 BAUD
 
-check_zeropage
-			phx
+;	ldx #17*2	; 38400 BAUD
+;	ldx #15*2	; 9600 BAUD
 
-			ldx #$00
--			sta $00,x
-			cmp $00,x
-			bne stop
-			inx
-			cpx #$ff
-			bne -
-			
-			plx
-			rts
-stop
-			txa
-			plx 
-			rts
+	;ldx #11*2	; 2400 BAUD
 
-;----------------------------------------------------------------------------------------------
-; STROUT - Output string
-;----------------------------------------------------------------------------------------------
-i_strout	pha                 ;save a, y to stack
-			phy
-		
-			ldy #$00
-- 		  	lda (msgptr),y
-          	beq +
-          	jsr chrout
-          	iny
-          	bne -
-+		   	ply                 ;restore a, y
-          	pla
-          	rts
+	lda uart_divisor,x
+	sta uart1dll	
 
-;----------------------------------------------------------------------------------------------
-; CHRHEX - ouuput binary as hex string 
-;----------------------------------------------------------------------------------------------
-i_chrhex 	pha
-			lsr                ;shift high nybble into low nybble
-			lsr 
-			lsr 
-			lsr 
-			tay
-			lda hexascii,y      ;convert to ascii
-			jsr chrout
-			pla                 ;restore original value
-			pha
-			and #$0f            ;select low nybble
-			tay
-			lda hexascii,y      ;convert to ascii
-			jsr chrout        ;print value on the lcd
+	lda uart_divisor+1,x
+	sta uart1dlh
 
-			pla
-			rts
+	lda #%00000011	; 8N1
 
+	sta uart1lcr
+
+ 	;lda #87		; no FIFO enable and 
+ 	lda #7		; no FIFO enable and 
+				; clear FIFOs, 
+	sta uart1fcr	; trigger at 1 byte
+	; The above will not disabl e the fifo.
+	; This will:
+	lda #0
+	sta uart1fcr	; FIFO off
+
+	sta uart1ier	; polled mode (so far) 
+	sta uart1mcr	; reset DTR, RTS
+	and #%00001100			; keep OUT1, OUT2 values
+	sta uart1mcr		; reset DTR, RTS
+	clc
+
+	rts
 
 ;----------------------------------------------------------------------------------------------
 ; *** LCD initialisation
@@ -340,21 +243,21 @@ i_chrhex 	pha
 init_lcd  	ldx #$04            ;do function set 4 times
 -		  	lda #$38            ;function set: 8 bit, 2 lines, 5x7
 			sta lcdctl
-			jsr lcdbusy         ;wait for busy flag to clear
+			jsr i_lcdbusy         ;wait for busy flag to clear
 			dex
 			bne -
 			lda #$06            ;entry mode set: increment, no shift
 			sta lcdctl
-			jsr lcdbusy
+			jsr i_lcdbusy
 			lda #$0e            ;display on, cursor on, blink off
 			sta lcdctl
-			jsr lcdbusy
+			jsr i_lcdbusy
 			lda #$01            ;clear display
 			sta lcdctl
-			jsr lcdbusy
+			jsr i_lcdbusy
 			lda #$80            ;ddram address set: $00
 			sta lcdctl
-			jsr lcdbusy
+			jsr i_lcdbusy
 			rts
 
 ; *** Clear LCD display and return cursor to home
@@ -362,10 +265,10 @@ init_lcd  	ldx #$04            ;do function set 4 times
 i_lcdclear  pha
 			lda #$01
 			sta lcdctl
-			jsr lcdbusy
+			jsr i_lcdbusy
 			lda #$80
 			sta lcdctl
-			jsr lcdbusy
+			jsr i_lcdbusy
 			pla
 			rts
 
@@ -382,14 +285,14 @@ i_lcdbusy   pha
 ; registers preserved
 i_lcdprint  pha
 			sta lcddata            ;output the character
-			jsr lcdbusy
+			jsr i_lcdbusy
 			lda lcdctl            ;get current ddram address
 			and #$7f
 			cmp #$28          	;wrap from pos $13 (line 1 char 20)...
 			bne +
 			lda #$c0            	;...to $40 (line 2 char 1)
 			sta lcdctl
-			jsr lcdbusy
+			jsr i_lcdbusy
 +			pla
 			rts
 
@@ -436,49 +339,6 @@ i_lcdhex    pha
 			rts
 
 
-;----------------------------------------------------------------------------------------------
-; init UART
-;----------------------------------------------------------------------------------------------
-init_uart
-	; ok, we detected a 16550A, i.e. a chip 
-	; with working FIFO
-	lda #%10000000
-	sta uart1lcr
-
-	ldx #19*2	; 115200 BAUD
-
-;	ldx #17*2	; 38400 BAUD
-;	ldx #15*2	; 9600 BAUD
-
-	;ldx #11*2	; 2400 BAUD
-
-	lda uart_divisor,x
-	sta uart1dll	
-
-	lda uart_divisor+1,x
-	sta uart1dlh
-
-	lda #%00000011	; 8N1
-
-	sta uart1lcr
-
- 	;lda #87		; no FIFO enable and 
- 	lda #7		; no FIFO enable and 
-				; clear FIFOs, 
-	sta uart1fcr	; trigger at 1 byte
-	; The above will not disabl e the fifo.
-	; This will:
-	lda #0
-	sta uart1fcr	; FIFO off
-
-	sta uart1ier	; polled mode (so far) 
-	sta uart1mcr	; reset DTR, RTS
-	and #%00001100			; keep OUT1, OUT2 values
-	sta uart1mcr		; reset DTR, RTS
-	clc
-
-	rts
-;----------------------------------------------------------------------------------------------
 
 ;----------------------------------------------------------------------------------------------
 ; send byte in A 
@@ -620,11 +480,8 @@ uart_divisor
 ; Jump table
 ;----------------------------------------------------------------------------------------------
 *=$ff00
-strout 		jmp i_strout
-chrhex 		jmp i_chrhex
 chrout		jmp i_uart_tx
 chrin		jmp i_uart_rx
-lcdbusy 	jmp i_lcdbusy
 lcdclear	jmp i_lcdclear
 lcdprint 	jmp i_lcdprint
 lcdstring 	jmp i_lcdstring
@@ -632,7 +489,6 @@ lcdhex 		jmp i_lcdhex
 lcddec 		jmp i_lcddec
 lcddecz 	jmp i_lcddecz
 irqhandler  jmp i_irqhandler
-clockout    jmp i_clockout
 ;----------------------------------------------------------------------------------------------
 
 ;----------------------------------------------------------------------------------------------
