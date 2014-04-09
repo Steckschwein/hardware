@@ -1,17 +1,17 @@
-v 20130925 2
-T 2400 7300 8 10 1 1 0 6 1
-refdes=U?
+v 20110115 2
+T 2400 7300 8 10 0 1 0 6 1
+device=at28c256
 T 400 7150 9 8 1 0 0 0 2
 AT28C256
 
 T 400 7450 5 10 0 0 0 0 1
-device=at28c64
+
 T 400 7650 5 10 0 0 0 0 1
-footprint=SO28
+footprint=DIP28
 T 400 9250 5 10 0 0 0 0 1
-author=Marek Peca <mp@duch.cz>
+author=Thomas Woinke <t.woinke@mnet-mail.de>
 T 400 7850 5 10 0 0 0 0 1
-description=64Kx8 parallel EEPROM
+description=256Kx8 parallel EEPROM
 T 400 8050 5 10 0 0 0 0 1
 numslots=0
 T 400 8250 5 10 0 0 0 0 1
@@ -315,3 +315,5 @@ pinnumber=1
 T 450 1200 9 8 1 1 0 0 1
 pinlabel=A14
 }
+T 1500 4200 8 10 1 1 0 0 1
+refdes=U?

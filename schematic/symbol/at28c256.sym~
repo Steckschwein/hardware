@@ -1,17 +1,17 @@
-v 20130925 2
-T 2400 7300 8 10 1 1 0 6 1
-refdes=U?
+v 20110115 2
+T 2400 7300 8 10 0 1 0 6 1
+device=at28c256
 T 400 7150 9 8 1 0 0 0 2
 AT28C256
 
 T 400 7450 5 10 0 0 0 0 1
-device=at28c64
+
 T 400 7650 5 10 0 0 0 0 1
-footprint=SO28
+footprint=DIP28
 T 400 9250 5 10 0 0 0 0 1
-author=Marek Peca <mp@duch.cz>
+author=Thomas Woinke <t.woinke@mnet-mail.de>
 T 400 7850 5 10 0 0 0 0 1
-description=64Kx8 parallel EEPROM
+description=256Kx8 parallel EEPROM
 T 400 8050 5 10 0 0 0 0 1
 numslots=0
 T 400 8250 5 10 0 0 0 0 1
@@ -249,44 +249,32 @@ pinlabel=A1
 T 450 6400 5 8 0 1 0 2 1
 pintype=in
 }
-P 2700 3200 2500 3200 1 0 0
-{
-T 2495 3245 5 8 1 1 0 0 1
-pinnumber=20
-T 2500 3250 5 8 0 1 180 8 1
-pinseq=19
-T 2345 3195 9 8 1 1 0 6 1
-pinlabel=CE
-T 2350 3200 5 8 0 1 180 2 1
-pintype=in
-}
-L 2350 3376 2122 3376 3 0 0 0 -1 -1
-V 2450 3200 50 6 0 0 0 -1 -1 0 -1 -1 -1 -1 -1
-P 2700 2800 2500 2800 1 0 0
+P 2700 2800 2400 2800 1 0 0
 {
 T 2495 2845 5 8 1 1 0 0 1
-pinnumber=22
+pinnumber=20
 T 2500 2850 5 8 0 1 180 8 1
-pinseq=21
+pinseq=19
 T 2345 2795 9 8 1 1 0 6 1
-pinlabel=OE
+pinlabel=CE
 T 2350 2800 5 8 0 1 180 2 1
 pintype=in
 }
-L 2100 3000 2300 3000 3 0 0 0 -1 -1
+L 2350 2976 2122 2976 3 0 0 0 -1 -1
 V 2450 2800 50 6 0 0 0 -1 -1 0 -1 -1 -1 -1 -1
 P 2700 2400 2400 2400 1 0 0
 {
-T 2495 2445 5 8 1 1 0 0 1
-pinnumber=1
+T 2495 2845 5 8 1 1 0 0 1
+pinnumber=22
 T 2500 2450 5 8 0 1 180 8 1
-pinseq=1
+pinseq=21
 T 2345 2395 9 8 1 1 0 6 1
-pinlabel=RDY/BUSY
+pinlabel=OE
 T 2350 2400 5 8 0 1 180 2 1
 pintype=in
 }
-L 1930 2524 2354 2524 3 0 0 0 -1 -1
+L 2100 2600 2300 2600 3 0 0 0 -1 -1
+V 2450 2400 50 6 0 0 0 -1 -1 0 -1 -1 -1 -1 -1
 P 2700 2000 2500 2000 1 0 0
 {
 T 2495 2045 5 8 1 1 0 0 1

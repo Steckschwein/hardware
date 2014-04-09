@@ -1,0 +1,2 @@
+schematics cpu.sch memory.sch reset.sch
+output-name 6502
