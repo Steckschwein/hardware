@@ -1,29 +1,29 @@
-unnamed_net23	R2-1 CONN1-4 
+unnamed_net24	R2-1 CONN1-4 
 RW	U8-1 
-unnamed_net22	C12-1 U10-1 
-unnamed_net21	CONN1-7 U10-14 
-unnamed_net20	CONN1-8 U10-13 
+unnamed_net23	C12-1 U10-1 
+unnamed_net22	CONN1-7 U10-14 
+unnamed_net21	CONN1-8 U10-13 
 RTS_TTL	U10-11 
-unnamed_net19	CONN1-2 U10-8 
-unnamed_net18	CONN1-3 U10-7 
-unnamed_net17	C14-2 U10-6 
-unnamed_net16	C15-2 U10-5 
-unnamed_net15	C15-1 U10-4 
-unnamed_net14	C12-2 U10-3 
-unnamed_net13	R2-2 C13-1 U10-2 
+unnamed_net20	CONN1-2 U10-8 
+unnamed_net19	CONN1-3 U10-7 
+unnamed_net18	C14-2 U10-6 
+unnamed_net17	C15-2 U10-5 
+unnamed_net16	C15-1 U10-4 
+unnamed_net15	C12-2 U10-3 
+unnamed_net14	R2-2 C13-1 U10-2 
 TXD_TTL	U10-10 U9-11 
-unnamed_net12	U9-32 
-unnamed_net11	U11-1 U9-30 
-unnamed_net10	U8-14 U9-21 
+unnamed_net13	U9-32 
+unnamed_net12	U11-1 U9-30 
+unnamed_net11	U8-14 U9-21 
 RXD_TTL	U10-9 U9-10 
-unnamed_net9	U11-12 U9-35 
-unnamed_net8	U8-15 U9-18 
+unnamed_net10	U11-12 U9-35 
+unnamed_net9	U8-15 U9-18 
 CTS_TTL	U10-12 U9-36 
-unnamed_net7	S1-2 C1-1 U1-2 
-unnamed_net6	C2-1 U1-7 R1-1 U1-6 
-unnamed_net5	C4-2 U1-5 
-unnamed_net4	U2-2 U2-1 U1-3 
-unnamed_net3	U6-27 
+unnamed_net8	S1-2 C1-1 U1-2 
+unnamed_net7	C2-1 U1-7 R1-1 U1-6 
+unnamed_net6	C4-2 U1-5 
+unnamed_net5	U2-2 U2-1 U1-3 
+unnamed_net4	U6-27 
 ROM	U6-20 U7-14 
 HIRAM	U5-20 U7-17 
 UART	U8-4 U7-18 
@@ -36,10 +36,11 @@ OE	U6-22 U5-22 U4-22 U2-8 U2-13
 WE	U5-27 U4-27 U2-11 
 RESET	R2-1 U11-13 U2-3 U3-40 
 PGND	C14-1 U8-5 U8-3 U8-2 U9-22 U9-19 C16-2 C11-2 C10-2 C9-2 C8-2 C7-2 C6-2 C5-2 C2-2 C4-1 R2-2 U3-21 
-Vcc	C13-2 R2-2 U11-14 U8-16 U10-16 U9-40 C16-1 C11-1 C10-1 C9-1 C8-1 C7-1 C6-1 C5-1 U1-4 R2-1 R1-2 U1-8 U6-28 U5-28 U4-28 R5-1 R4-1 R3-2 U2-14 U3-8 
-unnamed_net2	U7-9 U2-10 U2-9 U3-34 
+Vcc	C13-2 R2-2 U11-14 U8-16 U10-16 U9-40 C16-1 C11-1 C10-1 C9-1 C8-1 C7-1 C6-1 C5-1 U1-4 R2-1 R1-2 U1-8 U6-28 U5-28 U4-28 R6-1 R5-1 R4-1 R3-2 U2-14 U3-8 
+unnamed_net3	U7-9 U2-10 U2-9 U3-34 
 PHI2	U8-6 U7-10 U2-12 U3-39 
-unnamed_net1	R5-2 U3-2 
+unnamed_net2	R5-2 U3-2 
+unnamed_net1	R6-2 U3-36 
 IRQ	U11-2 R3-1 U3-4 
 NMI	R4-2 U3-6 
 D7	U9-8 U6-19 U5-19 U4-19 U3-26 
