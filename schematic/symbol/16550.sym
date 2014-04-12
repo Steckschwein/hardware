@@ -1,8 +1,8 @@
-v 20130925 2
+v 20110115 2
 B 300 400 2500 8000 3 0 0 0 -1 -1 0 -1 -1 -1 -1 -1
 {
 T 300 8650 5 10 0 0 0 0 1
-device=TL16C450N
+device=16550
 }
 P 0 7200 300 7200 1 0 0
 {
@@ -420,9 +420,9 @@ net=Vcc:40
 T 300 9250 5 10 0 0 0 0 1
 net=GND:20
 T 292 9646 5 10 0 0 0 0 1
-description=16C450 Serial UART for RS-232
+description=16550 Serial UART for RS-232
 T 292 9846 5 10 0 0 0 0 1
-author=Alan Somers <asomers@gmail.com>
+author=Thomas Woinke <t.woinke@mnet-mail.de>
 T 2500 8500 5 10 1 1 0 0 1
 refdes=U?
 T 300 9450 5 10 0 0 0 0 1
@@ -455,3 +455,7 @@ pinnumber=24
 T 3100 600 5 10 0 0 0 0 1
 pinseq=24
 }
+T 1400 5500 8 10 1 1 0 0 1
+device=16550
+T 1600 5300 8 10 1 1 0 0 1
+refdes=U?
