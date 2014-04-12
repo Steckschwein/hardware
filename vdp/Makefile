@@ -1,7 +1,7 @@
 all: vdp
 
 clean:
-	rm *.bin
+	rm -f *.bin
 	
 vdp: t9929.bin
 

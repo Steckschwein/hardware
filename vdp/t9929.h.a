@@ -2,6 +2,8 @@ a_vram 		= $d400
 a_vreg		= $d401
 a_vram_w		= $d500
 a_vreg_w		= $d501
+
+;gfx_mode_1  =
 vreg_r0 	= $80
 vreg_r1 	= $81
 vreg_r2 	= $82
