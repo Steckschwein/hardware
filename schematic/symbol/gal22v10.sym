@@ -251,7 +251,7 @@ P 2100 600 1800 600 1 0 0
 T 2100 600 5 10 0 0 0 0 1
 pintype=pwr
 T 1745 595 5 10 1 1 0 6 1
-pinlabel=VCC
+pinlabel=VDD
 T 1895 645 5 10 1 1 0 0 1
 pinnumber=24
 T 2100 600 5 10 0 0 0 0 1
@@ -262,7 +262,7 @@ P 2100 200 1800 200 1 0 0
 T 2100 200 5 10 0 0 0 0 1
 pintype=pwr
 T 1745 195 5 10 1 1 0 6 1
-pinlabel=GND
+pinlabel=VSS
 T 1895 245 5 10 1 1 0 0 1
 pinnumber=12
 T 2100 200 5 10 0 0 0 0 1
