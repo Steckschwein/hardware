@@ -1,26 +1,37 @@
 *=$0200
-!src "../bios/defs.h.a"
-!src "../bios/bios.h.a"
-adrl	= tmp0
-adrh	= tmp1
-pattern = tmp2
-   
+;!src "../bios/defs.h.a"
+;!src "../bios/bios.h.a"
+adrl	   =$f0
+adrh	   =$f1
+   cld
+   ldx   #$ff
+   txs   
+   ; for standalone test
+   jmp   main
+   !src "memtest.withoutbios.h.a"
+main:
+	lda   #<msg
+	sta   msgptr
+	lda   #>msg
+	sta   msgptr+1
+
 	lda   #$00
 	sta   adrl
-   sta   pattern
 	lda   #$03
 	sta   adrh
    ldy   #$00
    jsr   mem_ca
--	lda   pattern
+   ldx   #$00
+-	
+   lda   pattern, x
    sta   (adrl),y
 	lda   (adrl),y
-	cmp   pattern
+	cmp   pattern, x
 	bne   +
-   inc   pattern
+   inx
+   cpx   #$0a
    bne   -
-   lda   #$00
-   sta   pattern
+   ldx   #$00
 	iny
    bne   -
 	inc   adrh
@@ -34,12 +45,9 @@ pattern = tmp2
    jsr   lcdhex
 -	jmp -	
 mem_ca:
-   phy
+   tya            ;save adress low byte
+   pha
    jsr   lcdclear
-	lda   #<msg
-	sta   msgptr
-	lda   #>msg
-	sta   msgptr+1
    jsr   lcdstring
    lda   adrh
    jsr   lcdhex
@@ -47,3 +55,4 @@ mem_ca:
    jsr   lcdhex
    rts
 msg	!text "Mem ", $00
+pattern  !byte $f0,$0f,$96,$69,$a9,$9a,$00,$ff
