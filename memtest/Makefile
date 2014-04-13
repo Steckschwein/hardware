@@ -1,6 +1,6 @@
 all: memtest.bin
 clean:
-	rm *.bin *.labels
+	rm -f *.bin *.labels
 
 %.bin: %.a
 	acme -v -f plain -l $<.labels  --cpu 65c02 -o $@ $<
