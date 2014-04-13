@@ -1,7 +1,7 @@
 *=$1000
 adrl     =$f0
 adrh     =$f1
-pattern  =$f3
+pattern  =$f2
 msgptr   =  $fe
 !source "t9929.h.a"
 VDP_WAIT_CYCLES = 4300; 4300µs after vertical blank int, means 0,0043s / 0,0000005s (time for one cpu cycle at 2Mhz) = 8600cycles = 4300 NOP's -
@@ -9,7 +9,7 @@ VDP_WAIT_CYCLES = 4300; 4300µs after vertical blank int, means 0,0043s / 0,0000
    jsr   vdp_clear_vram
    jsr   vdp_load_charset
    jsr   vdp_write
-   jsr   vdp_color
+   ;jsr   vdp_color
    jsr   lcdclear
    lda   #'x'
    jsr   lcdprint
@@ -29,10 +29,10 @@ vdp_init:
    ;reg 7 7 - cyan background color
    ldx   #$00
    ldy	#$80
--  +nops 16
+-  +nops 8
    lda   vdp_init_bytes,x
    sta   a_vreg_w      ; write data to vdp
-   +nops 16
+   +nops 8
    sty   a_vreg_w      ; write the register number to vdp, 80 - reg0 , 81 - reg1 ... see datasheet page 4.1
    iny
    inx
@@ -40,10 +40,10 @@ vdp_init:
    bne   -
    rts
 vdp_sreg:
-   jsr   nops 
+   +nops 8
    stx   a_vreg_w
-   jsr   nops 
-   stx   a_vreg_w
+   +nops 8
+   sty   a_vreg_w
    rts
 vdp_clear_vram:
    ldx   #$00
@@ -296,7 +296,7 @@ l2:   dey
       rts
       
 nops:
-   +nops 32
+   +nops 16
    rts   
    
   !source "char.a"
