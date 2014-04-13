@@ -1,0 +1,42 @@
+*=$0200
+;-------------------------------------------------------------------------------------------	---
+lcdctl		= $d200
+lcddata		= lcdctl+1 
+   jsr   i_lcdclear
+   lda   #'x'
+   jsr   i_lcdprint
+-  jmp   -
+
+i_lcdclear  pha
+			lda #$01
+			sta lcdctl
+			jsr i_lcdbusy
+			lda #$80
+			sta lcdctl
+			jsr i_lcdbusy
+			pla
+			rts
+
+; *** Wait for LCD busy bit to clear
+; registers preserved
+i_lcdbusy   pha
+-			lda lcdctl            ;read from lcd register 0
+			and #$80            ;check bit 7 (busy)
+			bne -
+			pla
+			rts
+
+         ; *** Print character on LCD (40 character)
+; registers preserved
+i_lcdprint  pha
+			sta lcddata            ;output the character
+			jsr i_lcdbusy
+			lda lcdctl            ;get current ddram address
+			and #$7f
+			cmp #$28          	;wrap from pos $13 (line 1 char 20)...
+			bne +
+			lda #$c0            	;...to $40 (line 2 char 1)
+			sta lcdctl
+			jsr i_lcdbusy
++			pla
+			rts
