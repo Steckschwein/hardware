@@ -10,6 +10,10 @@ read_data
 
 			jsr lcdstring
 
+			lda #$c0
+			sta lcdctl
+			jsr i_lcdbusy
+
 			; load start address
 			jsr chrin
 			sta startaddr
@@ -107,7 +111,7 @@ read_data
 			; jsr strout
 
 			jmp (startaddr)
-txt			!text "BIOS 0404b "
+txt			!text "BIOS 1304 "
 			!byte $00
 
 
@@ -221,10 +225,10 @@ init_uart
 	sta uart1lcr
 
  	;lda #87		; no FIFO enable and 
- 	lda #7		; no FIFO enable and 
-				; clear FIFOs, 
+  	lda #7		; no FIFO enable and 
+	; 			; clear FIFOs, 
 	sta uart1fcr	; trigger at 1 byte
-	; The above will not disabl e the fifo.
+	; ; The above will not disabl e the fifo.
 	; This will:
 	lda #0
 	sta uart1fcr	; FIFO off
@@ -489,6 +493,8 @@ lcdhex 		jmp i_lcdhex
 lcddec 		jmp i_lcddec
 lcddecz 	jmp i_lcddecz
 irqhandler  jmp i_irqhandler
+lcdbusy 	jmp i_lcdbusy
+
 ;----------------------------------------------------------------------------------------------
 
 ;----------------------------------------------------------------------------------------------

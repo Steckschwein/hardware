@@ -9,10 +9,13 @@
 ;   7  | DAT/DO |          7
 
 	sei
+
+
 	lda #%01111111
 	sta via1ddrb
 	lda #%01111110
 	sta via1portb
+
 
 wait74
 	ldx #74
@@ -95,6 +98,16 @@ clk
 	plx
 	pla
 	rts
+
+
+	; *** Wait for LCD busy bit to clear
+; registers preserved
+i_lcdbusy   pha
+-			lda lcdctl            ;read from lcd register 0
+			and #$80            ;check bit 7 (busy)
+			bne -
+			pla
+			rts
 ; cmd0 reset card to SPI mode
 cmd0	!byte %01000000, %00000000, %00000000, %00000000, %00000000, %10010101
 ; cmd58 requests the contents of the operating conditions register for the connected card

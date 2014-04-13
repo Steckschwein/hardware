@@ -8,7 +8,7 @@ main
 	jsr lcdclear
 
 -
-	jsr uart_rx
+	jsr chrin
 	jsr lcdhex
 
 	lda #' '

@@ -6,4 +6,6 @@ lcdclear	= $ff06	; unused
 chrin	= $ff03	; ?
 lcdstring	= $ff0c	; ?
 chrout	= $ff00	; ?
+jiffies	= $fc	; unused
 lcddecz	= $ff15	; unused
+lcdbusy = $ff1b ; unused
