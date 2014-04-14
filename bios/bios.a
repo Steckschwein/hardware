@@ -111,7 +111,7 @@ read_data
 			; jsr strout
 
 			jmp (startaddr)
-txt			!text "BIOS 1304 "
+txt			!text "BIOS 1404a "
 			!byte $00
 
 
@@ -225,11 +225,9 @@ init_uart
 	sta uart1lcr
 
  	;lda #87		; no FIFO enable and 
-  	lda #7		; no FIFO enable and 
+ ; 	lda #7		; no FIFO enable and 
 	; 			; clear FIFOs, 
-	sta uart1fcr	; trigger at 1 byte
-	; ; The above will not disabl e the fifo.
-	; This will:
+;	sta uart1fcr	; trigger at 1 byte
 	lda #0
 	sta uart1fcr	; FIFO off
 
@@ -347,20 +345,34 @@ i_lcdhex    pha
 ;----------------------------------------------------------------------------------------------
 ; send byte in A 
 ;----------------------------------------------------------------------------------------------
+; i_uart_tx
+; 	pha
+; 	phx
+
+; 	tax
+
+; -	lda uart1lsr
+; 	and #$20
+; 	beq -
+
+; 	stx uart1rxtx
+	
+; 	plx
+; 	pla
+; 	rts
+
 i_uart_tx
 	pha
-	phx
 
-	tax
 
 -	lda uart1lsr
 	and #$20
 	beq -
 
-	stx uart1rxtx
-	
-	plx
-	pla
+	pla 
+
+	sta uart1rxtx
+
 	rts
 
 ;----------------------------------------------------------------------------------------------

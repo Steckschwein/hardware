@@ -1,11 +1,10 @@
 lcdhex	= $ff0f	; unused
 lcddec	= $ff12	; unused
 lcdprint	= $ff09	; ?
+lcdbusy	= $ff1b	; unused
 irqhandler	= $ff18	; ?
 lcdclear	= $ff06	; unused
 chrin	= $ff03	; ?
 lcdstring	= $ff0c	; ?
 chrout	= $ff00	; ?
-jiffies	= $fc	; unused
 lcddecz	= $ff15	; unused
-lcdbusy = $ff1b ; unused
