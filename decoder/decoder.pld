@@ -40,8 +40,8 @@ VCC
 
 ELCD     = PHI2 * G1 * A2*/A1*A0 * /B3*/B2*B1*/B0	; $d200 - LCD-Display at $d200
 
-/VDPCSR  = RW  * G1 * A2*/A1*A0 * /B3*B2*/B1*/B0	; $d400 - Video CSR     1101 0100 d400
-/VDPCSW  = /RW* PHI2 * G1*A2*/A1*A0  * /B3*B2*/B1*B0		; $d500 - Video CSW     1101 0101 d500
+/VDPCSR  = RW        * G1*A2*/A1*A0  * /B3*B2*/B1*/B0	; $d400 - Video CSR     1101 0100 d400
+/VDPCSW  = /RW*PHI2  * G1*A2*/A1*A0  * /B3*B2*/B1*B0		; $d500 - Video CSW     1101 0101 d500
 
 /UARTWR  = /RW * PHI2 * G1*A2*/A1*A0 * /B3*/B2*/B1*/B0	; $d000 - UART
 /UARTRD  = RW * G1*A2*/A1*A0 * /B3*/B2*/B1*/B0			; $d000 - UART
