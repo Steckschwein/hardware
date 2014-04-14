@@ -1,14 +1,12 @@
 *=$0200
-;!src "../bios/defs.h.a"
-;!src "../bios/bios.h.a"
+!src "../bios/defs.h.a"
+!src "../bios/bios.h.a"
 adrl	   =$f0
 adrh	   =$f1
    cld
    ldx   #$ff
    txs   
-   ; for standalone test
-   jmp   main
-   !src "memtest.withoutbios.h.a"
+
 main:
 	lda   #<msg
 	sta   msgptr
