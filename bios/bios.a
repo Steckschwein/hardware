@@ -108,10 +108,13 @@ read_data
 			lda #'K'
 			jsr chrout
 
-			; jsr strout
+			; re-init stack pointer
+			ldx #$ff
+			txs
 
+			; jump to new code
 			jmp (startaddr)
-txt			!text "BIOS 1404b "
+txt			!text " V1404d "
 			!byte $00
 
 
@@ -153,12 +156,6 @@ adrl	   =$f0
 adrh	   =$f1
 
 memcheck:
- 
-	lda   #<msg
-	sta   msgptr
-	lda   #>msg
-	sta   msgptr+1
-
 	lda   #$00
 	sta   adrl
 	lda   #$03
@@ -193,14 +190,12 @@ mem_ca:
 	tya            ;save adress low byte
 	pha
 	jsr   lcdclear
-	jsr   lcdstring
 	lda   adrh
 	jsr   lcdhex
 	pla
 	jsr   lcdhex
 	rts
-msg	!text "Mem ", $00
-pattern  !byte $f0,$0f,$96,$69,$a9,$9a,$00,$ff
+pattern  !byte $f0,$0f,$5a,$aa,$00,$ff
 
 ;----------------------------------------------------------------------------------------------
 ; IO_NMI Routine. Handle NMI
