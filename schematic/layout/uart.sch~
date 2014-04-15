@@ -354,7 +354,7 @@ C 46500 40500 1 0 1 XTAL-1.sym
 T 46100 43300 5 10 0 0 0 6 1
 device=XTAL
 T 44900 41900 5 10 1 1 0 6 1
-refdes=X?
+refdes=X2
 T 46105 42700 5 10 0 0 0 6 1
 footprint=OSC14
 }
