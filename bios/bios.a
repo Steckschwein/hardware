@@ -1,4 +1,11 @@
 *= $e000			; ROM Start
+; Put charset here
+!for i, $1000 {
+			brk
+}
+
+
+*=$f000
 !src "defs.h.a"
 
 read_data
@@ -114,7 +121,7 @@ read_data
 
 			; jump to new code
 			jmp (startaddr)
-txt			!text " V1404d "
+txt			!text " V1604"
 			!byte $00
 
 
