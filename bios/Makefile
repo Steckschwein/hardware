@@ -5,6 +5,7 @@ clean:
 
 %.h.a: %.a
 	grep  -e "\$$ff[0-9a-f][0-9a-f]" $<.labels | sort > $@
+	#grep  -e "sys_" $<.labels | sort >> $@
    
 %.bin: %.a
 	acme -v -f plain -l $<.labels  --cpu 65c02 -o $@ $<

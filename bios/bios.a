@@ -550,15 +550,25 @@ uart_divisor
 ; Jump table
 ;----------------------------------------------------------------------------------------------
 *=$ff00
+sys_chrout
 chrout		jmp i_uart_tx
+sys_chrin
 chrin		jmp i_uart_rx
+sys_lcdclear
 lcdclear	jmp i_lcdclear
+sys_lcdprint
 lcdprint 	jmp i_lcdprint
+sys_lcdstring
 lcdstring 	jmp i_lcdstring
+sys_lcdhex
 lcdhex 		jmp i_lcdhex 
+sys_lcddec
 lcddec 		jmp i_lcddec
+sys_lcddecz
 lcddecz 	jmp i_lcddecz
+sys_irqhandler
 irqhandler  jmp i_irqhandler
+sys_lcdbusy
 lcdbusy 	jmp i_lcdbusy
 
 ;----------------------------------------------------------------------------------------------
