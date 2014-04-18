@@ -47,7 +47,7 @@ main:
    pla   
    jsr   lcdhex
 ;-	jmp -	
-   jmp $f000
+   jmp sys_upload
 
 mem_ca:
    phx
