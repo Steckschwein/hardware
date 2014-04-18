@@ -1,8 +1,10 @@
 *=$0200
 !src "../bios/defs.h.a"
 !src "../bios/bios.h.a"
-adrl	   =$f0
-adrh	   =$f1
+adrl	   =$f3
+adrh	   =$f4
+foobar   =$f2
+
    cld
    ldx   #$ff
    txs   
@@ -12,6 +14,9 @@ main:
 	sta   msgptr
 	lda   #>msg
 	sta   msgptr+1
+
+   jsr   lcdclear
+   jsr   lcdstring
 
 	lda   #$00
 	sta   adrl
@@ -41,16 +46,30 @@ main:
    jsr   lcdprint   
    pla   
    jsr   lcdhex
--	jmp -	
+;-	jmp -	
+   jmp $f000
+
 mem_ca:
+   phx
+   phy
+   ldx #$09
+   ldy #$01
+   jsr lcdxy
+   plx
+   ply
+ 
    tya            ;save adress low byte
    pha
-   jsr   lcdclear
-   jsr   lcdstring
+ ;  sta foobar
+
    lda   adrh
    jsr   lcdhex
    pla
+;   lda foobar
    jsr   lcdhex
    rts
-msg	!text "Mem ", $00
+msg	!text "Memtest: ", $00
+
+lcdfoo:
+   rts
 pattern  !byte $f0,$0f,$96,$69,$a9,$9a,$00,$ff
