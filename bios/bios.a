@@ -9,13 +9,9 @@
 !src "defs.h.a"
 
 read_data
-			lda #<txt
-			sta msgptr
-
-			lda #>txt
-			sta msgptr+1
-
-			jsr lcdstring
+			ldx #$00
+			ldy #$01
+			jsr i_lcdxy
 
 			lda #$c0
 			sta lcdctl
@@ -121,8 +117,7 @@ read_data
 
 			; jump to new code
 			jmp (startaddr)
-txt			!text " V1604"
-			!byte $00
+
 
 
 ;----------------------------------------------------------------------------------------------
@@ -156,6 +151,18 @@ do_reset
 			
 ;			cli 
 			jsr memcheck
+
+			lda #<biosversion
+			sta msgptr
+
+			lda #>biosversion
+			sta msgptr+1
+
+			ldy #$02
+			ldx #$00
+			jsr lcdxy
+
+			jsr lcdstring
 			jmp read_data
 	
 	
@@ -394,6 +401,34 @@ i_lcdhex    pha
 			pla
 			rts
 
+;----------------------------------------------------------------------------------------------
+; lcdxy 
+; Set LCD-Cursor to position
+; row in Y, col in X
+;----------------------------------------------------------------------------------------------
+
+i_lcdxy
+	pha
+
+	lda #$80
+	sta tmp0
+
+	cpy #$02
+	bne +
+	lda #$c0
+	sta tmp0
++
+	txa
+	clc
+	adc tmp0
+
+	sta lcdctl
+	jsr lcdbusy
+
+	pla
+	rts
+;----------------------------------------------------------------------------------------------
+
 
 
 ;----------------------------------------------------------------------------------------------
@@ -520,6 +555,9 @@ hexascii	!text "0123456789ABCDEF"
 ; Lookup table for decimal to ASCII
 dec_tbl		!byte 128,160,200
 
+; Version String
+biosversion	!text "V1804", $00
+
 ;----------------------------------------------------------------------------------------------
 ;	divisor values for 1.8432 MHz Crystal
 ;	value		; baud	; #
@@ -570,6 +608,8 @@ sys_irqhandler
 irqhandler  jmp i_irqhandler
 sys_lcdbusy
 lcdbusy 	jmp i_lcdbusy
+sys_lcdxy
+lcdxy 		jmp i_lcdxy
 
 ;----------------------------------------------------------------------------------------------
 
