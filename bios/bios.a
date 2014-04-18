@@ -8,7 +8,7 @@
 *=$f000
 !src "defs.h.a"
 
-read_data
+upload
 			ldx #$00
 			ldy #$01
 			jsr i_lcdxy
@@ -163,13 +163,17 @@ do_reset
 			jsr lcdxy
 
 			jsr lcdstring
-			jmp read_data
+
+			jmp upload
 	
 	
-adrl	   =$f0
-adrh	   =$f1
+adrl	   =$00
+adrh	   =$01
 
 memcheck:
+	lda #'$'
+	jsr lcdprint
+
 	lda   #$00
 	sta   adrl
 	lda   #$03
@@ -196,14 +200,25 @@ memcheck:
 	jsr   mem_ca
 	lda   #$20
 	jsr   lcdprint   
+	lda #'$'
+	jsr lcdprint
 	pla   
 	jsr   lcdhex
 	rts
 
 mem_ca:
+	phx
+	phy
+	ldx #$01
+	ldy #$01
+	jsr lcdxy
+	plx
+	ply
+
+
 	tya            ;save adress low byte
 	pha
-	jsr   lcdclear
+;	jsr   lcdclear
 	lda   adrh
 	jsr   lcdhex
 	pla
@@ -556,7 +571,7 @@ hexascii	!text "0123456789ABCDEF"
 dec_tbl		!byte 128,160,200
 
 ; Version String
-biosversion	!text "V1804", $00
+biosversion	!text "V1804a", $00
 
 ;----------------------------------------------------------------------------------------------
 ;	divisor values for 1.8432 MHz Crystal
@@ -610,6 +625,7 @@ sys_lcdbusy
 lcdbusy 	jmp i_lcdbusy
 sys_lcdxy
 lcdxy 		jmp i_lcdxy
+sys_upload	jmp upload
 
 ;----------------------------------------------------------------------------------------------
 
