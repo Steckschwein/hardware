@@ -1,14 +1,25 @@
 *=$1000
+!source "t9929.h.a"
 adrl     =$f0
 adrh     =$f1
 pattern  =$f2
 TEXT_COLOR     = Dark_Green
 TEXT_BGCOLORT  = Black
 msgptr   =  $f4
-!source "t9929.h.a"
 VDP_WAIT_CYCLES = 4300; 4300µs after vertical blank int, means 0,0043s / 0,0000005s (time for one cpu cycle at 2Mhz) = 8600cycles = 4300 NOP's -
    jmp   main
-msg_1	!text " HEY THOMAS, THESE ARE THE FIRST  LETTERS WRITTEN ON SCREEN WITH          THE TMS9929 VDP!         TODAY IS THE 15.04.2014          +++HAPPY BIRTHDAY+++           SO FAR... /MLA ;)", $00
+msg_1	!text " Hey Thoma, these are the first letters written on screen with          THE TMS9929 VDP!         TODAY IS THE 15.04.2014          +++HAPPY BIRTHDAY+++           SO FAR... /MLA ;)", $00
+
+sprite1:
+		+SpriteLine %...#....
+		+SpriteLine %...#...
+		+SpriteLine %#######.
+		+SpriteLine %.#####..
+		+SpriteLine %..###...
+		+SpriteLine %.##.##..
+		+SpriteLine %.#...#..
+		+SpriteLine %........
+sprite2:
 
 main:   
    jsr   lcdclear
@@ -18,8 +29,9 @@ main:
    jsr   vdp_clear_vram
    jsr   vdp_load_charset
    jsr   vdp_blank_screen
-   jsr   vdp_write
    jsr   vdp_color
+   jsr   vdp_write
+   jsr   vdp_sprite
    jsr   lcdclear
    lda   #'x'
    jsr   lcdprint
@@ -27,6 +39,10 @@ main:
    ;jsr vdp_memtest_2
 -
    jmp   -
+	
+vdp_sprite:
+	rts
+	
 vdp_init_bytes	!byte 0,$c0,$05,$80,$00,$40,$00,Dark_Green<<4|Black
 vdp_init:
    ;reg 0 0 - ext. video off, 
@@ -39,10 +55,10 @@ vdp_init:
    ;reg 7 7 - cyan background color
    ldx   #$00
    ldy	#$80
--  +nops 8
+-  +nops	VREG_WAIT
    lda   vdp_init_bytes,x
    sta   a_vreg_w      ; write data to vdp
-   +nops 8
+	+nops	VREG_WAIT
    sty   a_vreg_w      ; write the register number to vdp, 80 - reg0 , 81 - reg1 ... see datasheet page 4.1
    iny
    inx
@@ -50,9 +66,9 @@ vdp_init:
    bne   -
    rts
 vdp_sreg:
-   +nops 8
+   +nops VREG_WAIT
    stx   a_vreg_w
-   +nops 8
+   +nops VREG_WAIT
    sty   a_vreg_w
    rts
 vdp_clear_vram:
@@ -63,7 +79,7 @@ vdp_clear_vram:
    ldx   #$00
    ldy   #$00
 c1:
-   +nops 32
+   +nops VRAM_WAIT
    sta   a_vram_w
    inx
    bne   c1
@@ -76,13 +92,13 @@ vdp_load_charset:
    sta   adrl
    lda   #>charset_c64
    sta   adrh
-   
+	
    ldx   #$00
    ldy   #$40
    jsr   vdp_sreg
    ldx   #$00; page counter   
    ldy   #$00
--  +nops 16
+-  +nops VRAM_WAIT
    lda   (adrl),y
    sta   a_vram_w
    iny
@@ -100,7 +116,7 @@ vdp_blank_screen:
    lda   #$20
    ldx   #$00
    ldy   #$00
--  +nops 8
+- 	+nops	VRAM_WAIT
    sta   a_vram_w
    inx   
    bne   -
@@ -117,7 +133,7 @@ vdp_write:
 -
    lda   msg_1,y
    beq   +
-   +nops 32
+   +nops VRAM_WAIT
    sta   a_vram_w
    iny
    bne   -
@@ -127,7 +143,7 @@ vdp_color:
    ldx   #$00
    ldy   #$60
    jsr   vdp_sreg
--  +nops 32
+-  +nops VRAM_WAIT
    sty   a_vram_w
    inx
    cpx   #$20
@@ -142,7 +158,7 @@ vdp_memtest_2:
    lda   #$96
    sta   pattern
    
-;   jsr   vdp_wait_vb
+   ;jsr   vdp_wait_vb
    
    lda   a_vreg
    jsr   print_x   
@@ -150,25 +166,25 @@ vdp_memtest_2:
    jsr   vdp_vram_read
    ldx   #$96
    jsr   vdp_vram_write
-   +nops 16
+   +nops VRAM_WAIT
    lda   #$69
    sta   a_vram_w
-   +nops 16
+   +nops VRAM_WAIT
    lda   #$f0
    sta   a_vram_w
-   +nops 16
+   +nops VRAM_WAIT
    lda   #$0f
    sta   a_vram_w
    
    jsr   vdp_vram_read
    pha
-   +nops 8
+   +nops VRAM_WAIT
    lda   a_vram
    pha
-   +nops 8
+   +nops VRAM_WAIT
    lda   a_vram
    pha
-   +nops 8
+   +nops VRAM_WAIT
    lda   a_vram
    jsr   print_x
    pla
@@ -273,7 +289,7 @@ vdp_vram_write:
    lda   adrh
    ora   #$40
    sta   a_vreg_w
-   +nops 16
+   +nops VRAM_WAIT
    stx   a_vram_w
    rts
 vdp_vram_read:
@@ -281,7 +297,7 @@ vdp_vram_read:
    sta   a_vreg_w
    lda   adrh
    sta   a_vreg_w
-   +nops 16
+   +nops VRAM_WAIT
    lda   a_vram
    rts
    
@@ -319,7 +335,7 @@ i_nops_48
    +nops 16
 i_nops_32
    +nops 16
-i_nops
+i_nops:
    +nops 16
    rts
    

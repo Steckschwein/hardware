@@ -1,3 +1,5 @@
+VRAM_WAIT	= 16	;1Mhz no wait is required
+VREG_WAIT	= 16
 a_vram 		= $d400
 a_vreg		= $d401
 a_vram_w		= $d500
@@ -33,3 +35,7 @@ White          =$0f
       nop
    }
 }
+!macro SpriteLine .v {
+	!by .v&255
+}
+ 
