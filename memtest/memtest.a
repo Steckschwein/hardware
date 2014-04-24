@@ -3,12 +3,6 @@
 !src "../bios/bios.h.a"
 adrl	   =$f3
 adrh	   =$f4
-foobar   =$f2
-
-   cld
-   ldx   #$ff
-   txs   
-
 main:
 	lda   #<msg
 	sta   msgptr
@@ -60,16 +54,11 @@ mem_ca:
  
    tya            ;save adress low byte
    pha
- ;  sta foobar
 
    lda   adrh
    jsr   lcdhex
    pla
-;   lda foobar
    jsr   lcdhex
    rts
 msg	!text "Memtest: ", $00
-
-lcdfoo:
-   rts
 pattern  !byte $f0,$0f,$96,$69,$a9,$9a,$00,$ff

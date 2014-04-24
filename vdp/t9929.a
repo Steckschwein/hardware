@@ -8,7 +8,7 @@ TEXT_BGCOLORT  = Black
 msgptr   =  $f4
 VDP_WAIT_CYCLES = 4300; 4300µs after vertical blank int, means 0,0043s / 0,0000005s (time for one cpu cycle at 2Mhz) = 8600cycles = 4300 NOP's -
    jmp   main
-msg_1	!text " Hey Thoma, these are the first letters written on screen with          THE TMS9929 VDP!         TODAY IS THE 15.04.2014          +++HAPPY BIRTHDAY+++           SO FAR... /MLA ;)", $00
+msg_1	!text " Hey Thomas, these are the first letters written on screen with          THE TMS9929 VDP!         TODAY IS THE 15.04.2014          +++HAPPY BIRTHDAY+++           so far... /MLA ;)", $00
 
 sprite1:
 		+SpriteLine %...#....
@@ -21,29 +21,41 @@ sprite1:
 		+SpriteLine %........
 sprite2:
 
-main:   
+main:
    jsr   lcdclear
    lda   #'a'
-   jsr   lcdprint
+	jsr   lcdprint
 	jsr   vdp_init
-   jsr   vdp_clear_vram
-   jsr   vdp_load_charset
+ 	jsr   vdp_clear_vram
    jsr   vdp_blank_screen
+   jsr   vdp_load_charset
    jsr   vdp_color
    jsr   vdp_write
    jsr   vdp_sprite
+	
+	+nops	VREG_WAIT
+	lda	#v_reg1_16k|v_reg1_display_on
+	sta	a_vreg_w
+	+nops	VREG_WAIT
+	lda	#v_reg1
+	sta	a_vreg_w
+	
    jsr   lcdclear
    lda   #'x'
    jsr   lcdprint
+	
    ;jsr vdp_memtest
    ;jsr vdp_memtest_2
 -
    jmp   -
-	
+
 vdp_sprite:
 	rts
 	
-vdp_init_bytes	!byte 0,$c0,$05,$80,$00,$40,$00,Dark_Green<<4|Black
+vdp_init_bytes
+	!byte 0
+	!byte v_reg1_16k
+	!byte $05,$80,$00,$40,$00,Dark_Green<<4|Black
 vdp_init:
    ;reg 0 0 - ext. video off, 
    ;reg 1 c0 - 4108/4116 DRAM, int disabled, video on, text mode, size 1, magnitude off
@@ -88,9 +100,9 @@ c1:
    bne   c1
    rts
 vdp_load_charset:
-   lda   #<charset_c64
+   lda   #<charset
    sta   adrl
-   lda   #>charset_c64
+   lda   #>charset
    sta   adrh
 	
    ldx   #$00
@@ -303,7 +315,7 @@ vdp_vram_read:
    
 vdp_bgcolor:
 	stx   a_vreg
-	lda   #vreg_r7
+	lda   #v_reg7
 	sta   a_vreg
 	rts
 vdp_post:
@@ -328,18 +340,8 @@ l2:   dey
       dex
       bne   l1
       rts
-
-i_nops_64
-   +nops 16
-i_nops_48
-   +nops 16
-i_nops_32
-   +nops 16
-i_nops:
-   +nops 16
-   rts
-   
-  !source "char.ascii.a"
+		
+  !source "../charsets/char.ascii.h.a"
    
 ; TODO FIXME - JUSTT FOR TESTING
 ; LCD 

@@ -5,9 +5,6 @@ clean:
 	
 vdp: t9929.bin
 
-charrom:
-	sh charrom.sh
-   
 %.bin: %.a
 	acme -v -f plain -l $<.labels --cpu 65c02 -o $@ $<
 
