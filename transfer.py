@@ -39,11 +39,11 @@ try:
 	
 
 	print "Startaddress : 0x%04x (%d)" % (startaddr, startaddr)
-	print "length    	: %d bytes" % (length, )
+	print "Length    	: %d bytes" % (length, )
 
 	ser.flushOutput()
 
-	bytes = ser.write(struct.pack('<h', startaddr))
+	bytes = ser.write(struct.pack('<H', startaddr))
 	if ser.read(2) == 'OK':
 		print "Start address %d bytes" % (bytes, )
 
