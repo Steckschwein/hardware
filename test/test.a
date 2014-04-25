@@ -1,42 +1,37 @@
-*=$0200
-;-------------------------------------------------------------------------------------------	---
-lcdctl		= $d200
-lcddata		= lcdctl+1 
-   jsr   i_lcdclear
-   lda   #'x'
-   jsr   i_lcdprint
--  jmp   -
+*=$1000
+!src "../bios/defs.h.a"
+!src "../bios/bios.h.a"
 
-i_lcdclear  pha
-			lda #$01
-			sta lcdctl
-			jsr i_lcdbusy
-			lda #$80
-			sta lcdctl
-			jsr i_lcdbusy
-			pla
-			rts
+	ldy #$01
+	ldx #39
+	jsr lcdclear
+	jsr lcdxy
 
-; *** Wait for LCD busy bit to clear
-; registers preserved
-i_lcdbusy   pha
--			lda lcdctl            ;read from lcd register 0
-			and #$80            ;check bit 7 (busy)
-			bne -
-			pla
-			rts
+	lda #'X'
+	jsr lcdprint
 
-         ; *** Print character on LCD (40 character)
-; registers preserved
-i_lcdprint  pha
-			sta lcddata            ;output the character
-			jsr i_lcdbusy
-			lda lcdctl            ;get current ddram address
-			and #$7f
-			cmp #$28          	;wrap from pos $13 (line 1 char 20)...
-			bne +
-			lda #$c0            	;...to $40 (line 2 char 1)
-			sta lcdctl
-			jsr i_lcdbusy
-+			pla
-			rts
+	jmp sys_upload
+
+; lcdxy 
+; Set LCD-Cursor to position
+; row in y, col in x
+; i_lcdxy
+; 	pha
+
+; 	lda #$80
+; 	sta tmp0
+
+; 	cpy #$02
+; 	bne +
+; 	lda #$c0
+; 	sta tmp0
+; +
+; 	txa
+; 	clc
+; 	adc tmp0
+
+; 	sta lcdctl
+; 	jsr lcdbusy
+
+; 	pla
+; 	rts
