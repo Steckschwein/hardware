@@ -4,12 +4,9 @@
 ;!src "memtest.withoutbios.h.a"
 adrl	   =$f3
 adrh	   =$f4
-foobar   =$f2
-
    cld
    ldx   #$ff
    txs   
-
 main:
 	lda   #<msg
 	sta   msgptr
