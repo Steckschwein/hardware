@@ -2,14 +2,14 @@
 !src "../bios/defs.h.a"
 !src "../bios/bios.h.a"
 ; sdcard pin assignment:
-; SD   | Signal | VIA Port B
-;   1  |    /CS |          1
-;   2  | CMD/DI |          6
+; SD   | Signal 		| VIA Port B
+;   1  |    /CS 		|          1
+;   2  | CMD/DI (mosi)|          6
 ;   5  |    CLK |	   0
 ;   7  | DAT/DO |          7
-
+outb 	= $f0
+inb		= $f1
 	sei
-
 
 	lda #%01111111
 	sta via1ddrb
@@ -36,32 +36,25 @@ wait74
 	; send CMD0 - init SD card to SPI mode
 	ldx #$00
 -	lda cmd0,x
+	
 	jsr spibyte
+	
 	inx
 	cpx #$06
 	bne -
 
-	lda #%01000001
-	ora via1portb
-	sta via1portb
+	lda #' '
+	jsr lcdprint
 
 
-; 	ldx #$00
-; -	lda cmd58,x
-; 	jsr spibyte
-; 	inx
-; 	cpx #$06
-; 	bne -
 
-	; lda #%01000000
-	; ora via1portb
-	; sta via1portb
+
+
 
 loop
-	dec via1portb
-	nop
 	inc via1portb
 	nop
+	dec via1portb
 	jmp loop	
 	
 
@@ -100,14 +93,37 @@ clk
 	rts
 
 
-	; *** Wait for LCD busy bit to clear
-; registers preserved
-i_lcdbusy   pha
--			lda lcdctl            ;read from lcd register 0
-			and #$80            ;check bit 7 (busy)
-			bne -
-			pla
-			rts
+; spibyte:
+; 	phx
+; 	phy
+; 	sta outb
+; 	ldy #0
+; 	sty inb
+; 	ldx #8
+; spibytelp:
+; 	tya		; (2) set A to 0
+; 	asl outb	; (5) shift MSB in to carry
+; 	bcc spibyte1	; (2)
+; 	ora #%01000000	; (2) set MOSI if MSB set
+; spibyte1:
+; 	sta via1portb	; (4) output (MOSI, SCS low, SCLK low)
+; 	tya		; (2) set A to 0 (Do it here for delay reasons)
+; 	inc via1portb	; (6) toggle clock high (SCLK is bit 0)
+; 	clc		; (2) clear C (Not affected by bit)
+; 	bit via1portb	; (4) copy MISO (bit 7) in to N (and MOSI in to V)
+; 	bpl spibyte2	; (2)
+; 	sec		; (2) set C is MISO bit is set (i.e. N)
+; spibyte2:
+; 	rol inb		; (5) copy C (i.e. MISO bit) in to bit 0 of result
+; 	dec via1portb	; (6) toggle clock low (SCLK is bit 0)
+; 	dex		; (2) next bit
+; 	bne spibytelp	; (2) loop
+; 	lda inb		; get result
+; 	plx
+; 	ply
+; 	rts
+
+
 ; cmd0 reset card to SPI mode
 cmd0	!byte %01000000, %00000000, %00000000, %00000000, %00000000, %10010101
 ; cmd58 requests the contents of the operating conditions register for the connected card
