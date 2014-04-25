@@ -1,6 +1,7 @@
-*=$0200
+*=$8000
 !src "../bios/defs.h.a"
 !src "../bios/bios.h.a"
+;!src "memtest.withoutbios.h.a"
 adrl	   =$f3
 adrh	   =$f4
 foobar   =$f2
@@ -55,9 +56,9 @@ main:
 mem_ca:
    phx
    phy
-   ldx #$09
+   ldx #$01
    ldy #$01
-   jsr lcdxy
+   jsr lcdclear
    plx
    ply
  

@@ -1,5 +1,5 @@
 ; pointer for string output functions 
-msgptr 		= $f8
+msgptr 		= $f3
 ;0011    f3    -
 ;0100    f4    +
 ;0101    f5    +
@@ -18,7 +18,8 @@ msgptr 		= $f8
 lcdctl		= $d200
 lcddata		= lcdctl+1 
 lcdprint
-i_lcdprint  pha
+i_lcdprint  
+			pha
 			sta lcddata            ;output the character
 			jsr i_lcdbusy
 			lda lcdctl            ;get current ddram address
@@ -79,6 +80,7 @@ i_lcdhex
 ; *** Clear LCD display and return cursor to home
 ; registers preserved
 lcdclear
+lcdxy
 i_lcdclear  
          pha
 			lda #$01
