@@ -18,12 +18,15 @@ main:
    jsr   lcdclear
    jsr   lcdstring
 
-	lda   #$00
-	sta   adrl
+	; lda   #$00
+	; sta   adrl
 	lda   #$03
 	sta   adrh
+
+   stz adrl
+   
    ldy   #$00
-   jsr   mem_ca
+ ;  jsr   mem_ca
    ldx   #$00
 -	
    lda   pattern, x
@@ -38,7 +41,7 @@ main:
 	iny
    bne   -
 	inc   adrh
-   jsr   mem_ca
+ ;  jsr   mem_ca
 	jmp   -
 +	pha            ;save erroneous pattern
    jsr   mem_ca
@@ -58,18 +61,15 @@ mem_ca:
    plx
    ply
  
-   tya            ;save adress low byte
-   pha
- ;  sta foobar
-
+ ;  tya            ;save adress low byte
+ ;  pha
+   phy
    lda   adrh
    jsr   lcdhex
    pla
-;   lda foobar
    jsr   lcdhex
    rts
 msg	!text "Memtest: ", $00
 
-lcdfoo:
-   rts
 pattern  !byte $f0,$0f,$96,$69,$a9,$9a,$00,$ff
+;pattern  !byte $00,$ff
