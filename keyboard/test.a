@@ -1,0 +1,48 @@
+*=$1000
+!src "../bios/defs.h.a"
+!src "../bios/bios.h.a"
+
+	lda #$00
+	sta via1ddra
+
+	sei
+
+	lda #<count
+	sta via1t1cl            ; set low byte of count
+	lda #>count
+	sta via1t1ch            ; set high byte of count
+
+	lda #%11000000
+	sta via1ier             ; enable VIA1 T1 interrupts
+
+	lda #%01000000
+	sta via1acr             ; T1 continuous, PB7 disabled
+
+
+	; Set IRQ Vector
+	lda #<kbd
+	sta irqvec
+
+	lda #>kbd
+	sta irqvec+1
+
+	cli
+
+
+-
+	; lda via1porta
+	; beq -
+	; jsr lcdprint
+
+	jmp -
+	
+kbd
+	pha	
+	bit   via1t1cl
+
+	lda via1porta
+	beq +
+	jsr lcdprint
+
++	pla
+	rti
