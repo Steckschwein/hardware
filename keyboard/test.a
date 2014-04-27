@@ -7,6 +7,14 @@
 
 	sei
 
+	; Set IRQ Vector
+	lda #<kbd
+	sta irqvec
+
+	lda #>kbd
+	sta irqvec+1
+
+
 	lda #<count
 	sta via1t1cl            ; set low byte of count
 	lda #>count
@@ -18,16 +26,16 @@
 	lda #%01000000
 	sta via1acr             ; T1 continuous, PB7 disabled
 
+	;lda #%00000100
+	; lda #%10001100
+	; sta via1ier             ; enable VIA1 shift register
 
-	; Set IRQ Vector
-	lda #<kbd
-	sta irqvec
 
-	lda #>kbd
-	sta irqvec+1
+	; lda #%00001100
+	; sta via1acr             ; shift register external clock
+
 
 	cli
-
 
 -
 	; lda via1porta
@@ -37,12 +45,43 @@
 	jmp -
 	
 kbd
-	pha	
-	bit   via1t1cl
+ 	pha
+ 
+ 	; Interrupt from VIA1 timer?
+ 	lda #%11000000
+ 	bit via1ifr	
+ 	beq + ; no?
 
-	lda via1porta
-	beq +
+ 	jsr keyboard
+	
++	pla
+
+	rti
+
+keyboard
+	pha
+ 	bit via1t1cl
+ 	lda via1porta
+ 	beq +
+
+ 	cmp #21 ; CTRL_U
+	bne ++
+
+	jmp $f000
+
+++	cmp #12 ; CTRL_L
+	bne ++
+	jsr lcdclear
+	bra +
+
+++	cmp #$8e
+	beq reset
+
 	jsr lcdprint
 
 +	pla
-	rti
+	rts
+
+
+reset
+	jmp ($fffc)
