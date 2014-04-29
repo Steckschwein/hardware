@@ -65,11 +65,9 @@ keyboard
  	beq +
 
  	cmp #21 ; CTRL_U
-	bne ++
+	beq upload
 
-	jmp $f000
-
-++	cmp #12 ; CTRL_L
+	cmp #12 ; CTRL_L
 	bne ++
 	jsr lcdclear
 	bra +
@@ -82,6 +80,14 @@ keyboard
 +	pla
 	rts
 
+upload
+	lda #<upload_txt
+	sta msgptr
+	lda #>upload_txt
+	sta msgptr+1
+	jsr lcdstring
 
+	jmp $f000
+upload_txt !text "Upload ready!",$00
 reset
 	jmp ($fffc)
