@@ -2,13 +2,27 @@
 !source "t9929.h.a"
 adrl     =$f0
 adrh     =$f1
-pattern  =$f2
-TEXT_COLOR     = Dark_Green
+msgptr   =$f2
+
+TEXT_COLOR     = Cyan
 TEXT_BGCOLORT  = Black
-msgptr   =  $f4
 VDP_WAIT_CYCLES = 4300; 4300µs after vertical blank int, means 0,0043s / 0,0000005s (time for one cpu cycle at 2Mhz) = 8600cycles = 4300 NOP's -
    jmp   main
-msg_1	!text " Hey Thomas, these are the first letters written on screen with          THE TMS9929 VDP!         TODAY IS THE 15.04.2014          +++HAPPY BIRTHDAY+++           so far... /MLA ;)", $00
+;msg_2	!text " Hey Thomas, these are the first letters written on screen with          THE TMS9929 VDP!         TODAY IS THE 15.04.2014          +++HAPPY BIRTHDAY+++           so far... /MLA ;)", $00
+msg_2	!text "      Welcome to VCFE 15.0!                                         These are some letters         written on screen with          THE TMS9929 VDP!", $00
+
+sprite_attr_table:
+	!byte	$64,$64,'V',Medium_Red
+	!byte	$64,$64+8,'C',Medium_Green
+	!byte	$64,$64+16,'F',Light_Blue
+	!byte	$64+8,$64,1,Dark_Yellow
+	!byte	$64+8,$64+8,5,Light_Yellow
+
+	!byte	$64+32,$64,'V',Medium_Red
+	!byte	$64+32,$64+8,'C',Medium_Green
+	!byte	$64+32,$64+16,'F',Light_Blue
+	!byte	$64+40,$64,1,Dark_Yellow
+	!byte	$64+40,$64+8,5,Light_Yellow
 
 sprite1:
 		+SpriteLine %...#....
@@ -19,8 +33,7 @@ sprite1:
 		+SpriteLine %.##.##..
 		+SpriteLine %.#...#..
 		+SpriteLine %........
-sprite2:
-
+		
 main:
    jsr   lcdclear
    lda   #'a'
@@ -39,23 +52,40 @@ main:
 	+nops	VREG_WAIT
 	lda	#v_reg1
 	sta	a_vreg_w
+
+;	ldx	#v_reg1_16k|v_reg1_display_on
+;	ldy	#v_reg1
+;	jsr	vdp_sreg
 	
    jsr   lcdclear
    lda   #'x'
    jsr   lcdprint
 	
-   ;jsr vdp_memtest
-   ;jsr vdp_memtest_2
--
-   jmp   -
+-   jmp   -
 
 vdp_sprite:
-	rts
+	ldx	#$00 ; offset $2000
+	ldy	#$68 ; #$26 + $40
+	jsr	vdp_sreg
+   ldy   #$00
+-
+   lda   sprite_attr_table,y
+   +nops VRAM_WAIT
+   sta   a_vram_w
+   iny
+	cpy	#(4*10)
+   bne   -
++  rts
 	
 vdp_init_bytes
 	!byte 0
 	!byte v_reg1_16k
-	!byte $05,$80,$00,$40,$00,Dark_Green<<4|Black
+	!byte $05	; name table - value * $400
+	!byte	$80	; color table - value * $40 (gfx1), 7f/ff (gfx2)
+	!byte	$00	; pattern table (charset) - value * $800  --> offset in VRAM 
+	!byte	$50	; sprite attribute table - value * $80 --> offset in VRAM 
+	!byte	$00	; sprite pattern table - value * $800  --> offset in VRAM 
+	!byte	Dark_Green<<4|Black
 vdp_init:
    ;reg 0 0 - ext. video off, 
    ;reg 1 c0 - 4108/4116 DRAM, int disabled, video on, text mode, size 1, magnitude off
@@ -79,7 +109,7 @@ vdp_init:
    rts
 vdp_sreg:
    +nops VREG_WAIT
-   stx   a_vreg_w
+	stx   a_vreg_w
    +nops VREG_WAIT
    sty   a_vreg_w
    rts
@@ -143,7 +173,7 @@ vdp_write:
    jsr   vdp_sreg
    ldy   #$00
 -
-   lda   msg_1,y
+   lda   msg_2,y
    beq   +
    +nops VRAM_WAIT
    sta   a_vram_w
@@ -151,150 +181,17 @@ vdp_write:
    bne   -
 +  rts
 vdp_color:
-   ldy   TEXT_COLOR<<4|Black
    ldx   #$00
    ldy   #$60
    jsr   vdp_sreg
+   ldy   #Cyan<<4|Transparent
 -  +nops VRAM_WAIT
    sty   a_vram_w
    inx
    cpx   #$20
    bne   -
    rts
-vdp_memtest_2:
-   jsr   lcdclear
-   
-   lda   #$00
-   sta   adrl
-   sta   adrh
-   lda   #$96
-   sta   pattern
-   
-   ;jsr   vdp_wait_vb
-   
-   lda   a_vreg
-   jsr   print_x   
 
-   jsr   vdp_vram_read
-   ldx   #$96
-   jsr   vdp_vram_write
-   +nops VRAM_WAIT
-   lda   #$69
-   sta   a_vram_w
-   +nops VRAM_WAIT
-   lda   #$f0
-   sta   a_vram_w
-   +nops VRAM_WAIT
-   lda   #$0f
-   sta   a_vram_w
-   
-   jsr   vdp_vram_read
-   pha
-   +nops VRAM_WAIT
-   lda   a_vram
-   pha
-   +nops VRAM_WAIT
-   lda   a_vram
-   pha
-   +nops VRAM_WAIT
-   lda   a_vram
-   jsr   print_x
-   pla
-   jsr   print_x
-   pla
-   jsr   print_x
-   pla
-   jsr   print_x
-   
-   rts
-    
-;   cmp   pattern
-;   bne   -
-;   inc   pattern
-;   lda   $f2
-;   cmp   #$02
-;   bne   l1
-;   inc   $f0
-;   lda   $f0
-;   cmp   #$ff
-;   bne   l1
-
-   rts
-msg	!text "Mem ", $00 
-; pointer for string output functions 
-vdp_memtest
-	jsr lcdclear
-   lda a_vreg
-   jsr lcdhex
-   ldy #$ff
-   ldx #$ff
--  nop
-   dey
-   bne   -
-   dex
-   bne   -
-
-   lda   #$20
-   jsr   lcdprint
-   
-   jsr   vdp_wait_vb
-   
-   lda   #$96
-   jsr   vdp_vram_write
-   lda   #$69
-   sta   a_vram_w
-   lda   #$11
-   sta   a_vram_w
-   
-   lda   #$20
-   jsr   lcdprint
-   jsr   vdp_vram_read
-   jsr   lcdhex
-   lda   a_vram
-   jsr   lcdhex
-   lda   a_vram
-   jsr   lcdhex
-
-   rts
-
-   jsr lcdclear  
-  
-	lda #<msg
-	sta msgptr
-	lda #>msg
-	sta msgptr+1
-	jsr lcdstring
-   
-   lda #$00
-   sta adrh
-   ldx #$00
--	stx a_vreg_w  ;low byte vram adress
-   lda adrh
-   ora #$40
-   sta a_vreg_w  ;high byte vram 
-   lda #$f0
-   sta a_vram_w
-   stx a_vreg_w
-   lda adrh
-   sta a_vreg_w
-   lda a_vram
-	cmp #$f0
-	bne +
-	inx
-   bne -
-	inc adrh
-   lda adrh
-   cmp #$40
-   bne -
-+	jsr lcdhex
-   lda #$20
-   jsr lcdprint
-   lda adrh
-	jsr lcdhex
-	txa
-	jsr lcdhex
-   rts
-   
 vdp_vram_write:
    lda   adrl
    sta   a_vreg_w

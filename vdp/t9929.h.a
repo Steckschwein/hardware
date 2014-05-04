@@ -1,5 +1,5 @@
-VRAM_WAIT	= 8				;1Mhz no wait is required
-VREG_WAIT	= 8
+VRAM_WAIT	= 8			;1Mhz no wait is required
+VREG_WAIT	= 4
 a_vram 		= $d400
 a_vreg		= $d401
 a_vram_w		= $d500
@@ -16,9 +16,8 @@ v_reg1_m2			= 1<<3
 v_reg1_spr_size	= 1<<1
 v_reg1_spr_mag		= 1<<0
 
-;128 64 32 16 8 4 2 1
-
 ;gfx_mode_1  =
+
 v_reg0 	= $80
 v_reg1 	= $81
 v_reg2 	= $82
@@ -49,6 +48,5 @@ White          =$0f
    }
 }
 !macro SpriteLine .v {
-	!by .v&255
+	!byte .v&255
 }
- 
