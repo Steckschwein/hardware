@@ -1,5 +1,5 @@
 VRAM_WAIT	= 8			;1Mhz no wait is required
-VREG_WAIT	= 4
+VREG_WAIT	= 8
 a_vram 		= $d400
 a_vreg		= $d401
 a_vram_w		= $d500

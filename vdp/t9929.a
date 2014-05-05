@@ -4,6 +4,12 @@ adrl     =$f0
 adrh     =$f1
 msgptr   =$f2
 
+; c64 program studio - endurion
+; cbm studio
+
+; C128 - risen from oblivion, vdc chip 
+; bil herd - forum "damals war's..." anbindung video chip
+
 TEXT_COLOR     = Cyan
 TEXT_BGCOLORT  = Black
 VDP_WAIT_CYCLES = 4300; 4300µs after vertical blank int, means 0,0043s / 0,0000005s (time for one cpu cycle at 2Mhz) = 8600cycles = 4300 NOP's -
@@ -11,29 +17,8 @@ VDP_WAIT_CYCLES = 4300; 4300µs after vertical blank int, means 0,0043s / 0,0000
 ;msg_2	!text " Hey Thomas, these are the first letters written on screen with          THE TMS9929 VDP!         TODAY IS THE 15.04.2014          +++HAPPY BIRTHDAY+++           so far... /MLA ;)", $00
 msg_2	!text "      Welcome to VCFE 15.0!                                         These are some letters         written on screen with          THE TMS9929 VDP!", $00
 
-sprite_attr_table:
-	!byte	$64,$64,'V',Medium_Red
-	!byte	$64,$64+8,'C',Medium_Green
-	!byte	$64,$64+16,'F',Light_Blue
-	!byte	$64+8,$64,1,Dark_Yellow
-	!byte	$64+8,$64+8,5,Light_Yellow
+;last_change="jsajsh js ahjs ajsh"
 
-	!byte	$64+32,$64,'V',Medium_Red
-	!byte	$64+32,$64+8,'C',Medium_Green
-	!byte	$64+32,$64+16,'F',Light_Blue
-	!byte	$64+40,$64,1,Dark_Yellow
-	!byte	$64+40,$64+8,5,Light_Yellow
-
-sprite1:
-		+SpriteLine %...#....
-		+SpriteLine %...#...
-		+SpriteLine %#######.
-		+SpriteLine %.#####..
-		+SpriteLine %..###...
-		+SpriteLine %.##.##..
-		+SpriteLine %.#...#..
-		+SpriteLine %........
-		
 main:
    jsr   lcdclear
    lda   #'a'
@@ -44,7 +29,6 @@ main:
    jsr   vdp_load_charset
    jsr   vdp_color
    jsr   vdp_write
-   jsr   vdp_sprite
 	
 	+nops	VREG_WAIT
 	lda	#v_reg1_16k|v_reg1_display_on
@@ -61,7 +45,28 @@ main:
    lda   #'x'
    jsr   lcdprint
 	
--   jmp   -
+-	
+	jsr	burn_cycles
+   jsr   vdp_sprite
+	jsr	sprite_move
+   jmp	-
+
+burn_cycles:
+	ldy	#$20
+	ldx	#$ff
+-	dex
+	bne	-
+	dey
+	bne	-
+	rts
+	
+sprite_move:
+	inc	sprite_attr_table+1+4*0
+	inc	sprite_attr_table+1+4*1
+	inc	sprite_attr_table+1+4*2
+	dec	sprite_attr_table+1+4*3
+	dec	sprite_attr_table+1+4*4
+	rts
 
 vdp_sprite:
 	ldx	#$00 ; offset $2000
@@ -73,7 +78,7 @@ vdp_sprite:
    +nops VRAM_WAIT
    sta   a_vram_w
    iny
-	cpy	#(4*10)
+	cpy	#(5*4)	
    bne   -
 +  rts
 	
@@ -329,9 +334,38 @@ lcdhex
 			lda hexascii,y      ;convert to ascii
 			jsr lcdprint        ;print value on the lcd      
 			pla
-			rts          
-!byte $00
-!byte $00
-!byte $00
-!byte $00
-!byte $00
+			rts      
+			
+sprite_attr_table:
+	!byte	$64,$64,'V',Medium_Red
+	!byte	$64,$64+8,'C',Medium_Green
+	!byte	$64,$64+16,'F',Light_Blue
+	!byte	$64+8,$64,'1',Dark_Yellow
+	!byte	$64+8,$64+8,'5',Light_Yellow
+
+	!byte	$ff,	$64,		'-',Light_Red
+	!byte	$ff,	$64+8,	'-',Light_Green
+	!byte	$ff,	$64+16,	'-',Light_Blue
+	!byte	$ff,	$64,		'-',Dark_Yellow
+	!byte	$ff,	$64+8,	'-',Dark_Yellow
+
+sprite1:
+		+SpriteLine %...#....
+		+SpriteLine %...#....
+		+SpriteLine %#######.
+		+SpriteLine %.#####..
+		+SpriteLine %..###...
+		+SpriteLine %.##.##..
+		+SpriteLine %.#...#..
+		+SpriteLine %........
+sprite2:
+		+SpriteLine %..#.....#..
+;		+SpriteLine %...#...#...
+;		+SpriteLine %..#######..
+;		+SpriteLine %.##.###.##.
+;		+SpriteLine %###########
+;		+SpriteLine %#.#######.#
+;		+SpriteLine %#.#.....#.#
+;		+SpriteLine %...##.##...
+
+			
