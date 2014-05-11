@@ -1,0 +1,2 @@
+schematics cpu.sch memory.sch reset.sch 50pin_connector.sch
+output-name cpu_mem
