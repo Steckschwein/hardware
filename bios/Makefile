@@ -1,3 +1,4 @@
+ACME_OPTS=--initmem 0xFF --cpu 65c02
 all: bios.bin bios.h.a
 
 clean:
@@ -8,4 +9,4 @@ clean:
 	#grep  -e "sys_" $<.labels | sort >> $@
    
 %.bin: %.a
-	acme -v -f plain -l $<.labels  --cpu 65c02 -o $@ $<
+	acme -v -f plain -l $<.labels $(ACME_OPTS) -o $@ $<
