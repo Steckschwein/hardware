@@ -3,7 +3,8 @@
 ;----------------------------------------------------------------------------------------------
 
 count 		= 19998 ; jiffy count 100Hz for 2MHz system
-;count		= 29997 ; jiffy count 100Hz for 3MHz system
+count3		= 29997 ; jiffy count 100Hz for 3MHz system
+count4		= 39996 ; jiffy count 100Hz for 4MHz system
 
 ;----------------------------------------------------------------------------------------------
 ; zeropage locations 
