@@ -2,36 +2,14 @@
 !src "../bios/defs.h.a"
 !src "../bios/bios.h.a"
 
-	ldy #$01
-	ldx #39
-	jsr lcdclear
-	jsr lcdxy
+-
+	lda #$ff
+	nop
+	nop
+	nop
+	sta $d500
+	nop
+	nop
+	nop
+	jmp -
 
-	lda #'X'
-	jsr lcdprint
-
-	jmp sys_upload
-
-; lcdxy 
-; Set LCD-Cursor to position
-; row in y, col in x
-; i_lcdxy
-; 	pha
-
-; 	lda #$80
-; 	sta tmp0
-
-; 	cpy #$02
-; 	bne +
-; 	lda #$c0
-; 	sta tmp0
-; +
-; 	txa
-; 	clc
-; 	adc tmp0
-
-; 	sta lcdctl
-; 	jsr lcdbusy
-
-; 	pla
-; 	rts
