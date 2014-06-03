@@ -15,9 +15,9 @@
 	sta irqvec+1
 
 
-	lda #<count
+	lda #<count4
 	sta via1t1cl            ; set low byte of count
-	lda #>count
+	lda #>count4
 	sta via1t1ch            ; set high byte of count
 
 	lda #%11000000
@@ -65,7 +65,7 @@ keyboard
  	beq +
 
  	cmp #21 ; CTRL_U
-	beq upload
+	beq myupload
 
 	cmp #12 ; CTRL_L
 	bne ++
@@ -80,14 +80,14 @@ keyboard
 +	pla
 	rts
 
-upload
+myupload
 	lda #<upload_txt
 	sta msgptr
 	lda #>upload_txt
 	sta msgptr+1
 	jsr lcdstring
 
-	jmp $f000
+	jmp upload
 upload_txt !text "Upload ready!",$00
 reset
 	jmp ($fffc)
