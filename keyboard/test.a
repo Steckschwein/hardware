@@ -15,9 +15,9 @@
 	sta irqvec+1
 
 
-	lda #<count4
+	lda #<count
 	sta via1t1cl            ; set low byte of count
-	lda #>count4
+	lda #>count
 	sta via1t1ch            ; set high byte of count
 
 	lda #%11000000
