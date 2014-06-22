@@ -47,7 +47,7 @@ try:
 	if ser.read(2) == 'OK':
 		print "Start address %d bytes" % (bytes, )
 
-	bytes = ser.write(struct.pack('<h', length))
+	bytes = ser.write(struct.pack('<H', length))
 	if ser.read(2) == 'OK':
 		print "Length %d bytes" % (bytes, )
 		
