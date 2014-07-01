@@ -34,7 +34,8 @@ VCC
 ;/WE      = /RW * PHI2                                 ; - write enable, combined with PHI2 (Pin 39) for synchronisation
 /CSHIRAM = G1*/A2                                     ; $8000-$cfff
          + G1*/A1*/A0
-/CSROM   = G1*A2*A1					; $e000-$ffff
+         + /RW*G1*A2*A1 				; Writes to $e000-$ffff go to the RAM
+/CSROM   = RW*G1*A2*A1					; Reads  to $e000-$ffff go to the ROM
 
 /CSVIA   = G1 * A2*/A1*A0 * /B3*/B2*/B1*B0		; $d100
 
