@@ -15,7 +15,7 @@ RW       ; RW of 6502 (Pin 34)
 PHI2     ; PHI2 of 6502 (Pin 39)
 NC
 GND
-NC 
+ROMOFF	; Remove ROM from Adress space if low, make unterlying RAM readable
 CSROM    ;CS signal for ROM at $e000-$ffff 
 NC ;UARTRD
 NC ;UARTWR
@@ -30,12 +30,11 @@ VCC
 ;
 ;  boolean expressions
 ;
-;OE       = /RW                                        ; - output enable (active low, read from adress)   		
-;/WE      = /RW * PHI2                                 ; - write enable, combined with PHI2 (Pin 39) for synchronisation
-/CSHIRAM = G1*/A2                                     ; $8000-$cfff
+/CSHIRAM = G1*/A2                       
          + G1*/A1*/A0
          + /RW*G1*A2*A1 				; Writes to $e000-$ffff go to the RAM
-/CSROM   = RW*G1*A2*A1					; Reads  to $e000-$ffff go to the ROM
+         + /ROMOFF*RW*G1*A2*A1			; Reads  to $e000-$ffff go to the RAM, IF ROMOFF is Low
+/CSROM   = ROMOFF*RW*G1*A2*A1			; Reads  to $e000-$ffff go to the ROM, IF ROMOFF is High
 
 /CSVIA   = G1 * A2*/A1*A0 * /B3*/B2*/B1*B0		; $d100
 
