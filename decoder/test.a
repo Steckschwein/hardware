@@ -2,12 +2,11 @@
 !src "../bios/defs.h.a"
 !src "../bios/bios.h.a"
 
-src = $e000
 main
 	ldx #$00
 loop
-	lda src,x
-	sta src,x
+	lda $e000,x
+	sta $e000,x
 	inx
 	cpx #$ff
 	bne loop
