@@ -1,0 +1,19 @@
+*=$1000
+!src "../bios/defs.h.a"
+!src "../bios/bios.h.a"
+
+src = $e000
+main
+	ldx #$00
+loop
+	lda src,x
+	sta src,x
+	inx
+	cpx #$ff
+	bne loop
+	jmp main
+	
+
+	
+	
+
