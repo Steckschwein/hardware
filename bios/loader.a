@@ -1,0 +1,33 @@
+*=$1000
+!src "defs.h.a"
+!src "bios.h.a"
+targetl = $00
+targeth = $01
+
+	lda #$00
+	sta targetl
+	lda #$e0
+	sta targeth
+
+loop
+
+	ldy #$00
+-	lda biosdata,y
+	sta (targetl),y
+	iny
+	bne -
+
+	lda #$ff    ; targeth schon bei $ff?
+	cmp targeth
+	beq end    ; ja? dann ende
+
+	inc targeth
+	bra loop 
+
+end	
+	lda #'X'
+	jsr lcdprint	
+-	jmp -	
+
+biosdata
+!bin "bios.bin"
