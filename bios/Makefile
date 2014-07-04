@@ -15,4 +15,4 @@ bios.h.a: bios.bin
 	acme -l $<.labels $(ACME_OPTS) -o $@ $<
 
 transfer: loader
-	../transfer.py loader.bin 0x1000
+	../transfer.py loader.bin 0x0800

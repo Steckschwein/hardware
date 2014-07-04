@@ -1,33 +1,66 @@
-*=$1000
+*=$0800
 !src "defs.h.a"
 !src "bios.h.a"
-targetl = $00
-targeth = $01
+src	= $40
+dst	= $42
+cnt	= $44
+ 
+
+
+	; lda #$01
+	; sta via1porta
+	; sta via1ddra
+
+
+	lda #<biosdata
+	sta src
+ 	lda #>biosdata
+	sta src+1
+	
+	lda #$00
+	sta dst
+	lda #$e0
+	sta dst+1
 
 	lda #$00
-	sta targetl
-	lda #$e0
-	sta targeth
+	sta cnt
+	lda #$20
+	sta cnt+1
 
-loop
 
-	ldy #$00
--	lda biosdata,y
-	sta (targetl),y
-	iny
-	bne -
+	jsr memcpy
 
-	lda #$ff    ; targeth schon bei $ff?
-	cmp targeth
-	beq end    ; ja? dann ende
+;	stz via1porta
 
-	inc targeth
-	bra loop 
-
-end	
 	lda #'X'
 	jsr lcdprint	
 -	jmp -	
 
+
+memcpy      ldy     cnt+0       ;set y = cnt.l
+            bne     loop        ;if cnt.l > 0, then loop
+            lda     cnt+1       ;if cnt.h > 0,
+            bne     loop        ; then loop
+            rts                 ;return
+loop        
+;			jsr 	lcdclear
+			lda 	cnt+1
+			jsr 	lcdhex
+			lda 	cnt
+			jsr 	lcdhex
+
+			lda     (src),y     ;load a from ((src)+y)
+            sta     (dst),y     ;store a to ((dst)+y)
+            dey                 ;decr cnt.l
+            bne     loop        ;if cnt.l > 0, then loop
+            inc     src+1       ;incr src += $0100
+            inc     dst+1       ;incr dst += $0100
+            dey                 ;decr cnt.l
+            dec     cnt+1       ;decr cnt.h
+            bne     loop        ;if cnt.h > 0, then loop
+            rts                 ;return
+
+
+*=$1000
 biosdata
 !bin "bios.bin"
