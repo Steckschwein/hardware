@@ -5,35 +5,19 @@ src	= $40
 dst	= $42
 cnt	= $44
  
-
-
 	; lda #$01
 	; sta via1porta
 	; sta via1ddra
 
-
-	lda #<biosdata
-	sta src
- 	lda #>biosdata
-	sta src+1
+	+SetVector biosdata, src
+	+SetVector $e000, dst
+	+SetVector $2000, cnt
 	
-	lda #$00
-	sta dst
-	lda #$e0
-	sta dst+1
-
-	lda #$00
-	sta cnt
-	lda #$20
-	sta cnt+1
-
-
 	jsr memcpy
 
 ;	stz via1porta
 
-	lda #'X'
-	jsr lcdprint	
+	+PrintChar 'X'
 -	jmp -	
 
 
@@ -43,13 +27,7 @@ memcpy      ldy     cnt+0       ;set y = cnt.l
             bne     loop        ; then loop
             rts                 ;return
 loop        
-;			jsr 	lcdclear
-			lda 	cnt+1
-			jsr 	lcdhex
-			lda 	cnt
-			jsr 	lcdhex
-
-			lda     (src),y     ;load a from ((src)+y)
+   	lda     (src),y     ;load a from ((src)+y)
             sta     (dst),y     ;store a to ((dst)+y)
             dey                 ;decr cnt.l
             bne     loop        ;if cnt.l > 0, then loop
@@ -61,6 +39,6 @@ loop
             rts                 ;return
 
 
-*=$1000
+*=$0900
 biosdata
 !bin "bios.bin"
