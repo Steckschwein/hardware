@@ -287,8 +287,7 @@ init_uart
 
 ;	ldx #17*2	; 38400 BAUD
 ;	ldx #15*2	; 9600 BAUD
-
-	;ldx #11*2	; 2400 BAUD
+;	ldx #11*2	; 2400 BAUD
 
 	lda uart_divisor,x
 	sta uart1dll	
@@ -300,15 +299,11 @@ init_uart
 
 	sta uart1lcr
 
- 	;lda #87		; no FIFO enable and 
- ; 	lda #7		; no FIFO enable and 
-	; 			; clear FIFOs, 
-;	sta uart1fcr	; trigger at 1 byte
-	lda #0
+	lda #$00
 	sta uart1fcr	; FIFO off
-
 	sta uart1ier	; polled mode (so far) 
 	sta uart1mcr	; reset DTR, RTS
+
 	and #%00001100			; keep OUT1, OUT2 values
 	sta uart1mcr		; reset DTR, RTS
 	clc
