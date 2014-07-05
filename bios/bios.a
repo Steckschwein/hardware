@@ -33,10 +33,13 @@ upload
 			lda #' '
 			jsr lcdprint
 
-			lda #'O'
-			jsr chrout
-			lda #'K'
-			jsr chrout
+;			lda #'O'
+;			jsr chrout
+;			lda #'K'
+;			jsr chrout
+
+			+PrintChar 'O'
+			+PrintChar 'K'
 
 			;jsr strout
 
@@ -80,10 +83,13 @@ upload
 			lda startaddr+1
 			sta addr+1	
 
-			lda #'O'
-			jsr chrout
-			lda #'K'
-			jsr chrout
+			;lda #'O'
+			;jsr chrout
+			;lda #'K'
+			;jsr chrout
+
+			+PrintChar 'O'
+			+PrintChar 'K'
 
 
 			ldy #$00
@@ -106,10 +112,12 @@ upload
 			bne - ; no? read next byte
 
 			; yes? write OK and jump to start addr	
-			lda #'O'
-			jsr chrout
-			lda #'K'
-			jsr chrout
+;			lda #'O'
+;			jsr chrout
+;			lda #'K'
+;			jsr chrout
+			+PrintChar 'O'
+			+PrintChar 'K'
 
 			; re-init stack pointer
 			ldx #$ff
@@ -141,28 +149,33 @@ do_reset
 
 
 			; Set IRQ Vector
-			lda #<irqhandler
-			sta irqvec
-
-			lda #>irqhandler
-			sta irqvec+1
+			+SetVector irqhandler, irqvec
+;			lda #<irqhandler
+;			sta irqvec
+;
+;			lda #>irqhandler
+;			sta irqvec+1
 
 
 			
 ;			cli 
 			jsr memcheck
 
-			lda #<biosversion
-			sta msgptr
-
-			lda #>biosversion
-			sta msgptr+1
-
 			ldy #$02
 			ldx #$00
 			jsr lcdxy
 
-			jsr lcdstring
+;			lda #<biosversion
+;			sta msgptr
+;
+;			lda #>biosversion
+;			sta msgptr+1
+
+			
+
+;			jsr lcdstring
+
+			+PrintString biosversion
 
 			jmp upload
 	
@@ -566,7 +579,7 @@ hexascii	!text "0123456789ABCDEF"
 dec_tbl		!byte 128,160,200
 
 ; Version String
-biosversion	!text "V1804a", $00
+biosversion	!text "V0507", $00
 
 ;----------------------------------------------------------------------------------------------
 ;	divisor values for 1.8432 MHz Crystal
