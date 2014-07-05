@@ -87,8 +87,13 @@ lcddata		= lcdctl+1
 ;-------------------------------------------------------------------------------------------	---
 !macro PrintChar char {
         lda #char
-        jsr lcdprint
+        jsr chrout
 }
+!macro PrintString .word {
+	+SetVector .word, msgptr
+        jsr lcdstring
+}
+	
 !macro SetVector .word, .addr {
         lda #<.word
         sta .addr
