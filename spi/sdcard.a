@@ -1,9 +1,11 @@
-!macro SDCommand .cmd {
+!macro SDCommand .cmd, .numres {
 	ldx #$00
 -	lda .cmd,x
 	
+	
 	jsr spibyte
 	
+
 	inx
 	cpx #$06
 	bne -
@@ -13,23 +15,25 @@
 
 	ldx #$00
 -	lda #$ff
+	
 	jsr spibyte
+
 	sta sdcmdres,x
 	inx
-	cpx #$05
+	cpx #.numres
 	bne -
 
 }
 
 
-!macro PrintSDRes { 
+!macro PrintSDRes .numres { 
 	lda #'['
 	jsr lcdprint
 	ldx #$00
 -	lda sdcmdres, x
 	jsr lcdhex
 	inx
-	cpx #$05
+	cpx #.numres
 	bne -
 
 	lda #']'
@@ -51,16 +55,23 @@
 ; inb		= $f1
 sdcmdres	= $e0
 
-	jsr lcdclear
 
+	jsr lcdclear
 	sei
 
 	stz via1porta
+	stz tmp0
 
-	lda #%01111111
+	; SR shift in, External clock on CB1
+	lda #%00001100
+	sta via1acr
+
+	lda #%10111111
 	sta via1ddrb
-	lda #%01111110
+	lda #%10111110
 	sta via1portb
+
+
 
 !for i,0,9 { 
 	lda #$ff
@@ -75,13 +86,13 @@ sdcmdres	= $e0
 
 
 	; send CMD0 - init SD card to SPI mode
-	+SDCommand cmd0
+	+SDCommand cmd0, $01
 
 	lda sdcmdres
 	cmp #$01
 	beq +
 	
-	err	+PrintString nocard	
+	+PrintString nocard	
 -	jmp -
 
 
@@ -91,23 +102,20 @@ sdcmdres	= $e0
 	lda #' '
 	jsr lcdprint
 
-;	+SDCommand cmd8
-	
+	+SDCommand cmd58, $01
 
-	+SDCommand cmd58
-
-!for i,0,9 {	
-	+SDCommand cmd55
-	+PrintSDRes
-	+SDCommand acmd41
-	+PrintSDRes
+!for i,0,2 {	
+	+SDCommand cmd55, $01
+	+PrintSDRes $01
+	+SDCommand acmd41, $01
+	+PrintSDRes $01
 }
 
-	; lda #'B'
-	; jsr lcdprint
+	lda #'B'
+	jsr lcdprint
 
-	; +SDCommand cmd16
-	; +PrintSDRes
+	+SDCommand cmd16, $01
+	+PrintSDRes $01
 
 	; lda #' '
 	; jsr lcdprint
@@ -115,73 +123,80 @@ sdcmdres	= $e0
 	
 -	jmp -
 
-
 ; Transmit byte VIA SPI
 ; Byte to transmit in A, received byte in A at exit
-spibyte	
+
+spibyte
 	phx
 	phy
+
+	tay		; zu transferierendes byte im akku nach y retten
+
 	ldx #$08
-	clc
---
-	asl
-
-	tay
-	bcs one
-
-zero	
-	lda #%10111111
-	and via1portb
-	sta via1portb
-	bra clk
-
-one	lda #%01000000
-	ora via1portb	
-	sta via1portb
 	
-clk
-	inc via1portb
-	tya
-	dec via1portb
+	lda via1portb	; Port laden
+	rol		; Nach links rotieren, damit das bit nachher an der richtigen stelle steht
+	sta tmp0		; bunkern
+
+-	tya		; zu transferierendes byte in den akku
+	clc
+	rol		; nach links, bit 7 ins carry
+	tay		; Akku nach Y retten fuer naechsten durchlauf
+
+	lda tmp0		; rotierten portinhalt zurueckholen
+	
+	ror 	; nach rechts, carry nach bit7
+	
+	sta via1portb	; ab in den port
+	
+	inc via1portb	; takt an
+	nop
+	dec via1portb	; takt aus 
 
 	dex
-	bne --
-	lda via1porta
+	bne -		; schon acht mal?
+	
+	lda via1sr
+
 	ply
 	plx
 	rts
-
-
-; spibyte:
+	
+; ; Transmit byte VIA SPI
+; ; Byte to transmit in A, received byte in A at exit
+; spibyte	
 ; 	phx
 ; 	phy
-; 	sta outb
-; 	ldy #0
-; 	sty inb
-; 	ldx #8
-; spibytelp:
-; 	tya		; (2) set A to 0
-; 	asl outb	; (5) shift MSB in to carry
-; 	bcc spibyte1	; (2)
-; 	ora #%01000000	; (2) set MOSI if MSB set
-; spibyte1:
-; 	sta via1portb	; (4) output (MOSI, SCS low, SCLK low)
-; 	tya		; (2) set A to 0 (Do it here for delay reasons)
-; 	inc via1portb	; (6) toggle clock high (SCLK is bit 0)
-; 	clc		; (2) clear C (Not affected by bit)
-; 	bit via1portb	; (4) copy MISO (bit 7) in to N (and MOSI in to V)
-; 	bpl spibyte2	; (2)
-; 	sec		; (2) set C is MISO bit is set (i.e. N)
-; spibyte2:
-; 	rol inb		; (5) copy C (i.e. MISO bit) in to bit 0 of result
-; 	dec via1portb	; (6) toggle clock low (SCLK is bit 0)
-; 	dex		; (2) next bit
-; 	bne spibytelp	; (2) loop
-; 	lda inb		; get result
-; 	plx
-; 	ply
-; 	rts
+; 	ldx #$08
+; 	clc
+; --
+; 	asl
 
+; 	tay
+; 	bcs one
+
+; 	bit 
+; zero	
+; 	lda #%01111111
+; 	and via1portb
+; 	sta via1portb
+; 	bra clk
+
+; one	lda #%10000000
+; 	ora via1portb	
+; 	sta via1portb
+	
+; clk
+; 	inc via1portb
+; 	tya
+; 	dec via1portb
+
+; 	dex
+; 	bne --
+; 	lda via1sr
+; 	ply
+; 	plx
+; 	rts
 
 ; cmd0 reset card to IDLE state
 cmd0	!byte %01000000, %00000000, %00000000, %00000000, %00000000, %10010101
