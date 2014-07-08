@@ -19,7 +19,7 @@ via_write_byte:
 			tay	;save new value to y
 			
 			txa	;via state to accu
-			lsr   	;shift rigth and set bit 7 with carry set from above
+			lsr   ;shift right and set bit 7 with carry set from above
 			
 			eor	#$01	; toogle bit 0
 			sta	viaport
@@ -31,8 +31,8 @@ via_write_byte:
 	phy	;safe regs
 	
 	tay	;data to y	
-	ldx 	viaport	;initial via state to x
-	asl
+	ldx 	viaport	; initial via state to x
+	asl				; but with 1 bit shift left
 	
 	+via_bit_out
 	+via_bit_out
