@@ -7,8 +7,8 @@ main:
 	lda 	#$ff
 	sta	via1ddrb
 
-	LDA	#$96
-	STA	via1portb
+	lda	#$96
+	sta	via1portb
 	lda	#$6c
 	jsr	via_write_byte
 	rts
@@ -22,20 +22,20 @@ via_write_byte:
 			tay	;save new value to y
 			
 			txa	;via state to accu
-			lsr   ;shift right and set bit 7 with carry set from above
+			ror   ;shift right and set bit 7 with carry set from above
 			
-			eor	#$01	; toogle bit 0
-			sta	via1portb
-			inc	via1portb
+			sta	via1portb	; toogle bit 0 for clck
+			dec	via1portb	
 	}
 	
 	pha
 	phx
 	phy	;safe regs
 	
-	tay	;data to y	
-	ldx 	via1portb	; initial via state to x
-	asl					; but with 1 bit shift left
+	tay					;data to y	
+	lda 	via1portb	; initial via state to x
+	ora	#$01			; bit 0 is set for later clock
+	asl					; store in x but with 1 bit shift left for later easy use
 	tax					; and safe back to x
 	
 	+via_bit_out
