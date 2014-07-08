@@ -17,7 +17,7 @@ via_write_byte:
 
 	!macro via_bit_out {
 			tya		
-			lsr	;shift value and set carry
+			asl	;shift value and set carry
 			tay	;save new value to y
 			
 			txa	;via state to accu
@@ -31,7 +31,7 @@ via_write_byte:
 	phx
 	phy	;safe regs
 	
-	tay					;data to y	
+	tay					; data to y	
 	lda 	via1portb	; initial via state to x
 	ora	#$01			; bit 0 is set for later clock
 	asl					; store in x but with 1 bit shift left for later easy use
