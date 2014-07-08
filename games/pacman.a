@@ -1,4 +1,4 @@
-*=$1000
+	*=	$1000
 !src "../bios/defs.h.a"
 !src "../bios/bios.h.a"
 
@@ -35,7 +35,8 @@ via_write_byte:
 	
 	tay	;data to y	
 	ldx 	via1portb	; initial via state to x
-	asl				; but with 1 bit shift left
+	asl					; but with 1 bit shift left
+	tax					; and safe back to x
 	
 	+via_bit_out
 	+via_bit_out
