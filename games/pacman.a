@@ -7,12 +7,11 @@ main:
 	lda 	#$ff
 	sta	via1ddrb
 
-	lda	#$96
+	lda	#$7e
 	sta	via1portb
 	lda	#$6c
 	jsr	via_write_byte
 	rts
-
 
 via_write_byte:
 
