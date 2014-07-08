@@ -1,11 +1,14 @@
 *=$1000
-
-viaport=$2000
+!src "../bios/defs.h.a"
+!src "../bios/bios.h.a"
 
 main:
 
+	lda 	#$ff
+	sta	via1ddrb
+
 	LDA	#$96
-	STA	viaport
+	STA	via1portb
 	lda	#$6c
 	jsr	via_write_byte
 	rts
@@ -22,8 +25,8 @@ via_write_byte:
 			lsr   ;shift right and set bit 7 with carry set from above
 			
 			eor	#$01	; toogle bit 0
-			sta	viaport
-			inc	viaport
+			sta	via1portb
+			inc	via1portb
 	}
 	
 	pha
@@ -31,7 +34,7 @@ via_write_byte:
 	phy	;safe regs
 	
 	tay	;data to y	
-	ldx 	viaport	; initial via state to x
+	ldx 	via1portb	; initial via state to x
 	asl				; but with 1 bit shift left
 	
 	+via_bit_out
