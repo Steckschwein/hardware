@@ -1,0 +1,51 @@
+*=$1000
+
+viaport=$2000
+
+main:
+
+	LDA	#$96
+	STA	viaport
+	lda	#$6c
+	jsr	via_write_byte
+	rts
+
+
+via_write_byte:
+
+	!macro via_bit_out {
+			tya		
+			lsr	;shift value and set carry
+			tay	;save new value to y
+			
+			txa	;via state to accu
+			lsr   	;shift rigth and set bit 7 with carry set from above
+			
+			eor	#$01	; toogle bit 0
+			sta	viaport
+			inc	viaport
+	}
+	
+	pha
+	phx
+	phy	;safe regs
+	
+	tay	;data to y	
+	ldx 	viaport	;initial via state to x
+	asl
+	
+	+via_bit_out
+	+via_bit_out
+	+via_bit_out
+	+via_bit_out
+	
+	+via_bit_out
+	+via_bit_out
+	+via_bit_out
+	+via_bit_out
+
+	ply	;restore regs
+	plx
+	pla
+	
+	rts			
