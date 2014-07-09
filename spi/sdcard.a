@@ -3,22 +3,24 @@
 -	lda .cmd,x
 	
 	
-	jsr spibyte
+	jsr spi_rw_byte
 	
 
 	inx
 	cpx #$06
 	bne -
 
-	lda #$ff
-	jsr spibyte
 
 	ldx #$00
 -	lda #$ff
 	
-	jsr spibyte
-
-	sta sdcmdres,x
+	jsr spi_rw_byte
+	jsr lcdhex
+	cpx #$00
+	bne +
+	cmp #$ff
+	beq -
++	sta sdcmdres,x
 	inx
 	cpx #.numres
 	bne -
@@ -44,38 +46,34 @@
 *=$1000
 !src "../bios/defs.h.a"
 !src "../bios/bios.h.a"
+
 ; sdcard pin assignment:
-; SD   | Signal 		| VIA Port B
-;   1  |    /CS 		|          1
-;   2  | CMD/DI (mosi)|          6
-;   5  |    CLK |	   0
-;   7  | DAT/DO |          7
+; SD   | Signal 		| VIA Port
+;   1  |    /CS 		|          PB1
+;   2  | CMD/DI (mosi)		|          CB2
+;   5  |    CLK 		|	   PB0/CB1
+;   7  | DAT/DO 		|          PB7
 
 ; outb 	= $f0
 ; inb		= $f1
 sdcmdres	= $e0
 
-
 	jsr lcdclear
 	sei
-
-	stz via1porta
-	stz tmp0
 
 	; SR shift in, External clock on CB1
 	lda #%00001100
 	sta via1acr
 
-	lda #%10111111
+	lda #$ff
 	sta via1ddrb
-	lda #%10111110
+	lda #%01111110
 	sta via1portb
 
 
 
 !for i,0,9 { 
-	lda #$ff
-	jsr spibyte
+	jsr spi_r_byte
 }
 
 	; set CS line to LOW
@@ -126,32 +124,31 @@ sdcmdres	= $e0
 ; Transmit byte VIA SPI
 ; Byte to transmit in A, received byte in A at exit
 
-spibyte
+spi_rw_byte
 	phx
 	phy
 
-	tay		; zu transferierendes byte im akku nach y retten
+;	tay		; zu transferierendes byte im akku nach y retten
+	sta tmp0
 
 	ldx #$08
 	
 	lda via1portb	; Port laden
-	rol		; Nach links rotieren, damit das bit nachher an der richtigen stelle steht
-	sta tmp0		; bunkern
+	and #$fe        ; SPICLK loeschen
 
--	tya		; zu transferierendes byte in den akku
-	clc
-	rol		; nach links, bit 7 ins carry
-	tay		; Akku nach Y retten fuer naechsten durchlauf
+;	rol		; Nach links rotieren, damit das bit nachher an der richtigen stelle steht
+	asl
+	tay
+	;sta tmp0	; bunkern
 
-	lda tmp0		; rotierten portinhalt zurueckholen
-	
-	ror 	; nach rechts, carry nach bit7
-	
+-	
+	rol tmp0
+	tya		; portinhalt
+	ror		; datenbit reinschieben
+
 	sta via1portb	; ab in den port
-	
 	inc via1portb	; takt an
-	nop
-	dec via1portb	; takt aus 
+	sta via1portb	; takt aus 
 
 	dex
 	bne -		; schon acht mal?
@@ -162,9 +159,37 @@ spibyte
 	plx
 	rts
 	
+spi_r_byte
+       phy
+       lda via1portb   ; Port laden
+       AND #$fe  ;    * Daten und Takt ausschalten
+       TAY             ; aufheben
+       ORA #$01
+
+       STA via1portb ; Takt An 1
+       STY via1portb ; Takt aus
+       STA via1portb ; Takt An 2
+       STY via1portb ; Takt aus
+       STA via1portb ; Takt An 3
+       STY via1portb ; Takt aus
+       STA via1portb ; Takt An 4
+       STY via1portb ; Takt aus
+       STA via1portb ; Takt An 5
+       STY via1portb ; Takt aus
+       STA via1portb ; Takt An 6
+       STY via1portb ; Takt aus
+       STA via1portb ; Takt An 7
+       STY via1portb ; Takt aus
+       STA via1portb ; Takt An 8
+       STY via1portb ; Takt aus
+
+       lda via1sr
+       ply
+       rts
+
 ; ; Transmit byte VIA SPI
 ; ; Byte to transmit in A, received byte in A at exit
-; spibyte	
+; spi_rw_byte	
 ; 	phx
 ; 	phy
 ; 	ldx #$08
