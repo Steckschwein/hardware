@@ -1,0 +1,33 @@
+*=$1000
+!src "../bios/defs.h.a"
+!src "../bios/bios.h.a"
+
+targetl	= $00
+targeth	= $f0
+
+
+main
+	ldy #$00
+
+
+-	lda (targetl), y
+	sta (targetl), y
+	iny
+	cpy #$ff
+	bne -
+	
+	lda #$ff
+	cmp targeth+1
+	beq +
+	
+	inc targeth+1
+	jmp main
+
++	lda #'X'
+	jsr lcdprint
+
+-	jmp -
+
+	
+	
+

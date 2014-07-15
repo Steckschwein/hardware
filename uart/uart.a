@@ -3,20 +3,18 @@
 !src "../bios/bios.h.a"
 	
 
-main
-;	sei 
-	jsr lcdclear
+	lda #%00010100
+	sta uart1mcr
+	lda uart1msr
 
--
-	jsr chrin
+	ldy #%00010000
+	sty uart1mcr
+
+
 	jsr lcdhex
+	
 
-	lda #' '
-	jsr lcdprint
-	jmp -
+-	jmp -
+	
 
-!byte $00
-!byte $00
-!byte $00
-!byte $00
-!byte $00
+
