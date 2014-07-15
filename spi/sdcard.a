@@ -2,33 +2,35 @@
 	ldx #$00
 -	lda .cmd,x
 	
-	
 	jsr spi_rw_byte
 	
-
 	inx
 	cpx #$06
 	bne -
 
+	jsr spi_r_byte		; byte lesen
 
+;	ldy #$00
 	ldx #$00
--	lda #$ff
-	
-	jsr spi_rw_byte
-	jsr lcdhex
-	cpx #$00
-	bne +
-	cmp #$ff
-	beq -
-+	sta sdcmdres,x
-	inx
-	cpx #.numres
-	bne -
+-		
+	jsr spi_r_byte		; byte lesen
 
+ 	; cpy #$00 			; y=0?
+ 	; bne +				; nein, dann weiter
+ 	; cmp #$ff			; ja, dann gelesenes byte=$FF?
+ 	; beq -				; ja, dann nochmal lesen
++	sta sdcmdres,x		; 
+ 	inx
+;	iny
+ 	cpx #.numres
+ 	bne -
 }
 
 
 !macro PrintSDRes .numres { 
+	pha
+	phx
+
 	lda #'['
 	jsr lcdprint
 	ldx #$00
@@ -40,6 +42,9 @@
 
 	lda #']'
 	jsr lcdprint
+
+	pla
+	plx
 }
 
 
@@ -67,14 +72,24 @@ sdcmdres	= $e0
 
 	lda #$ff
 	sta via1ddrb
+
 	lda #%01111110
 	sta via1portb
 
 
 
-!for i,0,9 { 
-	jsr spi_r_byte
-}
+	ldx #74
+
+	lda #%11111110
+	sta via1portb
+	tay
+	iny
+-	sty via1portb
+	sta via1portb
+	dex
+	bne -
+
+
 
 	; set CS line to LOW
 	lda #%11111101
@@ -85,14 +100,13 @@ sdcmdres	= $e0
 
 	; send CMD0 - init SD card to SPI mode
 	+SDCommand cmd0, $01
-
+	
 	lda sdcmdres
 	cmp #$01
 	beq +
 	
 	+PrintString nocard	
 -	jmp -
-
 
 +	+PrintString cardok	
 
@@ -101,25 +115,41 @@ sdcmdres	= $e0
 	jsr lcdprint
 
 	+SDCommand cmd58, $01
-
-!for i,0,2 {	
-	+SDCommand cmd55, $01
 	+PrintSDRes $01
-	+SDCommand acmd41, $01
-	+PrintSDRes $01
-}
 
-	lda #'B'
+		
+
+!for i,0,2 {
+
+	lda #'X'
 	jsr lcdprint
 
-	+SDCommand cmd16, $01
+	+SDCommand cmd55, $01
+	lda #'.'
+	jsr lcdprint
+	
 	+PrintSDRes $01
+lda #'.'
+	jsr lcdprint
+	
+	+SDCommand acmd41, $01
+	lda #'.'
+	jsr lcdprint
+	
+	+PrintSDRes $01
+}
+	; lda #'B'
+	; jsr lcdprint
+
+	; +SDCommand cmd16, $01
+	; +PrintSDRes $01
 
 	; lda #' '
 	; jsr lcdprint
 
-	
--	jmp -
+
+		
+	jmp upload
 
 ; Transmit byte VIA SPI
 ; Byte to transmit in A, received byte in A at exit
@@ -128,18 +158,15 @@ spi_rw_byte
 	phx
 	phy
 
-;	tay		; zu transferierendes byte im akku nach y retten
-	sta tmp0
+	sta tmp0	; zu transferierendes byte im akku nach tmp0 retten
 
 	ldx #$08
 	
 	lda via1portb	; Port laden
 	and #$fe        ; SPICLK loeschen
 
-;	rol		; Nach links rotieren, damit das bit nachher an der richtigen stelle steht
-	asl
-	tay
-	;sta tmp0	; bunkern
+	asl		; Nach links rotieren, damit das bit nachher an der richtigen stelle steht
+	tay		 ; bunkern
 
 -	
 	rol tmp0
@@ -153,7 +180,7 @@ spi_rw_byte
 	dex
 	bne -		; schon acht mal?
 	
-	lda via1sr
+	lda via1sr	; Schieberegister auslesen
 
 	ply
 	plx
@@ -162,7 +189,7 @@ spi_rw_byte
 spi_r_byte
        phy
        lda via1portb   ; Port laden
-       AND #$fe  ;    * Daten und Takt ausschalten
+       AND #$7e  ;    * Daten und Takt ausschalten
        TAY             ; aufheben
        ORA #$01
 
@@ -200,7 +227,6 @@ spi_r_byte
 ; 	tay
 ; 	bcs one
 
-; 	bit 
 ; zero	
 ; 	lda #%01111111
 ; 	and via1portb
@@ -239,3 +265,4 @@ cmd16	!byte $50, $00, $00, $02, $00, $01
 
 cardok	!text "Card OK!", $00
 nocard	!text "No Card!", $00
+error	!text "SD CMD Err", $00
