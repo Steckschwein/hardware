@@ -1,3 +1,7 @@
+*=$1000
+!src "../bios/defs.h.a"
+!src "../bios/bios.h.a"
+
 !macro SDCommand .cmd, .numres {
 	ldx #$00
 -	lda .cmd,x
@@ -8,12 +12,14 @@
 	cpx #$06
 	bne -
 
-	jsr spi_r_byte		; byte lesen
+	lda #$ff
+	jsr spi_rw_byte		; byte lesen
 
 ;	ldy #$00
 	ldx #$00
 -		
-	jsr spi_r_byte		; byte lesen
+	lda #$ff
+	jsr spi_rw_byte		; byte lesen
 
  	; cpy #$00 			; y=0?
  	; bne +				; nein, dann weiter
@@ -48,9 +54,6 @@
 }
 
 
-*=$1000
-!src "../bios/defs.h.a"
-!src "../bios/bios.h.a"
 
 ; sdcard pin assignment:
 ; SD   | Signal 		| VIA Port
@@ -61,20 +64,20 @@
 
 ; outb 	= $f0
 ; inb		= $f1
-sdcmdres	= $e0
+;sdcmdres	= $e0
 
 	jsr lcdclear
 	sei
 
 	; SR shift in, External clock on CB1
-	lda #%00001100
-	sta via1acr
+	; lda #%00001100
+	; sta via1acr
 
-	lda #$ff
-	sta via1ddrb
+	; lda #$ff
+	; sta via1ddrb
 
-	lda #%01111110
-	sta via1portb
+	; lda #%01111110
+	; sta via1portb
 
 
 
@@ -110,34 +113,24 @@ sdcmdres	= $e0
 
 +	+PrintString cardok	
 
-
-	lda #' '
-	jsr lcdprint
-
-	+SDCommand cmd58, $01
+	+SDCommand cmd8, $01
 	+PrintSDRes $01
 
 		
-
-!for i,0,2 {
-
-	lda #'X'
-	jsr lcdprint
-
+-	jmp -			
 	+SDCommand cmd55, $01
-	lda #'.'
-	jsr lcdprint
+!for	j,0,10 	{
+	lda #$ff
+	jsr spi_rw_byte
+	jsr lcdhex
+} 
+-	jmp -			
 	
-	+PrintSDRes $01
-lda #'.'
-	jsr lcdprint
 	
 	+SDCommand acmd41, $01
-	lda #'.'
-	jsr lcdprint
 	
 	+PrintSDRes $01
-}
+
 	; lda #'B'
 	; jsr lcdprint
 
@@ -148,71 +141,71 @@ lda #'.'
 	; jsr lcdprint
 
 
-		
+-	jmp -			
 	jmp upload
 
 ; Transmit byte VIA SPI
 ; Byte to transmit in A, received byte in A at exit
 
-spi_rw_byte
-	phx
-	phy
+; spi_rw_byte
+; 	phx
+; 	phy
 
-	sta tmp0	; zu transferierendes byte im akku nach tmp0 retten
+; 	sta tmp0	; zu transferierendes byte im akku nach tmp0 retten
 
-	ldx #$08
+; 	ldx #$08
 	
-	lda via1portb	; Port laden
-	and #$fe        ; SPICLK loeschen
+; 	lda via1portb	; Port laden
+; 	and #$fe        ; SPICLK loeschen
 
-	asl		; Nach links rotieren, damit das bit nachher an der richtigen stelle steht
-	tay		 ; bunkern
+; 	asl		; Nach links rotieren, damit das bit nachher an der richtigen stelle steht
+; 	tay		 ; bunkern
 
--	
-	rol tmp0
-	tya		; portinhalt
-	ror		; datenbit reinschieben
+; -	
+; 	rol tmp0
+; 	tya		; portinhalt
+; 	ror		; datenbit reinschieben
 
-	sta via1portb	; ab in den port
-	inc via1portb	; takt an
-	sta via1portb	; takt aus 
+; 	sta via1portb	; ab in den port
+; 	inc via1portb	; takt an
+; 	sta via1portb	; takt aus 
 
-	dex
-	bne -		; schon acht mal?
+; 	dex
+; 	bne -		; schon acht mal?
 	
-	lda via1sr	; Schieberegister auslesen
+; 	lda via1sr	; Schieberegister auslesen
 
-	ply
-	plx
-	rts
+; 	ply
+; 	plx
+; 	rts
 	
-spi_r_byte
-       phy
-       lda via1portb   ; Port laden
-       AND #$7e  ;    * Daten und Takt ausschalten
-       TAY             ; aufheben
-       ORA #$01
+; spi_r_byte
+;        phy
+;        lda via1portb   ; Port laden
+;        AND #$7e  ;    * Daten und Takt ausschalten
+;        TAY             ; aufheben
+;        ORA #$01
 
-       STA via1portb ; Takt An 1
-       STY via1portb ; Takt aus
-       STA via1portb ; Takt An 2
-       STY via1portb ; Takt aus
-       STA via1portb ; Takt An 3
-       STY via1portb ; Takt aus
-       STA via1portb ; Takt An 4
-       STY via1portb ; Takt aus
-       STA via1portb ; Takt An 5
-       STY via1portb ; Takt aus
-       STA via1portb ; Takt An 6
-       STY via1portb ; Takt aus
-       STA via1portb ; Takt An 7
-       STY via1portb ; Takt aus
-       STA via1portb ; Takt An 8
-       STY via1portb ; Takt aus
+;        STA via1portb ; Takt An 1
+;        STY via1portb ; Takt aus
+;        STA via1portb ; Takt An 2
+;        STY via1portb ; Takt aus
+;        STA via1portb ; Takt An 3
+;        STY via1portb ; Takt aus
+;        STA via1portb ; Takt An 4
+;        STY via1portb ; Takt aus
+;        STA via1portb ; Takt An 5
+;        STY via1portb ; Takt aus
+;        STA via1portb ; Takt An 6
+;        STY via1portb ; Takt aus
+;        STA via1portb ; Takt An 7
+;        STY via1portb ; Takt aus
+;        STA via1portb ; Takt An 8
+;        STY via1portb ; Takt aus
 
-       lda via1sr
-       ply
-       rts
+;        lda via1sr
+;        ply
+;        rts
 
 ; ; Transmit byte VIA SPI
 ; ; Byte to transmit in A, received byte in A at exit
@@ -265,4 +258,3 @@ cmd16	!byte $50, $00, $00, $02, $00, $01
 
 cardok	!text "Card OK!", $00
 nocard	!text "No Card!", $00
-error	!text "SD CMD Err", $00

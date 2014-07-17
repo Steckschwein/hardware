@@ -10,9 +10,10 @@ count4		= 39996 ; jiffy count 100Hz for 4MHz system
 ; zeropage locations 
 ;----------------------------------------------------------------------------------------------
 
+; SD CArd result buffer
+sdcmdres	= $d0
 ; IRQ vector
 irqvec		= $e0
-
 ; general purpose temp variables
 tmp0		= $f0
 tmp1		= $f1

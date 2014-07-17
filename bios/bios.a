@@ -1,9 +1,6 @@
 *= $e000			; ROM Start
 ; Put charset here
-!for i, $1000 {
-			brk
-}
-
+!text "This space intentionally left blank", $00
 
 *=$f000
 !src "defs.h.a"
@@ -158,8 +155,10 @@ do_reset
 
 
 			
-;			cli 
-			jsr memcheck
+;			cli
+
+;	Memcheck disabled for now
+;			jsr memcheck
 
 			ldy #$02
 			ldx #$00
@@ -271,6 +270,18 @@ init_via1
 
 			lda #$00
 			sta via1ier             ; enable VIA1 T1 interrupts
+
+			; SR shift in, External clock on CB1
+			lda #%00001100
+			sta via1acr
+
+			; Port b all outputs
+			lda #$ff
+			sta via1ddrb
+
+			; SPICLK low, MOSI low, SPI_SS HI
+			lda #%01111110
+			sta via1portb
 
 
 			; lda #<count
@@ -570,6 +581,75 @@ i_lcddec
    rts
 
 ;----------------------------------------------------------------------------------------------
+; Transmit byte VIA SPI
+; Byte to transmit in A, received byte in A at exit
+;----------------------------------------------------------------------------------------------
+i_spi_rw_byte
+	phx
+	phy
+
+	sta tmp0	; zu transferierendes byte im akku nach tmp0 retten
+
+	ldx #$08
+	
+	lda via1portb	; Port laden
+	and #$fe        ; SPICLK loeschen
+
+	asl		; Nach links rotieren, damit das bit nachher an der richtigen stelle steht
+	tay		 ; bunkern
+
+-	
+	rol tmp0
+	tya		; portinhalt
+	ror		; datenbit reinschieben
+
+	sta via1portb	; ab in den port
+	inc via1portb	; takt an
+	sta via1portb	; takt aus 
+
+	dex
+	bne -		; schon acht mal?
+	
+	lda via1sr	; Schieberegister auslesen
+
+	ply
+	plx
+	rts
+
+;----------------------------------------------------------------------------------------------
+; Receive byte VIA SPI
+; Received byte in A at exit
+;----------------------------------------------------------------------------------------------
+	
+i_spi_r_byte
+       phy
+       lda via1portb   ; Port laden
+       AND #$7e  ;    * Daten und Takt ausschalten
+       TAY             ; aufheben
+       ORA #$01
+
+       STA via1portb ; Takt An 1
+       STY via1portb ; Takt aus
+       STA via1portb ; Takt An 2
+       STY via1portb ; Takt aus
+       STA via1portb ; Takt An 3
+       STY via1portb ; Takt aus
+       STA via1portb ; Takt An 4
+       STY via1portb ; Takt aus
+       STA via1portb ; Takt An 5
+       STY via1portb ; Takt aus
+       STA via1portb ; Takt An 6
+       STY via1portb ; Takt aus
+       STA via1portb ; Takt An 7
+       STY via1portb ; Takt aus
+       STA via1portb ; Takt An 8
+       STY via1portb ; Takt aus
+
+       lda via1sr
+       ply
+       rts
+
+;----------------------------------------------------------------------------------------------
 ; Tables and lookup data
 ;----------------------------------------------------------------------------------------------
 ; Lookup table for HEX to ASCII
@@ -579,7 +659,7 @@ hexascii	!text "0123456789ABCDEF"
 dec_tbl		!byte 128,160,200
 
 ; Version String
-biosversion	!text "V0507", $00
+biosversion	!text "V1607a", $00
 
 ;----------------------------------------------------------------------------------------------
 ;	divisor values for 1.8432 MHz Crystal
@@ -633,6 +713,13 @@ sys_lcdbusy
 lcdbusy 	jmp i_lcdbusy
 sys_lcdxy
 lcdxy 		jmp i_lcdxy
+
+sys_spi_rw_byte	
+spi_rw_byte	jmp i_spi_rw_byte
+
+sys_spi_r_byte	
+spi_r_byte	jmp i_spi_r_byte
+
 sys_upload	jmp upload
 
 ;----------------------------------------------------------------------------------------------
