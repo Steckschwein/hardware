@@ -7,7 +7,7 @@ device=LM555
 T 48200 44400 5 10 1 1 0 0 1
 refdes=U1
 T 47000 44100 5 10 0 1 0 0 1
-footprint=DIP8
+footprint=DIL 8 300
 }
 C 48400 47900 1 0 0 resistor-2.sym
 {
@@ -72,7 +72,7 @@ C 51600 44100 1 0 0 7400-1.sym
 T 52100 45000 5 10 0 0 0 0 1
 device=7400
 T 52100 46350 5 10 0 0 0 0 1
-footprint=DIP14
+footprint=DIL 14 300
 T 51900 45000 5 10 1 1 0 0 1
 refdes=U2
 T 52200 44700 5 10 0 1 0 0 1

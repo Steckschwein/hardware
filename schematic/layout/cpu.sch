@@ -11,7 +11,7 @@ device=65c02
 T 42800 47600 5 10 1 1 0 0 1
 refdes=U3
 T 41900 44500 5 10 0 0 0 0 1
-footprint=DIP40
+footprint=DIL 40 600
 }
 N 43900 47000 44500 47000 4
 {
@@ -443,7 +443,7 @@ device=gal22v10d
 T 54400 47300 5 10 1 1 0 0 1
 refdes=U7
 T 53500 44800 5 10 1 1 0 0 1
-footprint=DIP24N
+footprint=DIL 24 300
 }
 N 46400 46300 46400 46600 4
 C 46300 46700 1 180 0 resistor-2.sym
