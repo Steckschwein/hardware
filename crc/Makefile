@@ -1,7 +1,7 @@
 all : crc7
 
-crc7 : 
-	cc crc7.c -o crc7
+crc7 : crc7.o
+	cc crc7.o -o crc7
 
 clean :
-	rm -rf crc7
+	rm -rf crc7 *.o
