@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 
 void usage() {
@@ -77,6 +78,7 @@ int main(int argc, char *argv[]){
 
 	unsigned short crc = crc7(data, 0, 5)<<1;
 	for (i = 0; i < 5;i++)
-		fprintf(stderr, "%x,", data[i]);
-	fprintf(stderr, "%x", crc | 0x01);//sd stop bit
+		printf("$%02x,", data[i]);
+	printf("$%02x\n", crc | 0x01);//sd stop bit
+	
 }
