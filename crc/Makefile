@@ -1,3 +1,4 @@
+CFLAGS="-Os" 
 all : crc7
 
 crc7 : crc7.o
