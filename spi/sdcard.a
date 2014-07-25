@@ -12,22 +12,16 @@
 	cpx #$06
 	bne -
 
-	lda #$ff
-	jsr spi_rw_byte		; byte lesen
+	;lda #$ff
+	jsr spi_r_byte		; byte lesen
 
-;	ldy #$00
 	ldx #$00
 -		
-	lda #$ff
-	jsr spi_rw_byte		; byte lesen
+	;lda #$ff
+	jsr spi_r_byte		; byte lesen
 
- 	; cpy #$00 			; y=0?
- 	; bne +				; nein, dann weiter
- 	; cmp #$ff			; ja, dann gelesenes byte=$FF?
- 	; beq -				; ja, dann nochmal lesen
 +	sta sdcmdres,x		; 
  	inx
-;	iny
  	cpx #.numres
  	bne -
 }
@@ -90,7 +84,9 @@
 -	sty via1portb
 	sta via1portb
 	dex
+
 	bne -
+
 
 
 
@@ -113,23 +109,19 @@
 
 +	+PrintString cardok	
 
-	+SDCommand cmd8, $01
+	+SDCommand cmd8, $05
+	+PrintSDRes $05
+
+
+	+SDCommand cmd55, $01
+	+SDCommand acmd41hcs, $01
+
 	+PrintSDRes $01
 
-		
--	jmp -			
-	+SDCommand cmd55, $01
-!for	j,0,10 	{
-	lda #$ff
-	jsr spi_rw_byte
-	jsr lcdhex
-} 
--	jmp -			
-	
-	
-	+SDCommand acmd41, $01
-	
-	+PrintSDRes $01
+
+
+
+
 
 	; lda #'B'
 	; jsr lcdprint
@@ -137,121 +129,28 @@
 	; +SDCommand cmd16, $01
 	; +PrintSDRes $01
 
-	; lda #' '
-	; jsr lcdprint
+	lda #'X'
+	jsr lcdprint
 
 
 -	jmp -			
 	jmp upload
 
-; Transmit byte VIA SPI
-; Byte to transmit in A, received byte in A at exit
-
-; spi_rw_byte
-; 	phx
-; 	phy
-
-; 	sta tmp0	; zu transferierendes byte im akku nach tmp0 retten
-
-; 	ldx #$08
-	
-; 	lda via1portb	; Port laden
-; 	and #$fe        ; SPICLK loeschen
-
-; 	asl		; Nach links rotieren, damit das bit nachher an der richtigen stelle steht
-; 	tay		 ; bunkern
-
-; -	
-; 	rol tmp0
-; 	tya		; portinhalt
-; 	ror		; datenbit reinschieben
-
-; 	sta via1portb	; ab in den port
-; 	inc via1portb	; takt an
-; 	sta via1portb	; takt aus 
-
-; 	dex
-; 	bne -		; schon acht mal?
-	
-; 	lda via1sr	; Schieberegister auslesen
-
-; 	ply
-; 	plx
-; 	rts
-	
-; spi_r_byte
-;        phy
-;        lda via1portb   ; Port laden
-;        AND #$7e  ;    * Daten und Takt ausschalten
-;        TAY             ; aufheben
-;        ORA #$01
-
-;        STA via1portb ; Takt An 1
-;        STY via1portb ; Takt aus
-;        STA via1portb ; Takt An 2
-;        STY via1portb ; Takt aus
-;        STA via1portb ; Takt An 3
-;        STY via1portb ; Takt aus
-;        STA via1portb ; Takt An 4
-;        STY via1portb ; Takt aus
-;        STA via1portb ; Takt An 5
-;        STY via1portb ; Takt aus
-;        STA via1portb ; Takt An 6
-;        STY via1portb ; Takt aus
-;        STA via1portb ; Takt An 7
-;        STY via1portb ; Takt aus
-;        STA via1portb ; Takt An 8
-;        STY via1portb ; Takt aus
-
-;        lda via1sr
-;        ply
-;        rts
-
-; ; Transmit byte VIA SPI
-; ; Byte to transmit in A, received byte in A at exit
-; spi_rw_byte	
-; 	phx
-; 	phy
-; 	ldx #$08
-; 	clc
-; --
-; 	asl
-
-; 	tay
-; 	bcs one
-
-; zero	
-; 	lda #%01111111
-; 	and via1portb
-; 	sta via1portb
-; 	bra clk
-
-; one	lda #%10000000
-; 	ora via1portb	
-; 	sta via1portb
-	
-; clk
-; 	inc via1portb
-; 	tya
-; 	dec via1portb
-
-; 	dex
-; 	bne --
-; 	lda via1sr
-; 	ply
-; 	plx
-; 	rts
-
 ; cmd0 reset card to IDLE state
 cmd0	!byte %01000000, %00000000, %00000000, %00000000, %00000000, %10010101
-; cmd8 Sends SD Memory Card interface condition (old)
-cmd8 	!byte %01001000, %00000000, %00000000, %00000001, %10101010, %00001111
+cmd1	!byte %01000001, %00000000, %00000000, %00000000, %00000000, %00000001
+								      
+; cmd8 Sends SD Memory Card interface condition (SD 2.0)
+cmd8 	!byte %01001000, %00000000, %00000000, %00000001, %10101010, $87
+;cmd8 	!byte %01001000, %00000000, %00000000, %00000001, %10101010, %10010101
 ; cmd58 Sends SD Memory Card interface condition
 cmd58	!byte %01111010, %00000000, %00000000, %00000000, %00000000, %01110101
 ; cmd55
 cmd55	!byte $77, $00, $00, $00, $00, $01
 ; acmd41
 acmd41  !byte $69, $00, $00, $00, $00, $01
+acmd41hcs  !byte $69, $40, $00, $00, $00, $01
+
 ; cmd16 SET_BLOCKLEN
 cmd16	!byte $50, $00, $00, $02, $00, $01
 

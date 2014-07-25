@@ -1,0 +1,13 @@
+# use glob syntax.
+syntax: glob
+
+.DS_Store
+*.bin
+*.chp
+*.fus
+*.jed
+*.pin
+*.labels
+*.orig
+*.bak
+*~
