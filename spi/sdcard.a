@@ -12,13 +12,13 @@
 	cpx #$06
 	bne -
 
-;	lda #$ff
-	jsr spi_r_byte		; byte lesen
+	lda #$ff
+	jsr spi_rw_byte		; byte lesen
 
 	ldx #$00
 -		
-;	lda #$ff
-	jsr spi_r_byte		; byte lesen
+	lda #$ff
+	jsr spi_rw_byte		; byte lesen
 
 +	sta sdcmdres,x		; 
  	inx
@@ -72,8 +72,7 @@
 
 	; lda #%01111110
 	; sta via1portb
-
-
+init
 	ldx #80
 
 	lda #%11111110
@@ -87,14 +86,12 @@
 	bne -
 
 
-
 	; set CS line to LOW
 	lda #%11111101
 	and via1portb	
 	sta via1portb
 	
 
-init
 	; send CMD0 - init SD card to SPI mode
 	+SDCommand cmd0, $01
 	
@@ -111,28 +108,56 @@ init
 	+PrintSDRes $05
 
 
-	+SDCommand cmd55, $01
-	+SDCommand acmd41x, $01
-	+PrintSDRes $01
-	+SDCommand acmd41x, $01
-	+PrintSDRes $01
-	+SDCommand acmd41x, $01
-	+PrintSDRes $01
+	lda #$40
+	sta acmd41+1
+
+	ldx #$00
+
 	
-	; +SDCommand cmd1, $01
-	; +PrintSDRes $01
+initloop	
+	phx
+	+SDCommand cmd55, $01
+	plx
+	+SDCommand acmd41, $01
+	
 
-	; lda #'B'
-	; jsr lcdprint
+	lda sdcmdres
+	cmp #$00
+	beq initok
+	inx
+	cpx #$ff
+	bne initloop
+	
+	+PrintString initfail
+-	jmp -
 
-	; +SDCommand cmd16, $01
-	; +PrintSDRes $01
+initok
+	+PrintString initdone
+
+	+SDCommand cmd58, $05
+;	+PrintSDRes $05
+	
+
+	+SDCommand cmd16, $01
+;	+PrintSDRes $01
+
+	+SDCommand cmd17, $01
+	+PrintSDRes $01
+
+-	jsr spi_r_byte
+	cmp #$fe
+	bne -
+
+	ldx #$20
+-
+	jsr spi_r_byte
+	jsr lcdprint
+	dex
+	bne -
 
 	lda #'X'
 	jsr lcdprint
 
-
--	jmp -			
 	jmp upload
 
 ; cmd0 reset card to IDLE state
@@ -148,11 +173,11 @@ cmd58	!byte %01111010, %00000000, %00000000, %00000000, %00000000, %01110101
 cmd55	!byte $77, $00, $00, $00, $00, $01
 ; acmd41
 acmd41  !byte $69, $00, $00, $00, $00, $01
-acmd41x  !byte $69, $40, $00, $00, $00, $01
-
 ; cmd16 SET_BLOCKLEN
 cmd16	!byte $50, $00, $00, $02, $00, $01
+cmd17	!byte $51, $00, $00, $00, $00, $01
 
-
-cardok	!text "Card OK!", $00
-nocard	!text "No Card!", $00
+cardok	!text "SD Card Found!", $00
+nocard	!text "No SD Card!", $00
+initdone	!text "Init OK!", $00
+initfail	!text "Init Failed!", $00
