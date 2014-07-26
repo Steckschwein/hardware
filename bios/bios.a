@@ -1,5 +1,5 @@
 *= $e000			; ROM Start
-; Put charset here
+!bin "../charsets/char.bin"
 !text "This space intentionally left blank", $00
 
 *=$f000
@@ -468,22 +468,6 @@ i_lcdxy
 ;----------------------------------------------------------------------------------------------
 ; send byte in A 
 ;----------------------------------------------------------------------------------------------
-; i_uart_tx
-; 	pha
-; 	phx
-
-; 	tax
-
-; -	lda uart1lsr
-; 	and #$20
-; 	beq -
-
-; 	stx uart1rxtx
-	
-; 	plx
-; 	pla
-; 	rts
-
 i_uart_tx
 	pha
 
@@ -503,7 +487,6 @@ i_uart_tx
 ;----------------------------------------------------------------------------------------------
 ; receive byte, store in A 
 ;----------------------------------------------------------------------------------------------
-
 i_uart_rx
 -	lda uart1lsr 
 	and #$1f
@@ -659,7 +642,7 @@ hexascii	!text "0123456789ABCDEF"
 dec_tbl		!byte 128,160,200
 
 ; Version String
-biosversion	!text "V1607a", $00
+biosversion	!text "V2607", $00
 
 ;----------------------------------------------------------------------------------------------
 ;	divisor values for 1.8432 MHz Crystal
