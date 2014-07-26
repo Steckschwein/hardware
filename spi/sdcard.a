@@ -12,12 +12,12 @@
 	cpx #$06
 	bne -
 
-	;lda #$ff
+;	lda #$ff
 	jsr spi_r_byte		; byte lesen
 
 	ldx #$00
 -		
-	;lda #$ff
+;	lda #$ff
 	jsr spi_r_byte		; byte lesen
 
 +	sta sdcmdres,x		; 
@@ -74,8 +74,7 @@
 	; sta via1portb
 
 
-
-	ldx #74
+	ldx #80
 
 	lda #%11111110
 	sta via1portb
@@ -89,14 +88,13 @@
 
 
 
-
 	; set CS line to LOW
 	lda #%11111101
 	and via1portb	
 	sta via1portb
 	
 
-
+init
 	; send CMD0 - init SD card to SPI mode
 	+SDCommand cmd0, $01
 	
@@ -105,7 +103,7 @@
 	beq +
 	
 	+PrintString nocard	
--	jmp -
+	jmp init
 
 +	+PrintString cardok	
 
@@ -114,14 +112,15 @@
 
 
 	+SDCommand cmd55, $01
-	+SDCommand acmd41hcs, $01
-
+	+SDCommand acmd41x, $01
 	+PrintSDRes $01
-
-
-
-
-
+	+SDCommand acmd41x, $01
+	+PrintSDRes $01
+	+SDCommand acmd41x, $01
+	+PrintSDRes $01
+	
+	; +SDCommand cmd1, $01
+	; +PrintSDRes $01
 
 	; lda #'B'
 	; jsr lcdprint
@@ -149,7 +148,7 @@ cmd58	!byte %01111010, %00000000, %00000000, %00000000, %00000000, %01110101
 cmd55	!byte $77, $00, $00, $00, $00, $01
 ; acmd41
 acmd41  !byte $69, $00, $00, $00, $00, $01
-acmd41hcs  !byte $69, $40, $00, $00, $00, $01
+acmd41x  !byte $69, $40, $00, $00, $00, $01
 
 ; cmd16 SET_BLOCKLEN
 cmd16	!byte $50, $00, $00, $02, $00, $01
