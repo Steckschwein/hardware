@@ -1,3 +1,10 @@
+; sdcard pin assignment:
+; SD   | Signal 		| VIA Port
+;   1  |    /CS 		|          PB1
+;   2  | CMD/DI (mosi)		|          CB2
+;   5  |    CLK 		|	   PB0/CB1
+;   7  | DAT/DO 		|          PB7
+
 *=$1000
 !src "../bios/defs.h.a"
 !src "../bios/bios.h.a"
@@ -12,13 +19,11 @@
 	cpx #$06
 	bne -
 
-	lda #$ff
-	jsr spi_rw_byte		; byte lesen
+	jsr spi_r_byte		; byte lesen
 
 	ldx #$00
 -		
-	lda #$ff
-	jsr spi_rw_byte		; byte lesen
+	jsr spi_r_byte		; byte lesen
 
 +	sta sdcmdres,x		; 
  	inx
@@ -49,12 +54,6 @@
 
 
 
-; sdcard pin assignment:
-; SD   | Signal 		| VIA Port
-;   1  |    /CS 		|          PB1
-;   2  | CMD/DI (mosi)		|          CB2
-;   5  |    CLK 		|	   PB0/CB1
-;   7  | DAT/DO 		|          PB7
 
 ; outb 	= $f0
 ; inb		= $f1
@@ -141,22 +140,42 @@ initok
 	+SDCommand cmd16, $01
 ;	+PrintSDRes $01
 
+
+sd_read_block
 	+SDCommand cmd17, $01
 	+PrintSDRes $01
 
+	; Wait for data block to become ready
 -	jsr spi_r_byte
 	cmp #$fe
 	bne -
 
-	ldx #$20
+	ldx #$00
 -
 	jsr spi_r_byte
-	jsr lcdprint
-	dex
+	sta $2000,x
+	inx
 	bne -
+
+	ldx #$00
+-
+	jsr spi_r_byte
+	sta $2100,x
+	inx
+	bne -
+
+	
+	jsr spi_r_byte
+	jsr spi_r_byte
 
 	lda #'X'
 	jsr lcdprint
+
+
+	; set CS line to HI
+	lda #%01111110
+	ora via1portb	
+	sta via1portb
 
 	jmp upload
 
@@ -176,6 +195,7 @@ acmd41  !byte $69, $00, $00, $00, $00, $01
 ; cmd16 SET_BLOCKLEN
 cmd16	!byte $50, $00, $00, $02, $00, $01
 cmd17	!byte $51, $00, $00, $00, $00, $01
+cmd24	!byte $58, $00, $00, $00, $00, $01
 
 cardok	!text "SD Card Found!", $00
 nocard	!text "No SD Card!", $00
