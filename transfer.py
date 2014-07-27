@@ -34,7 +34,7 @@ try:
 		stopbits=1,
 		xonxoff=0, 
 		rtscts=0,
-		timeout=None
+		timeout=5
 	)
 	
 
@@ -56,6 +56,12 @@ try:
 		print "Length %d bytes" % (bytes, )
 		print "Bytes transferred: %d" % (bytes, )
 
+#	while True:
+#		c = ser.read()
+#		if c == '':
+#			break
+#		sys.stdout.write(c)
+	
 	ser.close()
 
 except IndexError:
