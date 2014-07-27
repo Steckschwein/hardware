@@ -25,32 +25,55 @@ main:
 	jsr   lcdprint
 	jsr   vdp_init
  	jsr   vdp_clear_vram
-   jsr   vdp_blank_screen
+   jsr   vdp_clear_screen
    jsr   vdp_load_charset
-   jsr   vdp_color
-   jsr   vdp_write
 	
-	+nops	VREG_WAIT
-	lda	#v_reg1_16k|v_reg1_display_on
-	sta	a_vreg_w
-	+nops	VREG_WAIT
-	lda	#v_reg1
-	sta	a_vreg_w
+	jsr	vdp_colortest
 
-;	ldx	#v_reg1_16k|v_reg1_display_on
-;	ldy	#v_reg1
-;	jsr	vdp_sreg
+;   jsr   vdp_color
+;   jsr   vdp_write
 	
-   jsr   lcdclear
+	ldx	#v_reg1_16k|v_reg1_display_on
+	ldy	#v_reg1
+	jsr	vdp_sreg
+	
    lda   #'x'
-   jsr   lcdprint
-	
+   jsr   lcdprint	
 -	
 	jsr	burn_cycles
    jsr   vdp_sprite
 	jsr	sprite_move
    jmp	-
 
+vdp_init_bytes
+	!byte 0
+	!byte v_reg1_16k
+	!byte ($1400 / $400)	; name table - value * $400
+	!byte	($2000 / $40)	; color table - value * $40 (gfx1), 7f/ff (gfx2)
+	!byte	($0000 / $800) ; pattern table (charset) - value * $800  --> offset in VRAM 
+	!byte	($2800 / $80)	; sprite attribute table - value * $80 --> offset in VRAM 
+	!byte	($0000 / $800)	; sprite pattern table - value * $800  --> offset in VRAM 
+	!byte	Dark_Green<<4 | Black
+vdp_init:
+   ;reg 0 0 - ext. video off, 
+   ;reg 1 c0 - 4108/4116 DRAM, int disabled, video on, text mode, size 1, magnitude off
+   ;reg 2 
+   ;reg 3
+   ;reg 4
+   ;reg 5
+   ;reg 6
+   ;reg 7 7 - cyan background color
+   ldx   #$00
+   ldy	#$80
+-  lda   vdp_init_bytes,x
+	jsr	vdp_sreg			; write data to vdp - write the register number to vdp, 80 - reg0 , 81 - reg1 ... see datasheet page 4.1
+   iny
+   inx
+   cpx   #$08
+   bne   -
+   rts
+	
+	
 burn_cycles:
 	ldy	#$20
 	ldx	#$ff
@@ -81,37 +104,6 @@ vdp_sprite:
 	cpy	#(5*4)	
    bne   -
 +  rts
-	
-vdp_init_bytes
-	!byte 0
-	!byte v_reg1_16k
-	!byte $05	; name table - value * $400
-	!byte	$80	; color table - value * $40 (gfx1), 7f/ff (gfx2)
-	!byte	$00	; pattern table (charset) - value * $800  --> offset in VRAM 
-	!byte	$50	; sprite attribute table - value * $80 --> offset in VRAM 
-	!byte	$00	; sprite pattern table - value * $800  --> offset in VRAM 
-	!byte	Dark_Green<<4|Black
-vdp_init:
-   ;reg 0 0 - ext. video off, 
-   ;reg 1 c0 - 4108/4116 DRAM, int disabled, video on, text mode, size 1, magnitude off
-   ;reg 2 
-   ;reg 3
-   ;reg 4
-   ;reg 5
-   ;reg 6
-   ;reg 7 7 - cyan background color
-   ldx   #$00
-   ldy	#$80
--  +nops	VREG_WAIT
-   lda   vdp_init_bytes,x
-   sta   a_vreg_w      ; write data to vdp
-	+nops	VREG_WAIT
-   sty   a_vreg_w      ; write the register number to vdp, 80 - reg0 , 81 - reg1 ... see datasheet page 4.1
-   iny
-   inx
-   cpx   #$08
-   bne   -
-   rts
 vdp_sreg:
    +nops VREG_WAIT
 	stx   a_vreg_w
@@ -156,7 +148,7 @@ vdp_load_charset:
    bne   -
    rts
 
-vdp_blank_screen:
+vdp_clear_screen:
    ldx   #$00
    ldy   #$54
    jsr   vdp_sreg
@@ -172,6 +164,21 @@ vdp_blank_screen:
    bne   -
    rts
    
+vdp_colortest:
+   ldx   #$00
+   ldy   #$60
+   jsr   vdp_sreg
+   ldy   #Black<<4|Transparent
+-  +nops VRAM_WAIT
+   sty   a_vram_w
+   +nops VRAM_WAIT
+   sty   a_vram_w
+	iny
+   inx
+   cpx   #$20
+   bne   -
+   rts
+	
 vdp_write:
    ldx   #$00
    ldy   #$54
@@ -367,5 +374,3 @@ sprite2:
 ;		+SpriteLine %#.#######.#
 ;		+SpriteLine %#.#.....#.#
 ;		+SpriteLine %...##.##...
-
-			
