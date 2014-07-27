@@ -14,5 +14,7 @@ bios.h.a: bios.bin
 %.bin: %.a
 	acme -l $<.labels $(ACME_OPTS) -o $@ $<
 
+burn: bios.bin
+	minipro -p AT28C256 -w bios.bin -e
 transfer: loader
 	../transfer.py loader.bin 0x0800
