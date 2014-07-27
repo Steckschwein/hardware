@@ -9,6 +9,9 @@
 !src "../bios/defs.h.a"
 !src "../bios/bios.h.a"
 
+sd_init_num_tries = $ff
+sd_blktarget = $2000
+
 !macro SDCommand .cmd, .numres {
 	ldx #$00
 -	lda .cmd,x
@@ -71,79 +74,29 @@
 
 	; lda #%01111110
 	; sta via1portb
-init
-	ldx #80
+	jsr init_sdcard
+	jsr sd_read_block
 
-	lda #%11111110
-	sta via1portb
-	tay
-	iny
--	sty via1portb
-	sta via1portb
-	dex
-
+	ldx #$00
+- 	lda sd_blktarget,x
+	jsr lcdprint
+	inx
+	cpx #32
 	bne -
 
 
-	; set CS line to LOW
-	lda #%11111101
-	and via1portb	
+	; set CS line to HI
+	lda #%01111110
+	ora via1portb	
 	sta via1portb
-	
 
-	; send CMD0 - init SD card to SPI mode
-	+SDCommand cmd0, $01
-	
-	lda sdcmdres
-	cmp #$01
-	beq +
-	
-	+PrintString nocard	
-	jmp init
-
-+	+PrintString cardok	
-
-	+SDCommand cmd8, $05
-	+PrintSDRes $05
+	jmp upload
 
 
-	lda #$40
-	sta acmd41+1
-
-	ldx #$00
-
-	
-initloop	
-	phx
-	+SDCommand cmd55, $01
-	plx
-	+SDCommand acmd41, $01
-	
-
-	lda sdcmdres
-	cmp #$00
-	beq initok
-	inx
-	cpx #$ff
-	bne initloop
-	
-	+PrintString initfail
--	jmp -
-
-initok
-	+PrintString initdone
-
-	+SDCommand cmd58, $05
-;	+PrintSDRes $05
-	
-
-	+SDCommand cmd16, $01
-;	+PrintSDRes $01
-
-
+; Read block from SD Card
 sd_read_block
 	+SDCommand cmd17, $01
-	+PrintSDRes $01
+	; +PrintSDRes $01
 
 	; Wait for data block to become ready
 -	jsr spi_r_byte
@@ -153,31 +106,142 @@ sd_read_block
 	ldx #$00
 -
 	jsr spi_r_byte
-	sta $2000,x
+	sta sd_blktarget,x
 	inx
 	bne -
 
 	ldx #$00
 -
 	jsr spi_r_byte
-	sta $2100,x
+	sta sd_blktarget+$100,x
 	inx
 	bne -
 
-	
+	; Read CRC bytes	
 	jsr spi_r_byte
 	jsr spi_r_byte
 
-	lda #'X'
-	jsr lcdprint
+	rts
 
 
-	; set CS line to HI
+
+init_sdcard
+	; set ALL CS lines to HIGH
 	lda #%01111110
 	ora via1portb	
 	sta via1portb
 
-	jmp upload
+	; 80 Taktzyklen
+	ldx #80
+
+	lda #%11111110
+	sta via1portb
+	
+	tay
+	iny
+
+-	sty via1portb
+	sta via1portb
+	dex
+	bne -
+
+	; set CS line to LOW
+	lda #%11111101
+	and via1portb	
+	sta via1portb
+	
+init
+	; send CMD0 - init SD card to SPI mode
+	+SDCommand cmd0, $01
+	; +PrintSDRes $01
+	lda sdcmdres
+	cmp #$01
+	beq +
+	
+	+PrintString nocard	
+	rts
+
++	+PrintString cardok	
+
+	+SDCommand cmd8, $05
+;	+PrintSDRes $05
+
+	ldx #$04
+	lda sdcmdres,x
+	cmp #$aa
+	bne sdver1
+
+	ldx #$03
+	lda sdcmdres,x
+	cmp #$01
+	bne sdver1
+
+	; SD Cart Version 2.0
+sdver2
+	; lda #'2'
+	; jsr lcdprint
+	lda #$40
+	sta acmd41+1
+
+	; SD Cart Version 1.0
+sdver1
+	; lda #'1'
+	; jsr lcdprint
+
+	ldx #$00
+
+	; Try to initialize card. Retry $ff times.
+initloop	
+	phx
+	+SDCommand cmd55, $01
+	+SDCommand acmd41, $01
+	plx
+
+	lda sdcmdres
+	cmp #$00
+	beq sdinitok
+	inx
+	cpx #sd_init_num_tries
+	bne initloop
+
+	; MMC Card
+	; Try to initialize card with cmd1. Retry $ff times.
+	ldx #$00
+	; lda #'M'
+	; jsr lcdprint
+
+
+initloop2
+	phx
+	+SDCommand cmd1, $01
+	plx
+
+	lda sdcmdres
+	cmp #$00
+	beq setblksize
+	inx
+	cpx #sd_init_num_tries
+	bne initloop2
+
+
+	+PrintString initfail
+	rts
+
+sdinitok
+	+SDCommand cmd58, $05
+	
+	; TODO
+	; CCS bit set? Yes, go to initdone
+	bit sdcmdres+1
+	bvs initdone
+
+setblksize
+	+SDCommand cmd16, $01
+
+initdone
+	+PrintString initdonetxt
+	rts
+
 
 ; cmd0 reset card to IDLE state
 cmd0	!byte %01000000, %00000000, %00000000, %00000000, %00000000, %10010101
@@ -199,5 +263,5 @@ cmd24	!byte $58, $00, $00, $00, $00, $01
 
 cardok	!text "SD Card Found!", $00
 nocard	!text "No SD Card!", $00
-initdone	!text "Init OK!", $00
+initdonetxt	!text "Init OK!", $00
 initfail	!text "Init Failed!", $00
