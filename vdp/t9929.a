@@ -29,13 +29,15 @@ main:
    jsr   vdp_load_charset
 	
 	jsr	vdp_colortest
+   lda   #'1'
+   jsr   lcdprint	
 
 ;   jsr   vdp_color
-;   jsr   vdp_write
-	
-	ldx	#v_reg1_16k|v_reg1_display_on
+;    jsr   vdp_write
+
+	lda	#v_reg1_16k|v_reg1_display_on
 	ldy	#v_reg1
-	jsr	vdp_sreg
+	jsr	vdp_srega
 	
    lda   #'x'
    jsr   lcdprint	
@@ -63,10 +65,10 @@ vdp_init:
    ;reg 5
    ;reg 6
    ;reg 7 7 - cyan background color
-   ldx   #$00
-   ldy	#$80
+   ldx   	#$00
+   ldy		#$80
 -  lda   vdp_init_bytes,x
-	jsr	vdp_sreg			; write data to vdp - write the register number to vdp, 80 - reg0 , 81 - reg1 ... see datasheet page 4.1
+	jsr	vdp_srega	; write data to vdp - write the register number to vdp, 80 - reg0 , 81 - reg1 ... see datasheet page 4.1
    iny
    inx
    cpx   #$08
@@ -104,6 +106,12 @@ vdp_sprite:
 	cpy	#(5*4)	
    bne   -
 +  rts
+vdp_srega:
+   +nops VREG_WAIT
+	sta   a_vreg_w
+   +nops VREG_WAIT
+   sty   a_vreg_w
+   rts
 vdp_sreg:
    +nops VREG_WAIT
 	stx   a_vreg_w
@@ -164,16 +172,25 @@ vdp_clear_screen:
    bne   -
    rts
    
-vdp_colortest:
-   ldx   #$00
-   ldy   #$60
-   jsr   vdp_sreg
-   ldy   #Black<<4|Transparent
+vdp_colortest:	
+   lda   #$00
+   ldy   #$54
+   jsr   vdp_srega
+   ldy   #$00
+   lda   #'A'
 -  +nops VRAM_WAIT
-   sty   a_vram_w
-   +nops VRAM_WAIT
-   sty   a_vram_w
-	iny
+   sta   a_vram_w
+   iny
+	bne   -
+   ldx   #$00
+   lda   #$00
+   ldy   #$60
+   jsr   vdp_srega
+   lda   #Cyan<<4|Transparent
+-  +nops VRAM_WAIT
+   sta   a_vram_w
+;	clc
+;	adc	#$10
    inx
    cpx   #$20
    bne   -
@@ -184,8 +201,7 @@ vdp_write:
    ldy   #$54
    jsr   vdp_sreg
    ldy   #$00
--
-   lda   msg_2,y
+-  lda   msg_2,y
    beq   +
    +nops VRAM_WAIT
    sta   a_vram_w
