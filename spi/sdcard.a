@@ -5,6 +5,10 @@
 ;   5  |    CLK 		|	   PB0/CB1
 ;   7  | DAT/DO 		|          PB7
 
+cmd17	= 17+64
+cmd18	= 18+64
+cmd24	= 24+64
+
 *=$1000
 !src "../bios/defs.h.a"
 !src "../bios/bios.h.a"
@@ -12,7 +16,7 @@
 
 sd_init_num_tries = $ff
 sd_blktarget = $0400
-sd_cmd_param = $0300
+sd_cmd_param = $0600
 
 !macro SDCommand .cmd, .numres {
 	ldx #$00
@@ -126,6 +130,25 @@ sd_cmd_param = $0300
 	inx
 	cpx #11
 	bne -
+
+	ldx #$00
+-	lda label,x
+	beq +
+	sta sd_blktarget + BS_VolLab2,x
+	inx
+	bra -
+
++
+	ldx #$00
+-	lda sd_blktarget + BS_VolLab2,x
+	jsr lcdprint
+	inx
+	cpx #11
+	bne -
+
+
+;	jsr sd_write_block
+
 	
 	; set CS line to HI
 	lda #%01111110
@@ -133,6 +156,80 @@ sd_cmd_param = $0300
 	sta via1portb
 
 	jmp upload
+
+
+; Write block to SD Card
+sd_write_block
+	jsr sd_select_card
+
+	lda #cmd24
+	jsr spi_rw_byte
+
+	ldx #$00
+-	lda sd_cmd_param,x
+	jsr spi_rw_byte	
+	inx
+	cpx #$04
+	bne -
+
+	lda #$01
+	jsr spi_rw_byte
+	
+-	lda #$ff
+	jsr spi_rw_byte		
+	cmp #$00
+	bne -
+
+	lda #$fe
+	jsr spi_rw_byte
+
+	ldx #$00
+-	lda sd_blktarget,x
+	jsr spi_rw_byte
+	inx
+	bne -
+
+	ldx #$00
+-	lda sd_blktarget+$100,x
+	jsr spi_rw_byte
+	inx
+	bne -
+
+	; Send fake CRC bytes
+	lda #$00
+	jsr spi_rw_byte
+	lda #$00
+	jsr spi_rw_byte
+
+	jsr spi_r_byte		
+	jsr lcdhex
+
+
+	
+	
+	; lda #$ff
+	; jsr spi_rw_byte
+	; lda #$ff
+	; jsr spi_rw_byte
+
+	; and #%00011111
+	; jsr lcdhex
+
+
+	
+
+-	lda #$ff
+	jsr spi_rw_byte		
+	jsr lcdhex
+	cmp #$ff
+	bne -
+	
+sd_write_block_end
+	jsr sd_deselect_card
+
+	rts
+
+
 
 
 ; Read block from SD Card
@@ -159,13 +256,6 @@ sd_read_block
 
 	jsr spi_r_byte
 	sta sdcmdres	
-
-;	cmp #$ff
-;	bne -
-
-
-;	cmp #$ff
-;	beq sd_read_block_end
 
 	; Wait for data block to become ready
 -	jsr spi_r_byte
@@ -331,15 +421,11 @@ sd_deselect_card
 	ora via1portb	
 	sta via1portb
 
-	lda #$ff
-	jsr spi_rw_byte
-	lda #$ff
-	jsr spi_rw_byte
-	lda #$ff
-	jsr spi_rw_byte
-	lda #$ff
-	jsr spi_rw_byte
 
+!for i,0,10 {
+	lda #$ff
+	jsr spi_rw_byte
+}
 	pla
 
 	rts
@@ -386,10 +472,11 @@ cmd55	!byte $77, $00, $00, $00, $00, $01
 acmd41  !byte $69, $00, $00, $00, $00, $01
 ; cmd16 SET_BLOCKLEN
 cmd16	!byte $50, $00, $00, $02, $00, $01
-cmd17	!byte $51, $00, $00, $00, $00, $01
-cmd24	!byte $58, $00, $00, $00, $00, $01
+; cmd17	!byte $51, $00, $00, $00, $00, $01
+; cmd24	!byte $58, $00, $00, $00, $00, $01
 
 cardok	!text "SD Card Found!", $00
 nocard	!text "No SD Card!", $00
 initdonetxt	!text "Init OK!", $00
 initfail	!text "Init Failed!", $00
+label	!text "STCKSCHWEIN", $00
