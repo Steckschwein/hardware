@@ -15,8 +15,7 @@ cmd24	= 24+64
 !src "fat32.h.a"
 
 sd_init_num_tries = $ff
-sd_blktarget = $0400
-sd_cmd_param = $0600
+
 
 !macro SDCommand .cmd, .numres {
 	ldx #$00
@@ -35,7 +34,7 @@ sd_cmd_param = $0600
 -		
 	jsr spi_r_byte		; byte lesen
 
-+	sta sdcmdres,x		; 
++	sta sd_cmd_result,x		; 
  	inx
  	cpx #.numres
  	bne -
@@ -49,7 +48,7 @@ sd_cmd_param = $0600
 	lda #'['
 	jsr lcdprint
 	ldx #$00
--	lda sdcmdres, x
+-	lda sd_cmd_result, x
 	jsr lcdhex
 	inx
 	cpx #.numres
@@ -62,12 +61,17 @@ sd_cmd_param = $0600
 	plx
 }
 
+sd_blktarget = $0400
 
+lda #<sd_blktarget
+sta sd_blkptr
+lda #>sd_blktarget
+sta sd_blkptr+1
 
 
 ; outb 	= $f0
 ; inb		= $f1
-;sdcmdres	= $e0
+;sd_cmd_result	= $e0
 
 	jsr lcdclear
 	sei
@@ -114,7 +118,7 @@ sd_cmd_param = $0600
 	ldx #$04
 	ldy #$00
 -	dex
-	lda sd_blktarget+BS_Partition0+PE_LBABegin,x
+	lda sd_blktarget + BS_Partition0+PE_LBABegin,x
 	sta sd_cmd_param,y
 	iny
 	cpx #$00	
@@ -255,7 +259,7 @@ sd_read_block
 	bne -
 
 	jsr spi_r_byte
-	sta sdcmdres	
+	sta sd_cmd_result
 
 	; Wait for data block to become ready
 -	jsr spi_r_byte
@@ -314,7 +318,7 @@ init
 	; send CMD0 - init SD card to SPI mode
 	+SDCommand cmd0, $01
 ;	+PrintSDRes $01
-	lda sdcmdres
+	lda sd_cmd_result
 	cmp #$01
 	beq +
 	
@@ -327,12 +331,12 @@ init
 ;	+PrintSDRes $05
 
 	ldx #$04
-	lda sdcmdres,x
+	lda sd_cmd_result,x
 	cmp #$aa
 	bne sdver1
 
 	ldx #$03
-	lda sdcmdres,x
+	lda sd_cmd_result,x
 	cmp #$01
 	bne sdver1
 
@@ -357,7 +361,7 @@ initloop
 	+SDCommand acmd41, $01
 	plx
 
-	lda sdcmdres
+	lda sd_cmd_result
 	cmp #$00
 	beq sdinitok
 	inx
@@ -376,7 +380,7 @@ initloop2
 	+SDCommand cmd1, $01
 	plx
 
-	lda sdcmdres
+	lda sd_cmd_result
 	cmp #$00
 	beq setblksize
 	inx
@@ -391,7 +395,7 @@ sdinitok
 	
 	; TODO
 	; CCS bit set? Yes, go to initdone
-	bit sdcmdres+1
+	bit sd_cmd_result+1
 	bvs initdone
 
 setblksize

@@ -10,8 +10,7 @@ count4		= 39996 ; jiffy count 100Hz for 4MHz system
 ; zeropage locations 
 ;----------------------------------------------------------------------------------------------
 
-; SD CArd result buffer
-sdcmdres	= $d0
+
 ; IRQ vector
 irqvec		= $e0
 ; general purpose temp variables
@@ -24,17 +23,22 @@ tmp5		= $f5
 tmp6		= $f6
 tmp7		= $f7
 
-; time variables
-hours	  	= $f9
-minutes   	= $fa
-seconds	  	= $fb
-jiffies   	= $fc
+
+; pointer for io block operations
+sd_blkptr 	= $fc
 
 ; pointer for string output functions 
 msgptr 		= $fe
 
 ; transfer routine addresses
 addr 		= $e2
+
+
+; SD CArd command parameter/result buffer
+sd_cmd_param 	= $0600
+sd_cmd_result	= $0604
+
+
 startaddr	= $0700
 endaddr     	= $0702
 length		= $0704
