@@ -16,6 +16,31 @@ cmd24	= 24+64
 
 sd_init_num_tries = $ff
 
+;-----------------------------------------------------------
+; send sd command. command in A, bytes result in X
+;-----------------------------------------------------------
+
+; sd_command
+; 	jsr spi_rw_byte
+	
+; 	ldx #$00
+; -	lda sd_cmd_param,x
+; 	jsr spi_rw_byte	
+; 	inx
+; 	cpx #$04
+; 	bne -
+
+; 	lda #$01
+; 	jsr spi_rw_byte
+
+; 	jsr spi_r_byte			; byte lesen
+
+; +	sta sd_cmd_result,x		; 
+;  	inx
+;  	cpx #.numres
+;  	bne -
+
+
 
 !macro SDCommand .cmd, .numres {
 	ldx #$00
@@ -151,7 +176,7 @@ sta sd_blkptr+1
 	bne -
 
 
-;	jsr sd_write_block
+	jsr sd_write_block
 
 	
 	; set CS line to HI
@@ -188,7 +213,7 @@ sd_write_block
 	jsr spi_rw_byte
 
 	ldx #$00
--	lda sd_blkptr,x
+-	lda (sd_blkptr,x)
 	jsr spi_rw_byte
 	inx
 	bne -
@@ -196,7 +221,7 @@ sd_write_block
 	inc sd_blkptr+1
 
 	ldx #$00
--	lda sd_blkptr,x
+-	lda (sd_blkptr,x)
 	jsr spi_rw_byte
 	inx
 	bne -
@@ -208,11 +233,9 @@ sd_write_block
 	jsr spi_rw_byte
 
 	jsr spi_r_byte		
-	jsr lcdhex
 
 -	lda #$ff
 	jsr spi_rw_byte		
-	jsr lcdhex
 	cmp #$ff
 	bne -
 	
@@ -257,7 +280,7 @@ sd_read_block
 
 	ldx #$00
 -	jsr spi_r_byte
-	sta sd_blkptr,x
+	sta (sd_blkptr,x)
 	inx
 	bne -
 
@@ -265,7 +288,7 @@ sd_read_block
 
 	ldx #$00
 -	jsr spi_r_byte
-	sta sd_blkptr,x
+	sta (sd_blkptr,x)
 	inx
 	bne -
 
@@ -282,30 +305,21 @@ sd_read_block_end
 
 
 init_sdcard
-	; set ALL CS lines to HIGH
-	lda #%01111110
-	ora via1portb	
-	sta via1portb
+	jsr sd_deselect_card
 
 	; 80 Taktzyklen
 	ldx #80
-
 	lda #%11111110
 	sta via1portb
-	
 	tay
 	iny
-
 -	sty via1portb
 	sta via1portb
 	dex
 	bne -
 
-	; set CS line to LOW
-	lda #%11111101
-	and via1portb	
-	sta via1portb
-	
+	jsr sd_select_card
+
 init
 	; send CMD0 - init SD card to SPI mode
 	+SDCommand cmd0, $01
