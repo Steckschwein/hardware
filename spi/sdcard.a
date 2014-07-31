@@ -188,13 +188,15 @@ sd_write_block
 	jsr spi_rw_byte
 
 	ldx #$00
--	lda sd_blktarget,x
+-	lda sd_blkptr,x
 	jsr spi_rw_byte
 	inx
 	bne -
 
+	inc sd_blkptr+1
+
 	ldx #$00
--	lda sd_blktarget+$100,x
+-	lda sd_blkptr,x
 	jsr spi_rw_byte
 	inx
 	bne -
@@ -208,20 +210,6 @@ sd_write_block
 	jsr spi_r_byte		
 	jsr lcdhex
 
-
-	
-	
-	; lda #$ff
-	; jsr spi_rw_byte
-	; lda #$ff
-	; jsr spi_rw_byte
-
-	; and #%00011111
-	; jsr lcdhex
-
-
-	
-
 -	lda #$ff
 	jsr spi_rw_byte		
 	jsr lcdhex
@@ -230,6 +218,7 @@ sd_write_block
 	
 sd_write_block_end
 	jsr sd_deselect_card
+	dec sd_blkptr+1
 
 	rts
 
@@ -268,13 +257,15 @@ sd_read_block
 
 	ldx #$00
 -	jsr spi_r_byte
-	sta sd_blktarget,x
+	sta sd_blkptr,x
 	inx
 	bne -
 
+	inc sd_blkptr+1
+
 	ldx #$00
 -	jsr spi_r_byte
-	sta sd_blktarget+$100,x
+	sta sd_blkptr,x
 	inx
 	bne -
 
@@ -284,6 +275,7 @@ sd_read_block
 
 sd_read_block_end
 	jsr sd_deselect_card
+	dec sd_blkptr+1
 
 	rts
 
