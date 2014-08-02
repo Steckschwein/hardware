@@ -1,0 +1,23 @@
+*=$1000
+!src "../bios/defs.h.a"
+!src "../bios/bios.h.a"
+
+
+	
+
+	jsr lcdclear
+
+	+PrintString hello
+	ldx #$00
+	ldy #$02
+	jsr lcdxy
+	
+	+PrintString hello
+	jmp upload
+
+
+
+hello
+	!text "Hello World! 12345678901234567890 ", $00
+
+	
