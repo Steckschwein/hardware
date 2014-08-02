@@ -1,9 +1,10 @@
-VRAM_WAIT	= 16			;1Mhz no wait is required
-VREG_WAIT	= 4
+VRAM_WAIT	= 0			;1Mhz no wait is required
+VREG_WAIT	= 0
+
 a_vram 		= $d400
 a_vreg		= $d401
-a_vram_w		= $d500
-a_vreg_w		= $d501
+a_vram_w		= $d400
+a_vreg_w		= $d401
 
 v_reg0_m3			= 1<<1
 v_reg0_extV			= 1<<0

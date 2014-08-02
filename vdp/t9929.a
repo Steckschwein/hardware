@@ -1,8 +1,13 @@
 *=$1000
+!source "../bios/defs.h.a"
+!source "../bios/bios.h.a"
 !source "t9929.h.a"
 adrl     =$f0
 adrh     =$f1
-msgptr   =$f2
+txtptr   =$f2
+crs_x    =$f4
+crs_c    =$f5
+charset  =$e000
 
 ; c64 program studio - endurion
 ; cbm studio
@@ -16,40 +21,60 @@ VDP_WAIT_CYCLES = 4300; 4300µs after vertical blank int, means 0,0043s / 0,0000
    jmp   main
 ;msg_2	!text " Hey Thomas, these are the first letters written on screen with          THE TMS9929 VDP!         TODAY IS THE 15.04.2014          +++HAPPY BIRTHDAY+++           so far... /MLA ;)", $00
 msg_2	!text "      Welcome to VCFE 15.0!                                         These are some letters         written on screen with          THE TMS9929 VDP!", $00
-
+msg_3 !text "READY.", $0
 ;last_change="jsajsh js ahjs ajsh"
 
 main:
    jsr   lcdclear
-   lda   #'a'
+   lda   #'0'
 	jsr   lcdprint
+
 	jsr   vdp_init
  	jsr   vdp_clear_vram
    jsr   vdp_clear_screen
    jsr   vdp_load_charset
+   jsr   vdp_color
 	
-	jsr	vdp_colortest
+;	jsr	vdp_colortest
    lda   #'1'
-   jsr   lcdprint	
+   jsr   lcdprint
 
 ;   jsr   vdp_color
 ;   jsr   vdp_write
 
-	lda	#v_reg1_16k|v_reg1_display_on
+	lda	#v_reg1_16k|v_reg1_display_on|v_reg1_int
 	ldy	#v_reg1
-	jsr	vdp_srega
-	
-   lda   #'x'
-   jsr   lcdprint	
--	
-	jsr	burn_cycles
-   jsr   vdp_sprite
-	jsr	sprite_move
-   jmp	-
+	jsr	vdp_sreg
 
+   +SetVector msg_3, txtptr
+   jsr   vdp_write
+
+   +SetVector  vdp_irq, irqvec
+
+   lda   #'2'
+   jsr   lcdprint 
+   cli
+-	jmp   -
+
+;	jsr	burn_cycles
+;   jsr   vdp_sprite
+;	jsr	sprite_move
+;   jsr lcdclear
+;   lda a_vreg
+;   jsr lcdhex
+;   jmp	-
+
+vdp_irq:
+   jsr   vdp_cursor
+   jsr   vdp_sprite
+   jsr   sprite_move
+;   jsr   lcdclear
+   lda   a_vreg
+;   jsr   lcdhex
+   rti
 vdp_init_bytes
 	!byte 0
-	!byte v_reg1_16k
+	!byte v_reg1_16k|v_reg1_int
 	!byte ($1400 / $400)	; name table - value * $400
 	!byte	($2000 / $40)	; color table - value * $40 (gfx1), 7f/ff (gfx2)
 	!byte	($0000 / $800) ; pattern table (charset) - value * $800  --> offset in VRAM 
@@ -68,7 +93,7 @@ vdp_init:
    ldx   	#$00
    ldy		#$80
 -  lda   vdp_init_bytes,x
-	jsr	vdp_srega	; write data to vdp - write the register number to vdp, 80 - reg0 , 81 - reg1 ... see datasheet page 4.1
+	jsr	vdp_sreg	; write data to vdp - write the register number to vdp, 80 - reg0 , 81 - reg1 ... see datasheet page 4.1
    iny
    inx
    cpx   #$08
@@ -84,6 +109,19 @@ burn_cycles:
 	dey
 	bne	-
 	rts
+vdp_cursor:
+   lda   #$20
+   ldy   #$54
+   jsr   vdp_sreg
+   lda   crs_c
+   and   #$10
+   beq   +
+   lda   #160
+   jmp   ++
++  lda   #' '
+++ sta   a_vram_w
+   inc   crs_c
+   rts
 	
 sprite_move:
 	inc	sprite_attr_table+1+4*0
@@ -94,7 +132,7 @@ sprite_move:
 	rts
 
 vdp_sprite:
-	ldx	#$00 ; offset $2000
+	lda	#$00 ; offset $2000
 	ldy	#$68 ; #$26 + $40
 	jsr	vdp_sreg
    ldy   #$00
@@ -106,20 +144,12 @@ vdp_sprite:
 	cpy	#(5*4)	
    bne   -
 +  rts
-vdp_srega:
-   +nops VREG_WAIT
-	sta   a_vreg_w
-   +nops VREG_WAIT
-   sty   a_vreg_w
-   rts
 vdp_sreg:
-   +nops VREG_WAIT
-	stx   a_vreg_w
-   +nops VREG_WAIT
+	sta   a_vreg_w
    sty   a_vreg_w
    rts
 vdp_clear_vram:
-   ldx   #$00
+   lda   #$00
    ldy   #$40
    jsr   vdp_sreg
    lda   #$00
@@ -142,7 +172,7 @@ vdp_load_charset:
 	
    lda   #$00
    ldy   #$40
-   jsr   vdp_srega
+   jsr   vdp_sreg
    ldx   #$00; page counter   
    ldy   #$00
 -  +nops VRAM_WAIT
@@ -157,7 +187,7 @@ vdp_load_charset:
    rts
 
 vdp_clear_screen:
-   ldx   #$00
+   lda   #$00
    ldy   #$54
    jsr   vdp_sreg
    lda   #$20
@@ -175,7 +205,7 @@ vdp_clear_screen:
 vdp_colortest:	
    lda   #$00
    ldy   #$54
-   jsr   vdp_srega
+   jsr   vdp_sreg
 	ldx   #$00
    ldy   #$00
    lda   #00
@@ -193,7 +223,7 @@ vdp_colortest:
 	
    lda   #$00
    ldy   #$60
-   jsr   vdp_srega
+   jsr   vdp_sreg
    ldy   #Black
    ldx   #$00
 -  +nops VRAM_WAIT
@@ -205,45 +235,27 @@ vdp_colortest:
    rts
 	
 vdp_write:
-   ldx   #$00
+   lda   #$00
    ldy   #$54
    jsr   vdp_sreg
    ldy   #$00
--  lda   msg_2,y
+-  lda   (txtptr),y
    beq   +
-   +nops VRAM_WAIT
    sta   a_vram_w
    iny
    bne   -
 +  rts
 vdp_color:
-   ldx   #$00
+   lda   #$00
    ldy   #$60
    jsr   vdp_sreg
-   ldy   #Cyan<<4|Transparent
+   ldx   #$00
+   ldy   #Light_Blue<<4|Transparent
 -  +nops VRAM_WAIT
    sty   a_vram_w
    inx
    cpx   #$20
    bne   -
-   rts
-
-vdp_vram_write:
-   lda   adrl
-   sta   a_vreg_w
-   lda   adrh
-   ora   #$40
-   sta   a_vreg_w
-   +nops VRAM_WAIT
-   stx   a_vram_w
-   rts
-vdp_vram_read:
-   lda   adrl
-   sta   a_vreg_w
-   lda   adrh
-   sta   a_vreg_w
-   +nops VRAM_WAIT
-   lda   a_vram
    rts
    
 vdp_bgcolor:
@@ -251,122 +263,7 @@ vdp_bgcolor:
 	lda   #v_reg7
 	sta   a_vreg
 	rts
-vdp_post:
-   dex
-   bne   vdp_post
-   dey
-   sty   $d400
-   lda   #88
-   sta   $d400
-   jsr	lcdclear
-   tya
-   jsr	lcdprint
-   rts   
-vdp_wait_vb:
--  lda   a_vreg
-   and   #$80
-   bne -
-     ldx   #10
-l1:    ldy   #172
-l2:   dey
-      bne   l2
-      dex
-      bne   l1
-      rts
-		
-  !source "../charsets/char.ascii.h.a"
-   
-; TODO FIXME - JUSTT FOR TESTING
-; LCD 
-;----------------------------------------------------------------------------------------------
-lcdctl		= $d200
-lcddata		= lcdctl+1
-; *** Clear LCD display and return cursor to home
-; registers preserved
-lcdclear 
-         php
-         pha
-			jsr lcdbusy
-			lda #$01
-			sta lcdctl
-			jsr lcdbusy
-			lda #$80
-			sta lcdctl
-			jsr lcdbusy
-			pla
-         plp
-			rts
-
-; *** Wait for LCD busy bit to clear
-; registers preserved
-lcdbusy   
-         pha
--			lda lcdctl            ;read from lcd register 0
-			and #$80            ;check bit 7 (busy)
-			bne -
-			pla
-			rts
-
-; *** Print character on LCD (40 character)
-; registers preserved
-lcdprint
-         pha
-			sta lcddata            ;output the character
-			jsr lcdbusy
-			lda lcdctl            ;get current ddram address
-			and #$7f
-			cmp #$28          	;wrap from pos $13 (line 1 char 20)...
-			bne +
-			lda #$c0            	;...to $40 (line 2 char 1)
-			sta lcdctl
-			jsr lcdbusy
-+			pla
-			rts
-         
-; *** print string on lcd
-; registers preserved
-lcdstring
-         pha                 ;save a, y to stack
-			tya
-			pha
-			ldy #$00
--		  	lda (msgptr),y
-			beq +
-			jsr lcdprint
-			iny
-			bne -
-+			pla                 ;restore a, y
-			tay
-			pla
-			rts          
-         
-print_x:
-         jsr   lcdhex
-         lda   #$20
-         jsr   lcdprint
-         rts
-; *** Print 2 digit hex number on LCD
-; A, X registers preserved
-; *** Lookup table for HEX to ASCII
-hexascii	!text "0123456789ABCDEF"
-lcdhex 
-         pha
-			lsr                ;shift high nybble into low nybble
-			lsr 
-			lsr 
-			lsr 
-			tay
-			lda hexascii,y      ;convert to ascii
-			jsr lcdprint        ;print value on the lcd
-			pla                 ;restore original value
-			pha
-			and #$0f            ;select low nybble
-			tay
-			lda hexascii,y      ;convert to ascii
-			jsr lcdprint        ;print value on the lcd      
-			pla
-			rts      
-			
+   					
 sprite_attr_table:
 	!byte	$64,$64,'V',Medium_Red
 	!byte	$64,$64+8,'C',Medium_Green
