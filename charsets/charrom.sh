@@ -5,5 +5,6 @@ echo 'charset:' > char.ascii.h.a
 sed -n 65,96p char.tmp.h.a >> char.ascii.h.a 	# 32 chars 
 sed -n 33,64p char.tmp.h.a >> char.ascii.h.a	# 
 sed -n 1,32p char.tmp.h.a >> char.ascii.h.a
+sed -n 97,158p char.tmp.h.a >> char.ascii.h.a
 sed -n 161p char.tmp.h.a >> char.ascii.h.a
 sed -n 258,283p char.tmp.h.a >> char.ascii.h.a

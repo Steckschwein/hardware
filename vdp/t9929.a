@@ -33,7 +33,7 @@ main:
    jsr   lcdprint	
 
 ;   jsr   vdp_color
-;    jsr   vdp_write
+;   jsr   vdp_write
 
 	lda	#v_reg1_16k|v_reg1_display_on
 	ldy	#v_reg1
@@ -55,7 +55,7 @@ vdp_init_bytes
 	!byte	($0000 / $800) ; pattern table (charset) - value * $800  --> offset in VRAM 
 	!byte	($2800 / $80)	; sprite attribute table - value * $80 --> offset in VRAM 
 	!byte	($0000 / $800)	; sprite pattern table - value * $800  --> offset in VRAM 
-	!byte	Dark_Green<<4 | Black
+	!byte	Black
 vdp_init:
    ;reg 0 0 - ext. video off, 
    ;reg 1 c0 - 4108/4116 DRAM, int disabled, video on, text mode, size 1, magnitude off
@@ -140,9 +140,9 @@ vdp_load_charset:
    lda   #>charset
    sta   adrh
 	
-   ldx   #$00
+   lda   #$00
    ldy   #$40
-   jsr   vdp_sreg
+   jsr   vdp_srega
    ldx   #$00; page counter   
    ldy   #$00
 -  +nops VRAM_WAIT
@@ -176,23 +176,31 @@ vdp_colortest:
    lda   #$00
    ldy   #$54
    jsr   vdp_srega
+	ldx   #$00
    ldy   #$00
-   lda   #'A'
+   lda   #00
 -  +nops VRAM_WAIT
    sta   a_vram_w
+	clc
+	adc	#$01
    iny
+	cpy	#128
 	bne   -
-   ldx   #$00
+	inx
+	cpx	#$06
+	bne	-
+	
+	
    lda   #$00
    ldy   #$60
    jsr   vdp_srega
-   lda   #Cyan<<4|Transparent
+   ldy   #Black
+   ldx   #$00
 -  +nops VRAM_WAIT
-   sta   a_vram_w
-;	clc
-;	adc	#$10
+   sty   a_vram_w
+	iny
    inx
-   cpx   #$20
+   cpx   #$20	
    bne   -
    rts
 	
