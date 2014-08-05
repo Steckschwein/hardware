@@ -89,7 +89,7 @@ refdes=S1
 N 52900 44600 53400 44600 4
 {
 T 52900 44600 5 10 1 1 0 0 1
-netname=RESET
+netname=/RESET
 }
 T 50000 40700 9 10 1 0 0 0 1
 RESET circuit
