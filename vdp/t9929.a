@@ -72,8 +72,56 @@ main:
 ;   jmp	-
 
 
+; bitmap mode
+; name table --> $00 to $ff
+; color table --> 2 colors
+; pattern table --> bitset
 vdp_gfx2_init:
+	;set 768 different pattern names
+	lda	#$00
+	ldy	#$54
+	jsr	vdp_sreg
+	ldy	#$00
 	ldx	#$00
+-	stx	a_vram
+	inx	
+	bne	-
+	iny
+	cpy	#$03
+	bne	-
+	;now set 6144 byte of color
+	lda	#$00
+	ldy	#$60
+	jsr	vdp_sreg
+	lda	Black<<4|White
+	ldy	#$00
+	ldx	#$00
+-	sta	a_vram
+	inx	
+	bne	-
+	iny
+	cpy	#$18
+	bne	-
+	;load the pic
+   lda   #<pic1
+   sta   adrl
+   lda   #>pic2
+   sta   adrh
+   lda   #$00
+   ldy   #$40
+   jsr   vdp_sreg
+   ldx   #$00; page counter   
+   ldy   #$00
+-  lda   (adrl),y
+   sta   a_vram_w
+   iny
+   bne   -
+   inc   adrh
+   inx   
+   cpx   #$18     ;6k bitmap - $1800
+   bne   -
+   rts	
+	
 	
 vdp_gfx2_img:
 	
