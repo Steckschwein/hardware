@@ -17,12 +17,19 @@ charset  =$e000
 
 TEXT_COLOR     = Cyan
 TEXT_BGCOLORT  = Black
-VDP_WAIT_CYCLES = 4300; 4300µs after vertical blank int, means 0,0043s / 0,0000005s (time for one cpu cycle at 2Mhz) = 8600cycles = 4300 NOP's -
+
    jmp   main
+	
 ;msg_2	!text " Hey Thomas, these are the first letters written on screen with          THE TMS9929 VDP!         TODAY IS THE 15.04.2014          +++HAPPY BIRTHDAY+++           so far... /MLA ;)", $00
 msg_2	!text "      Welcome to VCFE 15.0!                                         These are some letters         written on screen with          THE TMS9929 VDP!", $00
 msg_3 !text "READY.", $0
-;last_change="jsajsh js ahjs ajsh"
+
+pic1:
+!bin "tw_192px.gif.raw"
+pic2:
+!bin "ml_192px.gif.raw"
+pic3:
+!bin "great_success_256.raw"
 
 main:
    jsr   lcdclear
@@ -64,6 +71,13 @@ main:
 ;   jsr lcdhex
 ;   jmp	-
 
+
+vdp_gfx2_init:
+	ldx	#$00
+	
+vdp_gfx2_img:
+	
+
 vdp_irq:
    jsr   vdp_cursor
    jsr   vdp_sprite
@@ -81,6 +95,7 @@ vdp_init_bytes
 	!byte	($2800 / $80)	; sprite attribute table - value * $80 --> offset in VRAM 
 	!byte	($0000 / $800)	; sprite pattern table - value * $800  --> offset in VRAM 
 	!byte	Black
+
 vdp_init:
    ;reg 0 0 - ext. video off, 
    ;reg 1 c0 - 4108/4116 DRAM, int disabled, video on, text mode, size 1, magnitude off
@@ -164,6 +179,7 @@ c1:
    cpy   #$40
    bne   c1
    rts
+	
 vdp_load_charset:
    lda   #<charset
    sta   adrl
