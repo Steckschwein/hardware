@@ -3,7 +3,7 @@
 ;!bin "../charsets/char.bin"
 !text "This space intentionally left blank", $00
 startmsg
-!text "STECKSCHWEIN 1.0                ", $0a, $0d, $00
+!text "STECKSCHWEIN 1.0                ", $00
 !text "Thomas Woinke", $0a, $0d, $00
 !text "Marko Lauke", $0a, $0d, $00
 
@@ -43,6 +43,8 @@ upload
 
 			+PrintChar 'O'
 			+PrintChar 'K'
+
+			sei
 
 			;jsr strout
 
@@ -125,6 +127,8 @@ upload
 			; re-init stack pointer
 			ldx #$ff
 			txs
+
+			cli 
 
 			; jump to new code
 			jmp (startaddr)
@@ -803,7 +807,7 @@ hexascii	!text "0123456789ABCDEF"
 dec_tbl		!byte 128,160,200
 
 ; Version String
-biosversion	!text "V1508b VDP", $00
+biosversion	!text "V1508B VDP", $00
 
 ;----------------------------------------------------------------------------------------------
 ;	divisor values for 1.8432 MHz Crystal
