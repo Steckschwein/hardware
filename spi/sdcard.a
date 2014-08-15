@@ -5,41 +5,15 @@
 ;   5  |    CLK 		|	   PB0/CB1
 ;   7  | DAT/DO 		|          PB7
 
-cmd17	= 17+64
-cmd18	= 18+64
-cmd24	= 24+64
-
 *=$1000
 !src "../bios/defs.h.a"
 !src "../bios/bios.h.a"
 !src "fat32.h.a"
 
 sd_init_num_tries = $ff
-
-;-----------------------------------------------------------
-; send sd command. command in A, bytes result in X
-;-----------------------------------------------------------
-
-; sd_command
-; 	jsr spi_rw_byte
-	
-; 	ldx #$00
-; -	lda sd_cmd_param,x
-; 	jsr spi_rw_byte	
-; 	inx
-; 	cpx #$04
-; 	bne -
-
-; 	lda #$01
-; 	jsr spi_rw_byte
-
-; 	jsr spi_r_byte			; byte lesen
-
-; +	sta sd_cmd_result,x		; 
-;  	inx
-;  	cpx #.numres
-;  	bne -
-
+sd_blktarget = $0400
+sd_cmd_param = $0300
+sdcmdres = $031f
 
 
 !macro SDCommand .cmd, .numres {
@@ -59,7 +33,7 @@ sd_init_num_tries = $ff
 -		
 	jsr spi_r_byte		; byte lesen
 
-+	sta sd_cmd_result,x		; 
++	sta sdcmdres,x		; 
  	inx
  	cpx #.numres
  	bne -
@@ -73,7 +47,7 @@ sd_init_num_tries = $ff
 	lda #'['
 	jsr lcdprint
 	ldx #$00
--	lda sd_cmd_result, x
+-	lda sdcmdres, x
 	jsr lcdhex
 	inx
 	cpx #.numres
@@ -86,17 +60,12 @@ sd_init_num_tries = $ff
 	plx
 }
 
-sd_blktarget = $0400
 
-lda #<sd_blktarget
-sta sd_blkptr
-lda #>sd_blktarget
-sta sd_blkptr+1
 
 
 ; outb 	= $f0
 ; inb		= $f1
-;sd_cmd_result	= $e0
+;sdcmdres	= $e0
 
 	jsr lcdclear
 	sei
@@ -143,7 +112,7 @@ sta sd_blkptr+1
 	ldx #$04
 	ldy #$00
 -	dex
-	lda sd_blktarget + BS_Partition0+PE_LBABegin,x
+	lda sd_blktarget+BS_Partition0+PE_LBABegin,x
 	sta sd_cmd_param,y
 	iny
 	cpx #$00	
@@ -159,25 +128,6 @@ sta sd_blkptr+1
 	inx
 	cpx #11
 	bne -
-
-	ldx #$00
--	lda label,x
-	beq +
-	sta sd_blktarget + BS_VolLab2,x
-	inx
-	bra -
-
-+
-	ldx #$00
--	lda sd_blktarget + BS_VolLab2,x
-	jsr lcdprint
-	inx
-	cpx #11
-	bne -
-
-
-	jsr sd_write_block
-
 	
 	; set CS line to HI
 	lda #%01111110
@@ -185,67 +135,6 @@ sta sd_blkptr+1
 	sta via1portb
 
 	jmp upload
-
-
-; Write block to SD Card
-sd_write_block
-	jsr sd_select_card
-
-	lda #cmd24
-	jsr spi_rw_byte
-
-	ldx #$00
--	lda sd_cmd_param,x
-	jsr spi_rw_byte	
-	inx
-	cpx #$04
-	bne -
-
-	lda #$01
-	jsr spi_rw_byte
-	
--	lda #$ff
-	jsr spi_rw_byte		
-	cmp #$00
-	bne -
-
-	lda #$fe
-	jsr spi_rw_byte
-
-	ldx #$00
--	lda (sd_blkptr,x)
-	jsr spi_rw_byte
-	inx
-	bne -
-
-	inc sd_blkptr+1
-
-	ldx #$00
--	lda (sd_blkptr,x)
-	jsr spi_rw_byte
-	inx
-	bne -
-
-	; Send fake CRC bytes
-	lda #$00
-	jsr spi_rw_byte
-	lda #$00
-	jsr spi_rw_byte
-
-	jsr spi_r_byte		
-
--	lda #$ff
-	jsr spi_rw_byte		
-	cmp #$ff
-	bne -
-	
-sd_write_block_end
-	jsr sd_deselect_card
-	dec sd_blkptr+1
-
-	rts
-
-
 
 
 ; Read block from SD Card
@@ -271,7 +160,14 @@ sd_read_block
 	bne -
 
 	jsr spi_r_byte
-	sta sd_cmd_result
+	sta sdcmdres	
+
+;	cmp #$ff
+;	bne -
+
+
+;	cmp #$ff
+;	beq sd_read_block_end
 
 	; Wait for data block to become ready
 -	jsr spi_r_byte
@@ -280,15 +176,13 @@ sd_read_block
 
 	ldx #$00
 -	jsr spi_r_byte
-	sta (sd_blkptr,x)
+	sta sd_blktarget,x
 	inx
 	bne -
 
-	inc sd_blkptr+1
-
 	ldx #$00
 -	jsr spi_r_byte
-	sta (sd_blkptr,x)
+	sta sd_blktarget+$100,x
 	inx
 	bne -
 
@@ -298,33 +192,41 @@ sd_read_block
 
 sd_read_block_end
 	jsr sd_deselect_card
-	dec sd_blkptr+1
 
 	rts
 
 
 
 init_sdcard
-	jsr sd_deselect_card
+	; set ALL CS lines to HIGH
+	lda #%01111110
+	ora via1portb	
+	sta via1portb
 
 	; 80 Taktzyklen
 	ldx #80
+
 	lda #%11111110
 	sta via1portb
+	
 	tay
 	iny
+
 -	sty via1portb
 	sta via1portb
 	dex
 	bne -
 
-	jsr sd_select_card
-
+	; set CS line to LOW
+	lda #%11111101
+	and via1portb	
+	sta via1portb
+	
 init
 	; send CMD0 - init SD card to SPI mode
 	+SDCommand cmd0, $01
-;	+PrintSDRes $01
-	lda sd_cmd_result
+	+PrintSDRes $01
+	lda sdcmdres
 	cmp #$01
 	beq +
 	
@@ -337,12 +239,12 @@ init
 ;	+PrintSDRes $05
 
 	ldx #$04
-	lda sd_cmd_result,x
+	lda sdcmdres,x
 	cmp #$aa
 	bne sdver1
 
 	ldx #$03
-	lda sd_cmd_result,x
+	lda sdcmdres,x
 	cmp #$01
 	bne sdver1
 
@@ -367,7 +269,7 @@ initloop
 	+SDCommand acmd41, $01
 	plx
 
-	lda sd_cmd_result
+	lda sdcmdres
 	cmp #$00
 	beq sdinitok
 	inx
@@ -386,7 +288,7 @@ initloop2
 	+SDCommand cmd1, $01
 	plx
 
-	lda sd_cmd_result
+	lda sdcmdres
 	cmp #$00
 	beq setblksize
 	inx
@@ -401,7 +303,7 @@ sdinitok
 	
 	; TODO
 	; CCS bit set? Yes, go to initdone
-	bit sd_cmd_result+1
+	bit sdcmdres+1
 	bvs initdone
 
 setblksize
@@ -431,11 +333,15 @@ sd_deselect_card
 	ora via1portb	
 	sta via1portb
 
-
-!for i,0,10 {
 	lda #$ff
 	jsr spi_rw_byte
-}
+	lda #$ff
+	jsr spi_rw_byte
+	lda #$ff
+	jsr spi_rw_byte
+	lda #$ff
+	jsr spi_rw_byte
+
 	pla
 
 	rts
@@ -482,11 +388,10 @@ cmd55	!byte $77, $00, $00, $00, $00, $01
 acmd41  !byte $69, $00, $00, $00, $00, $01
 ; cmd16 SET_BLOCKLEN
 cmd16	!byte $50, $00, $00, $02, $00, $01
-; cmd17	!byte $51, $00, $00, $00, $00, $01
-; cmd24	!byte $58, $00, $00, $00, $00, $01
+cmd17	!byte $51, $00, $00, $00, $00, $01
+cmd24	!byte $58, $00, $00, $00, $00, $01
 
 cardok	!text "SD Card Found!", $00
 nocard	!text "No SD Card!", $00
 initdonetxt	!text "Init OK!", $00
 initfail	!text "Init Failed!", $00
-label	!text "STCKSCHWEIN", $00
