@@ -1,9 +1,15 @@
 *= $e000			; ROM Start
-!bin "../charsets/char.bin"
+!src "../charsets/char.ascii.h.a"
+;!bin "../charsets/char.bin"
 !text "This space intentionally left blank", $00
+
+!text "Steckschwein 1.0", $0a, $0d, $00
+!text "Thomas Woinke", $0a, $0d, $00
+!text "Marko Lauke", $0a, $0d, $00
 
 *=$f000
 !src "defs.h.a"
+!src "../vdp/t9929.h.a"
 
 upload
 			ldx #$00
@@ -139,10 +145,26 @@ do_reset
 			ldx #$ff
 			txs
 
+			+SetVector biosversion, msgptr
+
+			; init VDP
+			jsr vdp_init	
+			jsr vdp_clear_vram	
+
+			jsr vdp_clear_screen
+			jsr vdp_load_charset
+			jsr vdp_color
+
+
+			lda	#v_reg1_16k|v_reg1_display_on|v_reg1_int
+			ldy	#v_reg1
+			jsr	vdp_sreg
+
 			; init IO devices
 			jsr init_lcd
 			jsr init_via1
 			jsr init_uart
+
 
 
 			; Set IRQ Vector
@@ -164,23 +186,14 @@ do_reset
 			ldx #$00
 			jsr lcdxy
 
-;			lda #<biosversion
-;			sta msgptr
-;
-;			lda #>biosversion
-;			sta msgptr+1
-
-			
-
-;			jsr lcdstring
-
-			+PrintString biosversion
+			jsr lcdstring
+			jsr vdp_write	
 
 			jmp upload
 	
 	
-adrl	   =$00
-adrh	   =$01
+; adrl	   =$00
+; adrh	   =$01
 
 memcheck:
 	lda #'$'
@@ -258,6 +271,124 @@ i_irqhandler
 +			pla
 			rti
 
+
+;----------------------------------------------------------------------------------------------
+; init VDP, set memory map
+;----------------------------------------------------------------------------------------------
+vdp_init:
+		ldx   	#$00
+		ldy		#$80
+-  		lda   	vdp_init_bytes,x
+		jsr		vdp_sreg	; write data to vdp - write the register number to vdp, 80 - reg0 , 81 - reg1 ... see datasheet page 4.1
+		iny
+		inx
+		cpx   #$08
+		bne   -
+		rts
+
+vdp_sreg:
+		sta   a_vreg_w
+   		sty   a_vreg_w
+   		rts
+
+;----------------------------------------------------------------------------------------------
+; clear VDP VRAM
+;----------------------------------------------------------------------------------------------
+vdp_clear_vram:
+   lda   #$00
+   ldy   #$40
+   jsr   vdp_sreg
+   lda   #$00
+   ldx   #$00
+   ldy   #$00
+-
+   +nops VRAM_WAIT
+   sta   a_vram_w
+   inx
+   bne   -
+   iny
+   cpy   #$40
+   bne   -
+   rts
+
+;----------------------------------------------------------------------------------------------
+; clear VDP Screen
+;----------------------------------------------------------------------------------------------
+vdp_clear_screen:
+   lda   #$00
+   ldy   #$54
+   jsr   vdp_sreg
+   lda   #$20
+   ldx   #$00
+   ldy   #$00
+- 
+   +nops VRAM_WAIT
+   sta   a_vram_w
+   inx   
+   bne   -
+   iny
+   cpy   #$04
+   bne   -
+   rts
+
+;----------------------------------------------------------------------------------------------
+; Load Charset into VDP VRAM
+;----------------------------------------------------------------------------------------------
+vdp_load_charset:
+
+   +SetVector charset, adrl
+ 	
+   lda   #$00
+   ldy   #$40
+   jsr   vdp_sreg
+   ldx   #$00; page counter   
+   ldy   #$00
+-  
+   +nops VRAM_WAIT
+   lda   (adrl),y
+   sta   a_vram_w
+   iny
+   bne   -
+   inc   adrh
+   inx   
+   cpx   #$08     ;2k charset - $0800
+   bne   -
+   rts
+
+;----------------------------------------------------------------------------------------------
+; Set Text Color
+;----------------------------------------------------------------------------------------------
+vdp_color:
+   lda   #$00
+   ldy   #$60
+   jsr   vdp_sreg
+   ldx   #$00
+   ldy   #TEXT_COLOR<<4|Transparent
+-  +nops VRAM_WAIT
+   sty   a_vram_w
+   inx
+   cpx   #$20
+   bne   -
+   rts
+
+
+;----------------------------------------------------------------------------------------------
+; Write to VDP VRAM
+;----------------------------------------------------------------------------------------------
+vdp_write:
+   lda   #$00
+   ldy   #$54
+   jsr   vdp_sreg
+   ldy   #$00
+-  
+   
+   nop
+   lda   (msgptr),y
+   beq   +
+   sta   a_vram_w
+   iny
+   bne   -
++  rts
 ;----------------------------------------------------------------------------------------------
 ; init VIA1 - set all ports to input
 ;----------------------------------------------------------------------------------------------
@@ -377,6 +508,8 @@ i_lcdbusy   pha
 			bne -
 			pla
 			rts
+
+
 
 ; *** Print character on LCD (40 character)
 ; registers preserved
@@ -642,7 +775,7 @@ hexascii	!text "0123456789ABCDEF"
 dec_tbl		!byte 128,160,200
 
 ; Version String
-biosversion	!text "V2607", $00
+biosversion	!text "V1508VDP", $00
 
 ;----------------------------------------------------------------------------------------------
 ;	divisor values for 1.8432 MHz Crystal
@@ -669,6 +802,20 @@ uart_divisor
 	!word 2		; 56000	; 18
 	!word 1 	; 115200; 19
 ;----------------------------------------------------------------------------------------------
+
+;----------------------------------------------------------------------------------------------
+; VDP initialisation data
+;----------------------------------------------------------------------------------------------
+vdp_init_bytes	
+	!byte 0
+	!byte v_reg1_16k
+	!byte ($1400 / $400)	; name table - value * $400
+	!byte ($2000 / $40)	; color table - value * $40 (gfx1), 7f/ff (gfx2)
+	!byte ($0000 / $800) ; pattern table (charset) - value * $800  --> offset in VRAM 
+	!byte ($2800 / $80)	; sprite attribute table - value * $80 --> offset in VRAM 
+	; !byte ($0000 / $800)	; sprite pattern table - value * $800  --> offset in VRAM 
+	!byte $00
+	!byte TEXT_BGCOLORT
 
 ;----------------------------------------------------------------------------------------------
 ; Jump table

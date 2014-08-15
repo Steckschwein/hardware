@@ -1,7 +1,7 @@
 ;----------------------------------------------------------------------------------------------
 ; constants
 ;----------------------------------------------------------------------------------------------
-
+clockspeed	= 2000000
 count 		= 19998 ; jiffy count 100Hz for 2MHz system
 count3		= 29997 ; jiffy count 100Hz for 3MHz system
 count4		= 39996 ; jiffy count 100Hz for 4MHz system
@@ -10,6 +10,9 @@ count4		= 39996 ; jiffy count 100Hz for 4MHz system
 ; zeropage locations 
 ;----------------------------------------------------------------------------------------------
 
+; Cursor Position
+crs_x	= $d0
+crs_y	= $d1
 
 ; IRQ vector
 irqvec		= $e0
@@ -30,19 +33,23 @@ sd_blkptr 	= $fc
 ; pointer for string output functions 
 msgptr 		= $fe
 
+; general purpose address location
 ; transfer routine addresses
 addr 		= $e2
+adrl     =addr
+adrh     =addr+1
 
 
 ; SD CArd command parameter/result buffer
-sd_cmd_param 	= $0600
-sd_cmd_result	= $0604
+;sd_cmd_param 	= $0600
+;sd_cmd_result	= $0604
 
 
 startaddr	= $0700
 endaddr     	= $0702
 length		= $0704
 
+charset  =$e000
 ;----------------------------------------------------------------------------------------------
 ; UART
 ;----------------------------------------------------------------------------------------------
