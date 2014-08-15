@@ -1,2 +1,2 @@
-schematics cpu.sch memory.sch reset.sch DIN41617.sch
+schematics cpu.sch memory.sch reset.sch 50pin_connector.sch
 output-name cpu_mem
