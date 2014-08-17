@@ -1,6 +1,9 @@
 VRAM_WAIT	= 0			;1Mhz no wait is required
 VREG_WAIT	= 0
 
+TEXT_COLOR	= Light_Blue
+TEXT_BGCOLOR = Black
+
 a_vram 		= $d400
 a_vreg		= $d401
 a_vram_w		= $d400
@@ -26,7 +29,7 @@ v_reg3 	= $83
 v_reg4 	= $84
 v_reg5 	= $85
 v_reg6 	= $86
-v_reg7  	= $87
+v_reg7  = $87
 Transparent    =$00
 Black          =$01
 Medium_Green   =$02
