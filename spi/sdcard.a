@@ -73,6 +73,8 @@ sdcmdres = $031f
 	; jsr $f0e0;
 	; jmp upload
 
+
+
 	jsr init_sdcard
 	
 	stz sd_cmd_param
@@ -121,7 +123,6 @@ sdcmdres = $031f
 	jsr sd_read_block
 ;	+PrintSDRes $01
 
-
 	ldx #$00
 -	lda sd_blktarget + BS_VolLab2,x
 	jsr lcdprint
@@ -129,10 +130,8 @@ sdcmdres = $031f
 	cpx #11
 	bne -
 	
-	; set CS line to HI
-	lda #%01111110
-	ora via1portb	
-	sta via1portb
+
+	jsr sd_deselect_card
 
 	jmp upload
 
@@ -198,9 +197,8 @@ sd_read_block_end
 
 
 init_sdcard
-	; set ALL CS lines to HIGH
-	lda #%01111110
-	ora via1portb	
+	; set ALL CS lines and DO to HIGH 
+	lda #%11111110
 	sta via1portb
 
 	; 80 Taktzyklen
@@ -217,10 +215,11 @@ init_sdcard
 	dex
 	bne -
 
+	jsr sd_select_card
 	; set CS line to LOW
-	lda #%11111101
-	and via1portb	
-	sta via1portb
+	; lda #%11111101
+	; and via1portb	
+	; sta via1portb
 	
 init
 	; send CMD0 - init SD card to SPI mode
@@ -296,6 +295,9 @@ initloop2
 	bne initloop2
 
 	+PrintString initfail
+
+	jsr sd_deselect_card
+
 	rts
 
 sdinitok
