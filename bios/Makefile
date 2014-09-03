@@ -1,4 +1,4 @@
-ACME_OPTS=-v -f plain --initmem 0xFF --cpu 65c02
+ACME_OPTS=-v -f plain 
 all: bios.bin bios.h.a 
 
 clean:

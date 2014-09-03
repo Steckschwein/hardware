@@ -1,3 +1,5 @@
+!initmem $ff
+!cpu 65c02
 *= $e000			; ROM Start
 !src "../charsets/char.ascii.h.a"
 ;!bin "../charsets/char.bin"
@@ -150,17 +152,17 @@ do_reset
 			txs
 
 			; init VDP
-			jsr vdp_init	
-			jsr vdp_clear_vram	
+			; jsr vdp_init	
+			; jsr vdp_clear_vram	
 
-			jsr vdp_clear_screen
-			jsr vdp_load_charset
-			jsr vdp_color
+			; jsr vdp_clear_screen
+			; jsr vdp_load_charset
+			; jsr vdp_color
 
 
-			lda	#v_reg1_16k|v_reg1_display_on|v_reg1_int
-			ldy	#v_reg1
-			jsr	vdp_sreg
+			; lda	#v_reg1_16k|v_reg1_display_on|v_reg1_int
+			; ldy	#v_reg1
+			; jsr	vdp_sreg
 
 			; init IO devices
 			jsr init_lcd
