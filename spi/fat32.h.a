@@ -1,0 +1,36 @@
+;--------------------------------------------------------------------------------------
+; boot sector
+;--------------------------------------------------------------------------------------
+BS_jmpBoot		= $00
+BS_OEMName		= $03
+BPB_BytsPerSec 	= 11
+BPB_SecPerClus	= 13
+BPB_RsvdSecCnt	= 14	; Number of reserved sectors. Should be 32 for FAT32
+BPB_NumFATs		= 16
+BPB_Media		= 21	; For removable media, 0xF0 is frequently used. 
+						; The legal values for this field are 0xF0, 0xF8, 0xF9, 0xFA, 0xFB, 0xFC, 0xFD, 0xFE, and 0xFF. 
+BS_BootSig		= 38
+BS_VolID		= 39
+BS_VolLab		= 43
+BS_FilSysType	= 54	; One of the strings “FAT12 ”, “FAT16 ”, or “FAT ”.
+
+BS_Partition0	= 446
+BS_Partition1	= 462
+BS_Partition2	= 478
+BS_Partition3	= 494
+
+BS_Signature	= 510   ; must be 0x55AA
+
+
+;--------------------------------------------------------------------------------------
+; partition entry
+;--------------------------------------------------------------------------------------
+PE_Bootflag		= 0
+PE_CHSBegin		= 1
+PE_TypeCode		= 4
+PE_CHSEnd		= 6
+PE_LBABegin		= 8
+PE_NumSectors	= 12
+
+
+BS_VolLab2		= 71
