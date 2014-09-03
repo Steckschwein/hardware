@@ -2,11 +2,8 @@
 !source "../bios/defs.h.a"
 !source "../bios/bios.h.a"
 !source "t9929.h.a"
-adrl     =$f0
-adrh     =$f1
 txtptr   =$f2
-crs_x    =$f4
-crs_c    =$f5
+crs_c	 =$f3
 charset  =$e000
 
 ; c64 program studio - endurion
@@ -14,9 +11,6 @@ charset  =$e000
 
 ; C128 - risen from oblivion, vdc chip 
 ; bil herd - forum "damals war's..." anbindung video chip
-
-TEXT_COLOR     = Cyan
-TEXT_BGCOLORT  = Black
 
    jmp   main
 	
@@ -27,9 +21,9 @@ msg_3 !text "READY.", $0
 pic1:
 !bin "tw_192px.gif.raw"
 pic2:
-!bin "ml_192px.gif.raw"
+;!bin "ml_192px.gif.raw"
 pic3:
-!bin "great_success_256.raw"
+;!bin "great_success_256.gif.raw"
 
 main:
    jsr   lcdclear
@@ -46,12 +40,8 @@ main:
    lda   #'1'
    jsr   lcdprint
 
-;   jsr   vdp_color
+;    jsr   vdp_color
 ;   jsr   vdp_write
-
-	lda	#v_reg1_16k|v_reg1_display_on|v_reg1_int
-	ldy	#v_reg1
-	jsr	vdp_sreg
 
    +SetVector msg_3, txtptr
    jsr   vdp_write
@@ -60,10 +50,20 @@ main:
 
    lda   #'2'
    jsr   lcdprint 
-   cli
+   
+	jsr	vdp_gfx2_init
+	
+	lda	#v_reg0_m3
+	ldy	#v_reg0
+	jsr	vdp_sreg
+
+	lda	#v_reg1_16k|v_reg1_display_on	;|v_reg1_int
+	ldy	#v_reg1
+	jsr	vdp_sreg
+   
+	cli
 -	jmp   -
 
-;	jsr	burn_cycles
 ;   jsr   vdp_sprite
 ;	jsr	sprite_move
 ;   jsr lcdclear
@@ -77,23 +77,23 @@ main:
 ; color table --> 2 colors
 ; pattern table --> bitset
 vdp_gfx2_init:
-	;set 768 different pattern names
+	;set 768 different patterns --> name table
 	lda	#$00
-	ldy	#$54
+	ldy	#$58
 	jsr	vdp_sreg
 	ldy	#$00
 	ldx	#$00
 -	stx	a_vram
-	inx	
+	inx
 	bne	-
 	iny
 	cpy	#$03
 	bne	-
-	;now set 6144 byte of color
+	;now set 6144 byte of color --> color table
 	lda	#$00
 	ldy	#$60
 	jsr	vdp_sreg
-	lda	Black<<4|White
+	lda	#Black<<4|White
 	ldy	#$00
 	ldx	#$00
 -	sta	a_vram
@@ -101,11 +101,11 @@ vdp_gfx2_init:
 	bne	-
 	iny
 	cpy	#$18
-	bne	-
-	;load the pic
+	bne	-	
+;load the pic data --> pattern table
    lda   #<pic1
    sta   adrl
-   lda   #>pic2
+   lda   #>pic1
    sta   adrh
    lda   #$00
    ldy   #$40
@@ -127,19 +127,24 @@ vdp_gfx2_img:
 	
 
 vdp_irq:
+	lda   a_vreg
+;	jsr	vdp_colortest
+
    jsr   vdp_cursor
    jsr   vdp_sprite
    jsr   sprite_move
 ;   jsr   lcdclear
-   lda   a_vreg
 ;   jsr   lcdhex
    rti
 vdp_init_bytes
 	!byte 0
 	!byte v_reg1_16k|v_reg1_int
-	!byte ($1400 / $400)	; name table - value * $400
-	!byte	($2000 / $40)	; color table - value * $40 (gfx1), 7f/ff (gfx2)
-	!byte	($0000 / $800) ; pattern table (charset) - value * $800  --> offset in VRAM 
+;	!byte ($1400 / $400)	; name table - value * $400
+	!byte ($1800 / $400)	; name table - value * $400
+;	!byte	($2000 / $40)	; color table - value * $40 (gfx1), 7f/ff (gfx2)
+	!byte	$ff	; color table setting for gfx mode 2 --> $2000
+;	!byte	($0000 / $800) ; pattern table (charset) - value * $800  --> offset in VRAM 
+	!byte	$03 	; pattern table, either $0000 or $2000 (3)	
 	!byte	($2800 / $80)	; sprite attribute table - value * $80 --> offset in VRAM 
 	!byte	($0000 / $800)	; sprite pattern table - value * $800  --> offset in VRAM 
 	!byte	Black
@@ -164,14 +169,6 @@ vdp_init:
    rts
 	
 	
-burn_cycles:
-	ldy	#$20
-	ldx	#$ff
--	dex
-	bne	-
-	dey
-	bne	-
-	rts
 vdp_cursor:
    lda   #$20
    ldy   #$54
@@ -198,7 +195,7 @@ vdp_sprite:
 	lda	#$00 ; offset $2000
 	ldy	#$68 ; #$26 + $40
 	jsr	vdp_sreg
-   ldy   #$00
+    ldy   #$00
 -
    lda   sprite_attr_table,y
    +nops VRAM_WAIT
