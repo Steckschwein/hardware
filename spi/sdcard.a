@@ -129,8 +129,9 @@ init
 	ldx #$00
 -	
 	lda #$ff
+	phx
 	jsr spi_rw_byte
-
+	plx
 	sta sd_cmd_result,x
 	inx
 	cpx #$05
@@ -177,8 +178,9 @@ init
 	ldx #$00
 -	
 	lda #$ff
+	phx
 	jsr spi_rw_byte
-
+	plx
 	sta sd_cmd_result,x
 	inx
 	cpx #$05
@@ -222,7 +224,9 @@ sd_cmd
 	; transfer parameter buffer
 	ldx #$00
 -	lda sd_cmd_param,x
+	phx
 	jsr spi_rw_byte
+	plx
 	inx
 	cpx #$05
 	bne -
