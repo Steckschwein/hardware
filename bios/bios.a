@@ -38,15 +38,8 @@ upload
 			lda #' '
 			jsr lcdprint
 
-;			lda #'O'
-;			jsr chrout
-;			lda #'K'
-;			jsr chrout
-
 			+PrintChar 'O'
 			+PrintChar 'K'
-
-			sei
 
 			;jsr strout
 
@@ -90,14 +83,8 @@ upload
 			lda startaddr+1
 			sta addr+1	
 
-			;lda #'O'
-			;jsr chrout
-			;lda #'K'
-			;jsr chrout
-
 			+PrintChar 'O'
 			+PrintChar 'K'
-
 
 			ldy #$00
 -			jsr chrin
@@ -119,10 +106,6 @@ upload
 			bne - ; no? read next byte
 
 			; yes? write OK and jump to start addr	
-;			lda #'O'
-;			jsr chrout
-;			lda #'K'
-;			jsr chrout
 			+PrintChar 'O'
 			+PrintChar 'K'
 
@@ -152,17 +135,17 @@ do_reset
 			txs
 
 			; init VDP
-			; jsr vdp_init	
-			; jsr vdp_clear_vram	
+			jsr vdp_init	
+			jsr vdp_clear_vram	
 
-			; jsr vdp_clear_screen
-			; jsr vdp_load_charset
-			; jsr vdp_color
+			jsr vdp_clear_screen
+			jsr vdp_load_charset
+			jsr vdp_color
 
 
-			; lda	#v_reg1_16k|v_reg1_display_on|v_reg1_int
-			; ldy	#v_reg1
-			; jsr	vdp_sreg
+			lda	#v_reg1_16k|v_reg1_display_on|v_reg1_int
+			ldy	#v_reg1
+			jsr	vdp_sreg
 
 			; init IO devices
 			jsr init_lcd
@@ -173,15 +156,9 @@ do_reset
 
 			; Set IRQ Vector
 			+SetVector i_irqhandler, irqvec
-;			lda #<irqhandler
-;			sta irqvec
-;
-;			lda #>irqhandler
-;			sta irqvec+1
-
 
 			
-			cli
+;			cli
 
 ;	Memcheck disabled for now
 ;			jsr memcheck
@@ -189,9 +166,6 @@ do_reset
 			ldy #$02
 			ldx #$00
 			jsr lcdxy
-
-			+SetVector startmsg, msgptr
-			jsr vdp_write	
 
 			+SetVector biosversion, msgptr
 
@@ -205,8 +179,7 @@ do_reset
 ; adrh	   =$01
 
 memcheck:
-	lda #'$'
-	jsr lcdprint
+	+PrintChar '$'
 
 	lda   #$00
 	sta   adrl
@@ -234,8 +207,9 @@ memcheck:
 	jsr   mem_ca
 	lda   #$20
 	jsr   lcdprint   
-	lda #'$'
-	jsr lcdprint
+	
+	+PrintChar '$'
+	
 	pla   
 	jsr   lcdhex
 	rts
@@ -733,11 +707,9 @@ i_lcddec
 ;----------------------------------------------------------------------------------------------
 ; Transmit byte VIA SPI
 ; Byte to transmit in A, received byte in A at exit
+; Destructive: A,X,Y
 ;----------------------------------------------------------------------------------------------
 i_spi_rw_byte
-	phx
-	phy
-
 	sta tmp0	; zu transferierendes byte im akku nach tmp0 retten
 
 	ldx #$08
@@ -762,17 +734,15 @@ i_spi_rw_byte
 	
 	lda via1sr	; Schieberegister auslesen
 
-	ply
-	plx
 	rts
 
 ;----------------------------------------------------------------------------------------------
 ; Receive byte VIA SPI
 ; Received byte in A at exit
+; Destructive: A,Y
 ;----------------------------------------------------------------------------------------------
 	
 i_spi_r_byte
-       phy
        lda via1portb   ; Port laden
        AND #$7e  ;    * Daten und Takt ausschalten
        TAY             ; aufheben
@@ -796,7 +766,6 @@ i_spi_r_byte
        STY via1portb ; Takt aus
 
        lda via1sr
-       ply
        rts
 
 ;----------------------------------------------------------------------------------------------
@@ -809,7 +778,7 @@ hexascii	!text "0123456789ABCDEF"
 dec_tbl		!byte 128,160,200
 
 ; Version String
-biosversion	!text "V1508B VDP", $00
+biosversion	!text "V0409 VDP", $00
 
 ;----------------------------------------------------------------------------------------------
 ;	divisor values for 1.8432 MHz Crystal
