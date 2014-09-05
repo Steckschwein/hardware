@@ -52,7 +52,26 @@ main:
       stz crs_x
       stz crs_y
 -		jsr chrin
-      
+
+      jsr lcdhex
+   
+      cmp #$0d ; return
+      bne +
+      stz crs_x
+      inc crs_y
+      bra -
++
+
+      cmp #$04
+      bne +
+      jsr vdp_clear_screen
+      stz crs_x
+      stz crs_y
+      jsr vdp_gotoxy      
+      bra -   
++      
+      sec
+      sbc #$20      
 		jsr vdp_chrout
 
       inc crs_x
