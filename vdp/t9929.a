@@ -48,6 +48,10 @@ main:
 
    +SetVector  vdp_irq, irqvec
 
+   lda   #v_reg1_16k ;|v_reg1_int
+   ldy   #v_reg1
+   jsr   vdp_sreg
+
    lda   #'2'
    jsr   lcdprint 
    
