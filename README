@@ -1,1 +1,12 @@
-hello
+<script type="WaveDrom">
+{signal: [
+  {name: 'clk/16MHz',  wave: 'p...............'},
+  {name: 'clk0/8MHz',  wave: 'lhlhlhlhlhlhlhlh'},
+  {name: 'clk1/4MHz',  wave: 'l.h.l.h.l.h.l.h.'},
+  {name: 'PHI2/2MHz/250ns',  wave: 'l...h...l...h...'},
+  {name: 'clk3/1MHz',  wave: 'l.......h.......'},
+  {},
+  {name: 'vdpcsw/csr',  wave: '1...0.1.........'},
+
+]}
+</script>
