@@ -36,7 +36,7 @@ main:
    jsr   vdp_load_charset
    jsr   vdp_color
 	
-;	jsr	vdp_colortest
+	jsr	vdp_colortest
    lda   #'1'
    jsr   lcdprint
 
@@ -55,25 +55,17 @@ main:
    lda   #'2'
    jsr   lcdprint 
    
-	jsr	vdp_gfx2_init
-	
+	jsr	vdp_gfx2_init	
 	lda	#v_reg0_m3
 	ldy	#v_reg0
 	jsr	vdp_sreg
 
-	lda	#v_reg1_16k|v_reg1_display_on	;|v_reg1_int
+	lda	#v_reg1_16k|v_reg1_display_on;|v_reg1_int
 	ldy	#v_reg1
 	jsr	vdp_sreg
    
 	cli
 -	jmp   -
-
-;   jsr   vdp_sprite
-;	jsr	sprite_move
-;   jsr lcdclear
-;   lda a_vreg
-;   jsr lcdhex
-;   jmp	-
 
 
 ; bitmap mode
@@ -126,14 +118,12 @@ vdp_gfx2_init:
    bne   -
    rts	
 	
-	
-vdp_gfx2_img:
-	
 
 vdp_irq:
 	lda   a_vreg
+	
 ;	jsr	vdp_colortest
-
+	
    jsr   vdp_cursor
    jsr   vdp_sprite
    jsr   sprite_move
@@ -201,22 +191,22 @@ vdp_sprite:
 	jsr	vdp_sreg
     ldy   #$00
 -
-   lda   sprite_attr_table,y
-   +nops VRAM_WAIT
-   sta   a_vram_w
-   iny
+	lda   sprite_attr_table,y
+	sta   a_vram_w
+	iny
 	cpy	#(5*4)	
-   bne   -
-+  rts
-vdp_sreg:
+	bne   -
++  	rts
+
+vdp_sreg:	
 	sta   a_vreg_w
-   sty   a_vreg_w
-   rts
+	sty   a_vreg_w
+	rts
 vdp_clear_vram:
-   lda   #$00
-   ldy   #$40
-   jsr   vdp_sreg
-   lda   #$00
+	lda   #$00
+	ldy   #$40
+	jsr   vdp_sreg
+	lda   #$00
    ldx   #$00
    ldy   #$00
 c1:
@@ -273,27 +263,25 @@ vdp_colortest:
    jsr   vdp_sreg
 	ldx   #$00
    ldy   #$00
-   lda   #00
--  +nops VRAM_WAIT
-   sta   a_vram_w
-	clc
-	adc	#$01
-   iny
+   lda   #'A'
+-  sta   a_vram_w
+;	clc
+;	adc	#$01
+	iny
 	cpy	#128
 	bne   -
 	inx
 	cpx	#$06
 	bne	-
 	
-	
-   lda   #$00
+   lda   #$00		;set the color
    ldy   #$60
    jsr   vdp_sreg
-   ldy   #Black
    ldx   #$00
--  +nops VRAM_WAIT
-   sty   a_vram_w
-	iny
+-  lda   #Black<<4
+   sta   a_vram_w
+;   clc
+;   adc	 #$10
    inx
    cpx   #$20	
    bne   -
@@ -315,9 +303,8 @@ vdp_color:
    ldy   #$60
    jsr   vdp_sreg
    ldx   #$00
-   ldy   #Light_Blue<<4|Transparent
--  +nops VRAM_WAIT
-   sty   a_vram_w
+   ldy   #Black<<4|Transparent
+-  sty   a_vram_w
    inx
    cpx   #$20
    bne   -
