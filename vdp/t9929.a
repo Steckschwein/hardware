@@ -4,7 +4,6 @@
 !source "t9929.h.a"
 txtptr   =$f2
 crs_c	 =$f3
-charset  =$e000
 
 ; c64 program studio - endurion
 ; cbm studio
@@ -19,15 +18,17 @@ msg_2	!text "      Welcome to VCFE 15.0!                                        
 msg_3 !text "READY.", $0
 
 pic1:
-!bin "tw_192px.gif.raw"
+;!bin "tw_192px.gif.raw"
 pic2:
 ;!bin "ml_192px.gif.raw"
+;!bin "puppe.raw"
 pic3:
 ;!bin "great_success_256.gif.raw"
+!src "../charsets/char.ascii.vc20.h.a"
 
 main:
-   jsr   lcdclear
-   lda   #'0'
+	jsr   lcdclear
+	lda   #'0'
 	jsr   lcdprint
 
 	jsr   vdp_init
@@ -48,19 +49,19 @@ main:
 
    +SetVector  vdp_irq, irqvec
 
-   lda   #v_reg1_16k ;|v_reg1_int
+   lda   #v_reg1_16k
    ldy   #v_reg1
    jsr   vdp_sreg
 
    lda   #'2'
    jsr   lcdprint 
    
-	jsr	vdp_gfx2_init	
-	lda	#v_reg0_m3
-	ldy	#v_reg0
-	jsr	vdp_sreg
+;	jsr	vdp_gfx2_init	
+;	lda	#v_reg0_m3
+;	ldy	#v_reg0
+;	jsr	vdp_sreg
 
-	lda	#v_reg1_16k|v_reg1_display_on;|v_reg1_int
+	lda	#v_reg1_16k|v_reg1_display_on|v_reg1_int
 	ldy	#v_reg1
 	jsr	vdp_sreg
    
@@ -133,12 +134,12 @@ vdp_irq:
 vdp_init_bytes
 	!byte 0
 	!byte v_reg1_16k|v_reg1_int
-;	!byte ($1400 / $400)	; name table - value * $400
-	!byte ($1800 / $400)	; name table - value * $400
-;	!byte	($2000 / $40)	; color table - value * $40 (gfx1), 7f/ff (gfx2)
-	!byte	$ff	; color table setting for gfx mode 2 --> $2000
-;	!byte	($0000 / $800) ; pattern table (charset) - value * $800  --> offset in VRAM 
-	!byte	$03 	; pattern table, either $0000 or $2000 (3)	
+	!byte ($1400 / $400)	; name table - value * $400
+;	!byte ($1800 / $400)	; name table - value * $400
+	!byte	($2000 / $40)	; color table - value * $40 (gfx1), 7f/ff (gfx2)
+;	!byte	$ff	; color table setting for gfx mode 2 --> $2000
+	!byte	($0000 / $800) ; pattern table (charset) - value * $800  --> offset in VRAM 
+;	!byte	$03 	; pattern table, either $0000 or $2000 (3)	
 	!byte	($2800 / $80)	; sprite attribute table - value * $80 --> offset in VRAM 
 	!byte	($0000 / $800)	; sprite pattern table - value * $800  --> offset in VRAM 
 	!byte	Black
@@ -220,9 +221,9 @@ c1:
    rts
 	
 vdp_load_charset:
-   lda   #<charset
+   lda   #<charset_vc20
    sta   adrl
-   lda   #>charset
+   lda   #>charset_vc20
    sta   adrh
 	
    lda   #$00
@@ -262,26 +263,22 @@ vdp_colortest:
    ldy   #$54
    jsr   vdp_sreg
 	ldx   #$00
-   ldy   #$00
-   lda   #'A'
--  sta   a_vram_w
-;	clc
-;	adc	#$01
+    ldy   #$00
+-   sty   a_vram_w
 	iny
-	cpy	#128
 	bne   -
 	inx
-	cpx	#$06
+	cpx	#$03
 	bne	-
 	
    lda   #$00		;set the color
    ldy   #$60
    jsr   vdp_sreg
    ldx   #$00
--  lda   #Black<<4
-   sta   a_vram_w
-;   clc
-;   adc	 #$10
+   lda   #Black<<4
+-  sta   a_vram_w
+   clc
+   adc	 #$10
    inx
    cpx   #$20	
    bne   -
@@ -303,7 +300,7 @@ vdp_color:
    ldy   #$60
    jsr   vdp_sreg
    ldx   #$00
-   ldy   #Black<<4|Transparent
+   ldy   #Gray<<4|Transparent
 -  sty   a_vram_w
    inx
    cpx   #$20

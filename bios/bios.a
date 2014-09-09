@@ -1,8 +1,9 @@
 !initmem $ff
 !cpu 65c02
+!src "defs.h.a"
+!src "../vdp/t9929.h.a"
 *= $e000			; ROM Start
-!src "../charsets/char.ascii.h.a"
-;!bin "../charsets/char.bin"
+!src "../charsets/char.ascii.c64.h.a"
 !text "This space intentionally left blank", $00
 startmsg
 !text "STECKSCHWEIN 1.0                ", $00
@@ -10,9 +11,6 @@ startmsg
 !text "Marko Lauke", $0a, $0d, $00
 
 *=$f000
-!src "defs.h.a"
-!src "../vdp/t9929.h.a"
-
 upload
 			ldx #$00
 			ldy #$01
@@ -113,13 +111,9 @@ upload
 			ldx #$ff
 			txs
 
-			cli 
-
-			; jump to new code
-			jmp (startaddr)
-
-
-
+			cli
+			rts
+			
 ;----------------------------------------------------------------------------------------------
 ; RESET Routine. Call subroutines to init all components 
 ;----------------------------------------------------------------------------------------------
@@ -172,8 +166,9 @@ do_reset
 			jsr lcdstring
 			jsr vdp_write	
 
-			jmp upload
-	
+			jsr upload
+			; jump to new code
+			jmp (startaddr)
 	
 ; adrl	   =$00
 ; adrh	   =$01

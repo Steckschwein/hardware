@@ -510,4 +510,3 @@
 !byte $f7,$f7,$f7,$f7,$07,$ff,$ff,$ff
 !byte $0f,$0f,$0f,$0f,$ff,$ff,$ff,$ff
 !byte $0f,$0f,$0f,$0f,$f0,$f0,$f0,$f0
-!byte 
