@@ -1,3 +1,5 @@
+!source "../bios/defs.h.a"
+!source "../bios/bios.h.a"
 ;-------------------------------------------------------------------------
 ;
 ;  The WOZ Monitor for the Apple 1
@@ -26,8 +28,8 @@ IN              =     $0200				;,$027F     ;Input buffer
 
 KBD             =     $D010           ;PIA.A keyboard input
 KBDCR           =     $D011           ;PIA.A keyboard control register
-DSP             =     $D012           ;PIA.B display output register
-DSPCR           =     $D013           ;PIA.B display control register
+;DSP             =     $D012           ;PIA.B display output register
+;DSPCR           =     $D013           ;PIA.B display control register
 
 ; KBD b7..b0 are inputs, b6..b0 is ASCII input, b7 is constant high
 ;     Programmed to respond to low to high KBD strobe
@@ -55,11 +57,11 @@ PROMPT          =     "\"             ;Prompt character
 
 RESET           CLD                     ;Clear decimal arithmetic mode
                 CLI
-                LDY     #%01111111     ;Mask for DSP data direction reg
-                STY     DSP             ; (DDR mode is assumed after reset)
+;                LDY     #%01111111     ;Mask for DSP data direction reg
+;					 STY     DSP             ; (DDR mode is assumed after reset)
                 LDA     #%10100111     ;KBD and DSP control register mask
                 STA     KBDCR           ;Enable interrupts, set CA1, CB1 for
-                STA     DSPCR           ; positive edge sense/output mode.
+ ;               STA     DSPCR           ; positive edge sense/output mode.
 
 ; Program falls through to the GETLINE routine to save some program bytes
 ; Please note that Y still holds $7F, which will cause an automatic Escape
@@ -115,7 +117,10 @@ NEXTITEM        LDA     IN,Y            ;Get character
                 BEQ     SETSTOR         ;Set STOR mode! $BA will become $7B
                 CMP     #"R"
                 BEQ     RUN             ;Run the program! Forget the rest
-                STX     L               ;Clear input value (X=0)
+                CMP     #"L"				 ;  LOAD program from rs232/sd-card
+                BNE     +					 ;Jump to Sys-Call 
+					 JSR		sys_upload
++               STX     L               ;Clear input value (X=0)
                 STX     H
                 STY     YSAV            ;Save Y for comparison
 
@@ -240,9 +245,10 @@ PRHEX           AND     #%00001111     ;Mask LSD for hex print
 ;  Subroutine to print a character to the terminal
 ;-------------------------------------------------------------------------
 
-ECHO            BIT     DSP             ;DA bit (B7) cleared yet?
-                BMI     ECHO            ;No! Wait for display ready
-                STA     DSP             ;Output character. Sets DA
+ECHO            jsr		sys_echo
+					 ;BIT     DSP             ;DA bit (B7) cleared yet?
+                ;BMI     ECHO            ;No! Wait for display ready
+                ;STA     DSP             ;Output character. Sets DA
                 RTS
 
 ;-------------------------------------------------------------------------
