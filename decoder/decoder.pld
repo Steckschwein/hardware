@@ -17,10 +17,10 @@ CLK1
 GND
 ROMOFF	; Remove ROM from Adress space if low, make unterlying RAM readable
 CSROM    ;CS signal for ROM at $e000-$ffff 
-UARTRD
-UARTWR
+NC
+NC
 CSHIRAM  ;CS for ram between  $8000-$cfff
-CSUART ; TEST
+CSUART   ; CS for UART
 CSVIA    ;6522 VIA    at $d100
 ELCD     ;LCD-Display at $d200
 VDPCSR   ;Read VDP at $d400
@@ -43,8 +43,9 @@ ELCD     = PHI2 * G1 * A2*/A1*A0 * /B3*/B2*B1*/B0	; $d200 - LCD-Display at $d200
 /VDPCSR  = RW *PHI2*/CLK1  * G1*A2*/A1*A0  * /B3*B2*/B1*/B0	; $d400 - Video CSR     1101 0100 d400
 /VDPCSW  = /RW*PHI2*/CLK1  * G1*A2*/A1*A0  * /B3*B2*/B1*/B0	; $d400 - Video CSW     1101 0100 d400
 
-/UARTWR  = /RW * PHI2 * G1*A2*/A1*A0 * /B3*/B2*/B1*/B0	; $d000 - UART
-/UARTRD  = RW *  G1*A2*/A1*A0 * /B3*/B2*/B1*/B0			; $d000 - UART
+; Legacy
+; /UARTWR  = /RW * PHI2 * G1*A2*/A1*A0 * /B3*/B2*/B1*/B0	; $d000 - UART
+: /UARTRD  = RW *  G1*A2*/A1*A0 * /B3*/B2*/B1*/B0			; $d000 - UART
 /CSUART  = G1*A2*/A1*A0 * /B3*/B2*/B1*/B0
 
 DESCRIPTION:
