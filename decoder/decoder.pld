@@ -15,9 +15,10 @@ RW       ; RW of 6502 (Pin 34)
 PHI2     ; PHI2 of 6502 (Pin 39)
 CLK1	
 GND
+;
 ROMOFF	; Remove ROM from Adress space if low, make unterlying RAM readable
 CSROM    ;CS signal for ROM at $e000-$ffff 
-NC
+RW2		 ;early write, clocked phased
 NC
 CSHIRAM  ;CS for ram between  $8000-$cfff
 CSUART   ; CS for UART
@@ -45,7 +46,9 @@ ELCD     = PHI2 * G1 * A2*/A1*A0 * /B3*/B2*B1*/B0	; $d200 - LCD-Display at $d200
 
 ; Legacy
 ; /UARTWR  = /RW * PHI2 * G1*A2*/A1*A0 * /B3*/B2*/B1*/B0	; $d000 - UART
-: /UARTRD  = RW *  G1*A2*/A1*A0 * /B3*/B2*/B1*/B0			; $d000 - UART
+; /UARTRD  = RW *  G1*A2*/A1*A0 * /B3*/B2*/B1*/B0			; $d000 - UART
 /CSUART  = G1*A2*/A1*A0 * /B3*/B2*/B1*/B0
+
+/RW2	= /RW*PHI2*/CLK1
 
 DESCRIPTION:
