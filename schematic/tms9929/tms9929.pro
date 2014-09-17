@@ -1,6 +1,6 @@
-update=17.09.2014 20:18:09
+update=17.09.2014 21:49:56
 version=1
-last_client=kicad
+last_client=eeschema
 [cvpcb]
 version=1
 NetIExt=net
@@ -27,9 +27,21 @@ BoardOutlineThickness=0.100000000000
 ModuleOutlineThickness=0.150000000000
 [general]
 version=1
+[schematic_editor]
+version=1
+PageLayoutDescrFile=
+SubpartIdSeparator=0
+SubpartFirstId=65
+NetFmtName=PcbnewAdvanced
+SpiceForceRefPrefix=0
+SpiceUseNetNumbers=0
+RptD_X=0
+RptD_Y=100
+RptLab=1
+LabSize=60
 [eeschema]
 version=1
-LibDir=../symbol
+LibDir=../symbol;../../kicad
 [eeschema/libraries]
 LibName1=power
 LibName2=device
@@ -61,3 +73,4 @@ LibName27=opto
 LibName28=atmel
 LibName29=contrib
 LibName30=valves
+LibName31=D:/development/steckschwein-code/kicad/50pin_connector-cache
