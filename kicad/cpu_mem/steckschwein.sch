@@ -38,7 +38,7 @@ EELAYER 24 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
-Sheet 1 2
+Sheet 1 1
 Title ""
 Date ""
 Rev ""
@@ -1091,12 +1091,6 @@ F 3 "" H 3350 2700 60  0000 C CNN
 	1    3350 2700
 	1    0    0    -1  
 $EndComp
-$Sheet
-S 8650 1000 2250 2050
-U 5417695A
-F0 "50pin_connector.sch" 60
-F1 "50pin_connector.sch" 60
-$EndSheet
 Text GLabel 2750 3200 2    60   Input ~ 0
 PH0-IN
 Wire Bus Line
@@ -1587,8 +1581,206 @@ Text Label 7800 3350 0    60   ~ 0
 D
 Text Label 9600 3400 0    60   ~ 0
 D
-Text HLabel 8650 2000 0    60   Input ~ 0
-A
-Text HLabel 8650 2300 0    60   Input ~ 0
+$Comp
+L CONN_02X25 P?
+U 1 1 5419EC50
+P 10000 2100
+F 0 "P?" H 10000 3400 50  0000 C CNN
+F 1 "CONN_02X25" V 10000 2100 50  0000 C CNN
+F 2 "" H 10000 1350 60  0000 C CNN
+F 3 "" H 10000 1350 60  0000 C CNN
+	1    10000 2100
+	1    0    0    -1  
+$EndComp
+$Comp
+L VCC #PWR?
+U 1 1 5419EC57
+P 9650 750
+F 0 "#PWR?" H 9650 850 30  0001 C CNN
+F 1 "VCC" H 9650 850 30  0000 C CNN
+F 2 "" H 9650 750 60  0000 C CNN
+F 3 "" H 9650 750 60  0000 C CNN
+	1    9650 750 
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	9650 750  9650 900 
+Wire Wire Line
+	9650 900  9750 900 
+Wire Wire Line
+	10250 900  10300 900 
+Text GLabel 10300 900  2    60   Input ~ 0
+/RESET
+Text GLabel 10300 1000 2    60   Input ~ 0
+/IRQ
+Wire Wire Line
+	10250 1000 10300 1000
+Wire Wire Line
+	9750 1000 9700 1000
+Text GLabel 9700 1000 0    60   Input ~ 0
+/NMI
+Wire Bus Line
+	9300 1050 9300 1400
+Entry Wire Line
+	9300 1100 9400 1200
+Entry Wire Line
+	9300 1200 9400 1300
+Entry Wire Line
+	9300 1300 9400 1400
+Entry Wire Line
+	9300 1400 9400 1500
+Wire Wire Line
+	9400 1200 9750 1200
+Wire Wire Line
+	9400 1300 9750 1300
+Wire Wire Line
+	9400 1400 9750 1400
+Wire Wire Line
+	9400 1500 9750 1500
+Text Label 9400 1200 0    60   ~ 0
+D7
+Text Label 9400 1300 0    60   ~ 0
+D5
+Text Label 9400 1400 0    60   ~ 0
+D3
+Text Label 9400 1500 0    60   ~ 0
+D1
+Wire Bus Line
+	10750 1050 10750 1400
+Entry Wire Line
+	10650 1200 10750 1100
+Entry Wire Line
+	10650 1300 10750 1200
+Entry Wire Line
+	10650 1400 10750 1300
+Entry Wire Line
+	10650 1500 10750 1400
+Wire Wire Line
+	10250 1200 10650 1200
+Wire Wire Line
+	10250 1300 10650 1300
+Wire Wire Line
+	10250 1400 10650 1400
+Wire Wire Line
+	10250 1500 10650 1500
+Wire Wire Line
+	10250 1600 10300 1600
+Text GLabel 10300 1600 2    60   Input ~ 0
+/RW
+Text GLabel 10300 1700 2    60   Input ~ 0
+RDY
+Wire Wire Line
+	10250 1700 10300 1700
+Wire Wire Line
+	9750 1900 9700 1900
+Text GLabel 9700 1900 0    60   Input ~ 0
+E_LCD
+Wire Wire Line
+	10250 1900 10300 1900
+Text GLabel 10300 1900 2    60   Input ~ 0
+/CS_VIA
+Text GLabel 9700 2000 0    60   Input ~ 0
+/CS_UART
+Wire Wire Line
+	9750 2000 9700 2000
+Text GLabel 10300 2000 2    60   Input ~ 0
+/CSR_VDP
+Text GLabel 9700 2100 0    60   Input ~ 0
+/CSW_VDP
+Wire Wire Line
+	9700 2100 9750 2100
+Wire Wire Line
+	10250 2000 10300 2000
+Wire Bus Line
+	10900 2000 10900 2400
+Entry Wire Line
+	10800 2100 10900 2000
+Entry Wire Line
+	10800 2200 10900 2100
+Entry Wire Line
+	10800 2300 10900 2200
+Wire Wire Line
+	10250 2100 10800 2100
+Wire Wire Line
+	10250 2200 10800 2200
+Wire Wire Line
+	10250 2300 10800 2300
+Wire Bus Line
+	9100 2100 9100 2350
+Entry Wire Line
+	9100 2100 9200 2200
+Entry Wire Line
+	9100 2200 9200 2300
+Wire Wire Line
+	9200 2200 9750 2200
+Wire Wire Line
+	9200 2300 9750 2300
+$Comp
+L GND #PWR?
+U 1 1 5419EC95
+P 9150 2450
+F 0 "#PWR?" H 9150 2450 30  0001 C CNN
+F 1 "GND" H 9150 2380 30  0001 C CNN
+F 2 "" H 9150 2450 60  0000 C CNN
+F 3 "" H 9150 2450 60  0000 C CNN
+	1    9150 2450
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	9150 2450 9150 2400
+Wire Wire Line
+	9150 2400 9750 2400
+$Comp
+L GND #PWR?
+U 1 1 5419EC9D
+P 10800 2450
+F 0 "#PWR?" H 10800 2450 30  0001 C CNN
+F 1 "GND" H 10800 2380 30  0001 C CNN
+F 2 "" H 10800 2450 60  0000 C CNN
+F 3 "" H 10800 2450 60  0000 C CNN
+	1    10800 2450
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	10250 2400 10800 2400
+Wire Wire Line
+	10800 2400 10800 2450
+Wire Wire Line
+	9750 2500 9700 2500
+Wire Wire Line
+	9750 2600 9700 2600
+Wire Wire Line
+	10250 2500 10300 2500
+Text GLabel 9700 2500 0    60   Input ~ 0
+/OE
+Text GLabel 9700 2600 0    60   Input ~ 0
+PHI2
+Text GLabel 10300 2500 2    60   Input ~ 0
+/WE
+Text Label 10550 1200 0    60   ~ 0
+D6
+Text Label 10550 1300 0    60   ~ 0
+D4
+Text Label 10550 1400 0    60   ~ 0
+D2
+Text Label 10550 1500 0    60   ~ 0
+D0
+Text Label 10700 2300 0    60   ~ 0
+A0
+Text Label 10700 2200 0    60   ~ 0
+A2
+Text Label 10700 2100 0    60   ~ 0
+A4
+Text Label 9200 2300 0    60   ~ 0
+A1
+Text Label 9200 2200 0    60   ~ 0
+A3
+Text Label 10750 1050 0    60   ~ 0
 D
+Text Label 9300 1050 0    60   ~ 0
+D
+Text Label 9050 2150 0    60   ~ 0
+A
+Text Label 10900 2000 0    60   ~ 0
+A
 $EndSCHEMATC
