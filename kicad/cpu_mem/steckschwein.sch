@@ -32,7 +32,6 @@ LIBS:valves
 LIBS:65xxx
 LIBS:gal
 LIBS:UART
-LIBS:xo-14s
 LIBS:steckschwein-cache
 EELAYER 24 0
 EELAYER END
@@ -1050,9 +1049,9 @@ Text GLabel 5150 1400 2    60   Output ~ 0
 Text GLabel 5150 1500 2    60   Output ~ 0
 /CS_HIRAM
 Text GLabel 5150 1600 2    60   Output ~ 0
-/CS_RES01
+/OE2
 Text GLabel 5150 1700 2    60   Output ~ 0
-/CS_RES00
+/WE2
 Text GLabel 5150 1800 2    60   Output ~ 0
 /CS_ROM
 Text GLabel 4600 6150 2    60   Input ~ 0
@@ -1783,4 +1782,12 @@ Text Label 9050 2150 0    60   ~ 0
 A
 Text Label 10900 2000 0    60   ~ 0
 A
+Text GLabel 9700 2700 0    60   Input ~ 0
+/OE2
+Text GLabel 10300 2700 2    60   Input ~ 0
+/WE2
+Wire Wire Line
+	10300 2700 10250 2700
+Wire Wire Line
+	9700 2700 9750 2700
 $EndSCHEMATC

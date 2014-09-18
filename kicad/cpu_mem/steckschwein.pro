@@ -1,4 +1,4 @@
-update=Sat 13 Sep 2014 10:48:54 AM CEST
+update=Thu 18 Sep 2014 02:28:24 PM CEST
 version=1
 last_client=kicad
 [cvpcb]
@@ -61,7 +61,6 @@ LibName27=opto
 LibName28=atmel
 LibName29=contrib
 LibName30=valves
-LibName31=/home/thomas/Documents/kicad/lbr/65xxx
-LibName32=/home/thomas/Documents/kicad/lbr/gal
-LibName33=/home/thomas/Documents/kicad/lbr/UART
-LibName34=/home/thomas/Documents/kicad/lbr/clock_oscillator_x014s/xo-14s
+LibName31=/home/thomas/Documents/steckschwein/kicad/lbr/65xxx
+LibName32=/home/thomas/Documents/steckschwein/kicad/lbr/gal
+LibName33=/home/thomas/Documents/steckschwein/kicad/lbr/UART
