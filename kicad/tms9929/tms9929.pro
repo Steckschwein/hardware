@@ -1,4 +1,4 @@
-update=17.09.2014 23:11:40
+update=18.09.2014 20:44:11
 version=1
 last_client=eeschema
 [cvpcb]
@@ -25,11 +25,23 @@ SolderMaskMinWidth=0.000000000000
 DrawSegmentWidth=0.200000000000
 BoardOutlineThickness=0.100000000000
 ModuleOutlineThickness=0.150000000000
+[schematic_editor]
+version=1
+PageLayoutDescrFile=
+SubpartIdSeparator=0
+SubpartFirstId=65
+NetFmtName=PcbnewAdvanced
+SpiceForceRefPrefix=0
+SpiceUseNetNumbers=0
+RptD_X=0
+RptD_Y=100
+RptLab=1
+LabSize=60
 [general]
 version=1
 [eeschema]
 version=1
-LibDir=../lbr
+LibDir=../symbol;../../kicad
 [eeschema/libraries]
 LibName1=power
 LibName2=device
@@ -61,7 +73,4 @@ LibName27=opto
 LibName28=atmel
 LibName29=contrib
 LibName30=valves
-LibName31=65xxx
-LibName32=gal
-LibName33=UART
-LibName34=clock_oscillator_x014s/xo-14s
+LibName31=shared/50pin_connector-cache
