@@ -18,8 +18,8 @@ GND
 ;
 ROMOFF	; Remove ROM from Adress space if low, make unterlying RAM readable
 CSROM    ;CS signal for ROM at $e000-$ffff 
-RW2		 ;early write, clocked phased
-NC
+WE2		 ;early write, clocked phased CLK1
+OE2		; early read, clocked phased CLK1
 CSHIRAM  ;CS for ram between  $8000-$cfff
 CSUART   ; CS for UART
 CSVIA    ;6522 VIA    at $d100
@@ -49,6 +49,7 @@ ELCD     = PHI2 * G1 * A2*/A1*A0 * /B3*/B2*B1*/B0	; $d200 - LCD-Display at $d200
 ; /UARTRD  = RW *  G1*A2*/A1*A0 * /B3*/B2*/B1*/B0			; $d000 - UART
 /CSUART  = G1*A2*/A1*A0 * /B3*/B2*/B1*/B0
 
-/RW2	= /RW*PHI2*/CLK1
+/WE2	= /RW*PHI2*/CLK1
+/OE2	= RW*PHI2*/CLK1
 
 DESCRIPTION:
