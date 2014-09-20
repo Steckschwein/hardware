@@ -6,8 +6,6 @@ TEXT_BGCOLOR = Black
 
 a_vram 		= $d400
 a_vreg		= $d401
-a_vram_w		= $d400
-a_vreg_w		= $d401
 
 v_reg0_m3			= 1<<1
 v_reg0_extV			= 1<<0
@@ -37,7 +35,7 @@ Light_Green    =$03
 Dark_Blue      =$04
 Light_Blue     =$05;  5 Light Blue 
 Dark_Red       =$06
-Cyan           =$07 ;(Aqua Blue) 
+Cyan           =$07 ;(Aqua Blue)
 Medium_Red     =$08
 Light_Red      =$09
 Dark_Yellow    =$0a		;1010
