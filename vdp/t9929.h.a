@@ -44,11 +44,13 @@ Dark_Green     =$0c		;1100
 Magenta        =$0d ; (Purple)
 Gray           =$0e
 White          =$0f
+
 !macro nops n{
    !for i, n{
       nop
    }
 }
 !macro SpriteLine .v {
+	!byte (.v>>16)&255	
 	!byte .v&255
 }

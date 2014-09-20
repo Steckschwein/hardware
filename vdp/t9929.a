@@ -351,12 +351,3 @@ sprite1:
 		+SpriteLine %.##.##..
 		+SpriteLine %.#...#..
 		+SpriteLine %........
-sprite2:
-		+SpriteLine %..#.....#..
-;		+SpriteLine %...#...#...
-;		+SpriteLine %..#######..
-;		+SpriteLine %.##.###.##.
-;		+SpriteLine %###########
-;		+SpriteLine %#.#######.#
-;		+SpriteLine %#.#.....#.#
-;		+SpriteLine %...##.##...

@@ -1,3 +1,5 @@
+!src "../vdp/t9929.h.a"
+
 vdp_sreg:
 	sta   a_vreg
 	sty   a_vreg
