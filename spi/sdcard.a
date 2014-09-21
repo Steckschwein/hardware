@@ -28,6 +28,8 @@ cmd55	= $40 + 55	; APP_CMD
 cmd58	= $40 + 58	; READ_OCR
 acmd41	= $69
 
+
+main
 	jsr lcdclear
 	sei
 
@@ -35,6 +37,10 @@ acmd41	= $69
 	jsr init_sdcard
 
 	jsr sd_param_init
+
+;	jsr sd_write_block
+
+;-	jmp -
 	jsr sd_read_block
 	
 
@@ -60,6 +66,11 @@ acmd41	= $69
 	inx
 	cpx #11
 	bne -
+
+	lda #'X'
+	sta sd_blktarget + BS_VolLab2
+
+;	jsr sd_write_block
 	
 
 	jsr sd_deselect_card
@@ -270,10 +281,65 @@ sd_read_block
 	jsr spi_r_byte
 	jsr spi_r_byte
 
-sd_read_block_end
 	jsr sd_deselect_card
 
 	rts
+
+;---------------------------------------------------------------------
+; Write block to SD Card
+;---------------------------------------------------------------------
+sd_write_block
+	jsr sd_select_card
+
+	lda #cmd24
+	jsr sd_cmd
+	
+-	lda #$ff
+	jsr spi_rw_byte		
+	bne -
+
+	lda #'X'
+	jsr lcdprint
+
+
+	lda #$fe
+	jsr spi_rw_byte
+
+	ldx #$00
+-	lda sd_blktarget,x
+	phx
+	jsr spi_rw_byte
+	plx
+	inx
+	bne -
+
+	ldx #$00
+-	lda sd_blktarget+$100,x
+	phx
+	jsr spi_rw_byte
+	plx
+	inx
+	bne -
+
+
+	; Send fake CRC bytes
+	lda #$00
+	jsr spi_rw_byte
+	lda #$00
+	jsr spi_rw_byte
+
+	jsr spi_r_byte		
+
+
+
+-	lda #$ff
+	jsr spi_rw_byte		
+	cmp #$ff
+	bne -
+	
+	jsr sd_deselect_card
+
+	rts	
 
 
 
@@ -302,15 +368,11 @@ sd_deselect_card
 	ora via1portb	
 	sta via1portb
 
-	lda #$ff
+-	lda #$ff
 	jsr spi_rw_byte
-	lda #$ff
-	jsr spi_rw_byte
-	lda #$ff
-	jsr spi_rw_byte
-	lda #$ff
-	jsr spi_rw_byte
-
+	cmp #$ff
+;	bne -
+	
 	pla
 
 	rts
