@@ -1,4 +1,4 @@
-update=Thu 18 Sep 2014 02:28:24 PM CEST
+update=Sun 21 Sep 2014 07:54:45 PM CEST
 version=1
 last_client=kicad
 [cvpcb]
@@ -64,3 +64,4 @@ LibName30=valves
 LibName31=/home/thomas/Documents/steckschwein/kicad/lbr/65xxx
 LibName32=/home/thomas/Documents/steckschwein/kicad/lbr/gal
 LibName33=/home/thomas/Documents/steckschwein/kicad/lbr/UART
+LibName34=/home/thomas/Documents/steckschwein/kicad/lbr/osc
