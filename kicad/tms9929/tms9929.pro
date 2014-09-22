@@ -1,4 +1,4 @@
-update=18.09.2014 20:44:11
+update=18.09.2014 21:19:12
 version=1
 last_client=eeschema
 [cvpcb]
@@ -41,7 +41,7 @@ LabSize=60
 version=1
 [eeschema]
 version=1
-LibDir=../symbol;../../kicad
+LibDir=../../kicad;../lbr;../shared
 [eeschema/libraries]
 LibName1=power
 LibName2=device
