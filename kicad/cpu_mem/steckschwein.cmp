@@ -1,4 +1,4 @@
-Cmp-Mod V01 Created by Cvpcb (2014-09-10 BZR 5127)-product   date = Sun 21 Sep 2014 07:56:36 PM CEST
+Cmp-Mod V01 Created by Cvpcb (2014-09-10 BZR 5127)-product   date = Mon 22 Sep 2014 07:57:10 PM CEST
 
 BeginCmp
 TimeStamp = /541367DD;
@@ -99,7 +99,7 @@ IdModule  = Pin_Headers:Pin_Header_Straight_2x02;
 EndCmp
 
 BeginCmp
-TimeStamp = /5419EC50;
+TimeStamp = /54206EE0/542071FB;
 Reference = P5;
 ValeurCmp = CONN_02X25;
 IdModule  = Pin_Headers:Pin_Header_Angled_2x25;
@@ -218,10 +218,10 @@ IdModule  = Sockets_DIP:DIP-28__600_ELL;
 EndCmp
 
 BeginCmp
-TimeStamp = /54143582;
+TimeStamp = /541F2AC6;
 Reference = X1;
-ValeurCmp = TCXO3;
-IdModule  = Oscillator-Modules:OSCILLATOR_KXO-200;
+ValeurCmp = OSC;
+IdModule  = Oscillator-Modules:OSCILLATOR_KXO-200_LargePads;
 EndCmp
 
 EndListe
