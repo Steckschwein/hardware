@@ -1,0 +1,28 @@
+!src "../vdp/t9929.h.a"
+
+vdp_sreg:
+	sta   a_vreg
+	sty   a_vreg
+	rts
+	
+vdp_clear_vram:
+	lda   #$00
+	ldy   #$40
+	jsr   vdp_sreg
+	lda   #$00
+	ldx   #$00
+    ldy   #$00
+c1:
+	sta   a_vram
+	inx
+	bne   c1
+	iny
+	cpy   #$40
+	bne   c1
+	rts
+	
+vdp_bgcolor:
+	stx   a_vreg
+	lda   #v_reg7
+	sta   a_vreg
+	rts

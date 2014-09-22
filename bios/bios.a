@@ -269,8 +269,8 @@ vdp_init:
 		rts
 
 vdp_sreg:
-		sta   a_vreg_w
-   		sty   a_vreg_w
+		sta   a_vreg
+		sty   a_vreg
    		rts
 
 ;----------------------------------------------------------------------------------------------
@@ -285,7 +285,7 @@ vdp_clear_vram:
    ldy   #$00
 -
    +nops VRAM_WAIT
-   sta   a_vram_w
+   sta   a_vram
    inx
    bne   -
    iny
@@ -305,7 +305,7 @@ vdp_clear_screen:
    ldy   #$00
 - 
    +nops VRAM_WAIT
-   sta   a_vram_w
+   sta   a_vram
    inx   
    bne   -
    iny
@@ -328,7 +328,7 @@ vdp_load_charset:
 -  
    +nops VRAM_WAIT
    lda   (adrl),y
-   sta   a_vram_w
+   sta   a_vram
    iny
    bne   -
    inc   adrh
@@ -347,7 +347,7 @@ vdp_color:
    ldx   #$00
    ldy   #TEXT_COLOR<<4|Transparent
 -  +nops VRAM_WAIT
-   sty   a_vram_w
+   sty   a_vram
    inx
    cpx   #$20
    bne   -
@@ -367,7 +367,7 @@ vdp_write:
    nop
    lda   (msgptr),y
    beq   +
-   sta   a_vram_w
+   sta   a_vram
    iny
    bne   -
 +  rts
@@ -385,7 +385,7 @@ vdp_cursor:
    lda   #231
    jmp   ++
 +  lda   #' '
-++ sta   a_vram_w
+++ sta   a_vram
    inc   crs_x
    rts
 ;----------------------------------------------------------------------------------------------

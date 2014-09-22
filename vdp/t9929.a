@@ -44,11 +44,11 @@ main:
 ;    jsr   vdp_color
 ;   jsr   vdp_write
 
-   +SetVector msg_3, txtptr
-   jsr   vdp_write
+;   +SetVector msg_3, txtptr
+;   jsr   vdp_write
 
    +SetVector  vdp_irq, irqvec
-
+   
    lda   #v_reg1_16k
    ldy   #v_reg1
    jsr   vdp_sreg
@@ -64,9 +64,24 @@ main:
 	lda	#v_reg1_16k|v_reg1_display_on|v_reg1_int
 	ldy	#v_reg1
 	jsr	vdp_sreg
-   
+
+; via port a
+	lda #$00
+	sta via1ier             ; disable VIA1 T1 interrupts
+	lda #%00000000 			; set latch
+	sta via1acr
+	lda #%11001100 			; set level
+	sta via1pcr
+	lda #%11111000 			; set PA1 to input
+	sta via1ddra
+	
 	cli
--	jmp   -
+	
+-	lda via1porta
+	ldy #v_reg7
+	jsr	vdp_sreg
+	
+	jmp  -
 
 
 ; bitmap mode
@@ -110,7 +125,7 @@ vdp_gfx2_init:
    ldx   #$00; page counter   
    ldy   #$00
 -  lda   (adrl),y
-   sta   a_vram_w
+   sta   a_vram
    iny
    bne   -
    inc   adrh
@@ -123,9 +138,9 @@ vdp_gfx2_init:
 vdp_irq:
 	lda   a_vreg
 	
-;	jsr	vdp_colortest
+	jsr	vdp_colortest
 	
-   jsr   vdp_cursor
+;   jsr   vdp_cursor
    jsr   vdp_sprite
    jsr   sprite_move
 ;   jsr   lcdclear
@@ -174,7 +189,7 @@ vdp_cursor:
    lda   #160
    jmp   ++
 +  lda   #' '
-++ sta   a_vram_w
+++ sta   a_vram
    inc   crs_c
    rts
 	
@@ -193,15 +208,15 @@ vdp_sprite:
     ldy   #$00
 -
 	lda   sprite_attr_table,y
-	sta   a_vram_w
+	sta   a_vram
 	iny
 	cpy	#(5*4)	
 	bne   -
 +  	rts
 
 vdp_sreg:	
-	sta   a_vreg_w
-	sty   a_vreg_w
+	sta   a_vreg
+	sty   a_vreg
 	rts
 vdp_clear_vram:
 	lda   #$00
@@ -212,7 +227,7 @@ vdp_clear_vram:
    ldy   #$00
 c1:
    +nops VRAM_WAIT
-   sta   a_vram_w
+   sta   a_vram
    inx
    bne   c1
    iny
@@ -224,6 +239,8 @@ vdp_load_charset:
    lda   #<charset_vc20
    sta   adrl
    lda   #>charset_vc20
+;   clc
+;   adc	 #$08
    sta   adrh
 	
    lda   #$00
@@ -231,9 +248,8 @@ vdp_load_charset:
    jsr   vdp_sreg
    ldx   #$00; page counter   
    ldy   #$00
--  +nops VRAM_WAIT
-   lda   (adrl),y
-   sta   a_vram_w
+-  lda   (adrl),y
+   sta   a_vram
    iny
    bne   -
    inc   adrh
@@ -250,7 +266,7 @@ vdp_clear_screen:
    ldx   #$00
    ldy   #$00
 - 	+nops	VRAM_WAIT
-   sta   a_vram_w
+   sta   a_vram
    inx   
    bne   -
    iny
@@ -264,7 +280,8 @@ vdp_colortest:
    jsr   vdp_sreg
 	ldx   #$00
     ldy   #$00
--   sty   a_vram_w
+	lda	  #'a'
+-   sty   a_vram
 	iny
 	bne   -
 	inx
@@ -275,12 +292,11 @@ vdp_colortest:
    ldy   #$60
    jsr   vdp_sreg
    ldx   #$00
-   lda   #Black<<4
--  sta   a_vram_w
-   clc
-   adc	 #$10
+   ldy   #Medium_Red<<4
+-  sty   a_vram
+   iny
    inx
-   cpx   #$20	
+   cpx   #$20
    bne   -
    rts
 	
@@ -291,7 +307,7 @@ vdp_write:
    ldy   #$00
 -  lda   (txtptr),y
    beq   +
-   sta   a_vram_w
+   sta   a_vram
    iny
    bne   -
 +  rts
@@ -301,7 +317,7 @@ vdp_color:
    jsr   vdp_sreg
    ldx   #$00
    ldy   #Gray<<4|Transparent
--  sty   a_vram_w
+-  sty   a_vram
    inx
    cpx   #$20
    bne   -
@@ -335,12 +351,3 @@ sprite1:
 		+SpriteLine %.##.##..
 		+SpriteLine %.#...#..
 		+SpriteLine %........
-sprite2:
-		+SpriteLine %..#.....#..
-;		+SpriteLine %...#...#...
-;		+SpriteLine %..#######..
-;		+SpriteLine %.##.###.##.
-;		+SpriteLine %###########
-;		+SpriteLine %#.#######.#
-;		+SpriteLine %#.#.....#.#
-;		+SpriteLine %...##.##...

@@ -1,0 +1,84 @@
+*=$1000
+!source "../bios/defs.h.a"
+!source "../bios/bios.h.a"
+
+   jmp   main
+   
+!source "t99xx.lib.a"
+
+adr_h_w	= $f0
+adr_h_r	= $f1
+
+main:	
+	jsr   lcdclear
+	
+	lda	#v_reg1_16k
+	ldy	#v_reg1
+	jsr	vdp_sreg
+
+	lda   #<memtest_msg
+	sta   msgptr
+	lda   #>memtest_msg
+	sta   msgptr+1
+
+	jsr   lcdclear
+	jsr   lcdstring
+
+	lda   #$40
+	sta   adr_h_w
+	ldx   #$00
+	stx	  adr_h_r
+	ldy   #$00
+	jsr   mem_ca
+-	tya
+	phy
+	ldy	  adr_h_w
+	jsr	  vdp_sreg
+	ply
+	lda   pattern, x
+	sta		a_vram
+	tya
+	phy
+	ldy	  adr_h_r
+	jsr	  vdp_sreg
+	ply
+	lda	  a_vram	
+	cmp   pattern, x
+	bne   +
+	inx
+	cpx   #$0a
+	bne   -
+	ldx   #$00
+	iny
+	bne   -
+	inc   adr_h_w	; next 256 byte page
+	inc   adr_h_r
+    jsr   mem_ca
+	lda	  adr_h_r
+	cmp	  #$40
+	bne   -
+	jmp	  upload
++	pha            	;save erroneous pattern
+	jsr   mem_ca
+	lda   #$20
+	jsr   lcdprint   
+	pla   
+	jsr   lcdhex
+	jmp   upload
+
+mem_ca:	; output value
+   phx
+   phy
+   jsr 	lcdclear
+   plx
+   ply 
+   phy            ;save memory adress low byte
+   lda   adr_h_r
+   jsr   lcdhex
+   pla
+   jsr   lcdhex   
+   rts
+   
+memtest_msg	!text "Mem:$", $00
+
+pattern  !byte $f0,$0f,$96,$69,$a9,$9a,$00,$ff
