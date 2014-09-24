@@ -155,6 +155,9 @@ init
 +
 
 -
+	
+	jsr sd_busy_wait
+
 	jsr sd_param_init
 
 	lda #cmd55
