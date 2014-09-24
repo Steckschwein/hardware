@@ -35,7 +35,7 @@ EELAYER 24 0
 EELAYER END
 $Descr A3 16535 11693
 encoding utf-8
-Sheet 1 1
+Sheet 1 2
 Title "TMS9929"
 Date "Mittwoch, 17. September 2014"
 Rev "0.1"
@@ -1759,4 +1759,10 @@ F 3 "" H 1750 3850 60  0000 C CNN
 $EndComp
 Wire Wire Line
 	1750 3850 1750 3950
+$Sheet
+S 2800 5400 700  1500
+U 542278A8
+F0 "50Pin" 60
+F1 "50pin_connector.sch" 60
+$EndSheet
 $EndSCHEMATC
