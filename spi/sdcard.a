@@ -37,12 +37,8 @@ main
 	jsr init_sdcard
 
 	jsr sd_param_init
-
-;	jsr sd_write_block
-
-;-	jmp -
 	jsr sd_read_block
-	
+
 
 	; write start sector from partition entry to cmd param buffer (in reverse order)
 	lda sd_blktarget+BS_Partition0+PE_LBABegin+3
@@ -50,14 +46,13 @@ main
 
 	lda sd_blktarget+BS_Partition0+PE_LBABegin+2
 	sta sd_cmd_param+1
-
+	
 	lda sd_blktarget+BS_Partition0+PE_LBABegin+1
 	sta sd_cmd_param+2
-
+	
 	lda sd_blktarget+BS_Partition0+PE_LBABegin
 	sta sd_cmd_param+4
-
-
+	
 	jsr sd_read_block
 
 	ldx #$00
@@ -70,8 +65,8 @@ main
 	lda #'X'
 	sta sd_blktarget + BS_VolLab2
 
-;	jsr sd_write_block
-	
+	jsr sd_write_block
+
 
 	jsr sd_deselect_card
 
@@ -83,7 +78,7 @@ main
 init_sdcard
 
 	; 80 Taktzyklen
-	ldx #80
+	ldx #74
 
 	; set ALL CS lines and DO to HIGH 
 	lda #%11111110
@@ -133,6 +128,7 @@ init
 	lda #$87
 	sta sd_cmd_chksum
 
+	jsr sd_busy_wait
 
 	lda #cmd8
 	jsr sd_cmd
@@ -168,9 +164,11 @@ init
 	cmp #$01
 	bne sd_error
 
-
 	lda #$40
 	sta sd_cmd_param
+
+	lda #$10
+	sta sd_cmd_param+1
 
 	lda #acmd41
 	jsr sd_cmd
@@ -213,7 +211,7 @@ init
 
 +	
 	+PrintString initdonetxt
-	jsr sd_deselect_card	
+;	jsr sd_deselect_card	
 	rts
 
 sd_error
@@ -229,6 +227,7 @@ sd_error
 ; parameters in sd_cmd_param
 ;---------------------------------------------------------------------
 sd_cmd
+
 	; transfer command byte
 	jsr spi_rw_byte
 	
@@ -252,7 +251,9 @@ sd_cmd
 ; Read block from SD Card
 ;---------------------------------------------------------------------
 sd_read_block
-	jsr sd_select_card
+	;jsr sd_select_card
+
+	jsr sd_busy_wait
 
 	lda #cmd17
 	jsr sd_cmd
@@ -260,7 +261,9 @@ sd_read_block
 	lda #$ff
 	jsr spi_rw_byte		
 
--	jsr spi_r_byte
+
+-	lda #$ff
+	jsr spi_rw_byte		
 	cmp #$fe
 	bne -
 
@@ -281,7 +284,7 @@ sd_read_block
 	jsr spi_r_byte
 	jsr spi_r_byte
 
-	jsr sd_deselect_card
+;	jsr sd_deselect_card
 
 	rts
 
@@ -289,7 +292,9 @@ sd_read_block
 ; Write block to SD Card
 ;---------------------------------------------------------------------
 sd_write_block
-	jsr sd_select_card
+;	jsr sd_select_card
+
+	jsr sd_busy_wait
 
 	lda #cmd24
 	jsr sd_cmd
@@ -297,10 +302,6 @@ sd_write_block
 -	lda #$ff
 	jsr spi_rw_byte		
 	bne -
-
-	lda #'X'
-	jsr lcdprint
-
 
 	lda #$fe
 	jsr spi_rw_byte
@@ -341,7 +342,15 @@ sd_write_block
 
 	rts	
 
-
+;---------------------------------------------------------------------
+; wait while sd card is busy
+;---------------------------------------------------------------------
+sd_busy_wait
+-	lda #$ff
+	jsr spi_rw_byte
+	cmp #$ff
+	bne -
+	rts
 
 
 ;---------------------------------------------------------------------
@@ -368,10 +377,8 @@ sd_deselect_card
 	ora via1portb	
 	sta via1portb
 
--	lda #$ff
+	lda #$ff
 	jsr spi_rw_byte
-	cmp #$ff
-;	bne -
 	
 	pla
 
