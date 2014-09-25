@@ -5,7 +5,7 @@
 ;   5  |    CLK 		|	   PB0/CB1
 ;   7  | DAT/DO 		|          PB7
 
-*=$1000
+*=$2000
 !src "../bios/defs.h.a"
 !src "../bios/bios.h.a"
 !src "fat32.h.a"
@@ -45,7 +45,6 @@ main
 
 	jsr sd_read_block
 
-
 	; write start sector from partition entry to cmd param buffer (in reverse order)
 	lda sd_blktarget+BS_Partition0+PE_LBABegin+3
 	sta sd_cmd_param
@@ -75,13 +74,13 @@ main
 	bne -
 
 
-	lda #'U'
-	sta sd_blktarget + BS_VolLab2
+	; lda #'#'
+	; sta sd_blktarget + BS_VolLab2
 
-	jsr sd_write_block
+	; jsr sd_write_block
 
 
-	jsr sd_deselect_card
+	; jsr sd_deselect_card
 
 	jmp upload
 
@@ -294,10 +293,6 @@ sd_read_block
 	iny
 	bne -
 
-	; lda sd_blkptr+1
-	; sta tmp2
-	; inc tmp2
-
 	inc sd_blkptr+1
 
 	ldy #$00
@@ -314,11 +309,11 @@ sd_read_block
 
 	; Read CRC bytes	
 	jsr spi_r_byte
-	jsr spi_r_byte
+	jmp spi_r_byte
 
 ;	jsr sd_deselect_card
 
-	rts
+;	rts
 
 ;---------------------------------------------------------------------
 ; Write block to SD Card
@@ -363,18 +358,8 @@ sd_write_block
 	lda #$00
 	jsr spi_rw_byte
 
-	jsr spi_r_byte		
-
-
-
--	lda #$ff
-	jsr spi_rw_byte		
-	cmp #$ff
-	bne -
-	
-	jsr sd_deselect_card
-
-	rts	
+	jmp spi_r_byte		
+	;rts	
 
 ;---------------------------------------------------------------------
 ; wait while sd card is busy
