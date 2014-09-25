@@ -37,6 +37,12 @@ main
 	jsr init_sdcard
 
 	jsr sd_param_init
+
+	lda #$00
+	sta sd_blkptr
+	lda #$04
+	sta sd_blkptr+1
+
 	jsr sd_read_block
 
 
@@ -51,7 +57,13 @@ main
 	sta sd_cmd_param+2
 	
 	lda sd_blktarget+BS_Partition0+PE_LBABegin
-	sta sd_cmd_param+4
+	sta sd_cmd_param+4	
+
+
+	lda #$00
+	sta sd_blkptr
+	lda #$04
+	sta sd_blkptr+1
 	
 	jsr sd_read_block
 
@@ -62,7 +74,8 @@ main
 	cpx #11
 	bne -
 
-	lda #'X'
+
+	lda #'U'
 	sta sd_blktarget + BS_VolLab2
 
 	jsr sd_write_block
@@ -271,17 +284,33 @@ sd_read_block
 	bne -
 
 
-	ldx #$00
--	jsr spi_r_byte
-	sta sd_blktarget,x
-	inx
+	ldy #$00
+-	
+	phy
+	jsr spi_r_byte
+	ply
+
+	sta (sd_blkptr),y
+	iny
 	bne -
 
-	ldx #$00
--	jsr spi_r_byte
-	sta sd_blktarget+$100,x
-	inx
+	; lda sd_blkptr+1
+	; sta tmp2
+	; inc tmp2
+
+	inc sd_blkptr+1
+
+	ldy #$00
+-	
+	phy
+	jsr spi_r_byte
+	ply
+
+	sta (sd_blkptr),y
+	iny
 	bne -
+
+	dec sd_blkptr+1
 
 	; Read CRC bytes	
 	jsr spi_r_byte
@@ -309,22 +338,24 @@ sd_write_block
 	lda #$fe
 	jsr spi_rw_byte
 
-	ldx #$00
--	lda sd_blktarget,x
-	phx
+	ldy #$00
+-	lda (sd_blkptr),y
+	phy
 	jsr spi_rw_byte
-	plx
-	inx
+	ply
+	iny
 	bne -
 
-	ldx #$00
--	lda sd_blktarget+$100,x
-	phx
-	jsr spi_rw_byte
-	plx
-	inx
-	bne -
+	inc sd_blkptr+1
 
+	ldy #$00
+-	lda (sd_blkptr),y
+	phy
+	jsr spi_rw_byte
+	ply
+	iny
+	bne -
+	dec sd_blkptr+1
 
 	; Send fake CRC bytes
 	lda #$00
