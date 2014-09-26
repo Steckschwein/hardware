@@ -5,7 +5,7 @@
 ;   5  |    CLK 		|	   PB0/CB1
 ;   7  | DAT/DO 		|          PB7
 
-*=$2000
+*=$1000
 !src "../bios/defs.h.a"
 !src "../bios/bios.h.a"
 !src "fat32.h.a"
