@@ -10,23 +10,9 @@
 !src "../bios/bios.h.a"
 !src "fat32.h.a"
 
-sd_init_num_tries = $ff
 sd_blktarget = $0400
-sd_cmd_param = $0300
-sd_cmd_chksum	= sd_cmd_param+4
-sd_cmd_result = $031f
-sdcmdres = sd_cmd_result
-sd_cmd_errno = $0320
 
-cmd0 	= $40       ; GO_IDLE_STATE
-cmd1 	= $40 + 1 	; SEND_OP_COND
-cmd8 	= $40 + 8   ; SEND_IF_COND
-cmd16	= $40 + 16 	; SET_BLOCKLEN
-cmd17	= $40 + 17	; READ_SINGLE_BLOCK
-cmd24	= $40 + 24	; WRITE_BLOCK
-cmd55	= $40 + 55	; APP_CMD
-cmd58	= $40 + 58	; READ_OCR
-acmd41	= $69
+
 
 
 main
@@ -36,7 +22,29 @@ main
 
 	jsr init_sdcard
 
-	jsr sd_param_init
+
+
+	lda sd_cmd_errno
+	beq +
+
+	; SD Card init failed
+
+	jsr lcdhex
+
+	cmp #$ff
+	bne ++
+	+PrintString nocard
+++	cmp #$0f
+	bne ++
+	+PrintString invalidcard
+++  cmp #$1f
+	bne ++
+	+PrintString initfail
+
+++	
+;jmp upload
+-	jmp -
++	jsr sd_param_init
 
 	lda #$00
 	sta sd_blkptr
@@ -74,19 +82,27 @@ main
 	bne -
 
 
-	; lda #'#'
+	; lda #'T'
 	; sta sd_blktarget + BS_VolLab2
+	; lda #'E'
+	; sta sd_blktarget + BS_VolLab2+1
+	; lda #'S'
+	; sta sd_blktarget + BS_VolLab2+2
+	; lda #'T'
+	; sta sd_blktarget + BS_VolLab2+3
 
 	; jsr sd_write_block
 
 
-	; jsr sd_deselect_card
+	jsr sd_deselect_card
 
 	jmp upload
 
 
-
-
+;---------------------------------------------------------------------
+; Init SD Card 
+; Destructive: A, X, Y
+;---------------------------------------------------------------------
 init_sdcard
 
 	; 80 Taktzyklen
@@ -123,17 +139,13 @@ init
 
 	cmp #$01
 	beq +
-	
-	+PrintString nocard	
-	lda #$01
+
+	; No Card	
+	lda #$ff
 	sta sd_cmd_errno
 	rts
 
-+	+PrintString cardok	
-
-	; stz sd_cmd_param
-	; stz sd_cmd_param+1
-	lda #$01
++	lda #$01
 	sta sd_cmd_param+2
 	lda #$aa
 	sta sd_cmd_param+3
@@ -159,10 +171,11 @@ init
 	lda sd_cmd_result
 	cmp #$01
 	beq +
-	jsr lcdhex
-	+PrintString invalidcard
+	
+	; Invalid Card (or card we can't handle yet)
+	lda #$0f
+	sta sd_cmd_errno
 	jsr sd_deselect_card	
--	jmp -
 	rts
 +
 
@@ -175,11 +188,18 @@ init
 	lda #cmd55
 	jsr sd_cmd
 
-	jsr spi_r_byte
-	cmp #$01
-	bne sd_error
+	lda #$ff
+	jsr spi_rw_byte
 
-	lda #$40
+	cmp #$01
+	beq + 
+
+	; Init failed
+	lda #$f1	
+	sta sd_cmd_errno
+	rts 
+
++	lda #$40
 	sta sd_cmd_param
 
 	lda #$10
@@ -195,6 +215,8 @@ init
 	bne -
 
 	stz sd_cmd_param
+
+	jsr sd_busy_wait
 
 	lda #cmd58
 	jsr sd_cmd
@@ -213,27 +235,23 @@ init
 	bit sd_cmd_result+1
 	bvs +
 
-; cmd16	!byte $50, $00, $00, $02, $00, $01
 	; Set block size to 512 bytes
 	lda #$02
 	sta sd_cmd_param+2
 
+	jsr sd_busy_wait
+	
 	lda #cmd16
 	jsr sd_cmd
 
-	jsr spi_r_byte
-	jsr lcdhex
+	lda #$ff
+	jsr spi_rw_byte
 
 +	
-	+PrintString initdonetxt
-;	jsr sd_deselect_card	
-	rts
 
-sd_error
-	+PrintString initfail
-	jsr sd_deselect_card	
+	; SD card init successful
+	stz sd_cmd_errno
 	rts
-
 
 
 ;---------------------------------------------------------------------
@@ -310,9 +328,6 @@ sd_read_block
 	; Read CRC bytes	
 	jsr spi_r_byte
 	jmp spi_r_byte
-
-;	jsr sd_deselect_card
-
 ;	rts
 
 ;---------------------------------------------------------------------
@@ -371,7 +386,6 @@ sd_busy_wait
 	bne -
 	rts
 
-
 ;---------------------------------------------------------------------
 ; select sd card, pull CS line to low
 ;---------------------------------------------------------------------
@@ -416,51 +430,6 @@ sd_param_init
 	rts
 
 
-; outhex    	pha
-; 			phy
-; 			phx
-			
-; 			tax
-; 			lsr                ;shift high nybble into low nybble
-; 			lsr 
-; 			lsr 
-; 			lsr 
-; 			tay
-; 			lda hexascii,y      ;convert to ascii
-; 			jsr chrout  
-			
-; 			txa                 ;restore original value
-; 			and #$0f            ;select low nybble
-; 			tay
-; 			lda hexascii,y      ;convert to ascii
-; 			jsr chrout  
-			
-; 			plx
-; 			ply
-; 			pla
-; 			rts
-; hexascii	!text "0123456789ABCDEF"
-
-; cmd0 reset card to IDLE state
-; cmd0	!byte %01000000, %00000000, %00000000, %00000000, %00000000, %10010101
-; cmd1	!byte %01000001, %00000000, %00000000, %00000000, %00000000, %00000001
-								      
-; ; cmd8 Sends SD Memory Card interface condition (SD 2.0)
-; cmd8 	!byte %01001000, %00000000, %00000000, %00000001, %10101010, $87
-; ;cmd8 	!byte %01001000, %00000000, %00000000, %00000001, %10101010, %10010101
-; ; cmd58 Sends SD Memory Card interface condition
-; cmd58	!byte %01111010, %00000000, %00000000, %00000000, %00000000, %01110101
-; ; cmd55
-; cmd55	!byte $77, $00, $00, $00, $00, $01
-; ; acmd41
-; acmd41  !byte $69, $00, $00, $00, $00, $01
-; ; cmd16 SET_BLOCKLEN
-; cmd16	!byte $50, $00, $00, $02, $00, $01
-; cmd17	!byte $51, $00, $00, $00, $00, $01
-; cmd24	!byte $58, $00, $00, $00, $00, $01
-
-cardok	!text "SD Card Found!", $00
-nocard	!text "No SD Card!", $00
+nocard	!text "NO SD CARD ", $00
 invalidcard	!text "Invalid Card!", $00
-initdonetxt	!text "Init OK!", $00
 initfail	!text "Init Failed!", $00
