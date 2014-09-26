@@ -2,22 +2,21 @@
 !src "../bios/defs.h.a"
 !src "../bios/bios.h.a"
 
-
-	
-
 	jsr lcdclear
+
 
 	+PrintString hello
 	ldx #$00
 	ldy #$02
 	jsr lcdxy
-	
-	+PrintString hello
-	jmp upload
+	+PrintString num
+-	jmp -	
 
 
 
 hello
-	!text "Hello World! 12345678901234567890 ", $00
+	!text "**Hello World!**", $00
+num
+	!text "1234567890123456", $00
 
 	
