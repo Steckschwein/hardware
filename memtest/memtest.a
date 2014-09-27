@@ -25,7 +25,7 @@ check_zp
 
       jmp check_mem 
 
-      ; Broken
+      ; Broken ZP
 zp_kaputt
       txa
       jsr lcdclear
@@ -73,8 +73,6 @@ memcheck_end
       lda tmp0 
       jsr lcdhex
 
-      jmp main
+-     jmp -
       
-
-
-pattern  !byte $aa,$55
+pattern  !byte $00,$aa,$55,$ff
