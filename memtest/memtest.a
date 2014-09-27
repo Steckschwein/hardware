@@ -3,7 +3,6 @@
 !src "../bios/bios.h.a"
 
 main
-
       ; Check zeropage
 check_zp      
       ; Start at $ff
@@ -33,9 +32,11 @@ zp_kaputt
 -     jmp -
 
 
-start_check = $1175
+start_check = $1100
 
-check_mem      
+check_mem
+      stz tmp1
+loop      
 -     ldx #$01
 --    lda pattern,x
 
@@ -46,6 +47,7 @@ b     lda start_check
       dex
       bne --
       
+
       inc a+1
       inc b+1
       bne -
@@ -73,6 +75,17 @@ memcheck_end
       lda tmp0 
       jsr lcdhex
 
+      +SetVector start_check, a+1
+      +SetVector start_check, b+1
+
+      ldx #$0a
+      ldy #$01
+      jsr lcdxy
+      
+      lda tmp1
+      jsr lcdhex
+      inc tmp1
+      jmp loop
 -     jmp -
       
-pattern  !byte $00,$aa,$55,$ff
+pattern  !byte $aa,$55
