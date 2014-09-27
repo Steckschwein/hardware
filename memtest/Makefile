@@ -6,4 +6,4 @@ clean:
 	acme -v -f plain -l $<.labels  --cpu 65c02 -o $@ $<
 
 transfer: all
-	../transfer.py memtest.bin 0x8000
+	../transfer.py memtest.bin 0x1000
