@@ -41,15 +41,38 @@ adrh     =addr+1
 
 
 ; SD CArd command parameter/result buffer
-;sd_cmd_param 	= $0600
-;sd_cmd_result	= $0604
+sd_cmd_param = $0300
+sd_cmd_chksum	= sd_cmd_param+4
+sd_cmd_result = $031f
+
+; SD Card error
+; $ff - No Card
+; $0f - Invalid Card
+; $00 - No error
+sd_cmd_errno = $0320
 
 
 startaddr	= $0700
 endaddr     	= $0702
 length		= $0704
 
+
+
+
 charset  =$e000
+;----------------------------------------------------------------------------------------------
+; SD Card commands
+;----------------------------------------------------------------------------------------------
+cmd0 	= $40       ; GO_IDLE_STATE
+cmd1 	= $40 + 1 	; SEND_OP_COND
+cmd8 	= $40 + 8   ; SEND_IF_COND
+cmd16	= $40 + 16 	; SET_BLOCKLEN
+cmd17	= $40 + 17	; READ_SINGLE_BLOCK
+cmd24	= $40 + 24	; WRITE_BLOCK
+cmd55	= $40 + 55	; APP_CMD
+cmd58	= $40 + 58	; READ_OCR
+acmd41	= $69
+
 ;----------------------------------------------------------------------------------------------
 ; UART
 ;----------------------------------------------------------------------------------------------
@@ -105,7 +128,15 @@ lcddata		= lcdctl+1
 	+SetVector .word, msgptr
         jsr lcdstring
 }
-	
+!macro PrintStringAt .word,.x,.y {
+	ldx #.x
+	ldy #.y
+	jsr lcdxy	
+
+	+SetVector .word, msgptr
+    jsr lcdstring
+
+}
 !macro SetVector .word, .addr {
         lda #<.word
         sta .addr
