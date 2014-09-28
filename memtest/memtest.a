@@ -37,11 +37,11 @@ start_check = $1200
 check_mem
       stz tmp1
 loop      
--     lda $55 ; loop+1 
+-     lda #$55 ; loop+1 
       sta start_check   ; Start at $0200. skip stack for now      
       lda start_check
-      cmp $55
-      bne memcheck_end
+      cmp #$55
+      bne +
       
 
       ; phx
@@ -73,7 +73,6 @@ loop
       bra - 
 
 +
-memcheck_end
       sta tmp0
 
       jsr lcdclear
@@ -106,3 +105,6 @@ memcheck_end
 -     jmp -
       
 pattern  !byte $aa,$55
+
+; memcheck_zp
+;       !bin "memtest_zp.bin"
