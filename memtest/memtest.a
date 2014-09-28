@@ -32,30 +32,47 @@ zp_kaputt
 -     jmp -
 
 
-start_check = $1100
+start_check = $1200
 
 check_mem
       stz tmp1
 loop      
--     ldx #$01
---    lda pattern,x
-
-a     sta start_check   ; Start at $0200. skip stack for now      
-b     lda start_check
-      cmp pattern,x
+-     lda $55 ; loop+1 
+      sta start_check   ; Start at $0200. skip stack for now      
+      lda start_check
+      cmp $55
       bne memcheck_end
-      dex
-      bne --
       
 
-      inc a+1
-      inc b+1
+      ; phx
+      ; phy
+      ; ldx #$00
+      ; ldy #$00
+      ; jsr lcdxy
+      ; lda loop+3
+      ; jsr lcdhex
+      ; lda loop+4
+      ; jsr lcdhex
+      ; ply  
+      ; plx
+      
+
+      inc loop+3
+      inc loop+6
       bne -
 
-      inc a+2
-      inc b+2
+      inc loop+4
+      inc loop+7
       bne -
 
+      cmp #$aa
+      beq +
+      lda #$aa
+      sta loop +1
+      sta loop +9
+      bra - 
+
++
 memcheck_end
       sta tmp0
 
@@ -63,9 +80,9 @@ memcheck_end
 
       lda #'$'
       jsr lcdprint
-      lda a+2
+      lda loop+4
       jsr lcdhex
-      lda a+1
+      lda loop+3
       jsr lcdhex
 
       lda #' '
@@ -75,8 +92,8 @@ memcheck_end
       lda tmp0 
       jsr lcdhex
 
-      +SetVector start_check, a+1
-      +SetVector start_check, b+1
+      +SetVector start_check, loop+3
+      +SetVector start_check, loop+6
 
       ldx #$0a
       ldy #$01
