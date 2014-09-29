@@ -122,7 +122,9 @@ F 3 "" H 5100 5000 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	3800 4200 4600 4200
+	3800 4200 3900 4200
+Wire Wire Line
+	3900 4200 4600 4200
 $Comp
 L R R1
 U 1 1 54221CC2
@@ -204,7 +206,11 @@ Wire Wire Line
 Wire Wire Line
 	4600 3700 4150 3700
 Wire Wire Line
-	4150 3700 4150 4050
+	4150 3700 4150 3800
+Wire Wire Line
+	4150 3800 4150 3900
+Wire Wire Line
+	4150 3900 4150 4050
 Connection ~ 4150 3900
 $Comp
 L GND #PWR04
@@ -220,7 +226,9 @@ $EndComp
 Wire Wire Line
 	4000 2800 4600 2800
 Wire Wire Line
-	4000 2650 4000 2800
+	4000 2650 4000 2700
+Wire Wire Line
+	4000 2700 4000 2800
 Wire Wire Line
 	4000 2700 4600 2700
 $Comp
@@ -236,7 +244,11 @@ F 3 "" H 4000 2650 60  0000 C CNN
 $EndComp
 Connection ~ 4000 2700
 Wire Bus Line
-	4400 2300 4400 2550
+	4400 2300 4400 2400
+Wire Bus Line
+	4400 2400 4400 2500
+Wire Bus Line
+	4400 2500 4400 2550
 Text Label 4050 2300 0    60   ~ 0
 A[0..15]
 Entry Wire Line
@@ -262,7 +274,15 @@ A1
 Text Label 4500 2600 0    60   ~ 0
 A2
 Wire Bus Line
-	1300 700  1300 1250
+	1300 700  1300 850 
+Wire Bus Line
+	1300 850  1300 950 
+Wire Bus Line
+	1300 950  1300 1050
+Wire Bus Line
+	1300 1050 1300 1150
+Wire Bus Line
+	1300 1150 1300 1250
 Entry Wire Line
 	1300 850  1400 950 
 Entry Wire Line
@@ -294,7 +314,21 @@ A3
 Text Label 1400 1350 0    60   ~ 0
 A4
 Wire Bus Line
-	1300 1400 1300 2200
+	1300 1400 1300 1500
+Wire Bus Line
+	1300 1500 1300 1600
+Wire Bus Line
+	1300 1600 1300 1700
+Wire Bus Line
+	1300 1700 1300 1800
+Wire Bus Line
+	1300 1800 1300 1900
+Wire Bus Line
+	1300 1900 1300 2000
+Wire Bus Line
+	1300 2000 1300 2100
+Wire Bus Line
+	1300 2100 1300 2200
 Entry Wire Line
 	1300 1400 1400 1500
 Entry Wire Line
@@ -348,7 +382,21 @@ A[0..15]
 Text Label 1000 1400 0    60   ~ 0
 D[0..7]
 Wire Bus Line
-	4350 1400 4350 2200
+	4350 1400 4350 1500
+Wire Bus Line
+	4350 1500 4350 1600
+Wire Bus Line
+	4350 1600 4350 1700
+Wire Bus Line
+	4350 1700 4350 1800
+Wire Bus Line
+	4350 1800 4350 1900
+Wire Bus Line
+	4350 1900 4350 2000
+Wire Bus Line
+	4350 2000 4350 2100
+Wire Bus Line
+	4350 2100 4350 2200
 Entry Wire Line
 	4350 1400 4450 1500
 Entry Wire Line
@@ -430,7 +478,9 @@ $EndComp
 Wire Wire Line
 	9700 2550 10200 2550
 Wire Wire Line
-	10200 2550 10200 2950
+	10200 2550 10200 2850
+Wire Wire Line
+	10200 2850 10200 2950
 Wire Wire Line
 	9700 1950 10950 1950
 $Comp
@@ -458,7 +508,9 @@ F 3 "" H 10700 2350 60  0000 C CNN
 	0    -1   -1   0   
 $EndComp
 Wire Wire Line
-	9700 2350 10500 2350
+	9700 2350 10400 2350
+Wire Wire Line
+	10400 2350 10500 2350
 Wire Wire Line
 	7900 2350 8100 2350
 $Comp
@@ -573,7 +625,9 @@ Wire Wire Line
 Wire Wire Line
 	10950 3700 10800 3700
 Wire Wire Line
-	10950 1750 10950 2350
+	10950 1750 10950 1950
+Wire Wire Line
+	10950 1950 10950 2350
 Wire Wire Line
 	10450 2750 10400 2750
 Wire Wire Line
@@ -602,11 +656,19 @@ F 3 "" H 2750 6000 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	2750 6000 4100 6000
+	2750 6000 3000 6000
+Wire Wire Line
+	3000 6000 3250 6000
+Wire Wire Line
+	3250 6000 4100 6000
 Wire Wire Line
 	4100 6650 4100 6500
 Wire Wire Line
-	4100 6500 2750 6500
+	4100 6500 3250 6500
+Wire Wire Line
+	3250 6500 3000 6500
+Wire Wire Line
+	3000 6500 2750 6500
 $Comp
 L C C5
 U 1 1 542290E2
@@ -673,7 +735,9 @@ F 3 "" H 4900 1150 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	4900 1150 4900 1400
+	4900 1150 4900 1250
+Wire Wire Line
+	4900 1250 4900 1400
 $Comp
 L GND #PWR012
 U 1 1 5422AA07
@@ -702,7 +766,11 @@ Wire Wire Line
 Wire Wire Line
 	6700 1600 6950 1600
 Wire Wire Line
-	6950 1250 6950 1800
+	6950 1250 6950 1600
+Wire Wire Line
+	6950 1600 6950 1700
+Wire Wire Line
+	6950 1700 6950 1800
 Connection ~ 6950 1700
 Wire Wire Line
 	6950 1250 4900 1250
