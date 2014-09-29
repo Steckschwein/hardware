@@ -1,4 +1,4 @@
-*=$1000
+*=$0200
 !src "../bios/defs.h.a"
 !src "../bios/bios.h.a"
 
@@ -32,7 +32,7 @@ zp_kaputt
 -     jmp -
 
 
-start_check = $1200
+start_check = $029e
 
 check_mem
       stz tmp1
@@ -93,6 +93,9 @@ loop
 
       +SetVector start_check, loop+3
       +SetVector start_check, loop+6
+      lda #$55
+      sta loop +1
+      sta loop +9
 
       ldx #$0a
       ldy #$01
