@@ -65,15 +65,15 @@ loop
       inc loop+7
       bne -
 
+      
       cmp #$aa
       beq +
       lda #$aa
       sta loop +1
       sta loop +9
-      bra - 
+      
 
-+
-      sta tmp0
++     sta tmp0
 
       jsr lcdclear
 
@@ -91,19 +91,21 @@ loop
       lda tmp0 
       jsr lcdhex
 
-      +SetVector start_check, loop+3
-      +SetVector start_check, loop+6
-      lda #$55
-      sta loop +1
-      sta loop +9
-
       ldx #$0a
       ldy #$01
       jsr lcdxy
       
       lda tmp1
       jsr lcdhex
+
       inc tmp1
+
+      +SetVector start_check, loop+3
+      +SetVector start_check, loop+6
+      lda #$55
+      sta loop +1
+      sta loop +9
+
       jmp loop
 -     jmp -
       
