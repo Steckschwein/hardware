@@ -237,13 +237,13 @@ $EndComp
 Text GLabel 3150 3700 2    60   Input ~ 0
 /CS_VIA
 Wire Wire Line
-	2900 2800 3400 2800
+	2900 2800 4000 2800
 Wire Wire Line
 	2900 2300 3400 2300
 Wire Wire Line
-	2900 2200 3400 2200
+	2900 2200 3800 2200
 Wire Wire Line
-	2900 2100 3400 2100
+	2900 2100 4450 2100
 Connection ~ 1300 4550
 Connection ~ 1600 4550
 Connection ~ 1900 4550
@@ -261,7 +261,7 @@ Wire Wire Line
 Wire Wire Line
 	2900 3600 3150 3600
 Wire Wire Line
-	2900 3400 3400 3400
+	2900 3400 4250 3400
 Wire Wire Line
 	3050 3300 2900 3300
 Wire Wire Line
@@ -340,25 +340,39 @@ Wire Wire Line
 	9900 900  10000 900 
 Wire Bus Line
 	9800 700  9800 1200
-Text HLabel 3400 2100 2    60   Input ~ 0
-SPI_CLK
-Text HLabel 3400 2200 2    60   Input ~ 0
-SPI_SS1
-Text HLabel 3400 2800 2    60   Input ~ 0
-SPI_MOSI
-Text HLabel 3400 3400 2    60   Input ~ 0
-SPI_MISO
 Wire Wire Line
 	3050 3300 3050 2100
 Connection ~ 3050 2100
 $Sheet
-S 8000 800  1400 1700
+S 4450 1650 1400 1700
 U 542907F9
 F0 "SD Card" 60
 F1 "sd_card.sch" 60
-F2 "SPI_CLK" I L 8000 1250 60 
-F3 "SPI_MOSI" I L 8000 1400 60 
-F4 "SPI_MISO" I L 8000 1550 60 
-F5 "SPI_SS1" I L 8000 1700 60 
+F2 "SPI_CLK" I L 4450 2100 60 
+F3 "SPI_MOSI" I L 4450 2250 60 
+F4 "SPI_MISO" I L 4450 2400 60 
+F5 "SPI_SS1" I L 4450 2550 60 
 $EndSheet
+Text Label 3300 2100 0    60   ~ 0
+SPI_CLK
+Text Label 3300 2200 0    60   ~ 0
+SPI_SS1
+Text Label 3300 2300 0    60   ~ 0
+SPI_SS2
+Text Label 3300 2800 0    60   ~ 0
+SPI_MOSI
+Text Label 3300 3400 0    60   ~ 0
+SPI_MISO
+Wire Wire Line
+	4000 2800 4000 2250
+Wire Wire Line
+	4000 2250 4450 2250
+Wire Wire Line
+	3800 2200 3800 2550
+Wire Wire Line
+	3800 2550 4450 2550
+Wire Wire Line
+	4250 3400 4250 2400
+Wire Wire Line
+	4250 2400 4450 2400
 $EndSCHEMATC
