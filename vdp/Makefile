@@ -1,5 +1,4 @@
-all: vdp 
-#vdpinit.bin
+all: vdp vdpinit.bin
 
 clean:
 	rm -f *.bin
