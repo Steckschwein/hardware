@@ -5,21 +5,17 @@
 
 	jsr lcdclear
 	+PrintString msg
-loop
-	ldx #$00
 -
-a	lda $0900,x
-b	sta $e000,x
-	inx
-	bne -
+a	lda biosdata
+b	sta $e000
 
-	;lda a+2
-	;cmp #$ff
-	;beq +
+	inc a+1
+	inc b+1
+	bne -
 
 	inc a+2
 	inc b+2
-	bne loop
+	bne -
 
 done
 	+PrintString msgdone
