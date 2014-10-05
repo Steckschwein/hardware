@@ -9,6 +9,11 @@ count		= clockspeed / 1000000 * jiffies
 ; zeropage locations 
 ;----------------------------------------------------------------------------------------------
 
+; IO Channels
+chn_out = $00
+chn_in  = $01
+
+
 ; Cursor Position
 crs_x	= $d0
 crs_y	= $d1
@@ -52,7 +57,7 @@ sd_cmd_errno = $0320
 
 
 startaddr	= $0700
-endaddr     	= $0702
+endaddr     = $0702
 length		= $0704
 
 
@@ -70,7 +75,7 @@ cmd17	= $40 + 17	; READ_SINGLE_BLOCK
 cmd24	= $40 + 24	; WRITE_BLOCK
 cmd55	= $40 + 55	; APP_CMD
 cmd58	= $40 + 58	; READ_OCR
-acmd41	= $69
+acmd41	= $40 + 41
 
 ;----------------------------------------------------------------------------------------------
 ; UART

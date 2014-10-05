@@ -21,10 +21,10 @@ upload
 			jsr i_lcdbusy
 
 			; load start address
-			jsr chrin
+			jsr i_uart_rx
 			sta startaddr
 			
-			jsr chrin
+			jsr i_uart_rx
 			sta startaddr+1
 
 
@@ -36,16 +36,21 @@ upload
 			lda #' '
 			jsr lcdprint
 
-			+PrintChar 'O'
-			+PrintChar 'K'
+			lda #'O'
+			jsr i_uart_tx
+			lda #'K'
+			jsr i_uart_tx
+
+			; +PrintChar 'O'
+			; +PrintChar 'K'
 
 			;jsr strout
 
 			; load number of bytes to be uploaded
-			jsr chrin
+			jsr i_uart_rx
 			sta length
 			
-			jsr chrin
+			jsr i_uart_rx
 			sta length+1
 
 			lda length+1
@@ -81,11 +86,16 @@ upload
 			lda startaddr+1
 			sta addr+1	
 
-			+PrintChar 'O'
-			+PrintChar 'K'
+			lda #'O'
+			jsr i_uart_tx
+			lda #'K'
+			jsr i_uart_tx
+
+			; +PrintChar 'O'
+			; +PrintChar 'K'
 
 			ldy #$00
--			jsr chrin
+-			jsr i_uart_rx
 			sta (addr),y
 
 			iny	
@@ -104,8 +114,14 @@ upload
 			bne - ; no? read next byte
 
 			; yes? write OK and jump to start addr	
-			+PrintChar 'O'
-			+PrintChar 'K'
+
+			lda #'O'
+			jsr i_uart_tx
+			lda #'K'
+			jsr i_uart_tx
+
+			; +PrintChar 'O'
+			; +PrintChar 'K'
 
 
 ;			cli
@@ -160,6 +176,12 @@ check_zp
 -			jmp -
 
 .back_from_memcheck
+
+
+			stz chn_out
+			stz chn_in 
+
+
 			; init VDP
 			jsr vdp_init	
 			jsr vdp_clear_vram	
@@ -182,16 +204,19 @@ check_zp
 			; Set IRQ Vector
 			+SetVector i_irqhandler, irqvec
 
+
+			
 			lda #'$'
 			jsr lcdprint
 			lda tmp0
 			jsr lcdhex
 			lda tmp1
 			jsr lcdhex
-			
 
 			+PrintStringAt biosversion, $00, $02
 			jsr vdp_write	
+
+
 
 
 			jsr init_sdcard
@@ -253,6 +278,76 @@ i_irqhandler
 			ply
 			rti
 
+;----------------------------------------------------------------------------------------------
+; IO Wrapper
+;----------------------------------------------------------------------------------------------
+;----------------------------------------------------------------------------------------------
+; Output character on active output device
+;----------------------------------------------------------------------------------------------
+i_chrout
+		pha
+		lda chn_out
+		bne +
+		pla
+		jmp vdp_write
+
++		; LCD
+		cmp #$01
+		bne +
+		pla
+		jmp i_lcdprint
+
++		; UART
+		cmp #$02
+		bne +
+
+		pla
+		jmp i_uart_tx
+
++		rts
+;----------------------------------------------------------------------------------------------
+; Output string on active output device
+;----------------------------------------------------------------------------------------------
+i_strout 	pha                 ;save a, y to stack
+			phy
+
+			ldy #$00
+-		  	lda (msgptr),y
+			beq +
+			jsr i_chrout
+			iny
+			bne -
+
++			ply                 ;restore a, y
+			pla
+			rts
+
+;----------------------------------------------------------------------------------------------
+; Output byte as hex string on active output device
+;----------------------------------------------------------------------------------------------
+i_hexout    pha
+			phy
+			phx
+			
+			tax
+			lsr                ;shift high nybble into low nybble
+			lsr 
+			lsr 
+			lsr 
+			tay
+			lda hexascii,y      ;convert to ascii
+			jsr i_chrout        ;print value 
+			
+			txa                 ;restore original value
+			and #$0f            ;select low nybble
+			tay
+			lda hexascii,y      ;convert to ascii
+			jsr i_chrout        ;print value 
+			
+			plx
+			ply
+			pla
+			rts
 
 ;----------------------------------------------------------------------------------------------
 ; init VDP, set memory map
@@ -468,28 +563,30 @@ init_uart
 
 	rts
 
+lcd_line = $10 ; 16 chars per lcd row
+
 ;----------------------------------------------------------------------------------------------
 ; *** LCD initialisation
 ;----------------------------------------------------------------------------------------------
-init_lcdold  	ldx #$04            ;do function set 4 times
--		  	lda #$38            ;function set: 8 bit, 2 lines, 5x7
-			sta lcdctl
-			jsr i_lcdbusy         ;wait for busy flag to clear
-			dex
-			bne -
-			lda #$06            ;entry mode set: increment, no shift
-			sta lcdctl
-			jsr i_lcdbusy
-			lda #$0e            ;display on, cursor on, blink off
-			sta lcdctl
-			jsr i_lcdbusy
-			lda #$01            ;clear display
-			sta lcdctl
-			jsr i_lcdbusy
-			lda #$80            ;ddram address set: $00
-			sta lcdctl
-			jsr i_lcdbusy
-			rts
+; init_lcdold  	ldx #$04            ;do function set 4 times
+; -		  	lda #$38            ;function set: 8 bit, 2 lines, 5x7
+; 			sta lcdctl
+; 			jsr i_lcdbusy         ;wait for busy flag to clear
+; 			dex
+; 			bne -
+; 			lda #$06            ;entry mode set: increment, no shift
+; 			sta lcdctl
+; 			jsr i_lcdbusy
+; 			lda #$0e            ;display on, cursor on, blink off
+; 			sta lcdctl
+; 			jsr i_lcdbusy
+; 			lda #$01            ;clear display
+; 			sta lcdctl
+; 			jsr i_lcdbusy
+; 			lda #$80            ;ddram address set: $00
+; 			sta lcdctl
+; 			jsr i_lcdbusy
+; 			rts
 
 init_lcd	ldx #$04            ;do function set 4 times
 -		  	lda #$38            ;function set: 8 bit, 2 lines, 5x7
@@ -518,6 +615,9 @@ init_lcd	ldx #$04            ;do function set 4 times
 			lda #$80            ;ddram address set: $00
 			sta lcdctl
 			jsr i_lcdbusy
+
+			lda #$01
+			sta chn_out
 exit		rts
 
 
@@ -552,7 +652,7 @@ i_lcdprint  pha
 			jsr i_lcdbusy
 			lda lcdctl            ;get current ddram address
 			and #$7f
-			cmp #$28          	;wrap from pos $13 (line 1 char 20)...
+			cmp #lcd_line         ;wrap from pos $16 (line 1 char 20)...
 			bne +
 			lda #$c0            	;...to $40 (line 2 char 1)
 			sta lcdctl
@@ -667,7 +767,7 @@ i_uart_rx
 ;----------------------------------------------------------------------------------------------
 ; LCDDECZ - output byte in A as decimal ASCII with leading zeros
 ;----------------------------------------------------------------------------------------------
-i_lcddecz
+i_decoutz
    phx
    phy
    ldx #2
@@ -684,7 +784,7 @@ i_lcddecz
    bcc -
    tay
    lda tmp0
-   jsr lcdprint
+   jsr i_chrout
    tya
    ldy #$13
    dex
@@ -696,7 +796,7 @@ i_lcddecz
 ;----------------------------------------------------------------------------------------------
 ; LCDDEC - output byte in A as decimal ASCII without leading zeros
 ;----------------------------------------------------------------------------------------------
-i_lcddec
+i_decout
    phx
    phy
    ldx #1
@@ -720,7 +820,7 @@ i_lcddec
    beq ++
    stx tmp1
 +  eor #$30
-   jsr lcdprint
+   jsr i_chrout
 ++ tya
    ldy #$10
    dex
@@ -1133,7 +1233,7 @@ hexascii	!text "0123456789ABCDEF"
 dec_tbl		!byte 128,160,200
 
 ; Version String
-biosversion	!text "V0510 VDP SD", $00
+biosversion	!text "V0510", $00
 
 ; SD Card init status messages
 nocard	!text "NO SD CARD ", $00
@@ -1222,7 +1322,7 @@ b     cmp start_check
 ;----------------------------------------------------------------------------------------------
 *=$ff00
 sys_chrout
-chrout		jmp i_uart_tx
+chrout		jmp i_chrout
 sys_chrin
 chrin		jmp i_uart_rx
 sys_lcdclear
@@ -1233,10 +1333,10 @@ sys_lcdstring
 lcdstring 	jmp i_lcdstring
 sys_lcdhex
 lcdhex 		jmp i_lcdhex 
-sys_lcddec
-lcddec 		jmp i_lcddec
-sys_lcddecz
-lcddecz 	jmp i_lcddecz
+sys_decout
+decout 		jmp i_decout
+sys_decoutz
+decoutz 	jmp i_decoutz
 sys_irqhandler
 irqhandler  jmp i_irqhandler
 sys_lcdbusy
@@ -1267,6 +1367,10 @@ sys_sd_select_card
 sd_select_card 	jmp i_sd_select_card
 sys_sd_cmd
 sd_cmd 		jmp i_sd_cmd
+sys_strout
+strout 		jmp i_strout
+sys_hexout
+hexout 		jmp i_hexout
 
 ;----------------------------------------------------------------------------------------------
 
