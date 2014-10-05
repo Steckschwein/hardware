@@ -22,7 +22,13 @@ check_zp
       dey
       bne -
 
-      jmp check_mem 
+      ldx #.selfmod_end - .selfmod_start
+-     lda .selfmod_start - 1, x
+      sta .target - 1, x
+      dex
+      bne -
+      jmp .target
+;      jmp check_mem 
 
       ; Broken ZP
 zp_kaputt
@@ -32,15 +38,18 @@ zp_kaputt
 -     jmp -
 
 
-start_check = $029e
+start_check = $0100
 
+.selfmod_start
+!pseudopc $0000 {
+.target
 check_mem
       stz tmp1
 loop      
--     lda #$55 ; loop+1 
-      sta start_check   ; Start at $0200. skip stack for now      
-      lda start_check
-      cmp #$55
+-     ldx #$01
+--    lda pattern,x
+a     sta start_check   ; Start at $0200. skip stack for now      
+b     cmp start_check
       bne +
       
 
@@ -56,21 +65,17 @@ loop
       ; ply  
       ; plx
       
+      dex 
+      bne --
 
-      inc loop+3
-      inc loop+6
-      bne -
+      inc a+1
+      inc b+1
+      bne loop
 
-      inc loop+4
-      inc loop+7
-      bne -
+      inc a+2
+      inc b+2
+      bne loop
 
-      
-      cmp #$aa
-      beq +
-      lda #$aa
-      sta loop +1
-      sta loop +9
       
 
 +     sta tmp0
@@ -79,9 +84,9 @@ loop
 
       lda #'$'
       jsr lcdprint
-      lda loop+4
+      lda a+2
       jsr lcdhex
-      lda loop+3
+      lda a+1
       jsr lcdhex
 
       lda #' '
@@ -100,16 +105,14 @@ loop
 
       inc tmp1
 
-      +SetVector start_check, loop+3
-      +SetVector start_check, loop+6
-      lda #$55
-      sta loop +1
-      sta loop +9
+      +SetVector start_check, a+1
+      +SetVector start_check, b+1
 
       jmp loop
+}
+.selfmod_end
 -     jmp -
       
 pattern  !byte $aa,$55
-
 ; memcheck_zp
 ;       !bin "memtest_zp.bin"
