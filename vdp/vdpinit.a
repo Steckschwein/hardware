@@ -53,7 +53,7 @@ main:
       stz crs_y
 -		jsr chrin
 
-      jsr lcdhex
+      ;jsr lcdhex
    
       cmp #$0d ; return
       bne +
@@ -99,8 +99,8 @@ vdp_init:
 
 		rts
 vdp_sreg:
-		sta   a_vreg_w
-   	sty   a_vreg_w
+		sta   a_vreg
+   	sty   a_vreg
    	rts
 
 vdp_clear_screen:
@@ -112,7 +112,7 @@ vdp_clear_screen:
    ldy   #$00
 - 
    +nops VRAM_WAIT
-   sta   a_vram_w
+   sta   a_vram
    inx   
    bne   -
    iny
@@ -132,7 +132,7 @@ vdp_load_charset:
 -  
    +nops VRAM_WAIT
    lda   (adrl),y
-   sta   a_vram_w
+   sta   a_vram
    iny
    bne   -
    inc   adrh
@@ -147,7 +147,7 @@ vdp_color:
    ldx   #$00
    ldy   #TEXT_COLOR<<4|Transparent
 -  +nops VRAM_WAIT
-   sty   a_vram_w
+   sty   a_vram
    inx
    cpx   #$20
    bne   -
@@ -170,7 +170,7 @@ vdp_gotoxy
    clc
    adc crs_x
 
-   sta a_vreg_w
+   sta a_vreg
    
    lda crs_y
    cmp #$08
@@ -180,7 +180,7 @@ vdp_gotoxy
 + lda #$54
 
 set
-   sta a_vreg_w
+   sta a_vreg
 
    pla
    rts
@@ -189,7 +189,7 @@ set
 vdp_chrout
 
    jsr vdp_gotoxy
-   sta a_vram_w
+   sta a_vram
    rts
 
 
@@ -203,7 +203,7 @@ vdp_write:
    nop
    lda   (msgptr),y
    beq   +
-   sta   a_vram_w
+   sta   a_vram
    iny
    bne   -
 +  rts
@@ -217,7 +217,7 @@ vdp_clear_vram:
    ldy   #$00
 -
    +nops VRAM_WAIT
-   sta   a_vram_w
+   sta   a_vram
    inx
    bne   -
    iny
@@ -233,8 +233,8 @@ vdp_cursor:
    ldx  crs_x
    ldy  crs_y
 
-   stx   a_vreg_w
-   sty   a_vreg_w
+   stx   a_vreg
+   sty   a_vreg
 
    lda   crs_x
    and   #$10
@@ -242,7 +242,7 @@ vdp_cursor:
    lda   #231
    jmp   ++
 +  lda   #' '
-++ sta   a_vram_w
+++ sta   a_vram
    inc   crs_x
    
    pla
