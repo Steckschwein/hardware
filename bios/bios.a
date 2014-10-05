@@ -3,7 +3,7 @@
 !src "defs.h.a"
 !src "../vdp/t9929.h.a"
 *= $e000			; ROM Start
-!src "../charsets/char.ascii.c64.h.a"
+!src "../charsets/char.ascii.vc20.h.a"
 !text "This space intentionally left blank", $00
 startmsg
 !text "STECKSCHWEIN 1.0                ", $00
@@ -114,6 +114,7 @@ upload
 ;----------------------------------------------------------------------------------------------
 ; RESET Routine. Call subroutines to init all components 
 ;----------------------------------------------------------------------------------------------
+start_check = $0200
 do_reset
 			; disable interrupt
 			sei
@@ -125,6 +126,40 @@ do_reset
 			ldx #$ff
 			txs
 
+      			; Check zeropage
+check_zp
+		        ; Start at $ff
+			ldy #$ff
+			; Start with pattern $03 : $ff
+-			ldx num_patterns
+--			lda pattern,x
+			sta $00,y
+
+			cmp $00,y
+			bne +
+
+			dex
+			bne --
+
+			dey
+			bne -
+
+			; Copy self modifying memcheck routine to ZP
+			ldx #.selfmod_end - .selfmod_start
+-			lda .selfmod_start - 1, x
+			sta .target - 1, x
+			dex
+			bne -
+ 			jmp .target
+
+			; Broken ZP
+
++			txa
+			jsr lcdclear
+			jsr lcdhex
+-			jmp -
+
+.back_from_memcheck
 			; init VDP
 			jsr vdp_init	
 			jsr vdp_clear_vram	
@@ -144,26 +179,18 @@ do_reset
 			jsr init_uart
 
 
-
-;			jsr memcheck
-		
-
-			
-
 			; Set IRQ Vector
 			+SetVector i_irqhandler, irqvec
 
+			lda #'$'
+			jsr lcdprint
+			lda tmp0
+			jsr lcdhex
+			lda tmp1
+			jsr lcdhex
 			
-;			cli
 
-
-			ldy #$02
-			ldx #$00
-			jsr lcdxy
-
-			+SetVector biosversion, msgptr
-
-			jsr lcdstring
+			+PrintStringAt biosversion, $00, $02
 			jsr vdp_write	
 
 
@@ -189,74 +216,18 @@ do_reset
 +
 
 
-
+			
 			jsr upload
 			
 			; re-init stack pointer
 			ldx #$ff
 			txs
+
+			
+
 			; jump to new code
 			jmp (startaddr)
 	
-; adrl	   =$00
-; adrh	   =$01
-
-memcheck:
-	lda #'$'
-	jsr i_lcdprint
-
-	lda   #$00
-	sta   adrl
-	lda   #$03
-	sta   adrh
-	ldy   #$00
-	jsr   mem_ca
-	ldx   #$00
--	
-	lda   pattern, x
-	sta   (adrl),y
-	lda   (adrl),y
-	cmp   pattern, x
-	bne   +
-	inx
-	cpx   #$0a
-	bne   -
-	ldx   #$00
-	iny
-	bne   -
-	inc   adrh
-	jsr   mem_ca
-	jmp   -
-+	pha            ;save erroneous pattern
-	jsr   mem_ca
-	lda   #$20
-	jsr   lcdprint   
-	
-	+PrintChar '$'
-	
-	pla   
-	jsr   lcdhex
-	rts
-
-mem_ca:
-	phx
-	phy
-	ldx #$01
-	ldy #$01
-	jsr lcdxy
-	plx
-	ply
-
-
-	tya            ;save adress low byte
-	pha
-;	jsr   lcdclear
-	lda   adrh
-	jsr   lcdhex
-	pla
-	jsr   lcdhex
-	rts
-pattern  !byte $f0,$0f,$5a,$aa,$00,$ff
 
 ;----------------------------------------------------------------------------------------------
 ; IO_NMI Routine. Handle NMI
@@ -1162,7 +1133,7 @@ hexascii	!text "0123456789ABCDEF"
 dec_tbl		!byte 128,160,200
 
 ; Version String
-biosversion	!text "V2609 VDP SD", $00
+biosversion	!text "V0510 VDP SD", $00
 
 ; SD Card init status messages
 nocard	!text "NO SD CARD ", $00
@@ -1208,6 +1179,43 @@ vdp_init_bytes
 	; !byte ($0000 / $800)	; sprite pattern table - value * $800  --> offset in VRAM 
 	!byte $00
 	!byte TEXT_BGCOLOR
+
+;----------------------------------------------------------------------------------------------
+; Memcheck routine to be copied to ZP
+;----------------------------------------------------------------------------------------------
+num_patterns = $03
+pattern  !byte $aa,$55,$ff,$00
+
+.selfmod_start
+!pseudopc $0000 {
+.target
+      stz tmp1
+      
+-     ldx num_patterns
+--    lda pattern,x
+a     sta start_check   ; Start at $0200. skip stack for now      
+b     cmp start_check
+      bne +
+      
+      dex 
+      bne --
+
+      inc a+1
+      inc b+1
+      bne -
+
+      inc a+2
+      inc b+2
+      bne -
+
++	  lda a+2
+	  sta tmp0
+	  lda a+1
+	  sta tmp1
+
+      jmp .back_from_memcheck
+}
+.selfmod_end
 
 ;----------------------------------------------------------------------------------------------
 ; Jump table
