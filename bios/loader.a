@@ -1,42 +1,32 @@
 *=$0800
 !src "defs.h.a"
 !src "bios.h.a"
-src	= $40
-dst	= $42
-cnt	= $44
  
-	; lda #$01
-	; sta via1porta
-	; sta via1ddra
 
-	+SetVector biosdata, src
-	+SetVector $e000, dst
-	+SetVector $2000, cnt
-	
-	jsr memcpy
+	jsr lcdclear
+	+PrintString msg
+loop
+	ldx #$00
+-
+a	lda $0900,x
+b	sta $e000,x
+	inx
+	bne -
 
-;	stz via1porta
+	;lda a+2
+	;cmp #$ff
+	;beq +
 
-	+PrintChar 'X'
+	inc a+2
+	inc b+2
+	bne loop
+
+done
+	+PrintString msgdone
 -	jmp -	
 
-
-memcpy      ldy     cnt+0       ;set y = cnt.l
-            bne     loop        ;if cnt.l > 0, then loop
-            lda     cnt+1       ;if cnt.h > 0,
-            bne     loop        ; then loop
-            rts                 ;return
-loop        
-   	lda     (src),y     ;load a from ((src)+y)
-            sta     (dst),y     ;store a to ((dst)+y)
-            dey                 ;decr cnt.l
-            bne     loop        ;if cnt.l > 0, then loop
-            inc     src+1       ;incr src += $0100
-            inc     dst+1       ;incr dst += $0100
-            dey                 ;decr cnt.l
-            dec     cnt+1       ;decr cnt.h
-            bne     loop        ;if cnt.h > 0, then loop
-            rts                 ;return
+msg	!text "Loading.. ",$00
+msgdone	!text "done.",$00
 
 
 *=$0900
