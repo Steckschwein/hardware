@@ -1,6 +1,6 @@
-update=Sun 28 Sep 2014 11:45:20 PM CEST
+update=05.10.2014 20:16:31
 version=1
-last_client=kicad
+last_client=eeschema
 [cvpcb]
 version=1
 NetIExt=net
@@ -29,7 +29,7 @@ ModuleOutlineThickness=0.150000000000
 version=1
 [eeschema]
 version=1
-LibDir=
+LibDir=../shared;../lbr
 [eeschema/libraries]
 LibName1=power
 LibName2=device
@@ -53,3 +53,6 @@ LibName19=contrib
 LibName20=/home/thomas/Documents/steckschwein/kicad/lbr/65xxx
 LibName21=/home/thomas/Documents/steckschwein/kicad/lbr/ttl_ieee
 LibName22=/home/thomas/Documents/steckschwein/kicad/lbr/lp2950l
+LibName23=65xxx
+LibName24=lp2950l
+LibName25=ttl_ieee

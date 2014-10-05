@@ -19,13 +19,14 @@ LIBS:opto
 LIBS:atmel
 LIBS:contrib
 LIBS:65xxx
-LIBS:ttl_ieee
 LIBS:lp2950l
+LIBS:ttl_ieee
+LIBS:io-cache
 EELAYER 24 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
-Sheet 1 3
+Sheet 1 4
 Title ""
 Date ""
 Rev ""
@@ -375,4 +376,10 @@ Wire Wire Line
 	4250 3400 4250 2400
 Wire Wire Line
 	4250 2400 4450 2400
+$Sheet
+S 4450 3850 1400 1100
+U 54318D23
+F0 "Joystick Ports" 60
+F1 "joystick.sch" 60
+$EndSheet
 $EndSCHEMATC
