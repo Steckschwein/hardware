@@ -2,6 +2,7 @@
 
 vdp_sreg:
 	sta   a_vreg
+	nop
 	sty   a_vreg
 	rts
 	

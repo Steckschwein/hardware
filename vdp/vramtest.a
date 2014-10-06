@@ -12,7 +12,7 @@ adr_h_r	= $f1
 main:	
 	jsr   lcdclear
 	
-	lda	#v_reg1_16k
+	lda	#v_reg1_16k; 16K RAM, display off
 	ldy	#v_reg1
 	jsr	vdp_sreg
 
@@ -36,7 +36,7 @@ main:
 	jsr	  vdp_sreg
 	ply
 	lda   pattern, x
-	sta		a_vram
+	sta	  a_vram
 	tya
 	phy
 	ldy	  adr_h_r
