@@ -1,5 +1,5 @@
-VRAM_WAIT	= 0			;1Mhz no wait is required
-VREG_WAIT	= 0
+VRAM_WAIT	= 8			;1Mhz no wait is required
+VREG_WAIT	= 8
 
 TEXT_COLOR	= Light_Blue
 TEXT_BGCOLOR = Black
