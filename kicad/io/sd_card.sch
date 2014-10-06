@@ -19,13 +19,14 @@ LIBS:opto
 LIBS:atmel
 LIBS:contrib
 LIBS:65xxx
-LIBS:ttl_ieee
 LIBS:lp2950l
+LIBS:ttl_ieee
+LIBS:io-cache
 EELAYER 24 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
-Sheet 3 3
+Sheet 3 4
 Title ""
 Date ""
 Rev ""

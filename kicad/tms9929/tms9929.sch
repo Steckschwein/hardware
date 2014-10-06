@@ -1349,15 +1349,11 @@ Wire Wire Line
 Wire Wire Line
 	3800 2950 3800 2450
 Wire Wire Line
-	3350 2950 3800 2950
-Wire Wire Line
 	8850 2500 8850 2800
 Wire Wire Line
 	3850 2500 8850 2500
 Wire Wire Line
 	3850 3050 3850 2500
-Wire Wire Line
-	3350 3050 3850 3050
 Wire Wire Line
 	6950 2800 6900 2800
 Wire Wire Line
@@ -1367,8 +1363,6 @@ Wire Wire Line
 Wire Wire Line
 	3900 3150 3900 2550
 Wire Wire Line
-	3350 3150 3900 3150
-Wire Wire Line
 	5450 2800 5400 2800
 Wire Wire Line
 	5450 2700 5450 2800
@@ -1376,8 +1370,6 @@ Wire Wire Line
 	3950 2700 5450 2700
 Wire Wire Line
 	3950 3250 3950 2700
-Wire Wire Line
-	3350 3250 3950 3250
 Wire Bus Line
 	5500 2900 5500 2650
 Wire Bus Line
@@ -1421,10 +1413,6 @@ Wire Bus Line
 Wire Wire Line
 	3700 2350 10250 2350
 Wire Wire Line
-	3700 3350 3700 2350
-Wire Wire Line
-	3350 3350 3700 3350
-Wire Wire Line
 	10250 750  10100 750 
 Wire Wire Line
 	10250 2350 10250 750 
@@ -1438,12 +1426,6 @@ Wire Wire Line
 	8900 1450 8900 1500
 Wire Bus Line
 	8800 600  8800 1450
-Wire Wire Line
-	8350 2300 3600 2300
-Wire Wire Line
-	3650 3450 3650 2300
-Wire Wire Line
-	3350 3450 3650 3450
 Wire Wire Line
 	3600 2250 6550 2250
 Wire Wire Line
@@ -1468,30 +1450,6 @@ Wire Bus Line
 	6700 600  6700 1050
 Wire Wire Line
 	6400 950  6600 950 
-Wire Wire Line
-	3600 3550 3600 2250
-Wire Wire Line
-	3350 3550 3600 3550
-Wire Wire Line
-	5000 950  4900 950 
-Wire Wire Line
-	5000 550  5000 950 
-Wire Wire Line
-	3500 550  5000 550 
-Wire Wire Line
-	3500 1650 3500 550 
-Wire Wire Line
-	3350 1650 3500 1650
-Wire Wire Line
-	4950 750  4900 750 
-Wire Wire Line
-	4950 600  4950 750 
-Wire Wire Line
-	3550 600  4950 600 
-Wire Wire Line
-	3550 3650 3550 600 
-Wire Wire Line
-	3350 3650 3550 3650
 Wire Bus Line
 	5100 1950 5100 2150
 Wire Wire Line
@@ -1718,7 +1676,7 @@ Wire Wire Line
 Wire Bus Line
 	3600 850  3600 1450
 Wire Bus Line
-	3450 1850 3450 2450
+	3450 1600 3450 2450
 Wire Wire Line
 	3350 3850 3700 3850
 Wire Wire Line
@@ -1764,5 +1722,42 @@ S 2800 5400 700  1500
 U 542278A8
 F0 "50Pin" 60
 F1 "50pin_connector.sch" 60
+F2 "A0" I L 2800 5450 60 
+F3 "A2" I L 2800 5550 60 
+F4 "A4" I L 2800 5650 60 
+F5 "A3" I L 2800 5750 60 
+F6 "A1" I L 2800 5850 60 
+F7 "D0" I R 3500 5450 60 
+F8 "D1" I R 3500 5550 60 
+F9 "D2" I R 3500 5650 60 
+F10 "D3" I R 3500 5750 60 
+F11 "D4" I R 3500 5850 60 
+F12 "D5" I R 3500 5950 60 
+F13 "D6" I R 3500 6050 60 
+F14 "D7" I R 3500 6150 60 
 $EndSheet
+Wire Wire Line
+	8350 2300 3650 2300
+Wire Bus Line
+	3450 2950 3450 3750
+Entry Wire Line
+	3350 2950 3450 3050
+Entry Wire Line
+	3350 3050 3450 3150
+Entry Wire Line
+	3350 3150 3450 3250
+Entry Wire Line
+	3350 3250 3450 3350
+Entry Wire Line
+	3350 3350 3450 3450
+Entry Wire Line
+	3350 3450 3450 3550
+Entry Wire Line
+	3350 3550 3450 3650
+Entry Wire Line
+	3350 3650 3450 3750
+Text Label 3450 3100 0    60   ~ 0
+RD
+Entry Wire Line
+	3350 1650 3450 1750
 $EndSCHEMATC
