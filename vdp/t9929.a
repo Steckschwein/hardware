@@ -18,7 +18,7 @@ msg_2	!text "      Welcome to VCFE 15.0!                                        
 msg_3 !text "READY.", $0
 
 pic1:
-;!bin "tw_192px.gif.raw"
+!bin "tw_192px.gif.raw"
 pic2:
 ;!bin "ml_192px.gif.raw"
 ;!bin "puppe.raw"
@@ -55,11 +55,11 @@ main:
 
    lda   #'2'
    jsr   lcdprint 
-   
-;	jsr	vdp_gfx2_init	
-;	lda	#v_reg0_m3
-;	ldy	#v_reg0
-;	jsr	vdp_sreg
+
+   	jsr	vdp_gfx2_init	
+	lda	#v_reg0_m3
+	ldy	#v_reg0
+	jsr	vdp_sreg
 
 	lda	#v_reg1_16k|v_reg1_display_on|v_reg1_int
 	ldy	#v_reg1
@@ -87,11 +87,12 @@ main:
 vdp_gfx2_init:
 	;set 768 different patterns --> name table
 	lda	#$00
-	ldy	#$58
+	ldy	#$18+$40
 	jsr	vdp_sreg
 	ldy	#$00
 	ldx	#$00
--	stx	a_vram
+-	+nops VRAM_WAIT
+	stx	a_vram
 	inx
 	bne	-
 	iny
@@ -99,12 +100,13 @@ vdp_gfx2_init:
 	bne	-
 	;now set 6144 byte of color --> color table
 	lda	#$00
-	ldy	#$60
+	ldy	#$20+$40
 	jsr	vdp_sreg
 	lda	#Black<<4|White
 	ldy	#$00
 	ldx	#$00
--	sta	a_vram
+-	+nops VRAM_WAIT
+	sta	a_vram
 	inx	
 	bne	-
 	iny
@@ -116,11 +118,12 @@ vdp_gfx2_init:
    lda   #>pic1
    sta   adrh
    lda   #$00
-   ldy   #$40
+   ldy   #$00+$40
    jsr   vdp_sreg
    ldx   #$00; page counter   
    ldy   #$00
 -  lda   (adrl),y
+   +nops VRAM_WAIT
    sta   a_vram
    iny
    bne   -
@@ -128,6 +131,7 @@ vdp_gfx2_init:
    inx   
    cpx   #$18     ;6k bitmap - $1800
    bne   -
+   
    rts	
 	
 
@@ -155,17 +159,17 @@ vdp_irq:
 	ply
 	pla
 	rti
+	
 vdp_init_bytes
 	!byte 0
 	!byte v_reg1_16k|v_reg1_int
-	!byte ($1400 / $400)	; name table - value * $400
-;	!byte ($1800 / $400)	; name table - value * $400
-	!byte	($2000 / $40)	; color table - value * $40 (gfx1), 7f/ff (gfx2)
-;	!byte	$ff	; color table setting for gfx mode 2 --> $2000
-	!byte	($0000 / $800) ; pattern table (charset) - value * $800  --> offset in VRAM 
-;	!byte	$03 	; pattern table, either $0000 or $2000 (3)	
-	!byte	($2800 / $80)	; sprite attribute table - value * $80 --> offset in VRAM 
-	!byte	($0000 / $800)	; sprite pattern table - value * $800  --> offset in VRAM 
+	!byte ($1800 / $400)	; name table - value * $400
+;	!byte	($2000 / $40)	; color table - value * $40 (gfx1), 7f/ff (gfx2)
+	!byte	$ff	; color table setting for gfx mode 2 --> $2000
+;	!byte	($0000 / $800) ; pattern table (charset) - value * $800  --> offset in VRAM 
+	!byte	$03 	; pattern table, either $0000 or $2000 (3)	
+	!byte	($3800 / $80)	; sprite attribute table - value * $80 --> offset in VRAM 
+	!byte   ($0000 / $800)  ; sprite pattern table - value * $800  --> offset in VRAM
 	!byte	Black
 
 vdp_init:
@@ -191,7 +195,7 @@ vdp_init:
 	
 vdp_cursor:
    lda   #$20
-   ldy   #$54
+   ldy   #$18+$40
    jsr   vdp_sreg
    lda   crs_c
    and   #$10
@@ -213,7 +217,7 @@ sprite_move:
 
 vdp_sprite:
 	lda	#$00 ; offset $2000
-	ldy	#$68 ; #$26 + $40
+	ldy	#$38+$40
 	jsr	vdp_sreg
     ldy   #$00
 -
@@ -227,9 +231,9 @@ vdp_sprite:
 
 vdp_sreg:	
 	sta   a_vreg
-	+nops	VRAM_WAIT
 	sty   a_vreg
 	rts
+
 vdp_clear_vram:
 	lda   #$00
 	ldy   #$40
@@ -272,7 +276,7 @@ vdp_load_charset:
 
 vdp_clear_screen:
    lda   #$00
-   ldy   #$54
+   ldy   #$18+$40
    jsr   vdp_sreg
    lda   #$20
    ldx   #$00
@@ -287,7 +291,7 @@ vdp_clear_screen:
    
 vdp_colortest:	
    lda   #$00
-   ldy   #$54
+   ldy   #$18+$40
    jsr   vdp_sreg
 	ldx   #$00
     ldy   #$00
@@ -315,7 +319,7 @@ vdp_colortest:
 	
 vdp_write:
    lda   #$00
-   ldy   #$54
+   ldy   #$18+$40
    jsr   vdp_sreg
    ldy   #$00
 -  lda   (txtptr),y

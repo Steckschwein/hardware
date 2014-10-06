@@ -1,4 +1,4 @@
-VRAM_WAIT	= 3
+VRAM_WAIT	= 0
 
 TEXT_COLOR	= Light_Blue
 TEXT_BGCOLOR = Black
