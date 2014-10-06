@@ -3,14 +3,14 @@ GAL22V10    ; first line : used GAL
 
 ; PIN assignment
 ;
-G1       ; A15 of 6502 (Pin 25)
-A2       ; A14 of 6502 (Pin 24)
+A15       ; A15 of 6502 (Pin 25)
+A14       ; A14 of 6502 (Pin 24)
 A1       ; A13 of 6502 (Pin 23)
-A0       ; A12 of 6502 (Pin 22)
-B3       ; A11 of 6502 (Pin 17)
-B2       ; A10 of 6502 (Pin 18)
-B1       ; A09 of 6502 (Pin 19)
-B0       ; A08 of 6502 (Pin 20)
+A12       ; A12 of 6502 (Pin 22)
+A11       ; A11 of 6502 (Pin 17)
+A10       ; A10 of 6502 (Pin 18)
+A9       ; A9 of 6502 (Pin 19)
+A8       ; A8 of 6502 (Pin 20)
 RW       ; RW of 6502 (Pin 34)
 PHI2	 ;	phi2o System clock (Pin 39 CPU)
 NC
@@ -31,24 +31,24 @@ VCC
 ;
 ;  boolean expressions
 ;
-/CSHIRAM = G1*/A2                       
-         + G1*/A1*/A0
-         + /RW*G1*A2*A1 				; Writes to $e000-$ffff go to the RAM
-         + /ROMOFF*RW*G1*A2*A1			; Reads  to $e000-$ffff go to the RAM, IF ROMOFF is Low
-/CSROM   = ROMOFF*RW*G1*A2*A1			; Reads  to $e000-$ffff go to the ROM, IF ROMOFF is High
+/CSHIRAM = A15*/A14                       
+         + A15*/A1*/A12
+         + /RW*A15*A14*A1 				; Writes to $e000-$ffff go to the RAM
+         + /ROMOFF*RW*A15*A14*A1			; Reads  to $e000-$ffff go to the RAM, IF ROMOFF is Low
+/CSROM   = ROMOFF*RW*A15*A14*A1			; Reads  to $e000-$ffff go to the ROM, IF ROMOFF is High
 
-/CSVIA   = G1 * A2*/A1*A0 * /B3*/B2*/B1*B0		; $d100
+/CSVIA   = A15 * A14*/A1*A12 * /A11*/A10*/A9*A8		; $d100
 
-ELCD     = PHI2			* G1 * A2*/A1*A0 * /B3*/B2*B1*/B0	; $d200 - LCD-Display at $d200
-/CSLCD    = G1 * A2*/A1*A0 * /B3*/B2*B1*/B0	; $d200 - LCD-Display at $d200
+ELCD     = PHI2			* A15 * A14*/A1*A12 * /A11*/A10*A9*/A8	; $d200 - LCD-Display at $d200
+/CSLCD    = A15 * A14*/A1*A12 * /A11*/A10*A9*/A8	; $d200 - LCD-Display at $d200
 
 ; Variante	early CSW/CSR
-;/VDPCSR  = RW* PHI2 	* G1*A2*/A1*A0  * /B3*B2*/B1*/B0	; $d400 - Video CSR     1101 0100 d400
-;/VDPCSW  = /RW*PHI2	* G1*A2*/A1*A0  * /B3*B2*/B1*/B0	; $d400 - Video CSW     1101 0100 d400
-;/VDPCSR  = RW*  G1*A2*/A1*A0  * /B3*B2*/B1*/B0	; $d400 - Video CSR     1101 0100 d400
-;/VDPCSW  = /RW* G1*A2*/A1*A0  * /B3*B2*/B1*/B0	; $d400 - Video CSW     1101 0100 d400
-/CSVDP  = G1*A2*/A1*A0  * /B3*B2*/B1*/B0	; $d400 - Video CSW     1101 0100 d400
+;/VDPCSR  = RW* PHI2 	* A15*A14*/A1*A12  * /A11*A10*/A9*/A8	; $d400 - Video CSR     1101 0100 d400
+;/VDPCSW  = /RW*PHI2	* A15*A14*/A1*A12  * /A11*A10*/A9*/A8	; $d400 - Video CSW     1101 0100 d400
+;/VDPCSR  = RW*  A15*A14*/A1*A12  * /A11*A10*/A9*/A8	; $d400 - Video CSR     1101 0100 d400
+;/VDPCSW  = /RW* A15*A14*/A1*A12  * /A11*A10*/A9*/A8	; $d400 - Video CSW     1101 0100 d400
+/CSVDP  = A15*A14*/A1*A12  * /A11*A10*/A9*/A8	; $d400 - Video CSW     1101 0100 d400
 
-/CSUART  = G1*A2*/A1*A0 * /B3*/B2*/B1*/B0
+/CSUART  = A15*A14*/A1*A12 * /A11*/A10*/A9*/A8
 
 DESCRIPTION:
