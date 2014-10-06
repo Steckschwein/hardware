@@ -13,13 +13,13 @@ B2       ; A10 of 6502 (Pin 18)
 B3       ; A11 of 6502 (Pin 17)
 RW       ; RW of 6502 (Pin 34)
 PHI2		;	System clock
-CLK1
+NC
 GND
 ;
 ROMOFF	; Remove ROM from Adress space if low, make unterlying RAM readable
 CSROM    ;CS signal for ROM at $e000-$ffff 
-WE2
-OE2
+NC
+NC
 CSHIRAM  ;CS for ram between  $8000-$cfff
 CSUART   ; CS for UART
 CSVIA    ;6522 VIA    at $d100
@@ -49,7 +49,5 @@ ELCD     = PHI2			* G1 * A2*/A1*A0 * /B3*/B2*B1*/B0	; $d200 - LCD-Display at $d2
 /CSVDP  = G1*A2*/A1*A0  * /B3*B2*/B1*/B0	; $d400 - Video CSW     1101 0100 d400
 
 /CSUART  = G1*A2*/A1*A0 * /B3*/B2*/B1*/B0
-/WE2	= /RW*PHI2*/CLK1
-/OE2	= RW*PHI2*/CLK1
 
 DESCRIPTION:
