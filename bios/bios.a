@@ -365,6 +365,7 @@ vdp_init:
 
 vdp_sreg:
 		sta   a_vreg
+        	+nops   VRAM_WAIT
 		sty   a_vreg
    		rts
 
@@ -1233,7 +1234,7 @@ hexascii	!text "0123456789ABCDEF"
 dec_tbl		!byte 128,160,200
 
 ; Version String
-biosversion	!text "V0510", $00
+biosversion	!text "V0610", $00
 
 ; SD Card init status messages
 nocard	!text "NO SD CARD ", $00
