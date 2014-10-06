@@ -1,4 +1,4 @@
-all: decoder.jed test.bin romram.bin
+all: decoder.jed clk_decoder.jed test.bin romram.bin
 
 clean:
 	rm -f *.jed *.fus *.chp *.pin *.bin *.label
@@ -11,3 +11,4 @@ clean:
 
 transfer: test.bin
 	../transfer.py romram.bin 0x1000
+	

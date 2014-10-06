@@ -12,7 +12,7 @@ B1       ; A09 of 6502 (Pin 19)
 B2       ; A10 of 6502 (Pin 18)
 B3       ; A11 of 6502 (Pin 17)
 RW       ; RW of 6502 (Pin 34)
-PHI2		;	System clock
+PHI2	 ;	phi2o System clock (Pin 39 CPU)
 NC
 GND
 ;
