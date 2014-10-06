@@ -1,5 +1,4 @@
-VRAM_WAIT	= 8			;1Mhz no wait is required
-VREG_WAIT	= 8
+VRAM_WAIT	= 3
 
 TEXT_COLOR	= Light_Blue
 TEXT_BGCOLOR = Black
@@ -15,7 +14,7 @@ v_reg1_display_on	= 1<<6
 v_reg1_int			= 1<<5
 v_reg1_m1			= 1<<4
 v_reg1_m2			= 1<<3
-v_reg1_spr_size	= 1<<1
+v_reg1_spr_size		= 1<<1
 v_reg1_spr_mag		= 1<<0
 
 ;gfx_mode_1  =
@@ -50,7 +49,8 @@ White          =$0f
       nop
    }
 }
-!macro SpriteLine .v {
+
+!macro SpriteLine16 .v {
 	!byte (.v>>16)&255	
 	!byte .v&255
 }
