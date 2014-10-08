@@ -147,7 +147,7 @@ check_zp
 		    ; Start at $ff
 			ldy #$ff
 			; Start with pattern $03 : $ff
--			ldx num_patterns
+-			ldx #num_patterns
 --			lda pattern,x
 			sta $00,y
 
@@ -160,10 +160,24 @@ check_zp
 			dey
 			bne -
 
+check_stack
+			ldy #$ff
+-			ldx #num_patterns
+--			lda pattern,x
+			sta $0100,y
+			cmp $0100,y
+			bne +
+
+			dex
+			bne --
+
+			dey
+			bne --	
+
 			; Copy self modifying memcheck routine to ZP
 			ldx #.selfmod_end - .selfmod_start
 -			lda .selfmod_start - 1, x
-			sta .target - 1, x
+			sta <.target - 1, x
 			dex
 			bne -
  			jmp .target ; Execute memcheck routine in ZP
@@ -1234,7 +1248,7 @@ hexascii	!text "0123456789ABCDEF"
 dec_tbl		!byte 128,160,200
 
 ; Version String
-biosversion	!text "V0810", $00
+biosversion	!text "V0910", $00
 
 ; SD Card init status messages
 nocard	!text "NO SD CARD ", $00
@@ -1292,7 +1306,7 @@ pattern  !byte $aa,$55,$ff,$00
 .target
       stz tmp1
       
--     ldx num_patterns
+-     ldx #num_patterns
 --    lda pattern,x
 a     sta start_check   ; Start at $0200. skip stack for now      
 b     cmp start_check
@@ -1305,8 +1319,16 @@ b     cmp start_check
       inc b+1
       bne -
 
-      inc a+2
-      inc b+2
+      ;inc a+2
+      ;inc b+2
+
+      ; Stop at $e000 to prevent overwriting BIOS Code when ROMOFF
+      ldx a+2
+      inx
+      stx a+2
+      stx b+2
+      cpx #$e0
+      
       bne -
 
 +	  lda a+2
