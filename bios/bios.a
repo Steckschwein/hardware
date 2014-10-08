@@ -379,7 +379,7 @@ vdp_init:
 
 vdp_sreg:
 		sta   a_vreg
-        	+nops   VRAM_WAIT
+        +nops   VRAM_WAIT
 		sty   a_vreg
    		rts
 
@@ -435,8 +435,7 @@ vdp_load_charset:
    jsr   vdp_sreg
    ldx   #$00; page counter   
    ldy   #$00
--  
-   +nops VRAM_WAIT
+-  +nops VRAM_WAIT
    lda   (adrl),y
    sta   a_vram
    iny
@@ -473,10 +472,9 @@ vdp_write:
    jsr   vdp_sreg
    ldy   #$00
 -  
-   
-   nop
    lda   (msgptr),y
    beq   +
+   +nops VRAM_WAIT
    sta   a_vram
    iny
    bne   -
@@ -1248,7 +1246,7 @@ hexascii	!text "0123456789ABCDEF"
 dec_tbl		!byte 128,160,200
 
 ; Version String
-biosversion	!text "V0910", $00
+biosversion	!text "V0810a", $00
 
 ; SD Card init status messages
 nocard	!text "NO SD CARD ", $00
