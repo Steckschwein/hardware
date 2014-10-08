@@ -3,8 +3,8 @@ VRAM_WAIT	= 1
 TEXT_COLOR	= Light_Blue
 TEXT_BGCOLOR = Black
 
-a_vram 		= $d400
-a_vreg		= $d401
+a_vram 		= $0220
+a_vreg		= a_vram+1
 
 v_reg0_m3			= 1<<1
 v_reg0_extV			= 1<<0
