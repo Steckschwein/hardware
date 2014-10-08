@@ -130,7 +130,7 @@ upload
 ;----------------------------------------------------------------------------------------------
 ; RESET Routine. Call subroutines to init all components 
 ;----------------------------------------------------------------------------------------------
-start_check = $0200
+start_check = $0300
 do_reset
 			; disable interrupt
 			sei
@@ -142,9 +142,9 @@ do_reset
 			ldx #$ff
 			txs
 
-      			; Check zeropage
+      			; Check zeropage and Memory
 check_zp
-		        ; Start at $ff
+		    ; Start at $ff
 			ldy #$ff
 			; Start with pattern $03 : $ff
 -			ldx num_patterns
@@ -166,7 +166,7 @@ check_zp
 			sta .target - 1, x
 			dex
 			bne -
- 			jmp .target
+ 			jmp .target ; Execute memcheck routine in ZP
 
 			; Broken ZP
 
@@ -1234,7 +1234,7 @@ hexascii	!text "0123456789ABCDEF"
 dec_tbl		!byte 128,160,200
 
 ; Version String
-biosversion	!text "V0610", $00
+biosversion	!text "V0810", $00
 
 ; SD Card init status messages
 nocard	!text "NO SD CARD ", $00
