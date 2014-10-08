@@ -1,1 +1,0 @@
-../shared/50pin_connector.sch
