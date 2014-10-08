@@ -3,52 +3,56 @@ GAL22V10    ; first line : used GAL
 
 ; PIN assignment
 ;
-A15       ; A15 of 6502 (Pin 25)
-A14       ; A14 of 6502 (Pin 24)
-A13       ; A13 of 6502 (Pin 23)
-A12       ; A12 of 6502 (Pin 22)
-A11       ; A11 of 6502 (Pin 17)
-A10       ; A10 of 6502 (Pin 18)
-A9       ; A9 of 6502 (Pin 19)
-A8       ; A8 of 6502 (Pin 20)
-RW       ; RW of 6502 (Pin 34)
-PHI2	 ;	phi2o System clock (Pin 39 CPU)
-NC
+A15 ; A15 of 6502 (Pin 25)
+A14 ; A14 of 6502 (Pin 24)
+A13 ; A13 of 6502 (Pin 23)
+A12 ; A12 of 6502 (Pin 22)
+A11 ; A11 of 6502 (Pin 20)
+A10 ; A10 of 6502 (Pin 19)
+A9  ; A9  of 6502 (Pin 18)
+A8  ; A8  of 6502 (Pin 17)
+A7  ; A7  of 6502 (Pin 16)	
+A6  ; A6  of 6502 (Pin 15)	
+A5  ; A5  of 6502 (Pin 14)	
+
 GND
 ;
+A4  ; A4  of 6502 (Pin 13)	
+RW       ; RW of 6502 (Pin 34)
 ROMOFF	; Remove ROM from Adress space if low, make unterlying RAM readable
 CSROM    ;CS signal for ROM at $e000-$ffff 
-CSLCD
-NC
+CSLORAM  ;CS for ram between  $0000-$8000
 CSHIRAM  ;CS for ram between  $8000-$cfff
-CSUART   ; CS for UART
-CSVIA    ;6522 VIA    at $d100
-ELCD     ;LCD-Display at $d200
-NC ; VDPCSR   ;Read VDP at $d400
-NC ; VDPCSW   ;Write VDP at $d500
-CSVDP	 ; experimental
+CSUART   ; UART at $0200
+CSVIA    ; VIA  at $0210
+CSVDP	 ; VDP  at $0220
+CSSND	 ; SND  at $0230
+CSLCD    ; LCD  at $0240
 VCC
 ;
 ;  boolean expressions
+
 ;
-/CSHIRAM = A15*/A14                       
-         + A15*/A13*/A12
+/CSROM   = ROMOFF*RW*A15*A14*A13			; Reads  to $e000-$ffff go to the ROM, IF ROMOFF is High
+; f= /b */c * /d */e */f * g */H + a
+;           b      c      d      e      f     g     h    a
+;CSLORAM = /A14 * /A13 * /A12 * /A11 * /A10 * A9 * /A8 + A15  
+;             /A*/G   + /A*H    + /A*F     + /A*E     + /A*D     + /A*C     + /A*B
+/CSLORAM = /A15 * /A9 + /A15*A8 + /A15*A10 + /A15*A11 + /A15*A12 + /A15*A13 + /A15*A14   
+
+/CSHIRAM = A15*/A13                       
+         + A15*/A14
          + /RW*A15*A14*A13 				; Writes to $e000-$ffff go to the RAM
          + /ROMOFF*RW*A15*A14*A13			; Reads  to $e000-$ffff go to the RAM, IF ROMOFF is Low
-/CSROM   = ROMOFF*RW*A15*A14*A13			; Reads  to $e000-$ffff go to the ROM, IF ROMOFF is High
 
-/CSVIA   = A15 * A14*/A13*A12 * /A11*/A10*/A9*A8		; $d100
 
-ELCD     = PHI2			* A15 * A14*/A13*A12 * /A11*/A10*A9*/A8	; $d200 - LCD-Display at $d200
-/CSLCD    = A15 * A14*/A13*A12 * /A11*/A10*A9*/A8	; $d200 - LCD-Display at $d200
+/CSUART  = /A15*/A14*/A13*/A12 * /A11*/A10*A9*/A8 * /A7*/A6*/A5*/A4	; or $d0200
 
-; Variante	early CSW/CSR
-;/VDPCSR  = RW* PHI2 	* A15*A14*/A13*A12  * /A11*A10*/A9*/A8	; $d400 - Video CSR     1101 0100 d400
-;/VDPCSW  = /RW*PHI2	* A15*A14*/A13*A12  * /A11*A10*/A9*/A8	; $d400 - Video CSW     1101 0100 d400
-;/VDPCSR  = RW*  A15*A14*/A13*A12  * /A11*A10*/A9*/A8	; $d400 - Video CSR     1101 0100 d400
-;/VDPCSW  = /RW* A15*A14*/A13*A12  * /A11*A10*/A9*/A8	; $d400 - Video CSW     1101 0100 d400
-/CSVDP  = A15*A14*/A13*A12  * /A11*A10*/A9*/A8	; $d400 - Video CSW     1101 0100 d400
+/CSVIA   = /A15*/A14*/A13*/A12 * /A11*/A10*A9*/A8 * /A7*/A6*/A5*A4	; or $d0210
 
-/CSUART  = A15*A14*/A13*A12 * /A11*/A10*/A9*/A8
+/CSVDP   = /A15*/A14*/A13*/A12 * /A11*/A10*A9*/A8 * /A7*/A6*A5*/A4	; or $d0210
+
+/CSLCD   = /A15*/A14*/A13*/A12 * /A11*/A10*A9*/A8 * /A7*A6*/A5*/A4	; or $d0240
+
 
 DESCRIPTION:
