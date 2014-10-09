@@ -54,7 +54,7 @@ U 1 1 542071FB
 P 5550 3750
 F 0 "P5" H 5550 5050 50  0000 C CNN
 F 1 "CONN_02X25" V 5550 3750 50  0000 C CNN
-F 2 "" H 5550 3000 60  0000 C CNN
+F 2 "Pin_Headers:Pin_Header_Angled_2x25" H 5550 3000 60  0001 C CNN
 F 3 "" H 5550 3000 60  0000 C CNN
 	1    5550 3750
 	1    0    0    -1  
@@ -246,10 +246,8 @@ Text Label 6300 2700 0    60   ~ 0
 D
 Text Label 4850 2700 0    60   ~ 0
 D
-Text Label 4600 3800 0    60   ~ 0
-A
-Text Label 6450 3650 0    60   ~ 0
-A
+Text Label 4350 3750 0    60   ~ 0
+A[0..15]
 Text GLabel 5250 4350 0    60   Input ~ 0
 /OE2
 Text GLabel 5850 4350 2    60   Input ~ 0
@@ -278,6 +276,116 @@ Wire Wire Line
 	5800 3450 5850 3450
 Text GLabel 5850 3450 2    60   Input ~ 0
 /CS_RES02
-Text HLabel 6350 3950 2    60   Input ~ 0
+Text HLabel 3550 4900 2    60   Input ~ 0
 A0
+Entry Wire Line
+	3350 4800 3450 4900
+Text HLabel 3550 4700 2    60   Input ~ 0
+A2
+Text HLabel 3550 4500 2    60   Input ~ 0
+A4
+Entry Wire Line
+	3350 4500 3450 4600
+Entry Wire Line
+	3350 4400 3450 4500
+Wire Wire Line
+	3450 4500 3550 4500
+Entry Wire Line
+	3450 4700 3350 4600
+Text HLabel 3550 4600 2    60   Input ~ 0
+A3
+Entry Wire Line
+	3450 4800 3350 4700
+Text HLabel 3550 4800 2    60   Input ~ 0
+A1
+Wire Bus Line
+	3350 4100 3350 4950
+Text Label 3350 4150 0    60   ~ 0
+A[0..15]
+Wire Wire Line
+	3450 4900 3550 4900
+Wire Wire Line
+	3450 4800 3550 4800
+Wire Wire Line
+	3450 4600 3550 4600
+Wire Wire Line
+	3550 4700 3450 4700
+Wire Bus Line
+	3350 2700 3350 3750
+Entry Wire Line
+	3350 3050 3450 3150
+Entry Wire Line
+	3350 3250 3450 3350
+Entry Wire Line
+	3350 3450 3450 3550
+Entry Wire Line
+	3350 3650 3450 3750
+Wire Wire Line
+	3450 3150 3600 3150
+Wire Wire Line
+	3450 3350 3600 3350
+Wire Wire Line
+	3450 3550 3600 3550
+Wire Wire Line
+	3450 3750 3600 3750
+Text Label 3450 3150 0    60   ~ 0
+D7
+Text Label 3450 3350 0    60   ~ 0
+D5
+Text Label 3450 3550 0    60   ~ 0
+D3
+Text Label 3450 3750 0    60   ~ 0
+D1
+Text Label 3350 2650 0    60   ~ 0
+D[0..7]
+Entry Wire Line
+	3450 3250 3350 3150
+Entry Wire Line
+	3450 3450 3350 3350
+Entry Wire Line
+	3450 3650 3350 3550
+Entry Wire Line
+	3450 3850 3350 3750
+Wire Wire Line
+	3600 3250 3450 3250
+Wire Wire Line
+	3600 3450 3450 3450
+Wire Wire Line
+	3600 3650 3450 3650
+Wire Wire Line
+	3600 3850 3450 3850
+Text Label 3550 3250 2    60   ~ 0
+D6
+Text Label 3550 3450 2    60   ~ 0
+D4
+Text Label 3550 3650 2    60   ~ 0
+D2
+Text Label 3550 3850 2    60   ~ 0
+D0
+Text HLabel 3600 3850 2    60   Input ~ 0
+D0
+Text HLabel 3600 3750 2    60   Input ~ 0
+D1
+Text HLabel 3600 3650 2    60   Input ~ 0
+D2
+Text HLabel 3600 3550 2    60   Input ~ 0
+D3
+Text HLabel 3600 3450 2    60   Input ~ 0
+D4
+Text HLabel 3600 3350 2    60   Input ~ 0
+D5
+Text HLabel 3600 3250 2    60   Input ~ 0
+D6
+Text HLabel 3600 3150 2    60   Input ~ 0
+D7
+Text Label 3450 4900 0    60   ~ 0
+A0
+Text Label 3450 4800 0    60   ~ 0
+A1
+Text Label 3450 4700 0    60   ~ 0
+A2
+Text Label 3450 4600 0    60   ~ 0
+A3
+Text Label 3450 4500 0    60   ~ 0
+A4
 $EndSCHEMATC
