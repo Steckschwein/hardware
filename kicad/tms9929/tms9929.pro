@@ -1,6 +1,6 @@
-update=23.09.2014 11:23:11
+update=10.10.2014 00:19:19
 version=1
-last_client=eeschema
+last_client=kicad
 [cvpcb]
 version=1
 NetIExt=net
@@ -74,3 +74,4 @@ LibName28=atmel
 LibName29=contrib
 LibName30=valves
 LibName31=shared/50pin_connector-cache
+LibName32=lbr/tms99xx
