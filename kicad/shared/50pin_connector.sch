@@ -29,6 +29,7 @@ LIBS:opto
 LIBS:atmel
 LIBS:contrib
 LIBS:valves
+LIBS:50pin_connector-cache
 EELAYER 24 0
 EELAYER END
 $Descr A4 11693 8268
@@ -443,4 +444,12 @@ Wire Wire Line
 Wire Wire Line
 	5300 4650 5150 4650
 Connection ~ 5150 4650
+Entry Wire Line
+	3350 4300 3450 4400
+Text HLabel 3550 4400 2    60   Input ~ 0
+A5
+Wire Wire Line
+	3450 4400 3550 4400
+Text Label 3450 4400 0    60   ~ 0
+A5
 $EndSCHEMATC
