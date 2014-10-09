@@ -36,23 +36,26 @@ VCC
 /CSROM   = ROMOFF*RW*A15*A14*A13			; Reads  to $e000-$ffff go to the ROM, IF ROMOFF is High
 ; f= /b */c * /d */e */f * g */H + a
 ;           b      c      d      e      f     g     h    a
-CSLORAM = /A14 * /A13 * /A12 * /A11 * /A10 * A9 * /A8 + A15  
+CSLORAM = /A14 * /A13 * /A12 * /A11 * /A10 * A9 * /A8 + A15
+
 ;             /A*/G   + /A*H    + /A*F     + /A*E     + /A*D     + /A*C     + /A*B
 ;/CSLORAM = /A15 * /A9 + /A15*A8 + /A15*A10 + /A15*A11 + /A15*A12 + /A15*A13 + /A15*A14   
 
 /CSHIRAM = A15*/A13                       
          + A15*/A14
-         + /RW*A15*A14*A13 				; Writes to $e000-$ffff go to the RAM
+         + /RW*A15*A14*A13 					; Writes to $e000-$ffff go to the RAM
          + /ROMOFF*RW*A15*A14*A13			; Reads  to $e000-$ffff go to the RAM, IF ROMOFF is Low
 
 
-/CSUART  = /A15*/A14*/A13*/A12 * /A11*/A10*A9*/A8 * /A7*/A6*/A5*/A4	; or $d0200
+/CSUART  = /A15*/A14*/A13*/A12 * /A11*/A10*A9*/A8 * /A7*/A6*/A5*/A4	; or $0200
 
-/CSVIA   = /A15*/A14*/A13*/A12 * /A11*/A10*A9*/A8 * /A7*/A6*/A5*A4	; or $d0210
+/CSVIA   = /A15*/A14*/A13*/A12 * /A11*/A10*A9*/A8 * /A7*/A6*/A5*A4	; or $0210
 
-/CSVDP   = /A15*/A14*/A13*/A12 * /A11*/A10*A9*/A8 * /A7*/A6*A5*/A4	; or $d0220
+/CSVDP   = /A15*/A14*/A13*/A12 * /A11*/A10*A9*/A8 * /A7*/A6*A5*/A4	; or $0220
 
-/CSIO   = /A15*/A14*/A13*/A12 * /A11*/A10*A9*/A8 * /A7*A6	; or $d0240
+/CSND   	= /A15*/A14*/A13*/A12 * /A11*/A10*A9*/A8 * /A7*/A6*A5*A4		; or $0230
+
+/CSIO   	= /A15*/A14*/A13*/A12 * /A11*/A10*A9*/A8 * /A7*A6	; or $0240
 
 
 DESCRIPTION:
