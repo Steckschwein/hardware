@@ -1,4 +1,4 @@
-Cmp-Mod V01 Created by Cvpcb (2014-09-10 BZR 5127)-product   date = Mon 22 Sep 2014 07:57:10 PM CEST
+Cmp-Mod V01 Created by Cvpcb (2014-09-10 BZR 5127)-product   date = Thu 09 Oct 2014 08:35:41 PM CEST
 
 BeginCmp
 TimeStamp = /541367DD;
@@ -73,13 +73,6 @@ EndCmp
 BeginCmp
 TimeStamp = /54136830;
 Reference = P1;
-ValeurCmp = CONN_02X04;
-IdModule  = Pin_Headers:Pin_Header_Straight_2x04;
-EndCmp
-
-BeginCmp
-TimeStamp = /541368AB;
-Reference = P2;
 ValeurCmp = CONN_02X04;
 IdModule  = Pin_Headers:Pin_Header_Straight_2x04;
 EndCmp
@@ -215,6 +208,13 @@ TimeStamp = /5414AE2F;
 Reference = U8;
 ValeurCmp = HM62256BLP-7;
 IdModule  = Sockets_DIP:DIP-28__600_ELL;
+EndCmp
+
+BeginCmp
+TimeStamp = /5436D776;
+Reference = U9;
+ValeurCmp = 74LS139;
+IdModule  = Sockets_DIP:DIP-14__300_ELL;
 EndCmp
 
 BeginCmp
