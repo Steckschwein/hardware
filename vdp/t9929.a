@@ -76,7 +76,7 @@ main:
 	sta via1ddra
 	
 	cli
-	
+
 -	jmp  -
 
 
@@ -141,16 +141,13 @@ vdp_irq:
 	phx
 	
 	lda   a_vreg
+
 	
 ;	jsr	vdp_colortest
-
-;	lda via1porta
-;	ldy #v_reg7
-;	jsr	vdp_sreg
 	
 ;   jsr   vdp_cursor
 
-	jsr   vdp_sprite
++	jsr   vdp_sprite
 	jsr   sprite_move
 ;   jsr   lcdclear
 ;   jsr   lcdhex
@@ -342,7 +339,7 @@ vdp_color:
    rts
    
 vdp_bgcolor:
-	stx   a_vreg
+	sta   a_vreg
 	lda   #v_reg7
 	sta   a_vreg
 	rts

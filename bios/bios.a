@@ -4,13 +4,21 @@
 !src "../vdp/t9929.h.a"
 *= $e000			; ROM Start
 !src "../charsets/char.ascii.vc20.h.a"
-!text "This space intentionally left blank", $00
-startmsg
-!text "STECKSCHWEIN 1.0                ", $00
-!text "Thomas Woinke", $0a, $0d, $00
-!text "Marko Lauke", $0a, $0d, $00
 
+biosversion	!text "V0810b", $00	; Version String
+
+startmsg
+!text "STECKSCHWEIN 1.0", $0d
+!text "Thomas Woinke", $0d
+!text "Marko Lauke", $0d,$0d
+!text "Bios V0810b", $0d
+!text "Clock:", $0d
+!text "RAM:", $0d,$0d
+!text "READY.", $0d
+!text $00
 *=$f000
+!src "../vdp/t99xx.lib.a"
+
 upload
 			ldx #$00
 			ldy #$01
@@ -142,7 +150,7 @@ do_reset
 			ldx #$ff
 			txs
 
-      			; Check zeropage and Memory
+   			; Check zeropage and Memory
 check_zp
 		    ; Start at $ff
 			ldy #$ff
@@ -191,33 +199,30 @@ check_stack
 
 .back_from_memcheck
 
-
 			stz chn_out
 			stz chn_in 
 
-
 			; init VDP
-			jsr vdp_init	
-			jsr vdp_clear_vram	
+			+SetVector vdp_init_bytes,	adrl
+			jsr vdp_init_reg
 
+			jsr	vdp_clear_vram
 			jsr vdp_clear_screen
 			jsr vdp_load_charset
 			jsr vdp_color
 
-
-			lda	#v_reg1_16k|v_reg1_display_on|v_reg1_int
+			lda	#v_reg1_16k|v_reg1_display_on;v_reg1_int
 			ldy	#v_reg1
 			jsr	vdp_sreg
 
+			
 			; init IO devices
 			jsr init_lcd
 			jsr init_via1
 			jsr init_uart
 
-
 			; Set IRQ Vector
 			+SetVector i_irqhandler, irqvec
-
 
 			
 			lda #'$'
@@ -228,10 +233,9 @@ check_stack
 			jsr lcdhex
 
 			+PrintStringAt biosversion, $00, $02
-			jsr vdp_write	
-
-
-
+			
+			+SetVector startmsg, adrl
+			jsr	vdp_print
 
 			jsr init_sdcard
 
@@ -363,88 +367,35 @@ i_hexout    pha
 			pla
 			rts
 
-;----------------------------------------------------------------------------------------------
-; init VDP, set memory map
-;----------------------------------------------------------------------------------------------
-vdp_init:
-		ldx   	#$00
-		ldy		#$80
--  		lda   	vdp_init_bytes,x
-		jsr		vdp_sreg	; write data to vdp - write the register number to vdp, 80 - reg0 , 81 - reg1 ... see datasheet page 4.1
-		iny
-		inx
-		cpx   #$08
-		bne   -
-		rts
-
-vdp_sreg:
-		sta   a_vreg
-        +nops   VRAM_WAIT
-		sty   a_vreg
-   		rts
-
-;----------------------------------------------------------------------------------------------
-; clear VDP VRAM
-;----------------------------------------------------------------------------------------------
+			
 vdp_clear_vram:
-   lda   #$00
-   ldy   #$40
-   jsr   vdp_sreg
-   lda   #$00
-   ldx   #$00
-   ldy   #$00
--
-   +nops VRAM_WAIT
-   sta   a_vram
-   inx
-   bne   -
-   iny
-   cpy   #$40
-   bne   -
-   rts
+	lda #$00
+	ldy	$00+$40
+	lda #$00
+	sta adrl
+	ldx	#$40
+	jmp vdp_fill	;clear vram
 
 ;----------------------------------------------------------------------------------------------
 ; clear VDP Screen
 ;----------------------------------------------------------------------------------------------
 vdp_clear_screen:
+	lda	#$20
+	sta	adrl
    lda   #$00
-   ldy   #$54
-   jsr   vdp_sreg
-   lda   #$20
-   ldx   #$00
-   ldy   #$00
-- 
-   +nops VRAM_WAIT
-   sta   a_vram
-   inx   
-   bne   -
-   iny
-   cpy   #$04
-   bne   -
-   rts
+   ldy   #$18+$40
+   ldx	 #$03
+	jmp 	vdp_fill
 
 ;----------------------------------------------------------------------------------------------
 ; Load Charset into VDP VRAM
 ;----------------------------------------------------------------------------------------------
 vdp_load_charset:
-
    +SetVector charset, adrl
- 	
    lda   #$00
-   ldy   #$40
-   jsr   vdp_sreg
-   ldx   #$00; page counter   
-   ldy   #$00
--  +nops VRAM_WAIT
-   lda   (adrl),y
-   sta   a_vram
-   iny
-   bne   -
-   inc   adrh
-   inx   
-   cpx   #$08     ;2k charset - $0800
-   bne   -
-   rts
+   ldy   #$00+$40
+   ldx	 #$08
+   jmp 	 vdp_memcpy
 
 ;----------------------------------------------------------------------------------------------
 ; Set Text Color
@@ -468,11 +419,10 @@ vdp_color:
 ;----------------------------------------------------------------------------------------------
 vdp_write:
    lda   #$00
-   ldy   #$54
+   ldy   #$18+$40
    jsr   vdp_sreg
    ldy   #$00
--  
-   lda   (msgptr),y
+-  lda   (msgptr),y
    beq   +
    +nops VRAM_WAIT
    sta   a_vram
@@ -1245,9 +1195,6 @@ hexascii	!text "0123456789ABCDEF"
 ; Lookup table for decimal to ASCII
 dec_tbl		!byte 128,160,200
 
-; Version String
-biosversion	!text "V0810a", $00
-
 ; SD Card init status messages
 nocard	!text "NO SD CARD ", $00
 invalidcard	!text "Invalid Card!", $00
@@ -1284,13 +1231,12 @@ uart_divisor
 ;----------------------------------------------------------------------------------------------
 vdp_init_bytes	
 	!byte 0
-	!byte v_reg1_16k|v_reg1_int
-	!byte ($1400 / $400)	; name table - value * $400
+	!byte v_reg1_16k
+	!byte ($1800 / $400)	; name table - value * $400
 	!byte ($2000 / $40)	; color table - value * $40 (gfx1), 7f/ff (gfx2)
 	!byte ($0000 / $800) ; pattern table (charset) - value * $800  --> offset in VRAM 
 	!byte ($2800 / $80)	; sprite attribute table - value * $80 --> offset in VRAM 
-	; !byte ($0000 / $800)	; sprite pattern table - value * $800  --> offset in VRAM 
-	!byte $00
+	!byte ($0000 / $800)	; sprite pattern table - value * $800  --> offset in VRAM 
 	!byte TEXT_BGCOLOR
 
 ;----------------------------------------------------------------------------------------------

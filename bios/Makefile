@@ -11,7 +11,7 @@ bios.h.a: bios.bin
 %.h.a: %.a
 	grep sys_ bios.a.labels | sed -e"s/sys_//g" > $@
    
-%.bin: %.a
+%.bin: %.a ../vdp/*.h.a ../vdp/*.lib.a
 	acme -l $<.labels $(ACME_OPTS) -o $@ $<
 
 burn: bios.bin
