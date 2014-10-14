@@ -1213,9 +1213,9 @@ Entry Wire Line
 Entry Wire Line
 	3050 3650 3150 3750
 Text Label 3150 3600 0    60   ~ 0
-A1
+A5
 Text Label 3150 3750 0    60   ~ 0
-A0
+A4
 Text GLabel 3050 4100 0    60   Input ~ 0
 /CS_IO
 Text GLabel 5050 3550 2    60   Output ~ 0
