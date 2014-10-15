@@ -1,4 +1,4 @@
-VRAM_WAIT	=	3			;2Mhz 1 nop, 4Mhz 3 nop
+VRAM_WAIT	=	6			;2Mhz 1 nop, 4Mhz 3 nop
 
 TEXT_COLOR	= Light_Blue
 TEXT_BGCOLOR = Black

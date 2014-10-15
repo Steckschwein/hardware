@@ -7,20 +7,19 @@ A15 ; A15 of 6502 (Pin 25)
 A14 ; A14 of 6502 (Pin 24)
 A13 ; A13 of 6502 (Pin 23)
 A12 ; A12 of 6502 (Pin 22)
-A11 ; A11 of 6502 (Pin 20)
-A10 ; A10 of 6502 (Pin 19)
-A9  ; A9  of 6502 (Pin 18)
 A8  ; A8  of 6502 (Pin 17)
+A9  ; A9  of 6502 (Pin 18)
+A10 ; A10 of 6502 (Pin 19)
+A11 ; A11 of 6502 (Pin 20)
 A7  ; A7  of 6502 (Pin 16)	
 A6  ; A6  of 6502 (Pin 15)	
 A5  ; A5  of 6502 (Pin 14)	
-
 GND
 ;
 A4  ; A4  of 6502 (Pin 13)	
 RW       ; RW of 6502 (Pin 34)
 ROMOFF	; Remove ROM from Adress space if low, make unterlying RAM readable
-CSROM    ;CS signal for ROM at $e000-$ffff 
+CSROM    ;CS signal for ROM at $e000-$ffff
 CSLORAM  ;CS for ram between  $0000-$8000
 CSHIRAM  ;CS for ram between  $8000-$cfff
 CSUART   ; UART at $0200
