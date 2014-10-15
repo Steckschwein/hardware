@@ -12,14 +12,16 @@ vdp_display_off:
 	lda	  #v_reg1
 	sta   a_vreg
 	rts
-	
+
+;	input:
+;	adrl/adrh vector set to vdp init table for al 8 vdp registers
 vdp_init_reg:
 	; setup video registers
    ldy	#$00
    ldx	#v_reg0
 -  lda  (adrl),y
    sta   a_vreg
-   nop
+   +nops VRAM_WAIT
    stx   a_vreg
    iny
    inx
@@ -172,8 +174,8 @@ vdp_print:
 
 vdp_set_addr:
 	lda	vdp_x
-	and	#$1f	;0-31
-	sta vdp_x
+;	and	#$1f	;0-31
+;	sta vdp_x
 	lda	vdp_y	; * 32
 	asl	
 	asl	
@@ -191,3 +193,15 @@ vdp_set_addr:
 	adc	#$18+$40
 	sta	a_vreg
 	rts
+
+vdp_xy:
+	stx	vdp_x
+	sty	vdp_y
+	rts
+	
+!macro V_GotoXY .x, .y {
+	lda	.x
+	sta vdp_x
+	lda .y
+	sta	vdp_y
+}

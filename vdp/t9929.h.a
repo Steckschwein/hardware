@@ -1,10 +1,11 @@
-VRAM_WAIT	= 2
+VRAM_WAIT	=	3			;2Mhz 1 nop, 4Mhz 3 nop
 
 TEXT_COLOR	= Light_Blue
 TEXT_BGCOLOR = Black
 
-a_vram 		= $0220
-a_vreg		= a_vram+1
+a_vdp		= $0220
+a_vram		= a_vdp
+a_vreg		= a_vdp+1
 
 v_reg0_m3			= 1<<1
 v_reg0_extV			= 1<<0
@@ -14,7 +15,7 @@ v_reg1_display_on	= 1<<6
 v_reg1_int			= 1<<5
 v_reg1_m1			= 1<<4
 v_reg1_m2			= 1<<3
-v_reg1_spr_size		= 1<<1
+v_reg1_spr_size	= 1<<1
 v_reg1_spr_mag		= 1<<0
 
 ;gfx_mode_1  =
@@ -50,7 +51,21 @@ White          =$0f
    }
 }
 
-!macro SpriteLine16 .v {
-	!byte (.v>>16)&255	
+!macro SpriteLine .v {
 	!byte .v&255
+}
+!macro SpriteLine16 .v {
+	!byte (.v>>8)& 255
+	!byte  .v	 &255
+}
+
+!macro save{
+	pha
+	phy
+	phx
+}
+!macro restore{
+	plx
+	ply
+	pla
 }
