@@ -8,8 +8,10 @@
 yOffs=tmp0
 seed=tmp1
 move_on=tmp2
+scrollpos=tmp3
 text:
 !text	"VCFe.CH - 2014"
+!fill	255, $20
 !text	0
 main:
 	sei
@@ -30,7 +32,7 @@ main:
 	ldx	#$20		; $20 possible colors
 	jsr	vdp_fills
 	
-	lda	#$01		;clear screen gfx1
+	lda	#$20		;clear screen gfx1
 	sta	adrl
 	lda	#$00
 	ldy	#$18+$40
@@ -54,10 +56,13 @@ main:
 	cli
 	
 	stz		move_on
+	stz		scrollpos
 	
 -	lda		move_on
 	beq		-
 	jsr 	move_stars
+	jsr		text_scroll
+	
 	dec		move_on
 	jmp	-
 	
@@ -68,16 +73,39 @@ stars_irq:
 
 	lda	a_vreg
 	
+	;update sprite tab
 	+SetVector	starfield_spritetab, adrl
 	lda	#$00
 	ldy	#$3c+$40
 	ldx	#$20*4
 	jsr vdp_memcpys
 	
+	;update text
+	+SetVector	text_scroll_buf, adrl
+	lda	#$00
+	ldy	#$18+$40
+	ldx	#$20
+	jsr vdp_memcpys
+	
 	inc	move_on
 	
 	+restore
 	rti
+	
+text_scroll:
+	ldx	#$00
+-	lda	text_scroll_buf+1	,x
+	sta	text_scroll_buf		,x
+	inx
+	cpx	#$20
+	cpx	#$1f
+	bne	-
+	ldx	scrollpos
+	lda text,x
+	sta text_scroll_buf+$1f
+	inc scrollpos
+	
+	rts
 	
 move_stars:
 	ldx #$00
@@ -170,3 +198,5 @@ starfield_speed_tab:
 	!fill 32, 0
 starfield_spritetab:;y,x,pattern,attr
 	!fill 32*4, 0
+text_scroll_buf:
+	!fill 32, 0
