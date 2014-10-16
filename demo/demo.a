@@ -7,10 +7,13 @@
 
 yOffs=tmp0
 seed=tmp1
-move_on=tmp2
-scrollpos=tmp3
+frame_cnt=tmp2
+frame_end=tmp3
+scrollpos=tmp4
+scroll_cnt=tmp5
+text_color_ix=tmp6
 text:
-!text	"VCFe.CH - 2014"
+!text	"VCFe CH - 2014"
 !fill	255, $20
 !text	0
 main:
@@ -55,15 +58,24 @@ main:
 	
 	cli
 	
-	stz		move_on
+	stz		frame_cnt
+	stz		frame_end
 	stz		scrollpos
+	lda		#$0b
+	sta		text_color_ix
+	lda		#$10
+	sta		scroll_cnt
 	
--	lda		move_on
-	beq		-
+-	lda		frame_end
+	bne		-
 	jsr 	move_stars
-	jsr		text_scroll
-	
-	dec		move_on
+;	jsr		text_scroll
+	lda		frame_cnt
+	and		#$01
+	beq		+
+	jsr		text_color
++	
+	dec		frame_end
 	jmp	-
 	
 	rts
@@ -85,12 +97,34 @@ stars_irq:
 	lda	#$00
 	ldy	#$18+$40
 	ldx	#$20
-	jsr vdp_memcpys
-	
-	inc	move_on
-	
+;	jsr vdp_memcpys
+
+	ldx	text_color_ix
+	lda	intro_label_color,x
+	sta	adrl
+	lda	#$01	;skip first 8 chars
+	ldy #$20+$40
+	ldx	#$1f
+	jsr	vdp_fills
+
+	ldx frame_cnt
+	inx	
+	cpx	50
+	bne	+
+	ldx	#$00
++	stx	frame_cnt
+
+	inc	frame_end
+
 	+restore
 	rti
+
+text_color:
+	dec	text_color_ix
+	bne	+
+	lda	#$0b
+	sta text_color_ix
++	rts
 	
 text_scroll:
 	ldx	#$00
@@ -105,14 +139,14 @@ text_scroll:
 	sta text_scroll_buf+$1f
 	inc scrollpos
 	
-	rts
-	
++	rts
+
 move_stars:
 	ldx #$00
 	ldy #$00
 -	lda starfield_spritetab+1	,y
 	clc
-	adc starfield_speed_tab		,x
+	sbc starfield_speed_tab		,x
 	sta starfield_spritetab+1	,y
 	iny
 	iny
@@ -122,7 +156,7 @@ move_stars:
 	cpx	#$20
 	bne  -
 	rts
-	
+
 init_sprites:
 	lda	#$30
 	sta seed
@@ -200,3 +234,17 @@ starfield_spritetab:;y,x,pattern,attr
 	!fill 32*4, 0
 text_scroll_buf:
 	!fill 32, 0
+
+intro_label_color:
+	!byte Magenta<<4|Black
+	!byte Dark_Red<<4|Black
+	!byte	Medium_Red<<4|Black
+	!byte	Light_Red<<4|Black
+	!byte	Dark_Yellow<<4|Black
+	!byte	Light_Yellow<<4|Black
+	!byte	Dark_Yellow<<4|Black
+	!byte	Light_Red<<4|Black
+	!byte	Medium_Red<<4|Black
+	!byte Dark_Red<<4|Black
+	!byte Magenta<<4|Black
+	
