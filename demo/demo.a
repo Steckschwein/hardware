@@ -10,12 +10,15 @@ seed=tmp1
 frame_cnt=tmp2
 frame_end=tmp3
 scrollpos=tmp4
-scroll_cnt=tmp5
+scroll_ctl=tmp5
 text_color_ix=tmp6
+seconds=tmp7
 text:
-!text	"VCFe CH - 2014"
-!text	"!!! Steckschwein !!!",0
-; - "65c02 4MHz" - "TMS9929" - "VCFe.CH - 2014"
+!text	"      -+- VCFe CH - 2014 -+-    ",1
+!text	"       -+- Steckschwein -+-     ",1
+!text	"        -+- 65c02 4MHz -+-      ",1
+!text	"         -+- TMS9929 -+-        ",1
+!text	"                                ",1
 !fill	255, $20
 !text	0
 main:
@@ -24,6 +27,13 @@ main:
 	+SetVector	starfield_tab, adrl
 	jsr	vdp_init_reg
 
+	+SetVector charset, adrl
+	lda #$00
+	ldy #$00+$40
+	ldx	#$08
+	jsr	vdp_memcpy
+	
+	
 	+SetVector	chars, adrl
 	lda	#$00		;setup pattern
 	ldy	#$00+$40
@@ -59,25 +69,26 @@ main:
 	ldy		#12
 	jsr		vdp_xy
 	+SetVector	text, adrl
-	jsr		vdp_print
+;	jsr		vdp_print
 	
 	cli
 	
+	lda		#$03
+	sta		seconds
 	stz		frame_cnt
 	stz		frame_end
 	stz		scrollpos
 	lda		#$0a
 	sta		text_color_ix
-	lda		#$10
-	sta		scroll_cnt
+	stz		scroll_ctl
 	
 -	lda		frame_end
 	bne		-
 	jsr 	move_stars
-;	jsr		text_scroll
+	jsr		text_scroll
 	lda		frame_cnt
 	and		#$01
-	beq		+
+	bne		+
 	jsr		text_color
 +	
 	jsr		joystick
@@ -101,10 +112,10 @@ stars_irq:
 	
 	;update text
 	+SetVector	text_scroll_buf, adrl
-	lda	#$00
-	ldy	#$18+$40
+	lda	#$80
+	ldy	#$19+$40
 	ldx	#$20
-;	jsr vdp_memcpys
+	jsr vdp_memcpys
 
 	ldx	text_color_ix
 	lda	intro_label_color,x
@@ -116,11 +127,10 @@ stars_irq:
 
 	ldx frame_cnt
 	inx	
-	cpx	50
+	cpx	#50
 	bne	+
 	ldx	#$00
 +	stx	frame_cnt
-
 	inc	frame_end
 
 	+restore
@@ -137,19 +147,35 @@ text_color:
 +	rts
 	
 text_scroll:
+	lda	scroll_ctl
+	bne ++
+	lda	frame_cnt
+	cmp	#49
+	bne	text_scroll_e
+	lda	seconds
+	beq	+
+	dec seconds
+	rts
++	lda	#$03
+	sta	seconds
+	inc	scroll_ctl
+++
 	ldx	#$00
 -	lda	text_scroll_buf+1	,x
 	sta	text_scroll_buf		,x
 	inx
-	cpx	#$20
 	cpx	#$1f
 	bne	-
 	ldx	scrollpos
 	lda text,x
 	sta text_scroll_buf+$1f
 	inc scrollpos
+	cmp #$01			;stop marker
+	bne	text_scroll_e
+	dec scroll_ctl
 	
-+	rts
+text_scroll_e:
+	rts
 
 move_stars:
 	jsr	rnd
@@ -157,7 +183,8 @@ move_stars:
 	
 	ldx #$00
 	ldy #$00
--	lda starfield_spritetab+1	,y
+-	
+	lda starfield_spritetab+1	,y
 	clc
 	sbc starfield_speed_tab		,x
 	sta starfield_spritetab+1	,y
@@ -258,7 +285,7 @@ starfield_speed_tab:
 starfield_spritetab:;y,x,pattern,attr
 	!fill 32*4, 0
 text_scroll_buf:
-	!fill 32, 0
+	!fill 32, $20
 
 intro_label_color:
 	!byte Magenta<<4|Black
