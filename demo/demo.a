@@ -14,6 +14,8 @@ scroll_cnt=tmp5
 text_color_ix=tmp6
 text:
 !text	"VCFe CH - 2014"
+!text	"!!! Steckschwein !!!",0
+; - "65c02 4MHz" - "TMS9929" - "VCFe.CH - 2014"
 !fill	255, $20
 !text	0
 main:
@@ -41,6 +43,9 @@ main:
 	ldy	#$18+$40
 	ldx	#$03		; $300 chars
 	jsr	vdp_fill
+
+		
+	jsr	init_via
 	
 	jsr	init_sprites
 	
@@ -61,7 +66,7 @@ main:
 	stz		frame_cnt
 	stz		frame_end
 	stz		scrollpos
-	lda		#$0b
+	lda		#$0a
 	sta		text_color_ix
 	lda		#$10
 	sta		scroll_cnt
@@ -75,6 +80,8 @@ main:
 	beq		+
 	jsr		text_color
 +	
+	jsr		joystick
+
 	dec		frame_end
 	jmp	-
 	
@@ -119,10 +126,13 @@ stars_irq:
 	+restore
 	rti
 
+joystick:
+	rts
+	
 text_color:
 	dec	text_color_ix
 	bne	+
-	lda	#$0b
+	lda	#$0a
 	sta text_color_ix
 +	rts
 	
@@ -142,6 +152,9 @@ text_scroll:
 +	rts
 
 move_stars:
+	jsr	rnd
+	cmp	#$7f
+	
 	ldx #$00
 	ldy #$00
 -	lda starfield_spritetab+1	,y
@@ -209,6 +222,18 @@ noEor:
 	sta seed
 	rts
 	
+init_via:
+	;via port a
+	lda #$00
+	sta via1ier             ; disable VIA1 T1 interrupts
+	lda #%00000000 			; set latch
+	sta via1acr
+	lda #%11001100 			; set level
+	sta via1pcr
+	lda #%11111000 			; set PA1-3 to input
+	sta via1ddra
+	rts
+	
 chars:
 +SpriteLine	%........
 +SpriteLine	%........
@@ -247,4 +272,4 @@ intro_label_color:
 	!byte	Medium_Red<<4|Black
 	!byte Dark_Red<<4|Black
 	!byte Magenta<<4|Black
-	
+	!byte White
