@@ -7,15 +7,16 @@
 
 biosversion	!text "V0810b", $00	; Version String
 
-startmsg
+start_msg
 !text "STECKSCHWEIN 1.0", $0d
 !text "Thomas Woinke", $0d
 !text "Marko Lauke", $0d,$0d
 !text "Bios V0810b", $0d
 !text "Clock:", $0d
-!text "RAM:", $0d,$0d
-!text "READY.", $0d
-!text $00
+!text "RAM:", $0
+ready_msg
+!text $0d,$0d,"READY.", $0d
+!text $0
 *=$f000
 !src "../vdp/t99xx.lib.a"
 
@@ -234,7 +235,9 @@ check_stack
 
 			+PrintStringAt biosversion, $00, $02
 			
-			+SetVector startmsg, adrl
+			+SetVector start_msg, adrl
+			jsr	vdp_print
+			+SetVector ready_msg, adrl
 			jsr	vdp_print
 
 			jsr init_sdcard
@@ -307,7 +310,7 @@ i_chrout
 		lda chn_out
 		bne +
 		pla
-		jmp vdp_write
+		jmp	vdp_chrout
 
 +		; LCD
 		cmp #$01

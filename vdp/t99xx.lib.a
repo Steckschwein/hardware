@@ -6,13 +6,19 @@ vdp_sreg:
 	
 	
 vdp_display_off:
-	lda		#v_reg1_16k	;enable 16K ram, disable screen
+	lda	#v_reg1_16k	;enable 16K ram, disable screen
 	sta 	a_vreg
 	+nops	VRAM_WAIT
 	lda	  #v_reg1
 	sta   a_vreg
 	rts
 
+vdp_gfx1:
+	rts
+	
+vdp_gfx2:
+	rts
+	
 ;	input:
 ;	adrl/adrh vector set to vdp init table for al 8 vdp registers
 vdp_init_reg:
@@ -43,7 +49,6 @@ vdp_bgcolor:
 	+nops	VRAM_WAIT
 	sta   a_vreg
 	rts
-
 
 vdp_load_sprites16:
 ;	input:
@@ -142,11 +147,15 @@ vdp_memcpys:
 	dex
 	bne	-
 	rts
-	
+
+;
+;
+;	
 vdp_x	!byte	0	;col
 vdp_y	!byte	0  	;row
 vdp_print:
 	ldy		#$00
+	
 --	jsr		vdp_set_addr
 -	lda		(adrl),y
 	beq		++
@@ -162,10 +171,21 @@ vdp_print:
 	bne		-
 ++	rts
 
+vdp_chrout:
+	jsr		vdp_set_addr
++	+nops 	VRAM_WAIT
+	sta		a_vram
+	inc	vdp_x
+	lda	vdp_x
+	and	#$20
+	cmp	#$20
+	bne	+
+	stz	vdp_x
+	inc	vdp_y
++	rts
+
 vdp_set_addr:
 	lda	vdp_x
-;	and	#$1f	;0-31
-;	sta vdp_x
 	lda	vdp_y	; * 32
 	asl	
 	asl	
