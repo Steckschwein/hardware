@@ -16,8 +16,8 @@ seconds=tmp7
 text:
 !text	"      -+- VCFe CH - 2014 -+-    ",1
 !text	"       -+- Steckschwein -+-     ",1
-!text	"        -+- 65c02 4MHz -+-      ",1
-!text	"         -+- TMS9929 -+-        ",1
+!text	"      -+- CPU 65c02 4MHz -+-    ",1
+!text	"      -+- Video TMS9929 -+-     ",1
 !text	"                                ",1
 !fill	255, $20
 !text	0
@@ -81,9 +81,12 @@ main:
 	lda		#$0a
 	sta		text_color_ix
 	stz		scroll_ctl
+
+	; main loop 
 	
 -	lda		frame_end
 	bne		-
+	
 	jsr 	move_stars
 	jsr		text_scroll
 	lda		frame_cnt
@@ -102,6 +105,18 @@ stars_irq:
 	+save
 
 	lda	a_vreg
+
+	+nops	89
+	ldx		#$00
+-	lda		raster_bar_colors,x
+	jsr		vdp_bgcolor
+	+nops	$6e
+	inx
+	cpx		#$0b
+	bne		-
+	lda		#Black
+	jsr		vdp_bgcolor
+
 	
 	;update sprite tab
 	+SetVector	starfield_spritetab, adrl
@@ -131,6 +146,7 @@ stars_irq:
 	bne	+
 	ldx	#$00
 +	stx	frame_cnt
+
 	inc	frame_end
 
 	+restore
@@ -300,3 +316,16 @@ intro_label_color:
 	!byte Dark_Red<<4|Black
 	!byte Magenta<<4|Black
 	!byte White
+raster_bar_colors:
+	!byte Magenta
+	!byte Dark_Red
+	!byte	Medium_Red
+	!byte	Light_Red
+	!byte	Dark_Yellow
+	!byte	Light_Yellow
+	!byte	Dark_Yellow
+	!byte	Light_Red
+	!byte	Medium_Red
+	!byte Dark_Red
+	!byte Magenta
+	

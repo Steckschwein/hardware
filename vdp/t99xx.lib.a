@@ -33,8 +33,12 @@ vdp_init_reg:
    
    rts
 	
+;
+;   input
+;	a - color
+;
 vdp_bgcolor:
-	stx   a_vreg
+	sta   a_vreg
 	lda   #v_reg7
 	+nops	VRAM_WAIT
 	sta   a_vreg
