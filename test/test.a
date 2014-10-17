@@ -3,6 +3,7 @@
 !src "../bios/bios.h.a"
 
 	jsr lcdclear
+	cli
 
 
 	+PrintString hello
@@ -10,8 +11,7 @@
 	ldy #$02
 	jsr lcdxy
 	+PrintString num
--	lda $0270
-	jmp -	
+-	jmp -	
 
 
 
