@@ -10,7 +10,8 @@
 	ldy #$02
 	jsr lcdxy
 	+PrintString num
--	jmp -	
+-	lda $0270
+	jmp -	
 
 
 

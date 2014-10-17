@@ -1,6 +1,6 @@
 VRAM_WAIT	=	1	; 4Mhz 1 nop is sufficent, due to opcode fetch cycles and so on, if i/o will be placed on zp one more nop must be added
 
-TEXT_COLOR	= Light_Blue
+TEXT_COLOR	= Dark_Green
 TEXT_BGCOLOR = Black
 
 a_vdp		= $0220

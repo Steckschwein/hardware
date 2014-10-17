@@ -1,4 +1,4 @@
-*=$0200
+*=$0300
 !src "../bios/defs.h.a"
 !src "../bios/bios.h.a"
 
@@ -27,6 +27,7 @@ check_zp
       sta .target - 1, x
       dex
       bne -
+      stz chn_out
       jmp .target
 ;      jmp check_mem 
 
@@ -38,7 +39,7 @@ zp_kaputt
 -     jmp -
 
 
-start_check = $0100
+start_check = $0300
 
 .selfmod_start
 !pseudopc $0000 {
@@ -83,25 +84,25 @@ b     cmp start_check
       jsr lcdclear
 
       lda #'$'
-      jsr lcdprint
+      jsr chrout
       lda a+2
-      jsr lcdhex
+      jsr hexout
       lda a+1
-      jsr lcdhex
+      jsr hexout
 
       lda #' '
-      jsr lcdprint
+      jsr chrout
       lda #'$'
-      jsr lcdprint
+      jsr chrout
       lda tmp0 
-      jsr lcdhex
+      jsr hexout
 
-      ldx #$0a
-      ldy #$01
-      jsr lcdxy
+      ;ldx #$0a
+      ;ldy #$01
+      ;jsr lcdxy
       
       lda tmp1
-      jsr lcdhex
+      jsr hexout
 
       inc tmp1
 
