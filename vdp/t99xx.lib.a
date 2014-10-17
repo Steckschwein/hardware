@@ -50,10 +50,8 @@ vdp_load_sprites16:
 ;	adrl/adrh vector set to sprite table
 ;	a - low byte vram adress
 ;	y - high byte vram adress
-;   x - amount of sprites
-	stx	vdp_load_sprites16_c+1
+;  x - amount of sprites
 	jsr	vdp_sreg
-	ldx #$00
 --	ldy	#$00
 -	lda	(adrl),y
 	+nops	VRAM_WAIT
@@ -75,21 +73,19 @@ vdp_load_sprites16:
 	clc	
 	adc	#$1f
 	sta	adrl
-	inx
-vdp_load_sprites16_c:
-	cpx   #$00
+	dex
 	bne   --
 	rts
 	
 ;	input:
 ;	a - low byte vram adress
 ;	y - high byte vram adress
-;   x - amount of bytes to fill with pattern
+;  x - amount of bytes to fill with pattern
 ;	adrl - pattern
 vdp_fills:
 	jsr   vdp_sreg
 	lda   adrl
--   +nops	VRAM_WAIT
+-  +nops	VRAM_WAIT
 	sta   a_vram
 	dex
 	bne	-
@@ -100,20 +96,16 @@ vdp_fills:
 vdp_fill:
 ;	a - low byte vram adress
 ;	y - high byte vram adress
-;	x - amount of 256byte blocks
+;	x - amount of 256byte blocks (page counter)
 ;	adrl - pattern
 	jsr   vdp_sreg
-	stx	vdp_fill_c+1				;modify compare :)
-   ldx   #$00; page counter   
    ldy   #$00
    lda   adrl
 -  +nops	VRAM_WAIT
    sta   a_vram
    iny
    bne   -
-   inx   
-vdp_fill_c:
-   cpx   #$00
+   dex
    bne   -
    rts
 	
@@ -121,11 +113,9 @@ vdp_fill_c:
 ;	adrl/adrh vector set
 ;	a - low byte vram adress
 ;	y - high byte vram adress
-;  x - amount of 256byte blocks
+;  x - amount of 256byte blocks (page counter)
 vdp_memcpy:
 	jsr   vdp_sreg
-	stx	vdp_memcpy_c+1		;modify compare :)
-   ldx   #$00; page counter   
    ldy   #$00
 -  lda   (adrl),y
    +nops	VRAM_WAIT
@@ -133,9 +123,7 @@ vdp_memcpy:
    iny
    bne   -
    inc   adrh
-   inx   
-vdp_memcpy_c:
-   cpx   #$00
+   dex
    bne   -
    rts
 	
@@ -143,17 +131,15 @@ vdp_memcpy_c:
 ;	adrl/adrh vector set
 ;	a - low byte vram adress
 ;	y - high byte vram adress
-;  	x - amount of bytes to copy
+;  x - amount of bytes to copy
 vdp_memcpys:
 	jsr	vdp_sreg
-	stx	vdp_memcpys_c+1	;modify compare 
 	ldy   #$00
--  	lda   (adrl),y
+-  lda   (adrl),y
 	+nops	VRAM_WAIT
 	sta   a_vram
 	iny
-vdp_memcpys_c:
-	cpy	#$00
+	dex
 	bne	-
 	rts
 	
