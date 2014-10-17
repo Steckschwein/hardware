@@ -18,6 +18,8 @@ count		= clockspeed / 1000000 * jiffies
 ; IO Channels
 chn_out = $00
 chn_in  = $01
+ram_end_l   = $02
+ram_end_h   = ram_end_l+1
 
 
 ; Cursor Position

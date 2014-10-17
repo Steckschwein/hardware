@@ -5,13 +5,13 @@
 *= $e000			; ROM Start
 !src "../charsets/char.ascii.vc20.h.a"
 
-biosversion	!text "V0810b", $00	; Version String
+biosversion	!text "V0810c", $00	; Version String
 
 start_msg
 !text "STECKSCHWEIN 1.0", $0d
 !text "Thomas Woinke", $0d
 !text "Marko Lauke", $0d,$0d
-!text "Bios V0810b", $0d
+!text "Bios V0810c", $0d
 !text "Clock:", $0d
 !text "RAM:", $0
 ready_msg
@@ -19,6 +19,7 @@ ready_msg
 !text $0
 *=$f000
 !src "../vdp/t99xx.lib.a"
+
 
 upload
 			ldx #$00
@@ -212,9 +213,6 @@ check_stack
 			jsr vdp_load_charset
 			jsr vdp_color
 
-			lda	#v_reg1_16k|v_reg1_display_on;v_reg1_int
-			ldy	#v_reg1
-			jsr	vdp_sreg
 
 			
 			; init IO devices
@@ -237,8 +235,22 @@ check_stack
 			
 			+SetVector start_msg, adrl
 			jsr	vdp_print
-			+SetVector ready_msg, adrl
-			jsr	vdp_print
+
+			stz chn_out
+
+; 			lda #'$'
+; 			jsr	i_chrout
+; 
+;  			lda tmp1
+;   			jsr i_hexout
+;   			lda tmp0
+;  			jsr i_hexout
+; 			+SetVector ready_msg, adrl
+; 			jsr	vdp_print
+
+			lda	#v_reg1_16k|v_reg1_display_on;v_reg1_int
+			ldy	#v_reg1
+			jsr	vdp_sreg
 
 			jsr init_sdcard
 
@@ -325,7 +337,8 @@ i_chrout
 		pla
 		jmp i_uart_tx
 
-+		rts
++		
+		rts
 ;----------------------------------------------------------------------------------------------
 ; Output string on active output device
 ;----------------------------------------------------------------------------------------------
@@ -1278,7 +1291,8 @@ b     cmp start_check
       
       bne -
 
-+	  lda a+2
++	  
+	  lda a+2
 	  sta tmp0
 	  lda a+1
 	  sta tmp1

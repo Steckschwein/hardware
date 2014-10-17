@@ -34,8 +34,8 @@ vdp_init_reg:
    cpy   #$08
    bne   -
    
-   stz	vdp_x
-   stz	vdp_y
+   stz	crs_x
+   stz	crs_y
    
    rts
 	
@@ -147,12 +147,7 @@ vdp_memcpys:
 	dex
 	bne	-
 	rts
-
-;
-;
-;	
-vdp_x	!byte	0	;col
-vdp_y	!byte	0  	;row
+	
 vdp_print:
 	ldy		#$00
 	
@@ -161,41 +156,43 @@ vdp_print:
 	beq		++
 	cmp		#$0d
 	bne		+
-	stz		vdp_x
-	inc		vdp_y
+	stz		crs_x
+	inc		crs_y
 	iny
 	jmp		--
 +	+nops 	VRAM_WAIT
 	sta		a_vram
+	inc 		crs_x
 	iny
 	bne		-
 ++	rts
 
 vdp_chrout:
+	tay
 	jsr		vdp_set_addr
 +	+nops 	VRAM_WAIT
-	sta		a_vram
-	inc	vdp_x
-	lda	vdp_x
+	sty		a_vram
+	inc	crs_x
+	lda	crs_x
 	and	#$20
 	cmp	#$20
 	bne	+
-	stz	vdp_x
-	inc	vdp_y
+	stz	crs_x
+	inc	crs_y
 +	rts
 
 vdp_set_addr:
-	lda	vdp_x
-	lda	vdp_y	; * 32
+	lda	crs_x
+	lda	crs_y	; * 32
 	asl	
 	asl	
 	asl	
 	asl
 	asl
-	ora	vdp_x
+	ora	crs_x
 	sta	a_vreg	
 	
-	lda	vdp_y	; * 32
+	lda	crs_y	; * 32
 	lsr			; /8 -> page offset 0-2
 	lsr
 	lsr
@@ -205,13 +202,13 @@ vdp_set_addr:
 	rts
 
 vdp_xy:
-	stx	vdp_x
-	sty	vdp_y
+	stx	crs_x
+	sty	crs_y
 	rts
 	
 !macro V_GotoXY .x, .y {
 	lda	.x
-	sta vdp_x
+	sta crs_x
 	lda .y
-	sta	vdp_y
+	sta	crs_y
 }
