@@ -244,7 +244,9 @@ Wire Wire Line
 Wire Wire Line
 	2900 3550 3800 3550
 Wire Wire Line
-	2900 3450 4450 3450
+	2900 3450 3050 3450
+Wire Wire Line
+	3050 3450 4450 3450
 Connection ~ 1300 5900
 Connection ~ 1600 5900
 Connection ~ 1900 5900
@@ -252,9 +254,17 @@ Connection ~ 1900 5500
 Connection ~ 1600 5500
 Connection ~ 1300 5500
 Wire Wire Line
-	1300 5900 2150 5900
+	1300 5900 1600 5900
 Wire Wire Line
-	1300 5500 2150 5500
+	1600 5900 1900 5900
+Wire Wire Line
+	1900 5900 2150 5900
+Wire Wire Line
+	1300 5500 1600 5500
+Wire Wire Line
+	1600 5500 1900 5500
+Wire Wire Line
+	1900 5500 2150 5500
 Wire Wire Line
 	2900 5050 3150 5050
 Wire Wire Line
@@ -294,7 +304,15 @@ Wire Wire Line
 Wire Wire Line
 	1600 3450 1700 3450
 Wire Bus Line
-	1500 3250 1500 3750
+	1500 3250 1500 3350
+Wire Bus Line
+	1500 3350 1500 3450
+Wire Bus Line
+	1500 3450 1500 3550
+Wire Bus Line
+	1500 3550 1500 3650
+Wire Bus Line
+	1500 3650 1500 3750
 Wire Wire Line
 	1700 3250 1600 3250
 Wire Wire Line
@@ -312,7 +330,21 @@ Wire Wire Line
 Wire Wire Line
 	1600 2550 1700 2550
 Wire Bus Line
-	1500 2350 1500 3150
+	1500 2350 1500 2450
+Wire Bus Line
+	1500 2450 1500 2550
+Wire Bus Line
+	1500 2550 1500 2650
+Wire Bus Line
+	1500 2650 1500 2750
+Wire Bus Line
+	1500 2750 1500 2850
+Wire Bus Line
+	1500 2850 1500 2950
+Wire Bus Line
+	1500 2950 1500 3050
+Wire Bus Line
+	1500 3050 1500 3150
 Wire Wire Line
 	10000 2650 9900 2650
 Wire Wire Line
@@ -330,7 +362,21 @@ Wire Wire Line
 Wire Wire Line
 	9900 1950 10000 1950
 Wire Bus Line
-	9800 1750 9800 2550
+	9800 1750 9800 1850
+Wire Bus Line
+	9800 1850 9800 1950
+Wire Bus Line
+	9800 1950 9800 2050
+Wire Bus Line
+	9800 2050 9800 2150
+Wire Bus Line
+	9800 2150 9800 2250
+Wire Bus Line
+	9800 2250 9800 2350
+Wire Bus Line
+	9800 2350 9800 2450
+Wire Bus Line
+	9800 2450 9800 2550
 Wire Wire Line
 	9900 1200 10000 1200
 Wire Wire Line
@@ -340,7 +386,15 @@ Wire Wire Line
 Wire Wire Line
 	9900 900  10000 900 
 Wire Bus Line
-	9800 700  9800 1200
+	9800 700  9800 800 
+Wire Bus Line
+	9800 800  9800 900 
+Wire Bus Line
+	9800 900  9800 1000
+Wire Bus Line
+	9800 1000 9800 1100
+Wire Bus Line
+	9800 1100 9800 1200
 Wire Wire Line
 	3050 4650 3050 3450
 Connection ~ 3050 3450
@@ -383,6 +437,12 @@ F0 "Joystick Ports" 60
 F1 "joystick.sch" 60
 F2 "PortSel01" I L 4450 1600 60 
 F3 "PortSel02" I L 4450 1700 60 
+F4 "J_Right" I L 4450 1900 60 
+F5 "J_Left" I L 4450 2000 60 
+F6 "J_Up" I L 4450 2100 60 
+F7 "J_Down" I L 4450 2200 60 
+F8 "J_Fire1" I L 4450 2300 60 
+F9 "J_Fire2" I L 4450 2400 60 
 $EndSheet
 Wire Wire Line
 	2900 2550 3000 2550
@@ -396,4 +456,40 @@ Wire Wire Line
 	3100 1700 3100 2650
 Wire Wire Line
 	3100 2650 2900 2650
+Wire Wire Line
+	2900 2750 3200 2750
+Wire Wire Line
+	3200 2750 3200 1900
+Wire Wire Line
+	3200 1900 4450 1900
+Wire Wire Line
+	4500 2000 3300 2000
+Wire Wire Line
+	3300 2000 3300 2850
+Wire Wire Line
+	3300 2850 2900 2850
+Wire Wire Line
+	2900 2950 3400 2950
+Wire Wire Line
+	3400 2950 3400 2100
+Wire Wire Line
+	3400 2100 4500 2100
+Wire Wire Line
+	4500 2200 3500 2200
+Wire Wire Line
+	3500 2200 3500 3050
+Wire Wire Line
+	3500 3050 2900 3050
+Wire Wire Line
+	2900 3150 3600 3150
+Wire Wire Line
+	3600 3150 3600 2300
+Wire Wire Line
+	3600 2300 4500 2300
+Wire Wire Line
+	4500 2400 3700 2400
+Wire Wire Line
+	3700 2400 3700 3250
+Wire Wire Line
+	3700 3250 2900 3250
 $EndSCHEMATC

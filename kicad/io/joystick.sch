@@ -101,4 +101,16 @@ Wire Wire Line
 	5250 1600 5700 1600
 Wire Wire Line
 	5250 1750 5700 1750
+Text HLabel 4300 2050 0    60   Input ~ 0
+J_Right
+Text HLabel 4250 2200 0    60   Input ~ 0
+J_Left
+Text HLabel 4200 2400 0    60   Input ~ 0
+J_Up
+Text HLabel 4250 2550 0    60   Input ~ 0
+J_Down
+Text HLabel 4200 2800 0    60   Input ~ 0
+J_Fire1
+Text HLabel 4200 2950 0    60   Input ~ 0
+J_Fire2
 $EndSCHEMATC
