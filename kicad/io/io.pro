@@ -1,4 +1,4 @@
-update=05.10.2014 20:16:31
+update=21.10.2014 14:54:00
 version=1
 last_client=eeschema
 [cvpcb]
@@ -50,9 +50,6 @@ LibName16=siliconi
 LibName17=opto
 LibName18=atmel
 LibName19=contrib
-LibName20=/home/thomas/Documents/steckschwein/kicad/lbr/65xxx
-LibName21=/home/thomas/Documents/steckschwein/kicad/lbr/ttl_ieee
-LibName22=/home/thomas/Documents/steckschwein/kicad/lbr/lp2950l
-LibName23=65xxx
-LibName24=lp2950l
-LibName25=ttl_ieee
+LibName20=65xxx
+LibName21=lp2950l
+LibName22=ttl_ieee
