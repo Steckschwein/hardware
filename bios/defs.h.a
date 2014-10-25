@@ -146,7 +146,7 @@ lcddata		= lcdctl+1
 }
 !macro PrintString .word {
 	+SetVector .word, msgptr
-        jsr lcdstring
+        jsr strout
 }
 !macro PrintStringAt .word,.x,.y {
 	ldx #.x
