@@ -1,4 +1,4 @@
-VRAM_WAIT	=	1	; 4Mhz 1 nop is sufficent, due to opcode fetch cycles - if i/o will be placed on zp one more nop must be added
+VRAM_WAIT	=	2	; 4Mhz 1 nop is sufficent, due to opcode fetch cycles - if i/o will be placed on zp one more nop must be added
 
 TEXT_COLOR	= Dark_Green
 TEXT_BGCOLOR = Black
