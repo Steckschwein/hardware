@@ -18,8 +18,13 @@ count		= clockspeed / 1000000 * jiffies
 ; IO Channels
 chn_out = $00
 chn_in  = $01
-ram_end_l   = $02
-ram_end_h   = ram_end_l+1
+
+dev_screen = $00
+dev_lcd    = $01
+dev_uart   = $02
+
+
+
 
 
 ; Cursor Position
@@ -28,6 +33,9 @@ crs_y	= $d1
 
 ; IRQ vector
 irqvec		= $e0
+; ramend
+ram_end_l   = $e4
+ram_end_h   = ram_end_l+1
 ; general purpose temp variables
 tmp0		= $f0
 tmp1		= $f1

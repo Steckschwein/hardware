@@ -5,15 +5,15 @@
 *= $e000			; ROM Start
 !src "../charsets/char.ascii.vc20.h.a"
 
-biosversion	!text "V0810c", $00	; Version String
+biosversion	!text "V2510", $00	; Version String
 
 start_msg
 !text "STECKSCHWEIN 1.0", $0d
 !text "Thomas Woinke", $0d
 !text "Marko Lauke", $0d,$0d
-!text "Bios V0810c", $0d
-!text "Clock:", $0d
-!text "RAM:", $0
+!text "BIOS    : V2510", $0d
+;!text "Clock   :", $0d
+!text "RAM end : ", $0
 ready_msg
 !text $0d,$0d,"READY.", $0d
 !text $0
@@ -192,7 +192,7 @@ check_stack
 			bne -
  			jmp .target ; Execute memcheck routine in ZP
 
-			; Broken ZP
+			; Broken ZP or stack
 
 +			txa
 			jsr lcdclear
@@ -224,12 +224,17 @@ check_stack
 			+SetVector i_irqhandler, irqvec
 
 			
+
+			lda #dev_lcd
+			sta chn_out
+
 			lda #'$'
-			jsr lcdprint
-			lda tmp0
-			jsr lcdhex
-			lda tmp1
-			jsr lcdhex
+			jsr chrout
+
+			lda ram_end_l
+			jsr hexout
+			lda ram_end_h
+			jsr hexout
 
 			+PrintStringAt biosversion, $00, $02
 			
@@ -237,16 +242,17 @@ check_stack
 			jsr	vdp_print
 
 			stz chn_out
+			
+			lda #'$'
+			jsr chrout
 
-; 			lda #'$'
-; 			jsr	i_chrout
-; 
-;  			lda tmp1
-;   			jsr i_hexout
-;   			lda tmp0
-;  			jsr i_hexout
-; 			+SetVector ready_msg, adrl
-; 			jsr	vdp_print
+			lda ram_end_l
+			jsr hexout
+			lda ram_end_h
+			jsr hexout
+
+			+SetVector ready_msg, adrl
+			jsr	vdp_print
 
 			lda	#v_reg1_16k|v_reg1_display_on;v_reg1_int
 			ldy	#v_reg1
@@ -1264,7 +1270,7 @@ pattern  !byte $aa,$55,$ff,$00
 .selfmod_start
 !pseudopc $0000 {
 .target
-      stz tmp1
+      stz ram_end_h
       
 -     ldx #num_patterns
 --    lda pattern,x
@@ -1293,9 +1299,9 @@ b     cmp start_check
 
 +	  
 	  lda a+2
-	  sta tmp0
+	  sta ram_end_l
 	  lda a+1
-	  sta tmp1
+	  sta ram_end_h
 
       jmp .back_from_memcheck
 }
