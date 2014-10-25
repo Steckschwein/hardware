@@ -152,7 +152,7 @@ vdp_print:
 	ldy		#$00
 	
 --	jsr		vdp_set_addr
--	lda		(adrl),y
+-	lda		(msgptr),y
 	beq		++
 	cmp		#$0d
 	bne		+
