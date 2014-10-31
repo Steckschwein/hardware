@@ -12,56 +12,63 @@
 
 #include "keyboard.h"
 #include "keycodes.h"
-
-void pump(uint8_t b)
-{
-	uint8_t bit=7;
-
-	do
-	{
-		if (b & _BV(bit))
-		{
-			PORTA |= _BV(1);
-		}
-		else
-		{
-			PORTA &= ~_BV(1);
-		}
-		
-	;	_delay_ms(5);
-		PORTA |= _BV(0);
-	;	_delay_ms(5);
-		PORTA &= ~_BV(0);
-	
-	}
-	while(bit-- > 0);
-}	
+                    
+unsigned char key = 0b10100001;
+unsigned char bit;
 
 int main( void )
 {
 	
-	unsigned char key, tmp = 0;
+	PCMSK |= (1<<PCINT0);	// pin change mask: listen to portb bit 0
+	GIMSK |= (1<<PCIE);	// enable PCINT interrupt 
 	
-	keyboardInit( );
+	//keyboardInit( );
 	
-	DDRB = 0xff;
+	bit=0;
+	DDRB = 0xfe;
 	PORTB = 0x00;
 	
-	DDRA = 3;
-	PORTA=0;
-
 	sei( );
+
+ 	PORTB = (key & 1)<<PB1;
+
 
 	while( 1 )
 	{
-		if (( key = getKey( )) != 0 )
-		{
-			PORTB=key;
-			//pump(key);
-			_delay_ms(10);
-		}
-		PORTB=0;
-		//pump(0);
+
+
+		// if (( key = getKey( )) != 0 )
+		// {
+			
+		// }
 	}
 	return 0;
+}
+
+ISR(PCINT_vect)	 
+{			     
+	if( (PINB & (1 << PB0)) == 1) 
+	{
+		return;
+    } 
+    
+    
+
+ 	key = key>>1;
+	PORTB = (key & 1)<<PB1;
+
+  	
+   	bit ++;
+
+
+   	if (bit == 8)
+    {
+    	// key = getKey();
+    	key = 0b10100001;;
+    	bit = 0;
+    	PORTB = (key & 1)<<PB1;
+
+
+    }
+   	return;
 }
