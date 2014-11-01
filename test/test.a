@@ -1,17 +1,41 @@
-*=$1000
+*=$0800
 !src "../bios/defs.h.a"
 !src "../bios/bios.h.a"
 
+	lda #dev_lcd
+	sta chn_out 
 	jsr lcdclear
-	cli
 
 
-	+PrintString hello
-	ldx #$00
-	ldy #$02
-	jsr lcdxy
-	+PrintString num
--	jmp -	
+;	+PrintString hello
+;	ldx #$00
+;	ldy #$02
+;	jsr lcdxy
+;	+PrintString num
+
+
+	lda #$06
+	sta $02f0
+-	jmp -
+	lda $02f0
+	jsr lcdhex
+
+	lda #$01
+	sta $02f0
+	lda $02f0
+	tax
+	lda #$00
+	sta $02f0
+	txa
+	jsr lcdhex
+
+
+-	jmp -
+	
+	
+	
+	jmp upload
+
 
 
 

@@ -30,7 +30,12 @@
 ;    Equates giving memory assignments, machine
 ;    registers, and disk parameters.
 * = $1000
-;
+
+          lda #dev_uart
+          sta chn_out
+i_uart_tx = $f4b5
+i_uart_rx = $f4c2
+
 SSIZE     =128           ; sector size in bytes
 NBUF      =8             ; number of buffers desired in RAM
 ;                             (SSIZE*NBUF >= 1024 bytes)
@@ -71,9 +76,8 @@ TCR = crlf
 ;    to Boot up  code, and parameters describing the system.
 ;
 ;
-          *=*+2
-          lda #$02
-          sta chn_out
+;          *=*+2
+
                          ; User cold entry point
 ENTER     NOP            ; Vector to COLD entry
           JMP COLD+2     ;
@@ -174,8 +178,8 @@ XBLANK    =xblank         ; print one blank
 CRLF      =crlf         ; print a carriage return and line feed.
 ;HEX2      =$D2CE         ; print accum as two hex numbers
 HEX2      =hexout         ; print accum as two hex numbers
-LETTER    =chrout         ; print accum as one ASCII character
-ONEKEY    =chrin        ; wait for keystroke
+LETTER    = chrout         ; print accum as one ASCII character
+ONEKEY    = chrin    ; wait for keystroke
 XW        =$12           ; scratch reg. to next code field add
 NP        =$14           ; scratch reg. pointing to name field
 ;

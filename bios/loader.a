@@ -1,7 +1,9 @@
 *=$0800
 !src "defs.h.a"
 !src "bios.h.a"
- 
+
+	lda #dev_lcd
+	sta chn_out 
 
 	jsr lcdclear
 	+PrintString msg
@@ -19,6 +21,12 @@ b	sta $e000
 
 done
 	+PrintString msgdone
+	
+	lda #$01
+	sta $02f0
+	
+	jmp ($fffc)
+	
 -	jmp -	
 
 msg	!text "Loading.. ",$00

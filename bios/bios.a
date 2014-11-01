@@ -5,7 +5,7 @@
 *= $e000			; ROM Start
 !src "../charsets/char.ascii.vc20.h.a"
 
-biosversion	!text "V2510a", $00	; Version String
+biosversion	!text "V2510b", $00	; Version String
 
 start_msg
 !text "STECKSCHWEIN 1.0", $0d

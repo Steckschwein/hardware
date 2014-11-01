@@ -2,10 +2,9 @@
 
 import serial
 import sys
-import time
+#import time
 import struct
 
-#baudrate=38400
 baudrate=115200
 
 try:
@@ -56,12 +55,6 @@ try:
 		print "Length %d bytes" % (bytes, )
 		print "Bytes transferred: %d" % (bytes, )
 
-#	while True:
-#		c = ser.read()
-#		if c == '':
-#			break
-#		sys.stdout.write(c)
-	
 	ser.close()
 
 except IndexError:
