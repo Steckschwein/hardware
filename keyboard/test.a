@@ -2,18 +2,15 @@
 !src "../bios/defs.h.a"
 !src "../bios/bios.h.a"
 
+	ldx #$00
+
 	jsr lcdclear
-	jsr spi_rw_byte
+-	jsr spi_r_byte
+	inx
+	cmp #$ff
+	beq -
 	jsr lcdhex
-	jsr spi_rw_byte
-	jsr lcdhex
-	jsr spi_rw_byte
-	jsr lcdhex
-	jsr spi_rw_byte
-	jsr lcdhex
-	jsr spi_rw_byte
-	jsr lcdhex
-	jsr spi_rw_byte
+	txa
 	jsr lcdhex
 -	bra - 
 
