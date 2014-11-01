@@ -8,12 +8,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <avr/io.h>
-#include <avr/delay.h>
+// #include <avr/delay.h>
 
 #include "keyboard.h"
 #include "keycodes.h"
 
-unsigned char key = 0b10101010;
+unsigned char key = 0b10001001;
 unsigned char bit;
 
 
@@ -171,9 +171,13 @@ int main( void )
 {
 	
 	spiX_initslave(0);
+	sei();
+
 	while(1)
 	{
 		spiX_put(key);
+		spiX_wait();		// wait for transmission to finish
+
 
 	}
 

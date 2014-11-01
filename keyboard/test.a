@@ -2,40 +2,12 @@
 !src "../bios/defs.h.a"
 !src "../bios/bios.h.a"
 
-	ldx #$00
-
 	jsr lcdclear
--	jsr spi_r_byte
-	inx
-	cmp #$ff
-	beq -
+
+!for i,0,7 {
+	jsr spi_r_byte
 	jsr lcdhex
-	txa
-	jsr lcdhex
+}
 -	bra - 
 
-	lda #$00
-	tax
-	inx
-
--
-	sta via1portb
-	stx via1portb
-	sta via1portb
-	stx via1portb
-	sta via1portb
-	stx via1portb
-	sta via1portb
-	stx via1portb
-	sta via1portb
-	stx via1portb
-	sta via1portb
-	stx via1portb
-	sta via1portb
-	stx via1portb
-	sta via1portb
-	stx via1portb
-
-
-	bra -
 
