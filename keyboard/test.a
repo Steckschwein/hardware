@@ -2,12 +2,100 @@
 !src "../bios/defs.h.a"
 !src "../bios/bios.h.a"
 
-	jsr lcdclear
+buffer = $0300
+rdptr  = tmp6
+wrptr  = tmp7
 
-!for i,0,7 {
+	stz rdptr
+	stz wrptr
+
+	lda #dev_uart
+	sta chn_out
+;  	jsr lcdclear
+
+; -	
+; 	jsr spi_r_byte
+; 	beq -
+;  	cmp #$ff
+;  	beq - 
+;  	jsr lcdprint
+;  	jmp -
+
+	; lda #$00
+	; sta via1ddra
+
+	sei
+
+	; Set IRQ Vector
+	lda #<kbd
+	sta irqvec
+
+	lda #>kbd
+	sta irqvec+1
+
+
+	lda #<count
+	sta via1t1cl            ; set low byte of count
+	lda #>count
+	sta via1t1ch            ; set high byte of count
+
+	lda #%11000000
+	sta via1ier             ; enable VIA1 T1 interrupts
+
+	lda #%01000000
+	sta via1acr             ; T1 continuous, PB7 disabled
+
+	;lda #%00000100
+	; lda #%10001100
+	; sta via1ier             ; enable VIA1 shift register
+
+
+	; lda #%00001100
+	; sta via1acr             ; shift register external clock
+
+
+	cli
+
+-
+	ldx wrptr
+	lda buffer, x
+	cpx #$00
+	beq -
+	dec wrptr
+
+	jsr chrout
+	
+	jmp -
+	
+kbd
+ 	pha
+ 	phx
+ 
+ 	; Interrupt from VIA1 timer?
+ 	lda #%11000000
+ 	bit via1ifr	
+ 	beq + ; no?
+
+	; acknowledje interrupt 	
+ 	bit via1t1cl
+
+
+	ldx wrptr
+	cpx #$0f
+	beq + 	
+
 	jsr spi_r_byte
-	jsr lcdhex
-}
--	bra - 
+	;lda via1porta	
+	beq +
+ 	cmp #$ff
+ 	beq + 
+
+ 	inc wrptr
+	
++	pla
+	plx
+	rti
 
 
+reset
+	jmp ($fffc)
