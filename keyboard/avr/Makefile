@@ -1,4 +1,4 @@
-SERIALDEVICE=/dev/cu.usbmodem1a12121
+SERIALDEVICE=$(shell ls -1r /dev/cu.usbmodem* | head -1)
 CC=avr-gcc
 #CFLAGS= -g -Os -Wall -mcall-prologues -mmcu=attiny2313 -DF_CPU=14745600 -D__PROG_TYPES_COMPAT__
 CFLAGS= -g -Os -Wall -mcall-prologues -mmcu=attiny2313 -DF_CPU=8000000 -D__PROG_TYPES_COMPAT__ -std=gnu99
