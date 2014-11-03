@@ -2,26 +2,35 @@
 !src "../bios/defs.h.a"
 !src "../bios/bios.h.a"
 
-buffer = $0300
+buffer = $0280 ; kbd buffer in reserved ram within io space. :-)
 ptr  = tmp7
 
 	lda #$00
 	sta ptr
 
+
 	lda #dev_lcd
 	sta chn_out
   	jsr lcdclear
 
+	; Select SPI SS for keyboard
+	; lda #%11111010
+	; sta via1portb
+
+
+; TODO: rausfinden warum hier nur datenmüll kommt
+
 ; -	
-; 	jsr spi_r_byte
+; 	lda #$ff
+
+; 	jsr spi_rw_byte
 ; 	beq -
 ;  	cmp #$ff
 ;  	beq - 
 ;  	jsr lcdprint
+
 ;  	jmp -
 
-	; lda #$00
-	; sta via1ddra
 
 	sei
 
@@ -44,21 +53,17 @@ ptr  = tmp7
 	lda #%01000000
 	sta via1acr             ; T1 continuous, PB7 disabled
 
-	;lda #%00000100
-	; lda #%10001100
-	; sta via1ier             ; enable VIA1 shift register
-
-
-	; lda #%00001100
-	; sta via1acr             ; shift register external clock
-
-
 	cli
 -
-	jsr getkey	
+	jsr getkey
+	
+	cmp #$0c
+	beq +
+
 	jsr chrout
 	jmp -
-	
++	jsr lcdclear
+	jmp -
 
 getkey
 	phx
@@ -83,7 +88,7 @@ kbd
 	; acknowledje interrupt 	
  	bit via1t1cl
 
-
+ 	
 	ldx ptr
 	cpx #$0f
 	; ptr <= $0f?
@@ -92,14 +97,28 @@ kbd
 
 	bra +
 ++
-	jsr spi_r_byte
-	;lda via1porta	
-	beq +
+
+	; ; Select SPI SS for keyboard
+	lda #%11111010
+	sta via1portb
+
+
+	lda #$ff
+ 	jsr spi_rw_byte
+
+ 	; jsr spi_r_byte
+	beq ++
  	cmp #$ff
- 	beq + 
+ 	beq ++
 
  	sta buffer, x
  	inc ptr
+
+++
+	; ; Deselect any SPI devices
+	ldx #%11111110
+	stx via1portb
+
 	
 +	pla
 	plx
