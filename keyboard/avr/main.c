@@ -14,7 +14,7 @@
 
 #define CTRL_PORT   DDRB
 #define DATA_PORT   PORTB
-//#define SS_PIN      PB4
+#define SS_PIN      PB4
 #define CLK_PIN     PB7
 #define DI_PIN      PB5
 #define DO_PIN      PB6
@@ -31,7 +31,7 @@ void init()
 	CTRL_PORT |= _BV(DO_PIN);
 	
 	//Set three wire mode and set
-	//clock to External, Negative edge.
+	//clock to External, positive edge.
 	USICR = _BV(USIWM0) | (0 << USICS0) | _BV(USICS1);
 	
 	//Clear overflow flag
@@ -42,21 +42,22 @@ void init()
 void putSPI(unsigned char val)
 {
 	USIDR = val;	
-	while ((USISR & (1 << USIOIF)) == 0) {}; // Do nothing until USI has data ready
-	res = USIDR;
-
 	//Clear the overflow flag
 	USISR = _BV(USIOIF);
 
+	while ((USISR & (1 << USIOIF)) == 0) {}; // Do nothing until USI has data ready
+	res = USIDR;
 
-	USIDR = ~res;
+//	USIDR = ~res;
 }
 
 int main( void )
 {
 	unsigned char key;
 
-	// DDRB = 0xFF;
+	DDRB &= ~(1 << SS_PIN);
+	PORTB |= _BV(PB5); // pullup on (DI)
+
 	init();
 	keyboardInit();
 	sei();
@@ -64,11 +65,18 @@ int main( void )
 	res = 0;
 	while(1)
 	{		
+		// SS_PIN must be low for us to do something
+		if(PINB & (1 << SS_PIN)) 
+		{
+    		continue;
+  		}
+
 
 		if (( key = getKey()) != 0 )
 		{	
-			putSPI(0);					
-			putSPI(key);	
+			// spi_transfer(key);	
+			putSPI(key);					
+
 			// PORTB = key;
 			// _delay_ms(10);
 		}
