@@ -3,15 +3,14 @@
 !src "../bios/bios.h.a"
 
 buffer = $0300
-rdptr  = tmp6
-wrptr  = tmp7
+ptr  = tmp7
 
-	stz rdptr
-	stz wrptr
+	lda #$00
+	sta ptr
 
-	lda #dev_uart
+	lda #dev_lcd
 	sta chn_out
-;  	jsr lcdclear
+  	jsr lcdclear
 
 ; -	
 ; 	jsr spi_r_byte
@@ -55,18 +54,23 @@ wrptr  = tmp7
 
 
 	cli
-
 -
-	ldx wrptr
-	lda buffer, x
-	cpx #$00
-	beq -
-	dec wrptr
-
+	jsr getkey	
 	jsr chrout
-	
 	jmp -
 	
+
+getkey
+	phx
+-	ldx ptr  
+	beq -		; buffer empty, wait for key
+	dex
+	lda buffer, x
+	stx ptr
+
+	plx
+	rts
+
 kbd
  	pha
  	phx
@@ -80,17 +84,22 @@ kbd
  	bit via1t1cl
 
 
-	ldx wrptr
+	ldx ptr
 	cpx #$0f
-	beq + 	
+	; ptr <= $0f?
+	bcc ++
+	beq ++
 
+	bra +
+++
 	jsr spi_r_byte
 	;lda via1porta	
 	beq +
  	cmp #$ff
  	beq + 
 
- 	inc wrptr
+ 	sta buffer, x
+ 	inc ptr
 	
 +	pla
 	plx
