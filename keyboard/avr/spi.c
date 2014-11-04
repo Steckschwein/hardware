@@ -39,5 +39,5 @@ unsigned char spiTransfer(unsigned char val)
 
 uint8_t spiSelected()
 {
-	return PINB & (0 << SS_PIN);
+	return !(PINB & (1 << SS_PIN));
 }
