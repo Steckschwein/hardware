@@ -13,20 +13,14 @@ int main( void )
 {
 	unsigned char key;
 
-
-	spiInitSlave();
 	keyboardInit();
+	spiInitSlave();
+
 	sei();
 
 	while(1)
 	{		
-		// SS_PIN must be low for us to do something
-		//if(PINB & (1 << SS_PIN)) 
-		if (! spiSelected())
-		{
-    			continue;
-  		}
-
+		while ( slaveSelect ) {}
 
 		if (( key = getKey()) != 0 )
 		{	
