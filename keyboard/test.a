@@ -103,10 +103,8 @@ kbd
 	sta via1portb
 
 
-	lda #$ff
- 	jsr spi_rw_byte
-
- 	; jsr spi_r_byte
+	; lda #$ff
+ 	jsr spi_r_byte
 	beq ++
  	cmp #$ff
  	beq ++
