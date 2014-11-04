@@ -6,7 +6,7 @@
 /*
     Initialize USI as slave
 */
-void spiInit()
+void spiInitSlave()
 {
 	//DO pin is configured for output
 	CTRL_PORT |= _BV(DO_PIN);

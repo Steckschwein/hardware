@@ -8,7 +8,7 @@
 #define DI_PIN      PB5
 #define DO_PIN      PB6
 
-void spiInit();
+void spiInitSlave();
 unsigned char spiTransfer(unsigned char);
 uint8_t spiSelected();
 
