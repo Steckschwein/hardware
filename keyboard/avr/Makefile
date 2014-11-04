@@ -6,7 +6,7 @@ OBJ2HEX=avr-objcopy
 OBJDUMP = avr-objdump
 LOADER=avrdude -c stk500v2 -P $(SERIALDEVICE) -p t2313 -b 19200 -U flash:w:
 PRG=keyboard
-OBJ= main.o keyboard.o scancodes.o
+OBJ= main.o spi.o keyboard.o scancodes.o
 all: $(PRG).elf $(PRG).hex $(PRG).lss $(PRG).eep
 
 $(PRG).elf: $(OBJ) 
