@@ -13,6 +13,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <avr/io.h>
+#include <util/delay.h>
+
 
 #include "keycodes.h"
 #include "scancodes.h"
@@ -110,6 +112,15 @@ void decode( unsigned char data )
 			// Convert the character to ASCII.
 			if (( chr = decodeScanCode( data, flags )) != 0 )
 			{
+				if (((flags & ALT_FLAG) && chr == CTL_DEL))
+				{
+					PORTB &= ~(1 << PB0);
+					_delay_ms(1);
+					PORTB |= (1 << PB0);
+
+					return;
+				}
+
 				putKey( chr );
 			}
 		}
