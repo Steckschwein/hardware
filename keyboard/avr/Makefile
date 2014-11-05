@@ -1,10 +1,11 @@
 SERIALDEVICE=$(shell ls -1r /dev/cu.usbmodem* | head -1)
+CPUSPEED=4000000
 CC=avr-gcc
 #CFLAGS= -g -Os -Wall -mcall-prologues -mmcu=attiny2313 -DF_CPU=14745600 -D__PROG_TYPES_COMPAT__
-CFLAGS= -g -Os -Wall -mcall-prologues -mmcu=attiny2313 -DF_CPU=8000000 -D__PROG_TYPES_COMPAT__ -std=gnu99
+CFLAGS= -g -Os -Wall -mcall-prologues -mmcu=attiny2313 -DF_CPU=$(CPUSPEED) -D__PROG_TYPES_COMPAT__ -std=gnu99
 OBJ2HEX=avr-objcopy
 OBJDUMP = avr-objdump
-LOADER=avrdude -c stk500v2 -P $(SERIALDEVICE) -p t2313 -b 19200 -U flash:w:
+LOADER=avrdude -c stk500v2 -P $(SERIALDEVICE) -p t2313 -b 19200 
 PRG=keyboard
 OBJ= main.o spi.o keyboard.o scancodes.o
 all: $(PRG).elf $(PRG).hex $(PRG).lss $(PRG).eep
@@ -25,5 +26,8 @@ clean :
 	rm -f *.hex *.obj *.o *.elf
 
 burn : $(PRG).hex
-	$(LOADER)$(PRG).hex -U lfuse:w:0xe0:m -U hfuse:w:0xdf:m -U efuse:w:0xff:m
+	$(LOADER) -U flash:w:$(PRG).hex 
+
+fuse : 
+	$(LOADER) -U lfuse:w:0xe0:m -U hfuse:w:0xdf:m -U efuse:w:0xff:m
 
