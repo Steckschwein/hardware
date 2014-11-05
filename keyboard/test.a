@@ -2,6 +2,7 @@
 !src "../bios/defs.h.a"
 !src "../bios/bios.h.a"
 
+txtbuf=$0300
 buffer = $0280 ; kbd buffer in reserved ram within io space. :-)
 ptr  = tmp7
 
@@ -11,7 +12,6 @@ ptr  = tmp7
 
 	lda #dev_lcd
 	sta chn_out
-  	jsr lcdclear
 
 	; Select SPI SS for keyboard
 	; lda #%11111010
@@ -54,17 +54,43 @@ ptr  = tmp7
 	sta via1acr             ; T1 continuous, PB7 disabled
 
 	cli
--
-	jsr getkey
+
+main
+  	jsr lcdclear
+
+	+PrintString text1
+	ldx #$00
+	ldy #$02
+	jsr lcdxy
+
+	ldx #$00
+-	jsr getkey
 	
 	cmp #$0c
 	beq +
 
 	jsr chrout
+
+	cmp #$0d ; return gedrueckt?
+	beq out
+
+	sta txtbuf,x
+	inx
+	stz txtbuf,x
+
+
 	jmp -
 +	jsr lcdclear
 	jmp -
 
+out jsr lcdclear
+	+PrintString  text2
+	+PrintString  txtbuf
+
+--	jsr getkey
+	cmp #$0d
+	bne --
+	jmp main
 getkey
 	phx
 -	ldx ptr  
@@ -125,3 +151,7 @@ kbd
 
 reset
 	jmp ($fffc)
+
+
+text1	!text "Wie heisst du?", $00
+text2	!text "Hallo, ", $00
