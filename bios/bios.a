@@ -5,13 +5,13 @@
 *= $e000			; ROM Start
 !src "../charsets/char.ascii.vc20.h.a"
 
-biosversion	!text "V2510b", $00	; Version String
+biosversion	!text "V0611", $00	; Version String
 
 start_msg
 !text "STECKSCHWEIN 1.0", $0d
 !text "Thomas Woinke", $0d
 !text "Marko Lauke", $0d,$0d
-!text "BIOS    : V2510a", $0d
+!text "BIOS    : V0611", $0d
 ;!text "Clock   :", $0d
 !text "RAM end : ", $0
 ready_msg
@@ -312,7 +312,27 @@ check_stack
 ; IO_NMI Routine. Handle NMI
 ;----------------------------------------------------------------------------------------------
 do_nmi 
-			;jmp read_data
+			
+			pha
+			jsr lcdclear
+
+			jsr lcdhex
+			
+			lda #' '
+			jsr lcdprint
+			
+			txa
+			jsr lcdhex
+
+			lda #' '
+			jsr lcdprint
+
+
+			tya
+			jsr lcdhex
+
+		
+			pla
 			rti
 
 ;----------------------------------------------------------------------------------------------
