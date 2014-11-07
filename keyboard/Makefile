@@ -5,7 +5,7 @@ clean:
 
 avr:
 	( cd avr ; make )
-%.bin: %.a
+%.bin: %.a ../bios/defs.h.a
 	acme -v -f plain --cpu 65c02 -o $@ $<
 
 transfer: all
