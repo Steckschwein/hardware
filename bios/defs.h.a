@@ -3,9 +3,18 @@
 ;----------------------------------------------------------------------------------------------
 ; constants
 ;----------------------------------------------------------------------------------------------
-clockspeed	= 4000000 ; 3 MHz
-jiffies 	= 9999  ; jiffy count 100Hz for 1MHz systen
-count		= clockspeed / 1000000 * jiffies
+clockspeed	= 4 ; 4 MHz
+jiffies    = 32767  ; jiffy count 100Hz for 1MHz systen
+count		= clockspeed * jiffies
+
+; IO Channels
+chn_out = $00
+chn_in  = $01
+
+dev_screen = $00
+dev_lcd    = $01
+dev_uart   = $02
+
 ;
 ;CSUART   ; UART at $0200
 ;CSVIA    ; VIA  at $0210
@@ -16,14 +25,6 @@ count		= clockspeed / 1000000 * jiffies
 ; zeropage locations 
 ;----------------------------------------------------------------------------------------------
 
-; IO Channels
-chn_out = $00
-chn_in  = $01
-
-dev_screen = $00
-dev_lcd    = $01
-dev_uart   = $02
-
 
 
 
@@ -31,6 +32,12 @@ dev_uart   = $02
 ; Cursor Position
 crs_x	= $d0
 crs_y	= $d1
+
+; Keyboard buffer pointer
+kbd_ptr = $d2
+; Keyboard status flags
+; Bit 7; Keyboard on/off
+kbd_flg = $d3
 
 ; IRQ vector
 irqvec		= $e0
@@ -60,6 +67,7 @@ addr 		= $e2
 adrl     =addr
 adrh     =addr+1
 
+kbd_buf = $0280 ; kbd buffer in reserved ram within io space. :-)
 
 ; SD CArd command parameter/result buffer
 sd_cmd_param = $0300
