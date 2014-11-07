@@ -2,27 +2,32 @@
 !src "../bios/defs.h.a"
 !src "../bios/bios.h.a"
 
+
 txtbuf=$0300
-buffer = $0280 ; kbd buffer in reserved ram within io space. :-)
-ptr  = tmp7
 
-	lda #$00
-	sta ptr
-
+	jsr lcdclear
 
 	lda #dev_lcd
 	sta chn_out
 
-	; Select SPI SS for keyboard
-	; lda #%11111010
-	; sta via1portb
+	
+	stz kbd_ptr
+
+	stz kbd_flg
+
+
+	jsr kbd_enable
+	; Read first byte from Keyboard/SPI
+	jsr spi_r_byte
+
+
+
 
 
 ; TODO: rausfinden warum hier nur datenmüll kommt
 
 ; -	
 ; 	lda #$ff
-
 ; 	jsr spi_rw_byte
 ; 	beq -
 ;  	cmp #$ff
@@ -93,14 +98,15 @@ out jsr lcdclear
 	jmp main
 getkey
 	phx
--	ldx ptr  
-	beq -		; buffer empty, wait for key
+-	ldx kbd_ptr  
+	beq -		; kbd_buf empty, wait for key
 	dex
-	lda buffer, x
-	stx ptr
+	lda kbd_buf, x
+	stx kbd_ptr
 
 	plx
 	rts
+
 
 kbd
  	pha
@@ -111,37 +117,35 @@ kbd
  	bit via1ifr	
  	beq + ; no?
 
-	; acknowledje interrupt 	
+	; acknowledge interrupt 	
  	bit via1t1cl
 
+
+ 	bit kbd_flg
+ 	bmi +
+
  	
-	ldx ptr
-	cpx #$0f
-	; ptr <= $0f?
-	bcc ++
+	ldx kbd_ptr
+	cpx #$00
+	; kbd_ptr <= $0f?
+	bcs ++
 	beq ++
 
 	bra +
 ++
 
-	; ; Select SPI SS for keyboard
-	lda #%11111010
-	sta via1portb
-
 
 	; lda #$ff
  	jsr spi_r_byte
 	beq ++
- 	cmp #$ff
- 	beq ++
-
- 	sta buffer, x
- 	inc ptr
+ 	; cmp #$ff
+ 	; beq ++
+	
+	
+ 	sta kbd_buf, x
+ 	inc kbd_ptr
 
 ++
-	; ; Deselect any SPI devices
-	ldx #%11111110
-	stx via1portb
 
 	
 +	pla
@@ -151,6 +155,33 @@ kbd
 
 reset
 	jmp ($fffc)
+
+kbd_disable
+	pha
+
+	lda #$80
+	ora kbd_flg
+	sta kbd_flg
+	; Deselect any SPI devices
+	lda #%11111110
+	sta via1portb
+	
+	pla
+	rts
+
+kbd_enable
+	pha
+	; Select SPI SS for keyboard
+	lda #%01111010
+	; and via1portb
+	sta via1portb
+
+	lda #$7f
+	and kbd_flg
+	sta kbd_flg
+
+	pla
+	rts
 
 
 text1	!text "Wie heisst du?", $00
