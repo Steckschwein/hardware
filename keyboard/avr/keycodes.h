@@ -42,6 +42,9 @@
 #define CTL_Y 25
 #define CTL_Z 26
 
+
+
+
 #define ALT_A  0xd0
 #define ALT_B  0xd1
 #define ALT_C  0xd2
@@ -172,6 +175,9 @@
 #define CTL_PGDN 0xcd
 #define CTL_HOME 0xce
 #define CTL_END 0xcf
+
+#define SYSRQ 0x37
+
 
 #define C_LOCK 0xff
 

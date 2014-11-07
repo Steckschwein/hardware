@@ -11,7 +11,7 @@
 
 int main( void )
 {
-	unsigned char key;
+	register char key asm("r17");
 
 	keyboardInit();
 	spiInitSlave();
@@ -20,7 +20,7 @@ int main( void )
 
 	while(1)
 	{		
-		while ( slaveSelect ) {}
+		//while ( slaveSelect ) {}
 
 		if (( key = getKey()) != 0 )
 		{	

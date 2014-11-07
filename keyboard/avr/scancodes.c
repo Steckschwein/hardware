@@ -87,7 +87,8 @@
 
 
 // German Keymap
-static const prog_uchar  scan_to_ascii[][5] = 
+//static const prog_uchar  scan_to_ascii[][5] = 
+static const unsigned char  scan_to_ascii[][5] PROGMEM = 
 {
 {0x01, F9,	SHIFT_F9,	CTL_F9,		ALT_F9},
 {0x03, F5,	SHIFT_F5,	CTL_F5,		ALT_F5},
@@ -128,7 +129,8 @@ static const prog_uchar  scan_to_ascii[][5] =
 {0x34, 'g',	'G',		CTL_G,		NOT_USED},
 {0x35, 'z',	'Z',		CTL_Z,		NOT_USED},
 {0x36, '6',	'&',		NOT_USED,	NOT_USED},
-{0x3a, 'm',	'M',		CTL_M,		NOT_USED},
+{0x37, SYSRQ,			SYSRQ,	SYSRQ,		SYSRQ},
+{0x3a, 'm',	'M',		CTL_M,		ALT_M},
 {0x3b, 'j',	'J',		CTL_J,		NOT_USED},
 {0x3c, 'u',	'U',		CTL_U,		NOT_USED},
 {0x3d, '7',	'/',		NOT_USED,	'{'},
@@ -145,7 +147,6 @@ static const prog_uchar  scan_to_ascii[][5] =
 {0x4c, 'ö',	'Ö',		NOT_USED,	NOT_USED},
 {0x4d, 'p',	'P',		CTL_P,		NOT_USED},
 {0x4e, 'ß',	'?',		NOT_USED,	'\\'},
-
 {0x52, 'ä',	'Ä',		NOT_USED,	NOT_USED},
 {0x54, 'ü',	'Ü',		NOT_USED,	NOT_USED},
 {0x55, '´',	'`',		NOT_USED,	NOT_USED},
@@ -167,11 +168,13 @@ static const prog_uchar  scan_to_ascii[][5] =
 {0x78, F11,	SHIFT_F11,	CTL_F11,	ALT_F11},
 {0x7a, PGDN,	SHIFT_PGDN,	CTL_PGDN,	NOT_USED},
 {0x7d, PGUP,	SHIFT_PGUP,	CTL_PGUP,	NOT_USED},
-{0x83, F7,	SHIFT_F7,	CTL_F7,		ALT_F7}
+{0x83, F7,	SHIFT_F7,	CTL_F7,		ALT_F7},
+{0x84, SYSRQ,			SYSRQ,	SYSRQ,		SYSRQ}
+
 };
 
 
-unsigned char keyCount = 76; // Count of above keys.
+unsigned char keyCount = 78; // Count of above keys.
 
 unsigned char decodeScanCode( unsigned char scanCode, unsigned char flags )
 {

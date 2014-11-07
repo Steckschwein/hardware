@@ -112,11 +112,25 @@ void decode( unsigned char data )
 			// Convert the character to ASCII.
 			if (( chr = decodeScanCode( data, flags )) != 0 )
 			{
+				// Ctrl-alt-del
+				// pull PB0 low for a moment to trigger hardware reset
 				if (((flags & ALT_FLAG) && chr == CTL_DEL))
 				{
 					PORTB &= ~(1 << PB0);
 					_delay_ms(1);
 					PORTB |= (1 << PB0);
+
+					return;
+				}
+
+				// ALT-M 
+				// Pull PB1 low for a moment to trigger NMI
+				// TODO: Map this to SysRq key
+				if (chr == ALT_M)
+				{
+					PORTB &= ~(1 << PB1);
+					_delay_ms(1);
+					PORTB |= (1 << PB1);
 
 					return;
 				}
