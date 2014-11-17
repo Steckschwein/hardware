@@ -49,7 +49,8 @@ void spiInitSlave()
 
 unsigned char spiTransfer(unsigned char val)
 {
-	// GIMSK &= ~(1 << INT0);		// Disable INT0 interrupt		
+	static uint8_t key;
+	static uint8_t tmp = 0;
 	
 	
 	USIDR = val;	
@@ -57,8 +58,9 @@ unsigned char spiTransfer(unsigned char val)
 	USISR = _BV(USIOIF);
 
 	while ((USISR & (1 << USIOIF)) == 0) {}; // Do nothing until USI has data ready
-	// GIMSK |= (1 << INT0);	// Enable INT0 interrupt	
-	return USIDR;
+	key = USIDR;
+	
+	return key;
 }
 
 // unsigned char spiTransfer(unsigned char val)

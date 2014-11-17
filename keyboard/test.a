@@ -25,10 +25,11 @@ txtbuf=$0300
 
 
 ; TODO: rausfinden warum hier nur datenmüll kommt
-; -	
 ; 	jsr kbd_enable	
+; -	
+
 ; 	jsr spi_r_byte
-; 	jsr kbd_disable
+
 ; 	; jsr delay
 ; 	beq -
 ;  	cmp #$ff
@@ -36,10 +37,10 @@ txtbuf=$0300
 ;  	jsr lcdprint
 
 	
-; - 	jmp -
+;  	jmp -
 
 ; delay
-; !for i,0,256 {
+; !for i,0,1024 {
 ; 	nop
 ; }
 ; 	rts

@@ -3,29 +3,29 @@ keyboard.elf:     file format elf32-avr
 
 Sections:
 Idx Name          Size      VMA       LMA       File off  Algn
-  0 .text         00000490  00000000  00000000  00000094  2**1
+  0 .text         0000049c  00000000  00000000  00000094  2**1
                   CONTENTS, ALLOC, LOAD, READONLY, CODE
-  1 .data         00000002  00800060  00000490  00000524  2**0
+  1 .data         00000002  00800060  0000049c  00000530  2**0
                   CONTENTS, ALLOC, LOAD, DATA
-  2 .bss          00000019  00800062  00800062  00000526  2**0
+  2 .bss          00000053  00800062  00800062  00000532  2**0
                   ALLOC
-  3 .comment      00000011  00000000  00000000  00000526  2**0
+  3 .comment      00000011  00000000  00000000  00000532  2**0
                   CONTENTS, READONLY
-  4 .debug_aranges 000000e0  00000000  00000000  00000538  2**3
+  4 .debug_aranges 000000e0  00000000  00000000  00000548  2**3
                   CONTENTS, READONLY, DEBUGGING
-  5 .debug_info   000008d7  00000000  00000000  00000618  2**0
+  5 .debug_info   000008fa  00000000  00000000  00000628  2**0
                   CONTENTS, READONLY, DEBUGGING
-  6 .debug_abbrev 000003ff  00000000  00000000  00000eef  2**0
+  6 .debug_abbrev 0000041d  00000000  00000000  00000f22  2**0
                   CONTENTS, READONLY, DEBUGGING
-  7 .debug_line   000003b6  00000000  00000000  000012ee  2**0
+  7 .debug_line   000003b7  00000000  00000000  0000133f  2**0
                   CONTENTS, READONLY, DEBUGGING
-  8 .debug_frame  00000134  00000000  00000000  000016a4  2**2
+  8 .debug_frame  00000134  00000000  00000000  000016f8  2**2
                   CONTENTS, READONLY, DEBUGGING
-  9 .debug_str    000001c0  00000000  00000000  000017d8  2**0
+  9 .debug_str    000001c0  00000000  00000000  0000182c  2**0
                   CONTENTS, READONLY, DEBUGGING
- 10 .debug_loc    0000047b  00000000  00000000  00001998  2**0
+ 10 .debug_loc    00000450  00000000  00000000  000019ec  2**0
                   CONTENTS, READONLY, DEBUGGING
- 11 .debug_ranges 00000010  00000000  00000000  00001e13  2**0
+ 11 .debug_ranges 00000010  00000000  00000000  00001e3c  2**0
                   CONTENTS, READONLY, DEBUGGING
 
 Disassembly of section .text:
@@ -142,7 +142,7 @@ Disassembly of section .text:
  13e:	10 e0       	ldi	r17, 0x00	; 0
  140:	a0 e6       	ldi	r26, 0x60	; 96
  142:	b0 e0       	ldi	r27, 0x00	; 0
- 144:	e0 e9       	ldi	r30, 0x90	; 144
+ 144:	ec e9       	ldi	r30, 0x9C	; 156
  146:	f4 e0       	ldi	r31, 0x04	; 4
  148:	02 c0       	rjmp	.+4      	; 0x14e <__do_copy_data+0x10>
  14a:	05 90       	lpm	r0, Z+
@@ -161,11 +161,11 @@ Disassembly of section .text:
  15c:	1d 92       	st	X+, r1
 
 0000015e <.do_clear_bss_start>:
- 15e:	ab 37       	cpi	r26, 0x7B	; 123
+ 15e:	a5 3b       	cpi	r26, 0xB5	; 181
  160:	b2 07       	cpc	r27, r18
  162:	e1 f7       	brne	.-8      	; 0x15c <.do_clear_bss_loop>
- 164:	51 d1       	rcall	.+674    	; 0x408 <main>
- 166:	92 c1       	rjmp	.+804    	; 0x48c <_exit>
+ 164:	59 d1       	rcall	.+690    	; 0x418 <main>
+ 166:	98 c1       	rjmp	.+816    	; 0x498 <_exit>
 
 00000168 <__bad_interrupt>:
  168:	4b cf       	rjmp	.-362    	; 0x0 <__vectors>
@@ -210,19 +210,19 @@ void print_hexbyte(uint8_t i)
 	putchar('0');
  18e:	80 e3       	ldi	r24, 0x30	; 48
  190:	90 e0       	ldi	r25, 0x00	; 0
- 192:	44 d1       	rcall	.+648    	; 0x41c <putchar>
+ 192:	4a d1       	rcall	.+660    	; 0x428 <putchar>
 	putchar('x');
  194:	88 e7       	ldi	r24, 0x78	; 120
  196:	90 e0       	ldi	r25, 0x00	; 0
- 198:	41 d1       	rcall	.+642    	; 0x41c <putchar>
+ 198:	47 d1       	rcall	.+654    	; 0x428 <putchar>
 	putchar(h);
  19a:	8d 2f       	mov	r24, r29
  19c:	90 e0       	ldi	r25, 0x00	; 0
- 19e:	3e d1       	rcall	.+636    	; 0x41c <putchar>
+ 19e:	44 d1       	rcall	.+648    	; 0x428 <putchar>
 	putchar(l);
  1a0:	8c 2f       	mov	r24, r28
  1a2:	90 e0       	ldi	r25, 0x00	; 0
- 1a4:	3b d1       	rcall	.+630    	; 0x41c <putchar>
+ 1a4:	41 d1       	rcall	.+642    	; 0x428 <putchar>
 }
  1a6:	df 91       	pop	r29
  1a8:	cf 91       	pop	r28
@@ -235,15 +235,15 @@ void print_hexbyte(uint8_t i)
 void init_kb(void)
 {
 	kb_inptr =  kb_buffer;					  // Initialize buffer
- 1ac:	87 e6       	ldi	r24, 0x67	; 103
+ 1ac:	89 e6       	ldi	r24, 0x69	; 105
  1ae:	90 e0       	ldi	r25, 0x00	; 0
- 1b0:	90 93 70 00 	sts	0x0070, r25
- 1b4:	80 93 6f 00 	sts	0x006F, r24
+ 1b0:	90 93 aa 00 	sts	0x00AA, r25
+ 1b4:	80 93 a9 00 	sts	0x00A9, r24
 	kb_outptr = kb_buffer;
- 1b8:	90 93 72 00 	sts	0x0072, r25
- 1bc:	80 93 71 00 	sts	0x0071, r24
+ 1b8:	90 93 ac 00 	sts	0x00AC, r25
+ 1bc:	80 93 ab 00 	sts	0x00AB, r24
 	kb_buffcnt = 0;
- 1c0:	10 92 66 00 	sts	0x0066, r1
+ 1c0:	10 92 68 00 	sts	0x0068, r1
 
 	MCUCR 	= (1 << ISC01);					  // INT0 interrupt on falling edge
  1c4:	82 e0       	ldi	r24, 0x02	; 2
@@ -260,38 +260,38 @@ void put_kbbuff(uint8_t c)
 	// cli();
 
 	if (kb_buffcnt < KB_BUFF_SIZE)			  // If buffer not full
- 1ce:	90 91 66 00 	lds	r25, 0x0066
- 1d2:	98 30       	cpi	r25, 0x08	; 8
+ 1ce:	90 91 68 00 	lds	r25, 0x0068
+ 1d2:	90 34       	cpi	r25, 0x40	; 64
  1d4:	f0 f4       	brcc	.+60     	; 0x212 <put_kbbuff+0x44>
 	{
 		// Put character into buffer
 		// Increment pointer
 		*kb_inptr++ = c;
- 1d6:	e0 91 6f 00 	lds	r30, 0x006F
- 1da:	f0 91 70 00 	lds	r31, 0x0070
+ 1d6:	e0 91 a9 00 	lds	r30, 0x00A9
+ 1da:	f0 91 aa 00 	lds	r31, 0x00AA
  1de:	9f 01       	movw	r18, r30
  1e0:	2f 5f       	subi	r18, 0xFF	; 255
  1e2:	3f 4f       	sbci	r19, 0xFF	; 255
- 1e4:	30 93 70 00 	sts	0x0070, r19
- 1e8:	20 93 6f 00 	sts	0x006F, r18
+ 1e4:	30 93 aa 00 	sts	0x00AA, r19
+ 1e8:	20 93 a9 00 	sts	0x00A9, r18
  1ec:	80 83       	st	Z, r24
 		kb_buffcnt++;
- 1ee:	80 91 66 00 	lds	r24, 0x0066
+ 1ee:	80 91 68 00 	lds	r24, 0x0068
  1f2:	8f 5f       	subi	r24, 0xFF	; 255
- 1f4:	80 93 66 00 	sts	0x0066, r24
+ 1f4:	80 93 68 00 	sts	0x0068, r24
 
 		// Pointer wrapping
 		if (kb_inptr >= kb_buffer + KB_BUFF_SIZE)
- 1f8:	80 91 6f 00 	lds	r24, 0x006F
- 1fc:	90 91 70 00 	lds	r25, 0x0070
- 200:	8f 56       	subi	r24, 0x6F	; 111
+ 1f8:	80 91 a9 00 	lds	r24, 0x00A9
+ 1fc:	90 91 aa 00 	lds	r25, 0x00AA
+ 200:	89 5a       	subi	r24, 0xA9	; 169
  202:	90 40       	sbci	r25, 0x00	; 0
  204:	30 f0       	brcs	.+12     	; 0x212 <put_kbbuff+0x44>
 			kb_inptr = kb_buffer;
- 206:	87 e6       	ldi	r24, 0x67	; 103
+ 206:	89 e6       	ldi	r24, 0x69	; 105
  208:	90 e0       	ldi	r25, 0x00	; 0
- 20a:	90 93 70 00 	sts	0x0070, r25
- 20e:	80 93 6f 00 	sts	0x006F, r24
+ 20a:	90 93 aa 00 	sts	0x00AA, r25
+ 20e:	80 93 a9 00 	sts	0x00A9, r24
  212:	08 95       	ret
 
 00000214 <decode>:
@@ -570,242 +570,241 @@ ISR (INT0_vect)
  388:	18 95       	reti
 
 0000038a <get_kbchar>:
+int get_kbchar(void)
 {
 	int byte;
 
 	// Wait for data
-	// while(kb_buffcnt == 0);
-	if (kb_buffcnt == 0)
- 38a:	80 91 66 00 	lds	r24, 0x0066
+	while(kb_buffcnt == 0);
+ 38a:	80 91 68 00 	lds	r24, 0x0068
  38e:	88 23       	and	r24, r24
- 390:	f9 f0       	breq	.+62     	; 0x3d0 <get_kbchar+0x46>
-	{
-		return 0;
-	}
+ 390:	e1 f3       	breq	.-8      	; 0x38a <get_kbchar>
+	// if (kb_buffcnt == 0)
+	// {
+	// 	return 0;
+	// }
 
-	uint8_t tmp = GIMSK;
- 392:	4b b7       	in	r20, 0x3b	; 59
+	uint8_t tmp = SREG;
+ 392:	4f b7       	in	r20, 0x3f	; 63
 	cli();
  394:	f8 94       	cli
 
 	// Get byte - Increment pointer
 	byte = *kb_outptr++;
- 396:	e0 91 71 00 	lds	r30, 0x0071
- 39a:	f0 91 72 00 	lds	r31, 0x0072
- 39e:	cf 01       	movw	r24, r30
- 3a0:	01 96       	adiw	r24, 0x01	; 1
- 3a2:	90 93 72 00 	sts	0x0072, r25
- 3a6:	80 93 71 00 	sts	0x0071, r24
- 3aa:	20 81       	ld	r18, Z
- 3ac:	30 e0       	ldi	r19, 0x00	; 0
+ 396:	e0 91 ab 00 	lds	r30, 0x00AB
+ 39a:	f0 91 ac 00 	lds	r31, 0x00AC
+ 39e:	9f 01       	movw	r18, r30
+ 3a0:	2f 5f       	subi	r18, 0xFF	; 255
+ 3a2:	3f 4f       	sbci	r19, 0xFF	; 255
+ 3a4:	30 93 ac 00 	sts	0x00AC, r19
+ 3a8:	20 93 ab 00 	sts	0x00AB, r18
+ 3ac:	80 81       	ld	r24, Z
+ 3ae:	90 e0       	ldi	r25, 0x00	; 0
 
 	// Pointer wrapping
 	if (kb_outptr >= kb_buffer + KB_BUFF_SIZE)
- 3ae:	8f 56       	subi	r24, 0x6F	; 111
- 3b0:	90 40       	sbci	r25, 0x00	; 0
- 3b2:	30 f0       	brcs	.+12     	; 0x3c0 <get_kbchar+0x36>
+ 3b0:	29 5a       	subi	r18, 0xA9	; 169
+ 3b2:	30 40       	sbci	r19, 0x00	; 0
+ 3b4:	30 f0       	brcs	.+12     	; 0x3c2 <get_kbchar+0x38>
 		kb_outptr = kb_buffer;
- 3b4:	87 e6       	ldi	r24, 0x67	; 103
- 3b6:	90 e0       	ldi	r25, 0x00	; 0
- 3b8:	90 93 72 00 	sts	0x0072, r25
- 3bc:	80 93 71 00 	sts	0x0071, r24
+ 3b6:	29 e6       	ldi	r18, 0x69	; 105
+ 3b8:	30 e0       	ldi	r19, 0x00	; 0
+ 3ba:	30 93 ac 00 	sts	0x00AC, r19
+ 3be:	20 93 ab 00 	sts	0x00AB, r18
 
 	// Decrement buffer count
 	kb_buffcnt--;
- 3c0:	80 91 66 00 	lds	r24, 0x0066
- 3c4:	81 50       	subi	r24, 0x01	; 1
- 3c6:	80 93 66 00 	sts	0x0066, r24
+ 3c2:	20 91 68 00 	lds	r18, 0x0068
+ 3c6:	21 50       	subi	r18, 0x01	; 1
+ 3c8:	20 93 68 00 	sts	0x0068, r18
 
-	GIMSK = tmp;
- 3ca:	4b bf       	out	0x3b, r20	; 59
-
-	return byte;
- 3cc:	c9 01       	movw	r24, r18
- 3ce:	08 95       	ret
-
-	// Wait for data
-	// while(kb_buffcnt == 0);
-	if (kb_buffcnt == 0)
-	{
-		return 0;
- 3d0:	80 e0       	ldi	r24, 0x00	; 0
- 3d2:	90 e0       	ldi	r25, 0x00	; 0
-	kb_buffcnt--;
-
-	GIMSK = tmp;
+	SREG = tmp;
+ 3cc:	4f bf       	out	0x3f, r20	; 63
 
 	return byte;
 }
- 3d4:	08 95       	ret
+ 3ce:	08 95       	ret
 
-000003d6 <spiInitSlave>:
+000003d0 <spiInitSlave>:
     Initialize USI as slave
 */
 void spiInitSlave()
 {
 	//DO pin is configured for output
 	CTRL_PORT |= _BV(DO_PIN);
- 3d6:	be 9a       	sbi	0x17, 6	; 23
+ 3d0:	be 9a       	sbi	0x17, 6	; 23
 
 	CTRL_PORT |= _BV(PB0) | _BV(PB1);
- 3d8:	87 b3       	in	r24, 0x17	; 23
- 3da:	83 60       	ori	r24, 0x03	; 3
- 3dc:	87 bb       	out	0x17, r24	; 23
+ 3d2:	87 b3       	in	r24, 0x17	; 23
+ 3d4:	83 60       	ori	r24, 0x03	; 3
+ 3d6:	87 bb       	out	0x17, r24	; 23
 
 	// SS as input
 	CTRL_PORT &= ~(1 << SS_PIN);
- 3de:	bc 98       	cbi	0x17, 4	; 23
+ 3d8:	bc 98       	cbi	0x17, 4	; 23
 	// Enable pin change interrupt for SS_PIN
 	// PCMSK |= (1<<PCINT4	);	
 	// GIMSK |= (1<<PCIE);	
 
 	// pullup on (DI)
 	DATA_PORT |= _BV(DI_PIN); 
- 3e0:	c5 9a       	sbi	0x18, 5	; 24
+ 3da:	c5 9a       	sbi	0x18, 5	; 24
 	
 	// RESET
 	DATA_PORT |= _BV(PB0); 
- 3e2:	c0 9a       	sbi	0x18, 0	; 24
+ 3dc:	c0 9a       	sbi	0x18, 0	; 24
 
 	// NMI
 	DATA_PORT |= _BV(PB1); 
- 3e4:	c1 9a       	sbi	0x18, 1	; 24
+ 3de:	c1 9a       	sbi	0x18, 1	; 24
 
 	//Clear overflow flag
 	USISR = _BV(USIOIF);
- 3e6:	80 e4       	ldi	r24, 0x40	; 64
- 3e8:	8e b9       	out	0x0e, r24	; 14
+ 3e0:	80 e4       	ldi	r24, 0x40	; 64
+ 3e2:	8e b9       	out	0x0e, r24	; 14
 
 	//Set three wire mode and set
 	//clock to External, positive edge.
 	USICR = _BV(USIWM0) | (0 << USICS0) | _BV(USICS1);
- 3ea:	88 e1       	ldi	r24, 0x18	; 24
- 3ec:	8d b9       	out	0x0d, r24	; 13
+ 3e4:	88 e1       	ldi	r24, 0x18	; 24
+ 3e6:	8d b9       	out	0x0d, r24	; 13
 	// USICR = (1<<USIOIE) | _BV(USIWM0) | _BV(USICS1);
 	
 
 
 	transferComplete 	= 0;
- 3ee:	10 92 74 00 	sts	0x0074, r1
+ 3e8:	10 92 ae 00 	sts	0x00AE, r1
 	slaveSelect			= 1;
- 3f2:	81 e0       	ldi	r24, 0x01	; 1
- 3f4:	80 93 73 00 	sts	0x0073, r24
- 3f8:	08 95       	ret
+ 3ec:	81 e0       	ldi	r24, 0x01	; 1
+ 3ee:	80 93 ad 00 	sts	0x00AD, r24
+ 3f2:	08 95       	ret
 
-000003fa <spiTransfer>:
+000003f4 <spiTransfer>:
+
 unsigned char spiTransfer(unsigned char val)
 {
+	static uint8_t key;
+	static uint8_t tmp = 0;
+	tmp = SREG;
+ 3f4:	9f b7       	in	r25, 0x3f	; 63
+ 3f6:	90 93 67 00 	sts	0x0067, r25
+	cli();
+ 3fa:	f8 94       	cli
 	// GIMSK &= ~(1 << INT0);		// Disable INT0 interrupt		
 	
 	
 	USIDR = val;	
- 3fa:	8f b9       	out	0x0f, r24	; 15
+ 3fc:	8f b9       	out	0x0f, r24	; 15
 	//Clear the overflow flag
 	USISR = _BV(USIOIF);
- 3fc:	80 e4       	ldi	r24, 0x40	; 64
- 3fe:	8e b9       	out	0x0e, r24	; 14
+ 3fe:	80 e4       	ldi	r24, 0x40	; 64
+ 400:	8e b9       	out	0x0e, r24	; 14
 
 	while ((USISR & (1 << USIOIF)) == 0) {}; // Do nothing until USI has data ready
- 400:	76 9b       	sbis	0x0e, 6	; 14
- 402:	fe cf       	rjmp	.-4      	; 0x400 <spiTransfer+0x6>
-	// GIMSK |= (1 << INT0);	// Enable INT0 interrupt	
-	return USIDR;
- 404:	8f b1       	in	r24, 0x0f	; 15
+ 402:	76 9b       	sbis	0x0e, 6	; 14
+ 404:	fe cf       	rjmp	.-4      	; 0x402 <spiTransfer+0xe>
+	key = USIDR;
+ 406:	8f b1       	in	r24, 0x0f	; 15
+ 408:	80 93 66 00 	sts	0x0066, r24
+
+	SREG = tmp;
+ 40c:	80 91 67 00 	lds	r24, 0x0067
+ 410:	8f bf       	out	0x3f, r24	; 63
+	
+	return key;
 }
- 406:	08 95       	ret
+ 412:	80 91 66 00 	lds	r24, 0x0066
+ 416:	08 95       	ret
 
-00000408 <main>:
-
+00000418 <main>:
 	uint8_t key;
+	
 
 	// Initializes UART transmit buffer and keyboard reception
 	// init_uart();
 	init_kb();
- 408:	d1 de       	rcall	.-606    	; 0x1ac <init_kb>
+ 418:	c9 de       	rcall	.-622    	; 0x1ac <init_kb>
 	spiInitSlave();
- 40a:	e5 df       	rcall	.-54     	; 0x3d6 <spiInitSlave>
+ 41a:	da df       	rcall	.-76     	; 0x3d0 <spiInitSlave>
 	sei();
- 40c:	78 94       	sei
+ 41c:	78 94       	sei
 
 	while(1)
 	{
 
 		while (PINB & (1 << SS_PIN)) {};
- 40e:	b4 99       	sbic	0x16, 4	; 22
- 410:	fe cf       	rjmp	.-4      	; 0x40e <main+0x6>
+ 41e:	b4 99       	sbic	0x16, 4	; 22
+ 420:	fe cf       	rjmp	.-4      	; 0x41e <main+0x6>
 		
 		key = get_kbchar();
- 412:	bb df       	rcall	.-138    	; 0x38a <get_kbchar>
-		if (key != 0)
- 414:	88 23       	and	r24, r24
- 416:	d9 f3       	breq	.-10     	; 0x40e <main+0x6>
-		{
+ 422:	b3 df       	rcall	.-154    	; 0x38a <get_kbchar>
 
-	 		// GIMSK &= ~(1 << INT0);	// Disable INT0 interrupt		
-			spiTransfer(key);	
- 418:	f0 df       	rcall	.-32     	; 0x3fa <spiTransfer>
- 41a:	f9 cf       	rjmp	.-14     	; 0x40e <main+0x6>
+		spiTransfer(key);	
+ 424:	e7 df       	rcall	.-50     	; 0x3f4 <spiTransfer>
 
-0000041c <putchar>:
- 41c:	60 91 77 00 	lds	r22, 0x0077
- 420:	70 91 78 00 	lds	r23, 0x0078
- 424:	01 d0       	rcall	.+2      	; 0x428 <fputc>
- 426:	08 95       	ret
+	}
+ 426:	fb cf       	rjmp	.-10     	; 0x41e <main+0x6>
 
-00000428 <fputc>:
- 428:	0f 93       	push	r16
- 42a:	1f 93       	push	r17
- 42c:	cf 93       	push	r28
- 42e:	df 93       	push	r29
- 430:	18 2f       	mov	r17, r24
- 432:	09 2f       	mov	r16, r25
- 434:	eb 01       	movw	r28, r22
- 436:	8b 81       	ldd	r24, Y+3	; 0x03
- 438:	81 fd       	sbrc	r24, 1
- 43a:	03 c0       	rjmp	.+6      	; 0x442 <fputc+0x1a>
- 43c:	8f ef       	ldi	r24, 0xFF	; 255
- 43e:	9f ef       	ldi	r25, 0xFF	; 255
- 440:	20 c0       	rjmp	.+64     	; 0x482 <fputc+0x5a>
- 442:	82 ff       	sbrs	r24, 2
- 444:	10 c0       	rjmp	.+32     	; 0x466 <fputc+0x3e>
- 446:	4e 81       	ldd	r20, Y+6	; 0x06
- 448:	5f 81       	ldd	r21, Y+7	; 0x07
- 44a:	2c 81       	ldd	r18, Y+4	; 0x04
- 44c:	3d 81       	ldd	r19, Y+5	; 0x05
- 44e:	42 17       	cp	r20, r18
- 450:	53 07       	cpc	r21, r19
- 452:	7c f4       	brge	.+30     	; 0x472 <fputc+0x4a>
- 454:	e8 81       	ld	r30, Y
- 456:	f9 81       	ldd	r31, Y+1	; 0x01
- 458:	9f 01       	movw	r18, r30
- 45a:	2f 5f       	subi	r18, 0xFF	; 255
- 45c:	3f 4f       	sbci	r19, 0xFF	; 255
- 45e:	39 83       	std	Y+1, r19	; 0x01
- 460:	28 83       	st	Y, r18
- 462:	10 83       	st	Z, r17
- 464:	06 c0       	rjmp	.+12     	; 0x472 <fputc+0x4a>
- 466:	e8 85       	ldd	r30, Y+8	; 0x08
- 468:	f9 85       	ldd	r31, Y+9	; 0x09
- 46a:	81 2f       	mov	r24, r17
- 46c:	09 95       	icall
- 46e:	89 2b       	or	r24, r25
- 470:	29 f7       	brne	.-54     	; 0x43c <fputc+0x14>
- 472:	2e 81       	ldd	r18, Y+6	; 0x06
- 474:	3f 81       	ldd	r19, Y+7	; 0x07
- 476:	2f 5f       	subi	r18, 0xFF	; 255
- 478:	3f 4f       	sbci	r19, 0xFF	; 255
- 47a:	3f 83       	std	Y+7, r19	; 0x07
- 47c:	2e 83       	std	Y+6, r18	; 0x06
- 47e:	81 2f       	mov	r24, r17
- 480:	90 2f       	mov	r25, r16
- 482:	df 91       	pop	r29
- 484:	cf 91       	pop	r28
- 486:	1f 91       	pop	r17
- 488:	0f 91       	pop	r16
- 48a:	08 95       	ret
+00000428 <putchar>:
+ 428:	60 91 b1 00 	lds	r22, 0x00B1
+ 42c:	70 91 b2 00 	lds	r23, 0x00B2
+ 430:	01 d0       	rcall	.+2      	; 0x434 <fputc>
+ 432:	08 95       	ret
 
-0000048c <_exit>:
- 48c:	f8 94       	cli
+00000434 <fputc>:
+ 434:	0f 93       	push	r16
+ 436:	1f 93       	push	r17
+ 438:	cf 93       	push	r28
+ 43a:	df 93       	push	r29
+ 43c:	18 2f       	mov	r17, r24
+ 43e:	09 2f       	mov	r16, r25
+ 440:	eb 01       	movw	r28, r22
+ 442:	8b 81       	ldd	r24, Y+3	; 0x03
+ 444:	81 fd       	sbrc	r24, 1
+ 446:	03 c0       	rjmp	.+6      	; 0x44e <fputc+0x1a>
+ 448:	8f ef       	ldi	r24, 0xFF	; 255
+ 44a:	9f ef       	ldi	r25, 0xFF	; 255
+ 44c:	20 c0       	rjmp	.+64     	; 0x48e <fputc+0x5a>
+ 44e:	82 ff       	sbrs	r24, 2
+ 450:	10 c0       	rjmp	.+32     	; 0x472 <fputc+0x3e>
+ 452:	4e 81       	ldd	r20, Y+6	; 0x06
+ 454:	5f 81       	ldd	r21, Y+7	; 0x07
+ 456:	2c 81       	ldd	r18, Y+4	; 0x04
+ 458:	3d 81       	ldd	r19, Y+5	; 0x05
+ 45a:	42 17       	cp	r20, r18
+ 45c:	53 07       	cpc	r21, r19
+ 45e:	7c f4       	brge	.+30     	; 0x47e <fputc+0x4a>
+ 460:	e8 81       	ld	r30, Y
+ 462:	f9 81       	ldd	r31, Y+1	; 0x01
+ 464:	9f 01       	movw	r18, r30
+ 466:	2f 5f       	subi	r18, 0xFF	; 255
+ 468:	3f 4f       	sbci	r19, 0xFF	; 255
+ 46a:	39 83       	std	Y+1, r19	; 0x01
+ 46c:	28 83       	st	Y, r18
+ 46e:	10 83       	st	Z, r17
+ 470:	06 c0       	rjmp	.+12     	; 0x47e <fputc+0x4a>
+ 472:	e8 85       	ldd	r30, Y+8	; 0x08
+ 474:	f9 85       	ldd	r31, Y+9	; 0x09
+ 476:	81 2f       	mov	r24, r17
+ 478:	09 95       	icall
+ 47a:	89 2b       	or	r24, r25
+ 47c:	29 f7       	brne	.-54     	; 0x448 <fputc+0x14>
+ 47e:	2e 81       	ldd	r18, Y+6	; 0x06
+ 480:	3f 81       	ldd	r19, Y+7	; 0x07
+ 482:	2f 5f       	subi	r18, 0xFF	; 255
+ 484:	3f 4f       	sbci	r19, 0xFF	; 255
+ 486:	3f 83       	std	Y+7, r19	; 0x07
+ 488:	2e 83       	std	Y+6, r18	; 0x06
+ 48a:	81 2f       	mov	r24, r17
+ 48c:	90 2f       	mov	r25, r16
+ 48e:	df 91       	pop	r29
+ 490:	cf 91       	pop	r28
+ 492:	1f 91       	pop	r17
+ 494:	0f 91       	pop	r16
+ 496:	08 95       	ret
 
-0000048e <__stop_program>:
- 48e:	ff cf       	rjmp	.-2      	; 0x48e <__stop_program>
+00000498 <_exit>:
+ 498:	f8 94       	cli
+
+0000049a <__stop_program>:
+ 49a:	ff cf       	rjmp	.-2      	; 0x49a <__stop_program>

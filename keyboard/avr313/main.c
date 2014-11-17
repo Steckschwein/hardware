@@ -29,6 +29,7 @@ int main(void)
 {
 
 	uint8_t key;
+	
 
 	// Initializes UART transmit buffer and keyboard reception
 	// init_uart();
@@ -42,13 +43,9 @@ int main(void)
 		while (PINB & (1 << SS_PIN)) {};
 		
 		key = get_kbchar();
-		if (key != 0)
-		{
 
-	 		// GIMSK &= ~(1 << INT0);	// Disable INT0 interrupt		
-			spiTransfer(key);	
-			// GIMSK |= (1 << INT0);	// Enable INT0 interrupt	
-		}
+		spiTransfer(key);	
+
 	}
 	return 0;
 }
