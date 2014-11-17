@@ -16,6 +16,10 @@ sd_blktarget = $0400
 
 
 main
+	sei
+
+	jsr sd_select_card
+
 	jsr lcdclear
 
 	jsr sd_param_init
