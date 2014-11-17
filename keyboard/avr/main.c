@@ -5,13 +5,15 @@
 //---------------------------------------------------------------------------------
 
 #include <avr/interrupt.h>
+#include <util/delay.h>
+
 #include "keyboard.h"
 #include "keycodes.h"
 #include "spi.h"
 
 int main( void )
 {
-	register char key asm("r17");
+	uint8_t key;
 
 	keyboardInit();
 	spiInitSlave();
@@ -20,16 +22,20 @@ int main( void )
 
 	while(1)
 	{		
-		//while ( slaveSelect ) {}
+		key = 0;
 
+		while (slaveSelect == 0) {}
+	
+		
 		if (( key = getKey()) != 0 )
 		{	
-			spiTransfer(key);	
 
-			// PORTB = key;
-			// _delay_ms(10);
+			spiTransfer(key);	
+					
+	
+	
 		}
-		// PORTB=0;
+
 	}
 
 	return 0;

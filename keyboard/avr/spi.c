@@ -43,17 +43,21 @@ void spiInitSlave()
 
 
 	transferComplete 	= 0;
-	// slaveSelect			= 1;
+	slaveSelect			= 1;
 }
 
 
 // unsigned char spiTransfer(unsigned char val)
 // {
+// 	// GIMSK &= ~(1 << INT0);		// Disable INT0 interrupt		
+	
+	
 // 	USIDR = val;	
 // 	//Clear the overflow flag
 // 	USISR = _BV(USIOIF);
 
 // 	while ((USISR & (1 << USIOIF)) == 0) {}; // Do nothing until USI has data ready
+// 	// GIMSK |= (1 << INT0);	// Enable INT0 interrupt	
 // 	return USIDR;
 // }
 
@@ -83,25 +87,36 @@ ISR(PCINT_vect)
 {			     
 	// slaveSelect = 	(PINB & (1 << SS_PIN));
 	// slaveSelect is 1, we are inactive
-	if (PINB & (1 << SS_PIN))
+	slaveSelect  = PINB & (1 << SS_PIN);
+
+	if (!slaveSelect)
 	{
-		// slaveSelect = 1;
-		// tri state DO pin
-		CTRL_PORT &= ~_BV(DO_PIN);
-		DATA_PORT &= ~_BV(DO_PIN);
-		
-		// disable USI
-		USICR &= ~_BV(USIWM0);		
-		
+			GIMSK &= ~(1 << INT0);		// Disable INT0 interrupt		
 	}
 	else
 	{
-		// DO pin as output
-		CTRL_PORT |= _BV(DO_PIN);
+			GIMSK |= (1 << INT0);	// Enable INT0 interrupt	
 
-		// enable USI
-		USICR |= _BV(USIWM0);			
-		// slaveSelect = 0;
 	}
+	// if (PINB & (1 << SS_PIN))
+	// {
+	// 	slaveSelect = 1;
+	// 	// tri state DO pin
+	// 	// CTRL_PORT &= ~_BV(DO_PIN);
+	// 	// DATA_PORT &= ~_BV(DO_PIN);
+		
+	// 	// // disable USI
+	// 	// USICR &= ~_BV(USIWM0);		
+		
+	// }
+	// else
+	// {
+	// 	// DO pin as output
+	// 	// CTRL_PORT |= _BV(DO_PIN);
 
+	// 	// // enable USI
+	// 	// USICR |= _BV(USIWM0);			
+		
+	// 	slaveSelect = 0;
+	// }
 }

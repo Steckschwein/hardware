@@ -1,7 +1,6 @@
 SERIALDEVICE=$(shell ls -1r /dev/cu.usbmodem* | head -1)
-CPUSPEED=4000000
+CPUSPEED=20480000
 CC=avr-gcc
-#CFLAGS= -g -Os -Wall -mcall-prologues -mmcu=attiny2313 -DF_CPU=14745600 -D__PROG_TYPES_COMPAT__
 CFLAGS= -g -Os -Wall -mcall-prologues -mmcu=attiny2313 -DF_CPU=$(CPUSPEED) -D__PROG_TYPES_COMPAT__ -std=gnu99
 OBJ2HEX=avr-objcopy
 OBJDUMP = avr-objdump

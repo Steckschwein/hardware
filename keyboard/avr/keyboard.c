@@ -179,7 +179,8 @@ void keyboardInit( void )
 	MCUCR &= ~0x03;		// Setup INT0 for the falling edge.
 	MCUCR |= 0x02;
 	PCMSK |= (1<<PIND2);	// Enable pin change on INT0 (why is this required?)	
-	GIMSK= 0x40;		// Enable INT0 interrupt
+	//GIMSK= 0x40;		// Enable INT0 interrupt
+	GIMSK |= (1 << INT0);
 	inPtr = outPtr = keyBuffer;
 	endPtr = inPtr + (MAX_KEYS);
 }

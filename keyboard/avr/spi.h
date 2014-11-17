@@ -12,6 +12,6 @@ void spiInitSlave();
 unsigned char spiTransfer(unsigned char);
 
 volatile uint8_t transferComplete ;
-// volatile char slaveSelect;
+volatile uint8_t slaveSelect;
 
 #endif
