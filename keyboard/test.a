@@ -16,25 +16,33 @@ txtbuf=$0300
 	stz kbd_flg
 
 
-	jsr kbd_enable
+	jsr kbd_disable
 	; Read first byte from Keyboard/SPI
-	jsr spi_r_byte
+;	jsr spi_r_byte
 
 
 
 
 
 ; TODO: rausfinden warum hier nur datenmüll kommt
-
 ; -	
-; 	lda #$ff
-; 	jsr spi_rw_byte
+; 	jsr kbd_enable	
+; 	jsr spi_r_byte
+; 	jsr kbd_disable
+; 	; jsr delay
 ; 	beq -
 ;  	cmp #$ff
 ;  	beq - 
 ;  	jsr lcdprint
 
-;  	jmp -
+	
+; - 	jmp -
+
+; delay
+; !for i,0,256 {
+; 	nop
+; }
+; 	rts
 
 
 	sei
@@ -121,8 +129,8 @@ kbd
  	bit via1t1cl
 
 
- 	bit kbd_flg
- 	bmi +
+ 	; bit kbd_flg
+ 	; bmi +
 
  	
 	ldx kbd_ptr
@@ -134,19 +142,27 @@ kbd
 	bra +
 ++
 
+	; Select SPI SS for keyboard
+	lda #%01111010
+	; and via1portb
+	sta via1portb
 
 	; lda #$ff
  	jsr spi_r_byte
 	beq ++
- 	; cmp #$ff
- 	; beq ++
+ 	cmp #$ff
+ 	beq ++
+
+
 	
 	
  	sta kbd_buf, x
  	inc kbd_ptr
 
 ++
-
+ 	; Deselect any SPI devices
+	lda #%01111110
+	sta via1portb
 	
 +	pla
 	plx
