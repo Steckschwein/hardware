@@ -1,4 +1,4 @@
-Cmp-Mod V01 Created by Cvpcb (2014-09-10 BZR 5127)-product   date = Sun 26 Oct 2014 08:05:31 PM CET
+Cmp-Mod V01 Created by Cvpcb (2014-09-10 BZR 5127)-product   date = Mon 17 Nov 2014 10:10:30 PM CET
 
 BeginCmp
 TimeStamp = /541367DD;
@@ -92,10 +92,38 @@ IdModule  = Discret:C1;
 EndCmp
 
 BeginCmp
+TimeStamp = /544D4EDE/546A978B;
+Reference = C14;
+ValeurCmp = 100n;
+IdModule  = Discret:C1;
+EndCmp
+
+BeginCmp
+TimeStamp = /544D4EDE/546A97B6;
+Reference = C15;
+ValeurCmp = 100n;
+IdModule  = Discret:C1;
+EndCmp
+
+BeginCmp
+TimeStamp = /546AA0E1;
+Reference = C16;
+ValeurCmp = CP2;
+IdModule  = Capacitors_Elko_ThroughHole:Elko_vert_11.2x7.5mm_RM2.5;
+EndCmp
+
+BeginCmp
 TimeStamp = /54136830;
 Reference = P1;
 ValeurCmp = CONN_02X04;
 IdModule  = Pin_Headers:Pin_Header_Straight_2x04;
+EndCmp
+
+BeginCmp
+TimeStamp = /544D4EDE/544E9377;
+Reference = P2;
+ValeurCmp = CONN_01X08;
+IdModule  = Pin_Headers:Pin_Header_Straight_1x08;
 EndCmp
 
 BeginCmp
@@ -232,16 +260,23 @@ IdModule  = Sockets_DIP:DIP-16__300_ELL;
 EndCmp
 
 BeginCmp
-TimeStamp = /544D4EDE/544D53A2;
+TimeStamp = /544D4EDE/546A6140;
 Reference = U10;
-ValeurCmp = 74LS244;
-IdModule  = Sockets_DIP:DIP-20__300_ELL;
+ValeurCmp = 7400;
+IdModule  = Sockets_DIP:DIP-14__300_ELL;
 EndCmp
 
 BeginCmp
 TimeStamp = /544D4EDE/544D56DD;
 Reference = U11;
 ValeurCmp = 74LS273;
+IdModule  = Sockets_DIP:DIP-20__300_ELL;
+EndCmp
+
+BeginCmp
+TimeStamp = /544D4EDE/546A6264;
+Reference = U12;
+ValeurCmp = 74LS244;
 IdModule  = Sockets_DIP:DIP-20__300_ELL;
 EndCmp
 
