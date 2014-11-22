@@ -42,10 +42,12 @@ int main(void)
 
 		while (PINB & (1 << SS_PIN)) {};
 		
-		key = get_kbchar();
+		//decode(get_scbyte());
+		// key = get_kbchar();
 
+		key = get_scbyte();
 		spiTransfer(key);	
-
+		
 	}
 	return 0;
 }

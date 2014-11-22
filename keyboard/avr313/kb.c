@@ -5,13 +5,18 @@
 #include "gpr.h"
 #include "scancodes.h"
 
-#define KB_BUFF_SIZE 64
+#define KB_BUFF_SIZE 16
+#define SC_BUFF_SIZE 48
 
 volatile uint8_t kb_buffer[KB_BUFF_SIZE];
 volatile uint8_t *kb_inptr;
 volatile uint8_t *kb_outptr;
 volatile uint8_t kb_buffcnt;
 
+volatile uint8_t sc_buffer[SC_BUFF_SIZE];
+volatile uint8_t *sc_inptr;
+volatile uint8_t *sc_outptr;
+volatile uint8_t sc_buffcnt;
 
 
 void init_kb(void)
@@ -19,6 +24,10 @@ void init_kb(void)
 	kb_inptr =  kb_buffer;					  // Initialize buffer
 	kb_outptr = kb_buffer;
 	kb_buffcnt = 0;
+
+	sc_inptr =  sc_buffer;					  // Initialize buffer
+	sc_outptr = sc_buffer;
+	sc_buffcnt = 0;
 
 	MCUCR 	= (1 << ISC01);					  // INT0 interrupt on falling edge
 	GIMSK	= (1 << INT0);						  // Enable INT0 interrupt
@@ -42,7 +51,20 @@ ISR (INT0_vect)
 	if(--bitcount == 0)						  // All bits received
 	{
 		bitcount = 11;
-		decode(data);
+
+		
+		if (sc_buffcnt < SC_BUFF_SIZE)			  // If buffer not full
+		{
+			// Put scancode into buffer
+			// Increment pointer
+			*sc_inptr++ = data;
+			sc_buffcnt++;
+
+			// Pointer wrapping
+			if (sc_inptr >= sc_buffer + SC_BUFF_SIZE)
+				sc_inptr = sc_buffer;
+		}
+		// decode(data);
 	}
 }
 
@@ -185,3 +207,30 @@ int get_kbchar(void)
 
 	return byte;
 }
+
+
+int get_scbyte(void)
+{
+	int byte;
+
+	// Wait for data
+	while(sc_buffcnt == 0);
+
+	uint8_t tmp = SREG;
+	cli();
+
+	// Get byte - Increment pointer
+	byte = *sc_outptr++;
+
+	// Pointer wrapping
+	if (sc_outptr >= sc_buffer + SC_BUFF_SIZE)
+		sc_outptr = sc_buffer;
+
+	// Decrement buffer count
+	sc_buffcnt--;
+
+	SREG = tmp;
+
+	return byte;
+}
+

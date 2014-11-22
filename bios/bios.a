@@ -22,7 +22,7 @@ crlf	!byte $0d, $00
 !src "../vdp/t99xx.lib.a"
 
 
-upload
+.upload
 			ldx #$00
 			ldy #$01
 			jsr i_lcdxy
@@ -296,7 +296,7 @@ check_stack
 			+SetVector ready_msg, msgptr
 			jsr	vdp_print
 			
-			jsr upload
+			jsr .upload
 			
 			; re-init stack pointer
 			ldx #$ff
@@ -1376,7 +1376,7 @@ spi_rw_byte	jmp i_spi_rw_byte
 sys_spi_r_byte	
 spi_r_byte	jmp i_spi_r_byte
 
-sys_upload	jmp upload
+sys_upload	jmp .upload
 
 sys_sd_write_block
 sd_write_block 	jmp i_sd_write_block

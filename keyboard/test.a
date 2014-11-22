@@ -25,25 +25,25 @@ txtbuf=$0300
 
 
 ; TODO: rausfinden warum hier nur datenmüll kommt
-; 	jsr kbd_enable	
-; -	
+	jsr kbd_enable	
+-	
 
-; 	jsr spi_r_byte
+	jsr spi_r_byte
 
-; 	; jsr delay
-; 	beq -
-;  	cmp #$ff
-;  	beq - 
-;  	jsr lcdprint
+	; jsr delay
+	beq -
+ 	cmp #$ff
+ 	beq - 
+ 	jsr lcdhex
 
 	
-;  	jmp -
+ 	jmp -
 
-; delay
-; !for i,0,1024 {
-; 	nop
-; }
-; 	rts
+delay
+!for i,0,1024 {
+	nop
+}
+	rts
 
 
 	sei
@@ -83,7 +83,7 @@ main
 	cmp #$0c
 	beq +
 
-	jsr chrout
+	jsr hexout
 
 	cmp #$0d ; return gedrueckt?
 	beq out
