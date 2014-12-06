@@ -1,0 +1,205 @@
+*=$1000
+!src "../bios/defs.h.a"
+!src "../bios/bios.h.a"
+
+
+txtbuf=$0300
+
+	jsr lcdclear
+
+	lda #dev_lcd
+	sta chn_out
+
+	
+	stz kbd_ptr
+
+	stz kbd_flg
+
+
+	jsr kbd_disable
+	; Read first byte from Keyboard/SPI
+;	jsr spi_r_byte
+
+
+
+
+
+; TODO: rausfinden warum hier nur datenmüll kommt
+	jsr kbd_enable	
+-	
+
+	jsr spi_r_byte
+
+	; jsr delay
+	beq -
+ 	cmp #$ff
+ 	beq - 
+ 	jsr chrout
+
+	
+ 	jmp -
+
+delay
+!for i,0,1024 {
+	nop
+}
+	rts
+
+
+	sei
+
+	; Set IRQ Vector
+	lda #<kbd
+	sta irqvec
+
+	lda #>kbd
+	sta irqvec+1
+
+
+	lda #<count
+	sta via1t1cl            ; set low byte of count
+	lda #>count
+	sta via1t1ch            ; set high byte of count
+
+	lda #%11000000
+	sta via1ier             ; enable VIA1 T1 interrupts
+
+	lda #%01000000
+	sta via1acr             ; T1 continuous, PB7 disabled
+
+	cli
+
+main
+  	jsr lcdclear
+
+	+PrintString text1
+	ldx #$00
+	ldy #$02
+	jsr lcdxy
+
+	ldx #$00
+-	jsr getkey
+	
+	cmp #$0c
+	beq +
+
+	jsr hexout
+
+	cmp #$0d ; return gedrueckt?
+	beq out
+
+	sta txtbuf,x
+	inx
+	stz txtbuf,x
+
+
+	jmp -
++	jsr lcdclear
+	jmp -
+
+out jsr lcdclear
+	+PrintString  text2
+	+PrintString  txtbuf
+
+--	jsr getkey
+	cmp #$0d
+	bne --
+	jmp main
+getkey
+	phx
+-	ldx kbd_ptr  
+	beq -		; kbd_buf empty, wait for key
+	dex
+	lda kbd_buf, x
+	stx kbd_ptr
+
+	plx
+	rts
+
+
+kbd
+ 	pha
+ 	phx
+ 
+ 	; Interrupt from VIA1 timer?
+ 	lda #%11000000
+ 	bit via1ifr	
+ 	beq + ; no?
+
+	; acknowledge interrupt 	
+ 	bit via1t1cl
+
+
+ 	; bit kbd_flg
+ 	; bmi +
+
+ 	
+	ldx kbd_ptr
+	cpx #$00
+	; kbd_ptr <= $0f?
+	bcs ++
+	beq ++
+
+	bra +
+++
+
+	; Select SPI SS for keyboard
+	lda #%01111010
+	; and via1portb
+	sta via1portb
+
+	; lda #$ff
+ 	jsr spi_r_byte
+	beq ++
+ 	cmp #$ff
+ 	beq ++
+
+
+	
+	
+ 	sta kbd_buf, x
+ 	inc kbd_ptr
+
+++
+ 	; Deselect any SPI devices
+	lda #%01111110
+	sta via1portb
+	
++	pla
+	plx
+	rti
+
+
+reset
+	jmp ($fffc)
+
+kbd_disable
+	pha
+
+	lda #$80
+	ora kbd_flg
+	sta kbd_flg
+	; Deselect any SPI devices
+	lda #%11111110
+	sta via1portb
+	
+	pla
+	rts
+
+kbd_enable
+	pha
+	; Select SPI SS for keyboard
+	lda #%01111010
+	; and via1portb
+	sta via1portb
+
+	lda #$7f
+	and kbd_flg
+	sta kbd_flg
+
+	pla
+	rts
+
+
+text1	!text "Wie heisst du?", $00
+text2	!text "Hallo, ", $00

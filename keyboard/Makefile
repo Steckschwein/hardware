@@ -1,0 +1,10 @@
+all: test.bin 
+clean:
+	rm -f *.bin *.labels
+	( cd avr ; make clean )
+
+%.bin: %.a ../bios/defs.h.a
+	acme -v -f plain --cpu 65c02 -o $@ $<
+
+transfer: all
+	../transfer.py test.bin 
