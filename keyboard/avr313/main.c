@@ -37,8 +37,10 @@ int main(void)
 	
 	while(1)
 	{		
+		while(! spiEnabled());
+
 		key = get_kbchar();
-		spiTransfer(key);					
+		spiTransfer(key);						
 	}
 	return 0;
 }

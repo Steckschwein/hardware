@@ -12,8 +12,6 @@
 #define DD_MISO PB4
 void spiInitSlave();
 unsigned char spiTransfer(unsigned char);
-
-volatile uint8_t transferComplete ;
-volatile uint8_t slaveSelect;
+unsigned char spiEnabled();
 
 #endif

@@ -20,6 +20,11 @@ void spiInitSlave()
 
 }
 
+unsigned char spiEnabled()
+{
+	return 	!(PORTB & (1<<PB2));
+
+}
 
 unsigned char spiTransfer(unsigned char val)
 {
