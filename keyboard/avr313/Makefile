@@ -9,6 +9,8 @@ PRG=keyboard
 OBJ= gpr.o kb.o spi.o main.o 
 all: $(PRG).elf $(PRG).hex $(PRG).lss $(PRG).eep
 
+kb.o: scancodes_de.h
+
 $(PRG).elf: $(OBJ) 
 	$(CC) $(CFLAGS) -o $@ $^ $(LIBS) 
 
@@ -28,5 +30,7 @@ burn : $(PRG).hex
 	$(LOADER) -U flash:w:$(PRG).hex 
 
 fuse : 
-	$(LOADER) -U lfuse:w:0xe0:m -U hfuse:w:0xd9:m
+	$(LOADER) -U lfuse:w:0xc3:m -U hfuse:w:0xd9:m
+
+
 
