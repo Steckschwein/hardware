@@ -29,7 +29,6 @@ int main(void)
 {
 	uint8_t key;
 
-	// Initializes UART transmit buffer and keyboard reception
 	init_kb();
 	spiInitSlave();
 	sei();
