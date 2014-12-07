@@ -110,15 +110,6 @@ void decode(uint8_t sc)
 					return;
 				}
 
-				if (sc == 0x84) // SYSRQ
-				{
-					PORTC &= ~(1 << PC1);
-					_delay_ms(50);
-					PORTC |= (1 << PC1);
-
-					return;
-				}
-
 
 				offs=1;
 				if(shift)					  // If shift not pressed,
@@ -139,7 +130,6 @@ void decode(uint8_t sc)
 				if (ch == sc)
 				{
 					put_kbbuff(pgm_read_byte(&scancodes[i][offs]));
-					
 				}
 			 
 
@@ -177,9 +167,13 @@ void decode(uint8_t sc)
 		}
 		else
 		{
-			if (alt == 1 && ctrl == 1 && sc == 0x71)
+			if (sc == 0x84) // SYSRQ
 			{
-				PORTC &= ~(1 << _BV(0));
+				PORTC &= ~(1 << PC1);
+				_delay_ms(50);
+				PORTC |= (1 << PC1);
+
+				return;
 			}
 		}
 		// case 0x06 :						// F2
