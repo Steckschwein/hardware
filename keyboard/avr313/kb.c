@@ -5,8 +5,7 @@
 #include "gpr.h"
 #include "scancodes.h"
 
-#define KB_BUFF_SIZE 16
-#define SC_BUFF_SIZE 48
+#define KB_BUFF_SIZE 32
 
 volatile uint8_t kb_buffer[KB_BUFF_SIZE];
 volatile uint8_t *kb_inptr;
@@ -164,11 +163,11 @@ int get_kbchar(void)
 	int byte;
 
 	// Wait for data
-	while(kb_buffcnt == 0);
-	// if (kb_buffcnt == 0)
-	// {
-	// 	return 0;
-	// }
+	// while(kb_buffcnt == 0);
+	if (kb_buffcnt == 0)
+	{
+		return 0;
+	}
 
 	uint8_t tmp = SREG;
 	cli();
