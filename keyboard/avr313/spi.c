@@ -12,18 +12,15 @@
 */
 void spiInitSlave()
 {
-
 	/* Set MISO output, all others input */
 	DDR_SPI = (1<<DD_MISO);
 	/* Enable SPI */
 	SPCR = (1<<SPE);
-
 }
 
 unsigned char spiEnabled()
 {
 	return 	!(PORTB & (1<<PB2));
-
 }
 
 unsigned char spiTransfer(unsigned char val)
@@ -37,4 +34,3 @@ unsigned char spiTransfer(unsigned char val)
 	/* Return data register */
 	return SPDR;
 }
-	
