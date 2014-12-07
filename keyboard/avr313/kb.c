@@ -1,9 +1,10 @@
 #include <avr/pgmspace.h>
 #include <avr/interrupt.h>
+#include <util/delay.h>
 
 #include "kb.h"
 #include "gpr.h"
-#include "scancodes.h"
+#include "scancodes_de.h"
 
 #define KB_BUFF_SIZE 32
 
@@ -21,6 +22,9 @@ void init_kb(void)
 
 	MCUCR 	= (1 << ISC01);					  // INT0 interrupt on falling edge
 	GIMSK	= (1 << INT0);						  // Enable INT0 interrupt
+
+	DDRC	= (1 << PC0) | (1 << PC1);
+	PORTC  	= 3;
 }
 
 
@@ -52,8 +56,15 @@ ISR (INT0_vect)
 void decode(uint8_t sc)
 {
 	static uint8_t is_up = 0, mode = 0;
+
 	static uint8_t shift = 0;
-	uint8_t i, ch;
+	static uint8_t ctrl  = 0;
+	static uint8_t alt   = 0;
+
+	uint8_t i, ch, offs;
+
+	offs = 1;
+
 
 	if (!is_up)								  // Last data received was the up-key identifier
 	{
@@ -65,6 +76,16 @@ void decode(uint8_t sc)
 		else if(sc == 0x12 || sc == 0x59)	  // Left SHIFT or Right SHIFT
 		{
 			shift = 1;
+		}
+
+		else if (sc == 0x14)		// Left CTRL or Right CTRL
+		{
+			ctrl=1;
+		}
+
+		else if (sc == 0x11)     // Left ALT or Right ALT
+		{
+			alt=1;
 		}
 
 		else if(sc == 0x05)					  // F1
@@ -79,22 +100,49 @@ void decode(uint8_t sc)
 		{
 			if(mode == 0 || mode == 3)		  // If ASCII mode
 			{
-				if(!shift)					  // If shift not pressed,
-				{							  // do a table look-up
-					for(i = 0; (ch = pgm_read_byte(&unshifted[i][0])) != sc && ch; i++);
-					if (ch == sc)
-					{
-						put_kbbuff(pgm_read_byte(&unshifted[i][1]));
-					}
-				}							  // If shift pressed
-				else
+				
+				if (ctrl && alt && sc == 0x71) // CTRL ALT DEL
 				{
-					for(i = 0; (ch = pgm_read_byte(&shifted[i][0])) != sc && ch; i++);
-					if (ch == sc)
-					{
-						put_kbbuff( pgm_read_byte(&shifted[i][1]));
-					}
+					PORTC &= ~(1 << PC0);
+					_delay_ms(50);
+					PORTC |= (1 << PC0);
+
+					return;
 				}
+
+				if (sc == 0x84) // SYSRQ
+				{
+					PORTC &= ~(1 << PC1);
+					_delay_ms(50);
+					PORTC |= (1 << PC1);
+
+					return;
+				}
+
+
+				offs=1;
+				if(shift)					  // If shift not pressed,
+				{
+					offs=2;
+				}
+				else if (ctrl)
+				{
+					offs=3;
+				}
+				else if (alt)
+				{
+					offs=4;
+				}
+				
+				// do a table look-up
+				for(i = 0; (ch = pgm_read_byte(&scancodes[i][0])) != sc && ch; i++);
+				if (ch == sc)
+				{
+					put_kbbuff(pgm_read_byte(&scancodes[i][offs]));
+					
+				}
+			 
+
 			}								  // Scan code mode
 			else
 			{
@@ -112,13 +160,27 @@ void decode(uint8_t sc)
 		{
 			shift = 0;
 		}
-
+		else if (sc == 0x14)		// Left CTRL or Right CTRL
+		{
+			ctrl=0;
+		}
+		else if (sc == 0x11)     // Left ALT or Right ALT
+		{
+			alt=0;
+		}
 		else if(sc == 0x05)					  // F1
 		{
 			if(mode == 1)
 				mode = 2;
 			if(mode == 3)
 				mode = 0;
+		}
+		else
+		{
+			if (alt == 1 && ctrl == 1 && sc == 0x71)
+			{
+				PORTC &= ~(1 << _BV(0));
+			}
 		}
 		// case 0x06 :						// F2
 		//   clr();
