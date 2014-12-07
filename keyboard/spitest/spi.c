@@ -23,8 +23,6 @@ void spiInitSlave()
 
 unsigned char spiTransfer(unsigned char val)
 {
-	while(!(SPSR & (1<<SPIF)));
-
 	SPDR = val;
 
 	/* Wait for reception complete */

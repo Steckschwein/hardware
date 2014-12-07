@@ -25,49 +25,44 @@ txtbuf=$0300
 
 
 ; TODO: rausfinden warum hier nur datenmüll kommt
-	jsr kbd_enable	
--	
+; DONE: attiny flop, atmega top
 
-	jsr spi_r_byte
+; -	
+; 	jsr kbd_enable
+; 	jsr spi_r_byte
+; 	jsr kbd_disable
 
-	; jsr delay
-	beq -
- 	cmp #$ff
- 	beq - 
- 	jsr chrout
+; 	beq -
+;  	cmp #$ff
+;  	beq - 
+; 	jsr chrout
 
-	
- 	jmp -
-
-delay
-!for i,0,1024 {
-	nop
-}
-	rts
+;  	jmp -
 
 
-	sei
+
+	; sei
 
 	; Set IRQ Vector
-	lda #<kbd
-	sta irqvec
+	; lda #<kbd
+	; sta irqvec
 
-	lda #>kbd
-	sta irqvec+1
+	; lda #>kbd
+	; sta irqvec+1
 
 
-	lda #<count
-	sta via1t1cl            ; set low byte of count
-	lda #>count
-	sta via1t1ch            ; set high byte of count
+	; lda #<count
+	; sta via1t1cl            ; set low byte of count
+	; lda #>count
+	; sta via1t1ch            ; set high byte of count
 
-	lda #%11000000
-	sta via1ier             ; enable VIA1 T1 interrupts
+	; lda #%11000000
+	; sta via1ier             ; enable VIA1 T1 interrupts
 
-	lda #%01000000
-	sta via1acr             ; T1 continuous, PB7 disabled
+	; lda #%01000000
+	; sta via1acr             ; T1 continuous, PB7 disabled
 
-	cli
+	; cli
 
 main
   	jsr lcdclear
@@ -83,7 +78,7 @@ main
 	cmp #$0c
 	beq +
 
-	jsr hexout
+	jsr chrout
 
 	cmp #$0d ; return gedrueckt?
 	beq out
@@ -105,69 +100,67 @@ out jsr lcdclear
 	cmp #$0d
 	bne --
 	jmp main
-getkey
-	phx
--	ldx kbd_ptr  
-	beq -		; kbd_buf empty, wait for key
-	dex
-	lda kbd_buf, x
-	stx kbd_ptr
 
-	plx
+getkey
+-
+	jsr kbd_enable	
+	jsr spi_r_byte
+	jsr kbd_disable
+	beq -
 	rts
 
 
-kbd
- 	pha
- 	phx
+; kbd
+;  	pha
+;  	phx
  
- 	; Interrupt from VIA1 timer?
- 	lda #%11000000
- 	bit via1ifr	
- 	beq + ; no?
+;  	; Interrupt from VIA1 timer?
+;  	lda #%11000000
+;  	bit via1ifr	
+;  	beq + ; no?
 
-	; acknowledge interrupt 	
- 	bit via1t1cl
+; 	; acknowledge interrupt 	
+;  	bit via1t1cl
 
 
- 	; bit kbd_flg
- 	; bmi +
+;  	; bit kbd_flg
+;  	; bmi +
 
  	
-	ldx kbd_ptr
-	cpx #$00
-	; kbd_ptr <= $0f?
-	bcs ++
-	beq ++
+; 	ldx kbd_ptr
+; 	cpx #$00
+; 	; kbd_ptr <= $0f?
+; 	bcs ++
+; 	beq ++
 
-	bra +
-++
+; 	bra +
+; ++
 
-	; Select SPI SS for keyboard
-	lda #%01111010
-	; and via1portb
-	sta via1portb
+; 	; Select SPI SS for keyboard
+; 	lda #%01111010
+; 	; and via1portb
+; 	sta via1portb
 
-	; lda #$ff
- 	jsr spi_r_byte
-	beq ++
- 	cmp #$ff
- 	beq ++
+; 	; lda #$ff
+;  	jsr spi_r_byte
+; 	beq ++
+;  	cmp #$ff
+;  	beq ++
 
 
 	
 	
- 	sta kbd_buf, x
- 	inc kbd_ptr
+;  	sta kbd_buf, x
+;  	inc kbd_ptr
 
-++
- 	; Deselect any SPI devices
-	lda #%01111110
-	sta via1portb
+; ++
+;  	; Deselect any SPI devices
+; 	lda #%01111110
+; 	sta via1portb
 	
-+	pla
-	plx
-	rti
+; +	pla
+; 	plx
+; 	rti
 
 
 reset

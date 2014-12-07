@@ -43,6 +43,7 @@ ISR (INT0_vect)
 	{
 		bitcount = 11;
 		
+		// put_kbbuff(data);
 		decode(data);
 	}
 }

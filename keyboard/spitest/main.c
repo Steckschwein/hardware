@@ -2,8 +2,6 @@
 #include <avr/interrupt.h>
 
 #include "spi.h"
-#include "kb.h"
-
 
 /* -------------------------------------------------------------------
 	Atmel application note AVR313 ported for use with GCC
@@ -27,18 +25,38 @@
 
 int main(void)
 {
+
+	// uint8_t key;
+	uint8_t * chars = "Hello World! \0";
+	uint8_t * p;
 	uint8_t key;
 
 	// Initializes UART transmit buffer and keyboard reception
-	init_kb();
+	// init_uart();
+	// init_kb();
 	spiInitSlave();
 	sei();
 
-	
+	p = chars;
+
 	while(1)
-	{		
-		key = get_kbchar();
-		spiTransfer(key);					
+	{
+
+		
+		// key = get_kbchar();
+		// if (!key)
+		// {
+		// 	continue;
+		// }
+
+		if (! *p ) 
+		{
+				p = chars;
+		}		
+		key = *p;
+		p++;
+		
+		spiTransfer(key);
 	}
 	return 0;
 }
