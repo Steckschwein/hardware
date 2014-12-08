@@ -36,7 +36,7 @@ LIBS:osc
 LIBS:74xgxx
 LIBS:ttl_ieee
 LIBS:steckschwein-cache
-EELAYER 24 0
+EELAYER 25 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
@@ -1263,7 +1263,7 @@ Wire Wire Line
 Wire Wire Line
 	1300 6750 1300 5850
 Wire Wire Line
-	2300 5850 1300 5850
+	1300 5850 2300 5850
 Connection ~ 2300 5850
 Wire Wire Line
 	600  5650 1650 5650
@@ -1345,8 +1345,6 @@ Wire Wire Line
 	7000 2650 7400 2650
 Wire Wire Line
 	7400 2750 7200 2750
-Wire Wire Line
-	7400 2850 7200 2850
 Wire Bus Line
 	9050 750  9050 1650
 Wire Wire Line
@@ -1723,16 +1721,10 @@ Text Label 7350 4600 0    60   ~ 0
 /CS_LORAM
 Text Label 9450 4600 0    60   ~ 0
 /CS_HIRAM
-Text Label 7000 2950 0    60   ~ 0
-/CS_ROM
-Wire Wire Line
-	4850 800  5150 800 
 Wire Wire Line
 	4850 900  5150 900 
 Wire Wire Line
 	4850 1000 5150 1000
-Text Label 5100 800  0    60   ~ 0
-/CS_ROM
 Text Label 5100 900  0    60   ~ 0
 /CS_LORAM
 Text Label 5100 1000 0    60   ~ 0
@@ -1798,4 +1790,14 @@ F 3 "" H 10650 5850 60  0000 C CNN
 	1    10650 5850
 	1    0    0    -1  
 $EndComp
+Wire Wire Line
+	6300 2850 7400 2850
+Text Label 6950 2950 0    60   ~ 0
+/CS_ROM
+Wire Wire Line
+	4850 800  6300 800 
+Text Label 5150 800  0    60   ~ 0
+/CS_ROM
+Wire Wire Line
+	6300 800  6300 2850
 $EndSCHEMATC
