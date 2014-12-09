@@ -26,7 +26,7 @@ txtbuf=$0300
 
 ; TODO: rausfinden warum hier nur datenmüll kommt
 ; DONE: attiny flop, atmega top
-
+	
 ; -	
 ; 	jsr kbd_enable
 ; 	jsr spi_r_byte
@@ -43,7 +43,7 @@ txtbuf=$0300
 
 	; sei
 
-	; Set IRQ Vector
+	; ; Set IRQ Vector
 	; lda #<kbd
 	; sta irqvec
 
