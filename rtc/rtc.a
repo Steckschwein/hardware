@@ -1,0 +1,123 @@
+*=$1000
+!src "../bios/defs.h.a"
+!src "../bios/bios.h.a"
+
+	jsr lcdclear
+    lda #dev_lcd
+    sta chn_out
+
+
+	jsr rtc_enable
+	lda #$8f
+	jsr spi_rw_byte
+	lda #$00
+	jsr spi_rw_byte
+	jsr rtc_disable
+
+-	ldx #$00
+	ldy #$01
+    jsr lcdxy
+
+   
+    ; jsr write
+	jsr read
+	jsr waste
+	jmp -
+
+waste
+	pha 
+	phy
+	phx
+
+	ldx #$ff
+	ldy #$ff
+-	
+!for i,0,64 {
+	nop
+}	
+	dey
+	bne -
+
+-	dex
+	bne -
+
+	pla
+	ply
+	plx
+	rts
+
+read
+	pha
+	jsr rtc_enable
+    
+    lda #$00
+   	jsr spi_rw_byte
+
+!for i,0,2 {
+    jsr spi_r_byte
+    jsr hexout	
+}
+	
+	jsr rtc_disable
+	pla
+	rts
+
+write 
+	pha
+
+	ldx #$00
+
+	jsr rtc_enable
+
+    lda #$a0
+    jsr spi_rw_byte
+
+-   lda text,x
+    beq +
+    phx
+    jsr spi_rw_byte
+    plx
+    inx
+    bra -
+
++   jsr rtc_disable
+    
+    jsr rtc_enable
+
+    lda #$80
+    jsr spi_rw_byte
+    
+    lda #$00
+    jsr spi_rw_byte
+    lda #$52
+	jsr spi_rw_byte
+	lda #$00
+	jsr spi_rw_byte
+	jsr rtc_disable
+    pla
+    rts
+
+rtc_disable
+	pha
+
+	lda #$80
+	ora kbd_flg
+	sta kbd_flg
+	; Deselect any SPI devices
+	lda #%11111110
+	sta via1portb
+	
+	pla
+	rts
+
+rtc_enable
+	pha
+	; Select SPI SS for keyboard
+	lda #%01110110
+	; and via1portb
+	sta via1portb
+
+	pla
+	rts
+
+text	!text "Hallo!", $00
