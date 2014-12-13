@@ -23,6 +23,7 @@ void init_kb(void)
 	MCUCR 	= (1 << ISC01);					  // INT0 interrupt on falling edge
 	GIMSK	= (1 << INT0);						  // Enable INT0 interrupt
 
+
 	DDRC	= (1 << PC0) | (1 << PC1);
 	PORTC  	= 3;
 }
@@ -50,6 +51,33 @@ ISR (INT0_vect)
 		decode(data);
 	}
 }
+
+// void send(uint8_t data)
+// {
+// 	static uint8_t bitcount = 11;			  // 0 = neg.  1 = pos.	
+
+// 	DDRD |= (1 << CLOCK) | (1 << DATA)
+
+
+// 	uint8_t tmp = SREG;
+// 	cli();
+
+// 	// request to send
+// 	PORT_KB &= ~(1 << CLOCK);
+// 	_delay_us(110);
+// 	PORT_KB &= ~(1 << DATA);
+// 	DDRD 	&= ~(1 << CLOCK); 
+// 	PORT_KB |= (1 << CLOCK);
+
+
+// 	while(PORT_KB & (1 << CLOCK) );
+
+
+
+
+// 	SREG = tmp;
+
+// }
 
 
 
