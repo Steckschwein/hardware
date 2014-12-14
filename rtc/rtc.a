@@ -2,65 +2,130 @@
 !src "../bios/defs.h.a"
 !src "../bios/bios.h.a"
 
-	jsr lcdclear
-    lda #dev_lcd
+	lda #dev_lcd
     sta chn_out
+
+    ; Set IRQ Vector
+    lda #<read
+    sta irqvec
+
+    lda #>read
+    sta irqvec+1
+
+
+	jsr lcdclear
+    
+	ldx #$02
+	ldy #$01
+    jsr lcdxy
+
+   	lda #':'
+   	jsr chrout
+
+   	ldx #$05
+    jsr lcdxy
+   	lda #':'
+   	jsr chrout
+
+	ldx #$02
+	ldy #$02
+    jsr lcdxy
+
+    lda #'.'
+    jsr chrout
+
+   	ldx #$05
+    jsr lcdxy
+
+    lda #'.'
+    jsr chrout
+
 
 
 	jsr rtc_enable
 	lda #$8f
 	jsr spi_rw_byte
-	lda #$00
+	lda #$05
 	jsr spi_rw_byte
 	jsr rtc_disable
 
--	ldx #$00
-	ldy #$01
-    jsr lcdxy
+	jsr rtc_enable
+	lda #$87
+	jsr spi_rw_byte
+	lda #$81
+	jsr spi_rw_byte
+	lda #$80
+	jsr spi_rw_byte
+	lda #$80
+	jsr spi_rw_byte
+	lda #$80
+	jsr spi_rw_byte
+	jsr rtc_disable
 
-   
-    ; jsr write
-	jsr read
-	jsr waste
-	jmp -
+	cli
 
-waste
-	pha 
-	phy
-	phx
-
-	ldx #$ff
-	ldy #$ff
--	
-!for i,0,64 {
-	nop
-}	
-	dey
-	bne -
-
--	dex
-	bne -
-
-	pla
-	ply
-	plx
-	rts
+-	jmp -
 
 read
 	pha
 	jsr rtc_enable
-    
+    lda #$07
+	jsr spi_rw_byte
+	jsr rtc_disable
+
+	jsr rtc_enable
     lda #$00
    	jsr spi_rw_byte
 
-!for i,0,2 {
+	ldx #$06
+    ldy #$01
+    jsr lcdxy
+
     jsr spi_r_byte
     jsr hexout	
-}
+
+	ldx #$03
+	ldy #$01
+    jsr lcdxy
+
+    jsr spi_r_byte
+    jsr hexout	
+
+	ldx #$00
+	ldy #$01
+    jsr lcdxy
+
+    jsr spi_r_byte
+    jsr hexout	
+
+
+    jsr spi_r_byte
+
+	ldx #$00
+	ldy #$02
+    jsr lcdxy
+
+	jsr spi_r_byte
+	jsr hexout	
+
+	ldx #$03
+	ldy #$02
+    jsr lcdxy
+
+	jsr spi_r_byte
+	jsr hexout	
+
+	ldx #$06
+	ldy #$02
+    jsr lcdxy
+	
+	jsr spi_r_byte
+	jsr hexout	
+
 	
 	jsr rtc_disable
 	pla
-	rts
+	rti
 
 write 
 	pha
@@ -96,6 +161,29 @@ write
 	jsr rtc_disable
     pla
     rts
+
+write_date
+	pha
+	jsr rtc_enable
+
+    lda #$83
+    jsr spi_rw_byte
+    lda #$06
+    jsr spi_rw_byte
+
+    lda #$13
+    jsr spi_rw_byte
+    lda #$12
+    jsr spi_rw_byte
+    lda #$14
+    jsr spi_rw_byte
+
+	jsr rtc_disable
+
+
+	pla
+	rts
+
 
 rtc_disable
 	pha
