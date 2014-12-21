@@ -3,11 +3,30 @@
 !src "../bios/bios.h.a"
 !src "fat32.h.a"
 
-fat_errno	 = $0300
-lba_begin 	 = $0310 ; Begin of FAT32, 4 bytes
-fat_reserved_sect = $0314 ; number of reserved sectors, 2 bytes
-cluster_begin_lba = $0316 ; begin of cluster area, 4 bytes
-sectors_per_fat = $0320 ; sectors per fat, 4 bytes
+!macro Copy .src, .trgt, .len {
+!for i,0,.len {
+	lda .src  + i
+	sta .trgt + i
+}	
+}
+
+!macro SDBlockAddr .src {
+	lda .src + 3
+	sta sd_cmd_param+0
+	lda .src + 2
+	sta sd_cmd_param+1
+	lda .src + 1
+	sta sd_cmd_param+2
+	lda .src + 0
+	sta sd_cmd_param+3
+}
+
+
+fat_errno	 		= $0300
+fat_begin_lba 		= $0310 ; Begin of FAT32, 4 bytes
+fat_reserved_sect 	= $0314 ; number of reserved sectors, 2 bytes
+cluster_begin_lba 	= $0316 ; begin of cluster area, 4 bytes
+sectors_per_fat 	= $0320 ; sectors per fat, 4 bytes
 
 sd_blktarget = $0400
 
@@ -34,7 +53,7 @@ add32
 
 main
 
-    lda #dev_lcd
+    lda #dev_uart
     sta chn_out
 	sei
 
@@ -51,20 +70,31 @@ main
 
 	jsr sd_read_block
 	jsr fat_check_signature
-
 	lda fat_errno
 	beq +
-
 	+PrintString fat_err_signature
 -	jmp -
 
 +
-	
+	lda sd_blkptr
+	sta tmp6
+	lda sd_blkptr+1
+	sta tmp6+1
+
+	clc
+	lda tmp6
+	adc #<BS_Partition0
+	sta tmp6
+	lda tmp6+1
+	adc #>BS_Partition0
+	sta tmp6+1
+
+
+	ldy #PE_TypeCode
 	; Check Partition 0 type code
-	lda sd_blktarget+BS_Partition0+PE_TypeCode
+	lda (tmp6),y 
 	cmp #$0b
 	beq +
-
 	cmp #$0c
 	beq +
 
@@ -73,36 +103,35 @@ main
 -	jmp -
 
 +
-
-	; write start sector from partition entry to cmd param buffer (in reverse order)
-	lda sd_blktarget+BS_Partition0+PE_LBABegin+3
-	sta sd_cmd_param
+	; Get LBA start sector
+	ldy #PE_LBABegin+3
+	lda (tmp6),y
 	sta fat_begin_lba + 3 
 
-	lda sd_blktarget+BS_Partition0+PE_LBABegin+2
-	sta sd_cmd_param+1
+	dey
+	lda (tmp6),y
 	sta fat_begin_lba + 2
 
-	lda sd_blktarget+BS_Partition0+PE_LBABegin+1
-	sta sd_cmd_param+2
+	dey
+	lda (tmp6),y
 	sta fat_begin_lba + 1
 	
-	lda sd_blktarget+BS_Partition0+PE_LBABegin
-	sta sd_cmd_param+4	
+	dey
+	lda (tmp6),y
 	sta fat_begin_lba + 0
-	
+
+	; Write LBA start address to sd param buffer
+	+SDBlockAddr fat_begin_lba
+
 	; Read FAT Volume ID at LBABegin and Check signature
 	jsr sd_read_block
 	jsr fat_check_signature
-
 	lda fat_errno
 	beq +
-
 	+PrintString fat_err_signature
 -	jmp -
 
 +
-
 	; Bytes per Sector, must be 512 = $0200
 	; lda sd_blktarget + BPB_BytsPerSec + 1
 	; lda sd_blktarget + BPB_BytsPerSec 
@@ -111,30 +140,33 @@ main
 	; lda sd_blktarget + BPB_SecPerClus
 
 	; Number of reserved Sectors, $20
-	lda sd_blktarget + BPB_RsvdSecCnt + 1
+
+	ldy #BPB_RsvdSecCnt +1
+	lda (sd_blkptr),y
 	sta fat_reserved_sect + 1 
 
-	lda sd_blktarget + BPB_RsvdSecCnt 
+	dey
+	lda (sd_blkptr),y
 	sta fat_reserved_sect 
-
+	
 	; Number of FATs. Must be 2
 	; lda sd_blktarget + BPB_NumFATs
 
-	lda sd_blktarget + BPB_FATSz32 + 3
+
+	ldy #BPB_FATSz32 + 3
+	lda (sd_blkptr),y
 	sta sectors_per_fat + 3
-	lda sd_blktarget + BPB_FATSz32 + 2
+	dey
+	lda (sd_blkptr),y
 	sta sectors_per_fat + 2
-	lda sd_blktarget + BPB_FATSz32 + 1
+	dey
+	lda (sd_blkptr),y
 	sta sectors_per_fat + 1
-	lda sd_blktarget + BPB_FATSz32 + 0
-	sta sectors_per_fat + 0
+	dey
+	lda (sd_blkptr),y
+	sta sectors_per_fat 
 
-
-
-!for i,0,3 {
-	lda fat_begin_lba + i
-	sta add32op1 + i
-}	
+	+Copy fat_begin_lba, add32op1, 3
 
 	stz add32op2 + 3
 	stz add32op2 + 2
@@ -147,61 +179,76 @@ main
 
 	jsr add32
 
-!for i,0,3 {
-	lda add32res + i
-	sta fat_begin_lba + i
-}	
+	+Copy add32res, fat_begin_lba, 3
+	+Copy fat_begin_lba, add32op1, 3
+	+Copy sectors_per_fat, add32op2, 3
 
-!for i,0,3 {
-	lda fat_begin_lba + i
-	sta add32op1 + i
-}
-!for i,0,3 {
-	lda sectors_per_fat + i
-	sta add32op2 + i
-}
 	jsr add32
 
-!for i,0,3 {
-	lda add32res + i
-	sta add32op1 + i
-}
+	+Copy add32res, add32op1, 3
 
 	jsr add32
 	
-!for i,0,3 {
-	lda add32res + i
-	sta cluster_begin_lba + i
-}
+	+Copy add32res, cluster_begin_lba, 3
 
 	jsr sd_param_init
 
 
-	lda cluster_begin_lba + 3
-	sta sd_cmd_param+0
-	lda cluster_begin_lba + 2
-	sta sd_cmd_param+1
-	lda cluster_begin_lba + 1
-	sta sd_cmd_param+2
-	lda cluster_begin_lba + 0
-	sta sd_cmd_param+3
+	+SDBlockAddr cluster_begin_lba
 	
+
 	jsr sd_read_block
 
 	ldx #$00
 
--	lda sd_blktarget + 160 + DIR_Name,x
-	jsr chrout
-	inx
-	cpx #$0b
-	bne -
+	lda sd_blkptr
+	sta tmp6
+
+	lda sd_blkptr+1
+	sta tmp6+1
+
+-	ldy #DIR_Name
+--	lda (tmp6),y
+	cpy #DIR_Name
+	bne +
+	
+	cmp #$e5 ; deleted file
+	beq .next
+
+	cmp #$00 ; end of dir
+	beq .end
++	jsr chrout
+	iny
+	cpy #$0b
+	bne --
 
 	lda #' '
 	jsr chrout
 
-	lda sd_blktarget + 160 + DIR_Attr
+	ldy #DIR_Attr
+	lda (tmp6),y
 	jsr hexout
 
+	lda #10
+	jsr chrout
+	lda #13
+	jsr chrout
+
+.next
+	clc
+	lda tmp6
+	adc #<32
+	sta tmp6
+
+	lda tmp6+1
+	adc #>32
+	sta tmp6+1
+
+	bra -
+
+.end
+	lda #'X'
+	jsr chrout
 	jsr sd_deselect_card
 
 
@@ -213,11 +260,30 @@ fat_check_signature
 	pha
 	stz fat_errno
 
-	lda sd_blktarget + BS_Signature
+	lda sd_blkptr
+	sta tmp6
+	lda sd_blkptr+1
+	sta tmp6+1
+
+	
+	clc
+	lda tmp6
+	adc #<BS_Signature
+	sta tmp6
+
+
+	lda tmp6+1
+	adc #>BS_Signature
+	sta tmp6+1
+
+	ldy #$00
+	lda (tmp6),y
 	cmp #$55
 	bne +
 
-	lda sd_blktarget + BS_Signature+1
+	iny
+
+	lda (tmp6),y
 	cmp #$aa
 	bne +
 	
@@ -237,5 +303,4 @@ fat_check_signature
 fat_err_signature !text "bad block signature", $00
 fat_err_partition !text "invalid partition type", $00
 
-; some space for numbers
-fat_begin_lba !byte $00,$00,$00,$00
+
