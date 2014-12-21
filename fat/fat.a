@@ -60,19 +60,112 @@ main
     sta chn_out
 	sei
 
-	jsr sd_select_card
-
-	jsr lcdclear
-
-	jsr sd_param_init
-
 	lda #$00
 	sta sd_blkptr
 	lda #$04
 	sta sd_blkptr+1
 
+	jsr lcdclear
+
+	jsr fat_mount
+
+	
+	; just use cluster_begin_lba if reading root dir cluster
+	+Copy cluster_begin_lba, lba_addr, 3
+
+	; Calculate cluster LBA address for anything else
+	; jsr calc_lba_addr
+
+	
+	jsr fat_list_dir
+	jsr sd_deselect_card
+
+-	jmp -
+
+
+fat_check_signature
+	pha
+	stz fat_errno
+
+	clc
+	lda sd_blkptr
+	adc #<BS_Signature
+	sta tmp6
+	lda sd_blkptr+1
+	adc #>BS_Signature
+	sta tmp6+1
+
+	ldy #$00
+	lda (tmp6),y
+	cmp #$55
+	bne +
+
+	iny
+
+	lda (tmp6),y
+	cmp #$aa
+	bne +
+	
+	pla
+	rts
+
+
++	inc fat_errno
+	pla
+	rts
+
+calc_lba_addr
+	pha
+	phy
+
+	; lba_addr = cluster_begin_lba + (cluster_number - 2) * sectors_per_cluster;
+
+	sec
+	lda cluster_number 
+	sbc #$02
+	sta cluster_number 
+
+!for i,1,3 {
+	lda cluster_number + i 
+	sbc #$00
+	sta cluster_number + i
+}
+
+	+Copy cluster_begin_lba, lba_addr, 3
+	
+	ldy sectors_per_cluster
+
+-	clc
+	lda cluster_number + 0
+	adc lba_addr + 0
+	sta lba_addr + 0
+	lda cluster_number + 1
+	adc lba_addr + 1
+	sta lba_addr + 1
+	lda cluster_number + 2
+	adc lba_addr + 2
+	sta lba_addr + 2
+	lda cluster_number + 3
+	adc lba_addr + 3
+	sta lba_addr + 3
+	dey
+	bne -
+
+	ply
+	pla
+
+	rts
+
+fat_mount
+	jsr sd_select_card
+	jsr sd_param_init
+
 	jsr sd_read_block
 	jsr fat_check_signature
+
+	pha
+	phy
+
 	lda fat_errno
 	beq +
 	+PrintString fat_err_signature
@@ -177,7 +270,6 @@ main
 	lda (sd_blkptr),y
 	sta cluster_number 
 
-
 	+Copy fat_begin_lba, add32op1, 3
 
 	stz add32op2 + 3
@@ -203,35 +295,22 @@ main
 	
 	+Copy add32res, cluster_begin_lba, 3
 
+	ply
+	pla
+
+	rts
 
 
-	; lba_addr = cluster_begin_lba + (cluster_number - 2) * sectors_per_cluster;
-
-	sec
-	lda cluster_number 
-	sbc #$02
-	sta cluster_number 
-
-!for i,1,3 {
-	lda cluster_number + i 
-	sbc #$00
-	sta cluster_number + i
-}
-
-
+fat_list_dir
+	pha
+	phx	
+	phy
 
 	jsr sd_param_init
 
-	jsr calc_lba_addr
-
-
-
 	+SDBlockAddr lba_addr
 	
-
 	jsr sd_read_block
-
-	ldx #$00
 
 	lda sd_blkptr
 	sta tmp6
@@ -239,18 +318,19 @@ main
 	lda sd_blkptr+1
 	sta tmp6+1
 
--	
-	ldy #DIR_Attr
+-	ldy #DIR_Attr
 	lda (tmp6),y
-	cmp #$0f
+	cmp #$0f ; Long filename, skip this one
 	beq .next
-	sta tmp5
+	bit #$02 ; Hidden attribute set, skip
+    bne .next
+	tax
 
 
 	ldy #DIR_Name
 --	lda (tmp6),y
-	cpy #DIR_Name
-	bne +
+	cpy #DIR_Name 	; First character?
+	bne +			; yes, check stuff
 	
 	cmp #$e5 ; deleted file
 	beq .next
@@ -265,7 +345,7 @@ main
 	lda #' '
 	jsr chrout
 
-	lda tmp5
+	txa
 	jsr hexout
 
 	lda #' '
@@ -303,75 +383,10 @@ main
 	bra -
 
 .end
-	lda #'X'
-	jsr chrout
-	jsr sd_deselect_card
-
-
-
--	jmp -
-
-
-fat_check_signature
-	pha
-	stz fat_errno
-
-	clc
-	lda sd_blkptr
-	adc #<BS_Signature
-	sta tmp6
-	lda sd_blkptr+1
-	adc #>BS_Signature
-	sta tmp6+1
-
-	ldy #$00
-	lda (tmp6),y
-	cmp #$55
-	bne +
-
-	iny
-
-	lda (tmp6),y
-	cmp #$aa
-	bne +
-	
-	pla
-	rts
-
-
-+	inc fat_errno
-	pla
-	rts
-
-calc_lba_addr
-	pha
-	phy
-
-	+Copy cluster_begin_lba, lba_addr, 3
-	
-	ldy sectors_per_cluster
-
--	clc
-	lda cluster_number + 0
-	adc lba_addr + 0
-	sta lba_addr + 0
-	lda cluster_number + 1
-	adc lba_addr + 1
-	sta lba_addr + 1
-	lda cluster_number + 2
-	adc lba_addr + 2
-	sta lba_addr + 2
-	lda cluster_number + 3
-	adc lba_addr + 3
-	sta lba_addr + 3
-	dey
-	bne -
-
 	ply
+	plx
 	pla
-
 	rts
-
 
 
 
