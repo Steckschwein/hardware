@@ -7,7 +7,7 @@
 !for i,0,.len {
 	lda .src  + i
 	sta .trgt + i
-}	
+}
 }
 
 !macro SDBlockAddr .src {
@@ -76,16 +76,11 @@ main
 -	jmp -
 
 +
-	lda sd_blkptr
-	sta tmp6
-	lda sd_blkptr+1
-	sta tmp6+1
-
 	clc
-	lda tmp6
+	lda sd_blkptr
 	adc #<BS_Partition0
 	sta tmp6
-	lda tmp6+1
+	lda sd_blkptr+1
 	adc #>BS_Partition0
 	sta tmp6+1
 
@@ -207,7 +202,15 @@ main
 	lda sd_blkptr+1
 	sta tmp6+1
 
--	ldy #DIR_Name
+-	
+	ldy #DIR_Attr
+	lda (tmp6),y
+	cmp #$0f
+	beq .next
+	sta tmp5
+
+
+	ldy #DIR_Name
 --	lda (tmp6),y
 	cpy #DIR_Name
 	bne +
@@ -225,9 +228,25 @@ main
 	lda #' '
 	jsr chrout
 
-	ldy #DIR_Attr
+	lda tmp5
+	jsr hexout
+
+	lda #' '
+	jsr chrout
+
+	ldy #DIR_FileSize + 3
 	lda (tmp6),y
 	jsr hexout
+	dey
+	lda (tmp6),y
+	jsr hexout
+	dey
+	lda (tmp6),y
+	jsr hexout
+	dey
+	lda (tmp6),y
+	jsr hexout
+	
 
 	lda #10
 	jsr chrout
@@ -260,19 +279,11 @@ fat_check_signature
 	pha
 	stz fat_errno
 
-	lda sd_blkptr
-	sta tmp6
-	lda sd_blkptr+1
-	sta tmp6+1
-
-	
 	clc
-	lda tmp6
+	lda sd_blkptr
 	adc #<BS_Signature
 	sta tmp6
-
-
-	lda tmp6+1
+	lda sd_blkptr+1
 	adc #>BS_Signature
 	sta tmp6+1
 
