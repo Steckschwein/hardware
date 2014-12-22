@@ -39,20 +39,7 @@ add32res	= $8000 + 8
 
 	jmp main 
 
-;----------------------------------------------------------------------------------------------
-; add 2 32bit numbers in add32op1 and add32op2, result in add32res
-;----------------------------------------------------------------------------------------------
-add32
-	pha
-	clc
 
-!for i,0,3 {
-	lda add32op1 + i
-	adc add32op2 + i
-	sta add32res + i	
-}
-	pla
-	rts
 
 main
 
@@ -60,16 +47,12 @@ main
     sta chn_out
 	sei
 
-	lda #$00
-	sta sd_blkptr
-	lda #$04
-	sta sd_blkptr+1
 
 	jsr lcdclear
 
 	jsr fat_mount
 
-	
+
 	; just use cluster_begin_lba if reading root dir cluster
 	+Copy cluster_begin_lba, lba_addr, 3
 
@@ -160,6 +143,8 @@ fat_mount
 	jsr sd_select_card
 	jsr sd_param_init
 
+	+SetVector $0400, sd_blkptr
+
 	jsr sd_read_block
 	jsr fat_check_signature
 
@@ -174,15 +159,15 @@ fat_mount
 +	clc
 	lda sd_blkptr
 	adc #<BS_Partition0
-	sta tmp6
+	sta sd_blkptr
 	lda sd_blkptr+1
 	adc #>BS_Partition0
-	sta tmp6+1
+	sta sd_blkptr+1
 
 
 	ldy #PE_TypeCode
 	; Check Partition 0 type code
-	lda (tmp6),y 
+	lda (sd_blkptr),y 
 	cmp #$0b
 	beq +
 	cmp #$0c
@@ -193,28 +178,30 @@ fat_mount
 -	jmp -
 
 +
-	; Get LBA start sector
+	; Get LBA partition start sector
 	ldy #PE_LBABegin+3
-	lda (tmp6),y
+	lda (sd_blkptr),y
 	sta fat_begin_lba + 3 
 
 	dey
-	lda (tmp6),y
+	lda (sd_blkptr),y
 	sta fat_begin_lba + 2
 
 	dey
-	lda (tmp6),y
+	lda (sd_blkptr),y
 	sta fat_begin_lba + 1
 	
 	dey
-	lda (tmp6),y
+	lda (sd_blkptr),y
 	sta fat_begin_lba + 0
 
 	; Write LBA start address to sd param buffer
 	+SDBlockAddr fat_begin_lba
 
+	+SetVector $0400, sd_blkptr
 	; Read FAT Volume ID at LBABegin and Check signature
 	jsr sd_read_block
+
 	jsr fat_check_signature
 	lda fat_errno
 	beq +
@@ -270,7 +257,10 @@ fat_mount
 	lda (sd_blkptr),y
 	sta cluster_number 
 
-	+Copy fat_begin_lba, add32op1, 3
+
+	; cluster_begin_lba = Partition_LBA_Begin + Number_of_Reserved_Sectors + (Number_of_FATs * Sectors_Per_FAT);
+
+	; +Copy fat_begin_lba, add32op1, 3
 
 	stz add32op2 + 3
 	stz add32op2 + 2
@@ -281,19 +271,38 @@ fat_mount
 	lda fat_reserved_sect 
 	sta add32op2 
 
-	jsr add32
+	; jsr add32
+	clc
+!for i,0,3 {
+	lda fat_begin_lba + i
+	adc add32op2 + i
+	sta cluster_begin_lba + i	
+}
 
-	+Copy add32res, fat_begin_lba, 3
-	+Copy fat_begin_lba, add32op1, 3
-	+Copy sectors_per_fat, add32op2, 3
 
-	jsr add32
+	; +Copy add32res, fat_begin_lba, 3
+	; +Copy fat_begin_lba, add32op1, 3
+	; +Copy sectors_per_fat, add32op2, 3
 
-	+Copy add32res, add32op1, 3
+	; jsr add32
+	clc
+!for i,0,3 {
+	lda cluster_begin_lba + i
+	adc sectors_per_fat + i
+	sta cluster_begin_lba + i	
+}
+	clc
+!for i,0,3 {
+	lda cluster_begin_lba + i
+	adc sectors_per_fat + i
+	sta cluster_begin_lba + i	
+}
 
-	jsr add32
+	; +Copy add32res, add32op1, 3
+
+	; jsr add32
 	
-	+Copy add32res, cluster_begin_lba, 3
+	; +Copy add32res, cluster_begin_lba, 3
 
 	ply
 	pla
@@ -308,27 +317,23 @@ fat_list_dir
 
 	jsr sd_param_init
 
+	+SetVector $0400, sd_blkptr
 	+SDBlockAddr lba_addr
-	
 	jsr sd_read_block
 
-	lda sd_blkptr
-	sta tmp6
-
-	lda sd_blkptr+1
-	sta tmp6+1
-
 -	ldy #DIR_Attr
-	lda (tmp6),y
+	lda (sd_blkptr),y
 	cmp #$0f ; Long filename, skip this one
 	beq .next
 	bit #$02 ; Hidden attribute set, skip
     bne .next
+
+
 	tax
 
 
 	ldy #DIR_Name
---	lda (tmp6),y
+--	lda (sd_blkptr),y
 	cpy #DIR_Name 	; First character?
 	bne +			; yes, check stuff
 	
@@ -345,42 +350,70 @@ fat_list_dir
 	lda #' '
 	jsr chrout
 
-	txa
-	jsr hexout
+    jsr foo
+
+
 
 	lda #' '
 	jsr chrout
 
-	ldy #DIR_FileSize + 3
-	lda (tmp6),y
-	jsr hexout
-	dey
-	lda (tmp6),y
-	jsr hexout
-	dey
-	lda (tmp6),y
-	jsr hexout
-	dey
-	lda (tmp6),y
-	jsr hexout
-	
 
-	lda #10
-	jsr chrout
-	lda #13
-	jsr chrout
+
+	txa
+ 	bit #$10 ; Is a directory
+    beq +
+    lda #'D'
+    jsr chrout
+    bra ++ 
+
++	bit #$04 ; Is system, load file
+	beq +
+    lda #'S'
+    jsr chrout
+
+	bne .load
+
++	bit #$08 ; Is volume ID
+	beq +
+    lda #'V'
+    jsr chrout
+
+
+    bra ++ 
++	
+
+	lda #'F'
+    jsr chrout
+
+++	
+	; ldy #DIR_FileSize + 3
+	; lda (sd_blkptr),y
+	; jsr hexout
+	; dey
+	; lda (sd_blkptr),y
+	; jsr hexout
+	; dey
+	; lda (sd_blkptr),y
+	; jsr hexout
+	; dey
+	; lda (sd_blkptr),y
+	; jsr hexout
+
+
+    jsr crlf
+
 
 .next
 	clc
-	lda tmp6
+	lda sd_blkptr
 	adc #<32
-	sta tmp6
+	sta sd_blkptr
 
-	lda tmp6+1
+	lda sd_blkptr+1
 	adc #>32
-	sta tmp6+1
+	sta sd_blkptr+1
 
-	bra -
+	jmp -
 
 .end
 	ply
@@ -388,6 +421,71 @@ fat_list_dir
 	pla
 	rts
 
+.load
+	
+	+SetVector $c000, sd_blkptr
+	+SDBlockAddr lba_addr
+	jsr sd_read_block
+
+	; lda #'X'
+	; jsr lcdprint
+
+	jsr sd_read_block
+
+	; lda #'Y'
+	; jsr lcdprint
+
+
+	jmp $c000
+
+-	jmp -
+
+foo
+	lda #' '
+    jsr chrout
+
+	ldy #DIR_FstClusHI +1
+	lda (sd_blkptr),y
+	sta cluster_number +3
+	jsr hexout
+
+	dey
+	lda (sd_blkptr),y
+	sta cluster_number +2
+	jsr hexout
+
+	lda #' '
+    jsr chrout
+
+	ldy #DIR_FstClusLO +1
+	lda (sd_blkptr),y
+	sta cluster_number +1
+	jsr hexout
+	dey
+	lda (sd_blkptr),y
+	sta cluster_number 
+	jsr hexout
+
+	lda #' '
+    jsr chrout
+
+	jsr calc_lba_addr
+
+!for i,3,0 {
+	lda lba_addr +i
+	jsr hexout
+}
+
+	rts
+
+crlf
+	pha
+	lda #10
+	jsr chrout
+	lda #13
+	jsr chrout
+	pla
+	rts
 
 
 
