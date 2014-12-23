@@ -21,6 +21,7 @@
 	sta sd_cmd_param+3
 }
 
+!address {
 
 fat_errno	 		= $0300
 fat_begin_lba 		= $0310 ; Begin of FAT32, 4 bytes
@@ -33,11 +34,10 @@ cluster_number		= $0329
 
 sd_blktarget = $0400
 
-add32op1	= $8000
-add32op2	= $8000 + 4
-add32res	= $8000 + 8
 
-	jmp main 
+steckos_start = $c000	
+
+}
 
 
 
@@ -58,9 +58,8 @@ main
 
 	; Calculate cluster LBA address for anything else
 	; jsr calc_lba_addr
+	jsr fat_read_dir
 
-	
-	jsr fat_list_dir
 	jsr sd_deselect_card
 
 -	jmp -
@@ -71,11 +70,11 @@ fat_check_signature
 	stz fat_errno
 
 	clc
-	lda sd_blkptr
-	adc #<BS_Signature
+	lda sd_blkptr 
+	adc #<BS_Signature 
 	sta tmp6
-	lda sd_blkptr+1
-	adc #>BS_Signature
+	lda sd_blkptr+1 
+	adc #>BS_Signature 
 	sta tmp6+1
 
 	ldy #$00
@@ -91,7 +90,6 @@ fat_check_signature
 	
 	pla
 	rts
-
 
 +	inc fat_errno
 	pla
@@ -143,20 +141,22 @@ fat_mount
 	jsr sd_select_card
 	jsr sd_param_init
 
-	+SetVector $0400, sd_blkptr
+	+SetVector sd_blktarget, sd_blkptr
 
 	jsr sd_read_block
 	jsr fat_check_signature
 
 	pha
 	phy
+	phx
 
 	lda fat_errno
 	beq +
 	+PrintString fat_err_signature
 -	jmp -
 
-+	clc
++	
+	clc
 	lda sd_blkptr
 	adc #<BS_Partition0
 	sta sd_blkptr
@@ -180,8 +180,9 @@ fat_mount
 +
 	; Get LBA partition start sector
 	ldy #PE_LBABegin+3
+
 	lda (sd_blkptr),y
-	sta fat_begin_lba + 3 
+	sta fat_begin_lba + 3
 
 	dey
 	lda (sd_blkptr),y
@@ -198,7 +199,7 @@ fat_mount
 	; Write LBA start address to sd param buffer
 	+SDBlockAddr fat_begin_lba
 
-	+SetVector $0400, sd_blkptr
+	+SetVector sd_blktarget, sd_blkptr
 	; Read FAT Volume ID at LBABegin and Check signature
 	jsr sd_read_block
 
@@ -212,7 +213,16 @@ fat_mount
 	; Bytes per Sector, must be 512 = $0200
 	; lda sd_blktarget + BPB_BytsPerSec + 1
 	; lda sd_blktarget + BPB_BytsPerSec 
-
+	ldy #BPB_BytsPerSec
+	lda (sd_blkptr),y
+	bne +
+	iny
+	lda (sd_blkptr),y
+	cmp #$02
+	beq ++
++	+PrintString fat_err_bad_sect_size
+-	jmp -
+++
 	; Sectors per Cluster. Valid: 1,2,4,8,16,32,64,128
 	ldy #BPB_SecPerClus
 	lda (sd_blkptr),y
@@ -227,10 +237,6 @@ fat_mount
 	lda (sd_blkptr),y
 	sta fat_reserved_sect 
 	
-	; Number of FATs. Must be 2
-	; lda sd_blktarget + BPB_NumFATs
-
-
 	ldy #BPB_FATSz32 + 3
 	lda (sd_blkptr),y
 	sta sectors_per_fat + 3
@@ -260,64 +266,49 @@ fat_mount
 
 	; cluster_begin_lba = Partition_LBA_Begin + Number_of_Reserved_Sectors + (Number_of_FATs * Sectors_Per_FAT);
 
-	; +Copy fat_begin_lba, add32op1, 3
-
-	stz add32op2 + 3
-	stz add32op2 + 2
-
-	lda fat_reserved_sect + 1
-	sta add32op2 + 1 
-
-	lda fat_reserved_sect 
-	sta add32op2 
-
-	; jsr add32
 	clc
-!for i,0,3 {
+!for i,0,1 {
 	lda fat_begin_lba + i
-	adc add32op2 + i
+	adc fat_reserved_sect + i
+	sta cluster_begin_lba + i	
+}
+
+!for i,2,3 {
+	lda fat_begin_lba + i
+	adc #$00
 	sta cluster_begin_lba + i	
 }
 
 
-	; +Copy add32res, fat_begin_lba, 3
-	; +Copy fat_begin_lba, add32op1, 3
-	; +Copy sectors_per_fat, add32op2, 3
+	; Number of FATs. Must be 2
 
-	; jsr add32
-	clc
+	ldy #BPB_NumFATs
+	lda (sd_blkptr),y
+	tax
+
+-	clc
 !for i,0,3 {
 	lda cluster_begin_lba + i
 	adc sectors_per_fat + i
 	sta cluster_begin_lba + i	
 }
-	clc
-!for i,0,3 {
-	lda cluster_begin_lba + i
-	adc sectors_per_fat + i
-	sta cluster_begin_lba + i	
-}
+	dex
+	bne -
 
-	; +Copy add32res, add32op1, 3
-
-	; jsr add32
-	
-	; +Copy add32res, cluster_begin_lba, 3
-
+	plx
 	ply
 	pla
 
 	rts
 
 
-fat_list_dir
+fat_read_dir
 	pha
-	phx	
 	phy
 
 	jsr sd_param_init
-
-	+SetVector $0400, sd_blkptr
+	
+	+SetVector sd_blktarget, sd_blkptr
 	+SDBlockAddr lba_addr
 	jsr sd_read_block
 
@@ -329,170 +320,142 @@ fat_list_dir
     bne .next
 
 
-	tax
+    pha
+    ldy #DIR_Name
+	lda (sd_blkptr),y
 
-
-	ldy #DIR_Name
---	lda (sd_blkptr),y
-	cpy #DIR_Name 	; First character?
-	bne +			; yes, check stuff
-	
 	cmp #$e5 ; deleted file
 	beq .next
 
 	cmp #$00 ; end of dir
 	beq .end
-+	jsr chrout
-	iny
-	cpy #$0b
-	bne --
 
-	lda #' '
-	jsr chrout
+	jsr fat_list_entry
 
-    jsr foo
-
-
-
-	lda #' '
-	jsr chrout
-
-
-
-	txa
- 	bit #$10 ; Is a directory
-    beq +
-    lda #'D'
-    jsr chrout
-    bra ++ 
-
-+	bit #$04 ; Is system, load file
-	beq +
-    lda #'S'
-    jsr chrout
-
-	bne .load
-
-+	bit #$08 ; Is volume ID
-	beq +
-    lda #'V'
-    jsr chrout
-
-
-    bra ++ 
-+	
-
-	lda #'F'
-    jsr chrout
-
-++	
-	; ldy #DIR_FileSize + 3
-	; lda (sd_blkptr),y
-	; jsr hexout
-	; dey
-	; lda (sd_blkptr),y
-	; jsr hexout
-	; dey
-	; lda (sd_blkptr),y
-	; jsr hexout
-	; dey
-	; lda (sd_blkptr),y
-	; jsr hexout
-
-
-    jsr crlf
+	pla
+   	bit #$04 ; System attribute. load file
+   	
+   	bne .load
 
 
 .next
 	clc
 	lda sd_blkptr
-	adc #<32
+	adc #32
 	sta sd_blkptr
-
-	lda sd_blkptr+1
-	adc #>32
-	sta sd_blkptr+1
-
+	bcc +
+	inc sd_blkptr+1	
++
 	jmp -
 
 .end
 	ply
-	plx
 	pla
 	rts
 
 .load
-	
-	+SetVector $c000, sd_blkptr
-	+SDBlockAddr lba_addr
-	jsr sd_read_block
+	+PrintString fat_loading
 
-	; lda #'X'
-	; jsr lcdprint
-
-	jsr sd_read_block
-
-	; lda #'Y'
-	; jsr lcdprint
-
-
-	jmp $c000
-
--	jmp -
-
-foo
-	lda #' '
-    jsr chrout
-
+	ldy #DIR_Name
+--	lda (sd_blkptr),y
+	jsr chrout
+	iny
+	cpy #$0b
+	bne --
 	ldy #DIR_FstClusHI +1
 	lda (sd_blkptr),y
 	sta cluster_number +3
-	jsr hexout
 
 	dey
 	lda (sd_blkptr),y
 	sta cluster_number +2
-	jsr hexout
-
-	lda #' '
-    jsr chrout
 
 	ldy #DIR_FstClusLO +1
 	lda (sd_blkptr),y
 	sta cluster_number +1
-	jsr hexout
 	dey
 	lda (sd_blkptr),y
 	sta cluster_number 
-	jsr hexout
-
-	lda #' '
-    jsr chrout
 
 	jsr calc_lba_addr
 
-!for i,3,0 {
-	lda lba_addr +i
-	jsr hexout
-}
+	
+	+SetVector steckos_start, sd_blkptr
+	+SDBlockAddr lba_addr
+	jsr sd_read_block
 
-	rts
+	+PrintString fat_loading_done
+
+	jmp steckos_start
+
+;-	jmp -
+
+fat_list_entry
+	ldy #DIR_Name
+--	lda (sd_blkptr),y
+	jsr chrout
+	iny
+	cpy #$0b
+	bne --
+
+	jsr space
+
+	ldy #DIR_FileSize + 3
+	lda (sd_blkptr),y
+	jsr hexout
+	dey
+	lda (sd_blkptr),y
+	jsr hexout
+	dey
+	lda (sd_blkptr),y
+	jsr hexout
+	dey
+	lda (sd_blkptr),y
+	jsr hexout
+
+	jsr space
+
+	ldy #DIR_Attr
+	lda (sd_blkptr),y
+ 	bit #$10 ; Is a directory
+    beq +
+    lda #'D'
+    bra ++ 
+
++	bit #$04 ; Is system
+	beq +
+    lda #'S'
+    bra ++
+ 
++	bit #$08 ; Is volume ID
+	beq +
+    lda #'V'
+    
+    bra ++ 
++	
+	lda #'F'
+++	jsr chrout
+	jmp crlf
+;	rts
+
 
 crlf
-	pha
 	lda #10
 	jsr chrout
 	lda #13
-	jsr chrout
-	pla
-	rts
+	jmp chrout
+	; rts
 
-
-
+space 
+	lda #' '
+	jmp chrout
+	; rts
 
 ;fat_begin_lba = Partition_LBA_Begin + Number_of_Reserved_Sectors;
 ;cluster_begin_lba = Partition_LBA_Begin + Number_of_Reserved_Sectors + (Number_of_FATs * Sectors_Per_FAT);
 fat_err_signature !text "bad block signature", $00
 fat_err_partition !text "invalid partition type", $00
-
-
+fat_err_bad_sect_size !text "sector size unsupported", $00
+fat_err_num_fats	  !text "invalid number of FATs (!= 2)", $00
+fat_loading		  !text "Loading ",$00
+fat_loading_done  !text " done.",$00
