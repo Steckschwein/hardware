@@ -32,10 +32,10 @@ sectors_per_cluster = $0324 ; sectors per cluster, 1 byte
 lba_addr			= $0325 ; lba address, 4 bytes
 cluster_number		= $0329
 
-sd_blktarget = $0400
+sd_blktarget 		= $0400
 
 
-steckos_start = $c000	
+steckos_start		= $c000	
 
 }
 
@@ -69,22 +69,10 @@ fat_check_signature
 	pha
 	stz fat_errno
 
-	clc
-	lda sd_blkptr 
-	adc #<BS_Signature 
-	sta tmp6
-	lda sd_blkptr+1 
-	adc #>BS_Signature 
-	sta tmp6+1
-
-	ldy #$00
-	lda (tmp6),y
+	lda sd_blktarget + BS_Signature
 	cmp #$55
 	bne +
-
-	iny
-
-	lda (tmp6),y
+	lda sd_blktarget + BS_Signature+1
 	cmp #$aa
 	bne +
 	
@@ -156,18 +144,9 @@ fat_mount
 -	jmp -
 
 +	
-	clc
-	lda sd_blkptr
-	adc #<BS_Partition0
-	sta sd_blkptr
-	lda sd_blkptr+1
-	adc #>BS_Partition0
-	sta sd_blkptr+1
+	part0 = sd_blktarget + BS_Partition0
 
-
-	ldy #PE_TypeCode
-	; Check Partition 0 type code
-	lda (sd_blkptr),y 
+	lda part0 + PE_TypeCode
 	cmp #$0b
 	beq +
 	cmp #$0c
@@ -178,23 +157,14 @@ fat_mount
 -	jmp -
 
 +
-	; Get LBA partition start sector
-	ldy #PE_LBABegin+3
+	ldx #$00
+-	
+	lda part0 + PE_LBABegin,x
+	sta fat_begin_lba,x
+	inx
+	cpx #$04
+	bne -
 
-	lda (sd_blkptr),y
-	sta fat_begin_lba + 3
-
-	dey
-	lda (sd_blkptr),y
-	sta fat_begin_lba + 2
-
-	dey
-	lda (sd_blkptr),y
-	sta fat_begin_lba + 1
-	
-	dey
-	lda (sd_blkptr),y
-	sta fat_begin_lba + 0
 
 	; Write LBA start address to sd param buffer
 	+SDBlockAddr fat_begin_lba
@@ -211,58 +181,41 @@ fat_mount
 
 +
 	; Bytes per Sector, must be 512 = $0200
-	; lda sd_blktarget + BPB_BytsPerSec + 1
-	; lda sd_blktarget + BPB_BytsPerSec 
-	ldy #BPB_BytsPerSec
-	lda (sd_blkptr),y
+	lda sd_blktarget + BPB_BytsPerSec
 	bne +
-	iny
-	lda (sd_blkptr),y
+
+	lda sd_blktarget + BPB_BytsPerSec + 1
 	cmp #$02
 	beq ++
 +	+PrintString fat_err_bad_sect_size
 -	jmp -
 ++
 	; Sectors per Cluster. Valid: 1,2,4,8,16,32,64,128
-	ldy #BPB_SecPerClus
-	lda (sd_blkptr),y
+	lda sd_blktarget + BPB_SecPerClus
 	sta sectors_per_cluster
 	
 	; Number of reserved Sectors, $20
-	ldy #BPB_RsvdSecCnt +1
-	lda (sd_blkptr),y
+	lda sd_blktarget + BPB_RsvdSecCnt + 1
 	sta fat_reserved_sect + 1 
 
-	dey
-	lda (sd_blkptr),y
+	lda sd_blktarget + BPB_RsvdSecCnt 
 	sta fat_reserved_sect 
-	
-	ldy #BPB_FATSz32 + 3
-	lda (sd_blkptr),y
-	sta sectors_per_fat + 3
-	dey
-	lda (sd_blkptr),y
-	sta sectors_per_fat + 2
-	dey
-	lda (sd_blkptr),y
-	sta sectors_per_fat + 1
-	dey
-	lda (sd_blkptr),y
-	sta sectors_per_fat 
 
-	ldy #BPB_RootClus +3
-	lda (sd_blkptr),y
-	sta cluster_number + 3
-	dey
-	lda (sd_blkptr),y
-	sta cluster_number + 2
-	dey
-	lda (sd_blkptr),y
-	sta cluster_number + 1
-	dey
-	lda (sd_blkptr),y
-	sta cluster_number 
+	ldx #$00
+-	
+	lda sd_blktarget + BPB_FATSz32,x
+	sta sectors_per_fat,x
+	inx
+	cpx #$04
+	bne -
 
+	ldx #$00
+-	
+	lda sd_blktarget + BPB_RootClus,x
+	sta cluster_number,x
+	inx
+	cpx #$04
+	bne -
 
 	; cluster_begin_lba = Partition_LBA_Begin + Number_of_Reserved_Sectors + (Number_of_FATs * Sectors_Per_FAT);
 
@@ -281,17 +234,19 @@ fat_mount
 
 
 	; Number of FATs. Must be 2
-
-	ldy #BPB_NumFATs
-	lda (sd_blkptr),y
+	lda sd_blktarget + BPB_NumFATs
 	tax
 
 -	clc
-!for i,0,3 {
-	lda cluster_begin_lba + i
-	adc sectors_per_fat + i
-	sta cluster_begin_lba + i	
-}
+	ldy #$00
+--
+	lda cluster_begin_lba,y
+	adc sectors_per_fat,y
+	sta cluster_begin_lba,y
+	iny 
+	cpy #$04
+	bne --	
+
 	dex
 	bne -
 
@@ -319,14 +274,12 @@ fat_read_dir
 	bit #$02 ; Hidden attribute set, skip
     bne .next
 
-
     pha
     ldy #DIR_Name
 	lda (sd_blkptr),y
 
 	cmp #$e5 ; deleted file
 	beq .next
-
 	cmp #$00 ; end of dir
 	beq .end
 
@@ -379,7 +332,6 @@ fat_read_dir
 
 	jsr calc_lba_addr
 
-	
 	+SetVector steckos_start, sd_blkptr
 	+SDBlockAddr lba_addr
 	jsr sd_read_block
@@ -392,15 +344,16 @@ fat_read_dir
 
 fat_list_entry
 	ldy #DIR_Name
---	lda (sd_blkptr),y
+-	lda (sd_blkptr),y
 	jsr chrout
 	iny
 	cpy #$0b
-	bne --
+	bne -
 
 	jsr space
 
 	ldy #DIR_FileSize + 3
+
 	lda (sd_blkptr),y
 	jsr hexout
 	dey
@@ -417,6 +370,7 @@ fat_list_entry
 
 	ldy #DIR_Attr
 	lda (sd_blkptr),y
+
  	bit #$10 ; Is a directory
     beq +
     lda #'D'
@@ -430,7 +384,6 @@ fat_list_entry
 +	bit #$08 ; Is volume ID
 	beq +
     lda #'V'
-    
     bra ++ 
 +	
 	lda #'F'
