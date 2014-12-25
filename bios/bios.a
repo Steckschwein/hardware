@@ -5,13 +5,13 @@
 *= $e000			; ROM Start
 !src "../charsets/char.ascii.vc20.h.a"
 
-biosversion	!text "V0611", $00	; Version String
+biosversion	!text "V2512", $00	; Version String
 
 start_msg
 !text "STECKSCHWEIN 1.0", $0d
 !text "Thomas Woinke", $0d
 !text "Marko Lauke", $0d,$0d
-!text "BIOS    : V0611", $0d
+!text "BIOS    : V2512", $0d
 ;!text "Clock   :", $0d
 !text "RAM end : ", $0
 ready_msg
@@ -313,26 +313,27 @@ check_stack
 ;----------------------------------------------------------------------------------------------
 do_nmi 
 			
-			pha
-			jsr lcdclear
+			; pha
+			; jsr lcdclear
 
-			jsr lcdhex
+			; jsr lcdhex
 			
-			lda #' '
-			jsr lcdprint
+			; lda #' '
+			; jsr lcdprint
 			
-			txa
-			jsr lcdhex
+			; txa
+			; jsr lcdhex
 
-			lda #' '
-			jsr lcdprint
+			; lda #' '
+			; jsr lcdprint
 
 
-			tya
-			jsr lcdhex
+			; tya
+			; jsr lcdhex
 
 		
-			pla
+			; pla
+			jmp do_reset
 			rti
 
 ;----------------------------------------------------------------------------------------------
@@ -355,6 +356,19 @@ i_irqhandler
 ;----------------------------------------------------------------------------------------------
 ; IO Wrapper
 ;----------------------------------------------------------------------------------------------
+.chrin
+		pha
+		lda chn_in
+		bne +  ; $00 - keyboard
+		pla
+		jmp .kbd_chrin
++		cmp #$01
+		bne +
+		pla
+		jmp i_uart_rx
++
+		pla
+		rts
 ;----------------------------------------------------------------------------------------------
 ; Output character on active output device
 ;----------------------------------------------------------------------------------------------
@@ -1243,6 +1257,48 @@ i_sd_param_init
 	inc sd_cmd_chksum
 	rts
 
+;---------------------------------------------------------------------
+; enable keyboard controller on SPI bus
+;---------------------------------------------------------------------
+.kbd_enable
+	pha
+	; Select SPI SS for keyboard
+	lda #%01111010
+	; and via1portb
+	sta via1portb
+
+	lda #$7f
+	and kbd_flg
+	sta kbd_flg
+
+	pla
+	rts
+
+;---------------------------------------------------------------------
+; disable keyboard controller on SPI bus
+;---------------------------------------------------------------------
+.kbd_disable
+	pha
+
+	; Deselect any SPI devices
+	lda #%11111110
+	sta via1portb
+	
+	pla
+	rts
+
+;---------------------------------------------------------------------
+; get key from keyboard, wait if $00
+;---------------------------------------------------------------------
+.kbd_chrin
+-
+	jsr .kbd_enable	
+	jsr i_spi_r_byte
+	jsr .kbd_disable
+	beq -
+	rts
+
+
 ;----------------------------------------------------------------------------------------------
 ; Tables and lookup data
 ;----------------------------------------------------------------------------------------------
@@ -1350,7 +1406,7 @@ b     cmp start_check
 sys_chrout
 chrout		jmp i_chrout
 sys_chrin
-chrin		jmp i_uart_rx
+chrin		jmp .chrin
 sys_lcdclear
 lcdclear	jmp i_lcdclear
 sys_lcdprint
