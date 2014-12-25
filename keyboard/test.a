@@ -7,13 +7,10 @@ txtbuf=$0300
 
 	jsr lcdclear
 
+	;stz chn_in
 	lda #dev_lcd
 	sta chn_out
 
-	
-	stz kbd_ptr
-
-	stz kbd_flg
 
 
 	jsr kbd_disable
@@ -27,17 +24,14 @@ txtbuf=$0300
 ; TODO: rausfinden warum hier nur datenmüll kommt
 ; DONE: attiny flop, atmega top
 	
-; -	
-; 	jsr kbd_enable
-; 	jsr spi_r_byte
-; 	jsr kbd_disable
+-	
+	jsr chrin
+	beq -
+ 	cmp #$ff
+ 	beq - 
+	jsr hexout
 
-; 	beq -
-;  	cmp #$ff
-;  	beq - 
-; 	jsr chrout
-
-;  	jmp -
+ 	jmp -
 
 
 
@@ -73,7 +67,7 @@ main
 	jsr lcdxy
 
 	ldx #$00
--	jsr getkey
+-	jsr chrin
 	
 	cmp #$0c
 	beq +
@@ -96,18 +90,18 @@ out jsr lcdclear
 	+PrintString  text2
 	+PrintString  txtbuf
 
---	jsr getkey
+--	jsr chrin
 	cmp #$0d
 	bne --
 	jmp main
 
-getkey
--
-	jsr kbd_enable	
-	jsr spi_r_byte
-	jsr kbd_disable
-	beq -
-	rts
+; getkey
+; -
+; 	jsr kbd_enable	
+; 	jsr spi_r_byte
+; 	jsr kbd_disable
+; 	beq -
+; 	rts
 
 
 ; kbd
