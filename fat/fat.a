@@ -4,10 +4,18 @@
 !src "fat32.h.a"
 
 !macro Copy .src, .trgt, .len {
-!for i,0,.len {
-	lda .src  + i
-	sta .trgt + i
-}
+	phx
+	ldx #$00
+-	lda .src,x
+	sta .trgt,x
+	inx
+	cpx #.len+1
+	bne -
+	plx
+; !for i,0,.len {
+; 	lda .src  + i
+; 	sta .trgt + i
+; }
 }
 
 !macro SDBlockAddr .src {
@@ -104,19 +112,12 @@ calc_lba_addr
 	
 	ldx sectors_per_cluster
 
-	ldy #$00
 -	clc
---	lda cluster_number,y
-	adc lba_addr,y
-	sta lba_addr,y
-	iny
-	cmp #$04
-	bne --
-; !for i,0,3 {
-; 	lda cluster_number + i
-; 	adc lba_addr + i
-; 	sta lba_addr + i	
-; }
+!for i,0,3 {
+	lda cluster_number + i
+	adc lba_addr + i
+	sta lba_addr + i	
+}
 	dex
 	bne -
 
@@ -135,7 +136,6 @@ fat_mount
 	jsr fat_check_signature
 
 	pha
-	phy
 	phx
 
 	lda fat_errno
@@ -237,18 +237,18 @@ fat_mount
 	; lda sd_blktarget + BPB_NumFATs
 
 	clc
-	ldy #$00
+	ldx #$00
 --
-	lda sectors_per_fat,y
+	lda sectors_per_fat,x
 	asl ; * 2
-	adc cluster_begin_lba,y
-	sta cluster_begin_lba,y
-	iny 
-	cpy #$04
+	adc cluster_begin_lba,x
+	sta cluster_begin_lba,x
+	inx
+	cpx #$04
 	bne --	
 
 	plx
-	ply
+	; ply
 	pla
 
 	rts
