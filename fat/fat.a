@@ -104,12 +104,19 @@ calc_lba_addr
 	
 	ldx sectors_per_cluster
 
+	ldy #$00
 -	clc
-!for i,0,3 {
-	lda cluster_number + i
-	adc lba_addr + i
-	sta lba_addr + i	
-}
+--	lda cluster_number,y
+	adc lba_addr,y
+	sta lba_addr,y
+	iny
+	cmp #$04
+	bne --
+; !for i,0,3 {
+; 	lda cluster_number + i
+; 	adc lba_addr + i
+; 	sta lba_addr + i	
+; }
 	dex
 	bne -
 
