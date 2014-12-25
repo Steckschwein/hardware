@@ -66,7 +66,7 @@ main
 
 
 fat_check_signature
-	pha
+	; pha
 	stz fat_errno
 
 	lda sd_blktarget + BS_Signature
@@ -76,16 +76,16 @@ fat_check_signature
 	cmp #$aa
 	bne +
 	
-	pla
+	; pla
 	rts
 
 +	inc fat_errno
-	pla
+	; pla
 	rts
 
 calc_lba_addr
 	pha
-	phy
+	phx
 
 	; lba_addr = cluster_begin_lba + (cluster_number - 2) * sectors_per_cluster;
 
@@ -102,25 +102,18 @@ calc_lba_addr
 
 	+Copy cluster_begin_lba, lba_addr, 3
 	
-	ldy sectors_per_cluster
+	ldx sectors_per_cluster
 
 -	clc
-	lda cluster_number + 0
-	adc lba_addr + 0
-	sta lba_addr + 0
-	lda cluster_number + 1
-	adc lba_addr + 1
-	sta lba_addr + 1
-	lda cluster_number + 2
-	adc lba_addr + 2
-	sta lba_addr + 2
-	lda cluster_number + 3
-	adc lba_addr + 3
-	sta lba_addr + 3
-	dey
+!for i,0,3 {
+	lda cluster_number + i
+	adc lba_addr + i
+	sta lba_addr + i	
+}
+	dex
 	bne -
 
-	ply
+	plx
 	pla
 
 	rts
@@ -234,21 +227,18 @@ fat_mount
 
 
 	; Number of FATs. Must be 2
-	lda sd_blktarget + BPB_NumFATs
-	tax
+	; lda sd_blktarget + BPB_NumFATs
 
--	clc
+	clc
 	ldy #$00
 --
-	lda cluster_begin_lba,y
-	adc sectors_per_fat,y
+	lda sectors_per_fat,y
+	asl ; * 2
+	adc cluster_begin_lba,y
 	sta cluster_begin_lba,y
 	iny 
 	cpy #$04
 	bne --	
-
-	dex
-	bne -
 
 	plx
 	ply
@@ -270,16 +260,16 @@ fat_read_dir
 -	ldy #DIR_Attr
 	lda (sd_blkptr),y
 	cmp #$0f ; Long filename, skip this one
-	beq .next
+	beq +
 	bit #$02 ; Hidden attribute set, skip
-    bne .next
+    bne +
 
     pha
     ldy #DIR_Name
 	lda (sd_blkptr),y
 
 	cmp #$e5 ; deleted file
-	beq .next
+	beq +
 	cmp #$00 ; end of dir
 	beq .end
 
@@ -290,8 +280,7 @@ fat_read_dir
    	
    	bne .load
 
-
-.next
++
 	clc
 	lda sd_blkptr
 	adc #32
