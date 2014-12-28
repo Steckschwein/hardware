@@ -5,13 +5,11 @@
 *= $e000			; ROM Start
 !src "../charsets/char.ascii.vc20.h.a"
 
-biosversion	!text "V2512", $00	; Version String
+biosversion	!text "V2812a", $00	; Version String
 
 start_msg
-!text "STECKSCHWEIN 1.0", $0d
-!text "Thomas Woinke", $0d
-!text "Marko Lauke", $0d,$0d
-!text "BIOS    : V2512", $0d
+!text "SteckBIOS 0.1", $0d
+!text "BIOS    : V2812a", $0d
 ;!text "Clock   :", $0d
 !text "RAM end : ", $0
 ready_msg
@@ -398,7 +396,13 @@ i_chrout
 ; Output string on active output device
 ;----------------------------------------------------------------------------------------------
 i_strout 	pha                 ;save a, y to stack
-			phy
+			lda #chn_out
+			bne +
+
+			pla
+			jmp vdp_print
+
++			phy
 
 			ldy #$00
 -		  	lda (msgptr),y
