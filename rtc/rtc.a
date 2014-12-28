@@ -15,37 +15,18 @@
 
 	jsr lcdclear
     
-	ldx #$02
-	ldy #$01
-    jsr lcdxy
+	+PrintString time_mask
 
-   	lda #':'
-   	jsr chrout
-
-   	ldx #$05
-    jsr lcdxy
-   	lda #':'
-   	jsr chrout
-
-	ldx #$02
+	ldx #$00
 	ldy #$02
-    jsr lcdxy
-
-    lda #'.'
-    jsr chrout
-
-   	ldx #$05
-    jsr lcdxy
-
-    lda #'.'
-    jsr chrout
-
+	jsr lcdxy
+	+PrintString date_mask
 
 
 	jsr rtc_enable
 	lda #$8f
 	jsr spi_rw_byte
-	lda #$05
+	lda #$01
 	jsr spi_rw_byte
 	jsr rtc_disable
 
@@ -63,6 +44,7 @@
 	jsr rtc_disable
 
 	cli
+	;jsr read
 
 -	jmp -
 
@@ -152,11 +134,11 @@ write
     lda #$80
     jsr spi_rw_byte
     
-    lda #$00
+    lda #$30
     jsr spi_rw_byte
-    lda #$52
+    lda #$24
 	jsr spi_rw_byte
-	lda #$00
+	lda #$22
 	jsr spi_rw_byte
 	jsr rtc_disable
     pla
@@ -171,7 +153,7 @@ write_date
     lda #$06
     jsr spi_rw_byte
 
-    lda #$13
+    lda #$22
     jsr spi_rw_byte
     lda #$12
     jsr spi_rw_byte
@@ -209,3 +191,5 @@ rtc_enable
 	rts
 
 text	!text "Hallo!", $00
+time_mask !text "00:00:00", $00
+date_mask !text "00.00.00", $00
