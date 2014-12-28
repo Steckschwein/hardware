@@ -1,7 +1,7 @@
 all: test.bin 
 clean:
 	rm -f *.bin *.labels
-	( cd avr ; make clean )
+	( cd avr313 ; make clean )
 
 %.bin: %.a ../bios/defs.h.a
 	acme -v -f plain --cpu 65c02 -o $@ $<

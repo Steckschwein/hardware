@@ -1,78 +1,70 @@
 *=$1000
+
+jmp foo
 !src "../bios/defs.h.a"
 !src "../bios/bios.h.a"
+!src "../vdp/t9929.h.a"
 
 
 txtbuf=$0300
-
+foo
 	jsr lcdclear
 
-	;stz chn_in
-	lda #dev_lcd
-	sta chn_out
+	
+
+	stz chn_in
+	; lda #dev_lcd
+	; sta chn_out
+  	stz chn_out
 
 
-
-	jsr kbd_disable
-	; Read first byte from Keyboard/SPI
-;	jsr spi_r_byte
-
-
-
-
-
+ 
 ; TODO: rausfinden warum hier nur datenmüll kommt
 ; DONE: attiny flop, atmega top
 	
--	
-	jsr chrin
-	beq -
- 	cmp #$ff
- 	beq - 
-	jsr hexout
+; -	
+; 	jsr chrin
+; 	beq -
+;  	cmp #$ff
+;  	beq - 
 
- 	jmp -
+; 	jsr vdp_chrout
 
-
-
-	; sei
-
-	; ; Set IRQ Vector
-	; lda #<kbd
-	; sta irqvec
-
-	; lda #>kbd
-	; sta irqvec+1
-
-
-	; lda #<count
-	; sta via1t1cl            ; set low byte of count
-	; lda #>count
-	; sta via1t1ch            ; set high byte of count
-
-	; lda #%11000000
-	; sta via1ier             ; enable VIA1 T1 interrupts
-
-	; lda #%01000000
-	; sta via1acr             ; T1 continuous, PB7 disabled
-
-	; cli
+;  	jmp -
 
 main
-  	jsr lcdclear
+
+  	; stz chn_out
+	ldx #$00
+	stx crs_x
+
+	stx txtbuf
 
 	+PrintString text1
-	ldx #$00
-	ldy #$02
-	jsr lcdxy
 
-	ldx #$00
+	; ldx #$00
+	; ldy #$02
+	; jsr lcdxy
+
+	
+	; ldx #$00
+
 -	jsr chrin
 	
 	cmp #$0c
 	beq +
 
+	cmp #$08 ; Backspace
+	bne ++
+	dec crs_x
+	dex
+	stz txtbuf,x
+	bra -
+++	pha
 	jsr chrout
+	pla
+
+
 
 	cmp #$0d ; return gedrueckt?
 	beq out
@@ -80,113 +72,45 @@ main
 	sta txtbuf,x
 	inx
 	stz txtbuf,x
+	cpx #$0f
+	beq out
 
 
 	jmp -
-+	jsr lcdclear
++	
+	;jsr lcdclear
 	jmp -
 
-out jsr lcdclear
+out 
+	lda txtbuf
+	beq +
+	jsr crlf
+	;jsr lcdclear
 	+PrintString  text2
 	+PrintString  txtbuf
+	jsr crlf
 
---	jsr chrin
-	cmp #$0d
-	bne --
+; --	jsr chrin
+; 	cmp #$0d
+; 	bne --
+	jsr crlf
 	jmp main
-
-; getkey
-; -
-; 	jsr kbd_enable	
-; 	jsr spi_r_byte
-; 	jsr kbd_disable
-; 	beq -
-; 	rts
-
-
-; kbd
-;  	pha
-;  	phx
- 
-;  	; Interrupt from VIA1 timer?
-;  	lda #%11000000
-;  	bit via1ifr	
-;  	beq + ; no?
-
-; 	; acknowledge interrupt 	
-;  	bit via1t1cl
-
-
-;  	; bit kbd_flg
-;  	; bmi +
-
- 	
-; 	ldx kbd_ptr
-; 	cpx #$00
-; 	; kbd_ptr <= $0f?
-; 	bcs ++
-; 	beq ++
-
-; 	bra +
-; ++
-
-; 	; Select SPI SS for keyboard
-; 	lda #%01111010
-; 	; and via1portb
-; 	sta via1portb
-
-; 	; lda #$ff
-;  	jsr spi_r_byte
-; 	beq ++
-;  	cmp #$ff
-;  	beq ++
-
-
-	
-	
-;  	sta kbd_buf, x
-;  	inc kbd_ptr
-
-; ++
-;  	; Deselect any SPI devices
-; 	lda #%01111110
-; 	sta via1portb
-	
-; +	pla
-; 	plx
-; 	rti
-
++
+	jsr crlf
+	+PrintString name
+	jsr crlf
+	jmp main
 
 reset
 	jmp ($fffc)
 
-kbd_disable
-	pha
-
-	lda #$80
-	ora kbd_flg
-	sta kbd_flg
-	; Deselect any SPI devices
-	lda #%11111110
-	sta via1portb
-	
-	pla
-	rts
-
-kbd_enable
-	pha
-	; Select SPI SS for keyboard
-	lda #%01111010
-	; and via1portb
-	sta via1portb
-
-	lda #$7f
-	and kbd_flg
-	sta kbd_flg
-
-	pla
-	rts
-
-
-text1	!text "Wie heisst du?", $00
+text1	!text "Wie heisst du? ", $00
 text2	!text "Hallo, ", $00
+name	!text "Bitte gib deinen Namen ein.", $00
+
+!src "../vdp/t99xx.lib.a"
+
+crlf
+	stz crs_x
+	inc crs_y
+	rts
