@@ -1,4 +1,5 @@
 EESchema Schematic File Version 2
+LIBS:tms99xx
 LIBS:power
 LIBS:device
 LIBS:transistors
@@ -55,20 +56,6 @@ F 3 "" H 5150 3350 60  0000 C CNN
 	1    5150 3350
 	1    0    0    -1  
 $EndComp
-Entry Wire Line
-	5950 2250 6050 2350
-Entry Wire Line
-	5950 2350 6050 2450
-Entry Wire Line
-	5950 2450 6050 2550
-Entry Wire Line
-	5950 2550 6050 2650
-Entry Wire Line
-	5950 2650 6050 2750
-Entry Wire Line
-	5950 2750 6050 2850
-Entry Wire Line
-	5950 2850 6050 2950
 $Comp
 L CRYSTAL 10.738MHz1
 U 1 1 5419E797
@@ -718,22 +705,6 @@ F 3 "" H 14600 5950 60  0000 C CNN
 	1    14600 5950
 	1    0    0    -1  
 $EndComp
-Text Label 5900 2250 0    60   ~ 0
-AD1
-Text Label 5900 2150 0    60   ~ 0
-AD0
-Text Label 5900 2350 0    60   ~ 0
-AD2
-Text Label 5900 2450 0    60   ~ 0
-AD3
-Text Label 5900 2550 0    60   ~ 0
-AD4
-Text Label 5900 2650 0    60   ~ 0
-AD5
-Text Label 5900 2750 0    60   ~ 0
-AD6
-Text Label 5900 2850 0    60   ~ 0
-AD7
 Text Label 6000 3050 0    60   ~ 0
 RAS
 Text Label 6000 3150 0    60   ~ 0
@@ -818,39 +789,6 @@ F 3 "" H 2900 10250 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L C C10
-U 1 1 54232E8D
-P 3150 10250
-F 0 "C10" H 3150 10350 40  0000 L CNN
-F 1 "100nF" H 3156 10165 40  0000 L CNN
-F 2 "" H 3188 10100 30  0000 C CNN
-F 3 "" H 3150 10250 60  0000 C CNN
-	1    3150 10250
-	1    0    0    -1  
-$EndComp
-$Comp
-L C C11
-U 1 1 54232EE3
-P 3400 10250
-F 0 "C11" H 3400 10350 40  0000 L CNN
-F 1 "100nF" H 3406 10165 40  0000 L CNN
-F 2 "" H 3438 10100 30  0000 C CNN
-F 3 "" H 3400 10250 60  0000 C CNN
-	1    3400 10250
-	1    0    0    -1  
-$EndComp
-$Comp
-L C C12
-U 1 1 54232F3A
-P 3650 10250
-F 0 "C12" H 3650 10350 40  0000 L CNN
-F 1 "100nF" H 3656 10165 40  0000 L CNN
-F 2 "" H 3688 10100 30  0000 C CNN
-F 3 "" H 3650 10250 60  0000 C CNN
-	1    3650 10250
-	1    0    0    -1  
-$EndComp
-$Comp
 L GND #PWR2
 U 1 1 5423480D
 P 1650 10600
@@ -872,26 +810,6 @@ F 3 "" H 1650 9950 60  0000 C CNN
 	1    1650 9950
 	1    0    0    -1  
 $EndComp
-Entry Wire Line
-	5950 3450 6050 3550
-Entry Wire Line
-	5950 3550 6050 3650
-Entry Wire Line
-	5950 3650 6050 3750
-Entry Wire Line
-	5950 3750 6050 3850
-Entry Wire Line
-	5950 3850 6050 3950
-Entry Wire Line
-	5950 3950 6050 4050
-Entry Wire Line
-	5950 4050 6050 4150
-Entry Wire Line
-	5950 4150 6050 4250
-Text Label 6050 3600 0    60   ~ 0
-RD
-Entry Wire Line
-	5950 2150 6050 2250
 $Comp
 L 7400 U10
 U 3 1 54325AED
@@ -936,22 +854,6 @@ F 3 "" H 2000 5350 60  0000 C CNN
 	2    2000 5350
 	1    0    0    -1  
 $EndComp
-Entry Wire Line
-	4250 2250 4350 2150
-Entry Wire Line
-	4250 2350 4350 2250
-Entry Wire Line
-	4250 2450 4350 2350
-Entry Wire Line
-	4250 2550 4350 2450
-Entry Wire Line
-	4250 2650 4350 2550
-Entry Wire Line
-	4250 2750 4350 2650
-Entry Wire Line
-	4250 2850 4350 2750
-Entry Wire Line
-	4250 2950 4350 2850
 Entry Wire Line
 	2450 1550 2550 1650
 Entry Wire Line
@@ -1258,15 +1160,39 @@ Text Label 9450 2550 0    60   ~ 0
 A5
 Text Label 9450 2650 0    60   ~ 0
 A6
+Text Label 7500 5550 0    60   ~ 0
+RAS
+Text Label 8600 5550 0    60   ~ 0
+ROW
+Text Label 7500 5950 0    60   ~ 0
+CAS
+Text Label 8600 6850 0    60   ~ 0
+COL
+Text Label 7500 5150 0    60   ~ 0
+RW
+Text Label 8600 5150 0    60   ~ 0
+WR
+Text Label 6000 3450 0    60   ~ 0
+RD7
+Text Label 6000 3550 0    60   ~ 0
+RD6
+Text Label 6000 3650 0    60   ~ 0
+RD5
+Text Label 6000 3750 0    60   ~ 0
+RD4
+Text Label 6000 3850 0    60   ~ 0
+RD3
+Text Label 6000 3950 0    60   ~ 0
+RD2
+Text Label 6000 4050 0    60   ~ 0
+RD1
+Text Label 6000 4150 0    60   ~ 0
+RD0
 Wire Wire Line
 	1650 9950 1650 10050
-Wire Wire Line
-	1650 10450 3650 10450
-Connection ~ 3150 10450
 Connection ~ 1650 10450
 Wire Wire Line
 	1650 10450 1650 10600
-Connection ~ 3400 10450
 Connection ~ 2900 10450
 Connection ~ 2650 10450
 Connection ~ 2400 10450
@@ -1277,10 +1203,6 @@ Connection ~ 2150 10050
 Connection ~ 2400 10050
 Connection ~ 2650 10050
 Connection ~ 2900 10050
-Connection ~ 3150 10050
-Connection ~ 3400 10050
-Wire Wire Line
-	1650 10050 3650 10050
 Connection ~ 4100 1950
 Wire Wire Line
 	3750 950  3650 950 
@@ -1489,12 +1411,8 @@ Wire Wire Line
 	4050 1350 4350 1350
 Wire Wire Line
 	4050 1950 4350 1950
-Wire Bus Line
-	6050 2100 6050 2950
 Wire Wire Line
 	11650 8800 12300 8800
-Wire Bus Line
-	6050 3450 6050 4250
 Wire Wire Line
 	2600 4450 2700 4450
 Wire Wire Line
@@ -1523,8 +1441,6 @@ Wire Wire Line
 	4350 4750 3900 4750
 Wire Wire Line
 	3900 4750 3900 5250
-Wire Bus Line
-	4250 2200 4250 3000
 Wire Bus Line
 	2550 1550 2550 2450
 Wire Wire Line
@@ -1724,10 +1640,6 @@ Wire Wire Line
 	7450 5550 7650 5550
 Wire Wire Line
 	8800 5550 8550 5550
-Text Label 7500 5550 0    60   ~ 0
-RAS
-Text Label 8600 5550 0    60   ~ 0
-ROW
 Wire Wire Line
 	7450 5950 7650 5950
 Wire Wire Line
@@ -1752,16 +1664,94 @@ Wire Wire Line
 	7450 6850 7650 6850
 Wire Wire Line
 	8550 6850 8800 6850
-Text Label 7500 5950 0    60   ~ 0
-CAS
-Text Label 8600 6850 0    60   ~ 0
-COL
 Wire Wire Line
 	7450 5150 7650 5150
 Wire Wire Line
 	8800 5150 8550 5150
-Text Label 7500 5150 0    60   ~ 0
-RW
-Text Label 8600 5150 0    60   ~ 0
-WR
+Wire Wire Line
+	6200 3450 5950 3450
+Wire Wire Line
+	6200 3550 5950 3550
+Wire Wire Line
+	6200 3650 5950 3650
+Wire Wire Line
+	6200 3750 5950 3750
+Wire Wire Line
+	6200 3850 5950 3850
+Wire Wire Line
+	6200 3950 5950 3950
+Wire Wire Line
+	6200 4050 5950 4050
+Wire Wire Line
+	6200 4150 5950 4150
+Wire Wire Line
+	4100 2150 4350 2150
+Wire Wire Line
+	4100 2250 4350 2250
+Wire Wire Line
+	4100 2350 4350 2350
+Wire Wire Line
+	4100 2450 4350 2450
+Wire Wire Line
+	4100 2550 4350 2550
+Wire Wire Line
+	4100 2650 4350 2650
+Wire Wire Line
+	4100 2750 4350 2750
+Wire Wire Line
+	4100 2850 4350 2850
+Text Label 4150 2850 0    60   ~ 0
+D0
+Text Label 4150 2750 0    60   ~ 0
+D1
+Text Label 4150 2650 0    60   ~ 0
+D2
+Text Label 4150 2550 0    60   ~ 0
+D3
+Text Label 4150 2450 0    60   ~ 0
+D4
+Text Label 4150 2350 0    60   ~ 0
+D5
+Text Label 4150 2250 0    60   ~ 0
+D6
+Text Label 4150 2150 0    60   ~ 0
+D7
+Wire Wire Line
+	1650 10050 2900 10050
+Wire Wire Line
+	1650 10450 2900 10450
+NoConn ~ 9600 3200
+NoConn ~ 9600 1950
+Wire Wire Line
+	6200 2150 5950 2150
+Wire Wire Line
+	6200 2250 5950 2250
+Wire Wire Line
+	6200 2350 5950 2350
+Wire Wire Line
+	6200 2450 5950 2450
+Wire Wire Line
+	6200 2550 5950 2550
+Wire Wire Line
+	6200 2650 5950 2650
+Wire Wire Line
+	6200 2750 5950 2750
+Wire Wire Line
+	6200 2850 5950 2850
+Text Label 6000 2150 0    60   ~ 0
+AD0
+Text Label 6000 2250 0    60   ~ 0
+AD1
+Text Label 6000 2350 0    60   ~ 0
+AD2
+Text Label 6000 2450 0    60   ~ 0
+AD3
+Text Label 6000 2550 0    60   ~ 0
+AD4
+Text Label 6000 2650 0    60   ~ 0
+AD5
+Text Label 6000 2750 0    60   ~ 0
+AD6
+Text Label 6000 2850 0    60   ~ 0
+AD7
 $EndSCHEMATC
