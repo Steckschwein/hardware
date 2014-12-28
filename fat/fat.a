@@ -1,6 +1,8 @@
 *=$1000
 !src "../bios/defs.h.a"
 !src "../bios/bios.h.a"
+!src "../vdp/t9929.h.a"
+
 !src "fat32.h.a"
 
 !macro Copy .src, .trgt, .len {
@@ -51,22 +53,24 @@ steckos_start		= $c000
 
 main
 
-    lda #dev_uart
-    sta chn_out
+    ;lda #dev_uart
+    stz chn_out
 	sei
 
 
-	jsr lcdclear
+	; jsr lcdclear
 
 	jsr fat_mount
-
 
 	; just use cluster_begin_lba if reading root dir cluster
 	+Copy cluster_begin_lba, lba_addr, 3
 
 	; Calculate cluster LBA address for anything else
 	; jsr calc_lba_addr
+
 	jsr fat_read_dir
+
+
 
 	jsr sd_deselect_card
 
@@ -260,9 +264,11 @@ fat_read_dir
 
 	jsr sd_param_init
 	
+
 	+SetVector sd_blktarget, sd_blkptr
 	+SDBlockAddr lba_addr
 	jsr sd_read_block
+
 
 -	ldy #DIR_Attr
 	lda (sd_blkptr),y
@@ -285,7 +291,7 @@ fat_read_dir
 	pla
    	bit #$04 ; System attribute. load file
    	
-   	bne .load
+   	; bne .load
 
 +
 	clc
@@ -336,33 +342,31 @@ fat_read_dir
 
 	jmp steckos_start
 
-;-	jmp -
+-	jmp -
 
 fat_list_entry
 	ldy #DIR_Name
 -	lda (sd_blkptr),y
+	phy
 	jsr chrout
+	ply
 	iny
-	cpy #$0b
+	cpy #DIR_Name + $0b
+
 	bne -
 
 	jsr space
 
-	ldy #DIR_FileSize + 3
-
+	ldy #DIR_FileSize + 3 +1
+-	dey
 	lda (sd_blkptr),y
 	jsr hexout
-	dey
-	lda (sd_blkptr),y
-	jsr hexout
-	dey
-	lda (sd_blkptr),y
-	jsr hexout
-	dey
-	lda (sd_blkptr),y
-	jsr hexout
+	cpy #DIR_FileSize
+	bne -	
 
 	jsr space
+
+
 
 	ldy #DIR_Attr
 	lda (sd_blkptr),y
@@ -384,27 +388,30 @@ fat_list_entry
 +	
 	lda #'F'
 ++	jsr chrout
-	jmp crlf
-;	rts
+	jsr crlf
+	rts
 
 
 crlf
-	lda #10
+	lda #$0d
 	jsr chrout
-	lda #13
-	jmp chrout
-	; rts
+	; lda #13
+	; jsr chrout
+	rts
 
 space 
 	lda #' '
-	jmp chrout
-	; rts
+	jsr chrout
+	rts
 
 ;fat_begin_lba = Partition_LBA_Begin + Number_of_Reserved_Sectors;
 ;cluster_begin_lba = Partition_LBA_Begin + Number_of_Reserved_Sectors + (Number_of_FATs * Sectors_Per_FAT);
-fat_err_signature !text "bad block signature", $00
-fat_err_partition !text "invalid partition type", $00
-fat_err_bad_sect_size !text "sector size unsupported", $00
-fat_err_num_fats	  !text "invalid number of FATs (!= 2)", $00
-fat_loading		  !text "Loading ",$00
-fat_loading_done  !text " done.",$00
+fat_err_signature 		!text "bad block signature", $00
+fat_err_partition 		!text "invalid partition type", $00
+fat_err_bad_sect_size 	!text "sector size unsupported", $00
+fat_err_num_fats	  	!text "invalid number of FATs (!= 2)", $00
+fat_loading		  		!text "Loading ",$00
+fat_loading_done  		!text " done.",$00
+
+!src "../vdp/t99xx.lib.a"
+
