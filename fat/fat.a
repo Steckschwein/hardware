@@ -70,8 +70,6 @@ main
 
 	jsr fat_read_dir
 
-
-
 	jsr sd_deselect_card
 
 -	jmp -
@@ -263,45 +261,53 @@ fat_read_dir
 	phy
 
 	jsr sd_param_init
-	
 
-	+SetVector sd_blktarget, sd_blkptr
+-	+SetVector sd_blktarget, sd_blkptr
 	+SDBlockAddr lba_addr
 	jsr sd_read_block
 
 
--	ldy #DIR_Attr
+--	ldy #DIR_Attr
 	lda (sd_blkptr),y
 	cmp #$0f ; Long filename, skip this one
 	beq +
 	bit #$02 ; Hidden attribute set, skip
-    bne +
+	bne +
 
-    pha
+;    pha
     ldy #DIR_Name
 	lda (sd_blkptr),y
 
+	beq .end ; end of dir 
+	
 	cmp #$e5 ; deleted file
-	beq +
-	cmp #$00 ; end of dir
-	beq .end
+	beq +    ; skip
 
 	jsr fat_list_entry
 
-	pla
-   	bit #$04 ; System attribute. load file
+;	pla
+;   	bit #$04 ; System attribute. load file
    	
-   	; bne .load
+   	;bne .load
 
 +
+	; Increment blkptr by 32 bytes, jump to next dir entry
 	clc
 	lda sd_blkptr
 	adc #32
 	sta sd_blkptr
 	bcc +
 	inc sd_blkptr+1	
-+
++	
+	; end of block?
+	lda sd_blkptr+1
+	cmp #06
+	bne -- ; n
+
+	+SetVector sd_blktarget, sd_blkptr
+	inc lba_addr +0
 	jmp -
+
 
 .end
 	ply
@@ -312,11 +318,11 @@ fat_read_dir
 	+PrintString fat_loading
 
 	ldy #DIR_Name
---	lda (sd_blkptr),y
+-	lda (sd_blkptr),y
 	jsr chrout
 	iny
 	cpy #$0b
-	bne --
+	bne -
 	ldy #DIR_FstClusHI +1
 	lda (sd_blkptr),y
 	sta cluster_number +3
@@ -339,6 +345,12 @@ fat_read_dir
 	jsr sd_read_block
 
 	+PrintString fat_loading_done
+
+	; Reset StackPointer
+	ldx #$ff
+	txs
+	; Disable IRQ
+	sei
 
 	jmp steckos_start
 
@@ -367,7 +379,6 @@ fat_list_entry
 	jsr space
 
 
-
 	ldy #DIR_Attr
 	lda (sd_blkptr),y
 
@@ -393,10 +404,12 @@ fat_list_entry
 
 
 crlf
-	lda #$0d
-	jsr chrout
+	; lda #$0d
+	; jsr chrout
 	; lda #13
 	; jsr chrout
+	inc crs_y
+	stz crs_x
 	rts
 
 space 
