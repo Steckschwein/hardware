@@ -5,6 +5,7 @@
 
 !src "fat32.h.a"
 
+	
 !macro Copy .src, .trgt, .len {
 	phx
 	ldx #$00
@@ -47,7 +48,38 @@ sd_blktarget 		= $0400
 
 steckos_start		= $c000	
 
+dividend = $c0
+divisor = $c4
+remainder = $c6
+result = dividend
 }
+
+		jmp main
+
+divide	lda #0	        ;preset remainder to 0
+		sta remainder
+		sta remainder+1
+		ldx #16	        ;repeat for each bit: ...
+
+divloop	asl dividend	;dividend lb & hb*2, msb -> Carry
+		rol dividend+1	
+		rol remainder	;remainder lb & hb * 2 + msb from carry
+		rol remainder+1
+		lda remainder
+		sec
+		sbc divisor	;substract divisor to see if it fits in
+		tay	        ;lb result -> Y, for we may need it later
+		lda remainder+1
+		sbc divisor+1
+		bcc skip	;if carry=0 then divisor didn't fit in yet
+
+		sta remainder+1	;else save substraction result as new remainder,
+		sty remainder	
+		inc result	;and INCrement result cause divisor fit in 1 times
+
+skip	dex
+		bne divloop	
+		rts
 
 
 main
@@ -55,6 +87,20 @@ main
     stz chn_out
 	sei
 
+	; lda #$00
+	; sta dividend+3
+	; lda #$00
+	; sta dividend+2
+	; lda #$18
+	; sta dividend+1
+	; lda #$00
+	; sta dividend+0
+
+	; always divide by 512 (sector size)
+	lda #$02
+	sta divisor + 1
+	lda #$00
+	sta divisor + 0
 
 	jsr fat_mount
 
@@ -302,20 +348,7 @@ fat_read_dir
 
 	; yes, increase lba_addr and go again
 	+SetVector sd_blktarget, sd_blkptr
-	clc
-	lda lba_addr + 0
-	adc #$01
-	sta lba_addr + 0
-	lda lba_addr + 1
-	adc #$00
-	sta lba_addr + 1
-	lda lba_addr + 2
-	adc #$00
-	sta lba_addr + 2
-	lda lba_addr + 3
-	adc #$00
-	sta lba_addr + 3
-
+	jsr inc_lba_address
 	jmp -
 
 
@@ -339,7 +372,32 @@ fat_read_dir
 	cpy #$0b
 	bne -
 
+	jsr crlf
 
+
+!for i,3,0 {
+	ldy #DIR_FileSize + i
+	lda (sd_blkptr),y
+	sta dividend + i
+
+}
+	jsr lcdclear
+
+	jsr divide
+
+	lda result + 0
+	sta tmp7
+
+	; remainder > 0, increase x
+	clc
+	lda remainder +1
+	adc remainder +0
+	beq +
+	inc tmp7
++	
+
+	lda tmp7
+	
 	ldy #DIR_FstClusHI +1
 	lda (sd_blkptr),y
 	sta cluster_number +3
@@ -360,9 +418,29 @@ fat_read_dir
 	jsr calc_lba_addr
 
 	+SetVector steckos_start, sd_blkptr
-	+SDBlockAddr lba_addr
+-	+SDBlockAddr lba_addr
 	jsr sd_read_block
+	
+	phy
+	+PrintChar '.'
+	ply
 
+	dec tmp7
+	beq + ; zero, we're done
+
+	; increase lba_addy by 1
+
+	jsr inc_lba_address
+
+	clc
+	lda sd_blkptr + 1
+	adc #$02
+	sta sd_blkptr + 1
+	
+	; ready to read next block
+	bra -
+
++
 	+PrintString fat_loading_done
 
 	; Reset StackPointer
@@ -372,6 +450,24 @@ fat_read_dir
 	sei
 
 	jmp steckos_start
+
+
+inc_lba_address
+	clc
+	lda lba_addr + 0
+	adc #$01
+	sta lba_addr + 0
+	lda lba_addr + 1
+	adc #$00
+	sta lba_addr + 1
+	lda lba_addr + 2
+	adc #$00
+	sta lba_addr + 2
+	lda lba_addr + 3
+	adc #$00
+	sta lba_addr + 3
+
+	rts
 
 
 fat_list_entry
