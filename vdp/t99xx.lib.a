@@ -5,7 +5,6 @@ vdp_sreg:
 	sty   a_vreg
 	rts
 	
-	
 vdp_display_off:
 	lda	#v_reg1_16k	;enable 16K ram, disable screen
 	sta 	a_vreg
@@ -14,12 +13,6 @@ vdp_display_off:
 	sta   a_vreg
 	rts
 
-vdp_gfx1:
-	rts
-	
-vdp_gfx2:
-	rts
-	
 ;	input:
 ;	adrl/adrh vector set to vdp init table for al 8 vdp registers
 vdp_init_reg:
@@ -34,21 +27,48 @@ vdp_init_reg:
    inx
    cpy   #$08
    bne   -
-   
    stz	crs_x
    stz	crs_y
-   
    rts
+
+vdp_mode_gfx1:
+	+SetVector	vdp_init_bytes_gfx1, adrl
+	jmp	vdp_init_reg
 	
+vdp_mode_gfx2:
+	+SetVector	vdp_init_bytes_gfx2, adrl
+	jmp	vdp_init_reg
+
+vdp_init_bytes_gfx1
+	!byte 0
+	!byte v_reg1_16k|v_reg1_display_on|v_reg1_int
+	!byte 	($1800 / $400)	; name table - value * $400
+	!byte 	($2000 / $40)	; color table - value * $40 (gfx1), 7f/ff (gfx2)
+	!byte 	($0000 / $800) ; pattern table (charset) - value * $800  --> offset in VRAM 
+	!byte	($3c00 / $80)	; sprite attribute table - value * $80 --> offset in VRAM
+	!byte 	($0000 / $800)  ; sprite pattern table - value * $800  --> offset in VRAM
+	!byte	Black
+	
+vdp_init_bytes_gfx2
+	!byte v_reg0_m3
+	!byte v_reg1_16k|v_reg1_display_on|v_reg1_int
+	!byte ($3800 / $400)	; name table - value * $400
+	!byte	$ff	; color table setting for gfx mode 2 --> only Bit 7 is taken into account 0 => $0000, 1 => $2000, Bit 6-0 AND to character number
+	!byte	$03 	; pattern table, either $0000 (Bit 2 = 0) or $2000 (Bit 2=1), Bit 0,1 are AND to select the pattern array
+	!byte	($3c00 / $80)	; sprite attribute table - value * $80 --> offset in VRAM
+	!byte	($1800 / $800)	; sprite pattern table - value * $800  --> offset in VRAM
+	!byte	Black
+   
 ;
-;   input
-;	a - color
+;   input:	a - color
 ;
 vdp_bgcolor:
+	sei
 	sta   a_vreg
-	lda   #v_reg7
 	+nops	VRAM_WAIT
+	lda   #v_reg7
 	sta   a_vreg
+	cli
 	rts
 
 vdp_load_sprites16:
