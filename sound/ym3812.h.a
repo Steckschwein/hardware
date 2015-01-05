@@ -1,0 +1,3 @@
+a_sound		= $0230
+a_sound_rs	= a_sound	;register select
+a_sound_rw	= a_sound+1	;register write

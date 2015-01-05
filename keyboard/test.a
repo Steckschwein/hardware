@@ -1,36 +1,34 @@
 *=$1000
 
-jmp foo
+jmp init
 !src "../bios/defs.h.a"
 !src "../bios/bios.h.a"
 !src "../vdp/t9929.h.a"
-
-
-txtbuf=$0300
-foo
-	jsr lcdclear
-
-	
+!address {
+txtbuf=$0300	
+}
+crsr_blinkrate = $0f
+init
+	sei
 
 	stz chn_in
-	; lda #dev_lcd
-	; sta chn_out
   	stz chn_out
 
+  	lda #crsr_blinkrate
+  	sta tmp7
+  	
+  	stz tmp6
 
- 
-; TODO: rausfinden warum hier nur datenmüll kommt
-; DONE: attiny flop, atmega top
-	
-; -	
-; 	jsr chrin
-; 	beq -
-;  	cmp #$ff
-;  	beq - 
 
-; 	jsr vdp_chrout
+	+SetVector isr, irqvec
 
-;  	jmp -
+	lda	#v_reg1_16k|v_reg1_display_on|v_reg1_int
+	ldy	#v_reg1
+	jsr	vdp_sreg
+
+	cli
+	jsr lcdclear
+
 
 main
 
@@ -54,8 +52,17 @@ main
 	cmp #$0c
 	beq +
 
+	cmp #$0d ; return gedrueckt?
+	beq out
+
 	cmp #$08 ; Backspace
 	bne ++
+	lda #' '
+	pha
+	jsr		vdp_set_addr
+	pla
+	+nops 	VRAM_WAIT
+	sta		a_vram
 	dec crs_x
 	dex
 	stz txtbuf,x
@@ -66,8 +73,6 @@ main
 
 
 
-	cmp #$0d ; return gedrueckt?
-	beq out
 
 	sta txtbuf,x
 	inx
@@ -82,6 +87,13 @@ main
 	jmp -
 
 out 
+	lda #' '
+	pha
+	jsr		vdp_set_addr
+	pla
+	+nops 	VRAM_WAIT
+	sta		a_vram
+
 	lda txtbuf
 	beq +
 	jsr crlf
@@ -114,3 +126,62 @@ crlf
 	stz crs_x
 	inc crs_y
 	rts
+
+; vdp_cursor: 
+;    pha
+;    phy
+
+;    lda   #$20
+;    ldy   #$54
+;    jsr   vdp_sreg
+;    lda   crs_x
+;    and   #$10
+;    beq   +
+;    lda   #231
+;    jmp   ++
+; +  lda   #' '
+; ++ sta   a_vram
+;    ; inc   crs_x
+   
+;    pla
+;    ply
+
+;    rts
+
+
+isr
+	pha
+	bit	a_vreg ; Check VDP interrupt. IRQ is acknowledged by reading.
+	bpl +	   ; VDP IRQ flag set? 
+			   ; then do stuff here
+
+	dec tmp7   ;
+	bne +
+
+  	lda #crsr_blinkrate
+  	sta tmp7
+
+	; jsr home
+
+  	lda tmp6
+  	beq ++
+	
+	lda   #231
+	; lda #'X'
+	stz tmp6
+	jmp xyz
+++
+	inc tmp6
+	lda #' '
+	
+xyz	
+	pha
+	jsr		vdp_set_addr
+	pla
+	+nops 	VRAM_WAIT
+	sta		a_vram
+
++			   ; or not
+	pla
+	rti
+

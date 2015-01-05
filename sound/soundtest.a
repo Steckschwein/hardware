@@ -1,0 +1,20 @@
+*=$1000
+!source "../bios/defs.h.a"
+!source "../bios/bios.h.a"
+!source "ym3812.h.a"
+
+	jsr		lcdclear
+	lda		#'x'
+	jsr		lcdprint
+-	iny
+	sty		a_sound_rs
+	lda		#$00
+	nop	
+	nop	
+	nop	
+	sty		a_sound_rw
+
+	jmp		-
+	lda		a_sound
+	jsr		lcdhex
+	jmp		-
