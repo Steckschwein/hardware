@@ -1,11 +1,15 @@
 !initmem $ff
 !cpu 65c02
 !src "defs.h.a"
+!src "via.h.a"
+!src "sdcard.h.a"
+!src "uart.h.a"
+!src "lcd.h.a"
 !src "../vdp/t9929.h.a"
 *= $e000			; ROM Start
 !src "../charsets/char.ascii.vc20.h.a"
 
-biosversion	!text "V0501a", $00	; Version String
+biosversion	!text "V0501", $00	; Version String
 
 start_msg
 !text "SteckBIOS 0.1", $0d
@@ -21,13 +25,13 @@ crlf	!byte $0d, $00
 
 
 .upload
-			ldx #$00
-			ldy #$01
-			jsr i_lcdxy
+			; ldx #$00
+			; ldy #$01
+			; jsr i_lcdxy
 
-			lda #$c0
-			sta lcdctl
-			jsr i_lcdbusy
+			; lda #$c0
+			; sta lcdctl
+			; jsr i_lcdbusy
 
 			; load start address
 			jsr i_uart_rx
@@ -38,12 +42,15 @@ crlf	!byte $0d, $00
 
 
 			lda startaddr+1
-			jsr i_lcdhex
+			; jsr i_lcdhex
+			jsr i_hexout
 			lda startaddr
-			jsr i_lcdhex
+			; jsr i_lcdhex
+			jsr i_hexout
 
 			lda #' '
-			jsr lcdprint
+			; jsr lcdprint
+			jsr chrout
 
 			lda #'O'
 			jsr i_uart_tx
@@ -63,13 +70,16 @@ crlf	!byte $0d, $00
 			sta length+1
 
 			lda length+1
-			jsr i_lcdhex
+			; jsr i_lcdhex
+			jsr i_hexout
 
 			lda length
-			jsr i_lcdhex
+			; jsr i_lcdhex
+			jsr i_hexout
 			
 			lda #' '
-			jsr lcdprint
+			; jsr lcdprint
+			jsr chrout
 
 			; calculate end address
 			clc
@@ -82,13 +92,16 @@ crlf	!byte $0d, $00
 			sta endaddr+1
 
 			lda endaddr+1
-			jsr i_lcdhex
+			; jsr i_lcdhex
+			jsr i_hexout
 
 			lda endaddr
-			jsr i_lcdhex
+			; jsr i_lcdhex
+			jsr i_hexout
 			
 			lda #' '
-			jsr lcdprint
+			; jsr lcdprint
+			jsr chrout
 
 			lda startaddr
 			sta addr
@@ -139,7 +152,7 @@ crlf	!byte $0d, $00
 ;----------------------------------------------------------------------------------------------
 ; RESET Routine. Call subroutines to init all components 
 ;----------------------------------------------------------------------------------------------
-start_check = $0300
+.start_check = $0300
 .do_reset
 			; disable interrupt
 			sei
@@ -156,8 +169,8 @@ start_check = $0300
 		    ; Start at $ff
 			ldy #$ff
 			; Start with pattern $03 : $ff
--			ldx #num_patterns
---			lda pattern,x
+-			ldx #.num_patterns
+--			lda .pattern,x
 			sta $00,y
 
 			cmp $00,y
@@ -171,8 +184,8 @@ start_check = $0300
 
 .check_stack
 			ldy #$ff
--			ldx #num_patterns
---			lda pattern,x
+-			ldx #.num_patterns
+--			lda .pattern,x
 			sta $0100,y
 			cmp $0100,y
 			bne +
@@ -220,7 +233,7 @@ start_check = $0300
 			jsr init_uart
 
 			; Set IRQ Vector
-			+SetVector i_irqhandler, irqvec
+			+SetVector .irqhandler, irqvec
 
 			lda #dev_lcd
 			sta chn_out
@@ -339,7 +352,7 @@ start_check = $0300
 			jmp (irqvec)
 			
 
-i_irqhandler
+.irqhandler
 			pha
 			phy
 			lda a_vreg
@@ -700,18 +713,18 @@ vdp_init_bytes
 ;----------------------------------------------------------------------------------------------
 ; Memcheck routine to be copied to ZP
 ;----------------------------------------------------------------------------------------------
-num_patterns = $03
-pattern  !byte $aa,$55,$ff,$00
+.num_patterns = $03
+.pattern  !byte $aa,$55,$ff,$00
 
 .selfmod_start
 !pseudopc $0000 {
 .target
       stz ram_end_h
       
--     ldx #num_patterns
---    lda pattern,x
-a     sta start_check   ; Start at $0200. skip stack for now      
-b     cmp start_check
+-     ldx #.num_patterns
+--    lda .pattern,x
+a     sta .start_check   ; Start at $0200. skip stack for now      
+b     cmp .start_check
       bne +
       
       dex 
@@ -764,7 +777,7 @@ decout 		jmp i_decout
 sys_decoutz
 decoutz 	jmp i_decoutz
 sys_irqhandler
-irqhandler  jmp i_irqhandler
+irqhandler  jmp .irqhandler
 sys_lcdbusy
 lcdbusy 	jmp i_lcdbusy
 sys_lcdxy
