@@ -1,6 +1,7 @@
 *=$1000
 	jmp	main
 !source "../bios/defs.h.a"
+!source "../bios/via.h.a"
 !source "../bios/bios.h.a"
 !source "../vdp/t9929.h.a"
 !source "../vdp/t99xx.lib.a"
@@ -101,12 +102,15 @@ main:
 	
 	rts
 
+
 stars_irq:
 	+save
 
-	lda	a_vreg
-
-	+nops	89
+	; lda	a_vreg
+	bit	a_vreg ; Check VDP interrupt. IRQ is acknowledged by reading.
+	bmi +	   ; VDP IRQ flag set? 
+	rti		   ; no, then fuck off
++	+nops	89
 	ldx		#$00
 -	lda		raster_bar_colors,x
 	jsr		vdp_bgcolor
