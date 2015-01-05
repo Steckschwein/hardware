@@ -854,41 +854,10 @@ F 3 "" H 2000 5350 60  0000 C CNN
 	2    2000 5350
 	1    0    0    -1  
 $EndComp
-Entry Wire Line
-	2450 1550 2550 1650
-Entry Wire Line
-	2450 1650 2550 1750
-Entry Wire Line
-	2450 1750 2550 1850
-Entry Wire Line
-	2450 1850 2550 1950
-Entry Wire Line
-	2450 1950 2550 2050
-Entry Wire Line
-	2450 2050 2550 2150
-Entry Wire Line
-	2450 2150 2550 2250
-Entry Wire Line
-	2450 2250 2550 2350
 Text GLabel 1000 4350 0    60   Input ~ 0
 /CS_VDP
 Text GLabel 4150 3650 0    60   Input ~ 0
 /IRQ
-$Sheet
-S 1750 1500 700  1500
-U 542278A8
-F0 "50Pin" 60
-F1 "50pin_connector.sch" 60
-F2 "A0" I R 2450 2900 60 
-F3 "D0" I R 2450 1550 60 
-F4 "D1" I R 2450 1650 60 
-F5 "D2" I R 2450 1750 60 
-F6 "D3" I R 2450 1850 60 
-F7 "D4" I R 2450 1950 60 
-F8 "D5" I R 2450 2050 60 
-F9 "D6" I R 2450 2150 60 
-F10 "D7" I R 2450 2250 60 
-$EndSheet
 Text GLabel 4250 3850 0    60   Input ~ 0
 /RESET
 Text GLabel 800  5250 0    60   Input ~ 0
@@ -1441,8 +1410,6 @@ Wire Wire Line
 	4350 4750 3900 4750
 Wire Wire Line
 	3900 4750 3900 5250
-Wire Bus Line
-	2550 1550 2550 2450
 Wire Wire Line
 	4350 3850 4250 3850
 Wire Wire Line
@@ -1754,4 +1721,51 @@ Text Label 6000 2750 0    60   ~ 0
 AD6
 Text Label 6000 2850 0    60   ~ 0
 AD7
+$Sheet
+S 1750 1500 700  1500
+U 542278A8
+F0 "50Pin" 60
+F1 "50pin_connector.sch" 60
+F2 "A0" I R 2450 2900 60 
+F3 "D0" I R 2450 1550 60 
+F4 "D1" I R 2450 1650 60 
+F5 "D2" I R 2450 1750 60 
+F6 "D3" I R 2450 1850 60 
+F7 "D4" I R 2450 1950 60 
+F8 "D5" I R 2450 2050 60 
+F9 "D6" I R 2450 2150 60 
+F10 "D7" I R 2450 2250 60 
+$EndSheet
+Wire Wire Line
+	2600 1550 2450 1550
+Wire Wire Line
+	2600 1650 2450 1650
+Wire Wire Line
+	2600 1750 2450 1750
+Wire Wire Line
+	2600 1850 2450 1850
+Wire Wire Line
+	2600 1950 2450 1950
+Wire Wire Line
+	2600 2050 2450 2050
+Wire Wire Line
+	2600 2150 2450 2150
+Wire Wire Line
+	2600 2250 2450 2250
+Text Label 2500 1550 0    60   ~ 0
+D0
+Text Label 2500 1650 0    60   ~ 0
+D1
+Text Label 2500 1750 0    60   ~ 0
+D2
+Text Label 2500 1850 0    60   ~ 0
+D3
+Text Label 2500 1950 0    60   ~ 0
+D4
+Text Label 2500 2050 0    60   ~ 0
+D5
+Text Label 2500 2150 0    60   ~ 0
+D6
+Text Label 2500 2250 0    60   ~ 0
+D7
 $EndSCHEMATC
