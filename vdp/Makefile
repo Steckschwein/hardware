@@ -5,7 +5,7 @@ clean:
 	
 vdp: t9929.bin vramtest.bin
 
-%.bin: %.a *.h.a
+%.bin: %.a
 	acme -v -f plain -l $<.labels --cpu 65c02 -o $@ $<
 
 transfer: all
