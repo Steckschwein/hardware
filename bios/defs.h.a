@@ -82,20 +82,8 @@ sd_cmd_errno = $0320
 startaddr	= $0700
 endaddr     = $0702
 length		= $0704
-
-
-
-
 charset  =$e000
 }
-
-!src "via.h.a"
-!src "sdcard.h.a"
-!src "uart.h.a"
-!src "lcd.h.a"
-
-
-
 
 ;----------------------------------------------------------------------------------------------
 
