@@ -1,0 +1,63 @@
+;----------------------------------------------------------------------------------------------
+; Transmit byte VIA SPI
+; Byte to transmit in A, received byte in A at exit
+; Destructive: A,X,Y
+;----------------------------------------------------------------------------------------------
+i_spi_rw_byte
+	sta tmp0	; zu transferierendes byte im akku nach tmp0 retten
+
+	ldx #$08
+	
+	lda via1portb	; Port laden
+	and #$fe        ; SPICLK loeschen
+
+	asl		; Nach links rotieren, damit das bit nachher an der richtigen stelle steht
+	tay		 ; bunkern
+
+-	
+	rol tmp0
+	tya		; portinhalt
+	ror		; datenbit reinschieben
+
+	sta via1portb	; ab in den port
+	inc via1portb	; takt an
+	sta via1portb	; takt aus 
+
+	dex
+	bne -		; schon acht mal?
+	
+	lda via1sr	; Schieberegister auslesen
+
+	rts
+
+;----------------------------------------------------------------------------------------------
+; Receive byte VIA SPI
+; Received byte in A at exit
+; Destructive: A,Y
+;----------------------------------------------------------------------------------------------
+	
+i_spi_r_byte
+       lda via1portb   ; Port laden
+       AND #$7e  ;    * Daten und Takt ausschalten
+       TAY             ; aufheben
+       ORA #$01
+
+       STA via1portb ; Takt An 1
+       STY via1portb ; Takt aus
+       STA via1portb ; Takt An 2
+       STY via1portb ; Takt aus
+       STA via1portb ; Takt An 3
+       STY via1portb ; Takt aus
+       STA via1portb ; Takt An 4
+       STY via1portb ; Takt aus
+       STA via1portb ; Takt An 5
+       STY via1portb ; Takt aus
+       STA via1portb ; Takt An 6
+       STY via1portb ; Takt aus
+       STA via1portb ; Takt An 7
+       STY via1portb ; Takt aus
+       STA via1portb ; Takt An 8
+       STY via1portb ; Takt aus
+
+       lda via1sr
+       rts

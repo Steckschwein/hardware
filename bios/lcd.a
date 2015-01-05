@@ -1,0 +1,166 @@
+lcd_line = $10 ; 16 chars per lcd row
+
+;----------------------------------------------------------------------------------------------
+; *** LCD initialisation
+;----------------------------------------------------------------------------------------------
+; init_lcdold  	ldx #$04            ;do function set 4 times
+; -		  	lda #$38            ;function set: 8 bit, 2 lines, 5x7
+; 			sta lcdctl
+; 			jsr i_lcdbusy         ;wait for busy flag to clear
+; 			dex
+; 			bne -
+; 			lda #$06            ;entry mode set: increment, no shift
+; 			sta lcdctl
+; 			jsr i_lcdbusy
+; 			lda #$0e            ;display on, cursor on, blink off
+; 			sta lcdctl
+; 			jsr i_lcdbusy
+; 			lda #$01            ;clear display
+; 			sta lcdctl
+; 			jsr i_lcdbusy
+; 			lda #$80            ;ddram address set: $00
+; 			sta lcdctl
+; 			jsr i_lcdbusy
+; 			rts
+
+init_lcd	ldx #$04            ;do function set 4 times
+-		  	lda #$38            ;function set: 8 bit, 2 lines, 5x7
+			sta lcdctl
+			;jsr i_lcdbusy         ;wait for busy flag to clear
+			
+			ldy #$00
+--			iny
+			cpy #$0f
+			beq exit 
+			lda lcdctl			
+			and #$80
+			bne --
+
+			dex
+			bne -
+			lda #$06            ;entry mode set: increment, no shift
+			sta lcdctl
+			jsr i_lcdbusy
+			lda #$0e            ;display on, cursor on, blink off
+			sta lcdctl
+			jsr i_lcdbusy
+			lda #$01            ;clear display
+			sta lcdctl
+			jsr i_lcdbusy
+			lda #$80            ;ddram address set: $00
+			sta lcdctl
+			jsr i_lcdbusy
+
+			lda #$01
+			sta chn_out
+exit		rts
+
+
+
+; *** Clear LCD display and return cursor to home
+; registers preserved
+i_lcdclear  pha
+			lda #$01
+			sta lcdctl
+			jsr i_lcdbusy
+			lda #$80
+			sta lcdctl
+			jsr i_lcdbusy
+			pla
+			rts
+
+; *** Wait for LCD busy bit to clear
+; registers preserved
+i_lcdbusy   pha
+-			lda lcdctl            ;read from lcd register 0
+			and #$80            ;check bit 7 (busy)
+			bne -
+			pla
+			rts
+
+
+
+; *** Print character on LCD (40 character)
+; registers preserved
+i_lcdprint  pha
+			sta lcddata            ;output the character
+			jsr i_lcdbusy
+			lda lcdctl            ;get current ddram address
+			and #$7f
+			cmp #lcd_line         ;wrap from pos $16 (line 1 char 20)...
+			bne +
+			lda #$c0            	;...to $40 (line 2 char 1)
+			sta lcdctl
+			jsr i_lcdbusy
++			pla
+			rts
+
+; *** print string on lcd
+; registers preserved
+i_lcdstring pha                 ;save a, y to stack
+			tya
+			pha
+			ldy #$00
+-		  	lda (msgptr),y
+			beq +
+			jsr lcdprint
+			iny
+			bne -
++			pla                 ;restore a, y
+			tay
+			pla
+			rts
+
+; *** Print 2 digit hex number on LCD
+; A, X registers preserved
+i_lcdhex    pha
+			phy
+			phx
+			
+			tax
+			lsr                ;shift high nybble into low nybble
+			lsr 
+			lsr 
+			lsr 
+			tay
+			lda hexascii,y      ;convert to ascii
+			jsr lcdprint        ;print value on the lcd
+			
+			txa                 ;restore original value
+			and #$0f            ;select low nybble
+			tay
+			lda hexascii,y      ;convert to ascii
+			jsr lcdprint        ;print value on the lcd
+			
+			plx
+			ply
+			pla
+			rts
+
+;----------------------------------------------------------------------------------------------
+; lcdxy 
+; Set LCD-Cursor to position
+; row in Y, col in X
+;----------------------------------------------------------------------------------------------
+
+i_lcdxy
+	pha
+
+	lda #$80
+	sta tmp0
+
+	cpy #$02
+	bne +
+	lda #$c0
+	sta tmp0
++
+	txa
+	clc
+	adc tmp0
+
+	sta lcdctl
+	jsr lcdbusy
+
+	pla
+	rts
+;----------------------------------------------------------------------------------------------

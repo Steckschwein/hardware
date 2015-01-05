@@ -1,0 +1,327 @@
+;---------------------------------------------------------------------
+; Init SD Card 
+; Destructive: A, X, Y
+;---------------------------------------------------------------------
+init_sdcard
+       ; 80 Taktzyklen
+       ldx #74
+
+       ; set ALL CS lines and DO to HIGH 
+       lda #%11111110
+       sta via1portb
+
+       tay
+       iny
+
+-      sty via1portb
+       sta via1portb
+       dex
+       bne -
+
+       jsr sd_select_card
+       
+       jsr sd_param_init
+
+       ; CMD0 needs CRC7 checksum to be correct
+       lda #$95
+       sta sd_cmd_chksum
+
+       ; send CMD0 - init SD card to SPI mode
+       lda #cmd0
+       jsr sd_cmd
+
+       ; get result
+       lda #$ff
+       jsr spi_rw_byte
+
+       cmp #$01
+       beq +
+
+       ; No Card     
+       lda #$ff
+       sta sd_cmd_errno
+       rts
+
++      lda #$01
+       sta sd_cmd_param+2
+       lda #$aa
+       sta sd_cmd_param+3
+       lda #$87
+       sta sd_cmd_chksum
+
+       jsr i_sd_busy_wait
+
+       lda #cmd8
+       jsr sd_cmd
+
+       ldx #$00
+-      
+       lda #$ff
+       phx
+       jsr spi_rw_byte
+       plx
+       sta sd_cmd_result,x
+       inx
+       cpx #$05
+       bne -
+
+       lda sd_cmd_result
+       cmp #$01
+       beq +
+       
+       ; Invalid Card (or card we can't handle yet)
+       lda #$0f
+       sta sd_cmd_errno
+       jsr sd_deselect_card 
+       rts
++
+
+-
+       
+       jsr i_sd_busy_wait
+
+       jsr sd_param_init
+
+       lda #cmd55
+       jsr sd_cmd
+
+       lda #$ff
+       jsr spi_rw_byte
+
+       cmp #$01
+       beq + 
+
+       ; Init failed
+       lda #$f1      
+       sta sd_cmd_errno
+       rts 
+
++      lda #$40
+       sta sd_cmd_param
+
+       lda #$10
+       sta sd_cmd_param+1
+
+       lda #acmd41
+       jsr sd_cmd
+
+       lda #$ff
+       jsr spi_r_byte
+
+       cmp #$00
+       bne -
+
+       stz sd_cmd_param
+
+       jsr i_sd_busy_wait
+
+       lda #cmd58
+       jsr sd_cmd
+
+       ldx #$00
+-      
+       lda #$ff
+       phx
+       jsr spi_rw_byte
+       plx
+       sta sd_cmd_result,x
+       inx
+       cpx #$05
+       bne -
+
+       bit sd_cmd_result+1
+       bvs +
+
+       ; Set block size to 512 bytes
+       lda #$02
+       sta sd_cmd_param+2
+
+       jsr i_sd_busy_wait
+       
+       lda #cmd16
+       jsr sd_cmd
+
+       lda #$ff
+       jsr spi_rw_byte
+
++      
+
+       ; SD card init successful
+       stz sd_cmd_errno
+       rts
+
+
+;---------------------------------------------------------------------
+; Send SD Card Command
+; cmd byte in A
+; parameters in sd_cmd_param
+;---------------------------------------------------------------------
+i_sd_cmd
+
+       ; transfer command byte
+       jsr spi_rw_byte
+       
+       ; transfer parameter buffer
+       ldx #$00
+-      lda sd_cmd_param,x
+       phx
+       jsr spi_rw_byte
+       plx
+       inx
+       cpx #$05
+       bne -
+
+       ; send 8 clocks with DI 1
+       lda #$ff
+       jsr spi_rw_byte             
+
+       rts
+       
+;---------------------------------------------------------------------
+; Read block from SD Card
+;---------------------------------------------------------------------
+i_sd_read_block
+       ;jsr sd_select_card
+
+       jsr i_sd_busy_wait
+
+       lda #cmd17
+       jsr sd_cmd
+
+       lda #$ff
+       jsr spi_rw_byte             
+
+
+-      lda #$ff
+       jsr spi_rw_byte             
+       cmp #$fe
+       bne -
+
+
+       ldy #$00
+-      
+       phy
+       jsr spi_r_byte
+       ply
+
+       sta (sd_blkptr),y
+       iny
+       bne -
+
+       inc sd_blkptr+1
+
+       ldy #$00
+-      
+       phy
+       jsr spi_r_byte
+       ply
+
+       sta (sd_blkptr),y
+       iny
+       bne -
+
+       dec sd_blkptr+1
+
+       ; Read CRC bytes     
+       jsr spi_r_byte
+       jmp spi_r_byte
+;      rts
+
+;---------------------------------------------------------------------
+; Write block to SD Card
+;---------------------------------------------------------------------
+i_sd_write_block
+;      jsr sd_select_card
+
+       jsr i_sd_busy_wait
+
+       lda #cmd24
+       jsr sd_cmd
+       
+-      lda #$ff
+       jsr spi_rw_byte             
+       bne -
+
+       lda #$fe
+       jsr spi_rw_byte
+
+       ldy #$00
+-      lda (sd_blkptr),y
+       phy
+       jsr spi_rw_byte
+       ply
+       iny
+       bne -
+
+       inc sd_blkptr+1
+
+       ldy #$00
+-      lda (sd_blkptr),y
+       phy
+       jsr spi_rw_byte
+       ply
+       iny
+       bne -
+       dec sd_blkptr+1
+
+       ; Send fake CRC bytes
+       lda #$00
+       jsr spi_rw_byte
+       lda #$00
+       jsr spi_rw_byte
+
+       jmp spi_r_byte              
+       ;rts   
+
+;---------------------------------------------------------------------
+; wait while sd card is busy
+;---------------------------------------------------------------------
+i_sd_busy_wait
+-      lda #$ff
+       jsr spi_rw_byte
+       cmp #$ff
+       bne -
+       rts
+
+;---------------------------------------------------------------------
+; select sd card, pull CS line to low
+;---------------------------------------------------------------------
+i_sd_select_card
+       pha
+       ; set CS line to LOW
+       lda #%11111101
+       and via1portb 
+       sta via1portb
+       pla
+
+       rts
+
+;---------------------------------------------------------------------
+; deselect sd card, puSH CS line to HI and generate few clock cycles 
+; to allow card to deinit
+;---------------------------------------------------------------------
+i_sd_deselect_card
+       pha
+       ; set CS line to HI
+       lda #%01111110
+       ora via1portb 
+       sta via1portb
+
+       lda #$ff
+       jsr spi_rw_byte
+       
+       pla
+
+       rts
+
+;---------------------------------------------------------------------
+; clear sd card parameter buffer
+;---------------------------------------------------------------------
+i_sd_param_init
+       stz sd_cmd_param
+       stz sd_cmd_param+1
+       stz sd_cmd_param+2
+       stz sd_cmd_param+3
+       stz sd_cmd_chksum
+       inc sd_cmd_chksum
+       rts

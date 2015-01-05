@@ -5,11 +5,11 @@
 *= $e000			; ROM Start
 !src "../charsets/char.ascii.vc20.h.a"
 
-biosversion	!text "V2812a", $00	; Version String
+biosversion	!text "V0501a", $00	; Version String
 
 start_msg
 !text "SteckBIOS 0.1", $0d
-!text "BIOS    : V2812a", $0d
+!text "BIOS    : V0501a", $0d
 ;!text "Clock   :", $0d
 !text "RAM end : ", $0
 ready_msg
@@ -140,7 +140,7 @@ crlf	!byte $0d, $00
 ; RESET Routine. Call subroutines to init all components 
 ;----------------------------------------------------------------------------------------------
 start_check = $0300
-do_reset
+.do_reset
 			; disable interrupt
 			sei
 
@@ -152,7 +152,7 @@ do_reset
 			txs
 
    			; Check zeropage and Memory
-check_zp
+.check_zp
 		    ; Start at $ff
 			ldy #$ff
 			; Start with pattern $03 : $ff
@@ -169,7 +169,7 @@ check_zp
 			dey
 			bne -
 
-check_stack
+.check_stack
 			ldy #$ff
 -			ldx #num_patterns
 --			lda pattern,x
@@ -221,8 +221,6 @@ check_stack
 
 			; Set IRQ Vector
 			+SetVector i_irqhandler, irqvec
-
-			
 
 			lda #dev_lcd
 			sta chn_out
@@ -309,7 +307,7 @@ check_stack
 ;----------------------------------------------------------------------------------------------
 ; IO_NMI Routine. Handle NMI
 ;----------------------------------------------------------------------------------------------
-do_nmi 
+.do_nmi 
 			
 			; pha
 			; jsr lcdclear
@@ -331,13 +329,13 @@ do_nmi
 
 		
 			; pla
-			jmp do_reset
+			jmp .do_reset
 			rti
 
 ;----------------------------------------------------------------------------------------------
 ; IO_IRQ Routine. Handle IRQ
 ;----------------------------------------------------------------------------------------------
-do_irq
+.do_irq
 			jmp (irqvec)
 			
 
@@ -525,282 +523,12 @@ vdp_cursor:
 
 
 
-;----------------------------------------------------------------------------------------------
-; init VIA1 - set all ports to input
-;----------------------------------------------------------------------------------------------
-init_via1
-			pha
-			; VIA1
-			lda #%00000000
-			sta via1ddra
-			sta via1ddrb
-
-			lda #$00
-			sta via1ier             ; enable VIA1 T1 interrupts
-
-			; SR shift in, External clock on CB1
-			lda #%00001100
-			sta via1acr
-
-			; Port b all outputs
-			lda #$ff
-			sta via1ddrb
-
-			; SPICLK low, MOSI low, SPI_SS HI
-			lda #%01111110
-			sta via1portb
-
-
-			; lda #<count
-			; sta via1t1cl            ; set low byte of count
-			; lda #>count
-			; sta via1t1ch            ; set high byte of count
-			
-			; lda #%11000000
-			; sta via1ier             ; enable VIA1 T1 interrupts
-
-			; lda #%01000000
-		 ; 	sta via1acr             ; T1 continuous, PB7 disabled
-		 	
-		 	pla
-		 	rts
-
-;----------------------------------------------------------------------------------------------
-; init UART
-;----------------------------------------------------------------------------------------------
-init_uart
-	; ok, we detected a 16550A, i.e. a chip 
-	; with working FIFO
-	lda #%10000000
-	sta uart1lcr
-
-	ldx #19*2	; 115200 BAUD
-
-;	ldx #17*2	; 38400 BAUD
-;	ldx #15*2	; 9600 BAUD
-;	ldx #11*2	; 2400 BAUD
-
-	lda uart_divisor,x
-	sta uart1dll	
-
-	lda uart_divisor+1,x
-	sta uart1dlh
-
-	lda #%00000011	; 8N1
-
-	sta uart1lcr
-
-	lda #$00
-	sta uart1fcr	; FIFO off
-	sta uart1ier	; polled mode (so far) 
-	sta uart1mcr	; reset DTR, RTS
-
-	and #%00001100			; keep OUT1, OUT2 values
-	sta uart1mcr		; reset DTR, RTS
-	clc
-
-	rts
-
-lcd_line = $10 ; 16 chars per lcd row
-
-;----------------------------------------------------------------------------------------------
-; *** LCD initialisation
-;----------------------------------------------------------------------------------------------
-; init_lcdold  	ldx #$04            ;do function set 4 times
-; -		  	lda #$38            ;function set: 8 bit, 2 lines, 5x7
-; 			sta lcdctl
-; 			jsr i_lcdbusy         ;wait for busy flag to clear
-; 			dex
-; 			bne -
-; 			lda #$06            ;entry mode set: increment, no shift
-; 			sta lcdctl
-; 			jsr i_lcdbusy
-; 			lda #$0e            ;display on, cursor on, blink off
-; 			sta lcdctl
-; 			jsr i_lcdbusy
-; 			lda #$01            ;clear display
-; 			sta lcdctl
-; 			jsr i_lcdbusy
-; 			lda #$80            ;ddram address set: $00
-; 			sta lcdctl
-; 			jsr i_lcdbusy
-; 			rts
-
-init_lcd	ldx #$04            ;do function set 4 times
--		  	lda #$38            ;function set: 8 bit, 2 lines, 5x7
-			sta lcdctl
-			;jsr i_lcdbusy         ;wait for busy flag to clear
-			
-			ldy #$00
---			iny
-			cpy #$0f
-			beq exit 
-			lda lcdctl			
-			and #$80
-			bne --
-
-			dex
-			bne -
-			lda #$06            ;entry mode set: increment, no shift
-			sta lcdctl
-			jsr i_lcdbusy
-			lda #$0e            ;display on, cursor on, blink off
-			sta lcdctl
-			jsr i_lcdbusy
-			lda #$01            ;clear display
-			sta lcdctl
-			jsr i_lcdbusy
-			lda #$80            ;ddram address set: $00
-			sta lcdctl
-			jsr i_lcdbusy
-
-			lda #$01
-			sta chn_out
-exit		rts
+!src "via.a"
 
 
 
-; *** Clear LCD display and return cursor to home
-; registers preserved
-i_lcdclear  pha
-			lda #$01
-			sta lcdctl
-			jsr i_lcdbusy
-			lda #$80
-			sta lcdctl
-			jsr i_lcdbusy
-			pla
-			rts
+!src "lcd.a"
 
-; *** Wait for LCD busy bit to clear
-; registers preserved
-i_lcdbusy   pha
--			lda lcdctl            ;read from lcd register 0
-			and #$80            ;check bit 7 (busy)
-			bne -
-			pla
-			rts
-
-
-
-; *** Print character on LCD (40 character)
-; registers preserved
-i_lcdprint  pha
-			sta lcddata            ;output the character
-			jsr i_lcdbusy
-			lda lcdctl            ;get current ddram address
-			and #$7f
-			cmp #lcd_line         ;wrap from pos $16 (line 1 char 20)...
-			bne +
-			lda #$c0            	;...to $40 (line 2 char 1)
-			sta lcdctl
-			jsr i_lcdbusy
-+			pla
-			rts
-
-; *** print string on lcd
-; registers preserved
-i_lcdstring pha                 ;save a, y to stack
-			tya
-			pha
-			ldy #$00
--		  	lda (msgptr),y
-			beq +
-			jsr lcdprint
-			iny
-			bne -
-+			pla                 ;restore a, y
-			tay
-			pla
-			rts
-
-; *** Print 2 digit hex number on LCD
-; A, X registers preserved
-i_lcdhex    pha
-			phy
-			phx
-			
-			tax
-			lsr                ;shift high nybble into low nybble
-			lsr 
-			lsr 
-			lsr 
-			tay
-			lda hexascii,y      ;convert to ascii
-			jsr lcdprint        ;print value on the lcd
-			
-			txa                 ;restore original value
-			and #$0f            ;select low nybble
-			tay
-			lda hexascii,y      ;convert to ascii
-			jsr lcdprint        ;print value on the lcd
-			
-			plx
-			ply
-			pla
-			rts
-
-;----------------------------------------------------------------------------------------------
-; lcdxy 
-; Set LCD-Cursor to position
-; row in Y, col in X
-;----------------------------------------------------------------------------------------------
-
-i_lcdxy
-	pha
-
-	lda #$80
-	sta tmp0
-
-	cpy #$02
-	bne +
-	lda #$c0
-	sta tmp0
-+
-	txa
-	clc
-	adc tmp0
-
-	sta lcdctl
-	jsr lcdbusy
-
-	pla
-	rts
-;----------------------------------------------------------------------------------------------
-
-
-
-;----------------------------------------------------------------------------------------------
-; send byte in A 
-;----------------------------------------------------------------------------------------------
-i_uart_tx
-	pha
-
-
--	lda uart1lsr
-	and #$20
-	beq -
-
-	pla 
-
-	sta uart1rxtx
-
-	rts
-
-;----------------------------------------------------------------------------------------------
-
-;----------------------------------------------------------------------------------------------
-; receive byte, store in A 
-;----------------------------------------------------------------------------------------------
-i_uart_rx
--	lda uart1lsr 
-	and #$1f
-	cmp #$01
-	bne -
-	
-	lda uart1rxtx
- 
-	rts
 
 ;----------------------------------------------------------------------------------------------
 ; LCDDECZ - output byte in A as decimal ASCII with leading zeros
@@ -868,398 +596,10 @@ i_decout
 
    rts
 
-;----------------------------------------------------------------------------------------------
-; Transmit byte VIA SPI
-; Byte to transmit in A, received byte in A at exit
-; Destructive: A,X,Y
-;----------------------------------------------------------------------------------------------
-i_spi_rw_byte
-	sta tmp0	; zu transferierendes byte im akku nach tmp0 retten
+!src "uart.a"
+!src "spi.a"
+!src "sdcard.a"
 
-	ldx #$08
-	
-	lda via1portb	; Port laden
-	and #$fe        ; SPICLK loeschen
-
-	asl		; Nach links rotieren, damit das bit nachher an der richtigen stelle steht
-	tay		 ; bunkern
-
--	
-	rol tmp0
-	tya		; portinhalt
-	ror		; datenbit reinschieben
-
-	sta via1portb	; ab in den port
-	inc via1portb	; takt an
-	sta via1portb	; takt aus 
-
-	dex
-	bne -		; schon acht mal?
-	
-	lda via1sr	; Schieberegister auslesen
-
-	rts
-
-;----------------------------------------------------------------------------------------------
-; Receive byte VIA SPI
-; Received byte in A at exit
-; Destructive: A,Y
-;----------------------------------------------------------------------------------------------
-	
-i_spi_r_byte
-       lda via1portb   ; Port laden
-       AND #$7e  ;    * Daten und Takt ausschalten
-       TAY             ; aufheben
-       ORA #$01
-
-       STA via1portb ; Takt An 1
-       STY via1portb ; Takt aus
-       STA via1portb ; Takt An 2
-       STY via1portb ; Takt aus
-       STA via1portb ; Takt An 3
-       STY via1portb ; Takt aus
-       STA via1portb ; Takt An 4
-       STY via1portb ; Takt aus
-       STA via1portb ; Takt An 5
-       STY via1portb ; Takt aus
-       STA via1portb ; Takt An 6
-       STY via1portb ; Takt aus
-       STA via1portb ; Takt An 7
-       STY via1portb ; Takt aus
-       STA via1portb ; Takt An 8
-       STY via1portb ; Takt aus
-
-       lda via1sr
-       rts
-
-;---------------------------------------------------------------------
-; Init SD Card 
-; Destructive: A, X, Y
-;---------------------------------------------------------------------
-init_sdcard
-
-	; 80 Taktzyklen
-	ldx #74
-
-	; set ALL CS lines and DO to HIGH 
-	lda #%11111110
-	sta via1portb
-
-	tay
-	iny
-
--	sty via1portb
-	sta via1portb
-	dex
-	bne -
-
-	jsr sd_select_card
-	
-	jsr sd_param_init
-
-	; CMD0 needs CRC7 checksum to be correct
-	lda #$95
-	sta sd_cmd_chksum
-
-	; send CMD0 - init SD card to SPI mode
-	lda #cmd0
-	jsr sd_cmd
-
-	; get result
-	lda #$ff
-	jsr spi_rw_byte
-
-	cmp #$01
-	beq +
-
-	; No Card	
-	lda #$ff
-	sta sd_cmd_errno
-	rts
-
-+	lda #$01
-	sta sd_cmd_param+2
-	lda #$aa
-	sta sd_cmd_param+3
-	lda #$87
-	sta sd_cmd_chksum
-
-	jsr i_sd_busy_wait
-
-	lda #cmd8
-	jsr sd_cmd
-
-	ldx #$00
--	
-	lda #$ff
-	phx
-	jsr spi_rw_byte
-	plx
-	sta sd_cmd_result,x
-	inx
-	cpx #$05
-	bne -
-
-	lda sd_cmd_result
-	cmp #$01
-	beq +
-	
-	; Invalid Card (or card we can't handle yet)
-	lda #$0f
-	sta sd_cmd_errno
-	jsr sd_deselect_card	
-	rts
-+
-
--
-	
-	jsr i_sd_busy_wait
-
-	jsr sd_param_init
-
-	lda #cmd55
-	jsr sd_cmd
-
-	lda #$ff
-	jsr spi_rw_byte
-
-	cmp #$01
-	beq + 
-
-	; Init failed
-	lda #$f1	
-	sta sd_cmd_errno
-	rts 
-
-+	lda #$40
-	sta sd_cmd_param
-
-	lda #$10
-	sta sd_cmd_param+1
-
-	lda #acmd41
-	jsr sd_cmd
-
-	lda #$ff
-	jsr spi_r_byte
-
-	cmp #$00
-	bne -
-
-	stz sd_cmd_param
-
-	jsr i_sd_busy_wait
-
-	lda #cmd58
-	jsr sd_cmd
-
-	ldx #$00
--	
-	lda #$ff
-	phx
-	jsr spi_rw_byte
-	plx
-	sta sd_cmd_result,x
-	inx
-	cpx #$05
-	bne -
-
-	bit sd_cmd_result+1
-	bvs +
-
-	; Set block size to 512 bytes
-	lda #$02
-	sta sd_cmd_param+2
-
-	jsr i_sd_busy_wait
-	
-	lda #cmd16
-	jsr sd_cmd
-
-	lda #$ff
-	jsr spi_rw_byte
-
-+	
-
-	; SD card init successful
-	stz sd_cmd_errno
-	rts
-
-
-;---------------------------------------------------------------------
-; Send SD Card Command
-; cmd byte in A
-; parameters in sd_cmd_param
-;---------------------------------------------------------------------
-i_sd_cmd
-
-	; transfer command byte
-	jsr spi_rw_byte
-	
-	; transfer parameter buffer
-	ldx #$00
--	lda sd_cmd_param,x
-	phx
-	jsr spi_rw_byte
-	plx
-	inx
-	cpx #$05
-	bne -
-
-	; send 8 clocks with DI 1
-	lda #$ff
-	jsr spi_rw_byte		
-
-	rts
-	
-;---------------------------------------------------------------------
-; Read block from SD Card
-;---------------------------------------------------------------------
-i_sd_read_block
-	;jsr sd_select_card
-
-	jsr i_sd_busy_wait
-
-	lda #cmd17
-	jsr sd_cmd
-
-	lda #$ff
-	jsr spi_rw_byte		
-
-
--	lda #$ff
-	jsr spi_rw_byte		
-	cmp #$fe
-	bne -
-
-
-	ldy #$00
--	
-	phy
-	jsr spi_r_byte
-	ply
-
-	sta (sd_blkptr),y
-	iny
-	bne -
-
-	inc sd_blkptr+1
-
-	ldy #$00
--	
-	phy
-	jsr spi_r_byte
-	ply
-
-	sta (sd_blkptr),y
-	iny
-	bne -
-
-	dec sd_blkptr+1
-
-	; Read CRC bytes	
-	jsr spi_r_byte
-	jmp spi_r_byte
-;	rts
-
-;---------------------------------------------------------------------
-; Write block to SD Card
-;---------------------------------------------------------------------
-i_sd_write_block
-;	jsr sd_select_card
-
-	jsr i_sd_busy_wait
-
-	lda #cmd24
-	jsr sd_cmd
-	
--	lda #$ff
-	jsr spi_rw_byte		
-	bne -
-
-	lda #$fe
-	jsr spi_rw_byte
-
-	ldy #$00
--	lda (sd_blkptr),y
-	phy
-	jsr spi_rw_byte
-	ply
-	iny
-	bne -
-
-	inc sd_blkptr+1
-
-	ldy #$00
--	lda (sd_blkptr),y
-	phy
-	jsr spi_rw_byte
-	ply
-	iny
-	bne -
-	dec sd_blkptr+1
-
-	; Send fake CRC bytes
-	lda #$00
-	jsr spi_rw_byte
-	lda #$00
-	jsr spi_rw_byte
-
-	jmp spi_r_byte		
-	;rts	
-
-;---------------------------------------------------------------------
-; wait while sd card is busy
-;---------------------------------------------------------------------
-i_sd_busy_wait
--	lda #$ff
-	jsr spi_rw_byte
-	cmp #$ff
-	bne -
-	rts
-
-;---------------------------------------------------------------------
-; select sd card, pull CS line to low
-;---------------------------------------------------------------------
-i_sd_select_card
-	pha
-	; set CS line to LOW
-	lda #%11111101
-	and via1portb	
-	sta via1portb
-	pla
-
-	rts
-
-;---------------------------------------------------------------------
-; deselect sd card, puSH CS line to HI and generate few clock cycles 
-; to allow card to deinit
-;---------------------------------------------------------------------
-i_sd_deselect_card
-	pha
-	; set CS line to HI
-	lda #%01111110
-	ora via1portb	
-	sta via1portb
-
-	lda #$ff
-	jsr spi_rw_byte
-	
-	pla
-
-	rts
-
-;---------------------------------------------------------------------
-; clear sd card parameter buffer
-;---------------------------------------------------------------------
-i_sd_param_init
-	stz sd_cmd_param
-	stz sd_cmd_param+1
-	stz sd_cmd_param+2
-	stz sd_cmd_param+3
-	stz sd_cmd_chksum
-	inc sd_cmd_chksum
-	rts
 
 ;---------------------------------------------------------------------
 ; enable keyboard controller on SPI bus
@@ -1465,10 +805,10 @@ hexout 		jmp i_hexout
 ;----------------------------------------------------------------------------------------------
 ; $FFFA/$FFFB NMI Vector
 *= $fffa
-!word do_nmi
+!word .do_nmi
 ; $FFFC/$FFFD reset vector
 ;*= $fffc
-!word do_reset
+!word .do_reset
 ; $FFFE/$FFFF IRQ vector
 ;*= $fffe
-!word do_irq
+!word .do_irq
