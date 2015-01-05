@@ -1,5 +1,6 @@
 *=$1000
 !source "../bios/defs.h.a"
+!source "../bios/via.h.a"
 !source "../bios/bios.h.a"
 !source "t9929.h.a"
 txtptr   =$f2
