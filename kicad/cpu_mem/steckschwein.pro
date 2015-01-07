@@ -1,4 +1,4 @@
-update=Thu 09 Oct 2014 08:05:11 PM CEST
+update=Wed 07 Jan 2015 05:15:01 PM CET
 version=1
 last_client=kicad
 [cvpcb]
@@ -67,3 +67,16 @@ LibName33=/home/thomas/Documents/steckschwein/kicad/lbr/UART
 LibName34=/home/thomas/Documents/steckschwein/kicad/lbr/osc
 LibName35=74xgxx
 LibName36=/home/thomas/Documents/steckschwein/kicad/lbr/ttl_ieee
+[schematic_editor]
+version=1
+PageLayoutDescrFile=
+PlotDirectoryName=/home/thomas/Desktop/
+SubpartIdSeparator=0
+SubpartFirstId=65
+NetFmtName=Pcbnew
+SpiceForceRefPrefix=0
+SpiceUseNetNumbers=0
+RptD_X=0
+RptD_Y=100
+RptLab=1
+LabSize=60
