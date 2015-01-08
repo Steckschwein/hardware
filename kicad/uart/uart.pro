@@ -1,4 +1,4 @@
-update=Tue 23 Sep 2014 09:52:00 PM CEST
+update=Thu 08 Jan 2015 08:59:11 AM CET
 version=1
 last_client=kicad
 [cvpcb]
@@ -62,3 +62,16 @@ LibName28=contrib
 LibName29=valves
 LibName30=/home/thomas/Documents/steckschwein/kicad/lbr/UART
 LibName31=/home/thomas/Documents/steckschwein/kicad/lbr/osc
+[schematic_editor]
+version=1
+PageLayoutDescrFile=
+PlotDirectoryName=
+SubpartIdSeparator=0
+SubpartFirstId=65
+NetFmtName=
+SpiceForceRefPrefix=0
+SpiceUseNetNumbers=0
+RptD_X=0
+RptD_Y=100
+RptLab=1
+LabSize=60
