@@ -9,11 +9,11 @@
 *= $e000			; ROM Start
 !src "../charsets/char.ascii.vc20.h.a"
 
-biosversion	!text "V0501", $00	; Version String
+biosversion	!text "V0801", $00	; Version String
 
 start_msg
 !text "SteckBIOS 0.1", $0d
-!text "BIOS    : V0501a", $0d
+!text "BIOS    : V0801", $0d
 ;!text "Clock   :", $0d
 !text "RAM end : ", $0
 ready_msg
@@ -25,13 +25,13 @@ crlf	!byte $0d, $00
 
 
 .upload
-			; ldx #$00
-			; ldy #$01
-			; jsr i_lcdxy
+			ldx #$00
+			ldy #$01
+			jsr i_lcdxy
 
-			; lda #$c0
-			; sta lcdctl
-			; jsr i_lcdbusy
+			lda #$c0
+			sta lcdctl
+			jsr i_lcdbusy
 
 			; load start address
 			jsr i_uart_rx
@@ -42,23 +42,20 @@ crlf	!byte $0d, $00
 
 
 			lda startaddr+1
-			; jsr i_lcdhex
-			jsr i_hexout
+			jsr i_lcdhex
 			lda startaddr
-			; jsr i_lcdhex
-			jsr i_hexout
+			jsr i_lcdhex
 
 			lda #' '
-			; jsr lcdprint
-			jsr chrout
+			jsr lcdprint
 
 			lda #'O'
 			jsr i_uart_tx
 			lda #'K'
 			jsr i_uart_tx
 
-			; +PrintChar 'O'
-			; +PrintChar 'K'
+			;+PrintChar 'O'
+			;+PrintChar 'K'
 
 			;jsr strout
 
@@ -70,16 +67,13 @@ crlf	!byte $0d, $00
 			sta length+1
 
 			lda length+1
-			; jsr i_lcdhex
-			jsr i_hexout
+			jsr i_lcdhex
 
 			lda length
-			; jsr i_lcdhex
-			jsr i_hexout
+			jsr i_lcdhex
 			
 			lda #' '
-			; jsr lcdprint
-			jsr chrout
+			jsr lcdprint
 
 			; calculate end address
 			clc
@@ -92,16 +86,13 @@ crlf	!byte $0d, $00
 			sta endaddr+1
 
 			lda endaddr+1
-			; jsr i_lcdhex
-			jsr i_hexout
+			jsr i_lcdhex
 
 			lda endaddr
-			; jsr i_lcdhex
-			jsr i_hexout
+			jsr i_lcdhex
 			
 			lda #' '
-			; jsr lcdprint
-			jsr chrout
+			jsr lcdprint
 
 			lda startaddr
 			sta addr
