@@ -32,9 +32,8 @@
 * = $1000
 
           lda #dev_uart
-          sta chn_out
-i_uart_tx = $f4b5
-i_uart_rx = $f4c2
+          stz chn_out
+          stz chn_in
 
 SSIZE     =128           ; sector size in bytes
 NBUF      =8             ; number of buffers desired in RAM
@@ -65,8 +64,8 @@ DAREA     =UAREA-BMAG    ; disk buffer space.
 ;OUTCH     =$D2C1         ; output one ASCII char. to term.
 ;INCH      =$D1DC         ; input one ASCII char. to term.
 ;TCR       =$D0F1         ; terminal return and line feed.
-OUTCH = chrout
-INCH = chrin
+OUTCH = chrout_x
+INCH = chrin_x
 TCR = crlf
 ;
 ;    From DAREA downward to the top of the dictionary is free
@@ -76,7 +75,7 @@ TCR = crlf
 ;    to Boot up  code, and parameters describing the system.
 ;
 ;
-;          *=*+2
+         *=*+2
 
                          ; User cold entry point
 ENTER     NOP            ; Vector to COLD entry
@@ -3837,19 +3836,32 @@ TOP
 
 
 crlf
-          pha
-          lda #10
-          jsr chrout
-          lda #13
-          jsr chrout
+          ; pha
+          ; lda #10
+          ; jsr chrout
+          ; lda #13
+          ; jsr chrout
 
-          pla
+          ; pla
+          stz crs_x
+          inc crs_y
           rts
 
 xblank
           pha
           lda #' '
           jsr chrout
+          pla
+          rts
 
+chrin_x
+          jmp chrin
+chrout_x  
+          PHA
+          phy
+          phx
+          jsr chrout
+          plx
+          ply
           pla
           rts
