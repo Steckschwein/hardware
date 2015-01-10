@@ -1,4 +1,4 @@
-update=Wed 07 Jan 2015 05:15:01 PM CET
+update=Thu 08 Jan 2015 09:10:56 AM CET
 version=1
 last_client=kicad
 [cvpcb]
@@ -25,8 +25,6 @@ SolderMaskMinWidth=0.000000000000
 DrawSegmentWidth=0.200000000000
 BoardOutlineThickness=0.100000000000
 ModuleOutlineThickness=0.150000000000
-[general]
-version=1
 [eeschema]
 version=1
 LibDir=
@@ -80,3 +78,5 @@ RptD_X=0
 RptD_Y=100
 RptLab=1
 LabSize=60
+[general]
+version=1

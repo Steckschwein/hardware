@@ -1,6 +1,6 @@
-update=05.01.2015 10:49:25
+update=Tue 06 Jan 2015 12:12:42 PM CET
 version=1
-last_client=eeschema
+last_client=kicad
 [cvpcb]
 version=1
 NetIExt=net
@@ -61,5 +61,5 @@ LibName27=opto
 LibName28=atmel
 LibName29=contrib
 LibName30=valves
-LibName31=D:/development/steckschwein-code/kicad/lbr/y3014b
-LibName32=D:/development/steckschwein-code/kicad/lbr/ym3812
+LibName31=y3014b
+LibName32=ym3812
