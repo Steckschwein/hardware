@@ -45,27 +45,11 @@ Magenta        =$0d ; (Purple)
 Gray           =$0e
 White          =$0f
 
-!macro nops n{
-   !for i, n{
-      nop
-   }
-}
-
 !macro SpriteLine .v {
 	!byte .v&255
 }
+
 !macro SpriteLine16 .v {
 	!byte (.v>>8)& 255
 	!byte  .v	 &255
-}
-
-!macro save{
-	pha
-	phy
-	phx
-}
-!macro restore{
-	plx
-	ply
-	pla
 }
