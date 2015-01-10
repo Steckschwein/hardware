@@ -30,7 +30,8 @@ burn : $(PRG).hex
 	$(LOADER) -U flash:w:$(PRG).hex 
 
 fuse : 
-	$(LOADER) -U lfuse:w:0xc3:m -U hfuse:w:0xd9:m
+	#$(LOADER) -U lfuse:w:0xc3:m -U hfuse:w:0xd9:m
+	$(LOADER) -U lfuse:w:0xc4:m -U hfuse:w:0xd9:m
 
 
 
