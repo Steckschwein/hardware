@@ -730,4 +730,21 @@ NoConn ~ 9650 4200
 NoConn ~ 9750 4200
 NoConn ~ 10350 4200
 NoConn ~ -50  -2900
+$Comp
+L CP2 C8
+U 1 1 54B14373
+P 3500 6250
+F 0 "C8" H 3500 6350 40  0000 L CNN
+F 1 "100µF" H 3506 6165 40  0000 L CNN
+F 2 "Capacitors_Elko_ThroughHole:Elko_vert_11.5x8mm_RM3.5" H 3538 6100 30  0001 C CNN
+F 3 "" H 3500 6250 60  0000 C CNN
+	1    3500 6250
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	3500 6050 3500 6000
+Connection ~ 3500 6000
+Wire Wire Line
+	3500 6450 3500 6500
+Connection ~ 3500 6500
 $EndSCHEMATC
