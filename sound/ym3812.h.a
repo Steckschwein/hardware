@@ -1,3 +1,16 @@
+SND_WAIT		= 2
 a_sound		= $0230
 a_sound_rs	= a_sound	;register select
 a_sound_rw	= a_sound+1	;register write
+
+
+!macro snd_write r, v{
+	lda	r
+	sta	a_sound_rs
+	nop
+	nop
+	nop
+	nop
+	lda	v
+	sta	a_sound_rw
+}

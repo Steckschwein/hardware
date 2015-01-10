@@ -1,6 +1,4 @@
-all: soundtest
-
-soundtest: soundtest.bin
+all: soundtest.bin
 
 clean:
 	rm -f *.bin

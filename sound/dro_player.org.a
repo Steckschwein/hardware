@@ -210,7 +210,7 @@ main:
 	lda	#1<<7
 	sta	$0221
 	lda	#$81
-	sta $0221
+	sta 	$0221
 	lda	#$02
 	jsr	@vdp_color
 :
