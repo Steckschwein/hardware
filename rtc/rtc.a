@@ -1,171 +1,148 @@
 *=$1000
 !src "../bios/defs.h.a"
+!src "../bios/via.h.a"
 !src "../bios/bios.h.a"
+!src "../vdp/t9929.h.a"
 
-	lda #dev_lcd
-    sta chn_out
+tsec = tmp6
+tmin = tmp5
+thou = tmp4
+tday = tmp3
+tmon = tmp2
+tyea = tmp1
+	jmp main
+!fill $1000-$1f6, $ea
+main
+	;lda #dev_vdp
+    stz chn_out
+    sei
+ 	;   Set IRQ Vector
+ 	+SetVector isr, irqvec
 
-    ; Set IRQ Vector
-    lda #<read
-    sta irqvec
-
-    lda #>read
-    sta irqvec+1
-
+ 	lda	#v_reg1_16k|v_reg1_display_on|v_reg1_int
+	ldy	#v_reg1
+	jsr	vdp_sreg
+   
+   	lda #50
+	sta tmp7
 
 	jsr lcdclear
-    
+
+	lda #24
+	sta crs_x
+	stz crs_y
+
 	+PrintString time_mask
 
-	ldx #$00
-	ldy #$02
-	jsr lcdxy
+	lda #24
+	sta crs_x
+	lda #1
+	sta crs_y
+	; ldx #$00
+	; ldy #$02
+	; jsr lcdxy
 	+PrintString date_mask
 
 
 	jsr rtc_enable
 	lda #$8f
 	jsr spi_rw_byte
-	lda #$01
+	lda #$00
 	jsr spi_rw_byte
 	jsr rtc_disable
 
-	jsr rtc_enable
-	lda #$87
-	jsr spi_rw_byte
-	lda #$81
-	jsr spi_rw_byte
-	lda #$80
-	jsr spi_rw_byte
-	lda #$80
-	jsr spi_rw_byte
-	lda #$80
-	jsr spi_rw_byte
-	jsr rtc_disable
+	; jsr rtc_enable
+	; lda #$87
+	; jsr spi_rw_byte
+	; lda #$81
+	; jsr spi_rw_byte
+	; lda #$80
+	; jsr spi_rw_byte
+	; lda #$80
+	; jsr spi_rw_byte
+	; lda #$80
+	; jsr spi_rw_byte
+	; jsr rtc_disable
 
 	cli
-	;jsr read
+	; jsr read
 
 -	jmp -
 
-read
+isr
 	pha
-	jsr rtc_enable
-    lda #$07
-	jsr spi_rw_byte
-	jsr rtc_disable
+	phy
+	phx
 
+	bit	a_vreg ; Check VDP interrupt. IRQ is acknowledged by reading.
+	bpl +	   ; VDP IRQ flag set? 
+
+	dec tmp7
+	bne +
+
+	lda #50
+	sta tmp7
+
+	lda #24
+	sta crs_x
+	stz crs_y
+
+	; jsr read
 	jsr rtc_enable
     lda #$00
    	jsr spi_rw_byte
 
-	ldx #$06
-    ldy #$01
-    jsr lcdxy
-
     jsr spi_r_byte
-    jsr hexout	
-
-	ldx #$03
-	ldy #$01
-    jsr lcdxy
-
+    sta tsec
     jsr spi_r_byte
-    jsr hexout	
-
-	ldx #$00
-	ldy #$01
-    jsr lcdxy
-
+    sta tmin
     jsr spi_r_byte
-    jsr hexout	
-
+    sta thou
 
     jsr spi_r_byte
 
-	ldx #$00
-	ldy #$02
-    jsr lcdxy
-
-	jsr spi_r_byte
-	jsr hexout	
-
-	ldx #$03
-	ldy #$02
-    jsr lcdxy
-
-	jsr spi_r_byte
-	jsr hexout	
-
-	ldx #$06
-	ldy #$02
-    jsr lcdxy
-	
-	jsr spi_r_byte
-	jsr hexout	
-
-	
+    jsr spi_r_byte
+    sta tday
+    jsr spi_r_byte
+    sta tmon
+    jsr spi_r_byte
+    sta tyea
 	jsr rtc_disable
-	pla
+
+
+	lda thou
+	jsr hexout
+
+	inc crs_x
+
+	lda tmin
+	jsr hexout
+
+	inc crs_x
+	lda tsec
+	jsr hexout
+
+	lda #24
+	sta crs_x
+
+	lda #1
+	sta crs_y
+
+	lda tday
+	jsr hexout
+	inc crs_x
+	lda tmon
+	jsr hexout
+	inc crs_x
+	lda tyea
+	jsr hexout
+
+
+
++	pla
+	ply	
+	plx
 	rti
-
-write 
-	pha
-
-	ldx #$00
-
-	jsr rtc_enable
-
-    lda #$a0
-    jsr spi_rw_byte
-
--   lda text,x
-    beq +
-    phx
-    jsr spi_rw_byte
-    plx
-    inx
-    bra -
-
-+   jsr rtc_disable
-    
-    jsr rtc_enable
-
-    lda #$80
-    jsr spi_rw_byte
-    
-    lda #$30
-    jsr spi_rw_byte
-    lda #$24
-	jsr spi_rw_byte
-	lda #$22
-	jsr spi_rw_byte
-	jsr rtc_disable
-    pla
-    rts
-
-write_date
-	pha
-	jsr rtc_enable
-
-    lda #$83
-    jsr spi_rw_byte
-    lda #$06
-    jsr spi_rw_byte
-
-    lda #$22
-    jsr spi_rw_byte
-    lda #$12
-    jsr spi_rw_byte
-    lda #$14
-    jsr spi_rw_byte
-
-	jsr rtc_disable
-
-
-	pla
-	rts
-
 
 rtc_disable
 	pha
@@ -190,6 +167,8 @@ rtc_enable
 	pla
 	rts
 
-text	!text "Hallo!", $00
+; text	!text "Hallo!", $00
 time_mask !text "00:00:00", $00
 date_mask !text "00.00.00", $00
+
+!src "../vdp/t99xx.lib.a"
