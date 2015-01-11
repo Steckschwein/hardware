@@ -257,9 +257,9 @@ Connection ~ 9350 5700
 Connection ~ 9050 5700
 Connection ~ 8750 5700
 Wire Wire Line
-	8750 6100 9600 6100
+	8750 6100 9950 6100
 Wire Wire Line
-	8750 5700 9600 5700
+	8750 5700 9950 5700
 Wire Wire Line
 	2150 4200 2400 4200
 Wire Wire Line
@@ -358,9 +358,9 @@ $EndSheet
 Text Label 2550 2600 0    60   ~ 0
 SPI_CLK
 Text Label 2550 2700 0    60   ~ 0
-SPI_SS1
+~SPI_SS1
 Text Label 2550 2800 0    60   ~ 0
-SPI_SS2
+~SPI_SS2
 Text Label 2550 3300 0    60   ~ 0
 SPI_MOSI
 Text Label 2550 3900 0    60   ~ 0
@@ -477,7 +477,7 @@ Wire Wire Line
 Text Label 7700 1950 0    60   ~ 0
 SPI_CLK
 Text Label 7700 1650 0    60   ~ 0
-SPI_SS2
+~SPI_SS2
 Text GLabel 7750 2250 2    60   Output ~ 0
 /NMI
 Wire Wire Line
@@ -545,7 +545,7 @@ U 1 1 548DB6D8
 P 1100 6350
 F 0 "X1" H 1100 6440 30  0000 C CNN
 F 1 "CRYSTAL_SMD" H 1130 6240 30  0000 L CNN
-F 2 "Crystals:Crystal_Round_Horizontal_2mm" H 1100 6350 60  0001 C CNN
+F 2 "Crystals:Crystal_Round_Vertical_3mm_BigPad" H 1100 6350 60  0001 C CNN
 F 3 "" H 1100 6350 60  0000 C CNN
 	1    1100 6350
 	1    0    0    -1  
@@ -616,7 +616,7 @@ Connection ~ 2850 6350
 Wire Wire Line
 	2150 2900 2650 2900
 Text Label 2550 2900 0    60   ~ 0
-SPI_SS3
+~SPI_SS3
 Text Label 3000 6950 0    60   ~ 0
 SPI_CLK
 $Comp
@@ -634,8 +634,8 @@ Wire Wire Line
 	2650 7150 3000 7150
 Wire Wire Line
 	3900 7150 4700 7150
-Text Label 4050 7100 0    60   ~ 0
-SPI_SS3
+Text Label 4800 6000 0    60   ~ 0
+~SPI_SS3
 Wire Wire Line
 	7550 1750 9100 1750
 Text Label 7650 1750 0    60   ~ 0
@@ -778,11 +778,11 @@ Wire Wire Line
 Wire Wire Line
 	2150 3200 2650 3200
 Text Label 2550 3000 0    60   ~ 0
-SPI_SS4
+~SPI_SS4
 Text Label 2550 3100 0    60   ~ 0
-SPI_SS5
+~SPI_SS5
 Text Label 2550 3200 0    60   ~ 0
-SPI_SS6
+~SPI_SS6
 $Comp
 L MINI_DIN_6 P1
 U 1 1 54B06BFD
@@ -877,9 +877,9 @@ Wire Wire Line
 Wire Wire Line
 	3450 6350 3450 6000
 Wire Wire Line
-	3450 6000 4700 6000
+	3450 6000 5050 6000
 Wire Wire Line
-	4700 6000 4700 7150
+	4700 7150 4700 6000
 Wire Wire Line
 	4550 6450 5000 6450
 Wire Wire Line
@@ -890,4 +890,200 @@ Wire Wire Line
 	2150 4100 2300 4100
 Wire Wire Line
 	2300 4100 2300 4050
+$Comp
+L CP2 C8
+U 1 1 54B14D65
+P 9650 5900
+F 0 "C8" H 9650 6000 40  0000 L CNN
+F 1 "100µF" H 9656 5815 40  0000 L CNN
+F 2 "Capacitors_Elko_ThroughHole:Elko_vert_11.5x8mm_RM3.5" H 9688 5750 30  0001 C CNN
+F 3 "" H 9650 5900 60  0000 C CNN
+	1    9650 5900
+	1    0    0    -1  
+$EndComp
+Connection ~ 4700 6000
+$Comp
+L CONN_02X03 P4
+U 1 1 54B176A0
+P 3350 4600
+F 0 "P4" H 3350 4800 50  0000 C CNN
+F 1 "SPI4" H 3350 4400 50  0000 C CNN
+F 2 "Pin_Headers:Pin_Header_Straight_2x03" H 3350 3400 60  0001 C CNN
+F 3 "" H 3350 3400 60  0000 C CNN
+	1    3350 4600
+	1    0    0    -1  
+$EndComp
+$Comp
+L VCC #PWR014
+U 1 1 54B17C97
+P 3700 4350
+F 0 "#PWR014" H 3700 4450 30  0001 C CNN
+F 1 "VCC" H 3700 4450 30  0000 C CNN
+F 2 "" H 3700 4350 60  0000 C CNN
+F 3 "" H 3700 4350 60  0000 C CNN
+	1    3700 4350
+	1    0    0    -1  
+$EndComp
+$Comp
+L GND #PWR015
+U 1 1 54B17DD5
+P 3700 4800
+F 0 "#PWR015" H 3700 4800 30  0001 C CNN
+F 1 "GND" H 3700 4730 30  0001 C CNN
+F 2 "" H 3700 4800 60  0000 C CNN
+F 3 "" H 3700 4800 60  0000 C CNN
+	1    3700 4800
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	3600 4700 3700 4700
+Wire Wire Line
+	3700 4700 3700 4800
+Wire Wire Line
+	3600 4500 3700 4500
+Wire Wire Line
+	3700 4500 3700 4350
+Wire Wire Line
+	3600 4600 3900 4600
+Wire Wire Line
+	3100 4500 2700 4500
+Wire Wire Line
+	2700 4600 3100 4600
+Wire Wire Line
+	2700 4700 3100 4700
+Text Label 3650 4600 0    60   ~ 0
+SPI_MOSI
+Text Label 2750 4500 0    60   ~ 0
+SPI_MISO
+Text Label 2750 4600 0    60   ~ 0
+SPI_CLK
+Text Label 2750 4700 0    60   ~ 0
+~SPI_SS4
+$Comp
+L CONN_02X03 P7
+U 1 1 54B1904A
+P 6250 4600
+F 0 "P7" H 6250 4800 50  0000 C CNN
+F 1 "SPI6" H 6250 4400 50  0000 C CNN
+F 2 "Pin_Headers:Pin_Header_Straight_2x03" H 6250 3400 60  0001 C CNN
+F 3 "" H 6250 3400 60  0000 C CNN
+	1    6250 4600
+	1    0    0    -1  
+$EndComp
+$Comp
+L VCC #PWR016
+U 1 1 54B19050
+P 6600 4350
+F 0 "#PWR016" H 6600 4450 30  0001 C CNN
+F 1 "VCC" H 6600 4450 30  0000 C CNN
+F 2 "" H 6600 4350 60  0000 C CNN
+F 3 "" H 6600 4350 60  0000 C CNN
+	1    6600 4350
+	1    0    0    -1  
+$EndComp
+$Comp
+L GND #PWR017
+U 1 1 54B19056
+P 6600 4800
+F 0 "#PWR017" H 6600 4800 30  0001 C CNN
+F 1 "GND" H 6600 4730 30  0001 C CNN
+F 2 "" H 6600 4800 60  0000 C CNN
+F 3 "" H 6600 4800 60  0000 C CNN
+	1    6600 4800
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	6500 4700 6600 4700
+Wire Wire Line
+	6600 4700 6600 4800
+Wire Wire Line
+	6500 4500 6600 4500
+Wire Wire Line
+	6600 4500 6600 4350
+Wire Wire Line
+	6500 4600 6800 4600
+Wire Wire Line
+	6000 4500 5600 4500
+Wire Wire Line
+	5600 4600 6000 4600
+Wire Wire Line
+	5600 4700 6000 4700
+Text Label 6550 4600 0    60   ~ 0
+SPI_MOSI
+Text Label 5650 4500 0    60   ~ 0
+SPI_MISO
+Text Label 5650 4600 0    60   ~ 0
+SPI_CLK
+Text Label 5650 4700 0    60   ~ 0
+~SPI_SS6
+$Comp
+L CONN_02X03 P6
+U 1 1 54B1948A
+P 4800 4600
+F 0 "P6" H 4800 4800 50  0000 C CNN
+F 1 "SPI5" H 4800 4400 50  0000 C CNN
+F 2 "Pin_Headers:Pin_Header_Straight_2x03" H 4800 3400 60  0001 C CNN
+F 3 "" H 4800 3400 60  0000 C CNN
+	1    4800 4600
+	1    0    0    -1  
+$EndComp
+$Comp
+L VCC #PWR018
+U 1 1 54B19490
+P 5150 4350
+F 0 "#PWR018" H 5150 4450 30  0001 C CNN
+F 1 "VCC" H 5150 4450 30  0000 C CNN
+F 2 "" H 5150 4350 60  0000 C CNN
+F 3 "" H 5150 4350 60  0000 C CNN
+	1    5150 4350
+	1    0    0    -1  
+$EndComp
+$Comp
+L GND #PWR019
+U 1 1 54B19496
+P 5150 4800
+F 0 "#PWR019" H 5150 4800 30  0001 C CNN
+F 1 "GND" H 5150 4730 30  0001 C CNN
+F 2 "" H 5150 4800 60  0000 C CNN
+F 3 "" H 5150 4800 60  0000 C CNN
+	1    5150 4800
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	5050 4700 5150 4700
+Wire Wire Line
+	5150 4700 5150 4800
+Wire Wire Line
+	5050 4500 5150 4500
+Wire Wire Line
+	5150 4500 5150 4350
+Wire Wire Line
+	5050 4600 5350 4600
+Wire Wire Line
+	4550 4500 4150 4500
+Wire Wire Line
+	4150 4600 4550 4600
+Wire Wire Line
+	4150 4700 4550 4700
+Text Label 5100 4600 0    60   ~ 0
+SPI_MOSI
+Text Label 4200 4500 0    60   ~ 0
+SPI_MISO
+Text Label 4200 4600 0    60   ~ 0
+SPI_CLK
+Text Label 4200 4700 0    60   ~ 0
+~SPI_SS5
+$Comp
+L C C9
+U 1 1 54B17E82
+P 9950 5900
+F 0 "C9" H 9950 6000 40  0000 L CNN
+F 1 "100nF" H 9956 5815 40  0000 L CNN
+F 2 "Discret:C1" H 9988 5750 30  0001 C CNN
+F 3 "" H 9950 5900 60  0000 C CNN
+	1    9950 5900
+	1    0    0    -1  
+$EndComp
+Connection ~ 9650 5700
+Connection ~ 9650 6100
 $EndSCHEMATC
