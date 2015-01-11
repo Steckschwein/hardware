@@ -351,13 +351,13 @@ Wire Wire Line
 	4200 3750 4200 3150
 Connection ~ 4200 3150
 Wire Wire Line
-	2000 650  2550 650 
+	2000 650  2850 650 
 Wire Wire Line
 	2550 650  2550 700 
 Wire Wire Line
 	2550 1200 2550 1100
 Wire Wire Line
-	2000 1200 2550 1200
+	2000 1200 2850 1200
 Wire Wire Line
 	2000 1200 2000 1250
 Wire Wire Line
@@ -380,4 +380,21 @@ Wire Wire Line
 	10600 2450 9450 2450
 Wire Wire Line
 	9450 2450 9450 1550
+$Comp
+L C C10
+U 1 1 54B2DE3A
+P 2850 900
+F 0 "C10" H 2850 1000 40  0000 L CNN
+F 1 "100nF" H 2856 815 40  0000 L CNN
+F 2 "Discret:C1" H 2888 750 30  0001 C CNN
+F 3 "" H 2850 900 60  0000 C CNN
+	1    2850 900 
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	2850 650  2850 700 
+Connection ~ 2550 650 
+Wire Wire Line
+	2850 1200 2850 1100
+Connection ~ 2550 1200
 $EndSCHEMATC
