@@ -1,11 +1,12 @@
-all: vdp vdpinit.bin
+all: vdp
 
 clean:
 	rm -f *.bin
 	
-vdp: t9929.bin vramtest.bin
+vdp: vramtest.bin t9929.bin
 
-%.bin: %.a
+# !!! we have to explicitly list the %.h.a dependency, otherwise changes within the .h.a file are not detected by make
+%.bin: %.a *.h.a
 	acme -v -f plain -l $<.labels --cpu 65c02 -o $@ $<
 
 transfer: all

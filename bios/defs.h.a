@@ -114,3 +114,20 @@ charset  =$e000
         sta .addr+1
 }
 
+!macro nops n{
+   !for i, 0, n{
+      nop
+   }
+}
+
+
+!macro save{
+	pha
+	phy
+	phx
+}
+!macro restore{
+	plx
+	ply
+	pla
+}

@@ -33,7 +33,7 @@ main:
 
       jsr lcdclear
 
-!for i, 7 {
+!for i, 0, 7 {
       lda #i+48
       jsr vdp_chrout
       inc crs_y   
@@ -41,7 +41,7 @@ main:
       lda #30
       sta crs_x
       stz crs_y
-!for i, 7 {
+!for i, 0, 7 {
       lda #i+48
       jsr vdp_chrout
       inc crs_y   
