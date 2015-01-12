@@ -21,10 +21,9 @@ LIBS:contrib
 LIBS:65xxx
 LIBS:lp2950l
 LIBS:ttl_ieee
-LIBS:dallas-rtc
 LIBS:mini_din
 LIBS:io-cache
-EELAYER 25 0
+EELAYER 24 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
@@ -377,68 +376,10 @@ Wire Wire Line
 	3500 3900 3500 2900
 Wire Wire Line
 	3500 2900 3700 2900
-$Sheet
-S 3700 650  1400 1100
-U 54318D23
-F0 "Joystick Ports" 60
-F1 "joystick.sch" 60
-F2 "PortSel01" I L 3700 750 60 
-F3 "PortSel02" I L 3700 850 60 
-F4 "J_Right" I L 3700 1050 60 
-F5 "J_Left" I L 3700 1150 60 
-F6 "J_Up" I L 3700 1250 60 
-F7 "J_Down" I L 3700 1350 60 
-F8 "J_Fire1" I L 3700 1450 60 
-F9 "J_Fire2" I L 3700 1550 60 
-$EndSheet
 Wire Wire Line
 	2150 1700 2250 1700
 Wire Wire Line
-	2250 1700 2250 750 
-Wire Wire Line
-	2250 750  3700 750 
-Wire Wire Line
-	3700 850  2350 850 
-Wire Wire Line
-	2350 850  2350 1800
-Wire Wire Line
 	2350 1800 2150 1800
-Wire Wire Line
-	2150 1900 2450 1900
-Wire Wire Line
-	2450 1900 2450 1050
-Wire Wire Line
-	2450 1050 3700 1050
-Wire Wire Line
-	3750 1150 2550 1150
-Wire Wire Line
-	2550 1150 2550 2000
-Wire Wire Line
-	2550 2000 2150 2000
-Wire Wire Line
-	2150 2100 2650 2100
-Wire Wire Line
-	2650 2100 2650 1250
-Wire Wire Line
-	2650 1250 3750 1250
-Wire Wire Line
-	3750 1350 2750 1350
-Wire Wire Line
-	2750 1350 2750 2200
-Wire Wire Line
-	2750 2200 2150 2200
-Wire Wire Line
-	2150 2300 2850 2300
-Wire Wire Line
-	2850 2300 2850 1450
-Wire Wire Line
-	2850 1450 3750 1450
-Wire Wire Line
-	3750 1550 2950 1550
-Wire Wire Line
-	2950 1550 2950 2400
-Wire Wire Line
-	2950 2400 2150 2400
 $Comp
 L VCC #PWR06
 U 1 1 545BCE2C
@@ -1086,4 +1027,56 @@ F 3 "" H 9950 5900 60  0000 C CNN
 $EndComp
 Connection ~ 9650 5700
 Connection ~ 9650 6100
+Wire Wire Line
+	2250 1700 2250 750 
+Wire Wire Line
+	2250 750  3700 750 
+Wire Wire Line
+	2350 1800 2350 900 
+Wire Wire Line
+	2350 900  3700 900 
+Wire Wire Line
+	3700 1050 2450 1050
+Wire Wire Line
+	2450 1050 2450 1900
+Wire Wire Line
+	2450 1900 2150 1900
+Wire Wire Line
+	3700 1200 2550 1200
+Wire Wire Line
+	2550 1200 2550 2000
+Wire Wire Line
+	2550 2000 2150 2000
+$Sheet
+S 3700 650  1400 1250
+U 54318D23
+F0 "Joystick Ports" 60
+F1 "joystick.sch" 60
+F2 "PortSel01" I L 3700 1650 60 
+F3 "PortSel02" I L 3700 1800 60 
+F4 "J_Right" I L 3700 1200 60 
+F5 "J_Left" I L 3700 1050 60 
+F6 "J_Up" I L 3700 750 60 
+F7 "J_Down" I L 3700 900 60 
+F8 "J_Fire1" I L 3700 1350 60 
+F9 "J_Fire2" I L 3700 1500 60 
+$EndSheet
+Wire Wire Line
+	2150 2100 2650 2100
+Wire Wire Line
+	2650 2100 2650 1350
+Wire Wire Line
+	2650 1350 3700 1350
+Wire Wire Line
+	2150 2300 2950 2300
+Wire Wire Line
+	2950 2300 2950 1650
+Wire Wire Line
+	2950 1650 3700 1650
+Wire Wire Line
+	3700 1800 3050 1800
+Wire Wire Line
+	3050 1800 3050 2400
+Wire Wire Line
+	3050 2400 2150 2400
 $EndSCHEMATC
