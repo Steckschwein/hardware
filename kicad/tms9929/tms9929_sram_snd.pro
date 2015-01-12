@@ -1,4 +1,4 @@
-update=Thu 08 Jan 2015 02:28:55 PM CET
+update=12.01.2015 23:32:06
 version=1
 last_client=eeschema
 [general]
@@ -77,4 +77,3 @@ LibName28=atmel
 LibName29=contrib
 LibName30=valves
 LibName31=tms99xx
-LibName32=ok-jacks
