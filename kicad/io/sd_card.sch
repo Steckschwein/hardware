@@ -275,7 +275,7 @@ Wire Wire Line
 Wire Wire Line
 	4400 800  4450 800 
 Wire Wire Line
-	5250 800  10400 800 
+	5250 800  10500 800 
 Wire Wire Line
 	5550 1050 5550 800 
 Connection ~ 5550 800 
@@ -327,7 +327,7 @@ Wire Wire Line
 Wire Wire Line
 	10600 1850 10500 1850
 Wire Wire Line
-	10500 1850 10500 3250
+	10500 1400 10500 3250
 Wire Wire Line
 	10600 2150 10500 2150
 Connection ~ 10500 2150
@@ -383,18 +383,18 @@ Wire Wire Line
 $Comp
 L C C10
 U 1 1 54B2DE3A
-P 2850 900
-F 0 "C10" H 2850 1000 40  0000 L CNN
-F 1 "100nF" H 2856 815 40  0000 L CNN
-F 2 "Discret:C1" H 2888 750 30  0001 C CNN
-F 3 "" H 2850 900 60  0000 C CNN
-	1    2850 900 
+P 10500 1200
+F 0 "C10" H 10500 1300 40  0000 L CNN
+F 1 "100nF" H 10506 1115 40  0000 L CNN
+F 2 "Discret:C1" H 10538 1050 30  0001 C CNN
+F 3 "" H 10500 1200 60  0000 C CNN
+	1    10500 1200
 	1    0    0    -1  
 $EndComp
-Wire Wire Line
-	2850 650  2850 700 
 Connection ~ 2550 650 
-Wire Wire Line
-	2850 1200 2850 1100
 Connection ~ 2550 1200
+Wire Wire Line
+	10500 800  10500 1000
+Connection ~ 10400 800 
+Connection ~ 10500 1850
 $EndSCHEMATC
