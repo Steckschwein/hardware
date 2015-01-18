@@ -1,4 +1,4 @@
-Cmp-Mod V01 Created by Cvpcb (2014-09-10 BZR 5127)-product   date = Mon 17 Nov 2014 10:10:30 PM CET
+Cmp-Mod V01 Created by Cvpcb (2014-12-04 BZR 5312)-product   date = Tue 13 Jan 2015 08:57:42 PM CET
 
 BeginCmp
 TimeStamp = /541367DD;
@@ -92,20 +92,6 @@ IdModule  = Discret:C1;
 EndCmp
 
 BeginCmp
-TimeStamp = /544D4EDE/546A978B;
-Reference = C14;
-ValeurCmp = 100n;
-IdModule  = Discret:C1;
-EndCmp
-
-BeginCmp
-TimeStamp = /544D4EDE/546A97B6;
-Reference = C15;
-ValeurCmp = 100n;
-IdModule  = Discret:C1;
-EndCmp
-
-BeginCmp
 TimeStamp = /546AA0E1;
 Reference = C16;
 ValeurCmp = CP2;
@@ -145,6 +131,13 @@ TimeStamp = /54206EE0/542071FB;
 Reference = P5;
 ValeurCmp = CONN_02X25;
 IdModule  = Pin_Headers:Pin_Header_Angled_2x25;
+EndCmp
+
+BeginCmp
+TimeStamp = /54B57D9B;
+Reference = P6;
+ValeurCmp = POWER;
+IdModule  = Pin_Headers:Pin_Header_Angled_1x04;
 EndCmp
 
 BeginCmp
@@ -260,13 +253,6 @@ IdModule  = Sockets_DIP:DIP-16__300_ELL;
 EndCmp
 
 BeginCmp
-TimeStamp = /544D4EDE/546A6140;
-Reference = U10;
-ValeurCmp = 7400;
-IdModule  = Sockets_DIP:DIP-14__300_ELL;
-EndCmp
-
-BeginCmp
 TimeStamp = /544D4EDE/544D56DD;
 Reference = U11;
 ValeurCmp = 74LS273;
@@ -274,7 +260,7 @@ IdModule  = Sockets_DIP:DIP-20__300_ELL;
 EndCmp
 
 BeginCmp
-TimeStamp = /544D4EDE/546A6264;
+TimeStamp = /544D4EDE/54AD6087;
 Reference = U12;
 ValeurCmp = 74LS244;
 IdModule  = Sockets_DIP:DIP-20__300_ELL;

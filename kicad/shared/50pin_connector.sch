@@ -193,16 +193,14 @@ Wire Wire Line
 Wire Wire Line
 	6350 4050 6350 4100
 Wire Wire Line
-	5300 4150 5250 4150
+	5300 4150 5150 4150
 Wire Wire Line
-	5300 4250 5250 4250
-Wire Wire Line
-	5800 4150 5850 4150
-Text GLabel 5250 4150 0    60   Input ~ 0
+	5800 4150 6000 4150
+Text GLabel 5150 4150 0    60   Input ~ 0
 /OE
-Text GLabel 5250 4250 0    60   Input ~ 0
+Text GLabel 6250 4250 2    60   Input ~ 0
 PHI2
-Text GLabel 5850 4150 2    60   Input ~ 0
+Text GLabel 6000 4150 2    60   Input ~ 0
 /WE
 Text Label 4850 2850 2    60   ~ 0
 D6
@@ -377,8 +375,6 @@ Entry Wire Line
 	4650 3650 4750 3750
 Text Label 4750 3750 0    60   ~ 0
 A5
-NoConn ~ 5800 4350
-NoConn ~ 5300 4350
 $Comp
 L GND #PWR026
 U 1 1 5436D639
@@ -454,8 +450,30 @@ A5
 Text GLabel 5850 3550 2    60   Input ~ 0
 /CS_VIA
 NoConn ~ 5300 2750
-Text HLabel 5850 4250 2    60   Input ~ 0
+Text HLabel 5900 4350 2    60   Input ~ 0
 RESET_TRIG
+$Comp
+L GND #PWR?
+U 1 1 54BC2AE5
+P 4700 4300
+F 0 "#PWR?" H 4700 4300 30  0001 C CNN
+F 1 "GND" H 4700 4230 30  0001 C CNN
+F 2 "" H 4700 4300 60  0000 C CNN
+F 3 "" H 4700 4300 60  0000 C CNN
+	1    4700 4300
+	1    0    0    -1  
+$EndComp
 Wire Wire Line
-	5800 4250 5850 4250
+	4700 4300 4700 4250
+Wire Wire Line
+	4700 4250 5300 4250
+Wire Wire Line
+	5800 4250 6250 4250
+Wire Wire Line
+	5300 4350 5150 4350
+Wire Wire Line
+	5150 4350 5150 4250
+Connection ~ 5150 4250
+Wire Wire Line
+	5800 4350 5900 4350
 $EndSCHEMATC
