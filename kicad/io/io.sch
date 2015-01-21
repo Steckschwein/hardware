@@ -1083,4 +1083,14 @@ $EndComp
 Wire Wire Line
 	4300 7050 4300 7250
 Connection ~ 4300 7150
+Wire Wire Line
+	8000 2150 8000 6300
+Wire Wire Line
+	8000 6300 6800 6300
+Wire Wire Line
+	6800 6300 6800 7500
+Wire Wire Line
+	6800 7500 5450 7500
+Wire Wire Line
+	5450 7500 5450 7200
 $EndSCHEMATC
