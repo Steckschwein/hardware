@@ -1,4 +1,4 @@
-Cmp-Mod V01 Created by Cvpcb (2014-12-04 BZR 5312)-product   date = Tue 13 Jan 2015 08:57:42 PM CET
+Cmp-Mod V01 Created by Cvpcb (2014-12-04 BZR 5312)-product   date = Sat 24 Jan 2015 01:11:26 PM CET
 
 BeginCmp
 TimeStamp = /541367DD;
@@ -99,6 +99,83 @@ IdModule  = Capacitors_Elko_ThroughHole:Elko_vert_11.2x7.5mm_RM2.5;
 EndCmp
 
 BeginCmp
+TimeStamp = /54C38B5D;
+Reference = D1;
+ValeurCmp = LED;
+IdModule  = LEDs:LED-3MM;
+EndCmp
+
+BeginCmp
+TimeStamp = /54C38C62;
+Reference = D2;
+ValeurCmp = LED;
+IdModule  = LEDs:LED-3MM;
+EndCmp
+
+BeginCmp
+TimeStamp = /54C38D3E;
+Reference = D3;
+ValeurCmp = LED;
+IdModule  = LEDs:LED-3MM;
+EndCmp
+
+BeginCmp
+TimeStamp = /544D4EDE/54C39200;
+Reference = D4;
+ValeurCmp = LED;
+IdModule  = LEDs:LED-3MM;
+EndCmp
+
+BeginCmp
+TimeStamp = /544D4EDE/54C3922E;
+Reference = D5;
+ValeurCmp = LED;
+IdModule  = LEDs:LED-3MM;
+EndCmp
+
+BeginCmp
+TimeStamp = /544D4EDE/54C391D7;
+Reference = D6;
+ValeurCmp = LED;
+IdModule  = LEDs:LED-3MM;
+EndCmp
+
+BeginCmp
+TimeStamp = /544D4EDE/54C39194;
+Reference = D7;
+ValeurCmp = LED;
+IdModule  = LEDs:LED-3MM;
+EndCmp
+
+BeginCmp
+TimeStamp = /544D4EDE/54C392CE;
+Reference = D8;
+ValeurCmp = LED;
+IdModule  = LEDs:LED-3MM;
+EndCmp
+
+BeginCmp
+TimeStamp = /544D4EDE/54C39306;
+Reference = D9;
+ValeurCmp = LED;
+IdModule  = LEDs:LED-3MM;
+EndCmp
+
+BeginCmp
+TimeStamp = /544D4EDE/54C39293;
+Reference = D10;
+ValeurCmp = LED;
+IdModule  = LEDs:LED-3MM;
+EndCmp
+
+BeginCmp
+TimeStamp = /544D4EDE/54C39263;
+Reference = D11;
+ValeurCmp = LED;
+IdModule  = LEDs:LED-3MM;
+EndCmp
+
+BeginCmp
 TimeStamp = /54136830;
 Reference = P1;
 ValeurCmp = CONN_02X04;
@@ -179,6 +256,83 @@ BeginCmp
 TimeStamp = /54136D90;
 Reference = R6;
 ValeurCmp = 1M;
+IdModule  = Discret:R3;
+EndCmp
+
+BeginCmp
+TimeStamp = /54C39594;
+Reference = R7;
+ValeurCmp = 270;
+IdModule  = Discret:R3;
+EndCmp
+
+BeginCmp
+TimeStamp = /54C3A498;
+Reference = R8;
+ValeurCmp = 270;
+IdModule  = Discret:R3;
+EndCmp
+
+BeginCmp
+TimeStamp = /54C3A4DF;
+Reference = R9;
+ValeurCmp = 270;
+IdModule  = Discret:R3;
+EndCmp
+
+BeginCmp
+TimeStamp = /544D4EDE/54C395B4;
+Reference = R10;
+ValeurCmp = 270;
+IdModule  = Discret:R3;
+EndCmp
+
+BeginCmp
+TimeStamp = /544D4EDE/54C39330;
+Reference = R11;
+ValeurCmp = 270;
+IdModule  = Discret:R3;
+EndCmp
+
+BeginCmp
+TimeStamp = /544D4EDE/54C39489;
+Reference = R12;
+ValeurCmp = 270;
+IdModule  = Discret:R3;
+EndCmp
+
+BeginCmp
+TimeStamp = /544D4EDE/54C393FC;
+Reference = R13;
+ValeurCmp = 270;
+IdModule  = Discret:R3;
+EndCmp
+
+BeginCmp
+TimeStamp = /544D4EDE/54C394D1;
+Reference = R14;
+ValeurCmp = 270;
+IdModule  = Discret:R3;
+EndCmp
+
+BeginCmp
+TimeStamp = /544D4EDE/54C3950D;
+Reference = R15;
+ValeurCmp = 270;
+IdModule  = Discret:R3;
+EndCmp
+
+BeginCmp
+TimeStamp = /544D4EDE/54C39453;
+Reference = R16;
+ValeurCmp = 270;
+IdModule  = Discret:R3;
+EndCmp
+
+BeginCmp
+TimeStamp = /544D4EDE/54C39576;
+Reference = R17;
+ValeurCmp = 270;
 IdModule  = Discret:R3;
 EndCmp
 
