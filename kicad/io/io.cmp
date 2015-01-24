@@ -1,4 +1,4 @@
-Cmp-Mod V01 Created by Cvpcb (2014-12-04 BZR 5312)-product   date = Sat 24 Jan 2015 03:35:29 PM CET
+Cmp-Mod V01 Created by Cvpcb (2014-12-04 BZR 5312)-product   date = Sat 24 Jan 2015 11:35:02 PM CET
 
 BeginCmp
 TimeStamp = /548DEF73;
@@ -89,6 +89,13 @@ TimeStamp = /54B06BFD;
 Reference = P1;
 ValeurCmp = PS/2 Keyboard;
 IdModule  = Steckschwein:mini_din-M_DIN6;
+EndCmp
+
+BeginCmp
+TimeStamp = /54C498CF;
+Reference = P2;
+ValeurCmp = CONN_02X06;
+IdModule  = Pin_Headers:Pin_Header_Straight_2x06;
 EndCmp
 
 BeginCmp
