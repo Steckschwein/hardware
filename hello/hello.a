@@ -1,0 +1,26 @@
+*= $1000
+jmp main 
+!src "../bios/defs.h.a"
+!src "../bios/bios.h.a"
+
+main 
+	lda #dev_lcd
+	sta chn_out
+
+	jsr lcdclear
+
+	+SetVector hello, msgptr
+	jsr lcdstring
+	ldx #$00
+	ldy #$02
+	jsr lcdxy
+	+SetVector num, msgptr
+	jsr lcdstring
+-	
+
+	jmp -
+
+hello
+	!text "**Hello World!**", $00
+num
+	!text "1234567890123456", $00
