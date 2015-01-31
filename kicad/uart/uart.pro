@@ -1,4 +1,4 @@
-update=Thu 08 Jan 2015 08:59:11 AM CET
+update=Sat 31 Jan 2015 12:42:25 PM CET
 version=1
 last_client=kicad
 [cvpcb]
@@ -27,9 +27,22 @@ BoardOutlineThickness=0.100000000000
 ModuleOutlineThickness=0.150000000000
 [general]
 version=1
+[schematic_editor]
+version=1
+PageLayoutDescrFile=
+PlotDirectoryName=
+SubpartIdSeparator=0
+SubpartFirstId=65
+NetFmtName=
+SpiceForceRefPrefix=0
+SpiceUseNetNumbers=0
+RptD_X=0
+RptD_Y=100
+RptLab=1
+LabSize=60
 [eeschema]
 version=1
-LibDir=
+LibDir=../lbr
 [eeschema/libraries]
 LibName1=power
 LibName2=device
@@ -62,16 +75,3 @@ LibName28=contrib
 LibName29=valves
 LibName30=/home/thomas/Documents/steckschwein/kicad/lbr/UART
 LibName31=/home/thomas/Documents/steckschwein/kicad/lbr/osc
-[schematic_editor]
-version=1
-PageLayoutDescrFile=
-PlotDirectoryName=
-SubpartIdSeparator=0
-SubpartFirstId=65
-NetFmtName=
-SpiceForceRefPrefix=0
-SpiceUseNetNumbers=0
-RptD_X=0
-RptD_Y=100
-RptLab=1
-LabSize=60
