@@ -1,4 +1,4 @@
-Cmp-Mod V01 Created by Cvpcb (2014-12-04 BZR 5312)-product   date = Sat 24 Jan 2015 11:35:02 PM CET
+Cmp-Mod V01 Created by Cvpcb (2014-12-04 BZR 5312)-product   date = Sat 31 Jan 2015 02:42:30 PM CET
 
 BeginCmp
 TimeStamp = /548DEF73;
@@ -137,14 +137,14 @@ BeginCmp
 TimeStamp = /54318D23/54318EBC;
 Reference = Port1;
 ValeurCmp = DB9;
-IdModule  = Connect:DB9MC;
+IdModule  = Connectors:DB_9M;
 EndCmp
 
 BeginCmp
 TimeStamp = /54318D23/54318F7A;
 Reference = Port2;
 ValeurCmp = DB9;
-IdModule  = Connect:DB9MC;
+IdModule  = Connectors:DB_9M;
 EndCmp
 
 BeginCmp
