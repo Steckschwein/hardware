@@ -1,4 +1,4 @@
-update=Fri 09 Jan 2015 01:46:05 PM CET
+update=Sun 01 Feb 2015 12:40:08 PM CET
 version=1
 last_client=kicad
 [cvpcb]
@@ -68,3 +68,4 @@ LibName21=lp2950l
 LibName22=ttl_ieee
 LibName23=dallas-rtc
 LibName24=mini_din
+LibName25=w_connectors

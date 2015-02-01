@@ -23,6 +23,7 @@ LIBS:lp2950l
 LIBS:ttl_ieee
 LIBS:dallas-rtc
 LIBS:mini_din
+LIBS:w_connectors
 LIBS:io-cache
 EELAYER 25 0
 EELAYER END
