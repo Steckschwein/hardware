@@ -648,7 +648,6 @@ F 3 "" H 4900 4600 60  0000 C CNN
 $EndComp
 Wire Wire Line
 	4900 4300 4900 4600
-NoConn ~ 4600 4000
 NoConn ~ 4600 3400
 NoConn ~ 6700 3400
 NoConn ~ 6700 3500
@@ -747,4 +746,11 @@ Connection ~ 3500 6000
 Wire Wire Line
 	3500 6450 3500 6500
 Connection ~ 3500 6500
+Wire Wire Line
+	4600 4000 4400 4000
+Wire Wire Line
+	4400 4000 4400 4400
+Wire Wire Line
+	4400 4400 4900 4400
+Connection ~ 4900 4400
 $EndSCHEMATC
