@@ -22,18 +22,22 @@ main
 	ldy	#$01
 	jsr	lcdxy
 
+	+nops	1000
 	lda	#PORT_SEL_1			;port 1
 	sta	via1porta
 	+SetVector msg_j1, 		msgptr
 	jsr 	lcdstring
 	lda	via1porta
+	and	#%00111111
 	jsr	lcdhex
 
-	lda	#PORT_SEL_2		;port 2
+	+nops	1000
+	lda	#PORT_SEL_2			;port 2
 	sta	via1porta
 	+SetVector msg_j2, 		msgptr
 	jsr 	lcdstring
 	lda	via1porta
+	and	#%00111111
 	jsr	lcdhex
 	jmp -
 
