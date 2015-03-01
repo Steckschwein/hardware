@@ -1,2 +1,0 @@
-schematics cpu.sch memory.sch reset.sch uart.sch io.sch
-output-name 6502
