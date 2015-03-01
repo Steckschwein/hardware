@@ -1,5 +1,4 @@
 !initmem $ff
-!cpu 65c02
 !src "defs.h.a"
 !src "via.h.a"
 !src "sdcard.h.a"
@@ -210,7 +209,7 @@ crlf	!byte $0d, $00
 			stz chn_in 
 
 			; init VDP
-			+SetVector vdp_init_bytes,	adrl
+			+SetVector .vdp_init_bytes,	adrl
 			jsr vdp_init_reg
 
 			jsr	vdp_clear_vram
@@ -252,12 +251,12 @@ crlf	!byte $0d, $00
 			stz chn_out
 			
 			lda #'$'
-			jsr chrout
+			jsr .chrout
 
 			lda ram_end_l
-			jsr hexout
+			jsr .hexout
 			lda ram_end_h
-			jsr hexout
+			jsr .hexout
 
 			+SetVector crlf, msgptr
 			jsr	vdp_print
@@ -267,41 +266,43 @@ crlf	!byte $0d, $00
 			ldy	#v_reg1
 			jsr	vdp_sreg
 
+
+			lda #dev_lcd
+			sta chn_out
+
+			ldy #$02
+			ldx #$00
+			jsr lcdxy
+
 			jsr init_sdcard
 
 			lda sd_cmd_errno
 			beq +
-			ldy #$01
-			ldx #$00
-			jsr lcdxy
+			
 			; SD Card init failed
 			cmp #$ff
 			bne ++
 
-			lda #dev_lcd
-			sta chn_out 
-			+PrintString nocard			
-			jsr vdp_print
+			+PrintString .nocard			
 			
-
 ++			cmp #$0f
 			bne ++
-			+PrintString invalidcard
-			jsr vdp_print
+
+			+PrintString .invalidcard
 
 ++			cmp #$1f
 			bne ++
-			+PrintString initfail
-			jsr vdp_print
+
+			+PrintString .initfail
+
 			bra ++
 
-+			+SetVector cardok, msgptr
-			jsr	vdp_print
++			+PrintString .cardok	
 		
 ++
 
-			+SetVector ready_msg, msgptr
-			jsr	vdp_print
+;			+SetVector ready_msg, msgptr
+;			jsr	vdp_print
 			
 			jsr .upload
 			
@@ -394,7 +395,7 @@ crlf	!byte $0d, $00
 ; Output string on active output device
 ;----------------------------------------------------------------------------------------------
 .strout 	pha                 ;save a, y to stack
-			lda #chn_out
+			lda chn_out
 			bne +
 
 			pla
@@ -464,8 +465,8 @@ crlf	!byte $0d, $00
 	adc     #6              ;add offset for letter a-f
 +	jsr		.chrout
 
+	plx
 	pla
-	ply
 	rts
 
 			
@@ -570,9 +571,9 @@ vdp_cursor:
    lsr
 -  rol
    bcs +
-   cmp dec_tbl,x
+   cmp .dec_tbl,x
    bcc ++
-+  sbc dec_tbl,x
++  sbc .dec_tbl,x
    sec
 ++ rol tmp0
    bcc -
@@ -601,9 +602,9 @@ vdp_cursor:
    lsr
 -  rol
    bcs ++
-   cmp dec_tbl,x
+   cmp .dec_tbl,x
    bcc +
-++ sbc dec_tbl,x
+++ sbc .dec_tbl,x
    sec
 +  rol tmp0
    bcc -
@@ -683,13 +684,13 @@ vdp_cursor:
 ;hexascii	!text "0123456789ABCDEF"
 
 ; Lookup table for decimal to ASCII
-dec_tbl		!byte 128,160,200
+.dec_tbl		!byte 128,160,200
 
 ; SD Card init status messages
-cardok		!text "SD Card OK", $00
-nocard		!text "NO SD Card ", $00
-invalidcard	!text "Invalid SD Card!", $00
-initfail	!text "SD Init failed!", $00
+.cardok		!text "SD Card OK", $00
+.nocard		!text "NO SD Card ", $00
+.invalidcard	!text "Invalid SD Card!", $00
+.initfail	!text "SD Init failed!", $00
 
 ;----------------------------------------------------------------------------------------------
 ;	divisor values for 1.8432 MHz Crystal
@@ -720,7 +721,7 @@ initfail	!text "SD Init failed!", $00
 ;----------------------------------------------------------------------------------------------
 ; VDP initialisation data
 ;----------------------------------------------------------------------------------------------
-vdp_init_bytes	
+.vdp_init_bytes	
 	!byte 0
 	!byte v_reg1_16k
 	!byte ($1800 / $400)	; name table - value * $400
@@ -753,9 +754,6 @@ b     cmp .start_check
       inc a+1
       inc b+1
       bne -
-
-      ;inc a+2
-      ;inc b+2
 
       ; Stop at $e000 to prevent overwriting BIOS Code when ROMOFF
       ldx a+2
