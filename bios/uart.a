@@ -13,10 +13,10 @@ init_uart
 ;	ldx #15*2	; 9600 BAUD
 ;	ldx #11*2	; 2400 BAUD
 
-	lda uart_divisor,x
+	lda .uart_divisor,x
 	sta uart1dll	
 
-	lda uart_divisor+1,x
+	lda .uart_divisor+1,x
 	sta uart1dlh
 
 	lda #%00000011	; 8N1

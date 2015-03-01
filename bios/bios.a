@@ -319,29 +319,18 @@ crlf	!byte $0d, $00
 ; IO_NMI Routine. Handle NMI
 ;----------------------------------------------------------------------------------------------
 .do_nmi 
-			
-			; pha
-			; jsr lcdclear
+			; disable interrupt
+			sei
 
-			; jsr lcdhex
-			
-			; lda #' '
-			; jsr lcdprint
-			
-			; txa
-			; jsr lcdhex
+			; clear decimal flag
+			cld
 
-			; lda #' '
-			; jsr lcdprint
-
-
-			; tya
-			; jsr lcdhex
-
+			; init stack pointer
+			ldx #$ff
+			txs
 		
-			; pla
-			jmp .do_reset
-			rti
+			jmp .back_from_memcheck
+;			rti
 
 ;----------------------------------------------------------------------------------------------
 ; IO_IRQ Routine. Handle IRQ
@@ -678,7 +667,7 @@ vdp_cursor:
 	phy
 
 -	jsr .kbd_enable	
-	jsr i_spi_r_byte
+	jsr .spi_r_byte
 	jsr .kbd_disable
 	beq -
 	
@@ -705,7 +694,7 @@ initfail	!text "SD Init failed!", $00
 ;----------------------------------------------------------------------------------------------
 ;	divisor values for 1.8432 MHz Crystal
 ;	value		; baud	; #
-uart_divisor	
+.uart_divisor	
 	!word -1 	; dunno	; 0
 	!word 2304	; 50	; 1
 	!word 1536	; 75	; 2	
@@ -815,28 +804,28 @@ sys_lcdxy
 lcdxy 		jmp .lcdxy
 
 sys_spi_rw_byte	
-spi_rw_byte	jmp i_spi_rw_byte
+spi_rw_byte	jmp .spi_rw_byte
 
 sys_spi_r_byte	
-spi_r_byte	jmp i_spi_r_byte
+spi_r_byte	jmp .spi_r_byte
 
 sys_upload	jmp .upload
 
 sys_sd_write_block
-sd_write_block 	jmp i_sd_write_block
+sd_write_block 	jmp .sd_write_block
 
 sys_sd_read_block
-sd_read_block 	jmp i_sd_read_block
+sd_read_block 	jmp .sd_read_block
 
 sys_sd_param_init
-sd_param_init 	jmp i_sd_param_init
+sd_param_init 	jmp .sd_param_init
 
 sys_sd_deselect_card
-sd_deselect_card 	jmp i_sd_deselect_card
+sd_deselect_card 	jmp .sd_deselect_card
 sys_sd_select_card
-sd_select_card 	jmp i_sd_select_card
+sd_select_card 	jmp .sd_select_card
 sys_sd_cmd
-sd_cmd 		jmp i_sd_cmd
+sd_cmd 		jmp .sd_cmd
 sys_strout
 strout 		jmp .strout
 sys_hexout

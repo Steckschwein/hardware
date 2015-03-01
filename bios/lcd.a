@@ -1,4 +1,4 @@
-lcd_line = $10 ; 16 chars per lcd row
+.lcd_line = $10 ; 16 chars per lcd row
 
 ;----------------------------------------------------------------------------------------------
 ; *** LCD initialisation
@@ -87,7 +87,7 @@ exit		rts
 			jsr .lcdbusy
 			lda lcdctl            ;get current ddram address
 			and #$7f
-			cmp #lcd_line         ;wrap from pos $16 (line 1 char 20)...
+			cmp #.lcd_line         ;wrap from pos $16 (line 1 char 20)...
 			bne +
 			lda #$c0            	;...to $40 (line 2 char 1)
 			sta lcdctl
