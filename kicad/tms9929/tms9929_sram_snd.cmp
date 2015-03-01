@@ -1,4 +1,4 @@
-Cmp-Mod V01 Created by Cvpcb (2014-09-16 BZR 5139)-product   date = 28/02/2015 01:10:22
+Cmp-Mod V01 Created by Cvpcb (2014-09-16 BZR 5139)-product   date = 01/03/2015 22:14:53
 
 BeginCmp
 TimeStamp = /5419E797;
@@ -122,6 +122,13 @@ EndCmp
 BeginCmp
 TimeStamp = /54F10AC1;
 Reference = L1;
+ValeurCmp = 47µH;
+IdModule  = Inductors:INDUCTOR_V;
+EndCmp
+
+BeginCmp
+TimeStamp = /54F39091;
+Reference = L2;
 ValeurCmp = 47µH;
 IdModule  = Inductors:INDUCTOR_V;
 EndCmp
@@ -368,21 +375,21 @@ BeginCmp
 TimeStamp = /541A93AC;
 Reference = R21;
 ValeurCmp = 100;
-IdModule  = Resistors_ThroughHole:Resistor_Horizontal_RM15mm;
+IdModule  = Resistors_ThroughHole:Resistor_Horizontal_RM10mm;
 EndCmp
 
 BeginCmp
 TimeStamp = /541A94BA;
 Reference = R22;
 ValeurCmp = 100;
-IdModule  = Resistors_ThroughHole:Resistor_Horizontal_RM15mm;
+IdModule  = Resistors_ThroughHole:Resistor_Horizontal_RM10mm;
 EndCmp
 
 BeginCmp
 TimeStamp = /541BDEC3;
 Reference = R23;
 ValeurCmp = 100;
-IdModule  = Resistors_ThroughHole:Resistor_Horizontal_RM15mm;
+IdModule  = Resistors_ThroughHole:Resistor_Horizontal_RM10mm;
 EndCmp
 
 BeginCmp
