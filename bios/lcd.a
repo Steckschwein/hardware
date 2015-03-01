@@ -160,8 +160,9 @@ exit		rts
 	adc     #6              ;add offset for letter a-f
 +	jsr		.lcdprint
 
+	plx
 	pla
-	ply
+	
 	rts
 
 ;----------------------------------------------------------------------------------------------
