@@ -23,9 +23,8 @@ void init_kb(void)
 	MCUCR 	= (1 << ISC01);					  // INT0 interrupt on falling edge
 	GIMSK	= (1 << INT0);						  // Enable INT0 interrupt
 
-
-	DDRC	= (1 << PC0) | (1 << PC1);
 	PORTC  	= 3;
+	DDRC	= (1 << PC0) | (1 << PC1);
 }
 
 
