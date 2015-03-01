@@ -572,7 +572,7 @@ vdp_cursor:
 ;----------------------------------------------------------------------------------------------
 ; LCDDECZ - output byte in A as decimal ASCII with leading zeros
 ;----------------------------------------------------------------------------------------------
-i_decoutz
+.decoutz
    phx
    phy
    ldx #2
@@ -601,7 +601,7 @@ i_decoutz
 ;----------------------------------------------------------------------------------------------
 ; LCDDEC - output byte in A as decimal ASCII without leading zeros
 ;----------------------------------------------------------------------------------------------
-i_decout
+.decout
    phx
    phy
    ldx #1
@@ -674,11 +674,16 @@ i_decout
 ; get key from keyboard, wait if $00
 ;---------------------------------------------------------------------
 .kbd_chrin
--
-	jsr .kbd_enable	
+	phx
+	phy
+
+-	jsr .kbd_enable	
 	jsr i_spi_r_byte
 	jsr .kbd_disable
 	beq -
+	
+	ply
+	plx
 	rts
 
 
@@ -799,9 +804,9 @@ lcdstring 	jmp .lcdstring
 sys_lcdhex
 lcdhex 		jmp .lcdhex 
 sys_decout
-decout 		jmp i_decout
+decout 		jmp .decout
 sys_decoutz
-decoutz 	jmp i_decoutz
+decoutz 	jmp .decoutz
 sys_irqhandler
 irqhandler  jmp .irqhandler
 sys_lcdbusy
