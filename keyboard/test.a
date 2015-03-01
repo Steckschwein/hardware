@@ -14,5 +14,11 @@
 	jsr lcdclear
 
 -	jsr chrin
-	jsr lcdprint
+	cmp #$0d
+	beq +
+	jsr hexout
 	jmp -
++	jsr hexout
+	lda #$0a
+	jsr hexout
+	bra -

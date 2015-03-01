@@ -3,19 +3,9 @@
 !src "../bios/bios.h.a"
 
 main
-	lda #%00000001
-	sta via1porta ; Pin 0 von Port A auf 1 setzen -> ROM ein
-	sta via1ddra  ; Pin 0 von Port A als Ausgang setzen
-	
-	lda #$00
-	ldx #$42	
-	stx $e000     ; $42 landet im RAM
-	
-	dec via1porta ; Pin 0 von Port A ist jetzt 0 -> ROM  aus 
-	lda $e000     ; $42 aus dem RAM lesen
-	inc via1porta ; -> ROM ein
-	
-	jsr lcdhex
+	jsr lcdclear
+	lda #$01
+	sta $02f0
 -	jmp -
 	
 

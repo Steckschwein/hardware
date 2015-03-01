@@ -13,7 +13,7 @@
 	jsr spi_rw_byte
 	jsr rtc_disable
 
-;	jsr write
+	jsr write
 	jsr write_date
 
 -	jmp -
@@ -26,11 +26,11 @@ write
     lda #$80
     jsr spi_rw_byte
     
-    lda #$40
+    lda #$00
     jsr spi_rw_byte
-    lda #$07
+    lda #$39
 	jsr spi_rw_byte
-	lda #$18
+	lda #$12
 	jsr spi_rw_byte
 
 	jsr rtc_disable
@@ -46,9 +46,9 @@ write_date
     lda #$06
     jsr spi_rw_byte
 
-    lda #$05
+    lda #$22
     jsr spi_rw_byte
-    lda #$01
+    lda #$02
     jsr spi_rw_byte
     lda #$15
     jsr spi_rw_byte

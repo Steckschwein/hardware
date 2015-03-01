@@ -7,6 +7,9 @@ targeth	= $f0
 
 
 main
+	lda #$01
+	sta $2f0
+-	jmp -
 	ldy #$00
 
 

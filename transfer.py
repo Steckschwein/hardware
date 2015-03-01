@@ -25,8 +25,8 @@ try:
 
 
 	ser = serial.Serial(
-		port='/dev/tty.usbserial-FTGXH8UA',
-		#port='/dev/tty.usbserial-FTAJMAUJ', 
+		#port='/dev/tty.usbserial-FTGXH8UA',
+		port='/dev/tty.usbserial-FTAJMAUJ', 
 		baudrate=baudrate,
 		bytesize=8, 
 		parity='N', 

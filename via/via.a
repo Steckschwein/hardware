@@ -1,36 +1,58 @@
 *=$1000
 !src "../bios/defs.h.a"
 !src "../bios/bios.h.a"
+!src "../bios/via.h.a"
+cnt = $03
+	jsr lcdclear
 
-	stz tmp0
+	lda #cnt
+	sta tmp0
+
 	stz tmp1
 
-	lda #$ff
-	sta via1ddrb
-	sta via1ddra
-
-	lda #$01
-	sta via1portb
+	lda #$80
+	sta $02f0
 
 	sei
-	; Set IRQ Vector
-	lda #<irq
-	sta irqvec
 
-	lda #>irq
-	sta irqvec+1
+	lda #<count
+	sta via1t1cl            ; set low byte of count
+	lda #>count
+	sta via1t1ch            ; set high byte of count
+
+	lda #%11000000
+	sta via1ier             ; enable VIA1 T1 interrupts
+
+	lda #%01000000
+	sta via1acr             ; T1 continuous, PB7 disabled
+
+;	Set IRQ Vector
+
+	+SetVector irq, irqvec
 	cli
 
 	
--	
-	jmp -
+-	jmp -
+
 irq
-	inc tmp0
-	lda tmp0
-	cmp #$64
+	bit via1ifr		; Interrupt from VIA?
+	bpl +
+
+	bit via1t1cl	; Acknowledge timer interrupt
+
+	dec tmp0
 	bne +
-	stz tmp0
-	jsr lcdclear
-	jsr clockout
 	
-+	jmp irqhandler
+	lda #cnt
+	sta tmp0
+	
+	lda $02f0
+	cmp #%00001000
+	bne ++
+	lda #$80
+	sta $02f0
+	rti
+++	clc
+	ror $02f0
++	rti
+	;jmp irqhandler
