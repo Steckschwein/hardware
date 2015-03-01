@@ -40,16 +40,16 @@ init_lcd	ldx #$04            ;do function set 4 times
 			bne -
 			lda #$06            ;entry mode set: increment, no shift
 			sta lcdctl
-			jsr i_lcdbusy
+			jsr .lcdbusy
 			lda #$0e            ;display on, cursor on, blink off
 			sta lcdctl
-			jsr i_lcdbusy
+			jsr .lcdbusy
 			lda #$01            ;clear display
 			sta lcdctl
-			jsr i_lcdbusy
+			jsr .lcdbusy
 			lda #$80            ;ddram address set: $00
 			sta lcdctl
-			jsr i_lcdbusy
+			jsr .lcdbusy
 
 			lda #$01
 			sta chn_out
@@ -59,19 +59,19 @@ exit		rts
 
 ; *** Clear LCD display and return cursor to home
 ; registers preserved
-i_lcdclear  pha
+.lcdclear  pha
 			lda #$01
 			sta lcdctl
-			jsr i_lcdbusy
+			jsr .lcdbusy
 			lda #$80
 			sta lcdctl
-			jsr i_lcdbusy
+			jsr .lcdbusy
 			pla
 			rts
 
 ; *** Wait for LCD busy bit to clear
 ; registers preserved
-i_lcdbusy   pha
+.lcdbusy   pha
 -			lda lcdctl            ;read from lcd register 0
 			and #$80            ;check bit 7 (busy)
 			bne -
@@ -82,28 +82,28 @@ i_lcdbusy   pha
 
 ; *** Print character on LCD (40 character)
 ; registers preserved
-i_lcdprint  pha
+.lcdprint  pha
 			sta lcddata            ;output the character
-			jsr i_lcdbusy
+			jsr .lcdbusy
 			lda lcdctl            ;get current ddram address
 			and #$7f
 			cmp #lcd_line         ;wrap from pos $16 (line 1 char 20)...
 			bne +
 			lda #$c0            	;...to $40 (line 2 char 1)
 			sta lcdctl
-			jsr i_lcdbusy
+			jsr .lcdbusy
 +			pla
 			rts
 
 ; *** print string on lcd
 ; registers preserved
-i_lcdstring pha                 ;save a, y to stack
+.lcdstring pha                 ;save a, y to stack
 			tya
 			pha
 			ldy #$00
 -		  	lda (msgptr),y
 			beq +
-			jsr lcdprint
+			jsr .lcdprint
 			iny
 			bne -
 +			pla                 ;restore a, y
@@ -113,29 +113,56 @@ i_lcdstring pha                 ;save a, y to stack
 
 ; *** Print 2 digit hex number on LCD
 ; A, X registers preserved
-i_lcdhex    pha
-			phy
-			phx
+; i_lcdhex    pha
+; 			phy
+; 			phx
 			
-			tax
-			lsr                ;shift high nybble into low nybble
-			lsr 
-			lsr 
-			lsr 
-			tay
-			lda hexascii,y      ;convert to ascii
-			jsr lcdprint        ;print value on the lcd
+; 			tax
+; 			lsr                ;shift high nybble into low nybble
+; 			lsr 
+; 			lsr 
+; 			lsr 
+; 			tay
+; 			lda hexascii,y      ;convert to ascii
+; 			jsr lcdprint        ;print value on the lcd
 			
-			txa                 ;restore original value
-			and #$0f            ;select low nybble
-			tay
-			lda hexascii,y      ;convert to ascii
-			jsr lcdprint        ;print value on the lcd
+; 			txa                 ;restore original value
+; 			and #$0f            ;select low nybble
+; 			tay
+; 			lda hexascii,y      ;convert to ascii
+; 			jsr lcdprint        ;print value on the lcd
 			
-			plx
-			ply
-			pla
-			rts
+; 			plx
+; 			ply
+; 			pla
+; 			rts
+.lcdhex
+	pha
+	phx
+
+	tax
+	lsr
+	lsr
+	lsr
+	lsr				
+	and     #%00001111      ;mask lsd for hex print
+	ora     #"0"            ;add "0"
+	cmp     #"9"+1          ;is it a decimal digit?
+	bcc     +	            ;yes! output it
+	adc     #6              ;add offset for letter a-f
++	jsr		.lcdprint
+
+	txa 
+	and     #%00001111      ;mask lsd for hex print
+	ora     #"0"            ;add "0"
+	cmp     #"9"+1          ;is it a decimal digit?
+	bcc     +	            ;yes! output it
+	adc     #6              ;add offset for letter a-f
++	jsr		.lcdprint
+
+	pla
+	ply
+	rts
 
 ;----------------------------------------------------------------------------------------------
 ; lcdxy 
@@ -143,7 +170,7 @@ i_lcdhex    pha
 ; row in Y, col in X
 ;----------------------------------------------------------------------------------------------
 
-i_lcdxy
+.lcdxy
 	pha
 
 	lda #$80
@@ -159,7 +186,7 @@ i_lcdxy
 	adc tmp0
 
 	sta lcdctl
-	jsr lcdbusy
+	jsr .lcdbusy
 
 	pla
 	rts

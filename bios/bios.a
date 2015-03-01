@@ -9,11 +9,11 @@
 *= $e000			; ROM Start
 !src "../charsets/char.ascii.vc20.h.a"
 
-biosversion	!text "V0801", $00	; Version String
+biosversion	!text "V0103", $00	; Version String
 
 start_msg
 !text "SteckBIOS 0.1", $0d
-!text "BIOS    : V0801", $0d
+!text "BIOS    : V0103", $0d
 ;!text "Clock   :", $0d
 !text "RAM end : ", $0
 ready_msg
@@ -27,32 +27,32 @@ crlf	!byte $0d, $00
 .upload
 			ldx #$00
 			ldy #$01
-			jsr i_lcdxy
+			jsr .lcdxy
 
 			lda #$c0
 			sta lcdctl
-			jsr i_lcdbusy
+			jsr .lcdbusy
 
 			; load start address
-			jsr i_uart_rx
+			jsr .uart_rx
 			sta startaddr
 			
-			jsr i_uart_rx
+			jsr .uart_rx
 			sta startaddr+1
 
 
 			lda startaddr+1
-			jsr i_lcdhex
+			jsr .lcdhex
 			lda startaddr
-			jsr i_lcdhex
+			jsr .lcdhex
 
 			lda #' '
 			jsr lcdprint
 
 			lda #'O'
-			jsr i_uart_tx
+			jsr .uart_tx
 			lda #'K'
-			jsr i_uart_tx
+			jsr .uart_tx
 
 			;+PrintChar 'O'
 			;+PrintChar 'K'
@@ -60,20 +60,20 @@ crlf	!byte $0d, $00
 			;jsr strout
 
 			; load number of bytes to be uploaded
-			jsr i_uart_rx
+			jsr .uart_rx
 			sta length
 			
-			jsr i_uart_rx
+			jsr .uart_rx
 			sta length+1
 
-			lda length+1
-			jsr i_lcdhex
+			; lda length+1
+			; jsr .lcdhex
 
-			lda length
-			jsr i_lcdhex
+			; lda length
+			; jsr .lcdhex
 			
-			lda #' '
-			jsr lcdprint
+			; lda #' '
+			; jsr lcdprint
 
 			; calculate end address
 			clc
@@ -86,10 +86,10 @@ crlf	!byte $0d, $00
 			sta endaddr+1
 
 			lda endaddr+1
-			jsr i_lcdhex
+			jsr .lcdhex
 
 			lda endaddr
-			jsr i_lcdhex
+			jsr .lcdhex
 			
 			lda #' '
 			jsr lcdprint
@@ -100,15 +100,15 @@ crlf	!byte $0d, $00
 			sta addr+1	
 
 			lda #'O'
-			jsr i_uart_tx
+			jsr .uart_tx
 			lda #'K'
-			jsr i_uart_tx
+			jsr .uart_tx
 
 			; +PrintChar 'O'
 			; +PrintChar 'K'
 
 			ldy #$00
--			jsr i_uart_rx
+-			jsr .uart_rx
 			sta (addr),y
 
 			iny	
@@ -129,9 +129,11 @@ crlf	!byte $0d, $00
 			; yes? write OK and jump to start addr	
 
 			lda #'O'
-			jsr i_uart_tx
+			jsr .uart_tx
+			jsr lcdprint
 			lda #'K'
-			jsr i_uart_tx
+			jsr .uart_tx
+			jsr lcdprint
 
 			; +PrintChar 'O'
 			; +PrintChar 'K'
@@ -229,15 +231,20 @@ crlf	!byte $0d, $00
 			lda #dev_lcd
 			sta chn_out
 
+			+PrintStringAt biosversion, $00, $01
+
+			ldx #$06
+			jsr lcdxy
+
 			lda #'$'
-			jsr chrout
+			jsr .chrout
 
 			lda ram_end_l
-			jsr hexout
+			jsr .hexout
 			lda ram_end_h
-			jsr hexout
+			jsr .hexout
 
-			+PrintStringAt biosversion, $00, $02
+			
 			
 			+SetVector start_msg, msgptr
 			jsr	vdp_print
@@ -365,14 +372,14 @@ crlf	!byte $0d, $00
 +		cmp #$01
 		bne +
 		pla
-		jmp i_uart_rx
+		jmp .uart_rx
 +
 		pla
 		rts
 ;----------------------------------------------------------------------------------------------
 ; Output character on active output device
 ;----------------------------------------------------------------------------------------------
-i_chrout
+.chrout
 		pha
 		lda chn_out
 		bne +
@@ -383,21 +390,21 @@ i_chrout
 		cmp #$01
 		bne +
 		pla
-		jmp i_lcdprint
+		jmp .lcdprint
 
 +		; UART
 		cmp #$02
 		bne +
 
 		pla
-		jmp i_uart_tx
+		jmp .uart_tx
 
 +		
 		rts
 ;----------------------------------------------------------------------------------------------
 ; Output string on active output device
 ;----------------------------------------------------------------------------------------------
-i_strout 	pha                 ;save a, y to stack
+.strout 	pha                 ;save a, y to stack
 			lda #chn_out
 			bne +
 
@@ -409,7 +416,7 @@ i_strout 	pha                 ;save a, y to stack
 			ldy #$00
 -		  	lda (msgptr),y
 			beq +
-			jsr i_chrout
+			jsr .chrout
 			iny
 			bne -
 
@@ -420,29 +427,57 @@ i_strout 	pha                 ;save a, y to stack
 ;----------------------------------------------------------------------------------------------
 ; Output byte as hex string on active output device
 ;----------------------------------------------------------------------------------------------
-i_hexout    pha
-			phy
-			phx
+; .hexout    pha
+; 			phy
+; 			phx
 			
-			tax
-			lsr                ;shift high nybble into low nybble
-			lsr 
-			lsr 
-			lsr 
-			tay
-			lda hexascii,y      ;convert to ascii
-			jsr i_chrout        ;print value 
+; 			tax
+; 			lsr                ;shift high nybble into low nybble
+; 			lsr 
+; 			lsr 
+; 			lsr 
+; 			tay
+; 			lda hexascii,y      ;convert to ascii
+; 			jsr .chrout        ;print value 
 			
-			txa                 ;restore original value
-			and #$0f            ;select low nybble
-			tay
-			lda hexascii,y      ;convert to ascii
-			jsr i_chrout        ;print value 
+; 			txa                 ;restore original value
+; 			and #$0f            ;select low nybble
+; 			tay
+; 			lda hexascii,y      ;convert to ascii
+; 			jsr .chrout        ;print value 
 			
-			plx
-			ply
-			pla
-			rts
+; 			plx
+; 			ply
+; 			pla
+; 			rts
+
+.hexout
+	pha
+	phx
+
+	tax
+	lsr
+	lsr
+	lsr
+	lsr				
+	and     #%00001111      ;mask lsd for hex print
+	ora     #"0"            ;add "0"
+	cmp     #"9"+1          ;is it a decimal digit?
+	bcc     +	            ;yes! output it
+	adc     #6              ;add offset for letter a-f
++	jsr		.chrout
+
+	txa 
+	and     #%00001111      ;mask lsd for hex print
+	ora     #"0"            ;add "0"
+	cmp     #"9"+1          ;is it a decimal digit?
+	bcc     +	            ;yes! output it
+	adc     #6              ;add offset for letter a-f
++	jsr		.chrout
+
+	pla
+	ply
+	rts
 
 			
 vdp_clear_vram:
@@ -554,7 +589,7 @@ i_decoutz
    bcc -
    tay
    lda tmp0
-   jsr i_chrout
+   jsr .chrout
    tya
    ldy #$13
    dex
@@ -590,7 +625,7 @@ i_decout
    beq ++
    stx tmp1
 +  eor #$30
-   jsr i_chrout
+   jsr .chrout
 ++ tya
    ldy #$10
    dex
@@ -651,7 +686,7 @@ i_decout
 ; Tables and lookup data
 ;----------------------------------------------------------------------------------------------
 ; Lookup table for HEX to ASCII
-hexascii	!text "0123456789ABCDEF"
+;hexascii	!text "0123456789ABCDEF"
 
 ; Lookup table for decimal to ASCII
 dec_tbl		!byte 128,160,200
@@ -752,17 +787,17 @@ b     cmp .start_check
 ;----------------------------------------------------------------------------------------------
 *=$ff00
 sys_chrout
-chrout		jmp i_chrout
+chrout		jmp .chrout
 sys_chrin
 chrin		jmp .chrin
 sys_lcdclear
-lcdclear	jmp i_lcdclear
+lcdclear	jmp .lcdclear
 sys_lcdprint
-lcdprint 	jmp i_lcdprint
+lcdprint 	jmp .lcdprint
 sys_lcdstring
-lcdstring 	jmp i_lcdstring
+lcdstring 	jmp .lcdstring
 sys_lcdhex
-lcdhex 		jmp i_lcdhex 
+lcdhex 		jmp .lcdhex 
 sys_decout
 decout 		jmp i_decout
 sys_decoutz
@@ -770,9 +805,9 @@ decoutz 	jmp i_decoutz
 sys_irqhandler
 irqhandler  jmp .irqhandler
 sys_lcdbusy
-lcdbusy 	jmp i_lcdbusy
+lcdbusy 	jmp .lcdbusy
 sys_lcdxy
-lcdxy 		jmp i_lcdxy
+lcdxy 		jmp .lcdxy
 
 sys_spi_rw_byte	
 spi_rw_byte	jmp i_spi_rw_byte
@@ -798,9 +833,11 @@ sd_select_card 	jmp i_sd_select_card
 sys_sd_cmd
 sd_cmd 		jmp i_sd_cmd
 sys_strout
-strout 		jmp i_strout
+strout 		jmp .strout
 sys_hexout
-hexout 		jmp i_hexout
+hexout 		jmp .hexout
+uart_rx     jmp .uart_rx
+uart_tx     jmp .uart_tx
 
 ;----------------------------------------------------------------------------------------------
 
