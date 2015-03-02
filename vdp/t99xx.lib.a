@@ -19,7 +19,7 @@ vdp_init_reg:
 	; setup video registers
    ldy	#$00
    ldx	#v_reg0
--  lda  (adrl),y
+-  lda  (.adrl),y
    sta   a_vreg
    +nops VRAM_WAIT
    stx   a_vreg
@@ -32,11 +32,11 @@ vdp_init_reg:
    rts
 
 vdp_mode_gfx1:
-	+SetVector	vdp_init_bytes_gfx1, adrl
+	+SetVector	vdp_init_bytes_gfx1, .adrl
 	jmp	vdp_init_reg
 	
 vdp_mode_gfx2:
-	+SetVector	vdp_init_bytes_gfx2, adrl
+	+SetVector	vdp_init_bytes_gfx2, .adrl
 	jmp	vdp_init_reg
 
 vdp_init_bytes_gfx1
@@ -79,7 +79,7 @@ vdp_load_sprites16:
 ;  x - amount of sprites
 	jsr	vdp_sreg
 --	ldy	#$00
--	lda	(adrl),y
+-	lda	(.adrl),y
 	+nops	VRAM_WAIT
 	sta a_vram
 	iny
@@ -87,18 +87,18 @@ vdp_load_sprites16:
 	cpy	#$20
 	bne	-
 	ldy	#$00
-	inc	adrl
--	lda	(adrl),y
+	inc	.adrl
+-	lda	(.adrl),y
 	+nops	VRAM_WAIT
 	sta a_vram
 	iny
 	iny
 	cpy	#$20
 	bne	-
-	lda	adrl
+	lda	.adrl
 	clc	
 	adc	#$1f
-	sta	adrl
+	sta	.adrl
 	dex
 	bne   --
 	rts
@@ -110,7 +110,7 @@ vdp_load_sprites16:
 ;	adrl - pattern
 vdp_fills:
 	jsr   vdp_sreg
-	lda   adrl
+	lda   .adrl
 -  +nops	VRAM_WAIT
 	sta   a_vram
 	dex
@@ -126,7 +126,7 @@ vdp_fill:
 ;	adrl - pattern
 	jsr   vdp_sreg
    ldy   #$00
-   lda   adrl
+   lda   .adrl
 -  +nops	VRAM_WAIT
    sta   a_vram
    iny
@@ -143,12 +143,12 @@ vdp_fill:
 vdp_memcpy:
 	jsr   vdp_sreg
    ldy   #$00
--  lda   (adrl),y
+-  lda   (.adrl),y
    +nops	VRAM_WAIT
    sta   a_vram
    iny
    bne   -
-   inc   adrh
+   inc   .adrh
    dex
    bne   -
    rts
@@ -161,7 +161,7 @@ vdp_memcpy:
 vdp_memcpys:
 	jsr	vdp_sreg
 	ldy   #$00
--  lda   (adrl),y
+-  lda   (.adrl),y
 	+nops	VRAM_WAIT
 	sta   a_vram
 	iny

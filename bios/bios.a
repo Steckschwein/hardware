@@ -8,11 +8,11 @@
 *= $e000			; ROM Start
 !src "../charsets/char.ascii.vc20.h.a"
 
-biosversion	!text "V0103", $00	; Version String
+biosversion	!text "V0203", $00	; Version String
 
 start_msg
 !text "SteckBIOS 0.1", $0d
-!text "BIOS    : V0103", $0d
+!text "BIOS    : V0203", $0d
 ;!text "Clock   :", $0d
 !text "RAM end : ", $0
 ready_msg
@@ -34,111 +34,92 @@ crlf	!byte $0d, $00
 
 			; load start address
 			jsr .uart_rx
-			sta startaddr
+			sta .startaddr
 			
 			jsr .uart_rx
-			sta startaddr+1
+			sta .startaddr+1
 
 
-			lda startaddr+1
+			lda .startaddr+1
 			jsr .lcdhex
-			lda startaddr
+			lda .startaddr
 			jsr .lcdhex
 
 			lda #' '
-			jsr lcdprint
+			jsr .lcdprint
 
 			lda #'O'
 			jsr .uart_tx
 			lda #'K'
 			jsr .uart_tx
-
-			;+PrintChar 'O'
-			;+PrintChar 'K'
-
-			;jsr strout
 
 			; load number of bytes to be uploaded
 			jsr .uart_rx
-			sta length
+			sta .length
 			
 			jsr .uart_rx
-			sta length+1
-
-			; lda length+1
-			; jsr .lcdhex
-
-			; lda length
-			; jsr .lcdhex
-			
-			; lda #' '
-			; jsr lcdprint
+			sta .length+1
 
 			; calculate end address
 			clc
-			lda length
-			adc startaddr
-			sta endaddr
+			lda .length
+			adc .startaddr
+			sta .endaddr
 
-			lda length+1
-			adc startaddr+1
-			sta endaddr+1
+			lda .length+1
+			adc .startaddr+1
+			sta .endaddr+1
 
-			lda endaddr+1
+			lda .endaddr+1
 			jsr .lcdhex
 
-			lda endaddr
+			lda .endaddr
 			jsr .lcdhex
 			
 			lda #' '
-			jsr lcdprint
+			jsr .lcdprint
 
-			lda startaddr
-			sta addr
-			lda startaddr+1
-			sta addr+1	
+			lda .startaddr
+			sta .addr
+			lda .startaddr+1
+			sta .addr+1	
 
 			lda #'O'
 			jsr .uart_tx
 			lda #'K'
 			jsr .uart_tx
 
-			; +PrintChar 'O'
-			; +PrintChar 'K'
-
 			ldy #$00
 -			jsr .uart_rx
-			sta (addr),y
+			sta (.addr),y
 
 			iny	
 			cpy #$00
 			bne +
-			inc addr+1
+			inc .addr+1
 +		
 
 			; msb of current address equals msb of end address?
-			lda addr+1
-			cmp endaddr+1
+			lda .addr+1
+			cmp .endaddr+1
 			bne - ; no? read next byte
 
 			; yes? compare y to lsb of endaddr
-			cpy endaddr
+			cpy .endaddr
 			bne - ; no? read next byte
 
 			; yes? write OK and jump to start addr	
 
 			lda #'O'
 			jsr .uart_tx
-			jsr lcdprint
 			lda #'K'
 			jsr .uart_tx
-			jsr lcdprint
 
-			; +PrintChar 'O'
-			; +PrintChar 'K'
+			lda #'O'
+			jsr .lcdprint
+			lda #'K'
+			jsr .lcdprint
 
-
-;			cli
 			rts
 			
 ;----------------------------------------------------------------------------------------------
@@ -209,7 +190,7 @@ crlf	!byte $0d, $00
 			stz chn_in 
 
 			; init VDP
-			+SetVector .vdp_init_bytes,	adrl
+			+SetVector .vdp_init_bytes,	.adrl
 			jsr vdp_init_reg
 
 			jsr	vdp_clear_vram
@@ -313,7 +294,7 @@ crlf	!byte $0d, $00
 			
 
 			; jump to new code
-			jmp (startaddr)
+			jmp (.startaddr)
 	
 
 ;----------------------------------------------------------------------------------------------
@@ -474,7 +455,7 @@ vdp_clear_vram:
 	lda #$00
 	ldy	$00+$40
 	lda #$00
-	sta adrl
+	sta .adrl
 	ldx	#$40
 	jmp vdp_fill	;clear vram
 
@@ -483,7 +464,7 @@ vdp_clear_vram:
 ;----------------------------------------------------------------------------------------------
 vdp_clear_screen:
 	lda	#$20
-	sta	adrl
+	sta	.adrl
    lda   #$00
    ldy   #$18+$40
    ldx	 #$03
@@ -493,7 +474,7 @@ vdp_clear_screen:
 ; Load Charset into VDP VRAM
 ;----------------------------------------------------------------------------------------------
 vdp_load_charset:
-   +SetVector charset, adrl
+   +SetVector charset, .adrl
    lda   #$00
    ldy   #$00+$40
    ldx	 #$08

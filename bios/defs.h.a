@@ -63,9 +63,9 @@ msgptr 		= $fe
 
 ; general purpose address location
 ; transfer routine addresses
-addr 		= $e2
-adrl     =addr
-adrh     =addr+1
+.addr 		= $e2
+.adrl     = .addr
+.adrh     = .addr+1
 
 ; SD CArd command parameter/result buffer
 sd_cmd_param = $0300
@@ -79,9 +79,9 @@ sd_cmd_result = $031f
 sd_cmd_errno = $0320
 
 
-startaddr	= $0700
-endaddr     = $0702
-length		= $0704
+.startaddr	= $0300
+.endaddr     = $0302
+.length		= $0304
 charset  =$e000
 }
 
