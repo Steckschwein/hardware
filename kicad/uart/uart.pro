@@ -73,5 +73,5 @@ LibName26=opto
 LibName27=atmel
 LibName28=contrib
 LibName29=valves
-LibName30=/home/thomas/Documents/steckschwein/kicad/lbr/UART
-LibName31=/home/thomas/Documents/steckschwein/kicad/lbr/osc
+LibName30=../lbr/UART
+LibName31=../lbr/osc
