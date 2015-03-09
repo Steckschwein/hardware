@@ -1,4 +1,4 @@
-Cmp-Mod V01 Created by Cvpcb (2014-09-16 BZR 5139)-product   date = 01/03/2015 22:14:53
+Cmp-Mod V01 Created by Cvpcb (2014-09-16 BZR 5139)-product   date = 09/03/2015 23:59:49
 
 BeginCmp
 TimeStamp = /5419E797;
@@ -137,21 +137,21 @@ BeginCmp
 TimeStamp = /54EB8753;
 Reference = P1;
 ValeurCmp = CONN_01X04;
-IdModule  = Connect:bornier4;
+IdModule  = Pin_Headers:Pin_Header_Straight_1x04;
 EndCmp
 
 BeginCmp
 TimeStamp = /54EB888A;
 Reference = P2;
 ValeurCmp = CONN_01X04;
-IdModule  = Connect:bornier4;
+IdModule  = Pin_Headers:Pin_Header_Straight_1x04;
 EndCmp
 
 BeginCmp
 TimeStamp = /54EB88A5;
 Reference = P3;
 ValeurCmp = CONN_01X04;
-IdModule  = Connect:bornier4;
+IdModule  = Pin_Headers:Pin_Header_Straight_1x04;
 EndCmp
 
 BeginCmp
@@ -165,70 +165,70 @@ BeginCmp
 TimeStamp = /541BF5BA;
 Reference = Q1;
 ValeurCmp = BC550;
-IdModule  = Discret:TO92;
+IdModule  = Discret:TO92PN;
 EndCmp
 
 BeginCmp
 TimeStamp = /5419FF26;
 Reference = Q2;
 ValeurCmp = BC550;
-IdModule  = Discret:TO92;
+IdModule  = Discret:TO92PN;
 EndCmp
 
 BeginCmp
 TimeStamp = /541BDE9F;
 Reference = Q3;
 ValeurCmp = BC550;
-IdModule  = Discret:TO92;
+IdModule  = Discret:TO92PN;
 EndCmp
 
 BeginCmp
 TimeStamp = /5419FE35;
 Reference = Q4;
 ValeurCmp = BC550;
-IdModule  = Discret:TO92;
+IdModule  = Discret:TO92PN;
 EndCmp
 
 BeginCmp
 TimeStamp = /541BDEE9;
 Reference = Q5;
 ValeurCmp = BC550;
-IdModule  = Discret:TO92;
+IdModule  = Discret:TO92PN;
 EndCmp
 
 BeginCmp
 TimeStamp = /5419FC40;
 Reference = Q6;
 ValeurCmp = BC550;
-IdModule  = Discret:TO92;
+IdModule  = Discret:TO92PN;
 EndCmp
 
 BeginCmp
 TimeStamp = /5419FB93;
 Reference = Q7;
 ValeurCmp = BC550;
-IdModule  = Discret:TO92;
+IdModule  = Discret:TO92PN;
 EndCmp
 
 BeginCmp
 TimeStamp = /5419FDA4;
 Reference = Q8;
 ValeurCmp = BC550;
-IdModule  = Discret:TO92;
+IdModule  = Discret:TO92PN;
 EndCmp
 
 BeginCmp
 TimeStamp = /541BDED5;
 Reference = Q9;
 ValeurCmp = BC550;
-IdModule  = Discret:TO92;
+IdModule  = Discret:TO92PN;
 EndCmp
 
 BeginCmp
 TimeStamp = /5419F818;
 Reference = Q10;
 ValeurCmp = BC550;
-IdModule  = Discret:TO92;
+IdModule  = Discret:TO92PN;
 EndCmp
 
 BeginCmp
