@@ -12,6 +12,12 @@ cnt = $03
 
 	lda #$80
 	sta $02f0
+-		
+	jsr chrin
+	lda $02f0
+	ror
+	sta $02f0
+	jmp -
 
 	sei
 

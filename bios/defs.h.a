@@ -98,6 +98,16 @@ charset  =$e000
 	+SetVector .word, msgptr
         jsr strout
 }
+!macro String .addr {
+		phy
+    	ldy #$00
+-		lda .addr,y
+		beq +
+		jsr chrout
+		iny
+		bne -
++		ply
+}
 !macro PrintStringAt .word,.x,.y {
 	ldx #.x
 	ldy #.y
