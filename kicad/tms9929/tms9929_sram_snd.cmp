@@ -1,10 +1,10 @@
-Cmp-Mod V01 Created by Cvpcb (2014-09-16 BZR 5139)-product   date = 09/03/2015 23:59:49
+Cmp-Mod V01 Created by Cvpcb (2014-09-16 BZR 5139)-product   date = 10/03/2015 21:15:19
 
 BeginCmp
 TimeStamp = /5419E797;
 Reference = 10.738MHz1;
 ValeurCmp = CRYSTAL;
-IdModule  = Crystals:Crystal_HC49-U_Horizontal_Typ1;
+IdModule  = Crystals:Crystal_HC49-U_Vertical;
 EndCmp
 
 BeginCmp
@@ -25,13 +25,6 @@ BeginCmp
 TimeStamp = /5419EDDB;
 Reference = C2;
 ValeurCmp = 33pf;
-IdModule  = Capacitors_ThroughHole:Capacitor4x3RM2.5;
-EndCmp
-
-BeginCmp
-TimeStamp = /54229ECE;
-Reference = C3;
-ValeurCmp = 30pF;
 IdModule  = Capacitors_ThroughHole:Capacitor4x3RM2.5;
 EndCmp
 
@@ -152,6 +145,13 @@ TimeStamp = /54EB88A5;
 Reference = P3;
 ValeurCmp = CONN_01X04;
 IdModule  = Pin_Headers:Pin_Header_Straight_1x04;
+EndCmp
+
+BeginCmp
+TimeStamp = /54FF5318;
+Reference = P4;
+ValeurCmp = Power;
+IdModule  = Pin_Headers:Pin_Header_Angled_1x04;
 EndCmp
 
 BeginCmp
