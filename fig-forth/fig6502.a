@@ -1,6 +1,9 @@
 !src "../bios/defs.h.a"
 !src "../bios/bios.h.a"
 *	= $1000
+	lda #dev_uart
+	sta chn_out
+	stz chn_in
 ;
 ;                        Through the courtesy of
 ;
