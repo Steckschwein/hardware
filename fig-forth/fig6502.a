@@ -1,9 +1,5 @@
 !src "../bios/defs.h.a"
 !src "../bios/bios.h.a"
-*	= $1000
-	lda #dev_uart
-	sta chn_out
-	stz chn_in
 ;
 ;                        Through the courtesy of
 ;
@@ -51,7 +47,7 @@ UP        =W+2           ; user area pointer.
 XSAVE     =UP+2          ; temporary for X register.
 ;
 TIBX      =$0300         ; terminal input buffer of 84 bytes.
-ORIG      =$0355         ; origin of FORTH's Dictionary.
+ORIG      =$0400         ; origin of FORTH's Dictionary.
 MEM       =$d000         ; top of assigned memory+1 byte.
 UAREA     =MEM-128       ; 128 bytes of user area
 DAREA     =UAREA-BMAG    ; disk buffer space.
@@ -72,11 +68,14 @@ INCH	= chrin
 ;
 ;
           ;*=*+2
-	nop
-	nop
+	* = ORIG
 ;
                          ; User cold entry point
-ENTER     NOP            ; Vector to COLD entry
+ENTER     
+	lda #dev_uart
+	sta chn_out
+	stz chn_in
+   	  NOP            ; Vector to COLD entry
           JMP COLD+2     ;
 REENTR    NOP            ; User Warm entry point
           JMP WARM       ; Vector to WARM entry
@@ -100,9 +99,7 @@ REENTR    NOP            ; User Warm entry point
 ;    address ending $XXFF. This must be checked and altered on
 ;    any alteration , for the indirect jump at W-1 to operate !
 ;
-          ;.ORIGIN *+2
-	nop
-	nop
+;.ORIGIN *+2
 ;
 ;
 ;                                       LIT
