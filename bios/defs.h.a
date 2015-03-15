@@ -29,6 +29,11 @@ dev_uart   = $02
 ;----------------------------------------------------------------------------------------------
 
 !address {
+; Address pointers for serial upload
+.startaddr	= $c0
+.endaddr    = $c2
+.length		= $c4
+
 ; Cursor Position
 crs_x	= $d0
 crs_y	= $d1
@@ -78,10 +83,6 @@ sd_cmd_result = $031f
 ; $00 - No error
 sd_cmd_errno = $0320
 
-
-.startaddr	= $0300
-.endaddr     = $0302
-.length		= $0304
 charset  =$e000
 }
 

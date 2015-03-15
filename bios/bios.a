@@ -8,11 +8,11 @@
 *= $e000			; ROM Start
 !src "../charsets/char.ascii.vc20.h.a"
 
-biosversion	!text "V0203", $00	; Version String
+biosversion	!text "V1503", $00	; Version String
 
 start_msg
 !text "SteckBIOS 0.1", $0d
-!text "BIOS    : V0203", $0d
+!text "BIOS    : V1503", $0d
 ;!text "Clock   :", $0d
 !text "RAM end : ", $0
 ready_msg
@@ -21,6 +21,8 @@ ready_msg
 crlf	!byte $0d, $00
 *=$f000
 !src "../vdp/t99xx.lib.a"
+
+
 
 
 .upload
@@ -656,6 +658,21 @@ vdp_cursor:
 	ply
 	plx
 	rts
+;---------------------------------------------------------------------
+; get key from keyboard, no wait
+;---------------------------------------------------------------------
+
+.kbd_getkey
+	phx
+	phy
+
+	jsr .kbd_enable	
+	jsr .spi_r_byte
+	jsr .kbd_disable
+	
+	ply
+	plx
+	rts
 
 
 ;----------------------------------------------------------------------------------------------
@@ -811,7 +828,7 @@ sys_hexout
 hexout 		jmp .hexout
 uart_rx     jmp .uart_rx
 uart_tx     jmp .uart_tx
-
+getkex		jmp .kbd_getkey
 ;----------------------------------------------------------------------------------------------
 
 ;----------------------------------------------------------------------------------------------

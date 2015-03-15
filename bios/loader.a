@@ -1,4 +1,4 @@
-*=$0800
+*=$0400
 !src "defs.h.a"
 !src "bios.h.a"
 

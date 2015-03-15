@@ -21,4 +21,4 @@ bios.h.a: bios.bin
 burn: bios.bin
 	minipro -p AT28C256 -w bios.bin -e
 transfer: loader
-	../transfer.py loader.bin 0x0800
+	../transfer.py loader.bin 0x0400
