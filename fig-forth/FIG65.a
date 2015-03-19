@@ -153,13 +153,7 @@ NEXT
           STA IP
           BCC L54
           INC IP+1
-L54       
-          lda W
-          jsr lcdhex
-          lda W-1
-          jsr lcdhex
-
-          JMP W-1        ;Jump to an indirect jump (W) which
+L54       JMP W-1        ;Jump to an indirect jump (W) which
 ;                        vectors to code pointed to by a code
 ;                        field.
 ;
@@ -2699,7 +2693,7 @@ L2437     LDA ORIG+$0C,Y
           DEY
           BPL  L2437
           ;LDA #>ABORT/256    ; actually #>(ABORT+2)
-          LDA #>ABORT    ; actually #>(ABORT+2)
+          LDA #>ABORT   ; actually #>(ABORT+2)
           STA IP+1
           LDA #<ABORT+2
           STA IP
@@ -2759,6 +2753,12 @@ ABS       !word DOCOL
 L2498     !text $84,"DAB",$D3
           !word L2488    ; link to ABS
 DABS      !word DOCOL
+
+
+
+
+
+
           !word DUP
           !word DPM
           !word SEMIS
