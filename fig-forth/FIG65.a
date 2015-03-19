@@ -232,7 +232,7 @@ TRACE     STX XSAVE
           JSR HEX2
           JSR XBLANK
 ;
-          JSR ONEKEY     ; wait for operator keystroke
+          JSR chrin     ; wait for operator keystroke
           LDX XSAVE      ; just to pinpoint early problems
           LDY #0
           RTS
@@ -3948,11 +3948,6 @@ LETTER  AND     #$7F
         BCS     LETTER1         ;good if >= ' '
         LDA     #'.'
 LETTER1 JMP     chrout
-
-;
-; wait for keystroke
-;
-ONEKEY  JMP     chrin
 
 TOP  ; end of listing
 
