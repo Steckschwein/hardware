@@ -55,18 +55,12 @@ XSAVE     = UP+2          ; temporary for X register.
 ;
 TIBX      = $0300         ; terminal input buffer of 84 bytes.
 ORIG      = $0400         ; origin of FORTH's Dictionary.
-MEM       = $4000         ; top of assigned memory+1 byte.
+MEM       = $E000         ; top of assigned memory+1 byte.
 UAREA     = MEM-128       ; 128 bytes of user area
 DAREA     = UAREA-BMAG    ; disk buffer space.
 BRKBYTE   = MEM           ;XSAVE+1       ;?flag if break is pressed
 
 
-;?
-;         monitor calls for terminal support
-;
-;OUTCH     = $F819         ; output one ASCII char. to term.
-;INCH      = $F800         ; input one ASCII char. to term.
-;TCR       = $D0F1         ; terminal return and line feed.
 
 ;
 ;    From DAREA downward to the top of the dictionary is free
@@ -152,7 +146,7 @@ NEXT
           DEY
           LDA (IP),Y
           STA W
-        ;JSR TRACE      ; Remove this when all is well
+          JSR TRACE      ; Remove this when all is well
           CLC            ; Increment IP by two.
           LDA IP
           ADC #2
@@ -2671,8 +2665,6 @@ L2400     !word $FFE7    ; L2388-L2400
 L2406     !text $85,"ABOR",$D4
           !word L2381    ; link to QUIT
 ABORT     
-          +debug 'A'
--         jmp -
           !word DOCOL
           !word SPSTO
           !word DECIM
@@ -2706,7 +2698,8 @@ L2437     LDA ORIG+$0C,Y
           STA (UP),Y
           DEY
           BPL  L2437
-          LDA #>ABORT/256    ; actually #>(ABORT+2)
+          ;LDA #>ABORT/256    ; actually #>(ABORT+2)
+          LDA #>ABORT    ; actually #>(ABORT+2)
           STA IP+1
           LDA #<ABORT+2
           STA IP
@@ -3237,7 +3230,7 @@ XEMIT     TYA
           STA (UP),Y
           LDA 0,X        ; fetch character to output
           STX XSAVE
-          JSR OUTCH      ; and display it
+          jsr chrout      ; and display it
           LDX XSAVE
           JMP POP
 ;
@@ -3245,7 +3238,7 @@ XEMIT     TYA
 ;
 ;
 XKEY      STX XSAVE
-          JSR INCH       ; might otherwise clobber it while
+          jsr chrin       ; might otherwise clobber it while
           LDX XSAVE      ; inputting a char to accumulator
           JMP PUSHOA
 ;
@@ -3915,16 +3908,16 @@ MON       !word *+2
 ;
 CRLF
         LDA     #$0D
-        JSR     OUTCH
+        JSR     chrout
         LDA     #$0A
-;       JSR     OUTCH
+;       JSR     chrout
 ;       LDA     #'{'
-        JMP     OUTCH
+        JMP     chrout
 
 ; print one blank
 ;
 XBLANK  LDA     #$20
-        JMP     OUTCH
+        JMP     chrout
 
 ; print accum as two hex digits
 HEX2    PHA
@@ -3936,7 +3929,7 @@ HEX2    PHA
         PLA
 HEX2A   AND     #$0F
         JSR     HXDGT
-        JMP     OUTCH
+        JMP     chrout
 ;
 ;convert hex digit to ASCII
 ;
@@ -3954,21 +3947,14 @@ LETTER  AND     #$7F
         CMP     #$20            ;compare ASCII space
         BCS     LETTER1         ;good if >= ' '
         LDA     #'.'
-LETTER1 JMP     OUTCH
+LETTER1 JMP     chrout
 
 ;
 ; wait for keystroke
 ;
-ONEKEY  JMP     INCH
+ONEKEY  JMP     chrin
 
-;wait for character from UART
-;
-INCH 	JMP chrin
-
-;send character out to UART
-;
-OUTCH   JMP chrout
-TOP =    ENTER; *;  .END   ENTER        ; end of listing
+TOP  ; end of listing
 
 ;HEX
 ;: S0 0B3 @ ;
