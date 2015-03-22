@@ -1,7 +1,7 @@
-*=$1000
+*=$c000
 !src "../bios/defs.h.a"
 !src "../bios/bios.h.a"
-!src "../vdp/t9929.h.a"
+;!src "../vdp/t9929.h.a"
 
 !src "fat32.h.a"
 
@@ -31,7 +31,16 @@
 	lda .src + 0
 	sta sd_cmd_param+3
 }
-
+!macro debug .x {
+	lda #.x
+	jsr lcdprint
+} 
+!macro debug32 .x {
+!for i,3,0 {
+	lda .x+i
+	jsr lcdhex
+}
+}
 !address {
 
 fat_errno	 		= $0300
@@ -45,7 +54,7 @@ cluster_number		= $0329
 
 sd_blktarget 		= $0400
 
-steckos_start		= $c000	
+steckos_start		= $1000	
 
 dividend = $c0
 divisor = $c4
@@ -54,17 +63,15 @@ result = dividend
 }
 
 main
-    stz chn_out
-	sei
+	jsr lcdclear
+	lda #dev_uart
+    sta chn_out
+    stz chn_in
 
-	; lda #$00
-	; sta dividend+3
-	; lda #$00
-	; sta dividend+2
-	; lda #$18
-	; sta dividend+1
-	; lda #$00
-	; sta dividend+0
+    jsr chrin
+	lda #dev_uart
+
+	sei
 
 	; always divide by 512 (sector size)
 	lda #$02
@@ -72,7 +79,13 @@ main
 	lda #$00
 	sta divisor + 0
 
+	jsr sd_select_card
+	jsr sd_param_init
+
 	jsr fat_mount
+	lda fat_errno
+	bne .fat_end
+
 
 	; just use cluster_begin_lba if reading root dir cluster
 	+Copy cluster_begin_lba, lba_addr, 3
@@ -81,7 +94,10 @@ main
 	; jsr calc_lba_addr
 
 	jsr fat_read_dir
+	lda fat_errno
+	bne .fat_end
 
+.fat_end
 	jsr sd_deselect_card
 
 -	jmp -
@@ -141,9 +157,6 @@ calc_lba_addr
 	rts
 
 fat_mount
-	jsr sd_select_card
-	jsr sd_param_init
-
 	+SetVector sd_blktarget, sd_blkptr
 
 	jsr sd_read_block
@@ -191,7 +204,7 @@ fat_mount
 	lda fat_errno
 	beq +
 	+PrintString fat_err_signature
--	jmp -
+	jmp .end_mount
 
 +
 	; Bytes per Sector, must be 512 = $0200
@@ -202,7 +215,7 @@ fat_mount
 	cmp #$02
 	beq ++
 +	+PrintString fat_err_bad_sect_size
--	jmp -
+	jmp .end_mount
 ++
 	; Sectors per Cluster. Valid: 1,2,4,8,16,32,64,128
 	lda sd_blktarget + BPB_SecPerClus
@@ -233,34 +246,33 @@ fat_mount
 
 	; cluster_begin_lba = Partition_LBA_Begin + Number_of_Reserved_Sectors + (Number_of_FATs * Sectors_Per_FAT);
 
+	; add number of reserved sectors to fat_begin_lba. store in cluster_begin_lba
 	clc
 !for i,0,1 {
 	lda fat_begin_lba + i
 	adc fat_reserved_sect + i
 	sta cluster_begin_lba + i	
 }
-
 !for i,2,3 {
 	lda fat_begin_lba + i
 	adc #$00
-	sta cluster_begin_lba + i	
+	sta cluster_begin_lba + i
 }
 
-
 	; Number of FATs. Must be 2
-	; lda sd_blktarget + BPB_NumFATs
-
+	; lda sd_blktarget + BPB_NumFATs	
+	; add sectors_per_fat * 2 to cluster_begin_lba
 	clc
-	ldx #$00
---
-	lda sectors_per_fat,x
-	asl ; * 2
-	adc cluster_begin_lba,x
-	sta cluster_begin_lba,x
-	inx
-	cpx #$04
-	bne --	
+!for i,0,3 {	
+	lda sectors_per_fat + i
+	rol ; *2 (2 FATs)
+	adc cluster_begin_lba + i
+	sta cluster_begin_lba + i
+}
 
+	; now we have the lba address of the first sector of the first cluster
+	; +debug32 cluster_begin_lba
+.end_mount
 	plx
 	; ply
 	pla
@@ -269,6 +281,9 @@ fat_mount
 
 
 fat_read_dir
+	; lda fat_errno
+	; jsr lcdhex
+
 	pha
 	phy
 	phx
@@ -278,8 +293,7 @@ fat_read_dir
 -	+SetVector sd_blktarget, sd_blkptr
 	+SDBlockAddr lba_addr
 	jsr sd_read_block
-
-
+	
 --	ldy #DIR_Attr
 	lda (sd_blkptr),y
 	cmp #$0f ; Long filename, skip this one
@@ -321,7 +335,6 @@ fat_read_dir
 	jsr inc_lba_address
 	jmp -
 
-
 .end
 	ply
 	plx
@@ -334,9 +347,7 @@ fat_read_dir
 	ldy #DIR_Name
 -	lda (sd_blkptr),y
 	
-	phy
 	jsr chrout
-	ply
 
 	iny
 	cpy #$0b
@@ -390,9 +401,7 @@ fat_read_dir
 -	+SDBlockAddr lba_addr
 	jsr sd_read_block
 	
-	phy
 	+PrintChar '.'
-	ply
 
 	dec tmp7
 	beq + ; zero, we're done
@@ -412,11 +421,14 @@ fat_read_dir
 +
 	+PrintString fat_loading_done
 
+	jsr sd_deselect_card
+
 	; Reset StackPointer
 	ldx #$ff
 	txs
 	; Disable IRQ
 	sei
+
 
 	jmp steckos_start
 
@@ -487,12 +499,12 @@ fat_list_entry
 
 
 crlf
-	; lda #$0d
-	; jsr chrout
-	; lda #13
-	; jsr chrout
-	inc crs_y
-	stz crs_x
+	lda #$0d
+	jsr chrout
+	lda #$0a
+	jsr chrout
+	; inc crs_y
+	; stz crs_x
 	rts
 
 space 
@@ -535,5 +547,5 @@ fat_err_num_fats	  	!text "invalid number of FATs (!= 2)", $00
 fat_loading		  		!text "Loading ",$00
 fat_loading_done  		!text " done.",$00
 
-!src "../vdp/t99xx.lib.a"
+;!src "../vdp/t99xx.lib.a"
 
