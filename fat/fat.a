@@ -4,7 +4,6 @@
 ;!src "../vdp/t9929.h.a"
 
 !src "fat32.h.a"
-
 	
 !macro Copy .src, .trgt, .len {
 	phx
@@ -41,6 +40,7 @@
 	jsr lcdhex
 }
 }
+
 !address {
 
 fat_errno	 		= $0300
@@ -63,21 +63,20 @@ result = dividend
 }
 
 main
+	sei
 	jsr lcdclear
 	lda #dev_uart
     sta chn_out
     stz chn_in
 
     jsr chrin
-	lda #dev_uart
-
-	sei
+	
 
 	; always divide by 512 (sector size)
-	lda #$02
-	sta divisor + 1
-	lda #$00
-	sta divisor + 0
+	; lda #$02
+	; sta divisor + 1
+	; lda #$00
+	; sta divisor + 0
 
 	jsr sd_select_card
 	jsr sd_param_init
@@ -97,13 +96,13 @@ main
 	lda fat_errno
 	bne .fat_end
 
+	
 .fat_end
 	jsr sd_deselect_card
-
 -	jmp -
 
 
-fat_check_signature
+.fat_check_signature
 	; pha
 	stz fat_errno
 
@@ -157,18 +156,19 @@ calc_lba_addr
 	rts
 
 fat_mount
-	+SetVector sd_blktarget, sd_blkptr
-
-	jsr sd_read_block
-	jsr fat_check_signature
-
 	pha
 	phx
 
+	+SetVector sd_blktarget, sd_blkptr
+
+	jsr sd_read_block
+	jsr .fat_check_signature
+
+
 	lda fat_errno
 	beq +
-	+PrintString fat_err_signature
--	jmp -
+	+PrintString .fat_err_signature
+	jmp .end_mount
 
 +	
 	part0 = sd_blktarget + BS_Partition0
@@ -180,8 +180,9 @@ fat_mount
 	beq +
 
 	; type code not $0b or $0c
-	+PrintString fat_err_partition
--	jmp -
+	+PrintString .fat_err_partition
+	inc fat_errno
+	jmp .end_mount
 
 +
 	ldx #$00
@@ -200,10 +201,10 @@ fat_mount
 	; Read FAT Volume ID at LBABegin and Check signature
 	jsr sd_read_block
 
-	jsr fat_check_signature
+	jsr .fat_check_signature
 	lda fat_errno
 	beq +
-	+PrintString fat_err_signature
+	+PrintString .fat_err_signature
 	jmp .end_mount
 
 +
@@ -214,7 +215,7 @@ fat_mount
 	lda sd_blktarget + BPB_BytsPerSec + 1
 	cmp #$02
 	beq ++
-+	+PrintString fat_err_bad_sect_size
++	+PrintString .fat_err_bad_sect_size
 	jmp .end_mount
 ++
 	; Sectors per Cluster. Valid: 1,2,4,8,16,32,64,128
@@ -310,7 +311,7 @@ fat_read_dir
 	cmp #$e5 ; deleted file
 	beq +    ; skip
 
-	jsr fat_list_entry
+	jsr .fat_list_entry
 
 	txa
     bit #$04 ; System attribute. load file  	
@@ -342,18 +343,14 @@ fat_read_dir
 	rts
 
 .load
-	+PrintString fat_loading
+	+PrintString .fat_loading
 
 	ldy #DIR_Name
 -	lda (sd_blkptr),y
-	
 	jsr chrout
-
 	iny
 	cpy #$0b
 	bne -
-
-	jsr crlf
 
 
 !for i,3,0 {
@@ -361,7 +358,6 @@ fat_read_dir
 	lda (sd_blkptr),y
 	sta dividend + i
 }
-	jsr lcdclear
 
 	jsr divide
 
@@ -374,10 +370,7 @@ fat_read_dir
 	adc remainder +0
 	beq +
 	inc tmp7
-+	
-
-	lda tmp7
-	
++		
 	ldy #DIR_FstClusHI +1
 	lda (sd_blkptr),y
 	sta cluster_number +3
@@ -407,7 +400,6 @@ fat_read_dir
 	beq + ; zero, we're done
 
 	; increase lba_addy by 1
-
 	jsr inc_lba_address
 
 	clc
@@ -419,7 +411,7 @@ fat_read_dir
 	bra -
 
 +
-	+PrintString fat_loading_done
+	+PrintString .fat_loading_done
 
 	jsr sd_deselect_card
 
@@ -451,7 +443,7 @@ inc_lba_address
 	rts
 
 
-fat_list_entry
+.fat_list_entry
 	ldy #DIR_Name
 -	lda (sd_blkptr),y
 	phy
@@ -523,10 +515,12 @@ divloop	asl dividend	;dividend lb & hb*2, msb -> Carry
 		rol remainder+1
 		lda remainder
 		sec
-		sbc divisor	;substract divisor to see if it fits in
+		;sbc divisor	;substract divisor to see if it fits in
+		sbc #<512
 		tay	        ;lb result -> Y, for we may need it later
 		lda remainder+1
-		sbc divisor+1
+		; sbc divisor+1
+		sbc #>512
 		bcc skip	;if carry=0 then divisor didn't fit in yet
 
 		sta remainder+1	;else save substraction result as new remainder,
@@ -540,12 +534,12 @@ skip	dex
 
 ;fat_begin_lba = Partition_LBA_Begin + Number_of_Reserved_Sectors;
 ;cluster_begin_lba = Partition_LBA_Begin + Number_of_Reserved_Sectors + (Number_of_FATs * Sectors_Per_FAT);
-fat_err_signature 		!text "bad block signature", $00
-fat_err_partition 		!text "invalid partition type", $00
-fat_err_bad_sect_size 	!text "sector size unsupported", $00
-fat_err_num_fats	  	!text "invalid number of FATs (!= 2)", $00
-fat_loading		  		!text "Loading ",$00
-fat_loading_done  		!text " done.",$00
+.fat_err_signature 		!text "bad block signature", $00
+.fat_err_partition 		!text "invalid partition type", $00
+.fat_err_bad_sect_size 	!text "sector size unsupported", $00
+.fat_err_num_fats	  	!text "invalid number of FATs (!= 2)", $00
+.fat_loading		  	!text "Loading ",$00
+.fat_loading_done  		!text " done.",$00
 
 ;!src "../vdp/t99xx.lib.a"
 
