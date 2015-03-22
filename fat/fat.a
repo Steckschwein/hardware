@@ -266,7 +266,7 @@ fat_mount
 
 
 	; now we have the lba address of the first sector of the first cluster
-	+debug32 cluster_begin_lba
+	; +debug32 cluster_begin_lba
 .end_mount
 	plx
 	ply
