@@ -17,51 +17,94 @@
 ;
 ; page zero variables
 ;
-BOARD   =	$50
-BK      =	$60
-PIECE   =	$B0
-SQUARE  =	$B1
-SP2     =	$B2
-SP1     =	$B3
-INCHEK  =	$B4
-STATE   =	$B5
-MOVEN   =	$B6
-REV	=       $B7
-OMOVE   =	$DC
-WCAP0   =	$DD
-COUNT   =	$DE
-BCAP2   =	$DE
-WCAP2   =	$DF
-BCAP1   =	$E0
-WCAP1   =	$E1
-BCAP0   =	$E2
-MOB     =	$E3
-MAXC    =	$E4
-CC      =	$E5
-PCAP    =	$E6
-BMOB    =	$E3
-BMAXC   =	$E4
-BMCC    =	$E5 		; was BCC (TASS doesn't like it as a label)
-BMAXP   =	$E6
-XMAXC   =	$E8
-WMOB    =	$EB
-WMAXC   =	$EC
-WCC     =	$ED
-WMAXP   =	$EE
-PMOB    =	$EF
-PMAXC   =	$F0
-PCC     =	$F1
-PCP     =	$F2
-OLDKY   =	$F3
-BESTP   =	$FB
-BESTV   =	$FA
-BESTM   =	$F9
-DIS1    =	$FB
-DIS2    =	$FA
-DIS3    =	$F9
-temp    =   $FC
+BOARD   =	$10
+BK      =	$20
+PIECE   =	$30
+SQUARE  =	$31
+SP2     =	$32
+SP1     =	$33
+INCHEK  =	$34
+STATE   =	$35
+MOVEN   =	$36
+REV	=       $37
+OMOVE   =	$4C
+WCAP0   =	$4D
+COUNT   =	$4E
+BCAP2   =	$4E
+WCAP2   =	$4F
+BCAP1   =	$50
+WCAP1   =	$51
+BCAP0   =	$52
+MOB     =	$53
+MAXC    =	$54
+CC      =	$55
+PCAP    =	$56
+BMOB    =	$53
+BMAXC   =	$54
+BMCC    =	$55 		; was BCC (TASS doesn't like it as a label)
+BMAXP   =	$56
+XMAXC   =	$58
+WMOB    =	$5B
+WMAXC   =	$5C
+WCC     =	$5D
+WMAXP   =	$5E
+PMOB    =	$5F
+PMAXC   =	$60
+PCC     =	$61
+PCP     =	$62
+OLDKY   =	$63
+BESTP   =	$6B
+BESTV   =	$6A
+BESTM   =	$69
+DIS1    =	$6B
+DIS2    =	$6A
+DIS3    =	$69
+temp    =   $6C
+; BOARD   =	$50
+; BK      =	$60
+; PIECE   =	$B0
+; SQUARE  =	$B1
+; SP2     =	$B2
+; SP1     =	$B3
+; INCHEK  =	$B4
+; STATE   =	$B5
+; MOVEN   =	$B6
+; REV	=       $B7
+; OMOVE   =	$DC
+; WCAP0   =	$DD
+; COUNT   =	$DE
+; BCAP2   =	$DE
+; WCAP2   =	$DF
+; BCAP1   =	$E0
+; WCAP1   =	$E1
+; BCAP0   =	$E2
+; MOB     =	$E3
+; MAXC    =	$E4
+; CC      =	$E5
+; PCAP    =	$E6
+; BMOB    =	$E3
+; BMAXC   =	$E4
+; BMCC    =	$E5 		; was BCC (TASS doesn't like it as a label)
+; BMAXP   =	$E6
+; XMAXC   =	$E8
+; WMOB    =	$EB
+; WMAXC   =	$EC
+; WCC     =	$ED
+; WMAXP   =	$EE
+; PMOB    =	$EF
+; PMAXC   =	$F0
+; PCC     =	$F1
+; PCP     =	$F2
+; OLDKY   =	$F3
+; BESTP   =	$FB
+; BESTV   =	$FA
+; BESTM   =	$F9
+; DIS1    =	$FB
+; DIS2    =	$FA
+; DIS3    =	$F9
+; temp    =   $FC
 		
-		*=$0400			; load into RAM @ $1000-$15FF
+		*=$1000			; load into RAM @ $1000-$15FF
 
 		lda #dev_uart
 		sta chn_out
@@ -123,7 +166,7 @@ NOGO	CMP	#$0D            ; [Enter]
 NOMV	CMP #$41		; [Q] ***Added to allow game exit***
 		BEQ DONE		; quit the game, exit back to system.  
 		JMP	INPUT		; process move
-DONE	JMP     $FF00		; *** MUST set this to YOUR OS starting address
+DONE	JMP     ($FFFA)		; *** MUST set this to YOUR OS starting address
 ;		
 ;       THE ROUTINE JANUS DIRECTS THE
 ;       ANALYSIS BY DETERMINING WHAT
@@ -141,13 +184,13 @@ JANUS	LDX	STATE
 ;		
 COUNTS	LDA	PIECE
 		BEQ	OVER           	; IF STATE=8
-		CPX 	#$08           	; DO NOT COUNT
+		CPX #$08           	; DO NOT COUNT
 		BNE	OVER          	; BLK MAX CAP
 		CMP	BMAXP        	; MOVES FOR
 		BEQ	XRT           	; WHITE
 ; 		
 OVER	INC	MOB,X          	; MOBILITY
-		CMP 	#$01           	;  + QUEEN
+		CMP #$01           	;  + QUEEN
 		BNE	NOQ           	; FOR TWO
 		INC	MOB,X
 ;		
@@ -495,14 +538,16 @@ CHECK	CMP	BOARD,X        	; CHECK FOR
 		BPL	CHECK
 TAKE	LDA	#$CC
 		STA	BOARD,X
-		TXA			; CAPTURED
-		PHA			; PIECE
+		; TXA			; CAPTURED
+		; PHA			; PIECE
+		phx
 		LDX	PIECE
 		LDA	BOARD,X
 		STY	BOARD,X        	; FROM
 		PHA			; SQUARE
-		TXA	
-		PHA			; PIECE
+		;TXA	
+		;PHA			; PIECE
+		phx
 		LDA	MOVEN
 		PHA			; MOVEN
 STRV	TSX	
@@ -712,7 +757,7 @@ POUT3	INY			;
 		JSR   	syschout	; PRINT ONE ASCII CHR - |             
 		jsr	POUT12		; print row number
 		JSR   	POUT9		; print CRLF
-            	JSR   	POUT5		; print bottom edge of board
+        JSR   	POUT5		; print bottom edge of board
 		CLC			; 
 		TYA			; 
 		ADC	#$08		; point y to beginning of next row
@@ -721,51 +766,55 @@ POUT3	INY			;
 		BEQ   	POUT8		; yes, print the LED values
 		BNE   	POUT1		; no, do new row
 
-POUT4		LDA   	REV		; print piece's color & type
+POUT4	LDA   	REV		; print piece's color & type
 		BEQ   	POUT41		;
 		LDA	cpl+16,X	;
 		BNE	POUT42		;
 POUT41	LDA   	cpl,x		;
 POUT42	JSR	syschout	;
 		lda	cph,x		;
-		jsr   	syschout	; 
+		jsr syschout	; 
 		BNE	POUT3		; branch always
 
-POUT5   TXA			; print "-----...-----<crlf>"
-		PHA
+POUT5   ;TXA			; print "-----...-----<crlf>"
+		;PHA
+		phx		; 65c02
 		LDX	#$19
 		LDA	#"-"
 POUT6	JSR   	syschout	; PRINT ONE ASCII CHR - "-"
 		DEX
 		BNE	POUT6
-		PLA
-		TAX
-		JSR	POUT9
-		RTS	 		
+		; PLA
+		; TAX
+		plx
+		jmp POUT9
+		; JSR	POUT9
+		; RTS	 		
 
 POUT8		jsr	POUT10		;
 		jsr lcdclear 
-		LDA   	$FB
+		LDA   	DIS1
 		JSR   	syshexout	; PRINT 1 BYTE AS 2 HEX CHRS	
 		jsr 	lcdhex
         LDA   	#$20
 		JSR   	syschout	; PRINT ONE ASCII CHR - SPACE
 		jsr 	lcdprint
-       	LDA   	$FA
+       	LDA   	DIS2
 		JSR   	syshexout	; PRINT 1 BYTE AS 2 HEX CHRS	
 		jsr 	lcdhex
        	LDA   	#$20
 		JSR   	syschout	; PRINT ONE ASCII CHR - SPACE
 		jsr 	lcdprint
-       	LDA   	$F9
+       	LDA   	DIS3
 		JSR   	syshexout	; PRINT 1 BYTE AS 2 HEX CHRS	
 		jsr 	lcdhex
 
 POUT9   LDA   	#$0D
 		JSR   	syschout	; PRINT ONE ASCII CHR - CR
        	LDA   	#$0A
-		JSR   	syschout	; PRINT ONE ASCII CHR - LF
-		RTS 
+       	JMP syschout
+		; JSR   	syschout	; PRINT ONE ASCII CHR - LF
+		; RTS 
 
 POUT10	ldx   	#$00		; print the column labels
 POUT11	lda	#$20		; 00 01 02 03 ... 07 <CRLF>
@@ -778,8 +827,9 @@ POUT11	lda	#$20		; 00 01 02 03 ... 07 <CRLF>
 		BEQ	POUT9
 POUT12	TYA
 		and 	#$70
-		JSR 	syshexout
-		rts
+		; JSR 	syshexout
+		; rts
+		jmp 	syshexout
 
 POUT13	ldx   	#$00		; Print the copyright banner
 POUT14	lda   	banner,x
@@ -787,7 +837,7 @@ POUT14	lda   	banner,x
 		jsr   	syschout
 		inx
 		bne   	POUT14
-POUT15		rts         
+POUT15	rts         
 
 KIN    	LDA   	#"?"
 		JSR   	syschout	; PRINT ONE ASCII CHR - ?

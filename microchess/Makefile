@@ -6,4 +6,4 @@ clean:
 	acme -v -f plain --cpu 65c02 -o $@ $<
 
 transfer: all
-	../transfer.py microchess.bin 0x0400
+	../transfer.py microchess.bin 0x1000
