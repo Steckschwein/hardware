@@ -866,7 +866,7 @@ syshexout	= hexout
 ;                PLY                     ;
 ;                jmp   syschout          ;
 
-Hexdigdata	!text	"0123456789ABCDEF"
+;Hexdigdata	!text	"0123456789ABCDEF"
 banner		!text	"MicroChess (c) 1996-2002 Peter Jennings, peterj@benlo.com"
 		!byte	$0d, $0a, $00
 cpl		!text	"WWWWWWWWWWWWWWWWBBBBBBBBBBBBBBBBWWWWWWWWWWWWWWWW"
