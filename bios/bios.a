@@ -316,17 +316,12 @@ biosversion	!text "V2303", $00	; Version String
 			; jsr calc_lba_addr
 
 			jsr fat_read_dir
-			lda fat_errno
-			bne .fat_end
-
 	
 .fat_end
 			jsr sd_deselect_card
 
 			+PrintString .bootup_failed
 
-			jmp .upload
-			jmp .startup
 
 ++
 
