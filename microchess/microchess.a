@@ -1,16 +1,44 @@
 ;***********************************************************************
 ;
-;  MicroChess (c) 1996-2002 Peter Jennings, peterj@benlo.com 
+;  Kim-1 MicroChess (c) 1976-2005 Peter Jennings, www.benlo.com
 ;
 ;***********************************************************************
-; I have been given permission to distribute this program by the
-; author and copyright holder, Peter Jennings.  Please get his 
-; permission if you wish to re-distribute a modified copy of 
-; this file to others.  He specifically requested that his 
-; copyright notice be included in the source and binary images.
-; Thanks! 
+
+; All rights reserved.
+
+; Redistribution and use in source and binary forms, with or without
+; modification, are permitted provided that the following conditions
+; are met:
+; 1. Redistributions of source code must retain the above copyright
+;    notice, this list of conditions and the following disclaimer.
+; 2. Redistributions in binary form must reproduce the above copyright
+;    notice, this list of conditions and the following disclaimer in the
+;    documentation and/or other materials provided with the distribution.
+; 3. The name of the author may not be used to endorse or promote products
+;    derived from this software without specific prior written permission.
+
+; THIS SOFTWARE IS PROVIDED BY THE AUTHOR ''AS IS'' AND ANY EXPRESS OR
+; IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+; OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+; IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+; INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+; NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+; DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+; THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+; (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+; THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 ;
-; modified by Daryl Rictor to work over a serial terminal connection, August 2002.
+; modified by Daryl Rictor to work over a
+; serial terminal connection, August 2002.
+;
+; Updated with corrections to earlier OCR errors by Bill Forster, August 2005.
+;
+; Adapted for the Steckschwein 65c02 homebrew computer by Thomas Woinke, March 2015 
+; - use BIOS routines for serial communication
+; - relocate zero page variables
+; - output moves to serial and LCD
+; - slight syntax changes for the ACME cross assembler
 ;
 !src "../bios/defs.h.a"
 !src "../bios/bios.h.a"
