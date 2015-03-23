@@ -29,6 +29,11 @@ dev_uart   = $02
 ;----------------------------------------------------------------------------------------------
 
 !address {
+	dividend = $c0
+; divisor = $c4
+remainder = $c6
+result = dividend
+
 ; Address pointers for serial upload
 .startaddr	= $c0
 .endaddr    = $c2
@@ -72,10 +77,25 @@ msgptr 		= $fe
 .adrl     = .addr
 .adrh     = .addr+1
 
+; MEMCTL Register
+memctl    = $02f0
 ; SD CArd command parameter/result buffer
 sd_cmd_param = $0300
 sd_cmd_chksum	= sd_cmd_param+4
 sd_cmd_result = $031f
+
+fat_errno	 		= $0300
+fat_begin_lba 		= $0310 ; Begin of FAT32, 4 bytes
+fat_reserved_sect 	= $0314 ; number of reserved sectors, 2 bytes
+cluster_begin_lba 	= $0316 ; begin of cluster area, 4 bytes
+sectors_per_fat 	= $0320 ; sectors per fat, 4 bytes
+sectors_per_cluster = $0324 ; sectors per cluster, 1 byte
+lba_addr			= $0325 ; lba address, 4 bytes
+cluster_number		= $0329
+
+sd_blktarget 		= $0400
+
+steckos_start		= $1000	
 
 ; SD Card error
 ; $ff - No Card
@@ -84,6 +104,7 @@ sd_cmd_result = $031f
 sd_cmd_errno = $0320
 
 charset  =$e000
+
 }
 
 ;----------------------------------------------------------------------------------------------
@@ -91,12 +112,19 @@ charset  =$e000
 ;----------------------------------------------------------------------------------------------
 ; MACROS
 ;-------------------------------------------------------------------------------------------	---
+!macro SetVector .word, .addr {
+        lda #<.word
+        sta .addr
+        lda #>.word
+        sta .addr+1
+}
+
 !macro PrintChar char {
         lda #char
         jsr chrout
 }
 !macro PrintString .word {
-	+SetVector .word, msgptr
+		+SetVector .word, msgptr
         jsr strout
 }
 !macro String .addr {
@@ -118,12 +146,7 @@ charset  =$e000
     jsr lcdstring
 
 }
-!macro SetVector .word, .addr {
-        lda #<.word
-        sta .addr
-        lda #>.word
-        sta .addr+1
-}
+
 
 !macro nops n{
    !for i, 0, n{
@@ -141,4 +164,36 @@ charset  =$e000
 	plx
 	ply
 	pla
+}
+
+!macro Copy .src, .trgt, .len {
+	phx
+	ldx #$00
+-	lda .src,x
+	sta .trgt,x
+	inx
+	cpx #.len+1
+	bne -
+	plx
+}
+
+!macro SDBlockAddr .src {
+	lda .src + 3
+	sta sd_cmd_param+0
+	lda .src + 2
+	sta sd_cmd_param+1
+	lda .src + 1
+	sta sd_cmd_param+2
+	lda .src + 0
+	sta sd_cmd_param+3
+}
+!macro debug .x {
+	lda #.x
+	jsr lcdprint
+} 
+!macro debug32 .x {
+!for i,3,0 {
+	lda .x+i
+	jsr lcdhex
+}
 }
