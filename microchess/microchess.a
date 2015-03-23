@@ -232,7 +232,7 @@ ON4		LDA	XMAXC        	; SAVE ACTUAL
 ;		
 		LDA	#$08       	; STATE=8
 		STA	STATE        	; GENERATE
-;		JSR	OHM          	; CONTINUATION
+		JSR	GNM          	; CONTINUATION
 		JSR	UMOVE         	; MOVES
 ;		
 		JMP	STRATGY       	; FINAL EVALUATION
@@ -560,7 +560,7 @@ STRV	TSX
 ;       -CHECKS FOR CHECK OR CHECKMATE
 ;       AND ASSIGNS VALUE TO MOVE
 ;		
-CKMATE	LDY	BMAXC         		; CAN BLK CAP
+CKMATE	LDX	BMAXC         		; CAN BLK CAP
 		CPX	POINTS       	; MY KING?
 		BNE	NOCHEK	
 		LDA	#$00           	; GULP!
