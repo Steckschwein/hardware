@@ -29,10 +29,10 @@ dev_uart   = $02
 ;----------------------------------------------------------------------------------------------
 
 !address {
-	dividend = $c0
-; divisor = $c4
-remainder = $c6
-result = dividend
+; 	dividend = $c0
+; ; divisor = $c4
+; remainder = $c6
+; result = dividend
 
 ; Address pointers for serial upload
 .startaddr	= $c0
@@ -95,7 +95,7 @@ cluster_number		= $0329
 
 sd_blktarget 		= $0400
 
-steckos_start		= $1000	
+.steckos_start		= $1000	
 
 ; SD Card error
 ; $ff - No Card
