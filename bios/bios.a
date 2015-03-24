@@ -10,7 +10,7 @@
 *= $e000			; ROM Start
 !src "../charsets/char.ascii.vc20.h.a"
 
-biosversion	!text "V2303", $00	; Version String
+biosversion	!text "V2403", $00	; Version String
 
 ; start_msg
 ; !text "SteckBIOS 0.1", $0d
@@ -301,8 +301,8 @@ biosversion	!text "V2303", $00	; Version String
 			+PrintString .bootup_txt
 
 
-			jsr sd_select_card
-			jsr sd_param_init
+			jsr .sd_select_card
+			jsr .sd_param_init
 
 			jsr .fat_mount
 			lda fat_errno
@@ -315,13 +315,12 @@ biosversion	!text "V2303", $00	; Version String
 			; Calculate cluster LBA address for anything else
 			; jsr calc_lba_addr
 
-			jsr fat_read_dir
+			jsr .fat_read_dir
 	
 .fat_end
-			jsr sd_deselect_card
+			jsr .sd_deselect_card
 
 			+PrintString .bootup_failed
-
 
 ++
 
@@ -732,7 +731,7 @@ biosversion	!text "V2303", $00	; Version String
 
 	+SetVector sd_blktarget, sd_blkptr
 
-	jsr sd_read_block
+	jsr .sd_read_block
 	jsr .fat_check_signature
 
 
@@ -811,33 +810,34 @@ biosversion	!text "V2303", $00	; Version String
 	; Number of FATs. Must be 2
 	; lda sd_blktarget + BPB_NumFATs	
 	; add sectors_per_fat * 2 to cluster_begin_lba
-	ldx #$02
--
-	clc
-!for i,0,3 {	
-	lda sd_blktarget + BPB_FATSz32 + i ; sectors per fat
-	adc cluster_begin_lba + i
-	sta cluster_begin_lba + i
-}
-	dex
-	bne -
-
-	; ldy #$02
-; -	
+; 	ldx #$02
+; -
 ; 	clc
-; 	ldx #$00	
-; --	lda sd_blktarget + BPB_FATSz32,x ; sectors per fat
-; 	adc cluster_begin_lba,x
-; 	sta cluster_begin_lba,x
-; 	inx
-; 	cpx #$04
-; 	bne --
-	; dey
-	; bne -
+; !for i,0,3 {	
+; 	lda sd_blktarget + BPB_FATSz32 + i ; sectors per fat
+; 	adc cluster_begin_lba + i
+; 	sta cluster_begin_lba + i
+; }
+; 	dex
+; 	bne -
+	stz tmp0
+	ldy #$02
+-	
+	clc
+	ldx #$00	
+--	ror tmp0 ; get carry flag back
+	lda sd_blktarget + BPB_FATSz32,x ; sectors per fat
+	adc cluster_begin_lba,x
+	sta cluster_begin_lba,x
+	inx
+	rol tmp0 ; save carry flag before cpx
+	cpx #$04
+	bne --
+	dey
+	bne -
 
 
 	; now we have the lba address of the first sector of the first cluster
-	; +debug32 cluster_begin_lba
 .end_mount
 	plx
 	ply
@@ -869,17 +869,17 @@ biosversion	!text "V2303", $00	; Version String
 ;---------------------------------------------------------------------
 ; Read directory
 ;---------------------------------------------------------------------
-fat_read_dir
+.fat_read_dir
 
 	pha
 	phy
 	phx
 
-	jsr sd_param_init
+	jsr .sd_param_init
 
 -	+SetVector sd_blktarget, sd_blkptr
 	+SDBlockAddr lba_addr
-	jsr sd_read_block
+	jsr .sd_read_block
 	
 --	ldy #DIR_Attr
 	lda (sd_blkptr),y
@@ -929,7 +929,6 @@ fat_read_dir
 	rts
 
 .load
-
 	ldy #DIR_Name
 -	lda (sd_blkptr),y
 	jsr chrout
@@ -937,25 +936,41 @@ fat_read_dir
 	cpy #$0b
 	bne -
 
-
 !for i,3,0 {
 	ldy #DIR_FileSize + i
 	lda (sd_blkptr),y
-	sta dividend + i
+	sta tmp0 + i
 }
-
-	jsr .divideby512
-
-	lda result + 0
-	sta tmp7
-
-	; remainder > 0, increase x
 	clc
-	lda remainder +1
-	adc remainder +0
-	beq +
-	inc tmp7
-+		
+    lsr tmp0 + 2
+    lsr tmp0 + 1
+    lsr tmp0 + 0
+
+    lda tmp0 +1
+    sta tmp7
+    lda tmp0 + 0
+    beq +
+    inc tmp7
++
+
+; !for i,3,0 {
+; 	ldy #DIR_FileSize + i
+; 	lda (sd_blkptr),y
+; 	sta dividend + i
+; }
+
+; 	jsr .divideby512
+
+; 	lda result + 0
+; 	sta tmp7
+
+; 	; remainder > 0, increase x
+; 	clc
+; 	lda remainder +1
+; 	adc remainder +0
+; 	beq +
+; 	inc tmp7
+; +		
 	ldy #DIR_FstClusHI +1
 	lda (sd_blkptr),y
 	sta cluster_number +3
@@ -975,28 +990,30 @@ fat_read_dir
 
 	jsr .calc_lba_addr
 
-	+SetVector steckos_start, sd_blkptr
+	+SetVector .steckos_start, sd_blkptr
 -	+SDBlockAddr lba_addr
 	jsr sd_read_block
 	
-	+PrintChar '.'
-
 	dec tmp7
 	beq + ; zero, we're done
 
 	; increase lba_addy by 1
 	jsr .inc_lba_address
 
-	clc
-	lda sd_blkptr + 1
-	adc #$02
-	sta sd_blkptr + 1
-	
+	; clc
+	; lda sd_blkptr + 1
+	; adc #$02
+	; sta sd_blkptr + 1
+
+	inc sd_blkptr + 1
+	inc sd_blkptr + 1
+
+
 	; ready to read next block
 	bra -
 
 +
-	jsr sd_deselect_card
+	jsr .sd_deselect_card
 
 	; Reset StackPointer
 	ldx #$ff
@@ -1004,7 +1021,7 @@ fat_read_dir
 	; Disable IRQ
 	sei
 
-	jmp steckos_start
+	jmp .steckos_start
 
 
 .inc_lba_address
@@ -1018,10 +1035,13 @@ fat_read_dir
 	lda lba_addr + 2
 	adc #$00
 	sta lba_addr + 2
-	lda lba_addr + 3
-	adc #$00
-	sta lba_addr + 3
+	; lda lba_addr + 3
+	; adc #$00
+	; sta lba_addr + 3
 
+	bcc +
+	inc lba_addr + 3
++
 	rts
 
 .calc_lba_addr
@@ -1060,34 +1080,6 @@ fat_read_dir
 	rts
 
 
-
-.divideby512
-		lda #0	        ;preset remainder to 0
-		sta remainder
-		sta remainder+1
-		ldx #16	        ;repeat for each bit: ...
-
-.divloop	asl dividend	;dividend lb & hb*2, msb -> Carry
-		rol dividend+1	
-		rol remainder	;remainder lb & hb * 2 + msb from carry
-		rol remainder+1
-		lda remainder
-		sec
-		;sbc divisor	;substract divisor to see if it fits in
-		sbc #<512
-		tay	        ;lb result -> Y, for we may need it later
-		lda remainder+1
-		; sbc divisor+1
-		sbc #>512
-		bcc .skip	;if carry=0 then divisor didn't fit in yet
-
-		sta remainder+1	;else save substraction result as new remainder,
-		sty remainder	
-		inc result	;and INCrement result cause divisor fit in 1 times
-
-.skip	dex
-		bne .divloop	
-		rts
 ;----------------------------------------------------------------------------------------------
 ; Tables and lookup data
 ;----------------------------------------------------------------------------------------------
@@ -1249,6 +1241,9 @@ sys_uart_tx
 uart_tx     jmp .uart_tx
 sys_getkey
 getkey		jmp .kbd_getkey
+sys_fat_mount
+fat_mount   jmp .fat_mount
+
 ;----------------------------------------------------------------------------------------------
 
 ;----------------------------------------------------------------------------------------------
