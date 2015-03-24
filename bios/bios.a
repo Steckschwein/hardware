@@ -830,8 +830,8 @@ biosversion	!text "V2403", $00	; Version String
 	bne -
 
 	; now we have the lba address of the first sector of the first cluster
-	+debug32 cluster_begin_lba
--	jmp -
+	; +debug32 cluster_begin_lba
+; -	jmp -
 .end_mount
 	plx
 	ply
