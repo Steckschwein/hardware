@@ -806,38 +806,32 @@ biosversion	!text "V2403", $00	; Version String
 	adc #$00
 	sta cluster_begin_lba + i
 }
+	
 
 	; Number of FATs. Must be 2
 	; lda sd_blktarget + BPB_NumFATs	
 	; add sectors_per_fat * 2 to cluster_begin_lba
-; 	ldx #$02
-; -
-; 	clc
-; !for i,0,3 {	
-; 	lda sd_blktarget + BPB_FATSz32 + i ; sectors per fat
-; 	adc cluster_begin_lba + i
-; 	sta cluster_begin_lba + i
-; }
-; 	dex
-; 	bne -
-	stz tmp0
+
 	ldy #$02
--	
-	clc
+-	clc
+
 	ldx #$00	
---	ror tmp0 ; get carry flag back
+--	ror tmp0  ; get carry flag back
 	lda sd_blktarget + BPB_FATSz32,x ; sectors per fat
 	adc cluster_begin_lba,x
+	
 	sta cluster_begin_lba,x
 	inx
-	rol tmp0 ; save carry flag before cpx
+	rol tmp0 ; save status register before cpx to save carry
 	cpx #$04
+	
 	bne --
 	dey
 	bne -
 
-
 	; now we have the lba address of the first sector of the first cluster
+	+debug32 cluster_begin_lba
+-	jmp -
 .end_mount
 	plx
 	ply
@@ -953,24 +947,6 @@ biosversion	!text "V2403", $00	; Version String
     inc tmp7
 +
 
-; !for i,3,0 {
-; 	ldy #DIR_FileSize + i
-; 	lda (sd_blkptr),y
-; 	sta dividend + i
-; }
-
-; 	jsr .divideby512
-
-; 	lda result + 0
-; 	sta tmp7
-
-; 	; remainder > 0, increase x
-; 	clc
-; 	lda remainder +1
-; 	adc remainder +0
-; 	beq +
-; 	inc tmp7
-; +		
 	ldy #DIR_FstClusHI +1
 	lda (sd_blkptr),y
 	sta cluster_number +3
@@ -1064,7 +1040,6 @@ biosversion	!text "V2403", $00	; Version String
 	+Copy cluster_begin_lba, lba_addr, 3
 	
 	ldx sectors_per_cluster
-
 -	clc
 !for i,0,3 {
 	lda cluster_number + i
