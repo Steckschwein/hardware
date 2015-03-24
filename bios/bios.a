@@ -60,7 +60,7 @@ biosversion	!text "V2403", $00	; Version String
 			; load number of bytes to be uploaded
 			jsr .uart_rx
 			sta .length
-			
+				
 			jsr .uart_rx
 			sta .length+1
 
@@ -232,7 +232,7 @@ biosversion	!text "V2403", $00	; Version String
 			+PrintStringAt biosversion, $00, $01
 
 			ldx #$06
-			jsr lcdxy
+			jsr .lcdxy
 
 			lda #'$'
 			jsr .chrout
@@ -271,7 +271,7 @@ biosversion	!text "V2403", $00	; Version String
 
 			ldy #$02
 			ldx #$00
-			jsr lcdxy
+			jsr .lcdxy
 
 			jsr init_sdcard
 
@@ -923,13 +923,14 @@ biosversion	!text "V2403", $00	; Version String
 	rts
 
 .load
+	
 	ldy #DIR_Name
 -	lda (sd_blkptr),y
 	jsr chrout
 	iny
 	cpy #$0b
 	bne -
-
+	
 !for i,3,0 {
 	ldy #DIR_FileSize + i
 	lda (sd_blkptr),y
@@ -969,6 +970,8 @@ biosversion	!text "V2403", $00	; Version String
 	+SetVector .steckos_start, sd_blkptr
 -	+SDBlockAddr lba_addr
 	jsr sd_read_block
+
+	; +PrintChar '#'
 	
 	dec tmp7
 	beq + ; zero, we're done
@@ -1001,10 +1004,13 @@ biosversion	!text "V2403", $00	; Version String
 
 
 .inc_lba_address
-	clc
-	lda lba_addr + 0
-	adc #$01
-	sta lba_addr + 0
+	inc  lba_addr + 0
+	bne +
+	; clc
+	; lda lba_addr + 0
+	; adc #$01
+	; sta lba_addr + 0
+	sec
 	lda lba_addr + 1
 	adc #$00
 	sta lba_addr + 1
