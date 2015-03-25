@@ -816,13 +816,13 @@ biosversion	!text "V2403", $00	; Version String
 -	clc
 
 	ldx #$00	
---	ror tmp0  ; get carry flag back
+--	ror ; get carry flag back
 	lda sd_blktarget + BPB_FATSz32,x ; sectors per fat
 	adc cluster_begin_lba,x
 	
 	sta cluster_begin_lba,x
 	inx
-	rol tmp0 ; save status register before cpx to save carry
+	rol ; save status register before cpx to save carry
 	cpx #$04
 	
 	bne --
