@@ -202,11 +202,12 @@ mainloop
 	lda (sd_blkptr),y
 	lsr
 	sta .blocks
+	bcs +
 	dey
 	lda (sd_blkptr),y
-	beq +
-	inc .blocks
-+
+	beq ++
++	inc .blocks
+++
 
 	ldy #DIR_FstClusHI +1
 	lda (sd_blkptr),y
