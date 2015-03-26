@@ -946,11 +946,14 @@ biosversion	!text "V2603", $00	; Version String
 	lda (sd_blkptr),y
 	lsr
 	sta .blocks
-	ldy #DIR_FileSize + 0
+	bcs +
+	dey
 	lda (sd_blkptr),y
-	beq +
-	inc .blocks
-+
+	beq ++
++	inc .blocks
+++
+
+
 	ldy #DIR_FstClusHI +1
 	lda (sd_blkptr),y
 	sta cluster_number +3
