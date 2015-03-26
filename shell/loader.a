@@ -1,0 +1,52 @@
+*=$1000
+!src "../bios/defs.h.a"
+!src "../bios/bios.h.a"
+
+.dest = $e000
+.bios = $f000
+
+	lda #dev_lcd
+	sta chn_out 
+
+	jsr lcdclear
+	+PrintString msg
+-
+a	lda .payload
+b	sta .dest
+
+	inc a+1
+	inc b+1
+	bne -
+
+	inc a+2
+	inc b+2
+	bne -
+
+-
+a2	lda .bios
+b2	sta .bios
+
+	inc a2+1
+	inc b2+1
+	bne -
+
+	inc a2+2
+	inc b2+2
+	bne -
+
+
+done
+	+PrintString msgdone
+	
+	lda #$01
+	sta $02f0
+	
+	jmp .dest
+	
+msg	!text "Loading.. ",$00
+msgdone	!text "done.",$00
+
+
+*=$1100
+.payload
+!bin "shell.bin"

@@ -1,0 +1,350 @@
+*= $e000
+!src "../bios/defs.h.a"
+!src "../bios/bios.h.a"
+!src "../fat/fat32.h.a"
+
+	lda #dev_uart
+	sta chn_out
+	stz chn_in
+
+	; jsr sd_select_card
+	; jsr sd_param_init
+	; jsr fat_mount
+.filename = $d400
+
+mainloop
+	ldx #$00
+
+	+PrintString .crlf
+	+PrintString .prompt
+
+
+.inputloop	
+	jsr chrin
+	cmp #$0d ; return?
+	beq .parse
+
+	sta .buf, x
+	inx
+	stz .buf, x
+
+; 	cmp #$08 ; backspace?
+; 	bne +
+; 	dex
+; +
+
+	jsr chrout
+
+	bra .inputloop
+
+
+.parse
+	ldx #$00
+	lda .buf
+	cmp #'d'
+	bne +
+
+	sta .mode
+	+PrintString .crlf
+
+	jsr sd_select_card
+	+Copy cluster_begin_lba, lba_addr, 3
+	jsr .fat_read_dir
+
++	cmp #'l'
+	bne mainloop
+
+	sta .mode
+
+	
+	+PrintString .loadtxt
+
+	ldy #$00
+-	inx
+--	lda .buf,x
+	beq +
+    cmp #"."
+    bcc -
+    jsr chrout
+
+    cpy #12
+    beq ++
+    sta .filename,y
+	iny
+	lda #$00
+	sta .filename,y
+++	
+	
+
+    bra -
+	
++	
+	jsr sd_select_card
+	+Copy cluster_begin_lba, lba_addr, 3
+	jsr .fat_read_dir
+	
+	
+	jmp mainloop
+
+.fat_read_dir
+	pha
+	phy
+	phx
+
+	jsr sd_param_init
+
+-	+SetVector sd_blktarget, sd_blkptr
+	+SDBlockAddr lba_addr
+	jsr sd_read_block
+	
+--	ldy #DIR_Attr
+	lda (sd_blkptr),y
+	cmp #$0f ; Long filename, skip this one
+	beq +
+	bit #$02 ; Hidden attribute set, skip
+	bne +
+
+	tax
+    ldy #DIR_Name
+	lda (sd_blkptr),y
+
+	beq .end ; end of dir 
+	
+	cmp #$e5 ; deleted file
+	beq +    ; skip
+
+	; Actual file. Do something 
+
+	lda .mode
+	cmp #'d'
+	bne ++
+
+	jsr .fat_list_entry
+
+++	cmp #'l'
+	bne +
+
+	ldx #$00
+	ldy #DIR_Name
+.loop
+	lda .filename,x
+	beq .load
+
+	cmp #$60 ; Is lowercase?
+	bcc +
+	sec
+	sbc #$20 ; Yes, make uppercase
++
+	cmp (sd_blkptr),y
+	bne +
+	inx
+	iny
+	bra .loop
+
+
+	; Increment blkptr by 32 bytes, jump to next dir entry
++	clc
+	lda sd_blkptr
+	adc #32
+	sta sd_blkptr
+	bcc +
+	inc sd_blkptr+1	
++	
+	; end of block?
+	lda sd_blkptr+1
+	cmp #06
+	bne -- ; no
+
+	; yes, increase lba_addr and go again
+	+SetVector sd_blktarget, sd_blkptr
+	jsr .inc_lba_address
+	jmp -
+
+.end
+	ply
+	plx
+	pla
+	rts
+
+
+.blocks = tmp7
+.load	
+	ldy #DIR_Name
+-	lda (sd_blkptr),y
+	jsr chrout
+	iny
+	cpy #$0b
+	bne -
+	
+
+	; ldy #DIR_FileSize + 3
+	; lda (sd_blkptr),y
+	; lsr
+	; ldy #DIR_FileSize + 2
+	; lda (sd_blkptr),y
+	; ror
+	; ldy #DIR_FileSize + 1
+	; lda (sd_blkptr),y
+	; ror 
+
+	; enough for files up to 65535 bytes
+	ldy #DIR_FileSize + 1
+	lda (sd_blkptr),y
+	lsr
+	sta .blocks
+	ldy #DIR_FileSize + 0
+	lda (sd_blkptr),y
+	beq +
+	inc .blocks
++
+
+	ldy #DIR_FstClusHI +1
+	lda (sd_blkptr),y
+	sta cluster_number +3
+	dey
+	lda (sd_blkptr),y
+	sta cluster_number +2
+
+	ldy #DIR_FstClusLO +1
+	lda (sd_blkptr),y
+	sta cluster_number +1
+	dey
+	lda (sd_blkptr),y
+	sta cluster_number 
+
+	+Copy cluster_begin_lba, lba_addr, 3
+
+	jsr .calc_lba_addr
+
+	+SetVector .steckos_start, sd_blkptr
+-	+SDBlockAddr lba_addr
+	jsr sd_read_block
+
+	; +PrintChar '#'
+	
+	dec .blocks
+	beq + ; zero, we're done
+
+	; increase lba_addy by 1
+	jsr .inc_lba_address
+
+	inc sd_blkptr + 1
+	inc sd_blkptr + 1
+
+
+	; ready to read next block
+	bra -
+
++
+	jsr sd_deselect_card
+
+	; Reset StackPointer
+	ldx #$ff
+	txs
+	; Disable IRQ
+	sei
+
+	jmp .steckos_start
+
+
+.inc_lba_address
+	inc  lba_addr + 0
+	bne +
+	sec
+	lda lba_addr + 1
+	adc #$00
+	sta lba_addr + 1
+	lda lba_addr + 2
+	adc #$00
+	sta lba_addr + 2
+	bcc +
+	inc lba_addr + 3
++
+	rts
+
+.calc_lba_addr
+	pha
+	phx
+
+	; lba_addr = cluster_begin_lba + (cluster_number - 2) * sectors_per_cluster;
+
+	sec
+	lda cluster_number 
+	sbc #$02
+	sta cluster_number 
+
+!for i,1,3 {
+	lda cluster_number + i 
+	sbc #$00
+	sta cluster_number + i
+}
+
+	+Copy cluster_begin_lba, lba_addr, 3
+	
+	ldx sectors_per_cluster
+-	clc
+!for i,0,3 {
+	lda cluster_number + i
+	adc lba_addr + i
+	sta lba_addr + i	
+}
+	dex
+	bne -
+
+	plx
+	pla
+
+	rts
+
+.fat_list_entry
+	ldy #DIR_Name
+-	lda (sd_blkptr),y
+	
+	jsr chrout
+	
+	iny
+	cpy #DIR_Name + $0b
+
+	bne -
+
+	+PrintChar ' '
+
+	ldy #DIR_FileSize + 3 +1
+-	dey
+	lda (sd_blkptr),y
+	jsr hexout
+	cpy #DIR_FileSize
+	bne -	
+
+	+PrintChar ' '
+
+
+	ldy #DIR_Attr
+	lda (sd_blkptr),y
+
+ 	bit #$10 ; Is a directory
+    beq +
+    lda #'D'
+    bra ++ 
+
++	bit #$04 ; Is system
+	beq +
+    lda #'S'
+    bra ++
+ 
++	bit #$08 ; Is volume ID
+	beq +
+    lda #'V'
+    bra ++ 
++	
+	lda #'F'
+++	jsr chrout
+	+PrintString .crlf
+	rts	
+
+
+.prompt !text "> ",$00
+.crlf	!byte $0a,$0d,$00
+.loadtxt	!text $0a,$0d,"LOAD ",$00
+.mode	!byte $00
+.buf
