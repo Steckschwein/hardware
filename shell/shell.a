@@ -12,6 +12,8 @@
 	; jsr fat_mount
 .filename = $d400
 
+.hello
+	+PrintString .hellotxt
 mainloop
 	ldx #$00
 
@@ -41,15 +43,21 @@ mainloop
 .parse
 	ldx #$00
 	lda .buf
-	cmp #'d'
+	cmp #'h'
+	beq .hello
+	cmp #'u'
+	bne +
+	jmp $f000
++	cmp #'d'
 	bne +
 
 	sta .mode
 	+PrintString .crlf
 
-	jsr sd_select_card
-	+Copy cluster_begin_lba, lba_addr, 3
-	jsr .fat_read_dir
+	jmp .readdir
+	; jsr sd_select_card
+	; +Copy cluster_begin_lba, lba_addr, 3
+	; jsr .fat_read_dir
 
 +	cmp #'l'
 	bne mainloop
@@ -62,13 +70,18 @@ mainloop
 	ldy #$00
 -	inx
 --	lda .buf,x
-	beq +
+	beq .readdir
     cmp #"."
     bcc -
-    jsr chrout
-
+    
     cpy #12
     beq ++
+
+    cmp #$60 ; Is lowercase?
+	bcc +
+	sec
+	sbc #$20 ; Yes, make uppercase
++
     sta .filename,y
 	iny
 	lda #$00
@@ -78,7 +91,7 @@ mainloop
 
     bra -
 	
-+	
+.readdir
 	jsr sd_select_card
 	+Copy cluster_begin_lba, lba_addr, 3
 	jsr .fat_read_dir
@@ -93,25 +106,24 @@ mainloop
 
 	jsr sd_param_init
 
--	+SetVector sd_blktarget, sd_blkptr
-	+SDBlockAddr lba_addr
+	+SetVector sd_blktarget, sd_blkptr
+-	+SDBlockAddr lba_addr
 	jsr sd_read_block
 	
 --	ldy #DIR_Attr
 	lda (sd_blkptr),y
 	cmp #$0f ; Long filename, skip this one
-	beq +
+	beq .nextentry
 	bit #$02 ; Hidden attribute set, skip
-	bne +
+	bne .nextentry
 
 	tax
     ldy #DIR_Name
 	lda (sd_blkptr),y
-
 	beq .end ; end of dir 
 	
 	cmp #$e5 ; deleted file
-	beq +    ; skip
+	beq .nextentry   ; skip
 
 	; Actual file. Do something 
 
@@ -121,29 +133,25 @@ mainloop
 
 	jsr .fat_list_entry
 
+
 ++	cmp #'l'
-	bne +
+	bne .nextentry
 
 	ldx #$00
 	ldy #DIR_Name
 .loop
 	lda .filename,x
 	beq .load
-
-	cmp #$60 ; Is lowercase?
-	bcc +
-	sec
-	sbc #$20 ; Yes, make uppercase
-+
 	cmp (sd_blkptr),y
-	bne +
+	bne .nextentry
 	inx
 	iny
 	bra .loop
 
 
+.nextentry
 	; Increment blkptr by 32 bytes, jump to next dir entry
-+	clc
+	clc
 	lda sd_blkptr
 	adc #32
 	sta sd_blkptr
@@ -175,6 +183,8 @@ mainloop
 	iny
 	cpy #$0b
 	bne -
+
+
 	
 
 	; ldy #DIR_FileSize + 3
@@ -192,7 +202,7 @@ mainloop
 	lda (sd_blkptr),y
 	lsr
 	sta .blocks
-	ldy #DIR_FileSize + 0
+	dey
 	lda (sd_blkptr),y
 	beq +
 	inc .blocks
@@ -220,7 +230,7 @@ mainloop
 -	+SDBlockAddr lba_addr
 	jsr sd_read_block
 
-	; +PrintChar '#'
+	+PrintChar '.'
 	
 	dec .blocks
 	beq + ; zero, we're done
@@ -237,6 +247,7 @@ mainloop
 
 +
 	jsr sd_deselect_card
+	+PrintString .crlf
 
 	; Reset StackPointer
 	ldx #$ff
@@ -297,6 +308,7 @@ mainloop
 	rts
 
 .fat_list_entry
+	pha
 	ldy #DIR_Name
 -	lda (sd_blkptr),y
 	
@@ -340,11 +352,18 @@ mainloop
 	lda #'F'
 ++	jsr chrout
 	+PrintString .crlf
+	pla
 	rts	
 
 
+.hellotxt	!text $0a,$0d,"SteckShell 0.01 "
+			!text $0a,$0d,"d            - directory "
+			!text $0a,$0d,"l <name>     - load file "
+			!text $0a,$0d,"u            - serial upload",$0a,$0d,$00
 .prompt !text "> ",$00
 .crlf	!byte $0a,$0d,$00
-.loadtxt	!text $0a,$0d,"LOAD ",$00
+.loadtxt	!text $0a,$0d,"Loading ",$00
+
+
 .mode	!byte $00
 .buf
