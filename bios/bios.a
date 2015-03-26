@@ -10,7 +10,7 @@
 *= $e000			; ROM Start
 !src "../charsets/char.ascii.vc20.h.a"
 
-biosversion	!text "V2403", $00	; Version String
+biosversion	!text "V2603", $00	; Version String
 
 ; start_msg
 ; !text "SteckBIOS 0.1", $0d
@@ -819,7 +819,6 @@ biosversion	!text "V2403", $00	; Version String
 --	ror ; get carry flag back
 	lda sd_blktarget + BPB_FATSz32,x ; sectors per fat
 	adc cluster_begin_lba,x
-	
 	sta cluster_begin_lba,x
 	inx
 	rol ; save status register before cpx to save carry
@@ -922,6 +921,7 @@ biosversion	!text "V2403", $00	; Version String
 	pla
 	rts
 
+.blocks = tmp7
 .load
 	
 	ldy #DIR_Name
@@ -931,23 +931,26 @@ biosversion	!text "V2403", $00	; Version String
 	cpy #$0b
 	bne -
 	
-!for i,3,0 {
-	ldy #DIR_FileSize + i
+	; ldy #DIR_FileSize + 3
+	; lda (sd_blkptr),y
+	; lsr
+	; ldy #DIR_FileSize + 2
+	; lda (sd_blkptr),y
+	; ror
+	; ldy #DIR_FileSize + 1
+	; lda (sd_blkptr),y
+	; ror 
+
+	; enough for files up to 65535 bytes
+	ldy #DIR_FileSize + 1
 	lda (sd_blkptr),y
-	sta tmp0 + i
-}
-	clc
-    lsr tmp0 + 2
-    lsr tmp0 + 1
-    lsr tmp0 + 0
-
-    lda tmp0 +1
-    sta tmp7
-    lda tmp0 + 0
-    beq +
-    inc tmp7
+	lsr
+	sta .blocks
+	ldy #DIR_FileSize + 0
+	lda (sd_blkptr),y
+	beq +
+	inc .blocks
 +
-
 	ldy #DIR_FstClusHI +1
 	lda (sd_blkptr),y
 	sta cluster_number +3
@@ -973,7 +976,7 @@ biosversion	!text "V2403", $00	; Version String
 
 	; +PrintChar '#'
 	
-	dec tmp7
+	dec .blocks
 	beq + ; zero, we're done
 
 	; increase lba_addy by 1
@@ -1045,6 +1048,7 @@ biosversion	!text "V2403", $00	; Version String
 
 	+Copy cluster_begin_lba, lba_addr, 3
 	
+
 	ldx sectors_per_cluster
 -	clc
 !for i,0,3 {
