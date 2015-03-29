@@ -5,64 +5,11 @@
 
 !src "fat32.h.a"
 	
-!macro Copy .src, .trgt, .len {
-	phx
-	ldx #$00
--	lda .src,x
-	sta .trgt,x
-	inx
-	cpx #.len+1
-	bne -
-	plx
-; !for i,0,.len {
-; 	lda .src  + i
-; 	sta .trgt + i
-; }
-}
+steckos_start = $1000
 
-!macro SDBlockAddr .src {
-	lda .src + 3
-	sta sd_cmd_param+0
-	lda .src + 2
-	sta sd_cmd_param+1
-	lda .src + 1
-	sta sd_cmd_param+2
-	lda .src + 0
-	sta sd_cmd_param+3
-}
-!macro debug .x {
-	lda #.x
-	jsr lcdprint
-} 
-!macro debug32 .x {
-!for i,3,0 {
-	lda .x+i
-	jsr lcdhex
-}
-}
-
-!address {
-
-fat_errno	 		= $0300
-fat_begin_lba 		= $0310 ; Begin of FAT32, 4 bytes
-fat_reserved_sect 	= $0314 ; number of reserved sectors, 2 bytes
-cluster_begin_lba 	= $0316 ; begin of cluster area, 4 bytes
-sectors_per_fat 	= $0320 ; sectors per fat, 4 bytes
-sectors_per_cluster = $0324 ; sectors per cluster, 1 byte
-lba_addr			= $0325 ; lba address, 4 bytes
-cluster_number		= $0329
-
-sd_blktarget 		= $0400
-
-steckos_start		= $1000	
-
-dividend = $c0
-divisor = $c4
-remainder = $c6
-result = dividend
-}
 
 main
+		
 	sei
 	jsr lcdclear
 	lda #dev_uart
@@ -155,7 +102,7 @@ calc_lba_addr
 
 	rts
 
-fat_mount
+.fat_mount
 	pha
 	phx
 	phy
@@ -242,7 +189,8 @@ fat_mount
 	; lda sd_blktarget + BPB_NumFATs	
 	; add sectors_per_fat * 2 to cluster_begin_lba
 	ldx #$02
--	clc
+-
+	clc
 !for i,0,3 {	
 	lda sd_blktarget + BPB_FATSz32 + i ; sectors per fat
 	adc cluster_begin_lba + i
@@ -276,8 +224,6 @@ fat_mount
 
 
 fat_read_dir
-	; lda fat_errno
-	; jsr lcdhex
 
 	pha
 	phy
@@ -346,24 +292,23 @@ fat_read_dir
 	cpy #$0b
 	bne -
 
-
 !for i,3,0 {
 	ldy #DIR_FileSize + i
 	lda (sd_blkptr),y
-	sta dividend + i
+	sta tmp0 + i
 }
-
-	jsr divide
-
-	lda result + 0
-	sta tmp7
-
-	; remainder > 0, increase x
 	clc
-	lda remainder +1
-	adc remainder +0
-	beq +
-	inc tmp7
+    lsr tmp0 + 2
+    lsr tmp0 + 1
+    lsr tmp0 + 0
+
+    lda tmp0 +1
+    sta tmp7
+    lda tmp0 + 0
+    beq +
+    inc tmp7
++
+
 +		
 	ldy #DIR_FstClusHI +1
 	lda (sd_blkptr),y
@@ -497,34 +442,6 @@ space
 		lda #' '
 		jsr chrout
 		rts
-
-divide	lda #0	        ;preset remainder to 0
-		sta remainder
-		sta remainder+1
-		ldx #16	        ;repeat for each bit: ...
-
-divloop	asl dividend	;dividend lb & hb*2, msb -> Carry
-		rol dividend+1	
-		rol remainder	;remainder lb & hb * 2 + msb from carry
-		rol remainder+1
-		lda remainder
-		sec
-		;sbc divisor	;substract divisor to see if it fits in
-		sbc #<512
-		tay	        ;lb result -> Y, for we may need it later
-		lda remainder+1
-		; sbc divisor+1
-		sbc #>512
-		bcc skip	;if carry=0 then divisor didn't fit in yet
-
-		sta remainder+1	;else save substraction result as new remainder,
-		sty remainder	
-		inc result	;and INCrement result cause divisor fit in 1 times
-
-skip	dex
-		bne divloop	
-		rts
-
 
 ;fat_begin_lba = Partition_LBA_Begin + Number_of_Reserved_Sectors;
 ;cluster_begin_lba = Partition_LBA_Begin + Number_of_Reserved_Sectors + (Number_of_FATs * Sectors_Per_FAT);
