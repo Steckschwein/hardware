@@ -1,4 +1,4 @@
-Cmp-Mod V01 Created by Cvpcb (2014-09-16 BZR 5139)-product   date = 10/03/2015 21:15:19
+Cmp-Mod V01 Created by Cvpcb (2014-09-16 BZR 5139)-product   date = 29/03/2015 23:46:59
 
 BeginCmp
 TimeStamp = /5419E797;
@@ -57,27 +57,6 @@ IdModule  = Capacitors_ThroughHole:Capacitor4x3RM2.5;
 EndCmp
 
 BeginCmp
-TimeStamp = /54232DE2;
-Reference = C8;
-ValeurCmp = 100nF;
-IdModule  = Capacitors_ThroughHole:Capacitor4x3RM2.5;
-EndCmp
-
-BeginCmp
-TimeStamp = /54232E38;
-Reference = C9;
-ValeurCmp = 100nF;
-IdModule  = Capacitors_ThroughHole:Capacitor4x3RM2.5;
-EndCmp
-
-BeginCmp
-TimeStamp = /54ADAE44;
-Reference = C10;
-ValeurCmp = 100nF;
-IdModule  = Capacitors_ThroughHole:Capacitor4x3RM2.5;
-EndCmp
-
-BeginCmp
 TimeStamp = /5419E46F;
 Reference = C13;
 ValeurCmp = 16µ/10V;
@@ -113,38 +92,17 @@ IdModule  = diverse:rca_black;
 EndCmp
 
 BeginCmp
-TimeStamp = /54F10AC1;
+TimeStamp = /54F39091;
 Reference = L1;
 ValeurCmp = 47µH;
 IdModule  = Inductors:INDUCTOR_V;
 EndCmp
 
 BeginCmp
-TimeStamp = /54F39091;
-Reference = L2;
-ValeurCmp = 47µH;
-IdModule  = Inductors:INDUCTOR_V;
-EndCmp
-
-BeginCmp
-TimeStamp = /54EB8753;
+TimeStamp = /551851B2;
 Reference = P1;
-ValeurCmp = CONN_01X04;
-IdModule  = Pin_Headers:Pin_Header_Straight_1x04;
-EndCmp
-
-BeginCmp
-TimeStamp = /54EB888A;
-Reference = P2;
-ValeurCmp = CONN_01X04;
-IdModule  = Pin_Headers:Pin_Header_Straight_1x04;
-EndCmp
-
-BeginCmp
-TimeStamp = /54EB88A5;
-Reference = P3;
-ValeurCmp = CONN_01X04;
-IdModule  = Pin_Headers:Pin_Header_Straight_1x04;
+ValeurCmp = CONN_01X03;
+IdModule  = Pin_Headers:Pin_Header_Straight_1x03;
 EndCmp
 
 BeginCmp
@@ -403,21 +361,21 @@ BeginCmp
 TimeStamp = /541A206E;
 Reference = RV1;
 ValeurCmp = 5K;
-IdModule  = w_pth_resistors:trimmer_piher_pt6xv;
+IdModule  = w_pth_resistors:trimmer_piher_pt15xvx2;
 EndCmp
 
 BeginCmp
 TimeStamp = /541BDECF;
 Reference = RV2;
 ValeurCmp = 5K;
-IdModule  = w_pth_resistors:trimmer_piher_pt6xv;
+IdModule  = w_pth_resistors:trimmer_piher_pt15xvx2;
 EndCmp
 
 BeginCmp
 TimeStamp = /541A1879;
 Reference = RV3;
 ValeurCmp = 5K;
-IdModule  = w_pth_resistors:trimmer_piher_pt6xv;
+IdModule  = w_pth_resistors:trimmer_piher_pt15xvx2;
 EndCmp
 
 BeginCmp
