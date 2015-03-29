@@ -1,4 +1,4 @@
-*= $e000
+*= $d000
 !src "../bios/defs.h.a"
 !src "../bios/bios.h.a"
 !src "../fat/fat32.h.a"
@@ -10,12 +10,16 @@
 	; jsr sd_select_card
 	; jsr sd_param_init
 	; jsr fat_mount
+	+Copy cluster_begin_lba, lba_addr, 3
+
 .filename = $d400
 
 .hello
 	+PrintString .hellotxt
+
 mainloop
 	ldx #$00
+	stz .buf
 
 	+PrintString .crlf
 	+PrintString .prompt
@@ -26,19 +30,20 @@ mainloop
 	cmp #$0d ; return?
 	beq .parse
 
+	cmp #$08 ; backspace?
+	beq .backspace
+
 	sta .buf, x
 	inx
 	stz .buf, x
 
-; 	cmp #$08 ; backspace?
-; 	bne +
-; 	dex
-; +
-
-	jsr chrout
-
+-	jsr chrout
 	bra .inputloop
 
+.backspace
+	dex
+	stz .buf, x
+	bra -	
 
 .parse
 	ldx #$00
@@ -60,18 +65,17 @@ mainloop
 	; jsr .fat_read_dir
 
 +	cmp #'l'
+	beq +
+	cmp #'c'
 	bne mainloop
-
-	sta .mode
-
 	
-	+PrintString .loadtxt
++	sta .mode
 
 	ldy #$00
 -	inx
 --	lda .buf,x
 	beq .readdir
-    cmp #"."
+    cmp #"-" ; Ignore everything below "-"
     bcc -
     
     cpy #12
@@ -86,14 +90,16 @@ mainloop
 	iny
 	lda #$00
 	sta .filename,y
+
 ++	
-	
 
     bra -
 	
 .readdir
+
 	jsr sd_select_card
-	+Copy cluster_begin_lba, lba_addr, 3
+;	+Copy cluster_begin_lba, lba_addr, 3
+
 	jsr .fat_read_dir
 	
 	
@@ -104,6 +110,10 @@ mainloop
 	phy
 	phx
 
+!for i,3,0 {
+	lda lba_addr +i
+	pha	
+}
 	jsr sd_param_init
 
 	+SetVector sd_blktarget, sd_blkptr
@@ -135,19 +145,43 @@ mainloop
 
 
 ++	cmp #'l'
-	bne .nextentry
+	bne ++
+
 
 	ldx #$00
 	ldy #DIR_Name
 .loop
 	lda .filename,x
-	beq .load
+	bne +
+	jmp .load
++
+	; beq .load
 	cmp (sd_blkptr),y
 	bne .nextentry
 	inx
 	iny
 	bra .loop
 
+++  cmp #'c'
+	bne .nextentry
+
+
+	lda .filename
+	cmp #'/'
+	beq .cdroot
+
+	ldx #$00
+	ldy #DIR_Name
+.loop2
+	lda .filename,x
+	beq .cd
+	cmp (sd_blkptr),y
+	bne .nextentry
+	inx
+	iny
+	bra .loop2
+
+	; bne .nextentry
 
 .nextentry
 	; Increment blkptr by 32 bytes, jump to next dir entry
@@ -169,14 +203,31 @@ mainloop
 	jmp -
 
 .end
-	ply
-	plx
+	lda .mode
+	cmp #'l'
+	bne +
+	+PrintString .file_not_found
++
+!for i,0,3 {
 	pla
-	rts
+	sta lba_addr +i
+}
+	jmp mainloop
+; .end2
+; 	ply
+; 	plx
+; 	pla
+; 	rts
 
+.cdroot
+	+PrintString .cdtxt
+	+PrintChar '/'
+	+Copy cluster_begin_lba, lba_addr, 3
+	jmp mainloop 
 
-.blocks = tmp7
-.load	
+.cd
+	+PrintString .cdtxt
+
 	ldy #DIR_Name
 -	lda (sd_blkptr),y
 	jsr chrout
@@ -184,8 +235,20 @@ mainloop
 	cpy #$0b
 	bne -
 
+	jsr .lba_from_cluster
+	jmp mainloop
 
-	
+.blocks = tmp7
+.load	
+	+PrintString .loadtxt
+
+	ldy #DIR_Name
+-	lda (sd_blkptr),y
+	jsr chrout
+	iny
+	cpy #$0b
+	bne -
+
 
 	; ldy #DIR_FileSize + 3
 	; lda (sd_blkptr),y
@@ -209,23 +272,24 @@ mainloop
 +	inc .blocks
 ++
 
-	ldy #DIR_FstClusHI +1
-	lda (sd_blkptr),y
-	sta cluster_number +3
-	dey
-	lda (sd_blkptr),y
-	sta cluster_number +2
+	jsr .lba_from_cluster
+	; ldy #DIR_FstClusHI +1
+	; lda (sd_blkptr),y
+	; sta cluster_number +3
+	; dey
+	; lda (sd_blkptr),y
+	; sta cluster_number +2
 
-	ldy #DIR_FstClusLO +1
-	lda (sd_blkptr),y
-	sta cluster_number +1
-	dey
-	lda (sd_blkptr),y
-	sta cluster_number 
+	; ldy #DIR_FstClusLO +1
+	; lda (sd_blkptr),y
+	; sta cluster_number +1
+	; dey
+	; lda (sd_blkptr),y
+	; sta cluster_number 
 
-	+Copy cluster_begin_lba, lba_addr, 3
+	; +Copy cluster_begin_lba, lba_addr, 3
 
-	jsr .calc_lba_addr
+	; jsr .calc_lba_addr
 
 	+SetVector .steckos_start, sd_blkptr
 -	+SDBlockAddr lba_addr
@@ -241,7 +305,9 @@ mainloop
 
 	inc sd_blkptr + 1
 	inc sd_blkptr + 1
-
+	bne ++
+	inc sd_blkptr + 0
+++
 
 	; ready to read next block
 	bra -
@@ -260,7 +326,7 @@ mainloop
 
 
 .inc_lba_address
-	inc  lba_addr + 0
+	inc lba_addr + 0
 	bne +
 	sec
 	lda lba_addr + 1
@@ -274,6 +340,7 @@ mainloop
 +
 	rts
 
+; Calculate LBA from cluster number
 .calc_lba_addr
 	pha
 	phx
@@ -356,6 +423,25 @@ mainloop
 	pla
 	rts	
 
+.lba_from_cluster
+	ldy #DIR_FstClusHI +1
+	lda (sd_blkptr),y
+	sta cluster_number +3
+	dey
+	lda (sd_blkptr),y
+	sta cluster_number +2
+
+	ldy #DIR_FstClusLO +1
+	lda (sd_blkptr),y
+	sta cluster_number +1
+	dey
+	lda (sd_blkptr),y
+	sta cluster_number 
+
+	+Copy cluster_begin_lba, lba_addr, 3
+
+	jsr .calc_lba_addr
+	rts 
 
 .hellotxt	!text $0a,$0d,"SteckShell 0.01 "
 			!text $0a,$0d,"d            - directory "
@@ -364,7 +450,10 @@ mainloop
 .prompt !text "> ",$00
 .crlf	!byte $0a,$0d,$00
 .loadtxt	!text $0a,$0d,"Loading ",$00
-
-
+.cdtxt !text $0a,$0d,"CD: ",$00
+.file_not_found !text $0a,$0d,"File not found",$0a,$0d,$00
+; .fat_err_is_dir !text " is a directory",$0a,$0d,$00
+; .fat_err_is_nodir !text " not a directory",$0a,$0d,$00
+; .fat_err_is_volid !text " is volume id",$0a,$0d,$00
 .mode	!byte $00
 .buf
