@@ -167,25 +167,22 @@ charset  =$e000
 }
 
 !macro Copy .src, .trgt, .len {
-	phx
-	ldx #$00
+	ldx #.len
 -	lda .src,x
 	sta .trgt,x
-	inx
-	cpx #.len+1
-	bne -
-	plx
+	dex
+	bpl -
 }
 
 !macro SDBlockAddr .src {
-	lda .src + 3
-	sta sd_cmd_param+0
-	lda .src + 2
-	sta sd_cmd_param+1
-	lda .src + 1
-	sta sd_cmd_param+2
-	lda .src + 0
-	sta sd_cmd_param+3
+	ldx #$03
+	ldy #$00
+
+-	lda .src,x
+	sta sd_cmd_param,y	
+	iny
+	dex
+	bpl -
 }
 !macro debug .x {
 	lda #.x
