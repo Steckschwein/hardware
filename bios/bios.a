@@ -10,7 +10,7 @@
 *= $e000			; ROM Start
 !src "../charsets/char.ascii.vc20.h.a"
 
-biosversion	!text "V2603", $00	; Version String
+biosversion	!text "V3003", $00	; Version String
 
 ; start_msg
 ; !text "SteckBIOS 0.1", $0d
@@ -814,7 +814,6 @@ biosversion	!text "V2603", $00	; Version String
 
 	ldy #$02
 -	clc
-
 	ldx #$00	
 --	ror ; get carry flag back
 	lda sd_blktarget + BPB_FATSz32,x ; sectors per fat
@@ -822,8 +821,7 @@ biosversion	!text "V2603", $00	; Version String
 	sta cluster_begin_lba,x
 	inx
 	rol ; save status register before cpx to save carry
-	cpx #$04
-	
+	cpx #$04	
 	bne --
 	dey
 	bne -
@@ -985,11 +983,6 @@ biosversion	!text "V2603", $00	; Version String
 	; increase lba_addy by 1
 	jsr .inc_lba_address
 
-	; clc
-	; lda sd_blkptr + 1
-	; adc #$02
-	; sta sd_blkptr + 1
-
 	inc sd_blkptr + 1
 	inc sd_blkptr + 1
 
@@ -1012,10 +1005,6 @@ biosversion	!text "V2603", $00	; Version String
 .inc_lba_address
 	inc  lba_addr + 0
 	bne +
-	; clc
-	; lda lba_addr + 0
-	; adc #$01
-	; sta lba_addr + 0
 	sec
 	lda lba_addr + 1
 	adc #$00
@@ -1023,39 +1012,34 @@ biosversion	!text "V2603", $00	; Version String
 	lda lba_addr + 2
 	adc #$00
 	sta lba_addr + 2
-	; lda lba_addr + 3
-	; adc #$00
-	; sta lba_addr + 3
-
 	bcc +
 	inc lba_addr + 3
 +
 	rts
 
+; Calculate LBA from cluster number
 .calc_lba_addr
 	pha
 	phx
 
 	; lba_addr = cluster_begin_lba + (cluster_number - 2) * sectors_per_cluster;
-
 	sec
 	lda cluster_number 
 	sbc #$02
-	sta cluster_number 
+	sta tmp0 
 
 !for i,1,3 {
 	lda cluster_number + i 
 	sbc #$00
-	sta cluster_number + i
+	sta tmp0 + i
 }
-
+	
 	+Copy cluster_begin_lba, lba_addr, 3
 	
-
 	ldx sectors_per_cluster
 -	clc
 !for i,0,3 {
-	lda cluster_number + i
+	lda tmp0 + i
 	adc lba_addr + i
 	sta lba_addr + i	
 }
