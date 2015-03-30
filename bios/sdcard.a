@@ -199,22 +199,66 @@ init_sdcard
 
 
        ldy #$00
--      
-       phy
-       jsr .spi_r_byte
-       ply
+       lda via1portb   ; Port laden
+       AND #$7e  ;    * Daten und Takt ausschalten
+       TAX             ; aufheben
+       ORA #$01
+       sta tmp0
 
+-      lda tmp0
+       ; jsr .spi_r_byte
+
+       STA via1portb ; Takt An 1
+       STX via1portb ; Takt aus
+       STA via1portb ; Takt An 2
+       STX via1portb ; Takt aus
+       STA via1portb ; Takt An 3
+       STX via1portb ; Takt aus
+       STA via1portb ; Takt An 4
+       STX via1portb ; Takt aus
+       STA via1portb ; Takt An 5
+       STX via1portb ; Takt aus
+       STA via1portb ; Takt An 6
+       STX via1portb ; Takt aus
+       STA via1portb ; Takt An 7
+       STX via1portb ; Takt aus
+       STA via1portb ; Takt An 8
+       STX via1portb ; Takt aus
+
+       lda via1sr
        sta (sd_blkptr),y
        iny
        bne -
 
        inc sd_blkptr+1
 
-       ldy #$00
--      
-       phy
-       jsr .spi_r_byte
-       ply
+       ; ldy #$00
+-      lda tmp0
+       ; jsr .spi_r_byte
+       ; lda via1portb   ; Port laden
+       ; AND #$7e  ;    * Daten und Takt ausschalten
+       ; TAX             ; aufheben
+       ; ORA #$01
+
+       STA via1portb ; Takt An 1
+       STX via1portb ; Takt aus
+       STA via1portb ; Takt An 2
+       STX via1portb ; Takt aus
+       STA via1portb ; Takt An 3
+       STX via1portb ; Takt aus
+       STA via1portb ; Takt An 4
+       STX via1portb ; Takt aus
+       STA via1portb ; Takt An 5
+       STX via1portb ; Takt aus
+       STA via1portb ; Takt An 6
+       STX via1portb ; Takt aus
+       STA via1portb ; Takt An 7
+       STX via1portb ; Takt aus
+       STA via1portb ; Takt An 8
+       STX via1portb ; Takt aus
+
+       lda via1sr
+
 
        sta (sd_blkptr),y
        iny
