@@ -2,7 +2,7 @@
 !src "../bios/defs.h.a"
 !src "../bios/bios.h.a"
 
-.dest = $e000
+.dest = $d000
 .bios = $f000
 
 	lda #dev_lcd
@@ -22,24 +22,24 @@ b	sta .dest
 	inc b+2
 	bne -
 
--
-a2	lda .bios
-b2	sta .bios
+; -
+; a2	lda .bios
+; b2	sta .bios
 
-	inc a2+1
-	inc b2+1
-	bne -
+; 	inc a2+1
+; 	inc b2+1
+; 	bne -
 
-	inc a2+2
-	inc b2+2
-	bne -
+; 	inc a2+2
+; 	inc b2+2
+; 	bne -
 
 
 done
 	+PrintString msgdone
 	
-	lda #$01
-	sta $02f0
+	; lda #$01
+	; sta $02f0
 	
 	jmp .dest
 	

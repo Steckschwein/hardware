@@ -295,7 +295,7 @@ mainloop
 -	+SDBlockAddr lba_addr
 	jsr sd_read_block
 
-	+PrintChar '.'
+	; +PrintChar '.'
 	
 	dec .blocks
 	beq + ; zero, we're done
@@ -314,6 +314,7 @@ mainloop
 
 +
 	jsr sd_deselect_card
+	+PrintChar '.'
 	+PrintString .crlf
 
 	; Reset StackPointer
@@ -346,24 +347,22 @@ mainloop
 	phx
 
 	; lba_addr = cluster_begin_lba + (cluster_number - 2) * sectors_per_cluster;
-
 	sec
 	lda cluster_number 
 	sbc #$02
-	sta cluster_number 
+	sta tmp0 
 
 !for i,1,3 {
 	lda cluster_number + i 
 	sbc #$00
-	sta cluster_number + i
+	sta tmp0 + i
 }
-
 	+Copy cluster_begin_lba, lba_addr, 3
 	
 	ldx sectors_per_cluster
 -	clc
 !for i,0,3 {
-	lda cluster_number + i
+	lda tmp0 + i
 	adc lba_addr + i
 	sta lba_addr + i	
 }
@@ -394,6 +393,21 @@ mainloop
 	lda (sd_blkptr),y
 	jsr hexout
 	cpy #DIR_FileSize
+	bne -	
+
+	+PrintChar ' '
+
+	ldy #DIR_FstClusHI + 1 +1
+-	dey
+	lda (sd_blkptr),y
+	jsr hexout
+	cpy #DIR_FstClusHI
+	bne -	
+	ldy #DIR_FstClusLO + 1 +1
+-	dey
+	lda (sd_blkptr),y
+	jsr hexout
+	cpy #DIR_FstClusLO
 	bne -	
 
 	+PrintChar ' '
@@ -446,6 +460,7 @@ mainloop
 .hellotxt	!text $0a,$0d,"SteckShell 0.01 "
 			!text $0a,$0d,"d            - directory "
 			!text $0a,$0d,"l <name>     - load file "
+			!text $0a,$0d,"c <name>     - change directory "
 			!text $0a,$0d,"u            - serial upload",$0a,$0d,$00
 .prompt !text "> ",$00
 .crlf	!byte $0a,$0d,$00
