@@ -92,6 +92,7 @@ sectors_per_fat 	= $0320 ; sectors per fat, 4 bytes
 sectors_per_cluster = $0324 ; sectors per cluster, 1 byte
 lba_addr			= $0325 ; lba address, 4 bytes
 cluster_number		= $0329
+root_dir_first_clus = $032a ; first cluster of root dir
 
 sd_blktarget 		= $0400
 

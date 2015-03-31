@@ -10,7 +10,7 @@
 *= $e000			; ROM Start
 !src "../charsets/char.ascii.vc20.h.a"
 
-biosversion	!text "V3003", $00	; Version String
+biosversion	!text "V3103", $00	; Version String
 
 ; start_msg
 ; !text "SteckBIOS 0.1", $0d
@@ -769,7 +769,7 @@ biosversion	!text "V3003", $00	; Version String
 
 	+SetVector sd_blktarget, sd_blkptr
 	; Read FAT Volume ID at LBABegin and Check signature
-	jsr sd_read_block
+	jsr .sd_read_block
 
 	jsr .fat_check_signature
 	lda fat_errno
@@ -806,7 +806,8 @@ biosversion	!text "V3003", $00	; Version String
 	adc #$00
 	sta cluster_begin_lba + i
 }
-	
+
+	+Copy sd_blktarget + BPB_RootClus, root_dir_first_clus, 4	
 
 	; Number of FATs. Must be 2
 	; lda sd_blktarget + BPB_NumFATs	
