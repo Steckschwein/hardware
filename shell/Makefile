@@ -5,7 +5,8 @@ clean:
 %.bin: %.a
 	acme -v -f plain --cpu 65c02 -o $@ $<
 loader.bin: shell.bin
-transfer: all
-	../transfer.py loader.bin 0x1000
-
-#	../transfer.py shell.bin 0xd000
+transfer: shell.bin
+	../transfer.py shell.bin 0xd000
+loader: loader.bin
+	sudo mcopy loader.bin a:
+	sudo mattrib +s a:loader.bin
