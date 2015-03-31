@@ -226,6 +226,13 @@ mainloop
 	jmp mainloop 
 
 .cd
+	ldy #DIR_Attr
+	lda (sd_blkptr),y
+	bit #$10
+	bne +
+	+PrintString .not_a_dir	
+	jmp mainloop
++	
 	ldx #$04
 	ldy #DIR_FstClusHI +1
 	lda (sd_blkptr),y
@@ -248,9 +255,6 @@ mainloop
 	bne +
 	dex
 +
-	; txa
-	; jsr lcdhex
-	; cpx #$00
 	; Microsoft Extensible Firmware Initiative FAT32 File System Specification
 	; FAT: General Overview of On-Disk Format
 	; Version 1.03, December 6, 2000 Microsoft Corporation
@@ -277,6 +281,14 @@ mainloop
 
 .blocks = tmp7
 .load	
+	ldy #DIR_Attr
+	lda (sd_blkptr),y
+	bit #$20
+	bne +
+	+PrintString .not_a_file
+	jmp mainloop
++	
+
 	+PrintString .loadtxt
 
 	ldy #DIR_Name
@@ -501,9 +513,13 @@ mainloop
 			!text $0a,$0d,"u            - serial upload",$0a,$0d,$00
 .prompt !text "> ",$00
 .crlf	!byte $0a,$0d,$00
-.loadtxt	!text $0a,$0d,"Loading ",$00
-.cdtxt !text $0a,$0d,"CD: ",$00
+.loadtxt		!text $0a,$0d,"Loading ",$00
+.cdtxt 			!text $0a,$0d,"CD: ",$00
 .file_not_found !text $0a,$0d,"File not found",$0a,$0d,$00
+.not_a_dir 		!text $0a,$0d,"not a directory",$0a,$0d,$00
+.not_a_file 	!text $0a,$0d,"not a file",$0a,$0d,$00
+
+
 ; .fat_err_is_dir !text " is a directory",$0a,$0d,$00
 ; .fat_err_is_nodir !text " not a directory",$0a,$0d,$00
 ; .fat_err_is_volid !text " is volume id",$0a,$0d,$00
