@@ -226,6 +226,41 @@ mainloop
 	jmp mainloop 
 
 .cd
+	ldx #$04
+	ldy #DIR_FstClusHI +1
+	lda (sd_blkptr),y
+	sta cluster_number +3
+	bne +
+	dex
++	dey
+	lda (sd_blkptr),y
+	sta cluster_number +2
+	bne +
+	dex
++	ldy #DIR_FstClusLO +1
+	lda (sd_blkptr),y
+	sta cluster_number +1
+	bne +
+	dex
++	dey
+	lda (sd_blkptr),y
+	sta cluster_number 
+	bne +
+	dex
++
+	; txa
+	; jsr lcdhex
+	; cpx #$00
+	; Microsoft Extensible Firmware Initiative FAT32 File System Specification
+	; FAT: General Overview of On-Disk Format
+	; Version 1.03, December 6, 2000 Microsoft Corporation
+	
+	; 	Here is the summary for the dot and dotdot entries:
+	; • The dot entry is a directory that points to itself.
+	; • The dotdot entry points to the starting cluster of the parent of this directory (which is 0 if this
+	;   directories parent is the root directory).
+	beq .cdroot
+
 	+PrintString .cdtxt
 
 	ldy #DIR_Name
@@ -235,7 +270,9 @@ mainloop
 	cpy #$0b
 	bne -
 
-	jsr .lba_from_cluster
+	+Copy cluster_begin_lba, lba_addr, 3
+
+	jsr .calc_lba_addr
 	jmp mainloop
 
 .blocks = tmp7
