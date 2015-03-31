@@ -2,7 +2,7 @@
 ; Init SD Card 
 ; Destructive: A, X, Y
 ;---------------------------------------------------------------------
-init_sdcard
+.init_sdcard
        ; 80 Taktzyklen
        ldx #74
 

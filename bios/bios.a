@@ -1,4 +1,6 @@
 !initmem $ff
+!cpu 65c02
+
 !src "defs.h.a"
 !src "via.h.a"
 !src "sdcard.h.a"
@@ -247,15 +249,15 @@ biosversion	!text "V3103", $00	; Version String
 			; +SetVector start_msg, msgptr
 			; jsr	vdp_print
 
-			stz chn_out
+			; stz chn_out
 			
-			lda #'$'
-			jsr .chrout
+			; lda #'$'
+			; jsr .chrout
 
-			lda ram_end_l
-			jsr .hexout
-			lda ram_end_h
-			jsr .hexout
+			; lda ram_end_l
+			; jsr .hexout
+			; lda ram_end_h
+			; jsr .hexout
 
 			; +SetVector crlf, msgptr
 			; jsr	vdp_print
@@ -266,24 +268,21 @@ biosversion	!text "V3103", $00	; Version String
 			; jsr	vdp_sreg
 
 
-			lda #dev_lcd
-			sta chn_out
-
 			ldy #$02
 			ldx #$00
 			jsr .lcdxy
 
-			jsr init_sdcard
+			jsr .init_sdcard
 
 			lda sd_cmd_errno
 			beq +
-			
+
 			; SD Card init failed
 			cmp #$ff
 			bne ++
 
-			+PrintString .nocard			
-			
+			+PrintString .nocard               
+
 ++			cmp #$0f
 			bne ++
 
@@ -298,6 +297,8 @@ biosversion	!text "V3103", $00	; Version String
 
 +
 
+
+
 			+PrintString .bootup_txt
 
 
@@ -310,10 +311,10 @@ biosversion	!text "V3103", $00	; Version String
 
 
 			; just use cluster_begin_lba if reading root dir cluster
-			+Copy cluster_begin_lba, lba_addr, 3
-
+			+Copy cluster_begin_lba, lba_addr, 4
+			; +Copy root_dir_first_clus, cluster_number,4
 			; Calculate cluster LBA address for anything else
-			; jsr calc_lba_addr
+			; jsr .calc_lba_addr
 
 			jsr .fat_read_dir
 	
