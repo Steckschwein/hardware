@@ -1,4 +1,4 @@
-Cmp-Mod V01 Created by Cvpcb (2014-09-16 BZR 5139)-product   date = 29/03/2015 23:46:59
+Cmp-Mod V01 Created by Cvpcb (2014-09-16 BZR 5139)-product   date = 30/03/2015 09:25:50
 
 BeginCmp
 TimeStamp = /5419E797;
@@ -361,21 +361,21 @@ BeginCmp
 TimeStamp = /541A206E;
 Reference = RV1;
 ValeurCmp = 5K;
-IdModule  = w_pth_resistors:trimmer_piher_pt15xvx2;
+IdModule  = Potentiometers:Potentiometer_Trimmer-Piher_PT15-V15_horizontal;
 EndCmp
 
 BeginCmp
 TimeStamp = /541BDECF;
 Reference = RV2;
 ValeurCmp = 5K;
-IdModule  = w_pth_resistors:trimmer_piher_pt15xvx2;
+IdModule  = Potentiometers:Potentiometer_Trimmer-Piher_PT15-V15_horizontal;
 EndCmp
 
 BeginCmp
 TimeStamp = /541A1879;
 Reference = RV3;
 ValeurCmp = 5K;
-IdModule  = w_pth_resistors:trimmer_piher_pt15xvx2;
+IdModule  = Potentiometers:Potentiometer_Trimmer-Piher_PT15-V15_horizontal;
 EndCmp
 
 BeginCmp
