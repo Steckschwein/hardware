@@ -2,10 +2,18 @@
 !src "../bios/defs.h.a"
 !src "../bios/bios.h.a"
 !src "../fat/fat32.h.a"
+	
+	jsr lcdclear
+	lda #dev_lcd
+	sta chn_out
+	stz chn_in
+
+
+	+PrintString .hellotxt
 
 	lda #dev_uart
 	sta chn_out
-	stz chn_in
+
 
 	; jsr sd_select_card
 	; jsr sd_param_init
@@ -14,8 +22,10 @@
 
 .filename = $d400
 
+	
 .hello
 	+PrintString .hellotxt
+	+PrintString .helptxt
 
 mainloop
 	ldx #$00
@@ -46,31 +56,35 @@ mainloop
 	bra -	
 
 .parse
-	ldx #$00
+	; ldx #$00
 	lda .buf
-	cmp #'h'
-	beq .hello
-	cmp #'u'
-	bne +
-	jmp $f000
-+	cmp #'d'
-	bne +
-
 	sta .mode
-	+PrintString .crlf
 
-	jmp .readdir
-	; jsr sd_select_card
-	; +Copy cluster_begin_lba, lba_addr, 3
-	; jsr .fat_read_dir
-
-+	cmp #'l'
-	beq +
-	cmp #'c'
-	bne mainloop
+	ldx #$00
+-	lda .cmdlist,x
+	beq mainloop
 	
-+	sta .mode
+	cmp .mode
+	beq +
 
+	inx
+	inx
+	inx
+	bra -
+
++	
+	inx
+	lda .cmdlist,x
+	sta .addr
+	inx
+	lda .cmdlist,x
+	sta .addr+1
+	inx
+	jmp (.addr)
+
+
+.loadbla
+	ldx #$00
 	ldy #$00
 -	inx
 --	lda .buf,x
@@ -94,8 +108,13 @@ mainloop
 ++	
 
     bra -
+
+	
+
 	
 .readdir
+
+	+PrintString .crlf
 
 	jsr sd_select_card
 ;	+Copy cluster_begin_lba, lba_addr, 3
@@ -505,9 +524,10 @@ mainloop
 
 	jsr .calc_lba_addr
 	rts 
+	
 
-.hellotxt	!text $0a,$0d,"SteckShell 0.01 "
-			!text $0a,$0d,"d            - directory "
+.hellotxt	!text "SteckShell 0.01 ",$00
+.helptxt	!text $0a,$0d,"d            - directory "
 			!text $0a,$0d,"l <name>     - load file "
 			!text $0a,$0d,"c <name>     - change directory "
 			!text $0a,$0d,"u            - serial upload",$0a,$0d,$00
@@ -524,4 +544,33 @@ mainloop
 ; .fat_err_is_nodir !text " not a directory",$0a,$0d,$00
 ; .fat_err_is_volid !text " is volume id",$0a,$0d,$00
 .mode	!byte $00
+
+
+
+.cmdlist
+	!byte 'd'
+	!byte <.readdir
+	!byte >.readdir
+
+	!byte 'l'
+	!byte <.loadbla
+	!byte >.loadbla
+
+	!byte 'c'
+	!byte <.loadbla
+	!byte >.loadbla
+
+	!byte '/'
+	!byte <.cdroot
+	!byte >.cdroot
+
+	!byte 'u'
+	!byte <$f000
+	!byte >$f000
+
+	!byte 'h'
+	!byte <.hello
+	!byte >.hello
+		
+	!byte $00
 .buf
