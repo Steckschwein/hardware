@@ -27,10 +27,10 @@
 	; jsr fat_mount
 	+Copy cluster_begin_lba, lba_addr, 3
 
-.filename = $d400
 
 	
 .hello
+	+PrintString .crlf
 	+PrintString .hellotxt
 	+PrintString .helptxt
 
@@ -53,6 +53,8 @@ mainloop
 	sta .buf, x
 	inx
 	stz .buf, x
+	cpx #80
+	beq mainloop
 
 -	jsr chrout
 	bra .inputloop
@@ -68,18 +70,14 @@ mainloop
 
 	+toUpper
 
-; 	cmp #$60 ; Is lowercase?
-; 	bcc +
-; 	sec
-; 	sbc #$20 ; Yes, make uppercase
-; +
 	sta .mode
+	sta .buf
 
 	ldx #$00
 -	lda .cmdlist,x
 	beq mainloop
 
-	cmp .mode
+	cmp .buf
 	beq +
 
 	; Next entry in list
@@ -129,12 +127,6 @@ mainloop
 	+PrintString .crlf
 
 	jsr sd_select_card
-	; +Copy cluster_begin_lba, lba_addr, 3
-
-	jsr .fat_read_dir
-	
-	
-	jmp mainloop
 
 .fat_read_dir
 	pha
@@ -177,7 +169,6 @@ mainloop
 
 ++	cmp #'L'
 	bne ++
-
 
 	ldx #$00
 	ldy #DIR_Name
@@ -520,7 +511,7 @@ mainloop
 	bne -
 	rts
 
-.hellotxt	!text "SteckShell 0.01 ",$00
+.hellotxt	!text "SteckShell 0.02 ",$00
 .helptxt	!text $0a,$0d,"d            - directory "
 			!text $0a,$0d,"l <name>     - load file "
 			!text $0a,$0d,"c <name>     - change directory "
@@ -538,6 +529,7 @@ mainloop
 ; .fat_err_is_nodir !text " not a directory",$0a,$0d,$00
 ; .fat_err_is_volid !text " is volume id",$0a,$0d,$00
 .mode	!byte $00
+.filename  !text "           ",$00
 
 
 
