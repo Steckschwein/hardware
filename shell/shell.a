@@ -2,7 +2,14 @@
 !src "../bios/defs.h.a"
 !src "../bios/bios.h.a"
 !src "../fat/fat32.h.a"
-	
+!macro toUpper {
+    cmp #$60 ; Is lowercase?
+	bcc +
+	sec
+	sbc #$20 ; Yes, make uppercase
++	
+}
+
 	jsr lcdclear
 	lda #dev_lcd
 	sta chn_out
@@ -58,15 +65,24 @@ mainloop
 .parse
 	; ldx #$00
 	lda .buf
+
+	+toUpper
+
+; 	cmp #$60 ; Is lowercase?
+; 	bcc +
+; 	sec
+; 	sbc #$20 ; Yes, make uppercase
+; +
 	sta .mode
 
 	ldx #$00
 -	lda .cmdlist,x
 	beq mainloop
-	
+
 	cmp .mode
 	beq +
 
+	; Next entry in list
 	inx
 	inx
 	inx
@@ -95,11 +111,8 @@ mainloop
     cpy #12
     beq ++
 
-    cmp #$60 ; Is lowercase?
-	bcc +
-	sec
-	sbc #$20 ; Yes, make uppercase
-+
+	+toUpper 
+
     sta .filename,y
 	iny
 	lda #$00
@@ -113,11 +126,10 @@ mainloop
 
 	
 .readdir
-
 	+PrintString .crlf
 
 	jsr sd_select_card
-;	+Copy cluster_begin_lba, lba_addr, 3
+	; +Copy cluster_begin_lba, lba_addr, 3
 
 	jsr .fat_read_dir
 	
@@ -157,13 +169,13 @@ mainloop
 	; Actual file. Do something 
 
 	lda .mode
-	cmp #'d'
+	cmp #'D'
 	bne ++
 
 	jsr .fat_list_entry
 
 
-++	cmp #'l'
+++	cmp #'L'
 	bne ++
 
 
@@ -181,7 +193,7 @@ mainloop
 	iny
 	bra .loop
 
-++  cmp #'c'
+++  cmp #'C'
 	bne .nextentry
 
 
@@ -286,12 +298,7 @@ mainloop
 
 	+PrintString .cdtxt
 
-	ldy #DIR_Name
--	lda (sd_blkptr),y
-	jsr chrout
-	iny
-	cpy #$0b
-	bne -
+	jsr .print_filename
 
 	+Copy cluster_begin_lba, lba_addr, 3
 
@@ -310,12 +317,7 @@ mainloop
 
 	+PrintString .loadtxt
 
-	ldy #DIR_Name
--	lda (sd_blkptr),y
-	jsr chrout
-	iny
-	cpy #$0b
-	bne -
+	jsr .print_filename
 
 
 	; ldy #DIR_FileSize + 3
@@ -341,25 +343,8 @@ mainloop
 ++
 
 	jsr .lba_from_cluster
-	; ldy #DIR_FstClusHI +1
-	; lda (sd_blkptr),y
-	; sta cluster_number +3
-	; dey
-	; lda (sd_blkptr),y
-	; sta cluster_number +2
-
-	; ldy #DIR_FstClusLO +1
-	; lda (sd_blkptr),y
-	; sta cluster_number +1
-	; dey
-	; lda (sd_blkptr),y
-	; sta cluster_number 
-
-	; +Copy cluster_begin_lba, lba_addr, 3
-
-	; jsr .calc_lba_addr
-
 	+SetVector .steckos_start, sd_blkptr
+
 -	+SDBlockAddr lba_addr
 	jsr sd_read_block
 
@@ -526,6 +511,15 @@ mainloop
 	rts 
 	
 
+.print_filename
+	ldy #DIR_Name
+-	lda (sd_blkptr),y
+	jsr chrout
+	iny
+	cpy #$0b
+	bne -
+	rts
+
 .hellotxt	!text "SteckShell 0.01 ",$00
 .helptxt	!text $0a,$0d,"d            - directory "
 			!text $0a,$0d,"l <name>     - load file "
@@ -548,29 +542,23 @@ mainloop
 
 
 .cmdlist
-	!byte 'd'
-	!byte <.readdir
-	!byte >.readdir
+	!byte 'D'
+	!word .readdir
 
-	!byte 'l'
-	!byte <.loadbla
-	!byte >.loadbla
+	!byte 'L'
+	!word .loadbla
 
-	!byte 'c'
-	!byte <.loadbla
-	!byte >.loadbla
+	!byte 'C'
+	!word .loadbla
 
 	!byte '/'
-	!byte <.cdroot
-	!byte >.cdroot
+	!word .cdroot
 
-	!byte 'u'
-	!byte <$f000
-	!byte >$f000
+	!byte 'U'
+	!word $f000
 
-	!byte 'h'
-	!byte <.hello
-	!byte >.hello
-		
+	!byte 'H'
+	!word .hello
+
 	!byte $00
 .buf
