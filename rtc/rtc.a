@@ -66,8 +66,8 @@ main
 	cli
 	; jsr read
 	jsr isr
--	jmp -
 
+	rts
 isr
 	pha
 	phy

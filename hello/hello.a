@@ -16,10 +16,8 @@ main
 	jsr lcdxy
 	+SetVector num, msgptr
 	jsr lcdstring
--	
 
-	jmp -
-
+	rts
 hello
 	!text "**Hello World!**", $00
 num

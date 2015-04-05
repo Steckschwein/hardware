@@ -3,22 +3,45 @@
 !src "../bios/defs.h.a"
 !src "../bios/bios.h.a"
 
+!src "../bios/via.h.a"
+
+
 	sei
 
+	
 	stz chn_in
-
-	lda #dev_lcd
+	lda #dev_uart
   	sta chn_out
 
   	
 	jsr lcdclear
 
--	jsr chrin
-	cmp #$0d
-	beq +
-	jsr hexout
-	jmp -
-+	jsr hexout
-	lda #$0a
-	jsr hexout
+-	jsr .kbd_chrin
+	jsr chrout
+; 	cmp #$0d
+; 	beq +
+; 	jsr hexout
+; 	jmp -
+; +	jsr hexout
+; 	lda #$0a
+; 	jsr hexout
 	bra -
+
+.kbd_enable
+	lda #%01111010
+	sta via1portb
+	rts
+
+.kbd_disable
+	; disable keyboard
+	ldx #$7e
+	stx via1portb	
+	rts
+
+.kbd_chrin
+	jsr .kbd_enable
+-	lda #$00
+	jsr spi_rw_byte
+	beq -
+	jsr .kbd_disable
+	rts

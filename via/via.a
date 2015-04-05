@@ -15,7 +15,7 @@ cnt = $03
 -		
 	jsr chrin
 	lda $02f0
-	ror
+	lsr
 	sta $02f0
 	jmp -
 
