@@ -511,13 +511,13 @@ mainloop
 	bne -
 	rts
 
-.hellotxt	!text "SteckShell 0.02 ",$00
-.helptxt	!text $0a,$0d,"d            - directory "
-			!text $0a,$0d,"l <name>     - load file "
-			!text $0a,$0d,"c <name>     - change directory "
-			!text $0a,$0d,"u            - serial upload",$0a,$0d,$00
-.prompt !text "> ",$00
-.crlf	!byte $0a,$0d,$00
+.hellotxt		!text "SteckShell 0.02 ",$00
+.helptxt		!text $0a,$0d,"d            - directory "
+				!text $0a,$0d,"l <name>     - load file "
+				!text $0a,$0d,"c <name>     - change directory "
+				!text $0a,$0d,"u            - serial upload",$0a,$0d,$00
+.prompt			!text "> ",$00
+.crlf			!byte $0a,$0d,$00
 .loadtxt		!text $0a,$0d,"Loading ",$00
 .cdtxt 			!text $0a,$0d,"CD: ",$00
 .file_not_found !text $0a,$0d,"File not found",$0a,$0d,$00
