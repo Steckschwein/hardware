@@ -1,4 +1,4 @@
-Cmp-Mod V01 Created by Cvpcb (2014-09-16 BZR 5139)-product   date = 30/03/2015 09:25:50
+Cmp-Mod V01 Created by Cvpcb (2014-09-16 BZR 5139)-product   date = 06/04/2015 16:22:15
 
 BeginCmp
 TimeStamp = /5419E797;
@@ -29,6 +29,13 @@ IdModule  = Capacitors_ThroughHole:Capacitor4x3RM2.5;
 EndCmp
 
 BeginCmp
+TimeStamp = /55224E4F;
+Reference = C3;
+ValeurCmp = 100nF;
+IdModule  = Capacitors_ThroughHole:C_Disc_D3_P2.5;
+EndCmp
+
+BeginCmp
 TimeStamp = /542329DF;
 Reference = C4;
 ValeurCmp = 100nF;
@@ -54,6 +61,20 @@ TimeStamp = /54232D87;
 Reference = C7;
 ValeurCmp = 100nF;
 IdModule  = Capacitors_ThroughHole:Capacitor4x3RM2.5;
+EndCmp
+
+BeginCmp
+TimeStamp = /55224EB6;
+Reference = C8;
+ValeurCmp = 100nF;
+IdModule  = Capacitors_ThroughHole:C_Disc_D3_P2.5;
+EndCmp
+
+BeginCmp
+TimeStamp = /55224F16;
+Reference = C9;
+ValeurCmp = 100nF;
+IdModule  = Capacitors_ThroughHole:C_Disc_D3_P2.5;
 EndCmp
 
 BeginCmp
