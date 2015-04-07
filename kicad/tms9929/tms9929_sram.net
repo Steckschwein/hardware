@@ -1,7 +1,7 @@
 (export (version D)
   (design
     (source D:/development/steckschwein-code/kicad/tms9929/tms9929_sram_snd.sch)
-    (date "06/04/2015 19:22:46")
+    (date "06/04/2015 21:59:30")
     (tool "Eeschema (2014-09-16 BZR 5139)-product"))
   (components
     (comp (ref 10.738MHz1)

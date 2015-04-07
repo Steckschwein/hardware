@@ -25,7 +25,7 @@ LIBS:dallas-rtc
 LIBS:mini_din
 LIBS:w_connectors
 LIBS:io-cache
-EELAYER 25 0
+EELAYER 24 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
