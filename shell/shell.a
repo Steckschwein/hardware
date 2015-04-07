@@ -88,14 +88,7 @@ mainloop
 
 +	
 	inx
-	lda .cmdlist,x
-	sta .addr
-	inx
-	lda .cmdlist,x
-	sta .addr+1
-	inx
-	jmp (.addr)
-
+	jmp (.cmdlist,x) ; 65c02 FTW!!
 
 .loadbla
 	ldx #$00
