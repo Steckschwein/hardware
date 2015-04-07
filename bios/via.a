@@ -6,7 +6,6 @@ init_via1
 			; VIA1
 			lda #%00000000
 			sta via1ddra
-			sta via1ddrb
 
 			lda #$00
 			sta via1ier             ; enable VIA1 T1 interrupts
