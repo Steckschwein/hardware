@@ -73,15 +73,15 @@
 
 	; add number of reserved sectors to fat_begin_lba. store in cluster_begin_lba
 	clc
-!for i,0,1 {
-	lda fat_begin_lba + i
-	adc sd_blktarget + BPB_RsvdSecCnt + i
-	sta cluster_begin_lba + i	
+!for .i,0,1 {
+	lda fat_begin_lba + .i
+	adc sd_blktarget + BPB_RsvdSecCnt + .i
+	sta cluster_begin_lba + .i	
 }
-!for i,2,3 {
-	lda fat_begin_lba + i
+!for .i,2,3 {
+	lda fat_begin_lba + .i
 	adc #$00
-	sta cluster_begin_lba + i
+	sta cluster_begin_lba + .i
 }
 
 	+Copy sd_blktarget + BPB_RootClus, root_dir_first_clus, 4	
@@ -161,21 +161,21 @@
 	sbc #$02
 	sta tmp0 
 
-!for i,1,3 {
-	lda cluster_number + i 
-	sbc #$00
-	sta tmp0 + i
-}
+	!for .i,1,3 {
+		lda cluster_number + .i 
+		sbc #$00
+		sta tmp0 + .i
+	}
 	
 	+Copy cluster_begin_lba, lba_addr, 3
 	
 	ldx sectors_per_cluster
 -	clc
-!for i,0,3 {
-	lda tmp0 + i
-	adc lba_addr + i
-	sta lba_addr + i	
-}
+	!for .i,0,3 {
+		lda tmp0 + .i
+		adc lba_addr + .i
+		sta lba_addr + .i	
+	}
 	dex
 	bne -
 

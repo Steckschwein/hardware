@@ -207,10 +207,10 @@
 
 -      lda tmp0
 
-!for i,0,7 {
-       STA via1portb ; Takt An 
-       STX via1portb ; Takt aus
-}
+       !for .i,0,7 {
+              STA via1portb ; Takt An 
+              STX via1portb ; Takt aus
+       }
        lda via1sr
        sta (sd_blkptr),y
        iny
@@ -221,10 +221,10 @@
 
 -      lda tmp0
 
-!for i,0,7 {
-       STA via1portb ; Takt An 
-       STX via1portb ; Takt aus
-}
+       !for .i,0,7 {
+              STA via1portb ; Takt An 
+              STX via1portb ; Takt aus
+       }
 
        lda via1sr
 
@@ -235,10 +235,10 @@
        dec sd_blkptr+1
 
        ; Read CRC bytes     
-!for i,0,15 {
-       STA via1portb ; Takt An 
-       STX via1portb ; Takt aus
-}
+       !for .i,0,15 {
+              STA via1portb ; Takt An 
+              STX via1portb ; Takt aus
+       }
 
        ; jsr .spi_r_byte
        ; jmp .spi_r_byte

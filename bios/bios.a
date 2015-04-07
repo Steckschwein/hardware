@@ -804,30 +804,30 @@ biosversion	!text "V0704", $00	; Version String
       
 -     ldx #.num_patterns
 --    lda .pattern,x
-a     sta .start_check   ; Start at $0200. skip stack for now      
-b     cmp .start_check
+.a     sta .start_check   ; Start at $0200. skip stack for now      
+.b     cmp .start_check
       bne +
       
       dex 
       bne --
 
-      inc a+1
-      inc b+1
+      inc .a+1
+      inc .b+1
       bne -
 
       ; Stop at $e000 to prevent overwriting BIOS Code when ROMOFF
-      ldx a+2
+      ldx .a+2
       inx
-      stx a+2
-      stx b+2
+      stx .a+2
+      stx .b+2
       cpx #$e0
       
       bne -
 
 +	  
-	  lda a+2
+	  lda .a+2
 	  sta ram_end_l
-	  lda a+1
+	  lda .a+1
 	  sta ram_end_h
 
       jmp .back_from_memcheck
@@ -838,63 +838,35 @@ b     cmp .start_check
 ; Jump table
 ;----------------------------------------------------------------------------------------------
 *=$ff00
-sys_chrout
 chrout		jmp .chrout
-sys_chrin
 chrin		jmp .chrin
-sys_lcdclear
 lcdclear	jmp .lcdclear
-sys_lcdprint
 lcdprint 	jmp .lcdprint
-sys_lcdstring
 lcdstring 	jmp .lcdstring
-sys_lcdhex
 lcdhex 		jmp .lcdhex 
-sys_decout
 decout 		jmp .decout
-sys_decoutz
 decoutz 	jmp .decoutz
-sys_irqhandler
 irqhandler  jmp .irqhandler
-sys_lcdbusy
 lcdbusy 	jmp .lcdbusy
-sys_lcdxy
 lcdxy 		jmp .lcdxy
 
-sys_spi_rw_byte	
 spi_rw_byte	jmp .spi_rw_byte
-
-sys_spi_r_byte	
 spi_r_byte	jmp .spi_r_byte
 
-sys_upload	jmp .upload
+upload		jmp .upload
 
-sys_sd_write_block
 sd_write_block 	jmp .sd_write_block
-
-sys_sd_read_block
 sd_read_block 	jmp .sd_read_block
-
-sys_sd_param_init
 sd_param_init 	jmp .sd_param_init
-
-sys_sd_deselect_card
 sd_deselect_card 	jmp .sd_deselect_card
-sys_sd_select_card
-sd_select_card 	jmp .sd_select_card
-sys_sd_cmd
-sd_cmd 		jmp .sd_cmd
-sys_strout
+sd_select_card 		jmp .sd_select_card
+sd_cmd 				jmp .sd_cmd
+
 strout 		jmp .strout
-sys_hexout
 hexout 		jmp .hexout
-sys_uart_rx
 uart_rx     jmp .uart_rx
-sys_uart_tx
 uart_tx     jmp .uart_tx
-sys_getkey
 getkey		jmp .kbd_getkey
-sys_fat_mount
 fat_mount   jmp .fat_mount
 
 ;----------------------------------------------------------------------------------------------

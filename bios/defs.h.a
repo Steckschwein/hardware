@@ -151,7 +151,7 @@ charset  =$e000
 
 
 !macro nops n{
-   !for i, 0, n{
+   !for .i, 0, n{
       nop
    }
 }
