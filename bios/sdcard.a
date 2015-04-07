@@ -186,7 +186,7 @@
        jsr .sd_busy_wait
 
        lda #cmd17
-       jsr sd_cmd
+       jsr .sd_cmd
 
        lda #$ff
        jsr .spi_rw_byte             
