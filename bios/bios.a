@@ -12,7 +12,7 @@
 *= $e000			; ROM Start
 !src "../charsets/char.ascii.vc20.h.a"
 
-biosversion	!text "V3103", $00	; Version String
+biosversion	!text "V0704", $00	; Version String
 
 ; start_msg
 ; !text "SteckBIOS 0.1", $0d
@@ -286,8 +286,13 @@ biosversion	!text "V3103", $00	; Version String
 ++			cmp #$0f
 			bne ++
 
-			+PrintString .invalidcard
 
+
+
+			+PrintString .invalidcard
+++			cmp #$ef 
+			bne ++
+			+PrintString .unsupportedcard
 ++			cmp #$1f
 			bne ++
 
@@ -295,12 +300,27 @@ biosversion	!text "V3103", $00	; Version String
 
 			bra ++
 
+
 +
+			jsr .boot_from_card
 
 
+;			+SetVector ready_msg, msgptr
+;			jsr	vdp_print
+			
+			jsr .upload
+			
+			; re-init stack pointer
+.startup	ldx #$ff
+			txs
 
+			
+
+			; jump to new code
+			jmp (.startaddr)
+
+.boot_from_card
 			+PrintString .bootup_txt
-
 
 			jsr .sd_select_card
 			jsr .sd_param_init
@@ -316,28 +336,14 @@ biosversion	!text "V3103", $00	; Version String
 			; Calculate cluster LBA address for anything else
 			; jsr .calc_lba_addr
 
-			jsr .fat_read_dir
+			jsr .fat_bootfile
 	
 .fat_end
 			jsr .sd_deselect_card
 
 			+PrintString .bootup_failed
 
-++
-
-;			+SetVector ready_msg, msgptr
-;			jsr	vdp_print
-			
-			jsr .upload
-			
-			; re-init stack pointer
-.startup	ldx #$ff
-			txs
-
-			
-
-			; jump to new code
-			jmp (.startaddr)
+++			rts
 	
 
 .bootup_txt 	!text "Boot ", $00
@@ -721,337 +727,9 @@ biosversion	!text "V3103", $00	; Version String
 ;---------------------------------------------------------------------
 ; FAT32 routines
 ;---------------------------------------------------------------------
-
-;---------------------------------------------------------------------
-; Mount FAT32 on Partition 0
-;---------------------------------------------------------------------
-.fat_mount
-	pha
-	phx
-	phy
-
-	+SetVector sd_blktarget, sd_blkptr
-
-	jsr .sd_read_block
-	jsr .fat_check_signature
+!src "fat32.a"
 
 
-	lda fat_errno
-	beq +
-	+PrintString .fat_err_signature
-	jmp .end_mount
-
-+	
-	part0 = sd_blktarget + BS_Partition0
-
-	lda part0 + PE_TypeCode
-	cmp #$0b
-	beq +
-	cmp #$0c
-	beq +
-
-	; type code not $0b or $0c
-	+PrintString .fat_err_partition
-	inc fat_errno
-	jmp .end_mount
-
-+
-	ldx #$00
--	
-	lda part0 + PE_LBABegin,x
-	sta fat_begin_lba,x
-	inx
-	cpx #$04
-	bne -
-
-
-	; Write LBA start address to sd param buffer
-	+SDBlockAddr fat_begin_lba
-
-	+SetVector sd_blktarget, sd_blkptr
-	; Read FAT Volume ID at LBABegin and Check signature
-	jsr .sd_read_block
-
-	jsr .fat_check_signature
-	lda fat_errno
-	beq +
-	+PrintString .fat_err_signature
-	jmp .end_mount
-
-+
-	; Bytes per Sector, must be 512 = $0200
-	lda sd_blktarget + BPB_BytsPerSec
-	bne +
-	lda sd_blktarget + BPB_BytsPerSec + 1
-	cmp #$02
-	beq ++
-+	+PrintString .fat_err_bad_sect_size
-	inc fat_errno
-	jmp .end_mount
-++
-	; Sectors per Cluster. Valid: 1,2,4,8,16,32,64,128
-	lda sd_blktarget + BPB_SecPerClus
-	sta sectors_per_cluster
-	
-	; cluster_begin_lba = Partition_LBA_Begin + Number_of_Reserved_Sectors + (Number_of_FATs * Sectors_Per_FAT);
-
-	; add number of reserved sectors to fat_begin_lba. store in cluster_begin_lba
-	clc
-!for i,0,1 {
-	lda fat_begin_lba + i
-	adc sd_blktarget + BPB_RsvdSecCnt + i
-	sta cluster_begin_lba + i	
-}
-!for i,2,3 {
-	lda fat_begin_lba + i
-	adc #$00
-	sta cluster_begin_lba + i
-}
-
-	+Copy sd_blktarget + BPB_RootClus, root_dir_first_clus, 4	
-
-	; Number of FATs. Must be 2
-	; lda sd_blktarget + BPB_NumFATs	
-	; add sectors_per_fat * 2 to cluster_begin_lba
-
-	ldy #$02
--	clc
-	ldx #$00	
---	ror ; get carry flag back
-	lda sd_blktarget + BPB_FATSz32,x ; sectors per fat
-	adc cluster_begin_lba,x
-	sta cluster_begin_lba,x
-	inx
-	rol ; save status register before cpx to save carry
-	cpx #$04	
-	bne --
-	dey
-	bne -
-
-	; now we have the lba address of the first sector of the first cluster
-	; +debug32 cluster_begin_lba
-; -	jmp -
-.end_mount
-	plx
-	ply
-	pla
-
-	rts
-
-;---------------------------------------------------------------------
-; Check if block sinature is $55aa
-;---------------------------------------------------------------------
-.fat_check_signature
-	; pha
-	stz fat_errno
-
-	lda sd_blktarget + BS_Signature
-	cmp #$55
-	bne +
-	lda sd_blktarget + BS_Signature+1
-	cmp #$aa
-	bne +
-	
-	; pla
-	rts
-
-+	inc fat_errno
-	; pla
-	rts
-
-;---------------------------------------------------------------------
-; Read directory
-;---------------------------------------------------------------------
-.fat_read_dir
-
-	pha
-	phy
-	phx
-
-	jsr .sd_param_init
-
--	+SetVector sd_blktarget, sd_blkptr
-	+SDBlockAddr lba_addr
-	jsr .sd_read_block
-	
---	ldy #DIR_Attr
-	lda (sd_blkptr),y
-	cmp #$0f ; Long filename, skip this one
-	beq +
-	bit #$02 ; Hidden attribute set, skip
-	bne +
-
-	tax
-    ldy #DIR_Name
-	lda (sd_blkptr),y
-
-	beq .end ; end of dir 
-	
-	cmp #$e5 ; deleted file
-	beq +    ; skip
-
-	; jsr .fat_list_entry
-
-	txa
-    bit #$04 ; System attribute. load file  	
- 	bne .load
-
-+
-	; Increment blkptr by 32 bytes, jump to next dir entry
-	clc
-	lda sd_blkptr
-	adc #32
-	sta sd_blkptr
-	bcc +
-	inc sd_blkptr+1	
-+	
-	; end of block?
-	lda sd_blkptr+1
-	cmp #06
-	bne -- ; no
-
-	; yes, increase lba_addr and go again
-	+SetVector sd_blktarget, sd_blkptr
-	jsr .inc_lba_address
-	jmp -
-
-.end
-	ply
-	plx
-	pla
-	rts
-
-.blocks = tmp7
-.load
-	
-	ldy #DIR_Name
--	lda (sd_blkptr),y
-	jsr chrout
-	iny
-	cpy #$0b
-	bne -
-	
-	; ldy #DIR_FileSize + 3
-	; lda (sd_blkptr),y
-	; lsr
-	; ldy #DIR_FileSize + 2
-	; lda (sd_blkptr),y
-	; ror
-	; ldy #DIR_FileSize + 1
-	; lda (sd_blkptr),y
-	; ror 
-
-	; enough for files up to 65535 bytes
-	ldy #DIR_FileSize + 1
-	lda (sd_blkptr),y
-	lsr
-	sta .blocks
-	bcs +
-	dey
-	lda (sd_blkptr),y
-	beq ++
-+	inc .blocks
-++
-
-
-	ldy #DIR_FstClusHI +1
-	lda (sd_blkptr),y
-	sta cluster_number +3
-
-	dey
-	lda (sd_blkptr),y
-	sta cluster_number +2
-
-	ldy #DIR_FstClusLO +1
-	lda (sd_blkptr),y
-	sta cluster_number +1
-	dey
-	lda (sd_blkptr),y
-	sta cluster_number 
-
-	+Copy cluster_begin_lba, lba_addr, 3
-
-	jsr .calc_lba_addr
-
-	+SetVector .steckos_start, sd_blkptr
--	+SDBlockAddr lba_addr
-	jsr sd_read_block
-
-	; +PrintChar '#'
-	
-	dec .blocks
-	beq + ; zero, we're done
-
-	; increase lba_addy by 1
-	jsr .inc_lba_address
-
-	inc sd_blkptr + 1
-	inc sd_blkptr + 1
-
-
-	; ready to read next block
-	bra -
-
-+
-	jsr .sd_deselect_card
-
-	; Reset StackPointer
-	ldx #$ff
-	txs
-	; Disable IRQ
-	sei
-
-	jmp .steckos_start
-
-
-.inc_lba_address
-	inc  lba_addr + 0
-	bne +
-	sec
-	lda lba_addr + 1
-	adc #$00
-	sta lba_addr + 1
-	lda lba_addr + 2
-	adc #$00
-	sta lba_addr + 2
-	bcc +
-	inc lba_addr + 3
-+
-	rts
-
-; Calculate LBA from cluster number
-.calc_lba_addr
-	pha
-	phx
-
-	; lba_addr = cluster_begin_lba + (cluster_number - 2) * sectors_per_cluster;
-	sec
-	lda cluster_number 
-	sbc #$02
-	sta tmp0 
-
-!for i,1,3 {
-	lda cluster_number + i 
-	sbc #$00
-	sta tmp0 + i
-}
-	
-	+Copy cluster_begin_lba, lba_addr, 3
-	
-	ldx sectors_per_cluster
--	clc
-!for i,0,3 {
-	lda tmp0 + i
-	adc lba_addr + i
-	sta lba_addr + i	
-}
-	dex
-	bne -
-
-	plx
-	pla
-
-	rts
 
 
 ;----------------------------------------------------------------------------------------------
@@ -1067,6 +745,7 @@ biosversion	!text "V3103", $00	; Version String
 ; .cardok		!text "SD Card OK", $00
 .nocard					!text "NO SD Card ", $00
 .invalidcard			!text "Invalid SD Card!", $00
+.unsupportedcard		!text "Unsupp. SD Card!", $00
 .initfail				!text "SD Init failed!", $00
 .fat_err_signature 		!text "bad block signature", $00
 .fat_err_partition 		!text "invalid partition type", $00
