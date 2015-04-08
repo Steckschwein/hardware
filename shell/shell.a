@@ -87,8 +87,7 @@ mainloop
 	bra -
 
 +	
-	inx
-	jmp (.cmdlist,x) ; 65c02 FTW!!
+	jmp (.cmdlist+1,x) ; 65c02 FTW!!
 
 .loadbla
 	ldx #$00
