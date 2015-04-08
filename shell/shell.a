@@ -567,12 +567,7 @@ mainloop
 .not_a_dir 		!text $0a,$0d,"not a directory",$0a,$0d,$00
 .not_a_file 	!text $0a,$0d,"not a file",$0a,$0d,$00
 
-
-; .fat_err_is_dir !text " is a directory",$0a,$0d,$00
-; .fat_err_is_nodir !text " not a directory",$0a,$0d,$00
-; .fat_err_is_volid !text " is volume id",$0a,$0d,$00
 .filename  !text "           ",$00
-
 
 
 .cmdlist
