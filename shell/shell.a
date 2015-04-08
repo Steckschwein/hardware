@@ -2,6 +2,10 @@
 !src "../bios/defs.h.a"
 !src "../bios/bios.h.a"
 !src "../fat/fat32.h.a"
+!address {
+.key = $10
+}
+
 !macro toUpper {
     cmp #$60 ; Is lowercase?
 	bcc +
@@ -15,6 +19,22 @@
 	sta chn_out
 	stz chn_in
 
+	stz .key
+
+	lda #<count
+	sta via1t1cl            ; set low byte of count
+	lda #>count
+	sta via1t1ch            ; set high byte of count
+
+	lda #%11000000
+	sta via1ier             ; enable VIA1 T1 interrupts
+
+	lda #%01000000
+	sta via1acr             ; T1 continuous, PB7 disabled
+
+	+SetVector .irq, irqvec
+
+	cli
 
 	+PrintString .hellotxt
 
@@ -43,7 +63,7 @@ mainloop
 
 
 .inputloop	
-	jsr chrin
+	jsr .keyin
 	cmp #$0d ; return?
 	beq .parse
 
@@ -70,24 +90,25 @@ mainloop
 
 	+toUpper
 
-	sta .mode
 	sta .buf
 
 	ldx #$00
--	lda .cmdlist,x
+-	lda .cmdlist+2,x
 	beq mainloop
 
 	cmp .buf
-	beq +
+	bne +
+	
+	jmp (.cmdlist,x) ; 65c02 FTW!!
 
-	; Next entry in list
++	; Next entry in list
 	inx
 	inx
 	inx
 	bra -
 
-+	
-	jmp (.cmdlist+1,x) ; 65c02 FTW!!
+	
+
 
 .loadbla
 	ldx #$00
@@ -117,7 +138,7 @@ mainloop
 	
 .readdir
 	+PrintString .crlf
-
+	sei
 	jsr sd_select_card
 
 .fat_read_dir
@@ -125,15 +146,16 @@ mainloop
 	phy
 	phx
 
-!for i,3,0 {
-	lda lba_addr +i
-	pha	
-}
+	!for .i,3,0 {
+		lda lba_addr +.i
+		pha	
+	}
 	jsr sd_param_init
 
 	+SetVector sd_blktarget, sd_blkptr
 -	+SDBlockAddr lba_addr
 	jsr sd_read_block
+	
 	
 --	ldy #DIR_Attr
 	lda (sd_blkptr),y
@@ -152,7 +174,7 @@ mainloop
 
 	; Actual file. Do something 
 
-	lda .mode
+	lda .buf
 	cmp #'D'
 	bne ++
 
@@ -179,6 +201,7 @@ mainloop
 ++  cmp #'C'
 	bne .nextentry
 
+	cli
 
 	lda .filename
 	cmp #'/'
@@ -217,15 +240,16 @@ mainloop
 	jmp -
 
 .end
-	lda .mode
-	cmp #'l'
+	lda .buf
+	cmp #'L'
 	bne +
 	+PrintString .file_not_found
 +
-!for i,0,3 {
+!for .i,0,3 {
 	pla
-	sta lba_addr +i
+	sta lba_addr +.i
 }
+	cli
 	jmp mainloop
 ; .end2
 ; 	ply
@@ -290,6 +314,9 @@ mainloop
 
 .blocks = tmp7
 .load	
+	; Disable IRQ
+	sei
+
 	ldy #DIR_Attr
 	lda (sd_blkptr),y
 	bit #$20
@@ -330,7 +357,6 @@ mainloop
 
 -	+SDBlockAddr lba_addr
 	jsr sd_read_block
-
 	; +PrintChar '.'
 	
 	dec .blocks
@@ -348,16 +374,16 @@ mainloop
 	; ready to read next block
 	bra -
 
-+
++	
+
 	jsr sd_deselect_card
+
 	+PrintChar '.'
 	+PrintString .crlf
 
 	; Reset StackPointer
 	ldx #$ff
 	txs
-	; Disable IRQ
-	sei
 
 	jmp .steckos_start
 
@@ -388,11 +414,11 @@ mainloop
 	sbc #$02
 	sta tmp0 
 
-!for i,1,3 {
-	lda cluster_number + i 
-	sbc #$00
-	sta tmp0 + i
-}
+	!for .i,1,3 {
+		lda cluster_number + .i 
+		sbc #$00
+		sta tmp0 + .i
+	}
 	+Copy cluster_begin_lba, lba_addr, 3
 	
 	ldx sectors_per_cluster
@@ -503,6 +529,31 @@ mainloop
 	bne -
 	rts
 
+.irq
+	pha
+	bit via1ifr		; Interrupt from VIA?
+	bpl +
+
+	bit via1t1cl	; Acknowledge timer interrupt
+
+	lda .key		; already char in buffer? do nothing
+	bne +
+
+	jsr getkey
+	cmp #$00
+	beq +
+	sta .key
+
++	pla
+	rti
+
+.keyin
+-	lda .key
+	beq -
+
+	stz .key
+	rts
+
 .hellotxt		!text "SteckShell 0.02 ",$00
 .helptxt		!text $0a,$0d,"d            - directory "
 				!text $0a,$0d,"l <name>     - load file "
@@ -520,29 +571,29 @@ mainloop
 ; .fat_err_is_dir !text " is a directory",$0a,$0d,$00
 ; .fat_err_is_nodir !text " not a directory",$0a,$0d,$00
 ; .fat_err_is_volid !text " is volume id",$0a,$0d,$00
-.mode	!byte $00
 .filename  !text "           ",$00
 
 
 
 .cmdlist
-	!byte 'D'
 	!word .readdir
-
+	!byte 'D'
+	
+	!word .loadbla
 	!byte 'L'
-	!word .loadbla
 
+	!word .loadbla
 	!byte 'C'
-	!word .loadbla
-
-	!byte '/'
+	
 	!word .cdroot
-
-	!byte 'U'
+	!byte '/'
+	
 	!word $f000
+	!byte 'U'
 
-	!byte 'H'
 	!word .hello
+	!byte 'H'
 
+	!word $0000
 	!byte $00
 .buf
