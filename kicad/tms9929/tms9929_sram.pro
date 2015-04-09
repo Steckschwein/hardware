@@ -1,4 +1,4 @@
-update=29/03/2015 23:45:47
+update=09/04/2015 16:11:01
 version=1
 last_client=pcbnew
 [general]
@@ -61,12 +61,12 @@ LibName31=tms99xx
 [pcbnew]
 version=1
 PageLayoutDescrFile=
-LastNetListRead=tms9929_sram_snd.net
+LastNetListRead=tms9929_sram.net
 UseCmpFile=1
-PadDrill=0.6
-PadDrillOvalY=0.6
-PadSizeH=1.5
-PadSizeV=1.5
+PadDrill=1.8
+PadDrillOvalY=1.8
+PadSizeH=3.19786
+PadSizeV=2.1
 PcbTextSizeV=1.5
 PcbTextSizeH=1.5
 PcbTextThickness=0.3
