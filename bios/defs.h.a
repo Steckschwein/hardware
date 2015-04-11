@@ -44,11 +44,6 @@ dev_uart   = $02
 crs_x	= $d0
 crs_y	= $d1
 
-; Keyboard buffer pointer
-kbd_ptr = $d2
-; Keyboard status flags
-; Bit 7; Keyboard on/off
-kbd_flg = $d3
 
 ; IRQ vector
 irqvec		= $e0
@@ -93,7 +88,11 @@ sectors_per_fat 	= $0320 ; sectors per fat, 4 bytes
 sectors_per_cluster = $0324 ; sectors per cluster, 1 byte
 lba_addr			= $0325 ; lba address, 4 bytes
 cluster_number		= $0329
-root_dir_first_clus = $032a ; first cluster of root dir
+root_dir_first_clus = $032d ; first cluster of root dir, 4 bytes
+curr_dir_cluster_no	= $0331 ; current dir cluster no
+file0_cluster_no	= $0335 ; File handle 0 cluster no
+file0_size			= $0339 ; File handle 0 filesize, 4 bytess
+
 
 sd_blktarget 		= $0400
 
