@@ -282,8 +282,7 @@ biosversion	!text "V1104", $00	; Version String
 			bne ++
 
 			+PrintString .nocard               
-			jsr .upload
-			
+
 ++			cmp #$0f
 			bne ++
 
@@ -308,7 +307,7 @@ biosversion	!text "V1104", $00	; Version String
 
 ;			+SetVector ready_msg, msgptr
 ;			jsr	vdp_print
-			
+++			
 			jsr .upload
 			
 			; re-init stack pointer
