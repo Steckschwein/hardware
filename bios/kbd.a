@@ -8,10 +8,6 @@
 	; and via1portb
 	sta via1portb
 
-	lda #$7f
-	and kbd_flg
-	sta kbd_flg
-
 	pla
 	rts
 
