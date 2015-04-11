@@ -16,6 +16,7 @@
 +	
 }
 
+.init
 	jsr lcdclear
 	lda #dev_lcd
 	sta chn_out
@@ -59,6 +60,7 @@
 
 
 mainloop
+	+Copy curr_dir_cluster_no, cluster_number, 3
 
 	+PrintString .crlf
 	+PrintString .prompt
@@ -152,6 +154,8 @@ mainloop
 .cd
 	+PrintString .crlf
 	jsr .fat_open
+	lda fat_errno
+	bne ++
 	
 	; in case ".." points to the root dir, the cluster number will be 0. In that case, we use the
 	; root cluster number from the BPB
@@ -165,40 +169,49 @@ mainloop
 	+Copy curr_dir_cluster_no, cluster_number, 3
 
 ++	
-	jmp mainloop 
+-	jmp mainloop 
 
 
 .load	
 	+PrintString .crlf
 
 	jsr .readfile
+	lda fat_errno
+	bne -
 
 	sei 
 
 	ldx #$ff
 	txs
 
-	jmp .steckos_start
+	+save
+	jsr .steckos_start
+	+restore
 
-	; jmp mainloop 
+	jmp .init 
 
 .type	
 	+PrintString .crlf
 
 	jsr .readfile
+	lda fat_errno
+	bne -
 	+PrintString .crlf
 
+	; +save
 	+PrintString .steckos_start
-
+	; +restore
 	jmp mainloop
 
 .readfile
 	jsr .fat_open
+	lda fat_errno
+	bne +
 
 	+SetVector .steckos_start, sd_blkptr
 	+Copy file0_cluster_no, cluster_number, 3
 	jsr .fat_read
-	rts
++	rts
 
 
 ; .irq
