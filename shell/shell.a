@@ -16,46 +16,31 @@
 +	
 }
 
-.init
-	jsr lcdclear
-	lda #dev_lcd
-	sta chn_out
-	stz chn_in
 
-	; jsr chrin
+	stz .key
 
-	; stz .key
+	lda #<count
+	sta via1t1cl            ; set low byte of count
+	lda #>count
+	sta via1t1ch            ; set high byte of count
 
-	; lda #<count
-	; sta via1t1cl            ; set low byte of count
-	; lda #>count
-	; sta via1t1ch            ; set high byte of count
+	lda #%11000000
+	sta via1ier             ; enable VIA1 T1 interrupts
 
-	; lda #%11000000
-	; sta via1ier             ; enable VIA1 T1 interrupts
+	lda #%01000000
+	sta via1acr             ; T1 continuous, PB7 disabled
 
-	; lda #%01000000
-	; sta via1acr             ; T1 continuous, PB7 disabled
+	+SetVector .irq, irqvec
 
-	; +SetVector .irq, irqvec
-
-	; cli
-
-	+PrintString .hellotxt
-
-
-	lda #dev_uart
-	sta chn_out
+	cli
 
 
 	jsr .fat_mount
 
-
-	
-.hello
-	+PrintString .crlf
-	+PrintString .hellotxt
-	+PrintString .helptxt
+.init
+	lda #dev_uart
+	sta chn_out
+	stz chn_in
 
 
 
@@ -69,21 +54,26 @@ mainloop
 
 
 .inputloop	
-	jsr chrin
+	jsr .keyin
 	cmp #$0d ; return?
 	beq .parse
 
 	cmp #$08 ; backspace?
 	beq .backspace
 
+.next	
+	jsr chrout
+
+	+toUpper
+
 	sta .buf, x
 	inx
 	stz .buf, x
+
+	; prevent overflow of input buffer 
 	cpx #80
 	beq mainloop
-
-.next	
-	jsr chrout
+	
 	bra .inputloop
 
 .backspace
@@ -93,10 +83,6 @@ mainloop
 
 .parse
 	lda .buf
-
-	+toUpper
-
-	sta .buf
 
 	ldx #$00
 	ldy #$00
@@ -110,7 +96,6 @@ mainloop
     cpy #12
     beq ++   ; read 11 bytes?
 
-	+toUpper 
 
     sta .filename,y
 	iny
@@ -124,25 +109,27 @@ mainloop
 .end_parse
 	ldx #$00
 -	lda .cmdlist+2,x
-	beq mainloop
-
-	cmp .buf
-	bne +
+	beq +
 	
-	jmp (.cmdlist,x) ; 65c02 FTW!!
+	cmp .buf
+	bne ++
+	
++	jmp (.cmdlist,x) ; 65c02 FTW!!
 
-+	; Next entry in list
+++	; Next entry in list
 	inx
 	inx
 	inx
 	bra -
-
-	
-
 	
 .dir
 	+PrintString .crlf
+	php
+	sei
+	
 	jsr .fat_read_dir
+	
+	plp
 	jmp mainloop
 
 
@@ -153,7 +140,11 @@ mainloop
 
 .cd
 	+PrintString .crlf
+	
+	php
+	sei
 	jsr .fat_open
+	plp
 	lda fat_errno
 	bne ++
 	
@@ -163,7 +154,7 @@ mainloop
 		lda curr_dir_cluster_no + .i
 		bne +		
 	}
-
+	
 	bra .cdroot
 +	
 	+Copy curr_dir_cluster_no, cluster_number, 3
@@ -179,15 +170,17 @@ mainloop
 	lda fat_errno
 	bne -
 
-	sei 
+	
 
 	ldx #$ff
 	txs
 
+	php
+	sei
 	+save
 	jsr .steckos_start
 	+restore
-
+	plp
 	jmp .init 
 
 .type	
@@ -195,15 +188,17 @@ mainloop
 
 	jsr .readfile
 	lda fat_errno
-	bne -
+	bne +
 	+PrintString .crlf
 
-	; +save
 	+PrintString .steckos_start
-	; +restore
-	jmp mainloop
+	
++	jmp mainloop
 
 .readfile
+	php
+	sei
+
 	jsr .fat_open
 	lda fat_errno
 	bne +
@@ -211,46 +206,66 @@ mainloop
 	+SetVector .steckos_start, sd_blkptr
 	+Copy file0_cluster_no, cluster_number, 3
 	jsr .fat_read
+
+	plp
+
 +	rts
 
 
-; .irq
-; 	pha
-; 	bit via1ifr		; Interrupt from VIA?
-; 	bpl +
+.irq
+	pha
+	phx
+	bit via1ifr		; Interrupt from VIA?
+	bpl +			; no? get out
 
-; 	bit via1t1cl	; Acknowledge timer interrupt
+	bit via1t1cl	; Acknowledge timer interrupt
 
-; 	lda .key		; already char in buffer? do nothing
-; 	bne +
+	lda .key		; already char in buffer? do nothing
+	bne +
 
-; 	jsr getkey
-; 	cmp #$00
-; 	beq +
-; 	sta .key
+	; jsr getkey
 
-; +	pla
-; 	rti
+	lda #%01111010
+	; and via1portb
+	sta via1portb
 
-; .keyin
-; -	lda .key
-; 	beq -
+	TAX             ; aufheben
+    ORA #$01
+    !for .i,0,7 {
+		STA via1portb ; Takt An 1
+		STX via1portb ; Takt aus  
+    }
+       
+	ldx #%11111110
+	stx via1portb
 
-; 	stz .key
-; 	rts
+	lda via1sr
+	cmp #$00
+	beq +
+	sta .key
 
-.hellotxt		!text "SteckShell 0.03 ",$00
-.helptxt		!text $0a,$0d,"d            - directory "
-				!text $0a,$0d,"l <name>     - load file "
-				!text $0a,$0d,"c <name>     - change directory "
-				!text $0a,$0d,"u            - serial upload",$0a,$0d,$00
-.prompt			!text "> ",$00
-.crlf			!byte $0a,$0d,$00
-; .filename  				!text "NAME    BIN",$00
-; .filename  				!text "TEST    TXT",$00
-; .filename  				!text "HELLO   BIN",$00
-; .filename  				!text "TESTDIR",$00
++	plx
+	pla
+	rti
 
+.keyin
+-	lda .key 		; wait for .key to become != 00
+	beq -
+
+	stz .key 		; reset .key to signal isr to fetch next key
+	rts
+
+.unknown
+	lda .buf
+	beq +
+	+PrintString .txt_msg_unknown_cmd
++	jmp mainloop
+
+.hello
+	+PrintString .crlf
+	+PrintString .hellotxt
+	+PrintString .helptxt
+	jmp mainloop
 
 .cmdlist
 	!word .dir
@@ -268,14 +283,25 @@ mainloop
 	!word .cdroot
 	!byte '/'
 	
-	!word $f000
+	!word upload
 	!byte 'U'
 
 	!word .hello
 	!byte 'H'
 
 	; End of list
-	!word $0000
+	!word .unknown
 	!byte $00
 
 !src "../fat/fat.a"
+
+.hellotxt		!text "SteckShell 0.03 ",$00
+.helptxt		!text $0a,$0d,"d            - directory "
+				!text $0a,$0d,"l <name>     - load file "
+				!text $0a,$0d,"t <name>     - dump file to screen"
+				!text $0a,$0d,"c <name>     - change directory "
+				!text $0a,$0d,"u            - serial upload",$0a,$0d,$00
+.prompt			!text "> ",$00
+.crlf			!byte $0a,$0d,$00
+
+.txt_msg_unknown_cmd	!text $0a,$0d,"unknown command",$00
