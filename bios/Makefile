@@ -13,8 +13,9 @@ loader.bin: bios.bin
 bios.bin: defs.h.a ../vdp/t99xx.lib.a
 bios.h.a: bios.bin 
 %.h.a: %.a
-	#grep sys_ bios.a.labels | sed -e"s/sys_//g" > $@
-	sort bios.a.labels > $@
+	grep sys_ bios.a.labels | sed -e"s/sys_//g" | sort > $@.tmp
+	cat bios.h.a.stub $@.tmp > $@
+	rm $@.tmp
    
 %.bin: %.a ../vdp/*.h.a ../vdp/*.lib.a
 	acme -l $<.labels $(ACME_OPTS) -o $@ $<
