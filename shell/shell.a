@@ -2,7 +2,6 @@
 !src "../bios/defs.h.a"
 !src "../bios/bios.h.a"
 !src "../bios/via.h.a"
-!src "../fat/fat32.h.a"
 !address {
 .key = $10
 .filename  			= $03a2
@@ -22,7 +21,7 @@
 	sta chn_out
 	stz chn_in
 
-	jsr chrin
+	; jsr chrin
 
 	; stz .key
 
@@ -146,9 +145,8 @@ mainloop
 
 
 .cdroot
-	+PrintString .cdtxt
 	+PrintChar '/'
-	+Copy root_dir_first_clus, cluster_number, 3
+	+Copy root_dir_first_clus, curr_dir_cluster_no, 3
 	jmp mainloop 
 
 .cd
@@ -158,13 +156,15 @@ mainloop
 	; in case ".." points to the root dir, the cluster number will be 0. In that case, we use the
 	; root cluster number from the BPB
 	!for .i,3,0 {
-		lda file0_cluster_no + .i
+		lda curr_dir_cluster_no + .i
 		bne +		
 	}
 
 	bra .cdroot
-+	+Copy file0_cluster_no, cluster_number, 3
-++	+PrintString .cdtxt
++	
+	+Copy curr_dir_cluster_no, cluster_number, 3
+
+++	
 	jmp mainloop 
 
 
@@ -233,7 +233,6 @@ mainloop
 				!text $0a,$0d,"u            - serial upload",$0a,$0d,$00
 .prompt			!text "> ",$00
 .crlf			!byte $0a,$0d,$00
-.cdtxt			!text "CD: ",$00
 ; .filename  				!text "NAME    BIN",$00
 ; .filename  				!text "TEST    TXT",$00
 ; .filename  				!text "HELLO   BIN",$00

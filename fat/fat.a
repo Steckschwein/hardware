@@ -1,8 +1,26 @@
 ; *=$c000
 !src "../bios/defs.h.a"
 !src "../bios/bios.h.a"
-	
+!src "../fat/fat32.h.a"
 
+!macro saveClusterNo .where {
+    ldy #DIR_FstClusHI +1
+	lda (sd_blkptr),y
+	sta .where +3
+
+	dey
+	lda (sd_blkptr),y
+	sta .where +2
+
+	ldy #DIR_FstClusLO +1
+	lda (sd_blkptr),y
+	sta .where +1
+	
+	dey
+	lda (sd_blkptr),y
+	sta .where
+
+} 
 ; main
 		
 ; 	sei
@@ -127,6 +145,9 @@
 	lda (sd_blkptr),y
 	cmp #$0f ; Long filename, skip this one
 	beq .open_next
+	; bit #$02 ; Hidden attribute set, skip
+	; bne .open_next
+
 
 	ldy #DIR_Name
 	lda (sd_blkptr),y
@@ -159,37 +180,40 @@
 	jsr .inc_lba_address
 	jmp -
 	
-.found
-	+PrintChar 'O'
-	+PrintChar 'K'
-	ldy #DIR_FstClusHI +1
-	lda (sd_blkptr),y
-	sta file0_cluster_no +3
-
-	dey
-	lda (sd_blkptr),y
-	sta file0_cluster_no +2
-
-	ldy #DIR_FstClusLO +1
-	lda (sd_blkptr),y
-	sta file0_cluster_no +1
-	
-	dey
-	lda (sd_blkptr),y
-	sta file0_cluster_no
-	
-!for .i,3,0 {
-	ldy #DIR_FileSize + .i
-	lda (sd_blkptr),y
-	sta file0_size + .i
-}
-
 .end_open
 	jsr sd_deselect_card
 	ply
 	plx
 	pla
 	rts
+
+.found
+	jsr .print_filename
+	+PrintString .fat_ok
+
+	ldy #DIR_Attr
+	lda (sd_blkptr),y
+
+	bit #$10 ; Is a directory
+    beq +
+    +saveClusterNo curr_dir_cluster_no
+    bra .end_open 
+
++	bit #$20 ; Is file
+	beq +
+    +saveClusterNo file0_cluster_no
+	!for .i,3,0 {
+		ldy #DIR_FileSize + .i
+		lda (sd_blkptr),y
+		sta file0_size + .i
+	}
+
+    bra .end_open
+ 
++	+PrintString .fat_open_error
+	inc fat_errno
+	jmp .end_open
+
 	
 
 .inc_blkptr
@@ -211,6 +235,7 @@
 	jsr sd_param_init
 	jsr sd_select_card
 
+	+Copy curr_dir_cluster_no, cluster_number, 3
 	+SetVector sd_blktarget, sd_blkptr
 	jsr .calc_lba_addr
 
@@ -536,7 +561,7 @@
 	; now we have the lba address of the first sector of the first cluster
 
 	; calculate lba address of root directory 
-	+Copy root_dir_first_clus, cluster_number, 3
+	+Copy root_dir_first_clus, curr_dir_cluster_no, 3
 
 .end_mount
 	jsr sd_select_card
@@ -545,14 +570,26 @@
 	pla
 
 	rts
+
+
+.print_filename
+	ldy #DIR_Name
+-	lda (sd_blkptr),y
+	jsr chrout
+	iny
+	cpy #$0b
+	bne -
+	rts
 ;fat_begin_lba = Partition_LBA_Begin + Number_of_Reserved_Sectors;
 ;cluster_begin_lba = Partition_LBA_Begin + Number_of_Reserved_Sectors + (Number_of_FATs * Sectors_Per_FAT);
 .fat_err_signature 		!text "bad block signature", $00
 .fat_err_partition 		!text "invalid partition type", $00
 .fat_err_bad_sect_size 	!text "sector size unsupported", $00
 .fat_err_num_fats	  	!text "invalid number of FATs (!= 2)", $00
-.fat_loading		  	!text "Loading ",$00
-.fat_loading_done  		!text " done.",$00
+.fat_open_error			!text "open error",$00
+.fat_ok					!text " OK",$00
+; .fat_loading		  	!text "Loading ",$00
+; .fat_loading_done  		!text " done.",$00
 ; .crlf					!byte $0a,$0d,$00
 
 s

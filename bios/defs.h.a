@@ -90,6 +90,7 @@ lba_addr			= $0325 ; lba address, 4 bytes
 cluster_number		= $0329
 root_dir_first_clus = $032d ; first cluster of root dir, 4 bytes
 curr_dir_cluster_no	= $0331 ; current dir cluster no
+
 file0_cluster_no	= $0335 ; File handle 0 cluster no
 file0_size			= $0339 ; File handle 0 filesize, 4 bytess
 
