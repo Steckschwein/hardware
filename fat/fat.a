@@ -4,14 +4,16 @@
 !src "../fat/fat32.h.a"
 
 !macro saveClusterNo .where {
-    ldy #DIR_FstClusHI +1
-	lda (sd_blkptr),y
-	sta .where +3
+ ;    ldy #DIR_FstClusHI +1
+	; lda (sd_blkptr),y
+	; sta .where +3
 
-	dey
-	lda (sd_blkptr),y
-	sta .where +2
+	; dey
+	; lda (sd_blkptr),y
+	; sta .where +2
 
+	stz .where +3
+	stz .where +2
 	ldy #DIR_FstClusLO +1
 	lda (sd_blkptr),y
 	sta .where +1
@@ -132,11 +134,14 @@
 	phx
 	phy
 
+	stz fat_errno
+
 	jsr sd_select_card
 	jsr sd_param_init
 
 	+SetVector sd_blktarget, sd_blkptr
 	jsr .calc_lba_addr
+
 -	+SDBlockAddr lba_addr
 
 	jsr sd_read_block
@@ -151,7 +156,7 @@
 
 	ldy #DIR_Name
 	lda (sd_blkptr),y
-	beq .end_open ; end of dir 
+	beq .fat_open_error ; end of dir 
 	
 	cmp #$e5 ; deleted file
 	beq .open_next   ; skip
@@ -179,6 +184,12 @@
 	+SetVector sd_blktarget, sd_blkptr
 	jsr .inc_lba_address
 	jmp -
+
+
+.fat_open_error
+	+PrintString .fat_err_open
+	inc fat_errno
+
 	
 .end_open
 	jsr sd_deselect_card
@@ -193,14 +204,13 @@
 
 	ldy #DIR_Attr
 	lda (sd_blkptr),y
-
 	bit #$10 ; Is a directory
     beq +
     +saveClusterNo curr_dir_cluster_no
     bra .end_open 
 
 +	bit #$20 ; Is file
-	beq +
+	beq .fat_open_error
     +saveClusterNo file0_cluster_no
 	!for .i,3,0 {
 		ldy #DIR_FileSize + .i
@@ -210,9 +220,6 @@
 
     bra .end_open
  
-+	+PrintString .fat_open_error
-	inc fat_errno
-	jmp .end_open
 
 	
 
@@ -586,7 +593,7 @@
 .fat_err_partition 		!text "invalid partition type", $00
 .fat_err_bad_sect_size 	!text "sector size unsupported", $00
 .fat_err_num_fats	  	!text "invalid number of FATs (!= 2)", $00
-.fat_open_error			!text "open error",$00
+.fat_err_open			!text "open error",$00
 .fat_ok					!text " OK",$00
 ; .fat_loading		  	!text "Loading ",$00
 ; .fat_loading_done  		!text " done.",$00
