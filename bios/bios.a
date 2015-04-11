@@ -282,7 +282,8 @@ biosversion	!text "V1104", $00	; Version String
 			bne ++
 
 			+PrintString .nocard               
-
+			jsr .upload
+			
 ++			cmp #$0f
 			bne ++
 
