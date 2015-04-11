@@ -1,9 +1,12 @@
 *= $d000
 !src "../bios/defs.h.a"
 !src "../bios/bios.h.a"
+!src "../bios/via.h.a"
 !src "../fat/fat32.h.a"
 !address {
 .key = $10
+.filename  			= $03a2
+.buf 				= $0350 ; Input buffer 80 bytes. end: $03a1
 }
 
 !macro toUpper {
@@ -19,33 +22,33 @@
 	sta chn_out
 	stz chn_in
 
-	stz .key
+	jsr chrin
 
-	lda #<count
-	sta via1t1cl            ; set low byte of count
-	lda #>count
-	sta via1t1ch            ; set high byte of count
+	; stz .key
 
-	lda #%11000000
-	sta via1ier             ; enable VIA1 T1 interrupts
+	; lda #<count
+	; sta via1t1cl            ; set low byte of count
+	; lda #>count
+	; sta via1t1ch            ; set high byte of count
 
-	lda #%01000000
-	sta via1acr             ; T1 continuous, PB7 disabled
+	; lda #%11000000
+	; sta via1ier             ; enable VIA1 T1 interrupts
 
-	+SetVector .irq, irqvec
+	; lda #%01000000
+	; sta via1acr             ; T1 continuous, PB7 disabled
 
-	cli
+	; +SetVector .irq, irqvec
+
+	; cli
 
 	+PrintString .hellotxt
+
 
 	lda #dev_uart
 	sta chn_out
 
 
-	; jsr sd_select_card
-	; jsr sd_param_init
-	; jsr fat_mount
-	+Copy cluster_begin_lba, lba_addr, 3
+	jsr .fat_mount
 
 
 	
@@ -54,16 +57,18 @@
 	+PrintString .hellotxt
 	+PrintString .helptxt
 
+
+
 mainloop
-	ldx #$00
-	stz .buf
 
 	+PrintString .crlf
 	+PrintString .prompt
+	ldx #$00
+	stz .buf
 
 
 .inputloop	
-	jsr .keyin
+	jsr chrin
 	cmp #$0d ; return?
 	beq .parse
 
@@ -76,22 +81,46 @@ mainloop
 	cpx #80
 	beq mainloop
 
--	jsr chrout
+.next	
+	jsr chrout
 	bra .inputloop
 
 .backspace
 	dex
 	stz .buf, x
-	bra -	
+	bra .next	
 
 .parse
-	; ldx #$00
 	lda .buf
 
 	+toUpper
 
 	sta .buf
 
+	ldx #$00
+	ldy #$00
+
+-	inx
+	lda .buf,x
+	beq .end_parse   ; end of input line?
+    cmp #"-" ; Ignore everything below "-"
+    bcc -
+    
+    cpy #12
+    beq ++   ; read 11 bytes?
+
+	+toUpper 
+
+    sta .filename,y
+	iny
+	lda #$00
+	sta .filename,y
+
+++	
+	bra -
+
+
+.end_parse
 	ldx #$00
 -	lda .cmdlist+2,x
 	beq mainloop
@@ -109,475 +138,119 @@ mainloop
 
 	
 
-
-.loadbla
-	ldx #$00
-	ldy #$00
--	inx
---	lda .buf,x
-	beq .readdir
-    cmp #"-" ; Ignore everything below "-"
-    bcc -
-    
-    cpy #12
-    beq ++
-
-	+toUpper 
-
-    sta .filename,y
-	iny
-	lda #$00
-	sta .filename,y
-
-++	
-
-    bra -
-
 	
-
-	
-.readdir
+.dir
 	+PrintString .crlf
-	sei
-	jsr sd_select_card
-
-.fat_read_dir
-	pha
-	phy
-	phx
-
-	!for .i,3,0 {
-		lda lba_addr +.i
-		pha	
-	}
-	jsr sd_param_init
-
-	+SetVector sd_blktarget, sd_blkptr
--	+SDBlockAddr lba_addr
-	jsr sd_read_block
-	
-	
---	ldy #DIR_Attr
-	lda (sd_blkptr),y
-	cmp #$0f ; Long filename, skip this one
-	beq .nextentry
-	bit #$02 ; Hidden attribute set, skip
-	bne .nextentry
-
-	tax
-    ldy #DIR_Name
-	lda (sd_blkptr),y
-	beq .end ; end of dir 
-	
-	cmp #$e5 ; deleted file
-	beq .nextentry   ; skip
-
-	; Actual file. Do something 
-
-	lda .buf
-	cmp #'D'
-	bne ++
-
-	jsr .fat_list_entry
-
-
-++	cmp #'L'
-	bne ++
-
-	ldx #$00
-	ldy #DIR_Name
-.loop
-	lda .filename,x
-	bne +
-	jmp .load
-+
-	; beq .load
-	cmp (sd_blkptr),y
-	bne .nextentry
-	inx
-	iny
-	bra .loop
-
-++  cmp #'C'
-	bne .nextentry
-
-	cli
-
-	lda .filename
-	cmp #'/'
-	beq .cdroot
-
-	ldx #$00
-	ldy #DIR_Name
-.loop2
-	lda .filename,x
-	beq .cd
-	cmp (sd_blkptr),y
-	bne .nextentry
-	inx
-	iny
-	bra .loop2
-
-	; bne .nextentry
-
-.nextentry
-	; Increment blkptr by 32 bytes, jump to next dir entry
-	clc
-	lda sd_blkptr
-	adc #32
-	sta sd_blkptr
-	bcc +
-	inc sd_blkptr+1	
-+	
-	; end of block?
-	lda sd_blkptr+1
-	cmp #06
-	bne -- ; no
-
-	; yes, increase lba_addr and go again
-	+SetVector sd_blktarget, sd_blkptr
-	jsr .inc_lba_address
-	jmp -
-
-.end
-	lda .buf
-	cmp #'L'
-	bne +
-	+PrintString .file_not_found
-+
-!for .i,0,3 {
-	pla
-	sta lba_addr +.i
-}
-	cli
+	jsr .fat_read_dir
 	jmp mainloop
-; .end2
-; 	ply
-; 	plx
-; 	pla
-; 	rts
+
 
 .cdroot
 	+PrintString .cdtxt
 	+PrintChar '/'
-	+Copy cluster_begin_lba, lba_addr, 3
+	+Copy root_dir_first_clus, cluster_number, 3
 	jmp mainloop 
 
 .cd
-	ldy #DIR_Attr
-	lda (sd_blkptr),y
-	bit #$10
-	bne +
-	+PrintString .not_a_dir	
-	jmp mainloop
-+	
-	ldx #$04
-	ldy #DIR_FstClusHI +1
-	lda (sd_blkptr),y
-	sta cluster_number +3
-	bne +
-	dex
-+	dey
-	lda (sd_blkptr),y
-	sta cluster_number +2
-	bne +
-	dex
-+	ldy #DIR_FstClusLO +1
-	lda (sd_blkptr),y
-	sta cluster_number +1
-	bne +
-	dex
-+	dey
-	lda (sd_blkptr),y
-	sta cluster_number 
-	bne +
-	dex
-+
-	; Microsoft Extensible Firmware Initiative FAT32 File System Specification
-	; FAT: General Overview of On-Disk Format
-	; Version 1.03, December 6, 2000 Microsoft Corporation
+	+PrintString .crlf
+	jsr .fat_open
 	
-	; 	Here is the summary for the dot and dotdot entries:
-	; • The dot entry is a directory that points to itself.
-	; • The dotdot entry points to the starting cluster of the parent of this directory (which is 0 if this
-	;   directories parent is the root directory).
-	beq .cdroot
+	; in case ".." points to the root dir, the cluster number will be 0. In that case, we use the
+	; root cluster number from the BPB
+	!for .i,3,0 {
+		lda file0_cluster_no + .i
+		bne +		
+	}
 
-	+PrintString .cdtxt
+	bra .cdroot
++	+Copy file0_cluster_no, cluster_number, 3
+++	+PrintString .cdtxt
+	jmp mainloop 
 
-	jsr .print_filename
 
-	+Copy cluster_begin_lba, lba_addr, 3
-
-	jsr .calc_lba_addr
-	jmp mainloop
-
-.blocks = tmp7
 .load	
-	; Disable IRQ
-	sei
-
-	ldy #DIR_Attr
-	lda (sd_blkptr),y
-	bit #$20
-	bne +
-	+PrintString .not_a_file
-	jmp mainloop
-+	
-
-	+PrintString .loadtxt
-
-	jsr .print_filename
-
-
-	; ldy #DIR_FileSize + 3
-	; lda (sd_blkptr),y
-	; lsr
-	; ldy #DIR_FileSize + 2
-	; lda (sd_blkptr),y
-	; ror
-	; ldy #DIR_FileSize + 1
-	; lda (sd_blkptr),y
-	; ror 
-
-	; enough for files up to 65535 bytes
-	ldy #DIR_FileSize + 1
-	lda (sd_blkptr),y
-	lsr
-	sta .blocks
-	bcs +
-	dey
-	lda (sd_blkptr),y
-	beq ++
-+	inc .blocks
-++
-
-	jsr .lba_from_cluster
-	+SetVector .steckos_start, sd_blkptr
-
--	+SDBlockAddr lba_addr
-	jsr sd_read_block
-	; +PrintChar '.'
-	
-	dec .blocks
-	beq + ; zero, we're done
-
-	; increase lba_addy by 1
-	jsr .inc_lba_address
-
-	inc sd_blkptr + 1
-	inc sd_blkptr + 1
-	bne ++
-	inc sd_blkptr + 0
-++
-
-	; ready to read next block
-	bra -
-
-+	
-
-	jsr sd_deselect_card
-
-	+PrintChar '.'
 	+PrintString .crlf
 
-	; Reset StackPointer
+	jsr .readfile
+
+	sei 
+
 	ldx #$ff
 	txs
 
 	jmp .steckos_start
 
+	; jmp mainloop 
 
-.inc_lba_address
-	inc lba_addr + 0
-	bne +
-	sec
-	lda lba_addr + 1
-	adc #$00
-	sta lba_addr + 1
-	lda lba_addr + 2
-	adc #$00
-	sta lba_addr + 2
-	bcc +
-	inc lba_addr + 3
-+
-	rts
-
-; Calculate LBA from cluster number
-.calc_lba_addr
-	pha
-	phx
-
-	; lba_addr = cluster_begin_lba + (cluster_number - 2) * sectors_per_cluster;
-	sec
-	lda cluster_number 
-	sbc #$02
-	sta tmp0 
-
-	!for .i,1,3 {
-		lda cluster_number + .i 
-		sbc #$00
-		sta tmp0 + .i
-	}
-	+Copy cluster_begin_lba, lba_addr, 3
-	
-	ldx sectors_per_cluster
--	clc
-!for i,0,3 {
-	lda tmp0 + i
-	adc lba_addr + i
-	sta lba_addr + i	
-}
-	dex
-	bne -
-
-	plx
-	pla
-
-	rts
-
-.fat_list_entry
-	pha
-	ldy #DIR_Name
--	lda (sd_blkptr),y
-	
-	jsr chrout
-	
-	iny
-	cpy #DIR_Name + $0b
-
-	bne -
-
-	+PrintChar ' '
-
-	ldy #DIR_FileSize + 3 +1
--	dey
-	lda (sd_blkptr),y
-	jsr hexout
-	cpy #DIR_FileSize
-	bne -	
-
-	+PrintChar ' '
-
-	ldy #DIR_FstClusHI + 1 +1
--	dey
-	lda (sd_blkptr),y
-	jsr hexout
-	cpy #DIR_FstClusHI
-	bne -	
-	ldy #DIR_FstClusLO + 1 +1
--	dey
-	lda (sd_blkptr),y
-	jsr hexout
-	cpy #DIR_FstClusLO
-	bne -	
-
-	+PrintChar ' '
-
-
-	ldy #DIR_Attr
-	lda (sd_blkptr),y
-
- 	bit #$10 ; Is a directory
-    beq +
-    lda #'D'
-    bra ++ 
-
-+	bit #$04 ; Is system
-	beq +
-    lda #'S'
-    bra ++
- 
-+	bit #$08 ; Is volume ID
-	beq +
-    lda #'V'
-    bra ++ 
-+	
-	lda #'F'
-++	jsr chrout
+.type	
 	+PrintString .crlf
-	pla
-	rts	
 
-.lba_from_cluster
-	ldy #DIR_FstClusHI +1
-	lda (sd_blkptr),y
-	sta cluster_number +3
-	dey
-	lda (sd_blkptr),y
-	sta cluster_number +2
+	jsr .readfile
+	+PrintString .crlf
 
-	ldy #DIR_FstClusLO +1
-	lda (sd_blkptr),y
-	sta cluster_number +1
-	dey
-	lda (sd_blkptr),y
-	sta cluster_number 
+	+PrintString .steckos_start
 
-	+Copy cluster_begin_lba, lba_addr, 3
+	jmp mainloop
 
-	jsr .calc_lba_addr
-	rts 
-	
+.readfile
+	jsr .fat_open
 
-.print_filename
-	ldy #DIR_Name
--	lda (sd_blkptr),y
-	jsr chrout
-	iny
-	cpy #$0b
-	bne -
+	+SetVector .steckos_start, sd_blkptr
+	+Copy file0_cluster_no, cluster_number, 3
+	jsr .fat_read
 	rts
 
-.irq
-	pha
-	bit via1ifr		; Interrupt from VIA?
-	bpl +
 
-	bit via1t1cl	; Acknowledge timer interrupt
+; .irq
+; 	pha
+; 	bit via1ifr		; Interrupt from VIA?
+; 	bpl +
 
-	lda .key		; already char in buffer? do nothing
-	bne +
+; 	bit via1t1cl	; Acknowledge timer interrupt
 
-	jsr getkey
-	cmp #$00
-	beq +
-	sta .key
+; 	lda .key		; already char in buffer? do nothing
+; 	bne +
 
-+	pla
-	rti
+; 	jsr getkey
+; 	cmp #$00
+; 	beq +
+; 	sta .key
 
-.keyin
--	lda .key
-	beq -
+; +	pla
+; 	rti
 
-	stz .key
-	rts
+; .keyin
+; -	lda .key
+; 	beq -
 
-.hellotxt		!text "SteckShell 0.02 ",$00
+; 	stz .key
+; 	rts
+
+.hellotxt		!text "SteckShell 0.03 ",$00
 .helptxt		!text $0a,$0d,"d            - directory "
 				!text $0a,$0d,"l <name>     - load file "
 				!text $0a,$0d,"c <name>     - change directory "
 				!text $0a,$0d,"u            - serial upload",$0a,$0d,$00
 .prompt			!text "> ",$00
 .crlf			!byte $0a,$0d,$00
-.loadtxt		!text $0a,$0d,"Loading ",$00
-.cdtxt 			!text $0a,$0d,"CD: ",$00
-.file_not_found !text $0a,$0d,"File not found",$0a,$0d,$00
-.not_a_dir 		!text $0a,$0d,"not a directory",$0a,$0d,$00
-.not_a_file 	!text $0a,$0d,"not a file",$0a,$0d,$00
-
-.filename  !text "           ",$00
+.cdtxt			!text "CD: ",$00
+; .filename  				!text "NAME    BIN",$00
+; .filename  				!text "TEST    TXT",$00
+; .filename  				!text "HELLO   BIN",$00
+; .filename  				!text "TESTDIR",$00
 
 
 .cmdlist
-	!word .readdir
+	!word .dir
 	!byte 'D'
 	
-	!word .loadbla
+	!word .load
 	!byte 'L'
 
-	!word .loadbla
+	!word .type
+	!byte 'T'
+
+	!word .cd
 	!byte 'C'
 	
 	!word .cdroot
@@ -589,6 +262,8 @@ mainloop
 	!word .hello
 	!byte 'H'
 
+	; End of list
 	!word $0000
 	!byte $00
-.buf
+
+!src "../fat/fat.a"
