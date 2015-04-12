@@ -23,58 +23,9 @@
 	sta .where
 
 } 
-; main
-		
-; 	sei
-; 	jsr lcdclear
-; 	lda #dev_uart
-;     sta chn_out
-;     stz chn_in
-
-;     jsr chrin
-	
-
-
-; 	jsr sd_select_card
-; 	jsr sd_param_init
-
-; 	jsr .fat_mount
-; 	jsr .fat_open
-
-; 	+Copy file0_cluster_no, cluster_number, 3
-; 	jsr .calc_lba_addr
-; 	jsr .fat_read_dir
-; -	jmp -
-
-; 	+SetVector $1000, sd_blkptr
-; 	jsr .fat_read
-
-; 	jsr sd_deselect_card
-	
-; 	ldx #$00
-; -	lda .steckos_start,x
-; 	beq +
-; 	jsr chrout
-; 	inx
-; 	bne -
-; +
-
-; 	;	Reset StackPointer
-; 	; ldx #$ff
-; 	; txs
-
-; 	; sei
-
-
-; 	; jmp .steckos_start
-
-	
-	
-; -	jmp -
-
 
 .blocks = tmp7
-.rest   = tmp6
+; .rest   = tmp6
 
 .fat_read
 	jsr sd_select_card
@@ -99,7 +50,8 @@
 	lda file0_size + 0
 	beq ++
 +	inc .blocks
-++  sta .rest
+++  
+	; sta .rest
 
 	
 	+Copy file0_cluster_no, cluster_number, 3
@@ -150,13 +102,13 @@
 	lda (sd_blkptr),y
 	cmp #$0f ; Long filename, skip this one
 	beq .open_next
-	; bit #$02 ; Hidden attribute set, skip
-	; bne .open_next
+	bit #$08 ; is volume id, we cant open this. skip, too
+	bne .open_next
 
 
 	ldy #DIR_Name
 	lda (sd_blkptr),y
-	beq .fat_open_error ; end of dir 
+	beq .fat_no_such_file ; end of dir 
 	
 	cmp #$e5 ; deleted file
 	beq .open_next   ; skip
@@ -185,6 +137,10 @@
 	jsr .inc_lba_address
 	jmp -
 
+.fat_no_such_file
+	+PrintString .fat_err_no_such_file
+	inc fat_errno
+	bra .end_open
 
 .fat_open_error
 	+PrintString .fat_err_open
@@ -217,8 +173,9 @@
 		lda (sd_blkptr),y
 		sta file0_size + .i
 	}
-
     bra .end_open
+
+
  
 
 	
@@ -298,14 +255,9 @@
 	bne +
 	lda sd_blktarget + BS_Signature+1
 	cmp #$aa
-	bne +
-	
-	; pla
-	rts
-
-+	inc fat_errno
-	; pla
-	rts
+	beq +
+	inc fat_errno
++	rts
 
 
 
@@ -594,6 +546,8 @@
 .fat_err_bad_sect_size 	!text "sector size unsupported", $00
 .fat_err_num_fats	  	!text "invalid number of FATs (!= 2)", $00
 .fat_err_open			!text "open error",$00
+.fat_err_no_such_file	!text "no such file or directory",$00
+
 .fat_ok					!text " OK",$00
 ; .fat_loading		  	!text "Loading ",$00
 ; .fat_loading_done  		!text " done.",$00
