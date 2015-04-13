@@ -33,9 +33,7 @@
 	+SetVector .irq, irqvec
 
 	cli
-
-	jsr lcdclear
-
+	
 	jsr .fat_mount
 
 .init
@@ -43,11 +41,7 @@
 	sta chn_out
 	stz chn_in
 
-
-
 mainloop
-	+Copy curr_dir_cluster_no, cluster_number, 3
-
 	+PrintString .crlf
 	+PrintString .prompt
 	ldx #$00
@@ -136,7 +130,6 @@ mainloop
 
 .cdroot
 	+PrintChar '/'
-	+Copy root_dir_first_clus, curr_dir_cluster_no, 3
 	jmp mainloop 
 
 .cd
