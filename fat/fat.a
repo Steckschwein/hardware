@@ -2,10 +2,8 @@
 !src "../bios/defs.h.a"
 !src "../bios/bios.h.a"
 !src "../fat/fat32.h.a"
-
-; File descriptor offsets
-FD_start_cluster = $00;
-FD_file_size	 = $08;
+FD_start_cluster = $00
+FD_file_size = $08
 
 !macro saveClusterNo .where {
  ;    ldy #DIR_FstClusHI +1
@@ -512,11 +510,9 @@ FD_file_size	 = $08;
 	adc #$00
 	sta cluster_begin_lba + .i
 }
-	; init file descriptor area
-	jsr .fat_init_fdarea
 
-	+Copy sd_blktarget + BPB_RootClus, fd_area + FD_start_cluster, 3
-	+Copy sd_blktarget + BPB_RootClus, root_dir_first_clus, 3
+
+	
 
 
 	; Number of FATs. Must be 2
@@ -537,6 +533,13 @@ FD_file_size	 = $08;
 	dey
 	bne -
 
+	; init file descriptor area
+	jsr .fat_init_fdarea
+
+	+Copy sd_blktarget + BPB_RootClus, root_dir_first_clus, 3
+
+	jsr .fat_open_rootdir
+
 	; now we have the lba address of the first sector of the first cluster
 
 .end_mount
@@ -545,6 +548,10 @@ FD_file_size	 = $08;
 	ply
 	pla
 
+	rts
+.fat_open_rootdir
+	; Open root dir
+	+Copy root_dir_first_clus, fd_area + FD_start_cluster, 3
 	rts
 
 .fat_init_fdarea
