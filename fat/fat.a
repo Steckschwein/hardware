@@ -302,7 +302,7 @@ FD_file_size = $08
 	pha
 	phx
 	tax
-	lda fd_area + FD_start_cluster, x 
+	lda fd_area + FD_start_cluster +3, x 
 
 	cmp #$ff
 	beq .file_not_open
@@ -310,7 +310,7 @@ FD_file_size = $08
 
 	; lba_addr = cluster_begin_lba + (cluster_number - 2) * sectors_per_cluster;
 	sec
-	; lda fd_area + FD_start_cluster, x 
+	lda fd_area + FD_start_cluster, x 
 	sbc #$02
 	sta tmp0 
 
