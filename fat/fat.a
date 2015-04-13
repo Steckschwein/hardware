@@ -179,6 +179,8 @@ FD_file_size	 = $08;
 	beq .fat_open_error
 
 	jsr .fat_alloc_fd
+	cmp #$ff
+	beq .fat_open_error
 	tax
 
 ++	stz fd_area + FD_start_cluster +3, x
@@ -547,31 +549,42 @@ FD_file_size	 = $08;
 	rts
 
 .fat_init_fdarea
+	jsr chrin
 	ldx #$00
-	lda #$ff
--	sta fd_area + FD_start_cluster +3 , x
-	!for .i,0,7 {
-		inx
-	}
+-	lda #$ff
+	sta fd_area + FD_start_cluster +3 , x
+
+	txa ; 2 cycles
+	clc ; 2 cycles
+	adc #$08 ; 2  cycles
+	tax ; 2 cycles
+
 	cpx #$80
 	bne -
 
 	rts
 
 .fat_alloc_fd
+	stz fat_errno
 	ldx #$08
 	
 -	lda fd_area + FD_start_cluster +3, x
 	cmp #$ff
 	beq +
-	!for .i,0,7 {
-		inx
-	}
+
+	txa ; 2 cycles
+	clc ; 2 cycles
+	adc #$08 ; 2  cycles
+	tax ; 2 cycles
+
 	cpx #$80
 	bne -
 
+	; Too many open files, no free file descriptor found
+	+PrintString .fat_err_too_many_open
+	ldx #$ff
 +	txa
-	jsr lcdhex
+	jsr hexout
 	rts
 
 .fat_close
@@ -599,6 +612,7 @@ FD_file_size	 = $08;
 .fat_err_open			!text "open error",$00
 .fat_err_no_such_file	!text "no such file or directory",$00
 .fat_err_file_not_open	!text "file not open error",$00
+.fat_err_too_many_open	!text "too many open files",$00
 
 .fat_ok					!text " OK",$00
 ; .fat_loading		  	!text "Loading ",$00
