@@ -146,22 +146,19 @@ mainloop
 .load	
 	+PrintString .crlf
 
-	jsr lcdclear
-
 	jsr .readfile		
 	
 	lda fat_errno
 	bne -
-
 
 	ldx #$ff
 	txs
 
 	php
 	sei
-	+save
+
 	jsr .steckos_start
-	+restore
+
 	plp
 	jmp .init 
 
