@@ -1,0 +1,25 @@
+TODO FAT32-Implementation
+
+- 	Filedesktriptoren
+	- Deskriptor: 
+		Typ/Flags (File/Dir)	1 byte
+		Startcluster		4 byte
+		Dateigröße		4 byte
+	                                9 byte
+	- Desktriptortabelle ab Adresse $xxxx
+	- $xxxx + 0 	1. Deskriptor auf rootdir, erzeugt durch mount
+	- $xxxx +10*n 	n. Deskripto, erzeugt durch open
+	- $yy (zp) offset des höchsten deskriptors
+	- open liefert erzeugten Deskriptor-Offset (Akku?)
+	- close dekrementoert $yy um 10
+
+- 	FAT-Lookups / Folgen von Clusterketten
+	- Checken ob aktueller Cluster der letzte Cluster ist
+
+- 	Zeit und Datum
+	- Felder in Dir-Entry auswerten, bei list_dir_entry anzeigen
+
+- 	Support für Schreib- und Löschoperationen
+	- finden freier Cluster, erkennen ungültiger Cluster
+
+	
