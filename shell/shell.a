@@ -130,6 +130,7 @@ mainloop
 
 .cdroot
 	+PrintChar '/'
+	jsr .fat_open_rootdir
 	jmp mainloop 
 
 .cd
@@ -139,32 +140,19 @@ mainloop
 	sei
 	jsr .fat_open
 	plp
-; 	lda fat_errno
-; 	bne ++
-	
-; 	; in case ".." points to the root dir, the cluster number will be 0. In that case, we use the
-; 	; root cluster number from the BPB
-; 	!for .i,3,0 {
-; 		lda curr_dir_cluster_no + .i
-; 		bne +		
-; 	}
-	
-; 	bra .cdroot
-; +	
-; 	+Copy curr_dir_cluster_no, cluster_number, 3
-; 
-; ++	
 -	jmp mainloop 
 
 
 .load	
 	+PrintString .crlf
 
-	jsr .readfile
+	jsr lcdclear
+
+	jsr .readfile		
+	
 	lda fat_errno
 	bne -
 
-	
 
 	ldx #$ff
 	txs
@@ -195,20 +183,21 @@ mainloop
 
 	jsr .fat_open
  	sta tmp5
-
+ 
 	lda fat_errno
 	bne +
 
+	
+
 	+SetVector .steckos_start, sd_blkptr
-	; +Copy file0_cluster_no, cluster_number, 3
 	lda tmp5
 	jsr .fat_read
 	
 	lda tmp5
 	jsr .fat_close
-	plp
-
-+	rts
+	
++	plp	
+	rts
 
 
 .irq
