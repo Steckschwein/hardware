@@ -3,6 +3,10 @@
 !src "../bios/bios.h.a"
 !src "../fat/fat32.h.a"
 
+; File descriptor offsets
+FD_start_cluster = $00;
+FD_file_size	 = $08;
+
 !macro saveClusterNo .where {
  ;    ldy #DIR_FstClusHI +1
 	; lda (sd_blkptr),y
@@ -31,6 +35,10 @@
 	jsr sd_select_card
 	jsr sd_param_init
 
+	tax
+
+	jsr .calc_lba_addr
+
 	; ldy #DIR_FileSize + 3
 	; lda (sd_blkptr),y
 	; lsr
@@ -43,19 +51,16 @@
 
 	; enough for files up to 65535 bytes
 	
-	lda file0_size + 1
+
+	lda fd_area + FD_file_size+1,x
 	lsr
 	sta .blocks
 	bcs +
-	lda file0_size + 0
+	lda fd_area + FD_file_size+0,x
 	beq ++
 +	inc .blocks
 ++  
-	; sta .rest
-
 	
-	+Copy file0_cluster_no, cluster_number, 3
-	jsr .calc_lba_addr
 
 -	+SDBlockAddr lba_addr
 	jsr sd_read_block
@@ -82,7 +87,7 @@
 	rts
 
 .fat_open
-	pha
+	; pha
 	phx
 	phy
 
@@ -92,6 +97,8 @@
 	jsr sd_param_init
 
 	+SetVector sd_blktarget, sd_blkptr
+
+	lda #$00
 	jsr .calc_lba_addr
 
 -	+SDBlockAddr lba_addr
@@ -151,7 +158,7 @@
 	jsr sd_deselect_card
 	ply
 	plx
-	pla
+	; pla
 	rts
 
 .found
@@ -162,17 +169,49 @@
 	lda (sd_blkptr),y
 	bit #$10 ; Is a directory
     beq +
-    +saveClusterNo curr_dir_cluster_no
-    bra .end_open 
+
+    ldx #$00 ; direcories always go to fd #0
+    ; +saveClusterNo curr_dir_cluster_no
+    ; bra .end_open 
+    bra ++
 
 +	bit #$20 ; Is file
 	beq .fat_open_error
-    +saveClusterNo file0_cluster_no
+
+	jsr .fat_alloc_fd
+	tax
+
+++	stz fd_area + FD_start_cluster +3, x
+	stz fd_area + FD_start_cluster +2, x
+	
+	ldy #DIR_FstClusLO +1
+	lda (sd_blkptr),y
+	sta fd_area + FD_start_cluster +1, x
+	
+	dey
+	lda (sd_blkptr),y
+	sta fd_area + FD_start_cluster +0, x
+
+	; Cluster no = 0? assume its root dir and add 2
+	lda fd_area + FD_start_cluster +1, x
+	bne +
+	lda fd_area + FD_start_cluster +0, x
+	bne +
+
+	; lda #$02
+	lda root_dir_first_clus +1
+	sta fd_area + FD_start_cluster +1, x
+	lda root_dir_first_clus +0
+	sta fd_area + FD_start_cluster +0, x
+
 	!for .i,3,0 {
 		ldy #DIR_FileSize + .i
 		lda (sd_blkptr),y
-		sta file0_size + .i
+		sta fd_area + FD_file_size + .i, x
 	}
+
+
++	txa
     bra .end_open
 
 
@@ -199,12 +238,11 @@
 	jsr sd_param_init
 	jsr sd_select_card
 
-	+Copy curr_dir_cluster_no, cluster_number, 3
-	+SetVector sd_blktarget, sd_blkptr
+	lda #$00
 	jsr .calc_lba_addr
 
+	+SetVector sd_blktarget, sd_blkptr
 -	+SDBlockAddr lba_addr
-
 	jsr sd_read_block
 	
 	
@@ -264,19 +302,24 @@
 .calc_lba_addr
 	pha
 	phx
+	tax
+	lda fd_area + FD_start_cluster, x 
+
+	cmp #$ff
+	beq .file_not_open
+	
 
 	; lba_addr = cluster_begin_lba + (cluster_number - 2) * sectors_per_cluster;
 	sec
-	lda cluster_number 
+	; lda fd_area + FD_start_cluster, x 
 	sbc #$02
 	sta tmp0 
 
 	!for .i,1,3 {
-		lda cluster_number + .i 
+		lda fd_area + FD_start_cluster + .i,x 
 		sbc #$00
 		sta tmp0 + .i
 	}
-
 
 	+Copy cluster_begin_lba, lba_addr, 3
 	
@@ -290,43 +333,16 @@
 	dex
 	bne -
 
+.calc_end
 	plx
 	pla
 
 	rts
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+.file_not_open
+	+PrintString .fat_err_file_not_open
+	inc fat_errno
+	bra .calc_end
 
 .inc_lba_address
 	inc lba_addr + 0
@@ -495,7 +511,10 @@
 	adc #$00
 	sta cluster_begin_lba + .i
 }
+	; init file descriptor area
+	jsr .fat_init_fdarea
 
+	+Copy sd_blktarget + BPB_RootClus, fd_area + FD_start_cluster, 3
 	+Copy sd_blktarget + BPB_RootClus, root_dir_first_clus, 3
 
 
@@ -519,9 +538,6 @@
 
 	; now we have the lba address of the first sector of the first cluster
 
-	; calculate lba address of root directory 
-	+Copy root_dir_first_clus, curr_dir_cluster_no, 3
-
 .end_mount
 	jsr sd_select_card
 	plx
@@ -530,6 +546,41 @@
 
 	rts
 
+.fat_init_fdarea
+	ldx #$00
+	lda #$ff
+-	sta fd_area + FD_start_cluster +3 , x
+	!for .i,0,7 {
+		inx
+	}
+	cpx #$80
+	bne -
+
+	rts
+
+.fat_alloc_fd
+	ldx #$08
+	
+-	lda fd_area + FD_start_cluster +3, x
+	cmp #$ff
+	beq +
+	!for .i,0,7 {
+		inx
+	}
+	cpx #$80
+	bne -
+
++	txa
+	jsr lcdhex
+	rts
+
+.fat_close
+	phx
+	tax 
+	lda #$ff
+	sta fd_area + FD_start_cluster +3 , x
+	plx
+	rts
 
 .print_filename
 	ldy #DIR_Name
@@ -547,6 +598,7 @@
 .fat_err_num_fats	  	!text "invalid number of FATs (!= 2)", $00
 .fat_err_open			!text "open error",$00
 .fat_err_no_such_file	!text "no such file or directory",$00
+.fat_err_file_not_open	!text "file not open error",$00
 
 .fat_ok					!text " OK",$00
 ; .fat_loading		  	!text "Loading ",$00

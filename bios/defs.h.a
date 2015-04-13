@@ -94,6 +94,7 @@ curr_dir_cluster_no	= $0331 ; current dir cluster no
 file0_cluster_no	= $0335 ; File handle 0 cluster no
 file0_size			= $0339 ; File handle 0 filesize, 4 bytess
 
+fd_area				= $0380 ; File descriptor area, 16x8byte 
 
 sd_blktarget 		= $0400
 

@@ -34,6 +34,7 @@
 
 	cli
 
+	jsr lcdclear
 
 	jsr .fat_mount
 
@@ -145,21 +146,21 @@ mainloop
 	sei
 	jsr .fat_open
 	plp
-	lda fat_errno
-	bne ++
+; 	lda fat_errno
+; 	bne ++
 	
-	; in case ".." points to the root dir, the cluster number will be 0. In that case, we use the
-	; root cluster number from the BPB
-	!for .i,3,0 {
-		lda curr_dir_cluster_no + .i
-		bne +		
-	}
+; 	; in case ".." points to the root dir, the cluster number will be 0. In that case, we use the
+; 	; root cluster number from the BPB
+; 	!for .i,3,0 {
+; 		lda curr_dir_cluster_no + .i
+; 		bne +		
+; 	}
 	
-	bra .cdroot
-+	
-	+Copy curr_dir_cluster_no, cluster_number, 3
-
-++	
+; 	bra .cdroot
+; +	
+; 	+Copy curr_dir_cluster_no, cluster_number, 3
+; 
+; ++	
 -	jmp mainloop 
 
 
@@ -200,13 +201,18 @@ mainloop
 	sei
 
 	jsr .fat_open
+ 	sta tmp5
+
 	lda fat_errno
 	bne +
 
 	+SetVector .steckos_start, sd_blkptr
-	+Copy file0_cluster_no, cluster_number, 3
+	; +Copy file0_cluster_no, cluster_number, 3
+	lda tmp5
 	jsr .fat_read
-
+	
+	lda tmp5
+	jsr .fat_close
 	plp
 
 +	rts
@@ -295,7 +301,7 @@ mainloop
 
 !src "../fat/fat.a"
 
-.hellotxt		!text "SteckShell 0.03 ",$00
+.hellotxt		!text "SteckShell 0.04 ",$00
 .helptxt		!text $0a,$0d,"d            - directory "
 				!text $0a,$0d,"l <name>     - load file "
 				!text $0a,$0d,"t <name>     - dump file to screen"
