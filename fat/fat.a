@@ -396,6 +396,26 @@ FD_file_size = $08
 
 	+PrintChar ' '
 
+	ldy #DIR_WrtDate +1
+	lda (sd_blkptr),y
+	jsr hexout
+	
+	dey
+	lda (sd_blkptr),y
+	jsr hexout
+
+	+PrintChar ' '
+
+
+	ldy #DIR_WrtTime +1
+	lda (sd_blkptr),y
+	jsr hexout
+	
+	dey
+	lda (sd_blkptr),y
+	jsr hexout
+	
+	+PrintChar ' '
 
 	ldy #DIR_Attr
 	lda (sd_blkptr),y
