@@ -50,5 +50,13 @@ BS_FilSysType	= 54	; One of the strings “FAT12 ”, “FAT16 ”, or “FAT �
 DIR_Name		= $00	;11 Bytes
 DIR_Attr		= $0B	;8 Bits
 DIR_FstClusHI	= $14	;16 Bits
+DIR_WrtTime		= $16   ; File write time, 16 bits
+						; Bits 0–4: 2-second count, valid value range 0–29 inclusive (0 – 58 seconds). 
+						; Bits 5–10: Minutes, valid value range 0–59 inclusive.
+						; Bits 11–15: Hours, valid value range 0–23 inclusive.
+DIR_WrtDate		= $18	; file write date, 16 bits
+						; Bits 0–4: Day of month, valid value range 1-31 inclusive.
+						; Bits 5–8: Month of year, 1 = January, valid value range 1–12 inclusive.
+						; Bits 9–15: Count of years from 1980, valid value range 0–127 inclusive (1980–2107).
 DIR_FstClusLO	= $1A	;16 Bits
 DIR_FileSize	= $1C	;32 Bits
