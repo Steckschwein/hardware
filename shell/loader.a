@@ -5,11 +5,6 @@
 .dest = $d000
 .bios = $f000
 
-	lda #dev_lcd
-	sta chn_out 
-
-	jsr lcdclear
-	+PrintString msg
 -
 a	lda .payload
 b	sta .dest
@@ -36,16 +31,12 @@ b	sta .dest
 
 
 done
-	+PrintString msgdone
 	
 	; lda #$01
 	; sta $02f0
 	
 	jmp .dest
 	
-msg	!text "Loading.. ",$00
-msgdone	!text "done.",$00
-
 
 *=$1100
 .payload
