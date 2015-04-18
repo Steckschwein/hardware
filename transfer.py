@@ -2,7 +2,6 @@
 
 import serial
 import sys
-#import time
 import struct
 
 baudrate=115200
@@ -38,7 +37,7 @@ try:
 	
 
 	print "Startaddress : 0x%04x (%d)" % (startaddr, startaddr)
-	print "Length    	: %d bytes" % (length, )
+	print "Length    	: %d bytes" % (length)
 
 	ser.flushOutput()
 
