@@ -1,4 +1,4 @@
-all: 3ddotscroll.bin demo.bin
+all: demo.bin
 clean:
 	rm -f *.bin *.labels
 	
