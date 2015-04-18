@@ -8,23 +8,21 @@
 !src "lcd.h.a"
 !src "../fat/fat32.h.a"
 
-; !src "../vdp/t9929.h.a"
 *= $e000			; ROM Start
 !src "../charsets/char.ascii.vc20.h.a"
 
-biosversion	!text "V1104", $00	; Version String
+biosversion	!text "V1804", $00	; Version String
 
-; start_msg
-; !text "SteckBIOS 0.1", $0d
-; !text "BIOS    : V2303", $0d
-; ;!text "Clock   :", $0d
-; !text "RAM end : ", $0
-; ready_msg
-; !text $0d,$0d,"READY.", $0d
-; !text $0
-; crlf	!byte $0d, $00
+.start_msg
+!text "SteckBIOS 0.1", $0d
+!text "BIOS    : V1804", $0d
+;!text "Clock   :", $0d
+!text "RAM end : ", $0
+.ready_msg
+!text $0d,$0d,"READY.", $0d
+!text $0
+.crlf	!byte $0d, $00
 *=$f000
-; !src "../vdp/t99xx.lib.a"
 
 
 
@@ -209,17 +207,6 @@ biosversion	!text "V1104", $00	; Version String
 			stz chn_out
 			stz chn_in 
 
-			; init VDP
-			; +SetVector .vdp_init_bytes,	.adrl
-			; jsr vdp_init_reg
-
-			; jsr	vdp_clear_vram
-			; jsr vdp_clear_screen
-			; jsr vdp_load_charset
-			; jsr vdp_color
-
-
-			
 			; init IO devices
 			jsr init_lcd
 			jsr init_via1
@@ -244,30 +231,7 @@ biosversion	!text "V1104", $00	; Version String
 			lda ram_end_h
 			jsr .hexout
 
-			
-			
-			; +SetVector start_msg, msgptr
-			; jsr	vdp_print
-
-			; stz chn_out
-			
-			; lda #'$'
-			; jsr .chrout
-
-			; lda ram_end_l
-			; jsr .hexout
-			; lda ram_end_h
-			; jsr .hexout
-
-			; +SetVector crlf, msgptr
-			; jsr	vdp_print
-
-
-			; lda	#v_reg1_16k|v_reg1_display_on;v_reg1_int
-			; ldy	#v_reg1
-			; jsr	vdp_sreg
-
-
+		
 			ldy #$02
 			ldx #$00
 			jsr .lcdxy
@@ -304,9 +268,6 @@ biosversion	!text "V1104", $00	; Version String
 +
 			jsr .boot_from_card
 
-
-;			+SetVector ready_msg, msgptr
-;			jsr	vdp_print
 ++			
 			jsr .upload
 			
@@ -502,85 +463,6 @@ biosversion	!text "V1104", $00	; Version String
 	rts
 
 			
-; vdp_clear_vram:
-; 	lda #$00
-; 	ldy	$00+$40
-; 	lda #$00
-; 	sta .adrl
-; 	ldx	#$40
-; 	jmp vdp_fill	;clear vram
-
-;----------------------------------------------------------------------------------------------
-; clear VDP Screen
-;----------------------------------------------------------------------------------------------
-; vdp_clear_screen:
-; 	lda	#$20
-; 	sta	.adrl
-;    lda   #$00
-;    ldy   #$18+$40
-;    ldx	 #$03
-; 	jmp 	vdp_fill
-
-;----------------------------------------------------------------------------------------------
-; Load Charset into VDP VRAM
-;----------------------------------------------------------------------------------------------
-; vdp_load_charset:
-;    +SetVector charset, .adrl
-;    lda   #$00
-;    ldy   #$00+$40
-;    ldx	 #$08
-;    jmp 	 vdp_memcpy
-
-;----------------------------------------------------------------------------------------------
-; Set Text Color
-;----------------------------------------------------------------------------------------------
-; vdp_color:
-;    lda   #$00
-;    ldy   #$60
-;    jsr   vdp_sreg
-;    ldx   #$00
-;    ldy   #TEXT_COLOR<<4|Transparent
-; -  ;+nops VRAM_WAIT
-;    sty   a_vram
-;    inx
-;    cpx   #$20
-;    bne   -
-;    rts
-
-
-;----------------------------------------------------------------------------------------------
-; Write to VDP VRAM
-;----------------------------------------------------------------------------------------------
-; vdp_write:
-;    lda   #$00
-;    ldy   #$18+$40
-;    jsr   vdp_sreg
-;    ldy   #$00
-; -  lda   (msgptr),y
-;    beq   +
-;    ;+nops VRAM_WAIT
-;    sta   a_vram
-;    iny
-;    bne   -
-; +  rts
-
-;----------------------------------------------------------------------------------------------
-; Display Cursor
-;----------------------------------------------------------------------------------------------
-; vdp_cursor:
-;    lda   #$20
-;    ldy   #$54
-;    jsr   vdp_sreg
-;    lda   crs_x
-;    and   #$10
-;    beq   +
-;    lda   #231
-;    jmp   ++
-; +  lda   #' '
-; ++ sta   a_vram
-;    inc   crs_x
-;    rts
-;----------------------------------------------------------------------------------------------
 
 
 
@@ -718,19 +600,6 @@ biosversion	!text "V1104", $00	; Version String
 	!word 2		; 56000	; 18
 	!word 1 	; 115200; 19
 ;----------------------------------------------------------------------------------------------
-
-;----------------------------------------------------------------------------------------------
-; VDP initialisation data
-;----------------------------------------------------------------------------------------------
-; .vdp_init_bytes	
-; 	!byte 0
-; 	!byte v_reg1_16k
-; 	!byte ($1800 / $400)	; name table - value * $400
-; 	!byte ($2000 / $40)	; color table - value * $40 (gfx1), 7f/ff (gfx2)
-; 	!byte ($0000 / $800) ; pattern table (charset) - value * $800  --> offset in VRAM 
-; 	!byte ($2800 / $80)	; sprite attribute table - value * $80 --> offset in VRAM 
-; 	!byte ($0000 / $800)	; sprite pattern table - value * $800  --> offset in VRAM 
-; 	!byte TEXT_BGCOLOR
 
 ;----------------------------------------------------------------------------------------------
 ; Memcheck routine to be copied to ZP
