@@ -14,42 +14,61 @@ scrollpos=tmp4
 scroll_ctl=tmp5
 text_color_ix=tmp6
 seconds=tmp7
-text:
-!text	"      -+- VCFe CH - 2014 -+-    ",1
+
+.line1:
+!text	"      -+- VCFe 16 - 2015 -+-    ",1
 !text	"       -+- Steckschwein -+-     ",1
 !text	"      -+- CPU 65c02 4MHz -+-    ",1
-!text	"      -+- Video TMS9929 -+-     ",1
+!text	"   -+- Jetzt auf Platine! -+-   ",1
+!text	"       -+- UART  16550 -+-      ",1
+!text	"     -+- Video TMS9929 -+-      ",1
+!text	"  -+-  SD-Karte, RTC, PS/2  -+- ",1
 !text	"                                ",1
 !fill	255, $20
 !text	0
+
+.line2:
+!text	"      -+- VCFe 16 - 2015 -+-    ",1
+!text	"       -+- Steckschwein -+-     ",1
+!text	"      -+- CPU 65c02 4MHz -+-    ",1
+!text	"   -+- Jetzt auf Platine! -+-   ",1
+!text	"       -+- UART  16550 -+-      ",1
+!text	"     -+- Video TMS9929 -+-      ",1
+!text	"  -+-  SD-Karte, RTC, PS/2  -+- ",1
+!text	"                                ",1
+!fill	255, $20
+!text	0
+
+
+
 main:
 	sei
 
-	+SetVector	starfield_tab, adrl
+	+SetVector	starfield_tab, .adrl
 	jsr	vdp_init_reg
 
-	+SetVector charset, adrl
+	+SetVector charset, .adrl
 	lda #$00
 	ldy #$00+$40
 	ldx	#$08
 	jsr	vdp_memcpy
 	
 	
-	+SetVector	chars, adrl
+	+SetVector	chars, .adrl
 	lda	#$00		;setup pattern
 	ldy	#$00+$40
 	ldx	#$10		;
 	jsr	vdp_memcpys
 
 	lda	#Cyan<<4|Black		;setup screen color gfx1
-	sta	adrl
+	sta	.adrl
 	lda	#$00
 	ldy	#$20+$40
 	ldx	#$20		; $20 possible colors
 	jsr	vdp_fills
 	
 	lda	#$20		;clear screen gfx1
-	sta	adrl
+	sta	.adrl
 	lda	#$00
 	ldy	#$18+$40
 	ldx	#$03		; $300 chars
@@ -63,13 +82,15 @@ main:
 	+SetVector	stars_irq,	irqvec
 	
 	lda	#v_reg1_16k|v_reg1_display_on|v_reg1_int
+	; lda	#v_reg1_16k|v_reg1_display_on
+
 	ldy	#v_reg1
 	jsr	vdp_sreg
 	
 	ldx		#08
 	ldy		#12
 	jsr		vdp_xy
-	+SetVector	text, adrl
+	+SetVector	.line1, .adrl
 ;	jsr		vdp_print
 	
 	cli
@@ -104,17 +125,23 @@ main:
 
 
 stars_irq:
+; 	bit via1ifr		; Interrupt from VIA?
+; 	bpl +
+; 	jmp .irq_end			; no? get out
+; +
+
 	+save
 
 	; lda	a_vreg
 	bit	a_vreg ; Check VDP interrupt. IRQ is acknowledged by reading.
-	bmi +	   ; VDP IRQ flag set? 
-	rti		   ; no, then fuck off
-+	+nops	89
+; 	bmi +	   ; VDP IRQ flag set? 
+; 	rti		   ; no, then fuck off
+; +	
+	+nops	89
 	ldx		#$00
 -	lda		raster_bar_colors,x
 	jsr		vdp_bgcolor
-	+nops	$6e
+	+nops	$6d
 	inx
 	cpx		#$0b
 	bne		-
@@ -123,14 +150,14 @@ stars_irq:
 
 	
 	;update sprite tab
-	+SetVector	starfield_spritetab, adrl
+	+SetVector	starfield_spritetab, .adrl
 	lda	#$00
 	ldy	#$3c+$40
 	ldx	#$20*4
 	jsr vdp_memcpys
 	
 	;update text
-	+SetVector	text_scroll_buf, adrl
+	+SetVector	text_scroll_buf, .adrl
 	lda	#$80
 	ldy	#$19+$40
 	ldx	#$20
@@ -138,7 +165,7 @@ stars_irq:
 
 	ldx	text_color_ix
 	lda	intro_label_color,x
-	sta	adrl
+	sta	.adrl
 	lda	#$01	;skip first 8 chars
 	ldy #$20+$40
 	ldx	#$1f
@@ -154,6 +181,7 @@ stars_irq:
 	inc	frame_end
 
 	+restore
+.irq_end
 	rti
 
 joystick:
@@ -187,7 +215,7 @@ text_scroll:
 	cpx	#$1f
 	bne	-
 	ldx	scrollpos
-	lda text,x
+	lda .line1,x
 	sta text_scroll_buf+$1f
 	inc scrollpos
 	cmp #$01			;stop marker
