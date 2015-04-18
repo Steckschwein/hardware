@@ -1,10 +1,13 @@
 *=$1000
 !source "../bios/defs.h.a"
-!source "../bios/via.h.a"
 !source "../bios/bios.h.a"
+!source "../bios/via.h.a"
+!source "../bios/lcd.h.a"
 !source "t9929.h.a"
 txtptr   =$f2
 crs_c	 =$f3
+adrl=	tmp0
+adrh=	tmp1
 
 ; c64 program studio - endurion
 ; cbm studio
@@ -12,9 +15,9 @@ crs_c	 =$f3
 ; C128 - risen from oblivion, vdc chip 
 ; bil herd - forum "damals war's..." anbindung video chip
 
-   jmp   main
-	
+   jmp   main   
 !source "t99xx.lib.a"
+
 ;msg_2	!text " Hey Thomas, these are the first letters written on screen with          THE TMS9929 VDP!         TODAY IS THE 15.04.2014          +++HAPPY BIRTHDAY+++           so far... /MLA ;)", $00
 msg_2	!text "      Welcome to VCFE 15.0!                                         These are some letters         written on screen with          THE TMS9929 VDP!", $00
 msg_3 !text "READY.", $0
@@ -62,10 +65,10 @@ main:
    lda   #'2'
    jsr   lcdprint 
 
-  	jsr	vdp_gfx2_init	
-	lda	#v_reg0_m3
-	ldy	#v_reg0
-	jsr	vdp_sreg
+;  	jsr	vdp_gfx2_init	
+;	lda	#v_reg0_m3
+;	ldy	#v_reg0
+;	jsr	vdp_sreg
 
 	lda	#v_reg1_16k|v_reg1_display_on|v_reg1_int
 	ldy	#v_reg1
@@ -146,10 +149,10 @@ vdp_init_bytes
 	!byte 0
 	!byte v_reg1_16k;|v_reg1_int
 	!byte ($1800 / $400)	; name table - value * $400
-;	!byte	($2000 / $40)	; color table - value * $40 (gfx1), 7f/ff (gfx2)
-	!byte	$ff	; color table setting for gfx mode 2 --> $2000
-;	!byte	($0000 / $800) ; pattern table (charset) - value * $800  --> offset in VRAM 
-	!byte	$03 	; pattern table, either $0000 or $2000 (3)	
+	!byte	($2000 / $40)	; color table - value * $40 (gfx1), 7f/ff (gfx2)
+;	!byte	$ff	; color table setting for gfx mode 2 --> $2000
+	!byte	($0000 / $800) ; pattern table (charset) - value * $800  --> offset in VRAM 
+;	!byte	$03 	; pattern table, either $0000 or $2000 (3)	
 	!byte	($3800 / $80)	; sprite attribute table - value * $80 --> offset in VRAM 
 	!byte   ($0000 / $800)  ; sprite pattern table - value * $800  --> offset in VRAM
 	!byte	Black

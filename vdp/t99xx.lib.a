@@ -1,4 +1,3 @@
-
 vdp_sreg:
 	sta   a_vreg
 	+nops	VRAM_WAIT
