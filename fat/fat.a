@@ -5,6 +5,7 @@
 FD_start_cluster = $00
 FD_file_size = $08
 
+
 !macro saveClusterNo .where {
  ;    ldy #DIR_FstClusHI +1
 	; lda (sd_blkptr),y
@@ -395,13 +396,14 @@ FD_file_size = $08
 
 	+PrintChar ' '
 
+	; day
 	ldy #DIR_WrtDate 
 	lda (sd_blkptr),y
 	and #%00111111
 	jsr decout
 
 	+PrintChar '.'
-	
+	; month
 	iny
 	lda (sd_blkptr),y
 	lsr
@@ -416,10 +418,15 @@ FD_file_size = $08
 	jsr decout
 	
 	+PrintChar '.'
+	; year
 	txa
-	sec
-	sbc #20
-	jsr decout
+	clc 
+	adc #80   	; add begin of msdos epoch (1980)
+	cmp #100	
+	bcc +		; greater than 100 (post-2000)
+	sec 		; yes, substract 100
+	sbc #100
++	jsr decout  ; there we go
 
 	
 
@@ -659,4 +666,4 @@ FD_file_size = $08
 ; .fat_loading_done  		!text " done.",$00
 ; .crlf					!byte $0a,$0d,$00
 
-s
+;s
