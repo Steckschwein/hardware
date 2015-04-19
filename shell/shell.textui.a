@@ -2,7 +2,10 @@
 !src "../vdp/t99xx.lib.a"
 
 .screen
-	!fill	$300, ' '
+	!align	255, 	0
+	!fill	$300, 	' '
+.cursor_x	!byte 0
+.cursor_y	!byte 0
 
 .textui_init_vdp
 	jsr	vdp_display_off			;display off
@@ -35,12 +38,9 @@
 	jsr	vdp_bgcolor
 	rts	
 
-.cursor_x
-.cursor_y
-
 .textui_chrout
 	tay
-	jsr	.textui_set_screen_addr
+;	jsr	.textui_set_screen_addr
 	
 	inc	.cursor_x
 	lda	.cursor_x
@@ -69,12 +69,23 @@
 	sta	.screen
 	rts
 
+_textui_println	
+	ldy	#$00
+-	lda	(msgptr),y
+	beq	+
+;	jsr .textui_chrout
+	;test
+	sta	.screen, y
+	iny
+	bne	-
++	rts
+	
 !macro	V_Print .word {
 }
 
 !macro	V_Println .word {
 	+SetVector .word, msgptr
-	ldx	#$00
-	lda	msgptr,x
+	jsr	_textui_println
 }
+
 .bg	!byte 0
