@@ -43,7 +43,6 @@
 	jsr	.textui_init_vdp
 	
 	jsr .fat_mount
-	
 	cli
 	
 .init
