@@ -18,17 +18,15 @@
 	rts
 	
 .textui_update_screen
-	inc	.bg
-	lda	.bg
+	lda	#Gray
 	jsr	vdp_bgcolor	
-	rts
-	sei
 	+SetVector	.screen, .adrl
 	lda	#$00
 	ldy	#$40+$18
 	ldx	#$03
 	jsr	vdp_memcpy
-	cli
+	lda	#Black
+	jsr	vdp_bgcolor
 	rts	
 	
 .bg	!byte 0

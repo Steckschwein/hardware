@@ -122,6 +122,7 @@ vdp_gfx2_init:
 	
    rts	
 	
+.bgcolor	!byte 00
 
 vdp_irq:
 	pha
@@ -129,7 +130,12 @@ vdp_irq:
 	phx
 	
 	lda   a_vreg
-
+	bit	a_vreg ; Check VDP interrupt. IRQ is acknowledged by reading.
+	bmi +	   ; VDP IRQ flag set? 
+	inc	.bgcolor
+	lda .bgcolor
+	jsr	vdp_bgcolor
++		
 	
 ;	jsr	vdp_colortest
 	

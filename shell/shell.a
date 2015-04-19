@@ -8,7 +8,7 @@
 !src "shell.textui.a"
 	
 .screen
-	!fill	$300, '@'
+	!fill	$300, ' '
 
 !address {
 .key = $10
@@ -42,7 +42,8 @@
 
 	jsr	.textui_init_vdp
 	
-;	jsr .fat_mount
+	jsr .fat_mount
+	
 	cli
 	
 .init
@@ -210,11 +211,11 @@ mainloop
 	phx
 	
 	;gfx
-	bit	a_vreg ; Check VDP interrupt. IRQ is acknowledged by reading.
-	bmi +	   ; VDP IRQ flag set? 
+	bit	a_vreg
+	bpl +	   ; VDP IRQ flag set? 
 	jsr	.textui_update_screen
 
-+	;via
+	;via
 	bit via1ifr		; Interrupt from VIA?
 	bpl +			; no? get out
 
