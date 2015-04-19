@@ -17,16 +17,23 @@
 	ldy	#$40+$20
 	jsr	vdp_fill
 	
-	lda	#' '					;fill screen with blank
+	lda	#'@'					;fill screen with blank
 	sta	.adrl
 	ldx	#$03
 	lda	#$00
 	ldy	#$40+$18
 	jsr	vdp_fill
+
+	lda	#$00					;sprites weg
+	sta	.adrl
+	ldx	#$32*4
+	lda	#$00
+	ldy	#$40+$3c
+	jsr	vdp_fills
 	
 	jsr	vdp_mode_gfx1
-	rts
 	
+	rts
 	
 .textui_update_screen
 	sei

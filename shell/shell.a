@@ -2,6 +2,7 @@
 !src "../bios/defs.h.a"
 !src "../bios/bios.h.a"
 !src "../bios/via.h.a"
+
 	jmp	.init0
 	
 !src "shell.textui.a"
@@ -40,8 +41,6 @@
 	+SetVector .irq, irqvec
 
 	jsr	.textui_init_vdp
-	
-	
 	
 	jsr .fat_mount
 	cli
@@ -212,7 +211,7 @@ mainloop
 	;gfx
 	bit	a_vreg ; Check VDP interrupt. IRQ is acknowledged by reading.
 	bmi +	   ; VDP IRQ flag set? 
-	jsr	.textui_update_screen	
+	jsr	.textui_update_screen
 
 +	;via
 	bit via1ifr		; Interrupt from VIA?
