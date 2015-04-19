@@ -10,32 +10,18 @@
 	ldy	#$40+$00
 	jsr	vdp_memcpy
 
-	lda	#Cyan<<4|Black			;text/bg color
-	sta	.adrl
-	ldx	#$20
-	lda	#$00
-	ldy	#$40+$20
-	jsr	vdp_fill
+	jsr	vdp_mode_gfx1_blank		;blank vram
 	
-	lda	#'@'					;fill screen with blank
-	sta	.adrl
-	ldx	#$03
-	lda	#$00
-	ldy	#$40+$18
-	jsr	vdp_fill
-
-	lda	#$00					;sprites weg
-	sta	.adrl
-	ldx	#$32*4
-	lda	#$00
-	ldy	#$40+$3c
-	jsr	vdp_fills
-	
+	lda	#Cyan<<4|Black			;gfx 1 with cyan/black
 	jsr	vdp_mode_gfx1
 	
 	rts
 	
 .textui_update_screen
+	inc	.bg
+	lda	.bg
+	jsr	vdp_bgcolor	
+	rts
 	sei
 	+SetVector	.screen, .adrl
 	lda	#$00
@@ -44,3 +30,5 @@
 	jsr	vdp_memcpy
 	cli
 	rts	
+	
+.bg	!byte 0

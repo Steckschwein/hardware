@@ -42,8 +42,9 @@
 
 	jsr	.textui_init_vdp
 	
-	jsr .fat_mount
+;	jsr .fat_mount
 	cli
+	
 .init
 	lda #dev_uart
 	sta chn_out

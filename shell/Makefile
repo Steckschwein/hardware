@@ -2,7 +2,7 @@ all: loader.bin shell.bin
 clean:
 	rm -f *.bin 
 
-%.bin: %.a %.textui.a
+%.bin: %.a %.textui.a ../vdp/t99xx.lib.a
 	acme -v -f plain --cpu 65c02 -o $@ $<
 shell.bin: ../fat/fat.a
 loader.bin: shell.bin
