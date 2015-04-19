@@ -361,18 +361,7 @@ FD_file_size = $08
 .fat_list_entry
 	pha
 	jsr .print_filename
-; 	ldy #DIR_Name
-; -	lda (sd_blkptr),y
-	
-; 	jsr chrout
-	
-; 	iny
-; 	cpy #DIR_Name + $0b
-
-; 	bne -
-
 	+PrintChar ' '
-
 
 	ldy #DIR_Attr
 	lda (sd_blkptr),y
@@ -406,40 +395,62 @@ FD_file_size = $08
 
 	+PrintChar ' '
 
-; 	ldy #DIR_FstClusHI + 1 +1
-; -	dey
-; 	lda (sd_blkptr),y
-; 	jsr hexout
-; 	cpy #DIR_FstClusHI
-; 	bne -	
-; 	ldy #DIR_FstClusLO + 1 +1
-; -	dey
-; 	lda (sd_blkptr),y
-; 	jsr hexout
-; 	cpy #DIR_FstClusLO
-; 	bne -	
-
-; 	+PrintChar ' '
-
-	ldy #DIR_WrtDate +1
+	ldy #DIR_WrtDate 
 	lda (sd_blkptr),y
-	jsr hexout
+	and #%00111111
+	jsr decout
+
+	+PrintChar '.'
 	
+	iny
+	lda (sd_blkptr),y
+	lsr
+	tax
 	dey
 	lda (sd_blkptr),y
-	jsr hexout
+	ror
+	lsr
+	lsr
+	lsr
+	lsr
+	jsr decout
+	
+	+PrintChar '.'
+	txa
+	sec
+	sbc #20
+	jsr decout
+
+	
 
 	+PrintChar ' '
 
-
 	ldy #DIR_WrtTime +1
 	lda (sd_blkptr),y
-	jsr hexout
-	
+	tax
+	lsr
+	lsr
+	lsr
+	jsr decout
+
+	+PrintChar ':'
+
+	txa
+	and #%00000111
+	sta tmp1
 	dey
 	lda (sd_blkptr),y
-	jsr hexout
+	
+	!for .i,0,4 {
+		lsr tmp1
+		ror 
+	}	
 
+	jsr decout
+
+
+	; Bits 11–15: Hours, valid value range 0–23 inclusive.
+	
 	+PrintString .crlf
 	pla
 	rts	
