@@ -41,10 +41,10 @@
 
 	jsr	.textui_init_vdp
 	
-	cli
+	
 	
 	jsr .fat_mount
-
+	cli
 .init
 	lda #dev_uart
 	sta chn_out
