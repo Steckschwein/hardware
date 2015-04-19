@@ -6,9 +6,6 @@
 	jmp	.init0
 	
 !src "shell.textui.a"
-	
-.screen
-	!fill	$300, ' '
 
 !address {
 .key = $10
@@ -53,6 +50,7 @@
 mainloop
 	+PrintString .crlf
 	+PrintString .prompt
+;	+V_Println	 .prompt
 	ldx #$00
 	stz .buf
 
@@ -260,12 +258,15 @@ mainloop
 	lda .buf
 	beq +
 	+PrintString .txt_msg_unknown_cmd
+;	+V_Println .txt_msg_unknown_cmd
 +	jmp mainloop
 
 .hello
 	+PrintString .crlf
 	+PrintString .hellotxt
 	+PrintString .helptxt
+;	+V_Println	.hellotxt
+;	+V_Println	.helptxt
 	jmp mainloop
 
 .cmdlist

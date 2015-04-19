@@ -1,6 +1,9 @@
 !src "../vdp/t9929.h.a"
 !src "../vdp/t99xx.lib.a"
 
+.screen
+	!fill	$300, ' '
+
 .textui_init_vdp
 	jsr	vdp_display_off			;display off
 	
@@ -15,6 +18,9 @@
 	lda	#Cyan<<4|Black			;gfx 1 with cyan/black
 	jsr	vdp_mode_gfx1
 	
+	stz	.cursor_x
+	stz	.cursor_y
+	
 	rts
 	
 .textui_update_screen
@@ -28,5 +34,47 @@
 	lda	#Black
 	jsr	vdp_bgcolor
 	rts	
+
+.cursor_x
+.cursor_y
+
+.textui_chrout
+	tay
+	jsr	.textui_set_screen_addr
 	
+	inc	.cursor_x
+	lda	.cursor_x
+	and	#$20
+	cmp	#$20
+	bne	+
+	stz	.cursor_x
+	inc	.cursor_y
++	rts
+
+.textui_set_screen_addr
+	lda	.cursor_x
+	lda	.cursor_y	; * 32
+	asl
+	asl	
+	asl	
+	asl
+	asl
+	ora	.cursor_x
+	sta	.screen
+	
+	lda	.cursor_y	; * 32
+	lsr			; /8 -> page offset 0-2
+	lsr
+	lsr
+	sta	.screen
+	rts
+
+!macro	V_Print .word {
+}
+
+!macro	V_Println .word {
+	+SetVector .word, msgptr
+	ldx	#$00
+	lda	msgptr,x
+}
 .bg	!byte 0
