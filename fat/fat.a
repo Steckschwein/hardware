@@ -360,62 +360,19 @@ FD_file_size = $08
 
 .fat_list_entry
 	pha
-	ldy #DIR_Name
--	lda (sd_blkptr),y
+	jsr .print_filename
+; 	ldy #DIR_Name
+; -	lda (sd_blkptr),y
 	
-	jsr chrout
+; 	jsr chrout
 	
-	iny
-	cpy #DIR_Name + $0b
+; 	iny
+; 	cpy #DIR_Name + $0b
 
-	bne -
+; 	bne -
 
 	+PrintChar ' '
 
-	ldy #DIR_FileSize + 3 +1
--	dey
-	lda (sd_blkptr),y
-	jsr hexout
-	cpy #DIR_FileSize
-	bne -	
-
-	+PrintChar ' '
-
-	ldy #DIR_FstClusHI + 1 +1
--	dey
-	lda (sd_blkptr),y
-	jsr hexout
-	cpy #DIR_FstClusHI
-	bne -	
-	ldy #DIR_FstClusLO + 1 +1
--	dey
-	lda (sd_blkptr),y
-	jsr hexout
-	cpy #DIR_FstClusLO
-	bne -	
-
-	+PrintChar ' '
-
-	ldy #DIR_WrtDate +1
-	lda (sd_blkptr),y
-	jsr hexout
-	
-	dey
-	lda (sd_blkptr),y
-	jsr hexout
-
-	+PrintChar ' '
-
-
-	ldy #DIR_WrtTime +1
-	lda (sd_blkptr),y
-	jsr hexout
-	
-	dey
-	lda (sd_blkptr),y
-	jsr hexout
-	
-	+PrintChar ' '
 
 	ldy #DIR_Attr
 	lda (sd_blkptr),y
@@ -437,6 +394,52 @@ FD_file_size = $08
 +	
 	lda #'F'
 ++	jsr chrout
+
+	+PrintChar ' '
+
+	ldy #DIR_FileSize + 1 +1
+-	dey
+	lda (sd_blkptr),y
+	jsr hexout
+	cpy #DIR_FileSize
+	bne -	
+
+	+PrintChar ' '
+
+; 	ldy #DIR_FstClusHI + 1 +1
+; -	dey
+; 	lda (sd_blkptr),y
+; 	jsr hexout
+; 	cpy #DIR_FstClusHI
+; 	bne -	
+; 	ldy #DIR_FstClusLO + 1 +1
+; -	dey
+; 	lda (sd_blkptr),y
+; 	jsr hexout
+; 	cpy #DIR_FstClusLO
+; 	bne -	
+
+; 	+PrintChar ' '
+
+	ldy #DIR_WrtDate +1
+	lda (sd_blkptr),y
+	jsr hexout
+	
+	dey
+	lda (sd_blkptr),y
+	jsr hexout
+
+	+PrintChar ' '
+
+
+	ldy #DIR_WrtTime +1
+	lda (sd_blkptr),y
+	jsr hexout
+	
+	dey
+	lda (sd_blkptr),y
+	jsr hexout
+
 	+PrintString .crlf
 	pla
 	rts	
