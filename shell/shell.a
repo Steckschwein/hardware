@@ -2,6 +2,13 @@
 !src "../bios/defs.h.a"
 !src "../bios/bios.h.a"
 !src "../bios/via.h.a"
+	jmp	.init0
+	
+!src "shell.textui.a"
+	
+.screen
+	!fill	$300, '@'
+
 !address {
 .key = $10
 .filename  			= $03a2
@@ -16,7 +23,7 @@
 +	
 }
 
-
+.init0
 	stz .key
 
 	lda #<count
@@ -32,6 +39,8 @@
 
 	+SetVector .irq, irqvec
 
+	jsr	.textui_init_vdp
+	
 	cli
 	
 	jsr .fat_mount
@@ -40,7 +49,7 @@
 	lda #dev_uart
 	sta chn_out
 	stz chn_in
-
+	
 mainloop
 	+PrintString .crlf
 	+PrintString .prompt
@@ -196,10 +205,16 @@ mainloop
 +	plp	
 	rts
 
-
 .irq
 	pha
 	phx
+	
+	;gfx
+	bit	a_vreg ; Check VDP interrupt. IRQ is acknowledged by reading.
+	bmi +	   ; VDP IRQ flag set? 
+	jsr	.textui_update_screen	
+
++	;via
 	bit via1ifr		; Interrupt from VIA?
 	bpl +			; no? get out
 
@@ -229,7 +244,8 @@ mainloop
 	beq +
 	sta .key
 
-+	plx
++
+	plx
 	pla
 	rti
 

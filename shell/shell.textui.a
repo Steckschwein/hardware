@@ -1,0 +1,39 @@
+!src "../vdp/t9929.h.a"
+!src "../vdp/t99xx.lib.a"
+
+.textui_init_vdp
+	jsr	vdp_display_off			;display off
+	
+	+SetVector charset, .adrl	;setup vram with characters
+	ldx	#$08
+	lda	#$00
+	ldy	#$40+$00
+	jsr	vdp_memcpy
+
+	lda	#Cyan<<4|Black			;text/bg color
+	sta	.adrl
+	ldx	#$20
+	lda	#$00
+	ldy	#$40+$20
+	jsr	vdp_fill
+	
+	lda	#' '					;fill screen with blank
+	sta	.adrl
+	ldx	#$03
+	lda	#$00
+	ldy	#$40+$18
+	jsr	vdp_fill
+	
+	jsr	vdp_mode_gfx1
+	rts
+	
+	
+.textui_update_screen
+	sei
+	+SetVector	.screen, .adrl
+	lda	#$00
+	ldy	#$40+$18
+	ldx	#$03
+	jsr	vdp_memcpy
+	cli
+	rts	
