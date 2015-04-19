@@ -208,11 +208,6 @@ mainloop
 .irq
 	pha
 	phx
-	
-	;gfx
-	bit	a_vreg
-	bpl +	   ; VDP IRQ flag set? 
-	jsr	.textui_update_screen
 
 	;via
 	bit via1ifr		; Interrupt from VIA?
@@ -245,7 +240,12 @@ mainloop
 	sta .key
 
 +
-	plx
+	;	gfx	expensive screen copy handling, placed at the end
+	bit	a_vreg
+	bpl +	   ; VDP IRQ flag set? 
+	jsr	.textui_update_screen
+	
++	plx
 	pla
 	rti
 

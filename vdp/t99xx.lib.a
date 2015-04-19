@@ -67,8 +67,7 @@ vdp_mode_gfx2:
 
 vdp_init_bytes_gfx1
 	!byte 0
-	!byte v_reg1_16k|v_reg1_display_on
-;|v_reg1_int
+	!byte v_reg1_16k|v_reg1_display_on|v_reg1_int
 	!byte 	($1800 / $400)	; name table - value * $400					--> characters 
 	!byte 	($2000 / $40)	; color table - value * $40 (gfx1), 7f/ff (gfx2)
 	!byte 	($0000 / $800) ; pattern table (charset) - value * $800  	--> offset in VRAM 
