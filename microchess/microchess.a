@@ -40,8 +40,8 @@
 ; - output moves to serial and LCD
 ; - slight syntax changes for the ACME cross assembler
 ;
-!src "../bios/defs.h.a"
-!src "../bios/bios.h.a"
+!src <defs.h.a>
+!src <bios.h.a>
 ;
 ; page zero variables
 ;
