@@ -1,7 +1,8 @@
 *= $d000
-!src "../bios/defs.h.a"
-!src "../bios/bios.h.a"
-!src "../bios/via.h.a"
+!src <defs.h.a>
+!src <bios.h.a>
+!src <via.h.a>
+!src <fat32.h.a>
 
 	jmp	.init0
 	

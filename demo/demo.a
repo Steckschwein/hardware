@@ -1,8 +1,8 @@
 *=$1000
 	jmp	main
-!source "../bios/defs.h.a"
-!source "../bios/via.h.a"
-!source "../bios/bios.h.a"
+!src <defs.h.a>
+!src <bios.h.a>
+!src <via.h.a>
 !source "../vdp/t9929.h.a"
 !source "../vdp/t99xx.lib.a"
 

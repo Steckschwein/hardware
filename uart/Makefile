@@ -1,10 +1,7 @@
-all: uart.bin test.bin
+all: uart.bin 
 clean:
 	rm *.bin
 
-
-test: test.bin
-memtest: memtest.bin
 
 %.bin: %.a
 	acme -v -f plain -l $<.labels  --cpu 65c02 -o $@ $<

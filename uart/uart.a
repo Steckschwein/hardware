@@ -1,6 +1,7 @@
 *=$1000
-!src "../bios/defs.h.a"
-!src "../bios/bios.h.a"
+!src <defs.h.a>
+!src <bios.h.a>
+!src <uart.h.a>
 	
 
 	lda #%00010100

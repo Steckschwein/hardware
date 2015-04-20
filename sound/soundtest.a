@@ -1,6 +1,6 @@
 *=$1000
-!source "../bios/defs.h.a"
-!source "../bios/bios.h.a"
+!source <defs.h.a>
+!source <bios.h.a>
 !source "ym3812.lib.a"
 
 	jsr		lcdclear
