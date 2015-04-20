@@ -147,9 +147,6 @@ isr
 rtc_disable
 	pha
 
-	lda #$80
-	ora kbd_flg
-	sta kbd_flg
 	; Deselect any SPI devices
 	lda #%11111110
 	sta via1portb
