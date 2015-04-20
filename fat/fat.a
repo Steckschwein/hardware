@@ -28,7 +28,7 @@ FD_file_size = $08
 ; .rest   = tmp6
 
 .fat_read
-	jsr sd_select_card
+	jsr .sd_select_card
 	jsr sd_param_init
 
 	tax
@@ -77,7 +77,7 @@ FD_file_size = $08
 
 +	
 
-	jsr sd_deselect_card
+	jsr .sd_deselect_card
 
 	rts
 
@@ -88,7 +88,7 @@ FD_file_size = $08
 
 	stz fat_errno
 
-	jsr sd_select_card
+	jsr .sd_select_card
 	jsr sd_param_init
 
 	+SetVector sd_blktarget, sd_blkptr
@@ -150,7 +150,7 @@ FD_file_size = $08
 
 	
 .end_open
-	jsr sd_deselect_card
+	jsr .sd_deselect_card
 	ply
 	plx
 	; pla
@@ -211,9 +211,6 @@ FD_file_size = $08
 	txa
     bra .end_open
 
-
- 
-
 	
 
 .inc_blkptr
@@ -233,7 +230,7 @@ FD_file_size = $08
 	phx
 
 	jsr sd_param_init
-	jsr sd_select_card
+	jsr .sd_select_card
 
 	lda #$00
 	jsr .calc_lba_addr
@@ -274,7 +271,7 @@ FD_file_size = $08
 	jmp -
 
 .end
-	jsr sd_deselect_card
+	jsr .sd_deselect_card
 	plx
 	ply
 	pla
@@ -459,6 +456,36 @@ FD_file_size = $08
 	pla
 	rts	
 
+
+
+
+.sd_select_card
+   	pha
+- 	lda via1portb	; wait for spi bus to become free
+   	and #%01111110
+   	cmp #$7e
+   	bne -
+	; set CS line to LOW
+	lda #%01111100
+	sta via1portb
+	pla
+
+	rts
+
+
+.sd_deselect_card
+       pha
+       ; set CS line to HI
+       lda #%01111110
+       sta via1portb
+
+       lda #$ff
+       jsr spi_rw_byte
+       
+       pla
+       rts
+
+
 ;---------------------------------------------------------------------
 ; Mount FAT32 on Partition 0
 ;---------------------------------------------------------------------
@@ -467,7 +494,7 @@ FD_file_size = $08
 	phx
 	phy
 
-	jsr sd_select_card
+	jsr .sd_select_card
 	jsr sd_param_init
 
 	+SetVector sd_blktarget, sd_blkptr
@@ -581,7 +608,7 @@ FD_file_size = $08
 	; now we have the lba address of the first sector of the first cluster
 
 .end_mount
-	jsr sd_select_card
+	jsr .sd_deselect_card
 	plx
 	ply
 	pla
