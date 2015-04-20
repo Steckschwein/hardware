@@ -127,12 +127,12 @@ mainloop
 	
 .dir
 	+PrintString .crlf
-	php
-	sei
+	; php
+	; sei
 	
 	jsr .fat_read_dir
 	
-	plp
+	; plp
 	jmp mainloop
 
 
@@ -144,10 +144,10 @@ mainloop
 .cd
 	+PrintString .crlf
 	
-	php
-	sei
+	; php
+	; sei
 	jsr .fat_open
-	plp
+	; plp
 -	jmp mainloop 
 
 
@@ -184,8 +184,8 @@ mainloop
 +	jmp mainloop
 
 .readfile
-	php
-	sei
+	; php
+	; sei
 
 	jsr .fat_open
  	sta tmp5
@@ -202,12 +202,14 @@ mainloop
 	lda tmp5
 	jsr .fat_close
 	
-+	plp	
++	
+	; plp	
 	rts
 
 .irq
 	pha
 	phx
+	phy
 
 	;via
 	bit via1ifr		; Interrupt from VIA?
@@ -219,6 +221,11 @@ mainloop
 	bne +
 
 	; jsr getkey
+
+	lda via1portb
+	and #%01111110
+	cmp #$7e
+	bne +
 
 	lda #%01111010
 	; and via1portb
@@ -245,7 +252,8 @@ mainloop
 	bpl +	   ; VDP IRQ flag set? 
 	jsr	.textui_update_screen
 	
-+	plx
++	ply
+	plx
 	pla
 	rti
 
