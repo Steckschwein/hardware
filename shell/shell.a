@@ -38,7 +38,7 @@
 
 	+SetVector .irq, irqvec
 
-	jsr	.textui_init_vdp
+	jsr	.textui_init
 	
 	jsr .fat_mount
 	cli
@@ -51,10 +51,9 @@
 mainloop
 	+PrintString .crlf
 	+PrintString .prompt
-	+V_Println .prompt
+	+V_Print .prompt
 	ldx #$00
 	stz .buf
-
 
 .inputloop	
 	jsr .keyin
@@ -207,9 +206,7 @@ mainloop
 	rts
 
 .irq
-	pha
-	phx
-	phy
+	+save
 
 	;via
 	bit via1ifr		; Interrupt from VIA?
@@ -252,9 +249,8 @@ mainloop
 	bpl +	   ; VDP IRQ flag set? 
 	jsr	.textui_update_screen
 	
-+	ply
-	plx
-	pla
++	
+	+restore
 	rti
 
 .keyin

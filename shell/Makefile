@@ -4,7 +4,7 @@ clean:
 
 %.bin: %.a %.textui.a ../vdp/t99xx.lib.a
 	acme -v -f plain --cpu 65c02 -o $@ $<
-shell.bin: ../fat/fat.a
+shell.bin: ../fat/fat.a ../lib/*.a
 loader.bin: shell.bin
 transfer: shell.bin
 	../transfer.py shell.bin 0xd000

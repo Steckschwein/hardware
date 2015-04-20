@@ -1,13 +1,17 @@
 !src "../vdp/t9929.h.a"
 !src "../vdp/t99xx.lib.a"
 
-.screen
-	!align	255, 	0
-	!fill	$300, 	' '
-.cursor_x	!byte 0
-.cursor_y	!byte 0
+.p_cursor=$f8	;cursor pointer
+.cursor_x=$fa
+.cursor_y=$fb
 
-.textui_init_vdp
+.screen=$c000
+.screen_status !byte 0
+.screen_frames !byte 0
+.CURSOR=0
+.DIRTY=1
+
+.textui_init
 	jsr	vdp_display_off			;display off
 	
 	+SetVector charset, .adrl	;setup vram with characters
@@ -16,18 +20,47 @@
 	ldy	#$40+$00
 	jsr	vdp_memcpy
 
-	jsr	vdp_mode_gfx1_blank		;blank vram
+	jsr	.textui_blank			;blank screen
+		
+	;TODO FIXME remove after init
+	jsr	vdp_mode_gfx1_blank		;blank screen vram
 	
 	lda	#Cyan<<4|Black			;gfx 1 with cyan/black
 	jsr	vdp_mode_gfx1
 	
 	stz	.cursor_x
 	stz	.cursor_y
+	jsr	.textui_screen_addr		;init cursor pointer
 	
+	rts
+
+.textui_blank
+	ldx	#$00
+	lda	#' '
+-	sta	.screen,x
+	sta	.screen+256,x
+	sta	.screen+512,x
+	inx
+	bne	-
+	rts
+	
+.textui_cursor
+	lda .screen_frames
+	and	#$10
+	beq	+
+	lda #160
+	jmp	++
++  	lda   #' '
+++	jmp _textui_put
 	rts
 	
 .textui_update_screen
-	lda	#Gray
+	inc	.screen_frames
+
+	jsr	.textui_cursor
+	
+	;TODO dirty check .screen_status AND 1 ...
++	lda	#Gray
 	jsr	vdp_bgcolor	
 	+SetVector	.screen, .adrl
 	lda	#$00
@@ -38,49 +71,66 @@
 	jsr	vdp_bgcolor
 	rts	
 
-.textui_chrout
-	tay
-;	jsr	.textui_set_screen_addr
-	
-	inc	.cursor_x
-	lda	.cursor_x
-	and	#$20
-	cmp	#$20
-	bne	+
-	stz	.cursor_x
-	inc	.cursor_y
-+	rts
-
-.textui_set_screen_addr
-	lda	.cursor_x
+.textui_screen_addr
 	lda	.cursor_y	; * 32
-	asl
+	asl	
 	asl	
 	asl	
 	asl
 	asl
 	ora	.cursor_x
-	sta	.screen
+	sta	.p_cursor
 	
 	lda	.cursor_y	; * 32
 	lsr			; /8 -> page offset 0-2
 	lsr
 	lsr
-	sta	.screen
+	clc
+	adc	#>.screen
+	sta	.p_cursor+1
 	rts
 
-_textui_println	
+	
+_textui_print
 	ldy	#$00
 -	lda	(msgptr),y
-	beq	+
-;	jsr .textui_chrout
-	;test
-	sta	.screen, y
-	iny
+	beq	+++
+	cmp	#$0a
+	bne	+
+	stz	.cursor_x
+	jmp	++
++	cmp	#$0d	
+	bne	+
+	inc	.cursor_y
+	jmp	++
++	jsr	_textui_out
+++	iny
 	bne	-
++++	rts
+	
+_textui_out
+	tax
+	jsr	.textui_screen_addr
+	txa	
+	sta	(.p_cursor)
+	inc	.cursor_x
+	lda	.cursor_x
+	and	#$20
+	beq	+
+	stz	.cursor_x
+	inc	.cursor_y
 +	rts
+
+_textui_put
+	sta	(.p_cursor)
+	rts
+	
+_textui_println
+	jmp	_textui_print
 	
 !macro	V_Print .word {
+	+SetVector .word, msgptr
+	jsr	_textui_print
 }
 
 !macro	V_Println .word {
