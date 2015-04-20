@@ -1,9 +1,5 @@
-!src "../bios/defs.h.a"
-!src "../bios/bios.h.a"
-!macro debug .x {
-     lda #.x
-     jsr lcdprint
-}
+!src <defs.h.a>
+!src <bios.h.a>
 ;
 ;                        Through the courtesy of
 ;
