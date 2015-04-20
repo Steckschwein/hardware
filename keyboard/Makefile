@@ -3,7 +3,7 @@ clean:
 	rm -f *.bin *.labels
 	( cd avr313 ; make clean )
 
-%.bin: %.a ../bios/defs.h.a
+%.bin: %.a ../lib/defs.h.a
 	acme -v -f plain --cpu 65c02 -o $@ $<
 
 transfer: all
