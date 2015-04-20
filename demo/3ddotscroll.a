@@ -15,8 +15,8 @@
 
 		jmp	START
 		
-!source "../bios/defs.h.a"
-;!source "../bios/bios.h.a"
+!src <defs.h.a>
+!src <bios.h.a>
 !source "../vdp/t9929.h.a"
 !source "../vdp/t99xx.lib.a"
 
@@ -86,7 +86,7 @@ START
          JSR MAKESPEEDCLEAR ;LIKE BEFORE FOR CLEAR PLOTS AND SET PLOTS
          JSR SPEEDCLEAR ;OK NOW CLEAR PLOTS
 
-		+SetVector	vdp_init_bytes, adrl	; setup video registers
+		+SetVector	vdp_init_bytes, .adrl	; setup video registers
 		jsr	vdp_init_reg
 		
 ;==========
@@ -402,14 +402,14 @@ INITGRAPH
 		bne	-
 
 		lda	#White<<4|Black
-		sta	adrl
+		sta	.adrl
 		lda	#$00
 		ldy	$00+$40
 		ldx	#$18
 		jsr	vdp_fill
 
 		lda	#$00
-		sta	adrl
+		sta	.adrl
 		lda	#$00
 		ldy	$20+$40
 		ldx	#$18
