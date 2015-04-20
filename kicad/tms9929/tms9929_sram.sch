@@ -30,7 +30,6 @@ LIBS:atmel
 LIBS:contrib
 LIBS:valves
 LIBS:tms99xx
-LIBS:tms9929_sram_snd-cache
 EELAYER 24 0
 EELAYER END
 $Descr A3 16535 11693
@@ -2068,7 +2067,7 @@ Wire Wire Line
 Wire Wire Line
 	1850 7450 2050 7450
 Wire Wire Line
-	3650 1350 3650 2150
+	3650 1050 3650 2150
 Wire Wire Line
 	13700 3550 13700 3650
 Text Label 10050 3550 0    60   ~ 0
@@ -2128,4 +2127,19 @@ Connection ~ 3400 6500
 Connection ~ 3650 6500
 Connection ~ 3400 6900
 Connection ~ 3650 6900
+$Comp
+L CTRIM C10
+U 1 1 5526BE0E
+P 3850 1050
+F 0 "C10" H 3980 970 50  0000 C CNN
+F 1 "5-50pf" H 4000 890 50  0000 C CNN
+F 2 "" H 3850 1050 60  0000 C CNN
+F 3 "" H 3850 1050 60  0000 C CNN
+	1    3850 1050
+	0    -1   -1   0   
+$EndComp
+Wire Wire Line
+	4050 1050 4100 1050
+Wire Wire Line
+	4100 1050 4100 1350
 $EndSCHEMATC
