@@ -1,5 +1,8 @@
 *=$1000
+!source "../bios/bios.h.a"
 !source "../bios/defs.h.a"
+!source "../bios/lcd.h.a"
+
     jmp   main
    
 !source "t9929.h.a"
