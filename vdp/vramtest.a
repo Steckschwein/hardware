@@ -1,7 +1,7 @@
 *=$1000
-!source "../bios/bios.h.a"
-!source "../bios/defs.h.a"
-!source "../bios/lcd.h.a"
+!source <bios.h.a>
+!source <defs.h.a>
+!source <lcd.h.a>
 
     jmp   main
    
