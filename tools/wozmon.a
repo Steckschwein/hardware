@@ -1,5 +1,5 @@
-!source "../bios/defs.h.a"
-!source "../bios/bios.h.a"
+!source <defs.h.a>
+!source <bios.h.a>
 ;-------------------------------------------------------------------------
 ;
 ;  The WOZ Monitor for the Apple 1
@@ -117,7 +117,7 @@ NEXTITEM        LDA     IN,Y            ;Get character
                 BEQ     RUN             ;Run the program! Forget the rest
                 CMP     #"L"				 ;  LOAD program from rs232/sd-card
                 BNE     +					 ;Jump to Sys-Call 
-					 JSR		sys_upload
+					 JSR	upload
 +               STX     L               ;Clear input value (X=0)
                 STX     H
                 STY     YSAV            ;Save Y for comparison
@@ -243,7 +243,7 @@ PRHEX           AND     #%00001111     ;Mask LSD for hex print
 ;  Subroutine to print a character to the terminal
 ;-------------------------------------------------------------------------
 
-ECHO            jsr		sys_echo
+ECHO            jsr		chrout
 					 ;BIT     DSP             ;DA bit (B7) cleared yet?
                 ;BMI     ECHO            ;No! Wait for display ready
                 ;STA     DSP             ;Output character. Sets DA
