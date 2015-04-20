@@ -27,19 +27,6 @@ seconds=tmp7
 !fill	255, $20
 !text	0
 
-.line2:
-!text	"      -+- VCFe 16 - 2015 -+-    ",1
-!text	"       -+- Steckschwein -+-     ",1
-!text	"      -+- CPU 65c02 4MHz -+-    ",1
-!text	"   -+- Jetzt auf Platine! -+-   ",1
-!text	"       -+- UART  16550 -+-      ",1
-!text	"     -+- Video TMS9929 -+-      ",1
-!text	"  -+-  SD-Karte, RTC, PS/2  -+- ",1
-!text	"                                ",1
-!fill	255, $20
-!text	0
-
-
 
 main:
 	sei
@@ -125,18 +112,19 @@ main:
 
 
 stars_irq:
-; 	bit via1ifr		; Interrupt from VIA?
-; 	bpl +
-; 	jmp .irq_end			; no? get out
-; +
+	bit via1ifr		; Interrupt from VIA?
+	bpl +
+	rti ; no? get out
+	
++
 
 	+save
 
 	; lda	a_vreg
 	bit	a_vreg ; Check VDP interrupt. IRQ is acknowledged by reading.
-; 	bmi +	   ; VDP IRQ flag set? 
-; 	rti		   ; no, then fuck off
-; +	
+	bmi +	   ; VDP IRQ flag set? 
+	rti		   ; no, then fuck off
++	
 	+nops	89
 	ldx		#$00
 -	lda		raster_bar_colors,x
