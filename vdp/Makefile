@@ -3,7 +3,7 @@ all: vdp
 clean:
 	rm -f *.bin
 	
-vdp: t9929.bin
+vdp: t9929.bin vramtest.bin
 
 # !!! we have to explicitly list the %.h.a dependency, otherwise changes within the .h.a file are not detected by make
 %.bin: %.a *.h.a
