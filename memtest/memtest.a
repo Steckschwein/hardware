@@ -1,6 +1,6 @@
 *=$0300
-!src "../bios/defs.h.a"
-!src "../bios/bios.h.a"
+!src <defs.h.a>
+!src <bios.h.a>
 
 main
       ; Check zeropage
