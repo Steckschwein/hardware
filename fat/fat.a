@@ -1,7 +1,4 @@
 ; *=$c000
-!src "../bios/defs.h.a"
-!src "../bios/bios.h.a"
-!src "../fat/fat32.h.a"
 FD_start_cluster = $00
 FD_file_size = $08
 

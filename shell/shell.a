@@ -2,6 +2,7 @@
 !src <defs.h.a>
 !src <bios.h.a>
 !src <via.h.a>
+!src <fat32.h.a>
 
 	jmp	.init0
 	
