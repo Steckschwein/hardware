@@ -1,12 +1,12 @@
 !initmem $ff
 !cpu 65c02
 
-!src "defs.h.a"
-!src "via.h.a"
-!src "sdcard.h.a"
-!src "uart.h.a"
-!src "lcd.h.a"
-!src "../fat/fat32.h.a"
+!src <defs.h.a>
+!src <via.h.a>
+!src <sdcard.h.a>
+!src <uart.h.a>
+!src <lcd.h.a>
+!src <fat32.h.a>
 
 *= $e000			; ROM Start
 !src "../charsets/char.ascii.vc20.h.a"
