@@ -32,7 +32,7 @@ FD_file_size = $08
 	; jsr .sd_select_card
 	; jsr sd_param_init
 
-	tax
+	; tax
 
 	jsr .calc_lba_addr
 
