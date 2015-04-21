@@ -2,16 +2,13 @@
 !src "../vdp/t99xx.lib.a"
 
 .p_cursor=$f8	;cursor pointer
-.cursor_x=$fa
-.cursor_y=$fb
-
 .screen=$c000
 .screen_status !byte 0
 .screen_frames !byte 0
 .COLS=32
 .ROWS=24
-.CURSOR=0
-.DIRTY=1
+.CURSOR=1<<0
+.DIRTY=1<<1
 
 .textui_init
 	jsr	vdp_display_off			;display off
@@ -30,8 +27,8 @@
 	lda	#Cyan<<4|Black			;gfx 1 with cyan/black
 	jsr	vdp_mode_gfx1
 	
-	stz	.cursor_x
-	stz	.cursor_y
+	stz	crs_x
+	stz	crs_y
 	jsr	.textui_screen_addr		;init cursor pointer
 	
 	rts
@@ -62,19 +59,29 @@
 	rts
 	
 .textui_update_screen
+	lda	#Gray
+	jsr	vdp_bgcolor	
+	
 	inc	.screen_frames
-
 	jsr	.textui_cursor
 	
 	;TODO dirty check .screen_status AND 1 ...
-+	lda	#Gray
-	jsr	vdp_bgcolor	
+	lda	.screen_status
+	and	#.DIRTY
+	beq	+		;exit if not dirty
+	
 	+SetVector	.screen, .adrl
 	lda	#$00
 	ldy	#$40+$18
 	ldx	#$03
 	jsr	vdp_memcpy
-	lda	#Black
+	
+	lda	.screen_status		;clean dirty
+	and	#!.DIRTY
+	sta	.screen_status
+
+	
++	lda	#Black
 	jsr	vdp_bgcolor
 	rts	
 
@@ -91,24 +98,24 @@
 	rts
 	
 .inc_cursor_y
-	lda .cursor_y
+	lda crs_y
 	cmp	#23		;last line
 	bne	+
 	jmp	.textui_scroll_up	; scroll and exit
-+	inc .cursor_y
++	inc crs_y
 	rts
 	
 .textui_screen_addr
-	lda	.cursor_y	; * .COLS
+	lda	crs_y	; * .COLS
 	asl	
 	asl	
 	asl	
 	asl
 	asl
-	ora	.cursor_x
+	ora	crs_x
 	sta	.p_cursor
 	
-	lda	.cursor_y	; * .COLS
+	lda	crs_y	; * .COLS
 	lsr			; /8 -> page offset 0-2
 	lsr
 	lsr
@@ -124,7 +131,7 @@ _textui_print
 	beq	+++
 	cmp	#$0a
 	bne	+
-	stz	.cursor_x
+	stz	crs_x
 	jmp	++
 +	cmp	#$0d	
 	bne	+
@@ -133,19 +140,23 @@ _textui_print
 +	jsr	_textui_out
 ++	iny
 	bne	-
-+++	rts
++++	
+	lda	.screen_status		;set dirty
+	ora	#.DIRTY
+	sta	.screen_status
+	rts
 	
 _textui_out
 	pha
 	jsr	.textui_screen_addr
 	pla	
 	sta	(.p_cursor)
-	inc	.cursor_x
-	lda	.cursor_x
+	inc	crs_x
+	lda	crs_x
 	and	#$20
 	cmp	#$20
 	bne	+
-	stz	.cursor_x
+	stz	crs_x
 	jsr	.inc_cursor_y
 +	rts
 

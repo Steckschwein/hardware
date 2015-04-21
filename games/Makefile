@@ -1,8 +1,9 @@
-all: pacman.bin invaders.bin 
+all: invaders.bin
+
 clean:
 	rm -f *.bin *.labels
 
-%.bin: %.a ../vdp/*.lib.a ../vdp/*.h.a *.*.a
+%.bin:	%.a ../vdp/*.a
 	acme -v -f plain --cpu 65c02 -o $@ $<
 
 transfer: all
