@@ -8,6 +8,8 @@
 .screen=$c000
 .screen_status !byte 0
 .screen_frames !byte 0
+.COLS=32
+.ROWS=24
 .CURSOR=0
 .DIRTY=1
 
@@ -42,6 +44,11 @@
 	sta	.screen+512,x
 	inx
 	bne	-
+	ldx	#$00
+-	sta	.screen+768,x	;last line for scroll up
+	inx
+	cpx	#.COLS
+	bne	-
 	rts
 	
 .textui_cursor
@@ -71,8 +78,28 @@
 	jsr	vdp_bgcolor
 	rts	
 
+.textui_scroll_up
+	ldx	#$00
+-	lda	.screen+.COLS,x
+	sta	.screen,x
+	lda	.screen+256+.COLS,x
+	sta	.screen+256,x
+	lda	.screen+512+.COLS,x
+	sta	.screen+512,x
+	inx
+	bne	-
+	rts
+	
+.inc_cursor_y
+	lda .cursor_y
+	cmp	#23		;last line
+	bne	+
+	jmp	.textui_scroll_up	; scroll and exit
++	inc .cursor_y
+	rts
+	
 .textui_screen_addr
-	lda	.cursor_y	; * 32
+	lda	.cursor_y	; * .COLS
 	asl	
 	asl	
 	asl	
@@ -81,7 +108,7 @@
 	ora	.cursor_x
 	sta	.p_cursor
 	
-	lda	.cursor_y	; * 32
+	lda	.cursor_y	; * .COLS
 	lsr			; /8 -> page offset 0-2
 	lsr
 	lsr
@@ -101,7 +128,7 @@ _textui_print
 	jmp	++
 +	cmp	#$0d	
 	bne	+
-	inc	.cursor_y
+	jsr	.inc_cursor_y
 	jmp	++
 +	jsr	_textui_out
 ++	iny
@@ -109,16 +136,17 @@ _textui_print
 +++	rts
 	
 _textui_out
-	tax
+	pha
 	jsr	.textui_screen_addr
-	txa	
+	pla	
 	sta	(.p_cursor)
 	inc	.cursor_x
 	lda	.cursor_x
 	and	#$20
-	beq	+
+	cmp	#$20
+	bne	+
 	stz	.cursor_x
-	inc	.cursor_y
+	jsr	.inc_cursor_y
 +	rts
 
 _textui_put
