@@ -32,8 +32,7 @@ FD_file_size = $08
 	; jsr .sd_select_card
 	; jsr sd_param_init
 
-	; tax
-
+	tax
 	jsr .calc_lba_addr
 
 	; ldy #DIR_FileSize + 3
@@ -513,9 +512,9 @@ FD_file_size = $08
        	lda #cmd18
        	jsr sd_cmd
 
-.read_block
        ; Wait for data token
--		lda #$ff
+-		
+		lda #$ff
 		jsr spi_rw_byte             
 		cmp #$fe
 		bne -
@@ -552,7 +551,7 @@ FD_file_size = $08
 			sta via1portb 
 			stx via1portb 
 		}
-
+		
 		dec .blocks
 		beq +
 		jmp -
