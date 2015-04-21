@@ -493,7 +493,6 @@ FD_file_size = $08
 ; Read multiple blocks from SD Card
 ;---------------------------------------------------------------------
 .sd_read_multiblock
-		+PrintString .crlf
 
 -		lda via1portb	; wait for spi bus to become free
 		and #%01111110
@@ -551,6 +550,7 @@ FD_file_size = $08
 			sta via1portb 
 			stx via1portb 
 		}
+
 
 		dec .blocks
 		beq +
