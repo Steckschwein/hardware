@@ -43,6 +43,7 @@ dev_uart   = $02
 ; Cursor Position
 crs_x	= $d0
 crs_y	= $d1
+crs_ptr	= $d2 ; 2 bytes
 
 
 ; IRQ vector

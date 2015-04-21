@@ -1,14 +1,14 @@
 !src "../vdp/t9929.h.a"
 !src "../vdp/t99xx.lib.a"
 
-.p_cursor=$f8	;cursor pointer
 .screen=$c000
 .screen_status !byte 0
 .screen_frames !byte 0
 .COLS=32
 .ROWS=24
-.CURSOR=1<<0
+.WRITE=1<<0
 .DIRTY=1<<1
+.CURSOR=1<<2
 
 .textui_init
 	jsr	vdp_display_off			;display off
@@ -50,19 +50,29 @@
 	
 .textui_cursor
 	lda .screen_frames
-	and	#$10
+	and	#$0f
+	bne	+++
+	lda .screen_status
+	and	#.WRITE
+	bne	+++
+	lda .screen_status
+	ora	#.CURSOR
+	eor	.screen_status
+	sta .screen_status
+	and	#.CURSOR
 	beq	+
-	lda #160
+	lda	#160
 	jmp	++
-+  	lda   #' '
++  	lda #' '
 ++	jmp _textui_put
-	rts
++++	rts
 	
 .textui_update_screen
-	lda	#Gray
-	jsr	vdp_bgcolor	
-	
+;	lda	#Gray
+;	jsr	vdp_bgcolor	
+
 	inc	.screen_frames
+	
 	jsr	.textui_cursor
 	
 	;TODO dirty check .screen_status AND 1 ...
@@ -80,7 +90,6 @@
 	and	#!.DIRTY
 	sta	.screen_status
 
-	
 +	lda	#Black
 	jsr	vdp_bgcolor
 	rts	
@@ -106,6 +115,7 @@
 	rts
 	
 .textui_screen_addr
+	pha
 	lda	crs_y	; * .COLS
 	asl	
 	asl	
@@ -113,7 +123,7 @@
 	asl
 	asl
 	ora	crs_x
-	sta	.p_cursor
+	sta	crs_ptr
 	
 	lda	crs_y	; * .COLS
 	lsr			; /8 -> page offset 0-2
@@ -121,47 +131,61 @@
 	lsr
 	clc
 	adc	#>.screen
-	sta	.p_cursor+1
+	sta	crs_ptr+1
+	pla
 	rts
 
-	
+
 _textui_print
+	inc .screen_status	;write on
 	ldy	#$00
 -	lda	(msgptr),y
-	beq	+++
+	beq	+
+	jsr .textui_dispatch_char
+	iny
+	bne	-
++	dec	.screen_status	;write off
+	jmp	.textui_screen_dirty
+
+_textui_chrout
+	beq	+	; \0 char
+	pha		; safe char
+	inc .screen_status	;write on
+	jsr .textui_dispatch_char
+	dec	.screen_status	;write off
+	jsr	.textui_screen_dirty
+	pla		; restore char
++	rts
+
+.textui_dispatch_char
 	cmp	#$0a
 	bne	+
 	stz	crs_x
-	jmp	++
+	rts
 +	cmp	#$0d	
 	bne	+
 	jsr	.inc_cursor_y
-	jmp	++
-+	jsr	_textui_out
-++	iny
-	bne	-
-+++	
-	lda	.screen_status		;set dirty
-	ora	#.DIRTY
-	sta	.screen_status
-	rts
-	
-_textui_out
-	pha
-	jsr	.textui_screen_addr
-	pla	
-	sta	(.p_cursor)
+	rts	
++	jsr	.textui_screen_addr
+	sta	(crs_ptr)
 	inc	crs_x
 	lda	crs_x
 	and	#$20
 	cmp	#$20
 	bne	+
 	stz	crs_x
-	jsr	.inc_cursor_y
+	jmp	.inc_cursor_y
 +	rts
+	
+.textui_screen_dirty
+	lda	.screen_status		;set dirty
+	ora	#.DIRTY
+	sta	.screen_status
+	rts
 
 _textui_put
-	sta	(.p_cursor)
+	sta	(crs_ptr)
+	jmp	.textui_screen_dirty
 	rts
 	
 _textui_println
