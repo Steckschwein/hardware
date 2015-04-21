@@ -59,6 +59,8 @@ FD_file_size = $08
 ++  
 ; -	+SDBlockAddr lba_addr
 	jsr .sd_read_multiblock
+
+
 	; +PrintChar '.'
 	
 	; dec .blocks
@@ -529,7 +531,7 @@ FD_file_size = $08
        ; read 256 bytes twice, increase blkptr in between
        !for .i,0,1 {
        		
--      		lda tmp0
+--     		lda tmp0
 
 			!for .j,0,7 {
 			      STA via1portb ; Takt An 
@@ -539,7 +541,7 @@ FD_file_size = $08
 			sta (sd_blkptr),y
 
 			iny
-			bne -
+			bne --
 
 			inc sd_blkptr+1		
 		}
@@ -553,7 +555,7 @@ FD_file_size = $08
 
 		dec .blocks
 		beq +
-		jmp .read_block
+		jmp -
 +
 		
 
