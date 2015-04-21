@@ -395,7 +395,7 @@ FD_file_size = $08
 	; day
 	ldy #DIR_WrtDate 
 	lda (sd_blkptr),y
-	and #%00111111
+	and #%00011111
 	jsr decout
 
 	+PrintChar '.'
@@ -505,7 +505,7 @@ FD_file_size = $08
 		sta via1portb
        
 		+SDBusyWait
-		
+
    		jsr sd_param_init
    		+SDBlockAddr lba_addr
 
