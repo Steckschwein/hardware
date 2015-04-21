@@ -2,7 +2,7 @@
 FD_start_cluster = $00
 FD_file_size = $08
 
-!src <sdcard.h.a>
+
 
 !macro saveClusterNo .where {
  ;    ldy #DIR_FstClusHI +1
@@ -461,6 +461,8 @@ FD_file_size = $08
 
 
 
+!src <sdcard.h.a>
+
 .sd_select_card
    	pha
 - 	lda via1portb	; wait for spi bus to become free
@@ -491,6 +493,8 @@ FD_file_size = $08
 ; Read multiple blocks from SD Card
 ;---------------------------------------------------------------------
 .sd_read_multiblock
+		+PrintString .crlf
+
 -		lda via1portb	; wait for spi bus to become free
 		and #%01111110
 		cmp #$7e
@@ -500,12 +504,8 @@ FD_file_size = $08
 		lda #%01111100
 		sta via1portb
        
--		lda #$ff
-		jsr spi_rw_byte
-		cmp #$ff
-		bne -
-       	; jsr sd_busy_wait
-
+		+SDBusyWait
+		
    		jsr sd_param_init
    		+SDBlockAddr lba_addr
 
@@ -551,22 +551,20 @@ FD_file_size = $08
 			sta via1portb 
 			stx via1portb 
 		}
-		
+
 		dec .blocks
 		beq +
 		jmp -
 +
 		
+		+SDBusyWait
 
 		; all blocks read, send cmd12 to end transmission
-       	lda #cmd12
-       	jsr sd_cmd
+		; jsr sd_param_init
+		lda #cmd12
+		jsr sd_cmd
 
-       	lda #$ff
-       	jsr spi_rw_byte             
-       	; TODO: check response 
-
-       	
+		+SDBusyWait
 
 		lda #%01111110
 		sta via1portb
