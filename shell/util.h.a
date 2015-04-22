@@ -1,0 +1,75 @@
+!ifdef util_h_a !eof
+util_h_a = 1
+!address {
+	outvec = $d2
+}
+.hexout
+	pha
+	phx
+	
+	tax
+	lsr
+	lsr
+	lsr
+	lsr				
+	and     #%00001111      ;mask lsd for hex print
+	ora     #"0"            ;add "0"
+	cmp     #"9"+1          ;is it a decimal digit?
+	bcc     +	            ;yes! output it
+	adc     #6              ;add offset for letter a-f
++	
+	jsr		(outvec)
+	
+	txa 
+	and     #%00001111      ;mask lsd for hex print
+	ora     #"0"            ;add "0"
+	cmp     #"9"+1          ;is it a decimal digit?
+	bcc     +	            ;yes! output it
+	adc     #6              ;add offset for letter a-f
++
+	
+	jsr		(outvec)
+
+	plx
+	pla
+	rts
+
+.decout
+	bra +
+	; Lookup table for decimal to ASCII
+	.dec_tbl		!byte 128,160,200
++
+   phx
+   phy
+   ldx #1
+   stx tmp1
+   inx
+   ldy #$40
+-- sty tmp0
+   lsr
+-  rol
+   bcs ++
+   cmp .dec_tbl,x
+   bcc +
+++ sbc .dec_tbl,x
+   sec
++  rol tmp0
+   bcc -
+   tay
+   cpx tmp1
+   lda tmp0
+   bcc +
+   beq ++
+   stx tmp1
++  eor #$30
+   jsr (outvec)
+
+++ tya
+   ldy #$10
+   dex
+   bpl --
+   ply
+   plx
+   rts
+
+
