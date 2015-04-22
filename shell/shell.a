@@ -51,6 +51,7 @@
 mainloop
 	+PrintString .crlf
 	+PrintString .prompt
+	+V_Print .crlf
 	+V_Print .prompt
 	ldx #$00
 	stz .buf
@@ -85,7 +86,6 @@ mainloop
 	bra .next	
 
 .parse
-	+V_Print .crlf
 	lda .buf
 
 	ldx #$00
@@ -180,6 +180,7 @@ mainloop
 	bne +
 	+PrintString .crlf
 	+PrintString .steckos_start
+	+V_Print	.crlf
 	+V_Println .steckos_start
 	
 +	jmp mainloop
@@ -266,15 +267,16 @@ mainloop
 	lda .buf
 	beq +
 	+PrintString .txt_msg_unknown_cmd
-	+V_Println .txt_msg_unknown_cmd
+	+V_Print .txt_msg_unknown_cmd
 +	jmp mainloop
 
 .hello
 	+PrintString .crlf
 	+PrintString .hellotxt
 	+PrintString .helptxt
-	+V_Println	.hellotxt
-	+V_Println	.helptxt
+	+V_Print	.crlf
+	+V_Print	.hellotxt
+	+V_Print	.helptxt
 	jmp mainloop
 
 .cmdlist
@@ -311,7 +313,7 @@ mainloop
 				!text $0a,$0d,"t <name>     - dump file to screen"
 				!text $0a,$0d,"c <name>     - change directory "
 				!text $0a,$0d,"u            - serial upload",$0a,$0d,$00
-.prompt			!text "> ",$00
+.prompt			!text ">",$00
 .crlf			!byte $0a,$0d,$00
 
 .txt_msg_unknown_cmd	!text $0a,$0d,"unknown command",$00
