@@ -195,6 +195,14 @@ _textui_put
 _textui_println
 	jmp	_textui_print
 	
+!macro	V_Print{
+	jsr	_textui_chrout
+}
+
+!macro	V_PrintChar .byte {
+	lda	#.byte
+	jsr	_textui_chrout
+}
 !macro	V_Print .word {
 	+SetVector .word, msgptr
 	jsr	_textui_print
