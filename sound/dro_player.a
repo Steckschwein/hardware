@@ -95,8 +95,8 @@ cmd_long_delay		= song + 24
 codemap_len		= song + 25
 codemap			= song + 26
 
-;SFX_YM_SELECT_REGISTER	= $230
-;SFX_YM_DATA_REGISTER	= $231
+S_SFX_YM_SELECT_REGISTER	= $230
+S_SFX_YM_DATA_REGISTER	= $231
 SFX_YM_SELECT_REGISTER	= $DF40
 SFX_YM_DATA_REGISTER	= $DF50
 
@@ -184,11 +184,13 @@ show_hex_byte:  ; A=byte, ZP: screen address base, Y = offset (from ZP)
 reset_sfx:
 	LDA #0
 	TAY
--	STY SFX_YM_SELECT_REGISTER ; select YM register
+-	STY S_SFX_YM_SELECT_REGISTER
+	STY SFX_YM_SELECT_REGISTER ; select YM register
         NOP ; some wait after writing
         NOP
         NOP
         NOP
+		STA S_SFX_YM_DATA_REGISTER
         STA SFX_YM_DATA_REGISTER ; write to selected YM register now
         LDX #4 ; some more delay we need here ...
         INY
@@ -338,11 +340,13 @@ play_loop:
 	; Note: we should use delays after writing registers (see: reset_sfx)
 	; However, at this point we have enough instructions between writes,
 	; so I simply don't need any additional delay (I hope so, at least)
+	STA S_SFX_YM_SELECT_REGISTER
 	STA SFX_YM_SELECT_REGISTER
 	STA ZP ; store YM register number in ZP
 	NOP ; anyway, it seems some delay needed at least HERE (before data write)
 	NOP
 	LDA ZP+1
+	STA S_SFX_YM_DATA_REGISTER
 	STA SFX_YM_DATA_REGISTER
 	; show it!
 	JSR show_reg
