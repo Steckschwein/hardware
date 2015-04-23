@@ -4,6 +4,8 @@
 .screen=$c000
 .screen_status !byte 0
 .screen_frames !byte 0
+.saved_char	!byte ' '
+.saved_crs_ptr	!word 0
 .COLS=32
 .ROWS=24
 .WRITE=1<<0
@@ -29,9 +31,7 @@
 	
 	stz	crs_x
 	stz	crs_y
-	jsr	.textui_screen_addr		;init cursor pointer
-	
-	rts
+	jmp .textui_update_crs_ptr		;init cursor pointer
 
 .textui_blank
 	ldx	#$00
@@ -49,21 +49,25 @@
 	rts
 	
 .textui_cursor
+	lda .screen_status
+	and	#.WRITE
+	bne	+++
 	lda .screen_frames
 	and	#$0f
 	bne	+++
 	lda .screen_status
-	and	#.WRITE
-	bne	+++
-	lda .screen_status
 	ora	#.CURSOR
 	eor	.screen_status
-	sta .screen_status
+	sta .screen_status		; or/eor to alternate .CURSOR bit
 	and	#.CURSOR
 	beq	+
+;	lda	crs_ptr				; save crs vector
+;	sta	.saved_crs_ptr
+;	lda	crs_ptr+1
+;	sta	.saved_crs_ptr+1
 	lda	#160
 	jmp	++
-+  	lda #' '
++  	lda	.saved_char
 ++	jmp _textui_put
 +++	rts
 	
@@ -114,7 +118,7 @@
 +	inc crs_y
 	rts
 	
-.textui_screen_addr
+.textui_update_crs_ptr
 	pha
 	lda	crs_y	; * .COLS
 	asl	
@@ -160,22 +164,22 @@ _textui_chrout
 .textui_dispatch_char
 	cmp	#$0a
 	bne	+
+	lda	#' '
+	sta	(crs_ptr)		;cariage return, we do not write anything, therefore erase a possible not blank cursor before write
 	stz	crs_x
-	rts
+	jmp	++
 +	cmp	#$0d	
 	bne	+
 	jsr	.inc_cursor_y
-	rts	
-+	jsr	.textui_screen_addr
-	sta	(crs_ptr)
+	jmp	++
++	sta	(crs_ptr)
 	inc	crs_x
 	lda	crs_x
 	and	#$20
-	cmp	#$20
-	bne	+
+	beq ++
 	stz	crs_x
-	jmp	.inc_cursor_y
-+	rts
+	jsr	.inc_cursor_y
+++	jmp	.textui_update_crs_ptr
 	
 .textui_screen_dirty
 	lda	.screen_status		;set dirty
@@ -191,6 +195,14 @@ _textui_put
 _textui_println
 	jmp	_textui_print
 	
+!macro	V_Print{
+	jsr	_textui_chrout
+}
+
+!macro	V_PrintChar .byte {
+	lda	#.byte
+	jsr	_textui_chrout
+}
 !macro	V_Print .word {
 	+SetVector .word, msgptr
 	jsr	_textui_print

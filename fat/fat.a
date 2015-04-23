@@ -143,11 +143,13 @@ FD_file_size = $08
 
 .fat_no_such_file
 	+PrintString .fat_err_no_such_file
+	+V_Print .fat_err_no_such_file
 	inc fat_errno
 	bra .end_open
 
 .fat_open_error
 	+PrintString .fat_err_open
+	+V_Print .fat_err_open
 	inc fat_errno
 
 	
@@ -161,6 +163,7 @@ FD_file_size = $08
 .found
 	jsr .print_filename
 	+PrintString .fat_ok
+	+V_Print .fat_ok
 
 	ldy #DIR_Attr
 	lda (sd_blkptr),y
@@ -359,6 +362,7 @@ FD_file_size = $08
 	pha
 	jsr .print_filename
 	+PrintChar ' '
+	+V_PrintChar ' '
 
 	ldy #DIR_Attr
 	lda (sd_blkptr),y
@@ -380,9 +384,11 @@ FD_file_size = $08
 +	
 	lda #'F'
 ++	jsr chrout
+	+V_Print
+
 
 	+PrintChar ' '
-
+	+V_PrintChar ' '
 	ldy #DIR_FileSize + 1 +1
 -	dey
 	lda (sd_blkptr),y
@@ -391,6 +397,7 @@ FD_file_size = $08
 	bne -	
 
 	+PrintChar ' '
+	+V_PrintChar ' '
 
 	; day
 	ldy #DIR_WrtDate 
@@ -399,6 +406,7 @@ FD_file_size = $08
 	jsr decout
 
 	+PrintChar '.'
+	+V_PrintChar ' '
 	; month
 	iny
 	lda (sd_blkptr),y
@@ -414,6 +422,7 @@ FD_file_size = $08
 	jsr decout
 	
 	+PrintChar '.'
+	+V_PrintChar '.'
 	; year
 	txa
 	clc 
@@ -427,6 +436,7 @@ FD_file_size = $08
 	
 
 	+PrintChar ' '
+	+V_PrintChar ' '
 
 	ldy #DIR_WrtTime +1
 	lda (sd_blkptr),y
@@ -437,6 +447,7 @@ FD_file_size = $08
 	jsr decout
 
 	+PrintChar ':'
+	+V_PrintChar ':'
 
 	txa
 	and #%00000111
@@ -758,6 +769,7 @@ FD_file_size = $08
 	ldy #DIR_Name
 -	lda (sd_blkptr),y
 	jsr chrout
+	+V_Print
 	iny
 	cpy #$0b
 	bne -
