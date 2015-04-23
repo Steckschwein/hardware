@@ -159,7 +159,6 @@ charset  =$e000
 
 
 !macro save{
-	php
 	pha
 	phy
 	phx
@@ -168,7 +167,6 @@ charset  =$e000
 	plx
 	ply
 	pla
-	plp
 }
 
 !macro Copy .src, .trgt, .len {

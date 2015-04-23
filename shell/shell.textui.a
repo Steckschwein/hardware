@@ -61,10 +61,8 @@
 	sta .screen_status		; or/eor to alternate .CURSOR bit
 	and	#.CURSOR
 	beq	+
-;	lda	crs_ptr				; save crs vector
-;	sta	.saved_crs_ptr
-;	lda	crs_ptr+1
-;	sta	.saved_crs_ptr+1
+	lda	(crs_ptr)			;save char
+	sta	.saved_char
 	lda	#160
 	jmp	++
 +  	lda	.saved_char
@@ -162,13 +160,13 @@ _textui_chrout
 +	rts
 
 .textui_dispatch_char
-	cmp	#$0a
+	cmp	#$0a			;cariage return
 	bne	+
-	lda	#' '
-	sta	(crs_ptr)		;cariage return, we do not write anything, therefore erase a possible not blank cursor before write
+	lda	.saved_char		
+	sta	(crs_ptr)		;restore char at cursor position
 	stz	crs_x
 	jmp	++
-+	cmp	#$0d	
++	cmp	#$0d
 	bne	+
 	jsr	.inc_cursor_y
 	jmp	++

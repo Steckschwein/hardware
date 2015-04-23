@@ -384,9 +384,13 @@ long_delay: ; "long delay" in DRO files means waiting (X+1)*256 miliseconds
 	BNE -
 	JMP play_loop
 chk_kbd:  ; if I am correct, it's about 14 cycles normally
-	LDA $DC01	; 4 cycles
-	AND #%10000000	; 2 cycles
-	BEQ reset	; 2 cycles (branch is not taken)
+	nop
+	nop
+;	LDA $DC01	; 4 cycles
+	nop
+;	AND #%10000000	; 2 cycles
+	nop
+;	BEQ reset	; 2 cycles (branch is not taken)
 	RTS		; 6 cycles
 reset: ; It's now safe to turn off your computer. :)
 	JSR reset_sfx

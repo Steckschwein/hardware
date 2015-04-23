@@ -1,7 +1,7 @@
 ;
 ;
-;\development\cc65\bin\ca65.exe dro_player.org.a -v --cpu 6502 -o dro_player.org.o
-;\development\cc65\bin\cl65.exe dro_player.org.o --cpu 6502 --start-addr $1000 -o dro_player.org.bin --config c64-asm.cfg
+;d:\development\steckschwein-code\sound>\development\cc65\bin\ca65.exe dro_player.org.a -v --cpu 6502 -o dro_player.org.o
+;d:\development\steckschwein-code\sound>\development\cc65\bin\cl65.exe dro_player.org.o --cpu 6502 --start-addr $1000 -o dro_player.org.bin --config c64-asm.cfg
 ; ---------------------------------------------------------------------
 ; DRO AdLib OPL2 player for Commodore 64 equipped with SFX
 ; Sound Expander cartridge with YM3812 chip (the "normal" chip
@@ -67,16 +67,18 @@
 ;	  test the stuff without a cartridge too
 ; ---------------------------------------------------------------------
 
-ZP=$f0		;:	.RES 2 ; general purpose zeropage locations we use (two bytes)
-song_p=$f2	;:	.RES 2 ; byte pointer inside the DRO stream (two bytes)
+.ZEROPAGE
 
+ZP:	.RES 2 ; general purpose zeropage locations we use (two bytes)
+song_p:	.RES 2 ; byte pointer inside the DRO stream (two bytes)
+
+.BSS
+screen_reg_addrs: .RES 512
 ;.SEGMENT "ZPSAVE"  ; not used here so much
 ; BASIC stub: do NOT place anything into the STARTUP segment
 ; before the stub itself!
 .CODE
 	jmp	main
-
-screen_reg_addrs: .RES 512
 	
 ; Character remapping for screen codes:
 ; We manipulate screen directly, and I don't want to convert texts
@@ -87,22 +89,39 @@ screen_reg_addrs: .RES 512
 ; Not remapped characters left as-is (by c64 target) hopefully
 ; most of them at least are OK :)
 
+.REPEAT 26,l
+.CHARMAP l+97,l+1 ; lower case
+.CHARMAP l+65,l+65 ; upper case
+.ENDREP
+.CHARMAP 64,0  ; @
+.CHARMAP 95,100   ; _
+
 ;song_length		= song + 12  ; we don't use length currently, but the label after the included DRO to match against the position counter
 cmd_short_delay		= song + 23
 cmd_long_delay		= song + 24
 codemap_len		= song + 25
 codemap			= song + 26
 
-SFX_YM_SELECT_REGISTER	= $DF40
-SFX_YM_DATA_REGISTER	= $DF50
-SFX_YM_SELECT_REGISTER2	= $0230
-SFX_YM_DATA_REGISTER2	= $0231
+;SFX_YM_SELECT_REGISTER	= $DF40
+;SFX_YM_DATA_REGISTER	= $DF50
+SFX_YM_SELECT_REGISTER	= $230
+SFX_YM_DATA_REGISTER	= $231
 
 SCREEN_ADDRESS		= $0400
+COLOR_ADDRESS		= $D800
+COLOR_RAM_OFFSET	= COLOR_ADDRESS - SCREEN_ADDRESS
 REGDUMP_START_POS	= SCREEN_ADDRESS + 41
 SONG_POSITION_POS	= SCREEN_ADDRESS + 24*40
 MSG_POS			= SCREEN_ADDRESS + 22*40
 SONG_NAME_POS		= SONG_POSITION_POS + 15
+DELAY_POS_COLRAM	= MSG_POS + 37 + COLOR_RAM_OFFSET
+MSG_COLOR		= 7
+HEADER_COLOR		= 13
+COMMON_COLOR		= 1
+NAME_COLOR		= 14
+DELAY_ACTIVE_COLOR	= 1
+DELAY_INACTIVE_COLOR	= 11
+LINE_COLOR		= 3
 
 ; You need a version 2 DRO file here
 ; DOSBOX 0.74 (maybe 0.73 too, but note: older versions
@@ -176,18 +195,17 @@ reset_sfx:
 	LDA #0
 	TAY
 :	STY SFX_YM_SELECT_REGISTER ; select YM register
-	STY SFX_YM_SELECT_REGISTER2
         NOP ; some wait after writing
         NOP
         NOP
         NOP
         STA SFX_YM_DATA_REGISTER ; write to selected YM register now
-		STA SFX_YM_DATA_REGISTER2
         LDX #4 ; some more delay we need here ...
 :	DEX
         NOP
         BNE :-
         INY
+        STY $D020 ; it is really not needed :)
         BNE :--
 	RTS
 
@@ -206,25 +224,33 @@ main:
 	; time and it is not counted, the exact timing is surely bad.
 	; This is only a quick TEST, do not except advanced
 	; features now.
-	sei
-	lda	#1<<7
-	sta	$0221
-	lda	#$81
-	sta 	$0221
-	lda	#$02
-	jsr	@vdp_color
+	SEI
+	; Select lower-case character set
+	LDA #23
+	STA $D018
+	; "Nice" black screen, also clear it, with filling the color RAM as well
+	LDX #0
+	STX $D020
+	STX $D021
 :
 	LDA #' '
 	STA SCREEN_ADDRESS,X
 	STA SCREEN_ADDRESS+$100,X
 	STA SCREEN_ADDRESS+$200,X
 	STA SCREEN_ADDRESS+$300,X
+	LDA #COMMON_COLOR
+	STA COLOR_ADDRESS,X
+	STA COLOR_ADDRESS+$100,X
+	STA COLOR_ADDRESS+$200,X
+	STA COLOR_ADDRESS+$300,X
 	INX
 	BNE :-
 	; Display the top header
 :	LDA header,X
 	ORA #128 ; in inverse (bit 7 set)
 	STA SCREEN_ADDRESS,X
+	LDA #HEADER_COLOR 	; with some different color ....
+	STA COLOR_ADDRESS,X
 	INX
 	CPX #header_size
 	BNE :-
@@ -232,6 +258,8 @@ main:
 	LDX #0
 :	LDA msg,X
 	STA MSG_POS,X
+	LDA #MSG_COLOR
+	STA MSG_POS+COLOR_RAM_OFFSET,X
 	INX
 	CPX #msg_size
 	BNE :-
@@ -240,6 +268,8 @@ main:
 :	LDA dro_file_name,X
 	ORA #128 ; in inverse (bit 7 set)
 	STA SONG_NAME_POS,X
+	LDA #NAME_COLOR
+	STA SONG_NAME_POS+COLOR_RAM_OFFSET,X
 	INX
 	CPX #dro_file_name_size
 	BNE :-
@@ -249,6 +279,9 @@ main:
 	STA MSG_POS-40,X
 	LDA #99
 	STA MSG_POS+40,X
+	LDA #LINE_COLOR
+	STA MSG_POS+COLOR_RAM_OFFSET-40,X
+	STA MSG_POS+COLOR_RAM_OFFSET+40,X
 	DEX
 	BPL :-
 
@@ -293,6 +326,12 @@ main:
 :
 	INY
 	BNE @scraddrtabfillloop
+
+	; Program CIA-1 for our simple kbd "scan", we only check a single matrix row/col,
+	; so this is the only place where it's needed to setup
+	; they key is "x" what we're looking for
+	LDA #%11111011
+	STA $DC00
 
 @main_player:
 	; We must find the (C64 memory) address of the first byte
@@ -373,20 +412,23 @@ main:
 	BEQ @long_delay
 	; no delay commands: the byte is a codemap position
 	TAX ; move to X
+	; clear delay info, no delay
+	LDA #DELAY_INACTIVE_COLOR
+	STA DELAY_POS_COLRAM+1
+	STA DELAY_POS_COLRAM+2
+	LDA #DELAY_ACTIVE_COLOR
+	STA DELAY_POS_COLRAM
 	; Convert into register number
 	LDA codemap,X
 	; Note: we should use delays after writing registers (see: reset_sfx)
 	; However, at this point we have enough instructions between writes,
 	; so I simply don't need any additional delay (I hope so, at least)
 	STA SFX_YM_SELECT_REGISTER
-	STA SFX_YM_SELECT_REGISTER2
 	STA ZP ; store YM register number in ZP
 	NOP ; anyway, it seems some delay needed at least HERE (before data write)
 	NOP
-	jsr	@vdp_color
 	LDA ZP+1
 	STA SFX_YM_DATA_REGISTER
-	STA SFX_YM_DATA_REGISTER2
 	; show it!
 	JSR show_reg
 	; check looping
@@ -400,6 +442,11 @@ main:
 ; In delay codes we check keyboard to see if we want to exit.
 ; That also used as a part of the delay.
 @short_delay: ; "short delay" in DRO files means waiting X+1 miliseconds
+	LDA #DELAY_INACTIVE_COLOR
+	STA DELAY_POS_COLRAM
+	STA DELAY_POS_COLRAM+2
+	LDA #DELAY_ACTIVE_COLOR
+	STA DELAY_POS_COLRAM+1
 	LDX ZP+1 ; after this, we should wait X+1 msecs
 	INX
 :	LDY #40  ;25*40=1000 cycles [25=20 - see below - plus 5], about one msec.
@@ -410,6 +457,11 @@ main:
 	BNE :--
 	JMP @play_loop
 @long_delay: ; "long delay" in DRO files means waiting (X+1)*256 miliseconds
+	LDA #DELAY_INACTIVE_COLOR
+	STA DELAY_POS_COLRAM
+	STA DELAY_POS_COLRAM+1
+	LDA #DELAY_ACTIVE_COLOR
+	STA DELAY_POS_COLRAM+2
 	LDX ZP+1  ; after this, we should wait (X+1)*256 msecs
 	INX
 :	TXA
@@ -427,19 +479,12 @@ main:
 	BNE :---
 	JMP @play_loop
 @chk_kbd:  ; if I am correct, it's about 14 cycles normally
-	nop
-	nop
-	nop
-	nop
+	LDA $DC01	; 4 cycles
+	AND #%10000000	; 2 cycles
+	BEQ @reset	; 2 cycles (branch is not taken)
 	RTS		; 6 cycles
 @reset: ; It's now safe to turn off your computer. :)
+	LDA #%00001011
+	STA $D011
 	JSR reset_sfx
-	lda	#$0f
-	jsr @vdp_color
-:	JMP :-
-
-@vdp_color:
-	sta	 $0221
-	lda	 #$87
-	sta  $0221
-	rts
+	JMP 64738
