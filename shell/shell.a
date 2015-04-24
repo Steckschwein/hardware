@@ -199,8 +199,9 @@ mainloop
 
 	+SetVector .steckos_start, sd_blkptr
 	lda tmp5
+	; jsr .fat_read_singleblock
 	jsr .fat_read
-	
+
 	lda tmp5
 	jsr .fat_close
 	
