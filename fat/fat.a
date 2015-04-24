@@ -60,7 +60,7 @@ FD_file_size = $08
 	jsr .sd_read_multiblock
 
 
-	; +PrintChar '.'
+	; +ShellPrintChar '.'
 	
 	; dec .blocks
 	; beq + ; zero, we're done
@@ -142,14 +142,12 @@ FD_file_size = $08
 	jmp -
 
 .fat_no_such_file
-	+PrintString .fat_err_no_such_file
-	+V_Print .fat_err_no_such_file
+	+ShellPrintString .fat_err_no_such_file
 	inc fat_errno
 	bra .end_open
 
 .fat_open_error
-	+PrintString .fat_err_open
-	+V_Print .fat_err_open
+	+ShellPrintString .fat_err_open
 	inc fat_errno
 
 	
@@ -162,8 +160,7 @@ FD_file_size = $08
 
 .found
 	jsr .print_filename
-	+PrintString .fat_ok
-	+V_Print .fat_ok
+	+ShellPrintString .fat_ok
 
 	ldy #DIR_Attr
 	lda (sd_blkptr),y
@@ -339,7 +336,7 @@ FD_file_size = $08
 	rts
 
 .file_not_open
-	+PrintString .fat_err_file_not_open
+	+ShellPrintString .fat_err_file_not_open
 	inc fat_errno
 	bra .calc_end
 
@@ -361,8 +358,7 @@ FD_file_size = $08
 .fat_list_entry
 	pha
 	jsr .print_filename
-	+PrintChar ' '
-	+V_PrintChar ' '
+	+ShellPrintChar ' '
 
 	ldy #DIR_Attr
 	lda (sd_blkptr),y
@@ -383,30 +379,25 @@ FD_file_size = $08
     bra ++ 
 +	
 	lda #'F'
-++	jsr chrout
-	+V_Print
+++	+ShellPrint
 
-
-	+PrintChar ' '
-	+V_PrintChar ' '
+	+ShellPrintChar ' '
 	ldy #DIR_FileSize + 1 +1
 -	dey
 	lda (sd_blkptr),y
-	jsr hexout
+	+ShellPrintHex
 	cpy #DIR_FileSize
 	bne -	
 
-	+PrintChar ' '
-	+V_PrintChar ' '
+	+ShellPrintChar ' '
 
 	; day
 	ldy #DIR_WrtDate 
 	lda (sd_blkptr),y
 	and #%00011111
-	jsr decout
+	+ShellPrintDec
 
-	+PrintChar '.'
-	+V_PrintChar ' '
+	+ShellPrintChar '.'
 	; month
 	iny
 	lda (sd_blkptr),y
@@ -419,10 +410,9 @@ FD_file_size = $08
 	lsr
 	lsr
 	lsr
-	jsr decout
+	+ShellPrintDec
 	
-	+PrintChar '.'
-	+V_PrintChar '.'
+	+ShellPrintChar '.'
 	; year
 	txa
 	clc 
@@ -431,12 +421,11 @@ FD_file_size = $08
 	bcc +		; greater than 100 (post-2000)
 	sec 		; yes, substract 100
 	sbc #100
-+	jsr decout  ; there we go
++	+ShellPrintDec  ; there we go
 
 	
 
-	+PrintChar ' '
-	+V_PrintChar ' '
+	+ShellPrintChar ' '
 
 	ldy #DIR_WrtTime +1
 	lda (sd_blkptr),y
@@ -444,10 +433,9 @@ FD_file_size = $08
 	lsr
 	lsr
 	lsr
-	jsr decout
+	+ShellPrintDec
 
-	+PrintChar ':'
-	+V_PrintChar ':'
+	+ShellPrintChar ':'
 
 	txa
 	and #%00000111
@@ -460,12 +448,12 @@ FD_file_size = $08
 		ror 
 	}	
 
-	jsr decout
+	+ShellPrintDec
 
 
 	; Bits 11–15: Hours, valid value range 0–23 inclusive.
 	
-	+PrintString .crlf
+	+ShellPrintString .crlf
 	pla
 	rts	
 
@@ -602,10 +590,9 @@ FD_file_size = $08
 
 	jsr .fat_check_signature
 
-
 	lda fat_errno
 	beq +
-	+PrintString .fat_err_signature
+	+ShellPrintString .fat_err_signature
 	jmp .end_mount
 
 +	
@@ -618,7 +605,7 @@ FD_file_size = $08
 	beq +
 
 	; type code not $0b or $0c
-	+PrintString .fat_err_partition
+	+ShellPrintString .fat_err_partition
 	inc fat_errno
 	jmp .end_mount
 
@@ -642,7 +629,7 @@ FD_file_size = $08
 	jsr .fat_check_signature
 	lda fat_errno
 	beq +
-	+PrintString .fat_err_signature
+	+ShellPrintString .fat_err_signature
 	jmp .end_mount
 
 +
@@ -652,7 +639,7 @@ FD_file_size = $08
 	lda sd_blktarget + BPB_BytsPerSec + 1
 	cmp #$02
 	beq ++
-+	+PrintString .fat_err_bad_sect_size
++	+ShellPrintString .fat_err_bad_sect_size
 	inc fat_errno
 	jmp .end_mount
 ++
@@ -674,9 +661,6 @@ FD_file_size = $08
 	adc #$00
 	sta cluster_begin_lba + .i
 }
-
-
-	
 
 
 	; Number of FATs. Must be 2
@@ -719,7 +703,7 @@ FD_file_size = $08
 	rts
 
 .fat_init_fdarea
-	jsr chrin
+;	jsr chrin
 	ldx #$00
 -	lda #$ff
 	sta fd_area + FD_start_cluster +3 , x
@@ -751,10 +735,10 @@ FD_file_size = $08
 	bne -
 
 	; Too many open files, no free file descriptor found
-	+PrintString .fat_err_too_many_open
+	+ShellPrintString .fat_err_too_many_open
 	ldx #$ff
 +	txa
-	jsr hexout
+	+ShellPrintHex
 	rts
 
 .fat_close
@@ -768,8 +752,7 @@ FD_file_size = $08
 .print_filename
 	ldy #DIR_Name
 -	lda (sd_blkptr),y
-	jsr chrout
-	+V_Print
+	+ShellPrint
 	iny
 	cpy #$0b
 	bne -

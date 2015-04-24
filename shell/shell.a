@@ -6,12 +6,39 @@
 
 	jmp	.init0
 	
-!src "shell.textui.a"
-
 !address {
 .key = $10
 .filename  			= $03a2
 .buf 				= $0350 ; Input buffer 80 bytes. end: $03a1
+}
+
+!src "shell.textui.a"
+!src "util.h.a"
+
+!macro ShellPrint {
+    jsr chrout
+	jsr _textui_chrout
+}
+
+!macro ShellPrintChar char {
+	lda #char
+    jsr chrout
+	jsr _textui_chrout
+}
+
+!macro ShellPrintHex {
+	jsr hexout
+	jsr	shexout
+}
+!macro ShellPrintDec {
+	jsr decout
+	jsr sdecout
+}
+
+!macro ShellPrintString .word {
+	+SetVector .word, msgptr
+    jsr strout
+	jsr _textui_print
 }
 
 !macro toUpper {
@@ -41,6 +68,7 @@
 	jsr	.textui_init
 	
 	jsr .fat_mount
+	
 	cli
 	
 .init
@@ -48,14 +76,14 @@
 	sta chn_out
 	stz chn_in
 	
+	jmp	.hello
+	
 mainloop
-	+PrintString .crlf
-	+PrintString .prompt
-	+V_Print .crlf
-	+V_Print .prompt
+	+ShellPrintString .crlf
+	+ShellPrintString .prompt
 	ldx #$00
 	stz .buf
-
+	
 .inputloop	
 	jsr .keyin
 	cmp #$0d ; return?
@@ -64,9 +92,8 @@ mainloop
 	cmp #$08 ; backspace?
 	beq .backspace
 
-.next	
-	jsr chrout
-	jsr	_textui_chrout
+.next
+	+ShellPrint
 
 	+toUpper
 
@@ -127,8 +154,7 @@ mainloop
 	bra -
 	
 .dir
-	+PrintString .crlf
-	+V_Print .crlf
+	+ShellPrintString .crlf
 	; php
 	; sei
 	
@@ -139,13 +165,12 @@ mainloop
 
 
 .cdroot
-	+PrintChar '/'
+	+ShellPrintChar '/'
 	jsr .fat_open_rootdir
 	jmp mainloop 
 
 .cd
-	+PrintString .crlf
-	+V_Print .crlf
+	+ShellPrintString .crlf
 	; php
 	; sei
 	jsr .fat_open
@@ -154,8 +179,7 @@ mainloop
 
 
 .load	
-	+PrintString .crlf
-	+V_Print .crlf
+	+ShellPrintString .crlf
 	jsr .readfile		
 	
 	lda fat_errno
@@ -173,15 +197,12 @@ mainloop
 	jmp .init 
 
 .type	
-	+PrintString .crlf
-	+V_Print .crlf
+	+ShellPrintString .crlf
 	jsr .readfile
 	lda fat_errno
 	bne +
-	+PrintString .crlf
-	+PrintString .steckos_start
-	+V_Print	.crlf
-	+V_Println .steckos_start
+	+ShellPrintString .crlf
+	+ShellPrintString .steckos_start
 	
 +	jmp mainloop
 
@@ -266,17 +287,13 @@ mainloop
 .unknown
 	lda .buf
 	beq +
-	+PrintString .txt_msg_unknown_cmd
-	+V_Print .txt_msg_unknown_cmd
+	+ShellPrintString .txt_msg_unknown_cmd
 +	jmp mainloop
 
 .hello
-	+PrintString .crlf
-	+PrintString .hellotxt
-	+PrintString .helptxt
-	+V_Print	.crlf
-	+V_Print	.hellotxt
-	+V_Print	.helptxt
+	+ShellPrintString .crlf
+	+ShellPrintString .hellotxt
+	+ShellPrintString .helptxt
 	jmp mainloop
 
 .cmdlist

@@ -26,7 +26,7 @@
 	;TODO FIXME remove after init
 	jsr	vdp_mode_gfx1_blank		;blank screen vram
 	
-	lda	#Cyan<<4|Black			;gfx 1 with cyan/black
+	lda	#Medium_Green<<4|Black			;gfx 1 with cyan/black
 	jsr	vdp_mode_gfx1
 	
 	stz	crs_x
@@ -165,19 +165,31 @@ _textui_chrout
 	lda	.saved_char		
 	sta	(crs_ptr)		;restore char at cursor position
 	stz	crs_x
-	jmp	++
-+	cmp	#$0d
+	jmp	+++
++	cmp	#$0d			;line feed
 	bne	+
 	jsr	.inc_cursor_y
-	jmp	++
+	jmp	+++
++	cmp	#$08			;backspace
+	bne	+
+	lda	crs_x
+	beq	++
+	lda	#' '
+	sta	(crs_ptr)
+	dec	crs_x
+	jmp	+++
+++	dec	crs_y
+	lda	#$1f
+	sta	crs_x
+	jmp	+++
 +	sta	(crs_ptr)
 	inc	crs_x
 	lda	crs_x
 	and	#$20
-	beq ++
+	beq +++
 	stz	crs_x
 	jsr	.inc_cursor_y
-++	jmp	.textui_update_crs_ptr
++++	jmp	.textui_update_crs_ptr
 	
 .textui_screen_dirty
 	lda	.screen_status		;set dirty
@@ -201,14 +213,12 @@ _textui_println
 	lda	#.byte
 	jsr	_textui_chrout
 }
-!macro	V_Print .word {
+!macro	V_PrintString .word {
 	+SetVector .word, msgptr
 	jsr	_textui_print
 }
 
-!macro	V_Println .word {
-	+SetVector .word, msgptr
-	jsr	_textui_println
+!macro	V_SetColor .color {
+	lda	.color
+	jsr	vdp_bgcolor
 }
-
-.bg	!byte 0

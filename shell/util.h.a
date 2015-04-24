@@ -1,9 +1,6 @@
 !ifdef util_h_a !eof
-util_h_a = 1
-!address {
-	outvec = $d2
-}
-.hexout
+
+shexout
 	pha
 	phx
 	
@@ -18,7 +15,7 @@ util_h_a = 1
 	bcc     +	            ;yes! output it
 	adc     #6              ;add offset for letter a-f
 +	
-	jsr		(outvec)
+	jsr 	_textui_chrout
 	
 	txa 
 	and     #%00001111      ;mask lsd for hex print
@@ -27,17 +24,16 @@ util_h_a = 1
 	bcc     +	            ;yes! output it
 	adc     #6              ;add offset for letter a-f
 +
-	
-	jsr		(outvec)
+	jsr _textui_chrout
 
 	plx
 	pla
 	rts
 
-.decout
+sdecout
 	bra +
 	; Lookup table for decimal to ASCII
-	.dec_tbl		!byte 128,160,200
+.dec_tbl		!byte 128,160,200
 +
    phx
    phy
@@ -62,7 +58,8 @@ util_h_a = 1
    beq ++
    stx tmp1
 +  eor #$30
-   jsr (outvec)
+
+   jsr _textui_chrout
 
 ++ tya
    ldy #$10
