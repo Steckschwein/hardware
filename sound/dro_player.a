@@ -139,8 +139,13 @@ song:
 	; just before the DRO stream, and "song_end" should be
 	; after it! Also read note at the .DEFINE line above.
 ;.INCBIN DRO_FILE
-;!bin "dn2_1.dro"
-!bin "prowla.dro"
+; !bin "dn2_1.dro"
+; !bin "dn2_2.dro"
+; !bin "prowla.dro"
+;dn2_1.dro	dn2_2.dro	
+; !bin "doofus.dro"
+; !bin "dro_v2.dro"
+!bin "samurai.dro"
 song_end:
 
 ;dro_file_name: .BYTE DRO_FILE
