@@ -31,10 +31,8 @@
 	jsr	shexout
 }
 !macro ShellPrintDec {
-	pha
-	jsr decout
-	pla
 	jsr sdecout
+	jsr decout
 }
 
 !macro ShellPrintString .word {
@@ -287,6 +285,19 @@ mainloop
 	stz .key 		; reset .key to signal isr to fetch next key
 	rts
 
+.upload
+	
+	sei
+
+	jsr upload
+
+	ldx #$ff
+	txs
+	; jump to new code
+	jmp (.startaddr)
+
+
+	
 .unknown
 	lda .buf
 	beq +
@@ -315,7 +326,7 @@ mainloop
 	!word .cdroot
 	!byte '/'
 	
-	!word upload
+	!word .upload
 	!byte 'U'
 
 	!word .hello
@@ -328,12 +339,11 @@ mainloop
 !src "../fat/fat.a"
 
 .hellotxt		!text "SteckShell 0.05 ",$00
-.helptxt		!text $0a,$0d,"d            - directory "
-				!text $0a,$0d,"l <name>     - load file "
-				!text $0a,$0d,"t <name>     - dump file to screen"
-				!text $0a,$0d,"c <name>     - change directory "
-				!text $0a,$0d,"u            - serial upload",$0a,$0d,$00
+.helptxt		!text $0a,$0d,"d        - directory "
+				!text $0a,$0d,"l <name> - load file "
+				!text $0a,$0d,"t <name> - display file"
+				!text $0a,$0d,"c <name> - change directory "
 .prompt			!text ">",$00
 .crlf			!byte $0a,$0d,$00
-
+.uploadtxt		!text $0a,$0d,"Serial Upload",$0a,$0d,$00
 .txt_msg_unknown_cmd	!text $0a,$0d,"unknown command",$00
