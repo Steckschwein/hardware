@@ -34,7 +34,7 @@ sdecout
 	bra +
 	; Lookup table for decimal to ASCII
 .dec_tbl		!byte 128,160,200
-+
++  pha	
    phx
    phy
    ldx #1
@@ -67,4 +67,5 @@ sdecout
    bpl --
    ply
    plx
+   pla
    rts
