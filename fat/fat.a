@@ -413,7 +413,7 @@ FD_file_size = $08
 	lda #'F'
 ++	+ShellPrint
 
-	; +ShellPrintChar ' '
+	+ShellPrintChar ' '
 	ldy #DIR_FileSize + 1 +1
 -	dey
 	lda (sd_blkptr),y
@@ -429,7 +429,7 @@ FD_file_size = $08
 	and #%00011111
 	+ShellPrintDec
 
-	+ShellPrintChar '.'
+	; +ShellPrintChar '.'
 	; month
 	iny
 	lda (sd_blkptr),y
@@ -444,7 +444,7 @@ FD_file_size = $08
 	lsr
 	+ShellPrintDec
 	
-	+ShellPrintChar '.'
+	; +ShellPrintChar '.'
 	; year
 	txa
 	clc 
