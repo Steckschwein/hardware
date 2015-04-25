@@ -1,5 +1,7 @@
 !src "../vdp/t9929.h.a"
 !src "../vdp/t99xx.lib.a"
+!src "cursor.raw"
+!src "sanduhr.raw"
 
 .screen=$c000
 .screen_status !byte 0
