@@ -31,7 +31,9 @@
 	jsr	shexout
 }
 !macro ShellPrintDec {
+	pha
 	jsr decout
+	pla
 	jsr sdecout
 }
 
