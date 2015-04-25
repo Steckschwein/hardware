@@ -1,34 +1,53 @@
 !src "../vdp/t9929.h.a"
 !src "../vdp/t99xx.lib.a"
-!src "cursor.raw"
+.assets
 !src "sanduhr.raw"
+!src "cursor.raw"
+
+!align	1,0;
+.cursor_sprite_tab
+	!byte	$ff,	$f0,	0,	Gray
+	!byte	$d0,	$00,	4,			Medium_Green
 
 .screen=$c000
 .screen_status !byte 0
 .screen_frames !byte 0
 .saved_char	!byte ' '
-.saved_crs_ptr	!word 0
 .COLS=32
 .ROWS=24
 .WRITE=1<<0
 .DIRTY=1<<1
 .CURSOR=1<<2
 
+
+
 .textui_init
 	jsr	vdp_display_off			;display off
-	
-	+SetVector charset, .adrl	;setup vram with characters
+
+	jsr vdp_mode_gfx1_sprites_off
+
+	+SetVector charset, .adrl	;setup vram with charset
 	ldx	#$08
 	lda	#$00
 	ldy	#$40+$00
 	jsr	vdp_memcpy
 
-	jsr	.textui_blank			;blank screen
-		
-	;TODO FIXME remove after init
-	jsr	vdp_mode_gfx1_blank		;blank screen vram
+	+SetVector	.assets, .adrl	;load cursor sprites to vram
+	ldx	#$04
+	lda	#$00
+	ldy	#$40+$08
+	jsr	vdp_load_sprites16x16
 	
-	lda	#Medium_Green<<4|Black			;gfx 1 with cyan/black
+	jsr	vdp_mode_gfx1_sprites_off	;clean sprite attribute table
+	+SetVector	.cursor_sprite_tab, .adrl
+	ldx	#$08
+	lda	#$00
+	ldy	#$40+$3c
+	jsr	vdp_memcpys
+	
+	jsr	.textui_blank				;blank screen
+
+	lda	#Medium_Green<<4|Black		;gfx 1 with cyan/black
 	jsr	vdp_mode_gfx1
 	
 	stz	crs_x
@@ -48,7 +67,7 @@
 	inx
 	cpx	#.COLS
 	bne	-
-	rts
+	jmp	.textui_screen_dirty
 	
 .textui_cursor
 	lda .screen_status
@@ -66,7 +85,7 @@
 	lda	(crs_ptr)			;save char
 	sta	.saved_char
 	lda	#160
-	jmp	++
+	bra	++
 +  	lda	.saved_char
 ++	jmp _textui_put
 +++	rts
@@ -76,7 +95,14 @@
 ;	jsr	vdp_bgcolor	
 
 	inc	.screen_frames
-	
+
+;	lda	#$03
+;	ldy	#$40+$3c
+;	jsr vdp_sreg
+;	lda	.screen_frames
+	;lda	#Light_Green
+;	sta	a_vram
+		
 	jsr	.textui_cursor
 	
 	;TODO dirty check .screen_status AND 1 ...
@@ -102,9 +128,13 @@
 	ldx	#$00
 -	lda	.screen+.COLS,x
 	sta	.screen,x
-	lda	.screen+256+.COLS,x
+	inx
+	bne	-
+-	lda	.screen+256+.COLS,x
 	sta	.screen+256,x
-	lda	.screen+512+.COLS,x
+	inx
+	bne	-
+-	lda	.screen+512+.COLS,x
 	sta	.screen+512,x
 	inx
 	bne	-
@@ -158,7 +188,7 @@ _textui_chrout
 	jsr .textui_dispatch_char
 	dec	.screen_status	;write off
 	jsr	.textui_screen_dirty
-	pla		; restore char
+	pla								; restore char
 +	rts
 
 .textui_dispatch_char
@@ -167,29 +197,32 @@ _textui_chrout
 	lda	.saved_char		
 	sta	(crs_ptr)		;restore char at cursor position
 	stz	crs_x
-	jmp	+++
+	bra	+++
 +	cmp	#$0d			;line feed
 	bne	+
 	jsr	.inc_cursor_y
-	jmp	+++
+	bra	+++
 +	cmp	#$08			;backspace
 	bne	+
-	lda	crs_x
-	beq	++
 	lda	#' '
 	sta	(crs_ptr)
-	dec	crs_x
-	jmp	+++
-++	dec	crs_y
-	lda	#$1f
-	sta	crs_x
-	jmp	+++
-+	sta	(crs_ptr)
-	inc	crs_x
 	lda	crs_x
-	and	#$20
-	beq +++
-	stz	crs_x
+	beq	++
+	dec	crs_x
+	bra	+++
+++	lda	crs_y			; cursor y=0, no dec
+	beq	+++
+	dec	crs_y
+	lda	#$1f			; end of line
+	sta	crs_x
+	bra	+++
++	sta	(crs_ptr)
+	lda	crs_x
+	cmp	#$1f
+	beq +
+	inc	crs_x
+	bra	+++
++	stz	crs_x
 	jsr	.inc_cursor_y
 +++	jmp	.textui_update_crs_ptr
 	
@@ -206,19 +239,6 @@ _textui_put
 	
 _textui_println
 	jmp	_textui_print
-	
-!macro	V_Print{
-	jsr	_textui_chrout
-}
-
-!macro	V_PrintChar .byte {
-	lda	#.byte
-	jsr	_textui_chrout
-}
-!macro	V_PrintString .word {
-	+SetVector .word, msgptr
-	jsr	_textui_print
-}
 
 !macro	V_SetColor .color {
 	lda	.color

@@ -2,6 +2,7 @@
 
 ;subroutine wrapper because there is no JSR (yyxx) on 6502 or 65c02
 mychrout 
+;	jsr	chrout
 	jmp (outvec)
 
 shexout
@@ -19,7 +20,7 @@ shexout
 	bcc     +	            ;yes! output it
 	adc     #6              ;add offset for letter a-f
 +	
-	jsr 	_textui_chrout
+	jsr mychrout
 	
 	txa 
 	and     #%00001111      ;mask lsd for hex print
@@ -28,7 +29,6 @@ shexout
 	bcc     +	            ;yes! output it
 	adc     #6              ;add offset for letter a-f
 +
-	; jsr _textui_chrout
 	jsr mychrout
 	plx
 	pla
@@ -63,7 +63,6 @@ sdecout
    stx tmp1
 +  eor #$30
 
-	; jsr _textui_chrout
 	jsr mychrout
 
 ++ tya

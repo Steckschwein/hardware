@@ -33,7 +33,7 @@
 }
 
 !macro ShellPrintString .word {
-	+SetVector .word, msgptr
+	+SetVector .word,	msgptr
 	jsr _textui_print
 }
 
