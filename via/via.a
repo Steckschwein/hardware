@@ -3,23 +3,11 @@
 !src <bios.h.a>
 !src <via.h.a>
 cnt = $03
-	jsr lcdclear
-
 	lda #cnt
 	sta tmp0
 
-	stz tmp1
-
 	lda #$80
 	sta $02f0
--		
-	jsr chrin
-	lda $02f0
-	lsr
-	sta $02f0
-	jmp -
-
-	sei
 
 	lda #<count
 	sta via1t1cl            ; set low byte of count

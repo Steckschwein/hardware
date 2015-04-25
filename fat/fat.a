@@ -29,8 +29,6 @@ FD_file_size = $08
 ; .rest   = tmp6
 
 .fat_read
-	; jsr .sd_select_card
-	; jsr sd_param_init
 
 	tax
 	jsr .calc_lba_addr
@@ -56,32 +54,66 @@ FD_file_size = $08
 	beq ++
 +	inc .blocks
 ++  
-; -	+SDBlockAddr lba_addr
 	jsr .sd_read_multiblock
++	
+	rts
+
+
+.fat_read_singleblock
+	jsr .sd_select_card
+	jsr sd_param_init
+
+	tax
+	jsr .calc_lba_addr
+
+	; ldy #DIR_FileSize + 3
+	; lda (sd_blkptr),y
+	; lsr
+	; ldy #DIR_FileSize + 2
+	; lda (sd_blkptr),y
+	; ror
+	; ldy #DIR_FileSize + 1
+	; lda (sd_blkptr),y
+	; ror 
+
+	; enough for files up to 65535 bytes
+
+
+	lda fd_area + FD_file_size+1,x
+	lsr
+	sta .blocks
+	bcs +
+	lda fd_area + FD_file_size+0,x
+	beq ++
++	inc .blocks
+++  
+-	+SDBlockAddr lba_addr
+	jsr sd_read_block
 
 
 	; +ShellPrintChar '.'
 	
-	; dec .blocks
-	; beq + ; zero, we're done
+	dec .blocks
+	beq + ; zero, we're done
 
 	; increase lba_addy by 1
-	; jsr .inc_lba_address
+	jsr .inc_lba_address
 
-; 	inc sd_blkptr + 1
-; 	inc sd_blkptr + 1
-; 	bne ++
-; 	inc sd_blkptr + 0
-; ++
+	inc sd_blkptr + 1
+	inc sd_blkptr + 1
+	bne ++
+	inc sd_blkptr + 0
+++
 
 	; ready to read next block
-	; bra -
+	bra -
 
 +	
 
-	; jsr .sd_deselect_card
+	jsr .sd_deselect_card
 
 	rts
+
 
 .fat_open
 	; pha
