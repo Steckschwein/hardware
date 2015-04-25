@@ -15,29 +15,25 @@
 !src "shell.textui.a"
 !src "util.h.a"
 
+
 !macro ShellPrint {
-    jsr chrout
-	jsr _textui_chrout
+	jsr mychrout
 }
 
 !macro ShellPrintChar char {
 	lda #char
-    jsr chrout
-	jsr _textui_chrout
+    jsr mychrout
 }
 
 !macro ShellPrintHex {
-	jsr hexout
 	jsr	shexout
 }
 !macro ShellPrintDec {
 	jsr sdecout
-	jsr decout
 }
 
 !macro ShellPrintString .word {
 	+SetVector .word, msgptr
-    jsr strout
 	jsr _textui_print
 }
 
@@ -49,9 +45,12 @@
 +	
 }
 
+
+
 .init0
 	stz .key
 
+	+SetVector _textui_chrout, outvec
 	lda #<count
 	sta via1t1cl            ; set low byte of count
 	lda #>count
@@ -66,6 +65,7 @@
 	+SetVector .irq, irqvec
 
 	jsr	.textui_init
+
 	
 	jsr .fat_mount
 	
@@ -75,8 +75,10 @@
 	lda #dev_uart
 	sta chn_out
 	stz chn_in
+
 	
 	jmp	.hello
+
 	
 mainloop
 	+ShellPrintString .crlf

@@ -1,5 +1,9 @@
 !ifdef util_h_a !eof
 
+;subroutine wrapper because there is no JSR (yyxx) on 6502 or 65c02
+mychrout 
+	jmp (outvec)
+
 shexout
 	pha
 	phx
@@ -24,8 +28,8 @@ shexout
 	bcc     +	            ;yes! output it
 	adc     #6              ;add offset for letter a-f
 +
-	jsr _textui_chrout
-
+	; jsr _textui_chrout
+	jsr mychrout
 	plx
 	pla
 	rts
@@ -59,7 +63,8 @@ sdecout
    stx tmp1
 +  eor #$30
 
-   jsr _textui_chrout
+	; jsr _textui_chrout
+	jsr mychrout
 
 ++ tya
    ldy #$10

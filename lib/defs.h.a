@@ -54,6 +54,9 @@ irqvec		= $e0
 ; ramend
 ram_end_l   = $e4
 ram_end_h   = ram_end_l+1
+
+outvec		= $e6
+
 ; general purpose temp variables
 tmp0		= $f0
 tmp1		= $f1
