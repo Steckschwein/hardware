@@ -327,7 +327,7 @@ mainloop
 
 !src "../fat/fat.a"
 
-.hellotxt		!text "SteckShell 0.04 ",$00
+.hellotxt		!text "SteckShell 0.05 ",$00
 .helptxt		!text $0a,$0d,"d            - directory "
 				!text $0a,$0d,"l <name>     - load file "
 				!text $0a,$0d,"t <name>     - dump file to screen"
