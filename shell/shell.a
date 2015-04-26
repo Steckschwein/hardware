@@ -57,6 +57,7 @@
 
 .init0
 	stz .key
+	jsr lcdclear
 
 	+SetVector _textui_chrout, outvec
 	lda #<count
@@ -74,7 +75,11 @@
 
 	jsr	.textui_init
 	
+	lda #'X'
+	jsr lcdprint
 	jsr .fat_mount
+	lda #'Y'
+	jsr lcdprint
 	
 	cli
 	
