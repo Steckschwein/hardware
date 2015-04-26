@@ -140,12 +140,13 @@ song:
 	; after it! Also read note at the .DEFINE line above.
 ;.INCBIN DRO_FILE
 ; !bin "dn2_1.dro"
-; !bin "dn2_2.dro"
+!bin "dn2_2.dro"
 ; !bin "prowla.dro"
 ;dn2_1.dro	dn2_2.dro	
 ; !bin "doofus.dro"
 ; !bin "dro_v2.dro"
-!bin "samurai.dro"
+; !bin "fahne.dro"
+; !bin "introcw3.dro"
 song_end:
 
 ;dro_file_name: .BYTE DRO_FILE
@@ -396,7 +397,7 @@ chk_kbd:  ; if I am correct, it's about 14 cycles normally
 ;	LDA $DC01	; 4 cycles
 
 ;	AND #%10000000	; 2 cycles
-	!for .i,0,32 {
+	!for .i,0,34 {
 		nop
 	} 
 	
