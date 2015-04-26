@@ -154,9 +154,8 @@ vdp_fill:
 	jsr   vdp_sreg
 	ldy   #$00
 	lda   .adrl
--  	+vnops
+-  	iny
 	sta   a_vram
-	iny
 	bne   -
 	dex
 	bne   -
@@ -172,7 +171,6 @@ vdp_memcpy:
 	ldy   #$00
 -  	lda   (.adrl),y
 	iny
-	+vnops
 	sta   a_vram
 	bne   -
 	inc   .adrh
