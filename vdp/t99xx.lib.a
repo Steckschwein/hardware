@@ -1,13 +1,18 @@
+
+!macro	vnops{
+	nop
+}
+
 vdp_sreg:
 	sta   a_vreg
-	nop
+	+vnops
 	sty   a_vreg
 	rts
 	
 vdp_display_off:
 	lda		#v_reg1_16k	;enable 16K ram, disable screen
 	sta 	a_vreg
-	;+nops	VRAM_WAIT
+	+vnops
 	lda	  	#v_reg1
 	sta   	a_vreg
 	rts
@@ -89,7 +94,7 @@ vdp_init_bytes_gfx2
 ;
 vdp_bgcolor:
 	sta   a_vreg
-	;+nops	VRAM_WAIT
+	+vnops
 	lda   #v_reg7
 	sta   a_vreg
 	rts
@@ -103,8 +108,7 @@ vdp_load_sprites16
 ;  	x - amount of sprites
 	jsr	vdp_sreg
 --	ldy	#$00
--	lda	(.adrl),y
-	;+nops	VRAM_WAIT
+-	lda	(.adrl),y	
 	sta a_vram
 	iny
 	iny
@@ -112,8 +116,7 @@ vdp_load_sprites16
 	bne	-
 	ldy	#$00
 	inc	.adrl
--	lda	(.adrl),y
-	;+nops	VRAM_WAIT
+-	lda	(.adrl),y	
 	sta a_vram
 	iny
 	iny
@@ -150,13 +153,13 @@ vdp_fill:
 	jsr   vdp_sreg
 	ldy   #$00
 	lda   .adrl
--  	;+nops	VRAM_WAIT
-   sta   a_vram
-   iny
-   bne   -
-   dex
-   bne   -
-   rts
+-  	+vnops
+	sta   a_vram
+	iny
+	bne   -
+	dex
+	bne   -
+	rts
 	
 ;	input:
 ;	adrl/adrh vector set
@@ -168,6 +171,7 @@ vdp_memcpy:
 	ldy   #$00
 -  	lda   (.adrl),y
 	iny
+	+vnops
 	sta   a_vram
 	bne   -
 	inc   .adrh
@@ -185,8 +189,8 @@ vdp_memcpys:
 	ldy   #$00
 -  	lda   (.adrl),y
 	iny
-	sta   a_vram
 	dex
+	sta   a_vram
 	bne	-
 	rts
 	
@@ -211,7 +215,7 @@ vdp_print:
 vdp_chrout:
 	tay
 	jsr		vdp_set_addr
-+	;+nops 	VRAM_WAIT
++	+vnops
 	sty		a_vram
 	inc	crs_x
 	lda	crs_x
