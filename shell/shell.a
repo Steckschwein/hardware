@@ -29,6 +29,14 @@
 	jsr	shexout
 }
 !macro ShellPrintDec {
+	; leading zero hack
+	cmp #10
+	bcs +
+	pha
+	+ShellPrintChar '0'
+	pla
++	
+
 	jsr sdecout
 }
 
