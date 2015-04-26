@@ -8,8 +8,8 @@
 	
 !address {
 .key = $10
-.filename  			= $03a2
 .buf 				= $0350 ; Input buffer 80 bytes. end: $03a1
+.filename  			= $03a2
 }
 
 !src "shell.textui.a"
@@ -104,7 +104,7 @@ mainloop
 	stz .buf, x
 
 	; prevent overflow of input buffer 
-	cpx #80
+	cpx #30
 	beq mainloop
 	
 	bra .inputloop
@@ -288,8 +288,14 @@ mainloop
 	rts
 
 .upload
-	
+
 	sei
+	jsr lcdclear
+	+SetVector .uploadtxt, msgptr
+	jsr lcdstring
+	ldx #$00
+	ldy #$02
+	jsr lcdxy
 
 	jsr upload
 
@@ -345,7 +351,8 @@ mainloop
 				!text $0a,$0d,"l <name> - load file "
 				!text $0a,$0d,"t <name> - display file"
 				!text $0a,$0d,"c <name> - change directory "
-.prompt			!text ">",$00
+				!text $0a,$0d,"u        - serial upload"
 .crlf			!byte $0a,$0d,$00
-.uploadtxt		!text $0a,$0d,"Serial Upload",$0a,$0d,$00
+.prompt			!text ">",$00
+.uploadtxt		!text "serial upload",$00
 .txt_msg_unknown_cmd	!text $0a,$0d,"unknown command",$00
