@@ -138,7 +138,8 @@ vdp_load_sprites16
 vdp_fills:
 	jsr   vdp_sreg
 	lda   .adrl
--  	sta   a_vram
+-  	+vnops
+	sta   a_vram
 	dex
 	bne	-
 	rts
