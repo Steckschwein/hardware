@@ -1,13 +1,13 @@
 vdp_sreg:
 	sta   a_vreg
-	+nops	VRAM_WAIT
+	nop
 	sty   a_vreg
 	rts
 	
 vdp_display_off:
 	lda		#v_reg1_16k	;enable 16K ram, disable screen
 	sta 	a_vreg
-	+nops	VRAM_WAIT
+	;+nops	VRAM_WAIT
 	lda	  	#v_reg1
 	sta   	a_vreg
 	rts
@@ -20,9 +20,8 @@ vdp_init_reg:
    ldx	#v_reg0
 -  lda  (.adrl),y
    sta   a_vreg
-   +nops VRAM_WAIT
+   iny				;iny first, burn cycle to avoid vdp nop
    stx   a_vreg
-   iny
    inx
    cpy   #$08
    bne   -
@@ -90,7 +89,7 @@ vdp_init_bytes_gfx2
 ;
 vdp_bgcolor:
 	sta   a_vreg
-	+nops	VRAM_WAIT
+	;+nops	VRAM_WAIT
 	lda   #v_reg7
 	sta   a_vreg
 	rts
@@ -105,7 +104,7 @@ vdp_load_sprites16
 	jsr	vdp_sreg
 --	ldy	#$00
 -	lda	(.adrl),y
-	+nops	VRAM_WAIT
+	;+nops	VRAM_WAIT
 	sta a_vram
 	iny
 	iny
@@ -114,7 +113,7 @@ vdp_load_sprites16
 	ldy	#$00
 	inc	.adrl
 -	lda	(.adrl),y
-	+nops	VRAM_WAIT
+	;+nops	VRAM_WAIT
 	sta a_vram
 	iny
 	iny
@@ -136,8 +135,7 @@ vdp_load_sprites16
 vdp_fills:
 	jsr   vdp_sreg
 	lda   .adrl
--  +nops	VRAM_WAIT
-	sta   a_vram
+-  	sta   a_vram
 	dex
 	bne	-
 	rts
@@ -150,9 +148,9 @@ vdp_fill:
 ;	x - amount of 256byte blocks (page counter)
 ;	adrl - pattern
 	jsr   vdp_sreg
-   ldy   #$00
-   lda   .adrl
--  +nops	VRAM_WAIT
+	ldy   #$00
+	lda   .adrl
+-  	;+nops	VRAM_WAIT
    sta   a_vram
    iny
    bne   -
@@ -169,9 +167,8 @@ vdp_memcpy:
 	jsr   vdp_sreg
 	ldy   #$00
 -  	lda   (.adrl),y
-   +nops	VRAM_WAIT
-	sta   a_vram
 	iny
+	sta   a_vram
 	bne   -
 	inc   .adrh
 	dex
@@ -187,9 +184,8 @@ vdp_memcpys:
 	jsr	vdp_sreg
 	ldy   #$00
 -  	lda   (.adrl),y
-	+nops	VRAM_WAIT
-	sta   a_vram
 	iny
+	sta   a_vram
 	dex
 	bne	-
 	rts
@@ -206,8 +202,7 @@ vdp_print:
 	inc		crs_y
 	iny
 	jmp		--
-+	+nops 	VRAM_WAIT
-	sta		a_vram
++	sta		a_vram
 	inc 		crs_x
 	iny
 	bne		-
@@ -216,7 +211,7 @@ vdp_print:
 vdp_chrout:
 	tay
 	jsr		vdp_set_addr
-+	+nops 	VRAM_WAIT
++	;+nops 	VRAM_WAIT
 	sty		a_vram
 	inc	crs_x
 	lda	crs_x
