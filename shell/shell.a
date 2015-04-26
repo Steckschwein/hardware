@@ -74,14 +74,16 @@
 	+SetVector .irq, irqvec
 
 	jsr	.textui_init
+
+	cli
 	
+	+V_ToggleCursorBusy	
 	lda #'X'
 	jsr lcdprint
 	jsr .fat_mount
 	lda #'Y'
 	jsr lcdprint
-	
-	cli
+	+V_ToggleCursorBusy
 	
 .init
 	lda #dev_uart
