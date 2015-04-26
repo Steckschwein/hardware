@@ -8,7 +8,7 @@ vdp_sreg:
 	+vnops
 	sty   a_vreg
 	rts
-	
+
 vdp_display_off:
 	lda		#v_reg1_16k	;enable 16K ram, disable screen
 	sta 	a_vreg
@@ -25,8 +25,9 @@ vdp_init_reg:
    ldx	#v_reg0
 -  lda  (.adrl),y
    sta   a_vreg
-   iny				;iny first, burn cycle to avoid vdp nop
+	+vnops
    stx   a_vreg
+   iny				;iny first, burn cycle to avoid vdp nop
    inx
    cpy   #$08
    bne   -
@@ -109,6 +110,7 @@ vdp_load_sprites16
 	jsr	vdp_sreg
 --	ldy	#$00
 -	lda	(.adrl),y	
+	+vnops
 	sta a_vram
 	iny
 	iny
@@ -117,6 +119,7 @@ vdp_load_sprites16
 	ldy	#$00
 	inc	.adrl
 -	lda	(.adrl),y	
+	+vnops
 	sta a_vram
 	iny
 	iny
@@ -154,7 +157,8 @@ vdp_fill:
 	jsr   vdp_sreg
 	ldy   #$00
 	lda   .adrl
--  	iny
+-  	+vnops
+	iny
 	sta   a_vram
 	bne   -
 	dex
@@ -165,11 +169,12 @@ vdp_fill:
 ;	adrl/adrh vector set
 ;	a - low byte vram adress
 ;	y - high byte vram adress
-;  x - amount of 256byte blocks (page counter)
+;  	x - amount of 256byte blocks (page counter)
 vdp_memcpy:
 	jsr   vdp_sreg
 	ldy   #$00
 -  	lda   (.adrl),y
+	+vnops
 	iny
 	sta   a_vram
 	bne   -
@@ -187,9 +192,10 @@ vdp_memcpys:
 	jsr	vdp_sreg
 	ldy   #$00
 -  	lda   (.adrl),y
+	+vnops
+	sta   a_vram
 	iny
 	dex
-	sta   a_vram
 	bne	-
 	rts
 	
@@ -205,7 +211,8 @@ vdp_print:
 	inc		crs_y
 	iny
 	jmp		--
-+	sta		a_vram
++	+vnops
+	sta		a_vram
 	inc 		crs_x
 	iny
 	bne		-

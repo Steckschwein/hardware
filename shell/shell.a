@@ -73,7 +73,6 @@
 	+SetVector .irq, irqvec
 
 	jsr	.textui_init
-
 	
 	jsr .fat_mount
 	
