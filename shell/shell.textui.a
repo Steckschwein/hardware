@@ -31,9 +31,10 @@
 
 .textui_init
 	jsr	vdp_display_off			;display off
-
 	jsr vdp_mode_gfx1_sprites_off
-
+	
+    jsr .textui_blank			;blank screen
+	
 	+SetVector charset, .adrl	;setup vram with charset
 	ldx	#$08
 	lda	#$00
@@ -71,7 +72,6 @@
 	sta	.screen+512,x
 	inx
 	bne	-
-	ldx	#$00
 -	sta	.screen+768,x	;last line for scroll up
 	inx
 	cpx	#.COLS
