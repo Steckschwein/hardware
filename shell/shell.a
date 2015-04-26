@@ -355,10 +355,11 @@ mainloop
 !src "../fat/fat.a"
 
 .hellotxt		!text "SteckShell 0.05 ",$00
-.helptxt		!text $0a,$0d,"d        - directory "
-				!text $0a,$0d,"l <name> - load file "
+.helptxt		!text $0a,$0d,"d        - directory"
+				!text $0a,$0d,"/        - root dir"
+				!text $0a,$0d,"c <name> - change directory"
+				!text $0a,$0d,"l <name> - load file"
 				!text $0a,$0d,"t <name> - display file"
-				!text $0a,$0d,"c <name> - change directory "
 				!text $0a,$0d,"u        - serial upload"
 .crlf			!byte $0a,$0d,$00
 .prompt			!text ">",$00
