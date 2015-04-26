@@ -56,6 +56,7 @@
 	jsr	.textui_blank				;blank screen
 
 	lda	#Medium_Green<<4|Black		;gfx 1 with cyan/black
+	; lda #White<<4|White		;gfx 1 with white/white
 	jsr	vdp_mode_gfx1
 	
 	stz	crs_x
