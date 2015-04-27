@@ -41,7 +41,12 @@
 ; - slight syntax changes for the ACME cross assembler
 ;
 !src <defs.h.a>
+!src <via.h.a>
 !src <bios.h.a>
+!address {
+.key = $09
+}
+
 ;
 ; page zero variables
 ;
@@ -133,11 +138,38 @@ temp    =   $6C
 ; temp    =   $FC
 		
 		*=$1000			; load into RAM @ $1000-$15FF
+		jmp .init
 
-		lda #dev_uart
-		sta chn_out
-		stz chn_in
-;
+!src "../shell/util.h.a"
+!src "../shell/shell.textui.a"
+
+.init
+		stz .key
+		jsr	.textui_init
+
+		+SetVector _textui_chrout, outvec
+
+		; +SetVector uart_tx, outvec	
+
+		lda #<count
+		sta via1t1cl            ; set low byte of count
+		lda #>count
+		sta via1t1ch            ; set high byte of count
+
+		lda #%11000000
+		sta via1ier             ; enable VIA1 T1 interrupts
+
+		lda #%01000000
+		sta via1acr             ; T1 continuous, PB7 disabled
+
+		+SetVector .irq, irqvec
+
+		lda #%01111110
+		sta via1portb
+
+		; stz chn_in
+		cli
+
 		LDA     #$00		; REVERSE TOGGLE
 		STA     REV
         
@@ -157,6 +189,7 @@ OUT		JSR	POUT		; DISPLAY AND
 ;		BEQ	OUT		; (DEBOUNCE)
 ;		STA	OLDKY
 ;		
+	
 		CMP	#$43		; [C]
 		BNE	NOSET		; SET UP
 		LDX	#$1F		; BOARD
@@ -738,7 +771,7 @@ POS		LSR
 		LDY	BOARD,X
 		CPY	#$10
 		BPL	NOPOSN
-POSN		CLC
+POSN	CLC
 		ADC	#$02
 NOPOSN	JMP	CKMATE       		; CONTINUE
 
@@ -747,7 +780,8 @@ NOPOSN	JMP	CKMATE       		; CONTINUE
 ; The following routines were added to allow text-based board
 ; display over a standard RS-232 port.
 ;
-POUT    jsr 	POUT9		; print CRLF
+POUT    
+		jsr 	POUT9		; print CRLF
 		jsr     POUT13		; print copyright
 		JSR	POUT10		; print column labels
 		LDY   	#$00		; init board location
@@ -820,7 +854,7 @@ POUT6	JSR   	syschout	; PRINT ONE ASCII CHR - "-"
 		; JSR	POUT9
 		; RTS	 		
 
-POUT8		jsr	POUT10		;
+POUT8	jsr	POUT10		;
 		jsr lcdclear 
 		LDA   	DIS1
 		JSR   	syshexout	; PRINT 1 BYTE AS 2 HEX CHRS	
@@ -845,9 +879,9 @@ POUT9   LDA   	#$0D
 		; JSR   	syschout	; PRINT ONE ASCII CHR - LF
 		; RTS 
 
-POUT10	ldx   	#$00		; print the column labels
+POUT10	ldx #$00		; print the column labels
 POUT11	lda	#$20		; 00 01 02 03 ... 07 <CRLF>
-		jsr   	syschout
+		jsr syschout
 		txa
 		jsr	syshexout
 		INX
@@ -856,11 +890,14 @@ POUT11	lda	#$20		; 00 01 02 03 ... 07 <CRLF>
 		BEQ	POUT9
 POUT12	TYA
 		and 	#$70
-		; JSR 	syshexout
-		; rts
-		jmp 	syshexout
+		JSR 	syshexout
+		rts
+		; jmp 	syshexout
 
-POUT13	ldx   	#$00		; Print the copyright banner
+POUT13	
+
+
+		ldx   	#$00		; Print the copyright banner
 POUT14	lda   	banner,x
 		beq   	POUT15
 		jsr   	syschout
@@ -874,13 +911,15 @@ KIN    	LDA   	#"?"
        	AND   	#$4F            ; MASK 0-7, AND ALPHA'S
        	RTS
 
-; syskin		jmp chrin
-; syschout	jmp chrout
-; syshexout	jmp hexout
-syskin		= chrin
-syschout	= chrout
-syshexout	= hexout
+syskin		= .keyin
+; syschout	= mychrout
+syshexout	= shexout
 
+syschout 
+	+save
+	jsr mychrout
+	+restore
+	rts
 ; syshexout      PHA                     ;  prints AA hex digits
 ;                LSR                     ;  MOVE UPPER NIBBLE TO LOWER
 ;                LSR                     ;
@@ -895,7 +934,7 @@ syshexout	= hexout
 ;                PLY                     ;
 ;                jmp   syschout          ;
 
-;Hexdigdata	!text	"0123456789ABCDEF"
+Hexdigdata	!text	"0123456789ABCDEF"
 banner		!text	"MicroChess (c) 1996-2002 Peter Jennings, peterj@benlo.com"
 		!byte	$0d, $0a, $00
 cpl		!text	"WWWWWWWWWWWWWWWWBBBBBBBBBBBBBBBBWWWWWWWWWWWWWWWW"
@@ -926,3 +965,59 @@ OPNING  	!byte 	$99, $25, $0B, $25, $01, $00, $33, $25
 ;
 ; end of file
 ;
+
+.irq
+	+save
+
+	;via
+	bit via1ifr		; Interrupt from VIA?
+	bpl +			; no? get out
+
+	bit via1t1cl	; Acknowledge timer interrupt
+
+	lda .key		; already char in buffer? do nothing
+	bne +
+
+	; jsr getkey
+
+	lda via1portb
+	and #%01111110
+	cmp #$7e
+	bne +
+
+	lda #%01111010
+	; and via1portb
+	sta via1portb
+
+	TAX             ; aufheben
+    ORA #$01
+    !for .i,0,7 {
+		STA via1portb ; Takt An 1
+		STX via1portb ; Takt aus  
+    }
+       
+	ldx #%11111110
+	stx via1portb
+
+	lda via1sr
+	cmp #$00
+	beq +
+	sta .key
+
++
+	;	gfx	expensive screen copy handling, placed at the end
+	bit	a_vreg
+	bpl +	   ; VDP IRQ flag set? 
+	jsr	.textui_update_screen
+	
++	
+	+restore
+	rti
+
+.keyin
+-	lda .key 		; wait for .key to become != 00
+	beq -
+
+	stz .key 		; reset .key to signal isr to fetch next key
+	rts
+.assets
