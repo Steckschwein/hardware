@@ -1,4 +1,4 @@
-all: FIG65.bin
+all: FIG65.bin fig6502.bin
 clean:
 	rm -f *.bin 
 
@@ -7,3 +7,4 @@ clean:
 
 transfer: all
 	../transfer.py FIG65.bin 0x0400
+#	../transfer.py fig6502.bin 0x0400

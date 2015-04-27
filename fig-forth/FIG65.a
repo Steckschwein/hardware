@@ -1,5 +1,11 @@
+*=$0400
+
 !src <defs.h.a>
 !src <bios.h.a>
+
+	jmp	ENTER
+	
+!src "../shell/shell.textui.a"
 ;
 ;                        Through the courtesy of
 ;
@@ -72,12 +78,15 @@ BRKBYTE   = MEM           ;XSAVE+1       ;?flag if break is pressed
 ;
                          ; User cold entry point
 ENTER    
-        jsr chrin
-        jsr lcdclear
-
         lda #dev_uart
         sta chn_out
         stz chn_in
+		
+        jsr lcdclear
+        lda	#'a'
+		jsr	lcdprint
+		
+		jsr chrin
 
           NOP            ; Vector to COLD entry
           JMP COLD+2     ;
