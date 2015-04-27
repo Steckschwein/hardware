@@ -1,20 +1,67 @@
 *=$1000
 !source <defs.h.a>
 !source <bios.h.a>
-!source "ym3812.lib.a"
 
+
+!address {
+	opl_stat = $0250
+	opl_data = opl_stat + 1
+} 
+
+!macro oplSetReg .reg, .val {
+	lda #.reg
+	sta opl_stat
+	!for .i,1,8 {
+		nop
+	} 
+	lda #.val
+	sta opl_data
+	!for .i,1,34 {
+		nop
+	} 
+
+}
 	jsr		lcdclear
 	lda		#'x'
 	jsr		lcdprint
--	iny
-	sty		a_sound_rs
-	lda		#$00
-	nop	
-	nop	
-	nop	
-	sty		a_sound_rw
 
-	jmp		-
-	lda		a_sound
-	jsr		lcdhex
-	jmp		-
+	; Set the modulator's multiple to 1
+	+oplSetReg $20, $01
+
+	; Set the modulator's level to about 40 dB
+	+oplSetReg $40, $10
+
+	; Modulator attack: quick; decay: long
+	+oplSetReg $60, $F0
+
+	; Modulator sustain: medium; release: medium
+	+oplSetReg $80, $77
+
+	; Set voice frequency's LSB (it'll be a D#)
+	+oplSetReg $A0, $98
+
+	; Set the carrier's multiple to 1
+	+oplSetReg $23, $01
+
+	; Set the carrier to maximum volume (about 47 dB)
+	+oplSetReg $43, $00
+
+	; Carrier attack: quick; decay: long
+	+oplSetReg $63, $F0
+
+	; Carrier sustain: medium; release: medium
+	+oplSetReg $83, $77
+
+	; Turn the voice on; set the octave and freq MSB
+	+oplSetReg $B0, $31
+
+
+	jsr chrin
+	+oplSetReg $B0, $11
+
+	rts
+
+
+
+
+
