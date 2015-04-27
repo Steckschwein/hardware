@@ -46,29 +46,25 @@ init
 
 	cli
 
-
-	stz chn_in
-	lda #dev_lcd
-	sta chn_out
-
 main
 	jsr lcdclear
 	stz txtbuf
 
 	+ShellPrintString text1
-	; +String text1
+	
 
 	ldx #$00
-	; ldy #$02
-	; jsr lcdxy
-
--	jsr .keyin
 	
-	cmp #$0c
-	beq +
-
+-	jsr .keyin
 	cmp #$0d ; return gedrueckt?
 	beq out
+
+	cmp #$1f ; Ignore everything below "-"
+    bcc -
+	
+	; cmp #$0c
+	; beq +
+
 
 	; pha
 	jsr mychrout
@@ -82,10 +78,8 @@ main
 	beq out
 
 
-	jmp -
-+	
-	jsr lcdclear
-	jmp -
+	
++	jmp -
 
 out 
 	lda txtbuf
@@ -97,8 +91,8 @@ out
 	
 	+ShellPrintString  text2
 	+ShellPrintString  txtbuf
-	+ShellPrintString .crlf 
-	+ShellPrintString .crlf 
+	
+	+ShellPrintString .crlf2
 	jmp main
 +
 	+ShellPrintString name
@@ -164,9 +158,10 @@ out
 
 
 
-text1	!text "Wie heisst du? ", $0a,$0d, $00
+text1	!text "Wie heisst du? ", $00
 text2	!text $0a,$0d,"Hallo, ", $00
 name	!text "Bitte Namen eingeben.", $0a,$0d,$00
+.crlf2	!text $0a,$0d
 .crlf	!text $0a,$0d
 .null	!text $00
 .assets
