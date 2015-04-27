@@ -141,7 +141,7 @@ mainloop
     bcc -
     
     cpy #12
-    beq ++   ; read 11 bytes?
+    beq -   ; read 11 bytes?
 
 
     sta .filename,y
@@ -149,7 +149,7 @@ mainloop
 	lda #$00
 	sta .filename,y
 
-++	
+; ++	
 	bra -
 
 
@@ -371,3 +371,12 @@ mainloop
 .prompt			!text ">",$00
 .uploadtxt		!text "serial upload",$00
 .txt_msg_unknown_cmd	!text $0a,$0d,"unknown command",$00
+.assets
+!src "sanduhr.xpm.raw"
+!src "sanduhr_45.xpm.raw"
+!src "sanduhr_90.xpm.raw"
+!src "sanduhr_135.xpm.raw"
+!src "sanduhr_180.xpm.raw"
+!src "sanduhr_225.xpm.raw"
+!src "sanduhr_270.xpm.raw"
+!src "sanduhr_315.xpm.raw"

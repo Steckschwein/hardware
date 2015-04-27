@@ -2,15 +2,6 @@
 !src "../vdp/t99xx.lib.a"
 
 !align	255,0;
-.assets
-!src "sanduhr.xpm.raw"
-!src "sanduhr_45.xpm.raw"
-!src "sanduhr_90.xpm.raw"
-!src "sanduhr_135.xpm.raw"
-!src "sanduhr_180.xpm.raw"
-!src "sanduhr_225.xpm.raw"
-!src "sanduhr_270.xpm.raw"
-!src "sanduhr_315.xpm.raw"
 
 .cursor_sprite_tab
 	!byte	$ff,	$f0,	0,	Gray
