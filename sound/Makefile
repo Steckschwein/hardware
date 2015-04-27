@@ -1,10 +1,10 @@
-all: soundtest.bin dro_player.bin
+all: dro_player.bin
 
 clean:
 	rm -f *.bin
 
 %.bin: %.a
-	acme -v -f plain -l $<.labels --cpu 65c02 -o $@ $<
+	acme -v -f plain --cpu 65c02 -o $@ $<
 
 transfer: all
 #	../transfer.py soundtest.bin 0x0801
