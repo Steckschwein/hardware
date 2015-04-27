@@ -69,6 +69,7 @@
 ZP=$80			;	.RES 2 ; general purpose zeropage locations we use (two bytes)
 song_p=$82		;	.RES 2 ; byte pointer inside the DRO stream (two bytes)
 
+.nops = 6
 
 screen_reg_addrs:
 !fill	512,32
@@ -138,13 +139,15 @@ song:
 	; after it! Also read note at the .DEFINE line above.
 ;.INCBIN DRO_FILE
 ; !bin "dn2_1.dro"
-!bin "dn2_2.dro"
+; !bin "dn2_2.dro"
 ; !bin "prowla.dro"
 ;dn2_1.dro	dn2_2.dro	
-; !bin "doofus.dro"
 ; !bin "dro_v2.dro"
 ; !bin "fahne.dro"
-; !bin "introcw3.dro"
+; !bin "theevil.dro"
+; !bin "pacman.dro"
+; !bin "toohot.dro"
+!bin "introcw3.dro"
 song_end:
 
 ;dro_file_name: .BYTE DRO_FILE
@@ -190,19 +193,16 @@ reset_sfx:
 	TAY
 -	
 	STY SFX_YM_SELECT_REGISTER ; select YM register
-;        NOP ; some wait after writing
-;        NOP
-;        NOP
-;        NOP
+
 	; wait 12 cycles according to spec
-	!for .i,1,6 {
+	!for .i,1,.nops {
 		NOP
 	}
 
-        STA SFX_YM_DATA_REGISTER ; write to selected YM register now
-        LDX #4 ; some more delay we need here ...
-        INY
-        BNE -
+    STA SFX_YM_DATA_REGISTER ; write to selected YM register now
+    LDX #4 ; some more delay we need here ...
+    INY
+    BNE -
 	RTS
 
 
@@ -350,10 +350,9 @@ play_loop:
 	; so I simply don't need any additional delay (I hope so, at least)
 	STA SFX_YM_SELECT_REGISTER
 	STA ZP ; store YM register number in ZP
-	;NOP ; anyway, it seems some delay needed at least HERE (before data write)
-	;NOP
+
 	; Wait 12 cycles according to spec
-	!for .i,1,6 {
+	!for .i,1,.nops {
 		NOP 
 	}
 	LDA ZP+1
