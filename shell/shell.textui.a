@@ -4,14 +4,17 @@
 !align	255,0;
 
 .cursor_sprite_tab
+.sanduhr_on
 	!byte	$ff,	$f0,	0,	Gray
+.sanduhr_off
+	!byte	$d0,	$f0,	0,	Gray
+	
 	!byte	$d0,	$00,	4,	Medium_Green
 
 .screen=$c000
 .screen_status !byte 0
 .screen_frames !byte 0
 .saved_char	!byte ' '
-.sprite_ptr !byte 0
 .COLS=32
 .ROWS=24
 .WRITE=1<<0
@@ -117,23 +120,33 @@
 .textui_busy
 	lda	.screen_status
 	and	#.CURSOR_BUSY
-	beq	++
+	beq	+++
 	lda	.screen_frames
 	and	#$03
 	bne	++
-	lda	#$02
+	lda	#$00
 	ldy	#$40+$3c
 	jsr vdp_sreg
-	lda .sprite_ptr
+	lda	#$ff
+	sta	a_vram		;y - $ff top 
+	nop
+	nop
+	sta	a_vram		;x - $ff right border
+	lda .sanduhr_on+2
 	sta	a_vram
 	clc
 	adc	#$04		;16x16 sprites, pointer * 4
 	cmp	#$04*8
 	bne	+
 	lda	#$00
-+	sta	.sprite_ptr
++	sta	.sanduhr_on+2
 ++	rts
-
++++	lda	#$00
+	ldy	#$40+$3c
+	jsr vdp_sreg
+	lda #$d0		;y-pos off screen
+	sta	a_vram
+	rts
 	
 .textui_scroll_up
 	ldx	#$00
