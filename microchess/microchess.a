@@ -235,6 +235,7 @@ NOSET	CMP	#$45		; [E]
 NOREV	CMP	#$40			; [P]
 		BNE	NOGO           	; PLAY CHESS
 		JSR	GO
+		; +V_ToggleCursorBusy
 CLDSP	STA	DIS1          	; DISPLAY
 		STA	DIS2         	; ACROSS
 		STA	DIS3          	; DISPLAY
@@ -669,13 +670,17 @@ PUSH	CMP	BESTV         	; IS THIS BEST
 		STA	BESTP
 		LDA	SQUARE
 		STA	BESTM        	; FLASH DISPLAY
-RETP	LDA	#"."		; print ... instead of flashing disp
-		Jmp	syschout	; print . and return
-;		
+RETP	
+		; LDA	#"."		; print ... instead of flashing disp
+		; Jmp	syschout	; print . and return
+		rts
+;			
 ;       MAIN PROGRAM TO PLAY CHESS
 ;       PLAY FROM OPENING OR THINK
 ;		
-GO		LDX	OMOVE        	; OPENING?
+GO		
+		+V_ToggleCursorBusy
+		LDX	OMOVE        	; OPENING?
 		BMI	NOOPEN          ; -NO   *ADD CHANGE FROM BPL
 		LDA	DIS3         	; -YES WAS
 		CMP	OPNING,X        ; OPPONENT'S
@@ -715,6 +720,8 @@ MV2		LDX	BESTP        	; MOVE
 		LDA	BESTM
 		STA	SQUARE       	; AND DISPLAY
 		JSR	MOVE           	; IT
+				+V_ToggleCursorBusy
+
 		JMP	CHESS
 ;		
 MATE	LDA	#$FF           	; RESIGN
@@ -1041,4 +1048,13 @@ OPNING  	!byte 	$99, $25, $0B, $25, $01, $00, $33, $25
 
 	stz .key 		; reset .key to signal isr to fetch next key
 	rts
+* = $2000
 .assets
+!src "../shell/sanduhr.xpm.raw"
+!src "../shell/sanduhr_45.xpm.raw"
+!src "../shell/sanduhr_90.xpm.raw"
+!src "../shell/sanduhr_135.xpm.raw"
+!src "../shell/sanduhr_180.xpm.raw"
+!src "../shell/sanduhr_225.xpm.raw"
+!src "../shell/sanduhr_270.xpm.raw"
+!src "../shell/sanduhr_315.xpm.raw"
