@@ -170,6 +170,26 @@ temp    =   $6C
 		; stz chn_in
 		cli
 
+; 		ldx #0
+
+; -		txa
+
+; 		phx
+; 		jsr shexout
+; 		jsr mychrout
+
+; 		lda #' '
+; 		jsr mychrout
+; 		plx
+
+; 		jsr .keyin
+; 		inx
+; 		cmp #120
+; 		bne -
+
+		
+; -		jmp -
+
 		LDA     #$00		; REVERSE TOGGLE
 		STA     REV
         
@@ -786,7 +806,7 @@ POUT
 		JSR	POUT10		; print column labels
 		LDY   	#$00		; init board location
 		JSR	POUT5		; print board horz edge
-POUT1	lDA   	#"|"		; print vert edge
+POUT1	lDA   	#$1d		; print vert edge
 		JSR   	syschout	; PRINT ONE ASCII CHR - SPACE
 		LDX   	#$1F
 POUT2	TYA					; scan the pieces for a location match
@@ -807,7 +827,7 @@ POUT2	TYA					; scan the pieces for a location match
 		adc   	temp		; combine row & col to determine square color  
 		and   	#$01		; is board square white or blk?
 		bne	POUT25 		; white, print space
-		lda   	#"*"		; black, print *
+		lda   	#$8c		; black, print *
 		!byte	$2c		; used to skip over LDA #$20
 POUT25	LDA   	#$20		; ASCII space
 		JSR   	syschout	; PRINT ONE ASCII CHR - SPACE
@@ -816,7 +836,8 @@ POUT3	INY			;
 	    TYA			; get row number
         AND   	#$08		; have we completed the row?	 
         BEQ   	POUT1		; no, do next column
-		LDA   	#"|"		; yes, put the right edge on
+;		LDA   	#"|"		; yes, put the right edge on
+		lda 	#$1D
 		JSR   	syschout	; PRINT ONE ASCII CHR - |             
 		jsr	POUT12		; print row number
 		JSR   	POUT9		; print CRLF
@@ -843,7 +864,7 @@ POUT5   ;TXA			; print "-----...-----<crlf>"
 		;PHA
 		phx		; 65c02
 		LDX	#$19
-		LDA	#"-"
+		LDA	#$03
 POUT6	JSR   	syschout	; PRINT ONE ASCII CHR - "-"
 		DEX
 		BNE	POUT6
