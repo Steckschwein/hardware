@@ -1,4 +1,4 @@
-all: dro_player.bin
+all: soundtest.bin dro_player.bin
 
 clean:
 	rm -f *.bin
