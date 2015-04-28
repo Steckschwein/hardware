@@ -956,7 +956,7 @@ syschout
 ;                jmp   syschout          ;
 
 Hexdigdata	!text	"0123456789ABCDEF"
-banner		!text	"MicroChess (c) 1996-2002 Peter Jennings, peterj@benlo.com"
+banner		!text	"MicroChess (c) 1996-2002 ",$0a,$0d,"Peter Jennings, peterj@benlo.com"
 		!byte	$0d, $0a, $00
 cpl		!text	"WWWWWWWWWWWWWWWWBBBBBBBBBBBBBBBBWWWWWWWWWWWWWWWW"
 cph		!text   "KQCCBBRRPPPPPPPPKQCCBBRRPPPPPPPP"
