@@ -130,7 +130,7 @@
 	lda	#$ff
 	sta	a_vram		;y - $ff top 
 	nop
-	nop
+	lda	#$f0
 	sta	a_vram		;x - $ff right border
 	lda .sanduhr_on+2
 	sta	a_vram
