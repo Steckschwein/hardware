@@ -1,0 +1,17 @@
+!src "../vdp/t9929.h.a"
+
+.gfxui_init
+	jsr	vdp_display_off			;display off
+	jsr vdp_mode_sprites_off	;sprites off
+
+	lda	#$00
+	sta	gfx2_mode_bitmap_address
+	lda	#$10
+	sta	gfx2_mode_bitmap_address+1
+	lda	#$00
+	sta	gfx2_mode_ptr_bitmap_color_address
+	lda	#$28
+	sta	gfx2_mode_ptr_bitmap_color_address+1
+	jsr	vdp_mode_gfx2_load_bitmap
+	
+	jmp vdp_mode_gfx2;			;enable gfx2 mode

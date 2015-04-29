@@ -6,17 +6,26 @@
 ;
 ;
 !macro	vnops{
-;	nop
+	nop
 }
 
+.vdp_wait_blank
+	sei
+-	bit	a_vreg
+	bmi -	   ; wait until blank - irq flag set?
+	cli
+	rts
+	
 vdp_sreg:
-	sta   a_vreg
+	sta	a_vreg
 	+vnops
 	nop
 	sty   a_vreg
 	rts
 
+
 vdp_display_off:
+	jsr	.vdp_wait_blank
 	lda		#v_reg1_16k	;enable 16K ram, disable screen
 	sta 	a_vreg
 	+vnops
@@ -24,24 +33,48 @@ vdp_display_off:
 	sta   	a_vreg
 	rts
 
+; setup video registers upon given table
 ;	input:
 ;	adrl/adrh vector set to vdp init table for al 8 vdp registers
 vdp_init_reg:
-	; setup video registers
-   ldy	#$00
-   ldx	#v_reg0
--  lda  (.adrl),y
-   sta   a_vreg
+	jsr		.vdp_wait_blank
+	ldy	#$00
+	ldx	#v_reg0
+-  	lda  (.adrl),y
+	sta   a_vreg
 	+vnops
-   iny				;iny first, burn cycle to avoid vdp nop
-   stx   a_vreg
-   inx
-   cpy   #$08
-   bne   -
-   stz	crs_x
-   stz	crs_y
-   rts
+	iny				;iny first, burn cycle to avoid vdp nop
+	stx   a_vreg
+	inx
+	cpy   #$08
+	bne   -
+	rts
 
+;
+;	requires	gfx2_mode_bitmap_address and gfx2_mode_ptr_bitmap_color_address setup correctly with the adresses to image and color data
+;
+gfx2_mode_bitmap_address 			!word $1000	;default data adress $1000
+gfx2_mode_ptr_bitmap_color_address	!word $2800	;default data adress $2800
+vdp_mode_gfx2_load_bitmap
+	lda	gfx2_mode_bitmap_address
+	sta	.adrl
+	lda	gfx2_mode_bitmap_address+1
+	sta	.adrh
+	lda	#$00
+	ldy	#$40+$00
+	ldx	#$18	;6k bitmap - $1800
+	jsr	vdp_memcpy					;load the pic data --> pattern table at vram $0000
+	; load color
+	lda	gfx2_mode_ptr_bitmap_color_address
+	sta	.adrl
+	lda	gfx2_mode_ptr_bitmap_color_address+1
+	sta	.adrh
+	lda	#$00
+	ldy	#$40+$20
+	ldx	#$18	;6k color map - $1800
+	jmp	vdp_memcpy					;load the pic data --> color table at vram $2000
+	
+	
 ;
 ;	gfx 1 - 32x24 character mode, 16 colors with same color for 8 characters in a block
 ;
@@ -63,7 +96,8 @@ vdp_mode_gfx1_blank:
 	jmp	vdp_fill
 
 vdp_mode_gfx1_sprites_off
-	lda	#$d0					;sprites off, at least y=$d0 will disable the sprite 
+vdp_mode_sprites_off
+	lda	#$d0					;sprites off, at least y=$d0 will disable the sprite subsystem
 	sta	.adrl
 	ldx	#$32*4
 	lda	#$00
@@ -74,6 +108,18 @@ vdp_mode_gfx1_sprites_off
 ;	gfx 2 - each pixel can be adressed - e.g. for image
 ;	
 vdp_mode_gfx2:
+	;set 768 different patterns --> name table
+	lda	#$00
+	ldy	#$40+$38
+	jsr	vdp_sreg
+	ldy	#$03
+	ldx	#$00
+-	+vnops
+	stx	a_vram
+	inx
+	bne	-
+	dey
+	bne	-
 	+SetVector	vdp_init_bytes_gfx2, .adrl
 	jmp	vdp_init_reg
 
@@ -88,15 +134,15 @@ vdp_init_bytes_gfx1
 	!byte	Black
 	
 vdp_init_bytes_gfx2
-	!byte 	v_reg0_m3
-	!byte 	v_reg1_16k|v_reg1_display_on					;|v_reg1_int
+	!byte 	v_reg0_m3		; 
+	!byte 	v_reg1_16k|v_reg1_display_on|v_reg1_spr_size; |v_reg1_int
 	!byte 	($3800 / $400)	; name table - value * $400
-	!byte	$ff	; color table setting for gfx mode 2 --> only Bit 7 is taken into account 0 => $0000, 1 => $2000, Bit 6-0 AND to character number
-	!byte	$03 	; pattern table, either $0000 (Bit 2 = 0) or $2000 (Bit 2=1), Bit 0,1 are AND to select the pattern array
+	!byte	$ff				; color table setting for gfx mode 2 --> only Bit 7 is taken into account 0 => at vram $0000, 1 => at vram $2000, Bit 6-0 AND to character number
+	!byte	$03 			; pattern table - either at vram $0000 (Bit 2 = 0) or at vram $2000 (Bit 2=1), Bit 0,1 are AND to select the pattern array
 	!byte	($3c00 / $80)	; sprite attribute table - value * $80 --> offset in VRAM
 	!byte	($1800 / $800)	; sprite pattern table - value * $800  --> offset in VRAM
 	!byte	Black
-   
+	
 ;
 ;   input:	a - color
 ;

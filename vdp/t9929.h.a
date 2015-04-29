@@ -1,3 +1,6 @@
+!ifdef t9929_h_a !eof
+t9929_h_a = 1
+
 ;
 ;	TODO	
 ;		

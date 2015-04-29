@@ -13,8 +13,8 @@
 }
 
 !src "shell.textui.a"
+!src "shell.gfxui.a"
 !src "util.h.a"
-
 
 !macro ShellPrint {
 	jsr mychrout
@@ -72,8 +72,8 @@
 	sta via1acr             ; T1 continuous, PB7 disabled
 
 	+SetVector .irq, irqvec
-
-	jsr	.textui_init
+	
+	jsr	.textui_init0
 
 	cli
 	
@@ -212,7 +212,7 @@ mainloop
 	plp
 	jmp .init 
 
-.type	
+.type
 	+ShellPrintString .crlf
 	jsr .readfile
 	lda fat_errno
@@ -220,6 +220,19 @@ mainloop
 	+ShellPrintString .crlf
 	+ShellPrintString .steckos_start
 	
+.gfxview
+	jsr .readfile	; read data to .steckos_start ($1000)
+	lda fat_errno
+	bne +
+	jsr	.textui_disable			;disable textui
+	jsr	.gfxui_init
+-	jsr .keyin
+	cmp #$0d ; wait return?
+	bne	-
+	jsr	vdp_display_off			;restore textui
+	jsr	.textui_init
+	jsr	.textui_enable
+
 +	jmp mainloop
 
 .readfile
@@ -233,7 +246,6 @@ mainloop
 	bne +
 
 	
-
 	+SetVector .steckos_start, sd_blkptr
 	lda tmp5
 	; jsr .fat_read_singleblock
@@ -285,12 +297,8 @@ mainloop
 	sta .key
 
 +
-	;	gfx	expensive screen copy handling, placed at the end
-	bit	a_vreg
-	bpl +	   ; VDP IRQ flag set? 
 	jsr	.textui_update_screen
 	
-+	
 	+restore
 	rti
 
@@ -341,6 +349,9 @@ mainloop
 
 	!word .type
 	!byte 'T'
+	
+	!word .gfxview
+	!byte 'V'
 
 	!word .cd
 	!byte 'C'
@@ -360,12 +371,14 @@ mainloop
 
 !src "../fat/fat.a"
 
+
 .hellotxt		!text "SteckShell 0.05 ",$00
 .helptxt		!text $0a,$0d,"d        - directory"
 				!text $0a,$0d,"/        - root dir"
 				!text $0a,$0d,"c <name> - change directory"
 				!text $0a,$0d,"l <name> - load file"
 				!text $0a,$0d,"t <name> - display file"
+				!text $0a,$0d,"v <name> - display gfx file"
 				!text $0a,$0d,"u        - serial upload"
 .crlf			!byte $0a,$0d,$00
 .prompt			!text ">",$00

@@ -1,0 +1,22 @@
+!src <defs.h.a>
+
+*=$1000
+	jsr	.gfxui_init
+-	jmp	-
+.gfxui_init
+	jsr	vdp_display_off			;display off
+	jsr vdp_mode_sprites_off	;sprites off
+
+	+SetVector pattern,	gfx2_mode_bitmap_address
+	+SetVector color,	gfx2_mode_ptr_bitmap_color_address
+	jsr	vdp_mode_gfx2_load_bitmap
+
+	jmp vdp_mode_gfx2			;enable gfx2 mode
+	
+!src "../vdp/t9929.h.a"
+!src "../vdp/t99xx.lib.a"
+
+pattern
+!bin "ANNI_COLOR.TIAP"
+color
+!bin "ANNI_COLOR.TIAC"
