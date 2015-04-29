@@ -372,7 +372,7 @@ mainloop
 !src "../fat/fat.a"
 
 
-.hellotxt		!text "SteckShell 0.05 ",$00
+.hellotxt		!text "SteckShell 0.06 ",$00
 .helptxt		!text $0a,$0d,"d        - directory"
 				!text $0a,$0d,"/        - root dir"
 				!text $0a,$0d,"c <name> - change directory"
