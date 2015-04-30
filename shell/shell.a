@@ -219,6 +219,8 @@ mainloop
 	bne +
 	+ShellPrintString .crlf
 	+ShellPrintString .steckos_start
+
++	jmp mainloop
 	
 .gfxview
 	jsr .readfile	; read data to .steckos_start ($1000)
