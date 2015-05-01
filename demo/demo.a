@@ -113,18 +113,20 @@ main:
 
 stars_irq:
 	bit via1ifr		; Interrupt from VIA?
-	bpl +
-	rti ; no? get out
+	beq +
+	
+	bit via1t1cl
+	; rti ; no? get out
 	
 +
 
 	+save
 
-	; lda	a_vreg
+	lda	a_vreg
 	bit	a_vreg ; Check VDP interrupt. IRQ is acknowledged by reading.
-	bmi +	   ; VDP IRQ flag set? 
-	rti		   ; no, then fuck off
-+	
+	bpl +	   ; VDP IRQ flag set? 
+	rti
++
 	+nops	89
 	ldx		#$00
 -	lda		raster_bar_colors,x
