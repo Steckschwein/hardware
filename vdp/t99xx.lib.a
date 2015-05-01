@@ -5,9 +5,6 @@
 ;		investigate the difference between wdc and rockwell if no nop is used
 ;
 ;
-!macro	vnops{
-	nop
-}
 
 .vdp_wait_blank
 	sei
@@ -74,9 +71,18 @@ vdp_mode_gfx2_load_bitmap
 	ldx	#$18	;6k color map - $1800
 	jmp	vdp_memcpy					;load the pic data --> color table at vram $2000
 	
-	
 ;
-;	gfx 1 - 32x24 character mode, 16 colors with same color for 8 characters in a block
+;	text mode - 40x24 character mode, 16 colors with same color for 8 characters in a block
+;
+vdp_mode_text
+	+SetVector vdp_init_bytes_text, .adrl
+	jmp	vdp_init_reg
+
+vdp_mode_text_blank
+	ldx	#$04			; 4 x 256 bytes
+	jmp	.vdp_mode_blank	
+;
+;	gfx mode 1 - 32x24 character mode, 16 colors with same color for 8 characters in a block
 ;
 vdp_mode_gfx1:
 	sta	.adrl		;set character color
@@ -88,9 +94,10 @@ vdp_mode_gfx1:
 	jmp	vdp_init_reg
 
 vdp_mode_gfx1_blank:
+	ldx	#$03
+.vdp_mode_blank
 	lda	#' '					;fill screen with blank
 	sta	.adrl
-	ldx	#$03
 	lda	#$00
 	ldy	#$40+$18
 	jmp	vdp_fill
@@ -133,6 +140,16 @@ vdp_init_bytes_gfx1
 	!byte 	($0800 / $800)  ; sprite pattern table - value * $800  		--> offset in VRAM
 	!byte	Black
 	
+vdp_init_bytes_text
+	!byte 0
+	!byte v_reg1_16k|v_reg1_display_on|v_reg1_m1
+	!byte 	($1800 / $400)	; name table - value * $400					--> characters 
+	!byte 	0	; not used
+	!byte 	($0000 / $800) ; pattern table (charset) - value * $800  	--> offset in VRAM 
+	!byte	0	; not used
+	!byte 	0	; not used
+	!byte	Medium_Green<<4|Black
+
 vdp_init_bytes_gfx2
 	!byte 	v_reg0_m3		; 
 	!byte 	v_reg1_16k|v_reg1_display_on|v_reg1_spr_size; |v_reg1_int
