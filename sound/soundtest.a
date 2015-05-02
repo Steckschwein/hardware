@@ -11,12 +11,12 @@
 !macro oplSetReg .reg, .val {
 	lda #.reg
 	sta opl_stat
-	!for .i,1,8 {
+	!for .i,1,12 {
 		nop
 	} 
 	lda #.val
 	sta opl_data
-	!for .i,1,34 {
+	!for .i,1,48 {
 		nop
 	} 
 
