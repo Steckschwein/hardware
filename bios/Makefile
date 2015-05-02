@@ -16,7 +16,7 @@ bios.h.a: bios.bin
 	rm bios.h.a.tmp
    
 %.bin: %.a ../vdp/*.h.a ../vdp/*.lib.a
-	acme -l $<.labels $(ACME_OPTS) -o $@ $<
+	acme -Wtype-mismatch -l $<.labels $(ACME_OPTS) -o $@ $<
 
 burn: bios.bin
 	minipro -p AT28C256 -w bios.bin -e

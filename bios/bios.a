@@ -7,7 +7,7 @@
 !src <uart.h.a>
 !src <lcd.h.a>
 !src <fat32.h.a>
-
+!address	.target = $00
 *= $e000			; ROM Start
 !src "../charsets/char.ascii.vc20.h.a"
 
@@ -129,7 +129,7 @@ biosversion	!text "V1804", $00	; Version String
 ;----------------------------------------------------------------------------------------------
 ; RESET Routine. Call subroutines to init all components 
 ;----------------------------------------------------------------------------------------------
-.start_check = $0300
+!address 	.start_check = $0300
 .do_reset
 			; disable interrupt
 			sei
@@ -148,9 +148,9 @@ biosversion	!text "V1804", $00	; Version String
 			; Start with pattern $03 : $ff
 -			ldx #.num_patterns
 --			lda .pattern,x
-			sta $00,y
+			sta addr($00),y
 
-			cmp $00,y
+			cmp addr($00),y
 			bne .zp_broken
 
 			dex
@@ -164,8 +164,8 @@ biosversion	!text "V1804", $00	; Version String
 			ldy #$ff
 -			ldx #.num_patterns
 --			lda .pattern,x
-			sta $0100,y
-			cmp $0100,y
+			sta addr($0100),y
+			cmp addr($0100),y
 			bne .stack_broken
 
 			dex
@@ -178,7 +178,7 @@ biosversion	!text "V1804", $00	; Version String
 			; Copy self modifying memcheck routine to ZP
 			ldx #.selfmod_end - .selfmod_start
 -			lda .selfmod_start - 1, x
-			sta <.target - 1, x
+			sta addr(<(.target - 1)) , x
 			dex
 			bne -
  			jmp .target ; Execute memcheck routine in ZP
@@ -608,8 +608,8 @@ biosversion	!text "V1804", $00	; Version String
 .pattern  !byte $aa,$55,$ff,$00
 
 .selfmod_start
-!pseudopc $0000 {
-.target
+!pseudopc .target {
+
       stz ram_end_h
       
 -     ldx #.num_patterns

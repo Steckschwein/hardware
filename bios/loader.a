@@ -1,6 +1,6 @@
 *=$0400
-!src "defs.h.a"
-!src "bios.h.a"
+!src <defs.h.a>
+!src <bios.h.a>
 
 	lda #dev_lcd
 	sta chn_out 
