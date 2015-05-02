@@ -1,0 +1,69 @@
+;
+;	gfx mode 1 - 40x24 chars - text mode
+;
+!src <defs.h.a>
+!src "../vdp/t9929.h.a"
+*=$1000
+	jsr	vdp_display_off			;display off
+
+	
+	+SetVector	.charset,	.adrl	;inverse the charset
+	ldx	#$08
+	ldy	#$00
+-	stz	tmp0
+	lda	(.adrl),y	;bit inverse
+	asl
+	ror	tmp0
+	asl
+	ror	tmp0
+	asl
+	ror	tmp0
+	asl
+	ror	tmp0
+	asl
+	ror	tmp0
+	asl
+	ror	tmp0	
+	lda	tmp0
+	sta	(.adrl),y
+	iny
+	bne	-
+	inc	.adrh
+	dex
+	bne	-
+	
+	
+	+SetVector	.charset, .adrl
+	lda	#$00
+	ldy	#$00
+	ldx	#$08
+	jsr	vdp_memcpy
+
+	jsr vdp_mode_text_blank
+	
+	lda	#$00+224
+	ldy	#$40+$18+$01
+	jsr	vdp_sreg
+	ldx	#$00
+-	lda	.msg,x
+	beq	+
+	sta	a_vram
+	inx	
+	bne	-
++	
+	jsr vdp_mode_text			;enable text mode
+
+-	jmp	-
+
+!src "../vdp/t99xx.lib.a"
+
+.msg	
+	!text "This is just a test of the vdp text mode"
+	!text "where you can use 40 chars on each line."
+	!text 0xDB
+	!text 0
+
+.charset
+;!src "../charsets/char.ascii.6x8.v3.h.a"
+!src "../charsets/char.ascii.5x8.h.a"
+;!src "../charsets/char.ascii.4x6.h.a"
