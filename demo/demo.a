@@ -17,13 +17,11 @@ seconds=tmp7
 
 .line1:
 !text	"      -+- VCFe 16 - 2015 -+-    ",1
-!text	"       -+- Steckschwein -+-     ",1
+!text	"  -+- www.steckschwein.de -+-   ",1
 !text	"      -+- CPU 65c02 4MHz -+-    ",1
-!text	"   -+- Jetzt auf Platine! -+-   ",1
-!text	"       -+- UART  16550 -+-      ",1
+!text	"  -+- www.steckschwein.de -+-   ",1
 !text	"     -+- Video TMS9929 -+-      ",1
-!text	"  -+-  SD-Karte, RTC, PS/2  -+- ",1
-!text	"                                ",1
+!text	"  -+- www.steckschwein.de -+-   ",1
 !fill	255, $20
 !text	0
 
@@ -63,6 +61,7 @@ main:
 
 		
 	jsr	init_via
+
 	
 	jsr	init_sprites
 	
@@ -106,8 +105,32 @@ main:
 	jsr		joystick
 
 	dec		frame_end
+
+	; lda via1portb
+	; and #%01111110
+	; cmp #$7e
+	; bne +
+
+	; lda #%01111010
+	; ; and via1portb
+	; sta via1portb
+
+	; TAX             ; aufheben
+ ;    ORA #$01
+ ;    !for .i,0,7 {
+	; 	STA via1portb ; Takt An 1
+	; 	STX via1portb ; Takt aus  
+ ;    }
+       
+	; ldx #%11111110
+	; stx via1portb
+
+	; lda via1sr
+	; bne .out
+; +	
 	jmp	-
-	
+.out
+
 	rts
 
 
@@ -115,11 +138,8 @@ stars_irq:
 	bit via1ifr		; Interrupt from VIA?
 	beq +
 	
-	bit via1t1cl
-	; rti ; no? get out
-	
+	bit via1t1cl	; acknowledge VIA timer 1 interrupt
 +
-
 	+save
 
 	lda	a_vreg
