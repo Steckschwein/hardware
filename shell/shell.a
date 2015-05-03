@@ -363,6 +363,12 @@ mainloop
 .hello
 	+ShellPrintString .crlf
 	+ShellPrintString .hellotxt
+	; +ShellPrintString .helptxt
+	jmp mainloop
+
+.help
+	+ShellPrintString .crlf
+	; +ShellPrintString .hellotxt
 	+ShellPrintString .helptxt
 	jmp mainloop
 
@@ -388,7 +394,7 @@ mainloop
 	!word .upload
 	!byte 'U'
 
-	!word .hello
+	!word .help
 	!byte 'H'
 
 	; End of list
@@ -409,7 +415,7 @@ mainloop
 .crlf			!byte $0a,$0d,$00
 .prompt			!text ">",$00
 .uploadtxt		!text "serial upload",$00
-.txt_msg_unknown_cmd	!text $0a,$0d,"unknown command",$00
+.txt_msg_unknown_cmd	!text $0a,$0d,"unknown command (h for help)",$00
 .assets
 !src "sanduhr.xpm.raw"
 !src "sanduhr_45.xpm.raw"
