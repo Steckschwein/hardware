@@ -1,0 +1,20 @@
+;
+;	gfx mode 3 - 6x48 color blocks
+;
+!src <defs.h.a>
+*=$1000
+	jsr	vdp_display_off			;display off
+	jsr vdp_mode_sprites_off	;sprites off
+
+	+SetVector .pattern,	gfx3_mode_bitmap_address
+	jsr	vdp_mode_gfx3_load_bitmap
+
+	jsr vdp_mode_gfx3			;enable gfx3 mode
+
+-	jmp	-
+	
+!src "../vdp/t9929.h.a"
+!src "../vdp/t99xx.lib.a"
+
+.pattern
+!bin "INVADERS_MODE3.TIAP"

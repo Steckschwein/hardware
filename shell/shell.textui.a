@@ -1,16 +1,9 @@
 !src "../vdp/t9929.h.a"
 !src "../vdp/t99xx.lib.a"
 
-!align	255,0;
-
-.cursor_sprite_tab
-.sanduhr_on
+.sprite_sanduhr
 	!byte	$ff,	$f0,	0,	Gray
-.sanduhr_off
-	!byte	$d0,	$f0,	0,	Gray
 	
-	!byte	$d0,	$00,	4,	Medium_Green
-
 .screen=$c000
 .screen_status !byte .TEXTUI_ENABLED
 .screen_frames !byte 0
@@ -46,8 +39,8 @@
 	jsr	vdp_load_sprites16x16
 	
 	jsr	vdp_mode_gfx1_sprites_off	;clean sprite attribute table
-	+SetVector	.cursor_sprite_tab, .adrl
-	ldx	#$08
+	+SetVector	.sprite_sanduhr, .adrl
+	ldx	#$04
 	lda	#$00
 	ldy	#$40+$3c
 	jsr	vdp_memcpys
@@ -89,21 +82,21 @@
 +++	rts
 
 .textui_update_screen
+	bit	a_vreg
+	bmi +	   ; VDP IRQ flag set? 
+	rts
++	
 	lda	.screen_status
 	and	#.TEXTUI_ENABLED
 	bne	+
 	rts
-	
-+	bit	a_vreg
-	bmi +	   ; VDP IRQ flag set? 
-	rts
-+	
++
 ;	lda	#Gray
 ;	jsr	vdp_bgcolor	
 
 	inc	.screen_frames
-
 	jsr	.textui_busy
+
 	jsr	.textui_cursor
 	
 	;TODO dirty check .screen_status AND 1 ...
@@ -135,19 +128,20 @@
 	lda	#$00
 	ldy	#$40+$3c
 	jsr vdp_sreg
-	lda	#$ff
-	sta	a_vram		;y - $ff top 
-	nop
-	lda	#$f0
-	sta	a_vram		;x - $f0 before right border
-	lda .sanduhr_on+2
+	lda	#$ff		;y - $ff top 
+	sta	a_vram		
+	+vnops
+	lda	#$f0		;x - $f0 before right border
+	sta	a_vram		
+	+vnops
+	lda .sprite_sanduhr+2	;ptr
 	sta	a_vram
 	clc
 	adc	#$04		;16x16 sprites, pointer * 4
 	cmp	#$04*8
 	bne	+
 	lda	#$00
-+	sta	.sanduhr_on+2
++	sta	.sprite_sanduhr+2
 ++	rts
 +++	lda	#$00
 	ldy	#$40+$3c

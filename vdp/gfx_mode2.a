@@ -1,5 +1,5 @@
 ;
-;	gfx mode 1 - 40x24 chars - text mode
+;	gfx mode 2 - 40x24 chars - all colors
 ;
 !src <defs.h.a>
 *=$1000
@@ -18,6 +18,6 @@
 !src "../vdp/t99xx.lib.a"
 
 .pattern
-!bin "BRUNI_TRUDI.TIAP"
+!bin "test/BRUNI_TRUDI.TIAP"
 .color
-!bin "BRUNI_TRUDI.TIAC"
+!bin "test/BRUNI_TRUDI.TIAC"
