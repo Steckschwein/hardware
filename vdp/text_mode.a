@@ -60,6 +60,9 @@
 .msg	
 	!text "This is just a test of the vdp text mode"
 	!text "where you can use 40 chars on each line."
+	!text "                                        "
+	!text "0123456789          0123456789          "
+	!text "          0123456789          0123456789"
 	!text 0xDB
 	!text 0
 

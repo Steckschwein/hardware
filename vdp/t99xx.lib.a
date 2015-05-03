@@ -70,6 +70,18 @@ vdp_mode_gfx2_load_bitmap
 	ldy	#$40+$20
 	ldx	#$18	;6k color map - $1800
 	jmp	vdp_memcpy					;load the pic data --> color table at vram $2000
+
+gfx3_mode_bitmap_address		!word	$1800
+vdp_mode_gfx3_load_bitmap
+	lda	gfx3_mode_bitmap_address
+	sta	.adrl
+	lda	gfx3_mode_bitmap_address+1
+	sta	.adrh
+	lda	#$00
+	ldy	#$40+$00
+	ldx	#$18	;6k bitmap - $1800
+	jsr	vdp_memcpy					;load the pic data --> pattern table at vram $0000
+	rts
 	
 ;
 ;	text mode - 40x24 character mode, 16 colors with same color for 8 characters in a block
@@ -114,7 +126,7 @@ vdp_mode_sprites_off
 ;
 ;	gfx 2 - each pixel can be adressed - e.g. for image
 ;	
-vdp_mode_gfx2:
+vdp_mode_gfx2
 	;set 768 different patterns --> name table
 	lda	#$00
 	ldy	#$40+$38
@@ -128,6 +140,13 @@ vdp_mode_gfx2:
 	dey
 	bne	-
 	+SetVector	vdp_init_bytes_gfx2, .adrl
+	jmp	vdp_init_reg
+
+;
+;	gfx 3 - 4x4 color block - multicolor mode
+;	
+vdp_mode_gfx3
+	+SetVector	vdp_init_bytes_gfx3, .adrl
 	jmp	vdp_init_reg
 
 vdp_init_bytes_gfx1
@@ -153,6 +172,16 @@ vdp_init_bytes_text
 vdp_init_bytes_gfx2
 	!byte 	v_reg0_m3		; 
 	!byte 	v_reg1_16k|v_reg1_display_on|v_reg1_spr_size; |v_reg1_int
+	!byte 	($3800 / $400)	; name table - value * $400
+	!byte	$ff				; color table setting for gfx mode 2 --> only Bit 7 is taken into account 0 => at vram $0000, 1 => at vram $2000, Bit 6-0 AND to character number
+	!byte	$03 			; pattern table - either at vram $0000 (Bit 2 = 0) or at vram $2000 (Bit 2=1), Bit 0,1 are AND to select the pattern array
+	!byte	($3c00 / $80)	; sprite attribute table - value * $80 --> offset in VRAM
+	!byte	($1800 / $800)	; sprite pattern table - value * $800  --> offset in VRAM
+	!byte	Black
+
+vdp_init_bytes_gfx3
+	!byte 	0		; 
+	!byte 	v_reg1_16k|v_reg1_display_on|v_reg1_m2|v_reg1_spr_size; |v_reg1_int
 	!byte 	($3800 / $400)	; name table - value * $400
 	!byte	$ff				; color table setting for gfx mode 2 --> only Bit 7 is taken into account 0 => at vram $0000, 1 => at vram $2000, Bit 6-0 AND to character number
 	!byte	$03 			; pattern table - either at vram $0000 (Bit 2 = 0) or at vram $2000 (Bit 2=1), Bit 0,1 are AND to select the pattern array
