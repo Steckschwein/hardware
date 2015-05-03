@@ -130,8 +130,10 @@
 	jsr vdp_sreg
 	lda	#$ff		;y - $ff top 
 	sta	a_vram		
+	+vnops
 	lda	#$f0		;x - $f0 before right border
 	sta	a_vram		
+	+vnops
 	lda .sprite_sanduhr+2	;ptr
 	sta	a_vram
 	clc
