@@ -72,10 +72,34 @@
 	sta via1acr             ; T1 continuous, PB7 disabled
 
 	+SetVector .irq, irqvec
+
+
+	; read from keyboard buffer until empty to filter crap from kbd init
+-	lda #%01111010
+	sta via1portb
+
+	TAX             ; aufheben
+    ORA #$01
+    !for .i,0,7 {
+		STA via1portb ; Takt An 1
+		STX via1portb ; Takt aus  
+    }
+       
+	ldx #%11111110
+	stx via1portb
+
+	lda via1sr
+	cmp #$00
+	bne -
+
 	
 	jsr	.textui_init0
 
+
+
+
 	cli
+
 	
 	+V_ToggleCursorBusy	
 	lda #'X'
