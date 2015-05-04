@@ -9,3 +9,4 @@ clean:
 transfer: all
 #	../transfer.py soundtest.bin 0x0801
 	../transfer.py dro_player.bin 0x1000
+#	../transfer.py imfplayer.bin 0x1000

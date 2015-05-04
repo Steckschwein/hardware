@@ -1,5 +1,6 @@
 !source <defs.h.a>
 !source <bios.h.a>
+!source <lcd.h.a>
 !source <via.h.a>
 
 CPU_CLOCK=4000000
@@ -14,16 +15,40 @@ CPU_CLOCK=4000000
 !source "ym3812.lib.a"
 
 main
-	jsr	snd_detect
-	bne	+
-	rts
-+	jsr	snd_reset
-
-	jsr	.load_imf
-		
-	jsr	.init_timer
+	jsr	lcdclear
 	
+	jsr	snd_detect
+	bcs	+
+	bra	+;for testing purpose without opl chip	
+	lda	#'N'
+	jsr	lcdprint
+	rts
++	
+	lda	#'O'
+	jsr	lcdprint
+	
+	jsr	snd_reset
+	lda	#'P'
+	jsr	lcdprint
+	
+	jsr	.load_imf
+	bcs	+
+	lda	#'x'
+	jsr	lcdprint
+	rts
++
+	lda	#'L'
+	jsr	lcdprint
+	
+	jsr	.init_timer
+	lda	#'2'
+	jsr	lcdprint
+	
+	lda	#'.'
+	jsr	lcdprint
 	jsr	.play_imf
+	lda	#'.'
+	jsr	lcdprint
 	
 -	jmp	-
 	
@@ -48,15 +73,15 @@ main
 
 .irq
 	+save
-	;via
+	
 	bit via1ifr		; Interrupt from VIA?
-	bpl +
+	bpl ++
 	
 	bit via1t2cl	; Acknowledge timer interrupt by reading channel low
 	
 	lda	.imf_update_wait	;clear, means currently within play loop, 
 	beq	++					;skip delay countdown
-	dec	.delayl			
+	dec	.delayl
 	bne	++
 	lda .delayh
 	bne	+
@@ -71,8 +96,8 @@ main
 .play_imf
 	+SetVector	imf_data, .adrl
 	ldy	#$00
---	lda	.imf_update_wait	;wait flag set?, do nothing
-	bne	-
+--	lda	.imf_update_wait	;wait until flag cleared
+	bne	--
 	jsr	.next_data
 	jsr .is_songend			;indicated by carry 
 	bcs	++
@@ -90,6 +115,8 @@ main
 -	tya				;y to accu, test zero
 	bne	--
 	inc	.adrh
+	lda	#'.'
+	jsr	lcdprint
 	jmp	--
 +	inc	.imf_update_wait	; trigger countdown
 	bra	-
@@ -111,7 +138,9 @@ main
 	cmp	#$aa
 	bne	+
 	sec
-+	rts
+	rts
++	clc
+	rts
 
 .next_data
 	lda	(.adrl),y			
@@ -154,12 +183,6 @@ main
 .imf_update_wait !byte 0
 adlib_id !text "ADLIB"
 
-.imf_reg
-;	!fill 256,0
-.imf_val
-;	!fill 256,0
-.imf_delay
-;	!fill 512,0
 imf_data
 .imf_file
 !bin "test/test.wlf"
