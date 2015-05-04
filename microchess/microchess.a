@@ -145,7 +145,7 @@ temp    =   $6C
 
 .init
 		stz .key
-		jsr	.textui_init
+		jsr	.textui_init0
 
 		+SetVector _textui_chrout, outvec
 
@@ -1034,8 +1034,6 @@ OPNING  	!byte 	$99, $25, $0B, $25, $01, $00, $33, $25
 
 +
 	;	gfx	expensive screen copy handling, placed at the end
-	bit	a_vreg
-	bpl +	   ; VDP IRQ flag set? 
 	jsr	.textui_update_screen
 	
 +	
