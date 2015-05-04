@@ -318,11 +318,11 @@ FD_file_size = $08
 
 	lda sd_blktarget + BS_Signature
 	cmp #$55
-	bne +
+	bne ++
 	lda sd_blktarget + BS_Signature+1
 	cmp #$aa
 	beq +
-	inc fat_errno
+++	inc fat_errno
 +	rts
 
 
