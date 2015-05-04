@@ -6,10 +6,12 @@
 ;
 ;
 
+.WRITE_ADDRESS=$40
+
 .vdp_wait_blank
 	sei
 -	bit	a_vreg
-	bmi -	   ; wait until blank - irq flag set?
+	bpl -	   ; wait until blank - irq flag set?
 	cli
 	rts
 	
@@ -58,7 +60,7 @@ vdp_mode_gfx2_load_bitmap
 	lda	gfx2_mode_bitmap_address+1
 	sta	.adrh
 	lda	#$00
-	ldy	#$40+$00
+	ldy	#.WRITE_ADDRESS+$00
 	ldx	#$18	;6k bitmap - $1800
 	jsr	vdp_memcpy					;load the pic data --> pattern table at vram $0000
 	; load color
@@ -67,7 +69,7 @@ vdp_mode_gfx2_load_bitmap
 	lda	gfx2_mode_ptr_bitmap_color_address+1
 	sta	.adrh
 	lda	#$00
-	ldy	#$40+$20
+	ldy	#.WRITE_ADDRESS+$20
 	ldx	#$18	;6k color map - $1800
 	jmp	vdp_memcpy					;load the pic data --> color table at vram $2000
 
@@ -78,7 +80,7 @@ vdp_mode_gfx3_load_bitmap
 	lda	gfx3_mode_bitmap_address+1
 	sta	.adrh
 	lda	#$00
-	ldy	#$40+$00
+	ldy	#.WRITE_ADDRESS+$00
 	ldx	#$18	;6k bitmap - $1800
 	jsr	vdp_memcpy					;load the pic data --> pattern table at vram $0000
 	rts
@@ -100,7 +102,7 @@ vdp_mode_gfx1:
 	sta	.adrl		;set character color
 	ldx	#$20
 	lda	#$00
-	ldy	#$40+$20	;color vram
+	ldy	#.WRITE_ADDRESS+$20	;color vram
 	jsr	vdp_fills
 	+SetVector vdp_init_bytes_gfx1, .adrl
 	jmp	vdp_init_reg
@@ -111,7 +113,7 @@ vdp_mode_gfx1_blank:
 	lda	#' '					;fill screen with blank
 	sta	.adrl
 	lda	#$00
-	ldy	#$40+$18
+	ldy	#.WRITE_ADDRESS+$18
 	jmp	vdp_fill
 
 vdp_mode_gfx1_sprites_off
@@ -120,16 +122,13 @@ vdp_mode_sprites_off
 	sta	.adrl
 	ldx	#$32*4
 	lda	#$00
-	ldy	#$40+$3c
+	ldy	#.WRITE_ADDRESS+$3c
 	jmp	vdp_fills
-	
-;
-;	gfx 2 - each pixel can be adressed - e.g. for image
-;	
-vdp_mode_gfx2
+
+.vdp_fill_name_table
 	;set 768 different patterns --> name table
 	lda	#$00
-	ldy	#$40+$38
+	ldy	#.WRITE_ADDRESS+$38
 	jsr	vdp_sreg
 	ldy	#$03
 	ldx	#$00
@@ -139,6 +138,13 @@ vdp_mode_gfx2
 	bne	-
 	dey
 	bne	-
+rts
+	
+;
+;	gfx 2 - each pixel can be adressed - e.g. for image
+;	
+vdp_mode_gfx2
+	jsr	.vdp_fill_name_table
 	+SetVector	vdp_init_bytes_gfx2, .adrl
 	jmp	vdp_init_reg
 
@@ -146,6 +152,7 @@ vdp_mode_gfx2
 ;	gfx 3 - 4x4 color block - multicolor mode
 ;	
 vdp_mode_gfx3
+	jsr	.vdp_fill_name_table
 	+SetVector	vdp_init_bytes_gfx3, .adrl
 	jmp	vdp_init_reg
 
@@ -297,6 +304,17 @@ vdp_memcpys:
 	dex
 	bne	-
 	rts
+
+!macro V_GotoXY .x, .y {
+	lda	.x
+	sta crs_x
+	lda .y
+	sta	crs_y
+}
+
+;############
+;deprectated - use lib textui.a or gfxui.a instead
+;############
 	
 vdp_print:
 	ldy		#$00
@@ -347,7 +365,7 @@ vdp_set_addr:
 	lsr
 	lsr
 	clc
-	adc	#$18+$40
+	adc	#.WRITE_ADDRESS+$18
 	sta	a_vreg
 	rts
 
@@ -355,10 +373,3 @@ vdp_xy:
 	stx	crs_x
 	sty	crs_y
 	rts
-	
-!macro V_GotoXY .x, .y {
-	lda	.x
-	sta crs_x
-	lda .y
-	sta	crs_y
-}
