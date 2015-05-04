@@ -1,0 +1,166 @@
+!source <defs.h.a>
+!source <bios.h.a>
+!source <via.h.a>
+
+CPU_CLOCK=4000000
+.regsel=tmp0
+.regval=tmp1
+.delayh=tmp2
+.delayl=tmp3
+
+*=$1000
+	jmp	main
+
+!source "ym3812.lib.a"
+
+main
+	jsr	snd_detect
+	bne	+
+	rts
++	jsr	snd_reset
+
+	jsr	.load_imf
+		
+	jsr	.init_timer
+	
+	jsr	.play_imf
+	
+-	jmp	-
+	
+.init_timer
+	sei
+							; tempo is one of 280Hz (DN2), 560Hz (imf), 700Hz (.wlf) -> 4Mhz
+							; 280 Hz --> 14280
+							; 560 Hz -->  7140
+							; 700 Hz -->  5714
+	lda #<(CPU_CLOCK/560)
+	sta via1t1cl            ; set low byte of count
+	lda #>(CPU_CLOCK/560)
+	sta via1t1ch            ; set high byte of count
+ 
+	lda #%11000000
+	sta via1ier             ; enable VIA1 T1 interrupts
+	lda #%01000000
+	sta via1acr             ; T1 continuous, PB7 disabled  
+	+SetVector .irq, irqvec
+	cli
+	rts
+
+.irq
+	+save
+	;via
+	bit via1ifr		; Interrupt from VIA?
+	bpl +
+	
+	bit via1t2cl	; Acknowledge timer interrupt by reading channel low
+	
+	lda	.imf_update_wait	;clear, means currently within play loop, 
+	beq	++					;skip delay countdown
+	dec	.delayl			
+	bne	++
+	lda .delayh
+	bne	+
+	stz	.imf_update_wait	; trigger imf update, clear the wait flag
+	bra	++
++	dec
+	sta	.delayh
+++
+	+restore
+	rti
+	
+.play_imf
+	+SetVector	imf_data, .adrl
+	ldy	#$00
+--	lda	.imf_update_wait	;wait flag set?, do nothing
+	bne	-
+	jsr	.next_data
+	jsr .is_songend			;indicated by carry 
+	bcs	++
+	
+	lda	.regsel		;reg select
+	sta	a_sound_rs
+	+snd_nops
+	lda	.regval		;reg data
+	sta	a_sound_rw
+	
+	lda	.delayl		;delay > 0, wait until next update
+	bne	+
+	lda	.delayh
+	bne	+
+-	tya				;y to accu, test zero
+	bne	--
+	inc	.adrh
+	jmp	--
++	inc	.imf_update_wait	; trigger countdown
+	bra	-
+++	rts
+
+	inc	.imf_update_wait	; trigger countdown
+
+.is_songend
+	lda	.regsel
+	cmp	#$55
+	bne	+
+	lda	.regval
+	cmp	#$aa
+	bne	+
+	lda	.delayh
+	cmp	#$55
+	bne	+
+	lda	.delayl
+	cmp	#$aa
+	bne	+
+	sec
++	rts
+
+.next_data
+	lda	(.adrl),y			
+	sta	.regsel
+	iny
+	lda	(.adrl),y
+	sta	.regval
+	iny
+	lda	(.adrl),y
+	sta	.delayh
+	iny
+	lda	(.adrl),y
+	sta	.delayl
+	iny
+	rts
+		
+.load_imf
+	ldx	#$00
+-	lda	adlib_id,x	;check ADLIB signature
+	cmp	.imf_file,x
+	bne	+
+	inx
+	cpx	#$05
+	bne	-
+	bra	.load_imf_normal
++	lda	adlib_id+5	;check version != 1
+	cmp	#$01
+	bne	.load_imf_normal
+	bra	.load_imf_with_header
+	;TODO			;check file name
+					
++	clc				;no imf - clear carry
+	rts
+.load_imf_normal
+.load_imf_with_header	
+	sec
+	rts
+
+.songend !byte 0
+.imf_update_wait !byte 0
+adlib_id !text "ADLIB"
+
+.imf_reg
+;	!fill 256,0
+.imf_val
+;	!fill 256,0
+.imf_delay
+;	!fill 512,0
+imf_data
+.imf_file
+!bin "test/test.wlf"
+!byte $55, $aa, $55, $aa
