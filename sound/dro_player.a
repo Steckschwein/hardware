@@ -147,7 +147,7 @@ song:
 ; !bin "theevil.dro"
 ; !bin "pacman.dro"
 ; !bin "toohot.dro"
-!bin "introcw3.dro"
+;!bin "introcw3.dro"
 song_end:
 
 ;dro_file_name: .BYTE DRO_FILE
