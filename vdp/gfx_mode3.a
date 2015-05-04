@@ -17,4 +17,4 @@
 !src "../vdp/t99xx.lib.a"
 
 .pattern
-!bin "INVADERS_MODE3.TIAP"
+!bin "test/MODE3.TIAP"

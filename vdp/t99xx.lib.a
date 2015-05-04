@@ -81,7 +81,7 @@ vdp_mode_gfx3_load_bitmap
 	sta	.adrh
 	lda	#$00
 	ldy	#.WRITE_ADDRESS+$00
-	ldx	#$18	;6k bitmap - $1800
+	ldx	#$03	;768 byte
 	jsr	vdp_memcpy					;load the pic data --> pattern table at vram $0000
 	rts
 	
