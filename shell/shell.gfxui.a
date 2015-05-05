@@ -1,4 +1,4 @@
-!src "../vdp/t9929.h.a"
+!src <t9929.h.a>
 
 .gfxui_init
 	jsr	vdp_display_off			;display off

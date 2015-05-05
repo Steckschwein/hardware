@@ -2,7 +2,6 @@
 ;	gfx mode 1 - 40x24 chars - text mode
 ;
 !src <defs.h.a>
-!src "../vdp/t9929.h.a"
 *=$1000
 	jsr	vdp_display_off			;display off
 
@@ -55,7 +54,7 @@
 
 -	jmp	-
 
-!src "../vdp/t99xx.lib.a"
+!src "t99xx.lib.a"
 
 .msg	
 	!text "This is just a test of the vdp text mode"

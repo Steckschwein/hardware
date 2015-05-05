@@ -5,7 +5,6 @@
 
     jmp   main
    
-!source "t9929.h.a"
 !source "t99xx.lib.a"
 
 adr_h_w	= $f0

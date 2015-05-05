@@ -6,6 +6,8 @@
 
 	jmp	.init0
 	
+!src "../vdp/t99xx.lib.a"
+
 !address {
 .key = $10
 .buf 				= $0350 ; Input buffer 80 bytes. end: $03a1
@@ -402,7 +404,6 @@ mainloop
 	!byte $00
 
 !src "../fat/fat.a"
-
 
 .hellotxt		!text "SteckShell 0.06 ",$00
 .helptxt		!text $0a,$0d,"d        - directory"

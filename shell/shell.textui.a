@@ -1,5 +1,4 @@
-!src "../vdp/t9929.h.a"
-!src "../vdp/t99xx.lib.a"
+!src <t9929.h.a>
 
 .sprite_sanduhr
 	!byte	$ff,	$f0,	0,	Gray
@@ -230,17 +229,19 @@ _textui_chrout
 	bra	+++
 +	cmp	#$08			;backspace
 	bne	+
-	lda	#' '
-	sta	.saved_char		;blank at char position and also the saved char 
-	sta	(crs_ptr)
 	lda	crs_x
 	beq	++
 	dec	crs_x
-	bra	+++
+	lda	#' '			;blank at char position and also the saved char 
+	sta	.saved_char		
+	sta	(crs_ptr)
+	jsr	.textui_update_crs_ptr
+	sta	(crs_ptr)		;also erase char at the new position
+	rts
 ++	lda	crs_y			; cursor y=0, no dec
 	beq	+++
 	dec	crs_y
-	lda	#$1f			; end of line
+	lda	#$1f			; set x to end of line above
 	sta	crs_x
 	bra	+++
 +	sta	(crs_ptr)

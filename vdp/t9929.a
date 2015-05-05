@@ -3,7 +3,8 @@
 !source <bios.h.a>
 !source <via.h.a>
 !source <lcd.h.a>
-!source "t9929.h.a"
+!source <t9929.h.a>
+
 txtptr   =$f2
 crs_c	 =$f3
 adrl=	tmp0

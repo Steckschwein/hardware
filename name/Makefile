@@ -1,8 +1,8 @@
-all: name.bin 
+all: name.bin
 clean:
 	rm -f *.bin 
 
-%.bin: %.a ../bios/defs.h.a
+%.bin: %.a ../lib/defs.h.a
 	acme -v -f plain --cpu 65c02 -o $@ $<
 
 transfer: all
