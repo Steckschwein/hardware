@@ -14,7 +14,7 @@
 
 -	jmp	-
 	
-!src "t99xx.lib.a"
+!src <t99xx.lib.a>
 
 .pattern
 !bin "test/BRUNI_TRUDI.TIAP"
