@@ -17,7 +17,7 @@ adrh=	tmp1
 ; bil herd - forum "damals war's..." anbindung video chip
 
    jmp   main   
-!source "t99xx.lib.a"
+!source <t99xx.lib.a>
 
 ;msg_2	!text " Hey Thomas, these are the first letters written on screen with          THE TMS9929 VDP!         TODAY IS THE 15.04.2014          +++HAPPY BIRTHDAY+++           so far... /MLA ;)", $00
 msg_2	!text "      Welcome to VCFE 15.0!                                         These are some letters         written on screen with          THE TMS9929 VDP!", $00

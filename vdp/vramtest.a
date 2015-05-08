@@ -5,7 +5,7 @@
 
     jmp   main
    
-!source "t99xx.lib.a"
+!source <t99xx.lib.a>
 
 adr_h_w	= $f0
 adr_h_r	= $f1

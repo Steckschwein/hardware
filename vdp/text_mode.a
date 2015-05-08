@@ -7,6 +7,90 @@
 
 	
 	+SetVector	.charset,	.adrl	;inverse the charset
+	;jsr	.mirror_charset
+	jsr	.rotate_charset
+	
+
+	+SetVector	.charset, .adrl
+	lda	#$00
+	ldy	#$00
+	ldx	#$08
+	jsr	vdp_memcpy
+
+	jsr vdp_mode_text_blank
+	
+	lda	#$00+224
+	ldy	#$40+$18+$01
+	jsr	vdp_sreg
+	ldx	#$00
+-	lda	.msg,x
+	beq	+
+	sta	a_vram
+	inx	
+	bne	-
++	
+	jsr vdp_mode_text			;enable text mode
+
+-	jmp	-
+
+tmp8=$f8
+tmp9=$f9
+tmp10=$fa
+	
+.rotate_charset
+	lda	#$08
+	sta	tmp10
+	lda	#$00
+	stz	tmp0
+	stz	tmp1
+	stz	tmp2
+	stz	tmp3
+	stz	tmp4
+	stz	tmp5
+	stz	tmp6
+	stz	tmp7
+	lda	#$80
+	sta	tmp9
+--	lda	#$01
+	sta	tmp8
+	ldx	#$00
+-	lda	(.adrl),y
+	and	tmp8
+	beq	+
+	lda	tmp0,x
+	ora	tmp9
+	sta	tmp0,x
++	asl	tmp8
+	inx
+	cpx	#$08
+	bne	-
+	lsr	tmp9
+	bcc	+
+	lda	#$80
+	sta 	tmp9
+	phy
+	tya
+	sec	
+	sbc	#$07
+	tay	
+	ldx	#$00
+-	lda	tmp0,x
+	sta	(.adrl),y
+	stz	tmp0,x
+	iny
+	inx
+	cpx	#$08
+	bne	-
+	ply
++	iny
+	bne	--
+	inc	.adrh
+	dec	tmp10
+	bne	--
+	rts
+	
+	
+.mirror_charset
 	ldx	#$08
 	ldy	#$00
 -	stz	tmp0
@@ -30,31 +114,9 @@
 	inc	.adrh
 	dex
 	bne	-
-	
-	
-	+SetVector	.charset, .adrl
-	lda	#$00
-	ldy	#$00
-	ldx	#$08
-	jsr	vdp_memcpy
+	rts
 
-	jsr vdp_mode_text_blank
-	
-	lda	#$00+224
-	ldy	#$40+$18+$01
-	jsr	vdp_sreg
-	ldx	#$00
--	lda	.msg,x
-	beq	+
-	sta	a_vram
-	inx	
-	bne	-
-+	
-	jsr vdp_mode_text			;enable text mode
-
--	jmp	-
-
-!src "t99xx.lib.a"
+!src <t99xx.lib.a>
 
 .msg	
 	!text "This is just a test of the vdp text mode"
@@ -66,6 +128,5 @@
 	!text 0
 
 .charset
-;!src "../charsets/char.ascii.6x8.v3.h.a"
-!src "../charsets/char.ascii.5x8.h.a"
-;!src "../charsets/char.ascii.4x6.h.a"
+;!src "../charsets/char.ascii.5x8.h.a"		; mirrored
+!src "../charsets/char.ascii.6x8.v4.h.a"	; horizontal

@@ -9,6 +9,10 @@
 .saved_char	!byte ' '
 .COLS=32
 .ROWS=24
+
+.KEY_RETURN=$0d
+.KEY_BACKSPACE=$08
+
 .WRITE=1<<0
 .DIRTY=1<<1
 .CURSOR=1<<2
@@ -173,14 +177,44 @@
 +	inc crs_y
 	rts
 	
-.textui_update_crs_ptr
+.textui_update_crs_ptr_40cols
 	pha
 	lda	crs_y	; * .COLS
 	asl	
-	asl	
+	asl
+	asl
+	sta	tmp0	
+	asl			
+	asl
+	clc
+	adc	tmp0	; offs= y*.COLS -> y*40 = y*8+y*32	+ x
+	clc
+	adc	crs_x
+	sta	crs_ptr
+	lda	#$00	;add with carry
+	adc	#>.screen
+	sta	crs_ptr+1
+	
+;	0 6 12 18
+	
+	lda	crs_y	; * .COLS
+	lsr			; /6 -> page offset 0-3 => y/6 = y/(2*2+2)
+	lsr
+	lsr
+	clc
+	adc	#>.screen
+	sta	crs_ptr+1
+	pla
+	rts
+
+.textui_update_crs_ptr
+	pha
+	lda	crs_y
 	asl	
 	asl
 	asl
+	asl			
+	asl			; offs= y*.COLS
 	ora	crs_x
 	sta	crs_ptr
 	
@@ -223,11 +257,11 @@ _textui_chrout
 	sta	(crs_ptr)		;restore char at cursor position
 	stz	crs_x
 	bra	+++
-+	cmp	#$0d			;line feed
++	cmp	#.KEY_RETURN			;line feed
 	bne	+
 	jsr	.inc_cursor_y
 	bra	+++
-+	cmp	#$08			;backspace
++	cmp	#.KEY_BACKSPACE
 	bne	+
 	lda	crs_x
 	beq	++
@@ -241,12 +275,12 @@ _textui_chrout
 ++	lda	crs_y			; cursor y=0, no dec
 	beq	+++
 	dec	crs_y
-	lda	#$1f			; set x to end of line above
+	lda	#(.COLS-1)			; set x to end of line above
 	sta	crs_x
 	bra	+++
 +	sta	(crs_ptr)
 	lda	crs_x
-	cmp	#$1f
+	cmp	#(.COLS-1)
 	beq +
 	inc	crs_x
 	bra	+++

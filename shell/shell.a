@@ -5,8 +5,11 @@
 !src <fat32.h.a>
 
 	jmp	.init0
-	
-!src "../vdp/t99xx.lib.a"
+!src "shell.textui.a"
+!src "shell.gfxui.a"
+!src "util.h.a"
+
+
 
 !address {
 .key = $10
@@ -14,9 +17,6 @@
 .filename  			= $03a2
 }
 
-!src "shell.textui.a"
-!src "shell.gfxui.a"
-!src "util.h.a"
 
 !macro ShellPrint {
 	jsr mychrout
@@ -403,7 +403,10 @@ mainloop
 	!word .unknown
 	!byte $00
 
-!src "../fat/fat.a"
+
+
+!src <fat.a>
+!src <t99xx.lib.a>
 
 .hellotxt		!text "SteckShell 0.06 ",$00
 .helptxt		!text $0a,$0d,"d        - directory"
