@@ -19,7 +19,7 @@ main
 	
 	jsr	snd_detect
 	bcs	+
-	bra	+;for testing purpose without opl chip	
+	bra	+			;FIXME - for testing purpose only
 	lda	#'N'
 	jsr	lcdprint
 	rts
@@ -44,10 +44,12 @@ main
 	lda	#'2'
 	jsr	lcdprint
 	
-	lda	#'.'
+	lda	#'s'
 	jsr	lcdprint
+	
 	jsr	.play_imf
-	lda	#'.'
+	
+	lda	#'e'
 	jsr	lcdprint
 	
 -	jmp	-
@@ -79,13 +81,13 @@ main
 	
 	bit via1t2cl	; Acknowledge timer interrupt by reading channel low
 	
-	lda	.imf_update_wait	;clear, means currently within play loop, 
+	lda	.imf_update_wait	;clear, means currently within play loop
 	beq	++					;skip delay countdown
 	dec	.delayl
 	bne	++
-	lda .delayh
-	bne	+
-	stz	.imf_update_wait	; trigger imf update, clear the wait flag
+	lda .delayh				;delay low = 0, check delay high also = 0
+	bne	+					
+	stz	.imf_update_wait	; if so, trigger imf update, clear the wait flag
 	bra	++
 +	dec
 	sta	.delayh
@@ -95,11 +97,14 @@ main
 	
 .play_imf
 	+SetVector	imf_data, .adrl
+	jsr	.song_length
+	
 	ldy	#$00
 --	lda	.imf_update_wait	;wait until flag cleared
 	bne	--
-	jsr	.next_data
-	jsr .is_songend			;indicated by carry 
+	
+	jsr	.next_data			;next data block
+	jsr .is_songend			;song end ? indicated by carry=1
 	bcs	++
 	
 	lda	.regsel		;reg select
@@ -112,34 +117,39 @@ main
 	bne	+
 	lda	.delayh
 	bne	+
--	tya				;y to accu, test zero
+-	tya				;y overflow?
 	bne	--
 	inc	.adrh
 	lda	#'.'
 	jsr	lcdprint
 	jmp	--
-+	inc	.imf_update_wait	; trigger countdown
++	inc	.imf_update_wait	; trigger delay countdown
 	bra	-
 ++	rts
 
-	inc	.imf_update_wait	; trigger countdown
+.song_length
+	clc
+	lda	#<.songend
+	sbc	.adrl
+	sta	.length_l
+	lda	#>.songend
+	sbc	.adrh
+	sta	.length_h
+	rts
 
 .is_songend
-	lda	.regsel
-	cmp	#$55
+	phy
+	ldy	#$00
+-	lda	(.adrl),y
+	cmp	.songend,y
 	bne	+
-	lda	.regval
-	cmp	#$aa
-	bne	+
-	lda	.delayh
-	cmp	#$55
-	bne	+
-	lda	.delayl
-	cmp	#$aa
-	bne	+
+	iny	
+	cpy	#$04
+	bne	-
 	sec
-	rts
+	bra	++
 +	clc
+++	ply
 	rts
 
 .next_data
@@ -179,11 +189,11 @@ main
 	sec
 	rts
 
-.songend !byte 0
 .imf_update_wait !byte 0
 adlib_id !text "ADLIB"
 
 imf_data
 .imf_file
 !bin "test/test.wlf"
+.songend
 !byte $55, $aa, $55, $aa

@@ -23,29 +23,21 @@ snd_reset:
 ;	return - C (carry) flag set - if an opl2 compatible chip is available
 ;
 snd_detect:
-;	 hardwrite(4,0x60); hardwrite(4,0x80);
 	+snd_write 4, $60
 	+snd_write 4, $80
-;  stat1 = INP(adp);
 	ldy	a_sound
-;  hardwrite(2,0xff); hardwrite(4,0x21);
 	+snd_write 2, $ff
 	+snd_write 4, $21
 ;  for(i=0;i<80;i++)			// wait for adlib
 ;    INP(adp);
 ;  stat2 = INP(adp);
 	ldx	a_sound
-;  hardwrite(4,0x60); hardwrite(4,0x80);
 	+snd_write 4, $60
 	+snd_write 4, $80
-;  if(((stat1 & 0xe0) == 0) && ((stat2 & 0xe0) == 0xc0))
-;    return true;
 	tya
 	and	#$e0
 	beq	+
 	txa
 	and	#$e0
 	cmp	#$c0
-;  else
-;    return false;
 +	rts
