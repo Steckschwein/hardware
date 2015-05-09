@@ -4,7 +4,7 @@
 
 ; 	system attribute has to be set on file system
 
-.dest = $d000
+.dest = $c800
 .bios = $f000
 
 -
