@@ -15,6 +15,7 @@ cmd55	= $40 + 55	; APP_CMD
 cmd58	= $40 + 58	; READ_OCR
 acmd41	= $40 + 41
 
+sd_data_token = $fe
 
 !macro SDBusyWait {
 -		lda #$ff
