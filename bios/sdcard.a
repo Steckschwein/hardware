@@ -181,20 +181,29 @@
 ; Read block from SD Card
 ;---------------------------------------------------------------------
 .sd_read_block
-       ;jsr sd_select_card
+       jsr .sd_select_card
 
        jsr .sd_busy_wait
 
+       ; Send CMD17 command byte
        lda #cmd17
-       jsr .sd_cmd
+       jsr spi_rw_byte
 
-       lda #$ff
-       jsr .spi_rw_byte             
+       ; Send lba_addr in reverse order
+       !for .i, 3, 0 {
+              lda lba_addr + .i
+              jsr spi_rw_byte      
+       }
+
+       ; Send stopbit
+       lda #$01
+       jsr spi_rw_byte
 
 
+       ; wait for sd card data token
 -      lda #$ff
-       jsr .spi_rw_byte             
-       cmp #$fe
+       jsr spi_rw_byte             
+       cmp #sd_data_token
        bne -
 
 
@@ -240,8 +249,92 @@
               STX via1portb ; Takt aus
        }
 
-       ; jsr .spi_r_byte
-       ; jmp .spi_r_byte
+       jsr .sd_deselect_card
+       rts
+
+;---------------------------------------------------------------------
+; Read multiple blocks from SD Card
+;---------------------------------------------------------------------
+.sd_read_multiblock
+       +save
+
+       jsr .sd_select_card
+
+       jsr .sd_busy_wait  
+       ; +SDBusyWait
+
+       ; Send CMD18 command byte
+       lda #cmd18
+       jsr spi_rw_byte
+
+       ; Send lba_addr in reverse order
+       !for .i, 3, 0 {
+              lda lba_addr + .i
+              jsr spi_rw_byte      
+       }
+
+       ; Send stopbit
+       lda #$01
+       jsr spi_rw_byte
+
+       ; Wait for data token
+-             
+       lda #$ff
+       jsr spi_rw_byte             
+       cmp #$fe
+       bne -
+
+       ldy #$00
+
+       lda via1portb   ; Port laden
+       AND #$7e             ;    * Daten und Takt ausschalten
+       TAX             ; aufheben
+       ORA #$01
+       sta tmp0
+ 
+       ; read 256 bytes twice, increase blkptr in between
+       !for .i,0,1 {
+                     
+--            lda tmp0
+
+              !for .j,0,7 {
+                    STA via1portb ; Takt An 
+                    STX via1portb ; Takt aus
+              }
+              lda via1sr
+              sta (sd_blkptr),y
+
+              iny
+              bne --
+
+              inc sd_blkptr+1             
+       }
+              
+       lda tmp0
+       ; Read CRC bytes     
+       !for .i,0,15 {
+              sta via1portb 
+              stx via1portb 
+       }
+
+
+       dec addr(<.blocks)
+       beq +
+       jmp -
++
+              
+       jsr .sd_busy_wait  
+
+       ; all blocks read, send cmd12 to end transmission
+       ; jsr sd_param_init
+       lda #cmd12
+       jsr sd_cmd
+
+       jsr .sd_busy_wait  
+
+       jsr .sd_deselect_card
+
+       +restore
        rts
 
 ;---------------------------------------------------------------------
@@ -305,9 +398,12 @@
 ;---------------------------------------------------------------------
 .sd_select_card
        pha
+-      lda via1portb ; wait for spi bus to become free
+       and #%01111110
+       cmp #$7e
+       bne -
        ; set CS line to LOW
-       lda #%11111101
-       and via1portb 
+       lda #%01111100
        sta via1portb
        pla
 
@@ -321,14 +417,12 @@
        pha
        ; set CS line to HI
        lda #%01111110
-       ora via1portb 
        sta via1portb
 
        lda #$ff
-       jsr .spi_rw_byte
+       jsr spi_rw_byte
        
        pla
-
        rts
 
 ;---------------------------------------------------------------------
