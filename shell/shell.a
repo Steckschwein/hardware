@@ -54,9 +54,7 @@
 .init0
 	sei
 	
-	stz .key
-	jsr lcdclear
-	
+	stz .key	
 	+SetVector _textui_chrout, outvec
 	
 	lda #<count
@@ -97,11 +95,7 @@
 
 	
 	+V_ToggleCursorBusy	
-	lda #'X'
-	jsr lcdprint
 	jsr .fat_mount
-	lda #'Y'
-	jsr lcdprint
 	+V_ToggleCursorBusy
 	
 .init
