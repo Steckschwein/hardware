@@ -39,7 +39,7 @@ done
 	
 	jmp .dest
 	
-
-*=$1100
+!align 255,0
+; *=$1100
 .payload
 !bin "shell.bin"
