@@ -1,20 +1,21 @@
 !source <t9929.h.a>
 ;
-;
 ;	TODO	
 ;		improve some functions,  avoid nop for vdp write delay 2µs by opcode reordering
 ;		investigate the difference between wdc and rockwell if no nop is used
 ;
-;
-
 .WRITE_ADDRESS=$40
 
 .vdp_wait_blank
+	php
 	sei
 -	bit	a_vreg
 	bpl -	   ; wait until blank - irq flag set?
+	pla
+	and	#$04	;check interupt was set?
+	bne	+
 	cli
-	rts
++	rts
 	
 vdp_sreg:
 	sta	a_vreg
@@ -23,9 +24,8 @@ vdp_sreg:
 	sty   a_vreg
 	rts
 
-
 vdp_display_off:
-	jsr	.vdp_wait_blank
+;	jsr	.vdp_wait_blank
 	lda		#v_reg1_16k	;enable 16K ram, disable screen
 	sta 	a_vreg
 	+vnops
@@ -33,20 +33,53 @@ vdp_display_off:
 	sta   	a_vreg
 	rts
 
+;
+;	gfx 2 - each pixel can be adressed - e.g. for image
+;	
+vdp_mode_gfx2
+	jsr	.vdp_fill_name_table
+	+SetVector	vdp_init_bytes_gfx2, .adrl
+	bra	vdp_init_reg
+
+;
+;	gfx 3 - 4x4 color block - multicolor mode
+;	
+vdp_mode_gfx3
+	jsr	.vdp_fill_name_table
+	+SetVector	vdp_init_bytes_gfx3, .adrl
+	bra	vdp_init_reg
+
+;
+;	text mode - 40x24 character mode, 16 colors with same color for 8 characters in a block
+;
+vdp_mode_text
+	+SetVector vdp_init_bytes_text, .adrl
+	bra	vdp_init_reg
+;
+;	gfx mode 1 - 32x24 character mode, 16 colors with same color for 8 characters in a block
+;
+vdp_mode_gfx1:
+	sta	.adrl		;set character color
+	ldx	#$20
+	lda	#$00
+	ldy	#.WRITE_ADDRESS+$20	;color vram
+	jsr	vdp_fills
+	+SetVector vdp_init_bytes_gfx1, .adrl
+;	go on with code below
+
 ; setup video registers upon given table
 ;	input:
 ;	adrl/adrh vector set to vdp init table for al 8 vdp registers
 vdp_init_reg:
-	jsr		.vdp_wait_blank
+;	jsr		.vdp_wait_blank
 	ldy	#$00
 	ldx	#v_reg0
--  	lda  (.adrl),y
-	sta   a_vreg
-	+vnops
+-  	lda (.adrl),y
+	sta a_vreg
 	iny				;iny first, burn cycle to avoid vdp nop
-	stx   a_vreg
+	stx a_vreg
 	inx
-	cpy   #$08
+	cpy	#$08
 	bne   -
 	rts
 
@@ -86,32 +119,12 @@ vdp_mode_gfx3_load_bitmap
 	jsr	vdp_memcpy					;load the pic data --> pattern table at vram $0000
 	rts
 	
-;
-;	text mode - 40x24 character mode, 16 colors with same color for 8 characters in a block
-;
-vdp_mode_text
-	+SetVector vdp_init_bytes_text, .adrl
-	jmp	vdp_init_reg
-
 vdp_mode_text_blank
-	ldx	#$04			; 4 x 256 bytes
-	jmp	.vdp_mode_blank	
-;
-;	gfx mode 1 - 32x24 character mode, 16 colors with same color for 8 characters in a block
-;
-vdp_mode_gfx1:
-	sta	.adrl		;set character color
-	ldx	#$20
-	lda	#$00
-	ldy	#.WRITE_ADDRESS+$20	;color vram
-	jsr	vdp_fills
-	+SetVector vdp_init_bytes_gfx1, .adrl
-	jmp	vdp_init_reg
-
-vdp_mode_gfx1_blank:
+	ldx	#$04				; 4 x 256 bytes
+	bra	+
+vdp_mode_gfx1_blank:		; 3 x 256 bytes
 	ldx	#$03
-.vdp_mode_blank
-	lda	#' '					;fill screen with blank
++	lda	#' '					;fill vram screen with blank
 	sta	.adrl
 	lda	#$00
 	ldy	#.WRITE_ADDRESS+$18
@@ -141,22 +154,6 @@ vdp_mode_sprites_off
 	bne	-
 rts
 	
-;
-;	gfx 2 - each pixel can be adressed - e.g. for image
-;	
-vdp_mode_gfx2
-	jsr	.vdp_fill_name_table
-	+SetVector	vdp_init_bytes_gfx2, .adrl
-	jmp	vdp_init_reg
-
-;
-;	gfx 3 - 4x4 color block - multicolor mode
-;	
-vdp_mode_gfx3
-	jsr	.vdp_fill_name_table
-	+SetVector	vdp_init_bytes_gfx3, .adrl
-	jmp	vdp_init_reg
-
 vdp_init_bytes_gfx1
 	!byte 0
 	!byte v_reg1_16k|v_reg1_display_on|v_reg1_int|v_reg1_spr_size
@@ -169,7 +166,7 @@ vdp_init_bytes_gfx1
 	
 vdp_init_bytes_text
 	!byte 0
-	!byte v_reg1_16k|v_reg1_display_on|v_reg1_m1
+	!byte v_reg1_16k|v_reg1_display_on|v_reg1_int|v_reg1_m1
 	!byte 	($1800 / $400)	; name table - value * $400					--> characters 
 	!byte 	0	; not used
 	!byte 	($0000 / $800) ; pattern table (charset) - value * $800  	--> offset in VRAM 
@@ -312,65 +309,3 @@ vdp_memcpys:
 	lda .y
 	sta	crs_y
 }
-
-;############
-;deprectated - use lib textui.a or gfxui.a instead
-;############
-	
-vdp_print:
-	ldy		#$00
-	
---	jsr		vdp_set_addr
--	lda		(msgptr),y
-	beq		++
-	cmp		#$0d
-	bne		+
-	stz		crs_x
-	inc		crs_y
-	iny
-	jmp		--
-+	+vnops
-	sta		a_vram
-	inc 		crs_x
-	iny
-	bne		-
-++	rts
-
-vdp_chrout:
-	tay
-	jsr		vdp_set_addr
-+	+vnops
-	sty		a_vram
-	inc	crs_x
-	lda	crs_x
-	and	#$20
-	cmp	#$20
-	bne	+
-	stz	crs_x
-	inc	crs_y
-+	rts
-
-vdp_set_addr:
-	lda	crs_x
-	lda	crs_y	; * 32
-	asl	
-	asl	
-	asl	
-	asl
-	asl
-	ora	crs_x
-	sta	a_vreg	
-	
-	lda	crs_y	; * 32
-	lsr			; /8 -> page offset 0-2
-	lsr
-	lsr
-	clc
-	adc	#.WRITE_ADDRESS+$18
-	sta	a_vreg
-	rts
-
-vdp_xy:
-	stx	crs_x
-	sty	crs_y
-	rts

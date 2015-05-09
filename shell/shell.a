@@ -1,4 +1,4 @@
-*= $d000
+*= $c800
 !src <defs.h.a>
 !src <bios.h.a>
 !src <via.h.a>
@@ -9,14 +9,11 @@
 !src "shell.gfxui.a"
 !src "util.h.a"
 
-
-
 !address {
 .key = $10
 .buf 				= $0350 ; Input buffer 80 bytes. end: $03a1
 .filename  			= $03a2
 }
-
 
 !macro ShellPrint {
 	jsr mychrout
@@ -38,7 +35,6 @@
 	+ShellPrintChar '0'
 	pla
 +	
-
 	jsr sdecout
 }
 
@@ -55,13 +51,14 @@
 +	
 }
 
-
-
 .init0
+	sei
+	
 	stz .key
 	jsr lcdclear
-
+	
 	+SetVector _textui_chrout, outvec
+	
 	lda #<count
 	sta via1t1cl            ; set low byte of count
 	lda #>count
@@ -94,12 +91,8 @@
 	cmp #$00
 	bne -
 
-	
 	jsr	.textui_init0
-
-
-
-
+	
 	cli
 
 	
@@ -406,7 +399,6 @@ mainloop
 
 
 !src <fat.a>
-!src <t99xx.lib.a>
 
 .hellotxt		!text "SteckShell 0.06 ",$00
 .helptxt		!text $0a,$0d,"d        - directory"
@@ -429,3 +421,6 @@ mainloop
 !src "sanduhr_225.xpm.raw"
 !src "sanduhr_270.xpm.raw"
 !src "sanduhr_315.xpm.raw"
+!align 255,0
+.charset_6x8
+!src "../charsets/char.ascii.5x8.h.a"		; mirrored

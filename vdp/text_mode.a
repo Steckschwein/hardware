@@ -6,14 +6,15 @@
 	jsr	vdp_display_off			;display off
 
 	
-	+SetVector	.charset,	.adrl	;inverse the charset
-	;jsr	.mirror_charset
-	jsr	.rotate_charset
+	+SetVector	.charset,	.adrl	
+	jsr	.mirror_charset				;inverse the charset
+	;jsr	.rotate_charset
+	
 	
 
 	+SetVector	.charset, .adrl
 	lda	#$00
-	ldy	#$00
+	ldy	#$40+$00
 	ldx	#$08
 	jsr	vdp_memcpy
 
@@ -67,7 +68,7 @@ tmp10=$fa
 	lsr	tmp9
 	bcc	+
 	lda	#$80
-	sta 	tmp9
+	sta	tmp9
 	phy
 	tya
 	sec	
@@ -127,6 +128,7 @@ tmp10=$fa
 	!text 0xDB
 	!text 0
 
+!align 255,0
 .charset
-;!src "../charsets/char.ascii.5x8.h.a"		; mirrored
-!src "../charsets/char.ascii.6x8.v4.h.a"	; horizontal
+!src "../charsets/char.ascii.5x8.h.a"		; mirrored
+;!src "../charsets/char.ascii.6x8.v4.h.a"	; horizontal

@@ -101,7 +101,7 @@ vdp_gfx2_init:
 	jsr	vdp_sreg
 	ldy	#$00
 	ldx	#$00
--	+nops VRAM_WAIT
+-	+vnops
 	stx	a_vram
 	inx
 	bne	-
@@ -135,7 +135,7 @@ vdp_irq:
 	bmi +	   ; VDP IRQ flag set? 
 	inc	.bgcolor
 	lda .bgcolor
-	jsr	vdp_bgcolor
+;	jsr	vdp_bgcolor
 +		
 	
 ;	jsr	vdp_colortest
@@ -213,7 +213,7 @@ vdp_sprite:
 	jsr	vdp_sreg
     ldy   #$00
 -
-	+nops VRAM_WAIT
+	+vnops
 	lda   sprite_attr_table,y
 	sta   a_vram
 	iny
@@ -229,7 +229,7 @@ vdp_clear_vram:
    ldx   #$00
    ldy   #$00
 c1:
-	+nops  VRAM_WAIT
+	+vnops
    sta   a_vram
    inx
    bne   c1
@@ -284,7 +284,7 @@ vdp_colortest:
     ldy   #$00
 	lda	  #'a'
 -   sty   a_vram
-	+nops	VRAM_WAIT
+	+vnops
 	iny
 	bne   -
 	inx
@@ -297,7 +297,7 @@ vdp_colortest:
    ldx   #$00
    ldy   #Light_Blue<<4
 -  sty   a_vram
-	+nops	VRAM_WAIT
+	+vnops
    iny
    inx
    cpx   #$20

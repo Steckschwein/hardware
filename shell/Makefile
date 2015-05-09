@@ -11,7 +11,7 @@ assets: sanduhr.raw sanduhr_45.raw sanduhr_90.raw sanduhr_135.raw sanduhr_180.ra
 shell.bin: $(DEPS)
 loader.bin: shell.bin
 transfer: shell.bin
-	../transfer.py shell.bin 0xd000
+	../transfer.py shell.bin 0xc800
 loader: loader.bin
 	sudo mcopy loader.bin a:
 	sudo mattrib +s a:loader.bin
