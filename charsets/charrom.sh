@@ -14,6 +14,12 @@ echo 'charset_vc20:' > char.ascii.vc20.h.a
 sed -n 65,96p characters.901460-03.a >> char.ascii.vc20.h.a 	# 32 chars 
 sed -n 33,64p characters.901460-03.a >> char.ascii.vc20.h.a		# 32 chars
 sed -n 1,32p characters.901460-03.a >> char.ascii.vc20.h.a		# 32 chars
-sed -n 257,288p characters.901460-03.a >> char.ascii.vc20.h.a
+sed -n 257,288p characters.901460-03.a >> char.ascii.vc20.h.a	# 32 chars
+#inverse
+sed -n 193,224p characters.901460-03.a >> char.ascii.vc20.h.a 	# 32 chars 
+sed -n 161,192p characters.901460-03.a >> char.ascii.vc20.h.a		# 32 chars
+sed -n 129,160p characters.901460-03.a >> char.ascii.vc20.h.a		# 32 chars
+sed -n 385,416p characters.901460-03.a >> char.ascii.vc20.h.a	# 32 chars
+
 #sed -n 161p characters.901460-03.a >> char.ascii.vc20.h.a
 #sed -n 258,283p characters.901460-03.a >> char.ascii.vc20.h.a

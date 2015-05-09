@@ -4,7 +4,6 @@
 ;		improve some functions,  avoid nop for vdp write delay 2µs by opcode reordering
 ;		investigate the difference between wdc and rockwell if no nop is used
 ;
-.WRITE_ADDRESS=$40
 
 .vdp_wait_blank
 	php

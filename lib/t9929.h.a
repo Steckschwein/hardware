@@ -8,7 +8,7 @@ t9929_h_a = 1
 	nop
 }
 
-
+.WRITE_ADDRESS=$40
 TEXT_COLOR	= Dark_Green
 TEXT_BGCOLOR = Black
 

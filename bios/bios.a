@@ -11,9 +11,9 @@
 *= $e000			; ROM Start
 charset_8x8
 !src "../charsets/char.ascii.vc20.h.a"
-!align 255,0
+;!align 255,0
 charset_5x8
-!src "../charsets/char.ascii.5x8.h.a"		; mirrored
+!src "../charsets/char.ascii.6x8.v4.h.a"	; horizontal
 biosversion	!text "V0905", $00	; Version String
 
 .start_msg
@@ -25,10 +25,7 @@ biosversion	!text "V0905", $00	; Version String
 !text $0d,$0d,"READY.", $0d
 !text $0
 .crlf	!byte $0d, $00
-*=$f000
-
-
-
+*=$f100
 
 .upload
 			ldx #$00
