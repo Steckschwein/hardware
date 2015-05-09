@@ -524,6 +524,7 @@ FD_file_size = $08
 ; Read multiple blocks from SD Card
 ;---------------------------------------------------------------------
 .sd_read_multiblock
+		+save
 
 -		lda via1portb	; wait for spi bus to become free
 		and #%01111110
@@ -536,11 +537,19 @@ FD_file_size = $08
        
 		+SDBusyWait
 
-   		jsr sd_param_init
-   		+SDBlockAddr lba_addr
-
+       	; Send CMD18 command byte
        	lda #cmd18
-       	jsr sd_cmd
+       	jsr spi_rw_byte
+
+       	; Send lba_addr in reverse order
+		!for .i, 3, 0 {
+			lda lba_addr + .i
+			jsr spi_rw_byte	
+		}
+
+		; Send stopbit
+       	lda #$01
+       	jsr spi_rw_byte
 
        ; Wait for data token
 -		
@@ -597,12 +606,14 @@ FD_file_size = $08
 
 		+SDBusyWait
 
+		; Deselect card 
 		lda #%01111110
 		sta via1portb
 
 		lda #$ff
 		jsr spi_rw_byte
 
+		+restore
 		rts
 
 ;---------------------------------------------------------------------
