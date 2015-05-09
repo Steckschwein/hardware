@@ -231,7 +231,7 @@ mainloop
 	lda fat_errno
 	bne +
 	+ShellPrintString .crlf
-	+ShellPrintString .steckos_start
+	+ShellPrintString .steckos_start	
 
 +	jmp mainloop
 	
@@ -415,6 +415,3 @@ mainloop
 !src "sanduhr_225.xpm.raw"
 !src "sanduhr_270.xpm.raw"
 !src "sanduhr_315.xpm.raw"
-!align 255,0
-.charset_6x8
-!src "../charsets/char.ascii.5x8.h.a"		; mirrored
