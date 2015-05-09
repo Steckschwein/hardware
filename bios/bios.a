@@ -9,9 +9,12 @@
 !src <fat32.h.a>
 !address	.target = $00
 *= $e000			; ROM Start
+charset_8x8
 !src "../charsets/char.ascii.vc20.h.a"
-
-biosversion	!text "V1804", $00	; Version String
+!align 255,0
+charset_5x8
+!src "../charsets/char.ascii.5x8.h.a"		; mirrored
+biosversion	!text "V0905", $00	; Version String
 
 .start_msg
 !text "SteckBIOS 0.1", $0d
@@ -283,8 +286,8 @@ biosversion	!text "V1804", $00	; Version String
 .boot_from_card
 			+PrintString .bootup_txt
 
-			jsr .sd_select_card
-			jsr .sd_param_init
+			lda #%01111110
+			sta via1portb
 
 			jsr .fat_mount
 			lda fat_errno
@@ -687,6 +690,7 @@ sd_write_block 	jmp .sd_write_block
 sys_sd_read_block
 sd_read_block 	jmp .sd_read_block
 
+
 sys_sd_param_init
 sd_param_init 	jmp .sd_param_init
 
@@ -708,6 +712,9 @@ sys_fat_mount
 fat_mount   jmp .fat_mount
 sys_getkey
 getkey 		jmp .kbd_getkey	
+sys_sd_read_multiblock
+sd_read_multiblock 	jmp .sd_read_multiblock
+
 ;----------------------------------------------------------------------------------------------
 
 ;----------------------------------------------------------------------------------------------
