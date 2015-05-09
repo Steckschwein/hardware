@@ -6,6 +6,12 @@
 	phx
 	phy
 
+
+	; set lba_addr to $00000000 since we want to read the bootsector
+	!for .i,0,3 {
+		stz lba_addr + .i	
+	}
+
 	+SetVector sd_blktarget, sd_blkptr
 
 	jsr .sd_read_block
@@ -35,7 +41,7 @@
 	ldx #$00
 -	
 	lda part0 + PE_LBABegin,x
-	sta fat_begin_lba,x
+	sta lba_addr,x
 	inx
 	cpx #$04
 	bne -
@@ -74,12 +80,12 @@
 	; add number of reserved sectors to fat_begin_lba. store in cluster_begin_lba
 	clc
 !for .i,0,1 {
-	lda fat_begin_lba + .i
+	lda lba_addr + .i
 	adc sd_blktarget + BPB_RsvdSecCnt + .i
 	sta cluster_begin_lba + .i	
 }
 !for .i,2,3 {
-	lda fat_begin_lba + .i
+	lda lba_addr + .i
 	adc #$00
 	sta cluster_begin_lba + .i
 }
@@ -245,7 +251,7 @@
 	pla
 	rts
 
-.blocks = tmp7
+!address .blocks = tmp7
 .load
 	
 	ldy #DIR_Name
@@ -269,12 +275,12 @@
 	ldy #DIR_FileSize + 1
 	lda (sd_blkptr),y
 	lsr
-	sta .blocks
+	sta addr(<.blocks)
 	bcs +
 	dey
 	lda (sd_blkptr),y
 	beq ++
-+	inc .blocks
++	inc addr(<.blocks)
 ++
 
 
@@ -303,7 +309,7 @@
 
 	; +PrintChar '#'
 	
-	dec .blocks
+	dec addr(<.blocks)
 	beq + ; zero, we're done
 
 	; increase lba_addy by 1
