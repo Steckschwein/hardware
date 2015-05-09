@@ -152,7 +152,8 @@
 	jmp _textui_put
 +	lda	(crs_ptr)			;save char
 	sta	.saved_char
-	lda	#160
+	; lda	#160
+	lda	#18
 	jmp _textui_put
 +++	rts
 
