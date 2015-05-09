@@ -10,6 +10,8 @@
 .screen_frames !byte 0
 .saved_char	!byte ' '
 
+.cursor_char = 18
+
 .ROWS=24
 
 .KEY_RETURN=$0d
@@ -153,7 +155,7 @@
 +	lda	(crs_ptr)			;save char
 	sta	.saved_char
 	; lda	#160
-	lda	#18
+	lda	#.cursor_char
 	jmp _textui_put
 +++	rts
 
