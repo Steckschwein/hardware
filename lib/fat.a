@@ -485,7 +485,6 @@ FD_file_size = $08
 	ldx #$00
 -	
 	lda part0 + PE_LBABegin,x
-	sta fat_begin_lba,x
 	sta lba_addr,x
 	inx
 	cpx #$04
@@ -525,12 +524,12 @@ FD_file_size = $08
 	; add number of reserved sectors to fat_begin_lba. store in cluster_begin_lba
 	clc
 !for .i,0,1 {
-	lda fat_begin_lba + .i
+	lda lba_addr + .i
 	adc sd_blktarget + BPB_RsvdSecCnt + .i
 	sta cluster_begin_lba + .i	
 }
 !for .i,2,3 {
-	lda fat_begin_lba + .i
+	lda lba_addr + .i
 	adc #$00
 	sta cluster_begin_lba + .i
 }
