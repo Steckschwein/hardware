@@ -48,7 +48,7 @@
 
 
 	; Write LBA start address to sd param buffer
-	+SDBlockAddr fat_begin_lba
+	; +SDBlockAddr fat_begin_lba
 
 	+SetVector sd_blktarget, sd_blkptr
 	; Read FAT Volume ID at LBABegin and Check signature
@@ -199,10 +199,10 @@
 	phy
 	phx
 
-	jsr .sd_param_init
+	; jsr .sd_param_init
 
 -	+SetVector sd_blktarget, sd_blkptr
-	+SDBlockAddr lba_addr
+	; +SDBlockAddr lba_addr
 	jsr .sd_read_block
 	
 --	ldy #DIR_Attr
@@ -304,7 +304,8 @@
 	jsr .calc_lba_addr
 
 	+SetVector .steckos_start, sd_blkptr
--	+SDBlockAddr lba_addr
+-	
+	; +SDBlockAddr lba_addr
 	jsr .sd_read_block
 
 	; +PrintChar '#'
