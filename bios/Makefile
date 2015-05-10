@@ -20,6 +20,9 @@ bios.h.a: bios.bin
 	acme -Wtype-mismatch -l $<.labels $(ACME_OPTS) -o $@ $<
 
 burn: bios.bin
-	minipro -p AT28C256 -w bios.bin -e
+	mkfile 24k 24k.bin
+	cat bios.bin 24k.bin > burn.bin
+	minipro -p AT28C256 -w burn.bin
+	rm 24k.bin burn.bin
 transfer: loader
 	../transfer.py loader.bin 0x0400
