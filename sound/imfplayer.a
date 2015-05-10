@@ -13,8 +13,8 @@ CPU_CLOCK=4000000
 	jmp	main
 
 !source "ym3812.lib.a"
-
-main
+!source <t99xx.lib.a>
+main	
 	jsr	lcdclear
 	
 	jsr	snd_detect
@@ -41,10 +41,8 @@ main
 	jsr	lcdprint
 	
 	jsr	.init_timer
-	lda	#'2'
-	jsr	lcdprint
 	
-	lda	#'s'
+	lda	#'2'
 	jsr	lcdprint
 	
 	jsr	.play_imf
@@ -102,6 +100,10 @@ main
 	ldy	#$00
 --	lda	.imf_update_wait	;wait until flag cleared
 	bne	--
+
+	inc	tmp4
+	lda	tmp4
+	jsr	vdp_bgcolor
 	
 	jsr	.next_data			;next data block
 	jsr .is_songend			;song end ? indicated by carry=1
@@ -189,6 +191,8 @@ main
 	sec
 	rts
 
+.length_h 	!byte 0
+.length_l	!byte 0
 .imf_update_wait !byte 0
 adlib_id !text "ADLIB"
 

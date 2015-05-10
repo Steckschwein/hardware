@@ -19,4 +19,4 @@
 .pattern
 !bin "test/BRUNI_TRUDI.TIAP"
 .color
-!bin "test/BRUNI_TRUDI.TIAC"
+!bin "test/BRUNI_TRUDI.TIAP"

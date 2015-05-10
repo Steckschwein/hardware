@@ -13,7 +13,7 @@ charset_8x8
 !src "../charsets/char.ascii.vc20.h.a"
 ;!align 255,0
 charset_5x8
-!src "../charsets/char.ascii.6x8.v4.h.a"	; horizontal
+!src "../charsets/char.ascii.6x8.big.h.a"
 biosversion	!text "V1005", $00	; Version String
 
 .start_msg
