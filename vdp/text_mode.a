@@ -2,23 +2,30 @@
 ;	gfx mode 1 - 40x24 chars - text mode
 ;
 !src <defs.h.a>
+!src <bios.h.a>
 *=$1000
 	jsr	vdp_display_off			;display off
 
-	
-	+SetVector	.charset,	.adrl	
-	jsr	.mirror_charset				;inverse the charset
+	;+SetVector	charset,	.adrl	
+	;jsr	.mirror_charset				;inverse the charset
 	;jsr	.rotate_charset
-	
-	
 
-	+SetVector	.charset, .adrl
+	+SetVector	charset_6x8,	.adrl	
 	lda	#$00
 	ldy	#$40+$00
 	ldx	#$08
 	jsr	vdp_memcpy
 
 	jsr vdp_mode_text_blank
+
+	lda	#$00
+	ldy	#$40+$18
+	jsr	vdp_sreg
+	ldx	#$00
+-	stx	a_vram
+	inx	
+	bne	-
+
 	
 	lda	#$00+224
 	ldy	#$40+$18+$01
@@ -39,6 +46,20 @@ tmp9=$f9
 tmp10=$fa
 	
 .rotate_charset
+	+SetVector charset_6x8, .adrl	;setup vram with charset
+	+SetVector .charset, tmp8	;setup vram with charset
+	ldx	#$08
+	ldy	#$00
+-	lda	(.adrl),y
+	sta (tmp8),y
+	iny
+	bne	-
+	inc	.adrh
+	inc	tmp9
+	dex
+	bne	-
+	+SetVector .charset, .adrl
+
 	lda	#$08
 	sta	tmp10
 	lda	#$00
@@ -130,5 +151,6 @@ tmp10=$fa
 
 !align 255,0
 .charset
-!src "../charsets/char.ascii.5x8.h.a"		; mirrored
+;!src "../charsets/char.ascii.5x8.h.a"		; mirrored
 ;!src "../charsets/char.ascii.6x8.v4.h.a"	; horizontal
+;!src "../charsets/char.ascii.6x8.big.h.a"	; horizontal

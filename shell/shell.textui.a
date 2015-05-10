@@ -21,7 +21,7 @@
 .CURSOR_CHAR=160
 
 !ifdef text_mode_40 {
-.charset=.charset_6x8	; loaded after shell code, see shell.a
+.charset=charset_6x8	; loaded after shell code, see shell.a
 .COLS=40
 .textui_update_crs_ptr
 	pha
@@ -94,10 +94,9 @@
 	jsr .textui_update_crs_ptr		;init cursor pointer
 	
 .textui_init
-	+SetVector .charset, .adrl	;setup vram with charset
-	jsr	.mirror_charset
-	
+
 	+SetVector	.charset, .adrl
+	
 	lda	#$00
 	ldy	#.WRITE_ADDRESS+$00
 	ldx	#$08					;load charset
@@ -344,32 +343,7 @@ _textui_println
 	and	#!.TEXTUI_ENABLED
 +	sta	.screen_status
 	rts
-
-.mirror_charset
-	ldx	#$08
-	ldy	#$00
--	stz	tmp0
-	lda	(.adrl),y	;bit inverse
-	asl
-	ror	tmp0
-	asl
-	ror	tmp0
-	asl
-	ror	tmp0
-	asl
-	ror	tmp0
-	asl
-	ror	tmp0
-	asl
-	ror	tmp0	
-	lda	tmp0
-	sta	(.adrl),y
-	iny
-	bne	-
-	inc	.adrh
-	dex
-	bne	-
-	rts
+	
 
 !macro	V_ToggleCursorBusy {
 	jsr	_textui_toggle_cursor_busy

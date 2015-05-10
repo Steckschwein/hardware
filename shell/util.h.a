@@ -2,7 +2,7 @@
 
 ;subroutine wrapper because there is no JSR (yyxx) on 6502 or 65c02
 mychrout 
-;	jsr	chrout
+	jsr	chrout
 	jmp (outvec)
 
 shexout
