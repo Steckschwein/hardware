@@ -6,8 +6,10 @@
 #include <errno.h>     // Error number definitions
 #include <termios.h>  // POSIX terminal control definitions 
 
+#define BUFSIZE 65535
 char * device = "/dev/cu.usbserial-FTAJMAUJ";
-char buffer[65535];
+char buffer[BUFSIZE];
+
 // function to open the port
 int open_port(void)
 {
@@ -27,7 +29,7 @@ int open_port(void)
 }
 
 
-int main()
+int main(int argc, char *argv[])
 {
           int port,n;
           char str[30];
@@ -35,7 +37,7 @@ int main()
           char * p = buffer;
 
           FILE *fp; // input file
-          fp = fopen("hello.bin", "r");
+          fp = fopen(argv[1], "r");
           length = fread(buffer, 1, sizeof(buffer), fp);
           fclose(fp);
 
