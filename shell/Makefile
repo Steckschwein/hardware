@@ -1,4 +1,4 @@
-DEPS=*.raw *.h.a  shell.textui.a shell.gfxui.a ${ACME}/fat.a ${ACME}/t99xx.lib.a ${ACME}/t9929.h.a
+DEPS=*.raw  shell.textui.a shell.gfxui.a ${ACME}/fat.a ${ACME}/t99xx.lib.a ${ACME}/t9929.h.a
 all: loader.bin shell.bin
 clean:
 	rm -f *.bin 
