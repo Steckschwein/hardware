@@ -14,7 +14,7 @@ charset_8x8
 ;!align 255,0
 charset_5x8
 !src "../charsets/char.ascii.6x8.v4.h.a"	; horizontal
-biosversion	!text "V0905", $00	; Version String
+biosversion	!text "V1005", $00	; Version String
 
 .start_msg
 !text "SteckBIOS 0.1", $0d
