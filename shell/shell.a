@@ -10,7 +10,7 @@
 	jmp	.init0
 !src "shell.textui.a"
 !src "shell.gfxui.a"
-!src "util.h.a"
+; !src "util.h.a"
 
 !address {
 .key = $10
@@ -19,16 +19,16 @@
 }
 
 !macro ShellPrint {
-	jsr mychrout
+	jsr chrout
 }
 
 !macro ShellPrintChar char {
 	lda #char
-    jsr mychrout
+    jsr chrout
 }
 
 !macro ShellPrintHex {
-	jsr	shexout
+	jsr	hexout
 }
 !macro ShellPrintDec {
 	; leading zero hack
@@ -38,7 +38,7 @@
 	+ShellPrintChar '0'
 	pla
 +	
-	jsr sdecout
+	jsr decout
 }
 
 !macro ShellPrintString .word {
