@@ -406,7 +406,7 @@ mainloop
 .crlf			!byte $0a,$0d,$00
 .prompt			!text ">",$00
 .uploadtxt		!text "serial upload",$00
-.txt_msg_unknown_cmd	!text $0a,$0d,"unknown command",$00
+.txt_msg_unknown_cmd	!text $0a,$0d,"unknown command (h for help)",$00
 .assets
 !src "sanduhr.raw"
 !src "sanduhr_45.raw"
