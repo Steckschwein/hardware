@@ -204,9 +204,6 @@ biosversion	!text "V1005", $00	; Version String
 
 .back_from_memcheck
 
-			stz chn_out
-			stz chn_in 
-
 			; init IO devices
 			jsr init_lcd
 			jsr init_via1
@@ -215,8 +212,7 @@ biosversion	!text "V1005", $00	; Version String
 			; Set IRQ Vector
 			+SetVector .irqhandler, irqvec
 
-			lda #dev_lcd
-			sta chn_out
+			+SetVector .lcdprint, outvec
 
 			+PrintStringAt biosversion, $00, $01
 
@@ -363,27 +359,8 @@ biosversion	!text "V1005", $00	; Version String
 ; Output character on active output device
 ;----------------------------------------------------------------------------------------------
 .chrout
-		pha
-		lda chn_out
-		bne +
-		pla
-		; jmp	vdp_chrout
+		jmp (outvec)
 
-+		; LCD
-		cmp #dev_lcd
-		bne +
-		pla
-		jmp .lcdprint
-
-+		; UART
-		cmp #dev_uart
-		bne +
-
-		pla
-		jmp .uart_tx
-
-+		
-		rts
 ;----------------------------------------------------------------------------------------------
 ; Output string on active output device
 ;----------------------------------------------------------------------------------------------
