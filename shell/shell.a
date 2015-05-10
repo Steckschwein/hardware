@@ -408,11 +408,11 @@ mainloop
 .uploadtxt		!text "serial upload",$00
 .txt_msg_unknown_cmd	!text $0a,$0d,"unknown command",$00
 .assets
-!src "sanduhr.xpm.raw"
-!src "sanduhr_45.xpm.raw"
-!src "sanduhr_90.xpm.raw"
-!src "sanduhr_135.xpm.raw"
-!src "sanduhr_180.xpm.raw"
-!src "sanduhr_225.xpm.raw"
-!src "sanduhr_270.xpm.raw"
-!src "sanduhr_315.xpm.raw"
+!src "sanduhr.raw"
+!src "sanduhr_45.raw"
+!src "sanduhr_90.raw"
+!src "sanduhr_135.raw"
+!src "sanduhr_180.raw"
+!src "sanduhr_225.raw"
+!src "sanduhr_270.raw"
+!src "sanduhr_315.raw"
