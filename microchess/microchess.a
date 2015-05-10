@@ -140,7 +140,7 @@ temp    =   $6C
 		*=$1000			; load into RAM @ $1000-$15FF
 		jmp .init
 
-!src "../shell/util.h.a"
+; !src "../shell/util.h.a"
 !src "../shell/shell.textui.a"
 
 .init
@@ -167,28 +167,8 @@ temp    =   $6C
 		lda #%01111110
 		sta via1portb
 
-		; stz chn_in
+
 		cli
-
-; 		ldx #0
-
-; -		txa
-
-; 		phx
-; 		jsr shexout
-; 		jsr mychrout
-
-; 		lda #' '
-; 		jsr mychrout
-; 		plx
-
-; 		jsr .keyin
-; 		inx
-; 		cmp #120
-; 		bne -
-
-		
-; -		jmp -
 
 		LDA     #$00		; REVERSE TOGGLE
 		STA     REV
@@ -941,11 +921,11 @@ KIN    	LDA   	#"?"
 
 syskin		= .keyin
 ; syschout	= mychrout
-syshexout	= shexout
+syshexout	= hexout
 
 syschout 
 	+save
-	jsr mychrout
+	jsr chrout
 	+restore
 	rts
 ; syshexout      PHA                     ;  prints AA hex digits
@@ -1046,13 +1026,14 @@ OPNING  	!byte 	$99, $25, $0B, $25, $01, $00, $33, $25
 
 	stz .key 		; reset .key to signal isr to fetch next key
 	rts
-* = $2000
+; * = $2000
+!align 255,0
 .assets
-!src "../shell/sanduhr.xpm.raw"
-!src "../shell/sanduhr_45.xpm.raw"
-!src "../shell/sanduhr_90.xpm.raw"
-!src "../shell/sanduhr_135.xpm.raw"
-!src "../shell/sanduhr_180.xpm.raw"
-!src "../shell/sanduhr_225.xpm.raw"
-!src "../shell/sanduhr_270.xpm.raw"
-!src "../shell/sanduhr_315.xpm.raw"
+!src "../shell/sanduhr.raw"
+!src "../shell/sanduhr_45.raw"
+!src "../shell/sanduhr_90.raw"
+!src "../shell/sanduhr_135.raw"
+!src "../shell/sanduhr_180.raw"
+!src "../shell/sanduhr_225.raw"
+!src "../shell/sanduhr_270.raw"
+!src "../shell/sanduhr_315.raw"
