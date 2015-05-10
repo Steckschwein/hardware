@@ -213,6 +213,7 @@ biosversion	!text "V1005", $00	; Version String
 			+SetVector .irqhandler, irqvec
 
 			+SetVector .lcdprint, outvec
+			+SetVector .kbd_chrin, invec
 
 			+PrintStringAt biosversion, $00, $01
 
@@ -220,7 +221,7 @@ biosversion	!text "V1005", $00	; Version String
 			jsr .lcdxy
 
 			lda #'$'
-			jsr .chrout
+			jsr chrout
 
 			lda ram_end_l
 			jsr .hexout
@@ -342,24 +343,24 @@ biosversion	!text "V1005", $00	; Version String
 ;----------------------------------------------------------------------------------------------
 ; IO Wrapper
 ;----------------------------------------------------------------------------------------------
-.chrin
-		pha
-		lda chn_in
-		bne +  ; $00 - keyboard
-		pla
-		jmp .kbd_chrin
-+		cmp #dev_uart
-		bne +
-		pla
-		jmp .uart_rx
-+
-		pla
-		rts
+; .chrin
+; 		pha
+; 		lda chn_in
+; 		bne +  ; $00 - keyboard
+; 		pla
+; 		jmp .kbd_chrin
+; +		cmp #dev_uart
+; 		bne +
+; 		pla
+; 		jmp .uart_rx
+; +
+; 		pla
+; 		rts
 ;----------------------------------------------------------------------------------------------
 ; Output character on active output device
 ;----------------------------------------------------------------------------------------------
-.chrout
-		jmp (outvec)
+; .chrout
+; 		jmp (outvec)
 
 ;----------------------------------------------------------------------------------------------
 ; Output string on active output device
@@ -376,7 +377,7 @@ biosversion	!text "V1005", $00	; Version String
 			ldy #$00
 -		  	lda (msgptr),y
 			beq +
-			jsr .chrout
+			jsr chrout
 			iny
 			bne -
 
@@ -425,7 +426,7 @@ biosversion	!text "V1005", $00	; Version String
 	cmp     #"9"+1          ;is it a decimal digit?
 	bcc     +	            ;yes! output it
 	adc     #6              ;add offset for letter a-f
-+	jsr		.chrout
++	jsr		chrout
 
 	txa 
 	and     #%00001111      ;mask lsd for hex print
@@ -433,7 +434,7 @@ biosversion	!text "V1005", $00	; Version String
 	cmp     #"9"+1          ;is it a decimal digit?
 	bcc     +	            ;yes! output it
 	adc     #6              ;add offset for letter a-f
-+	jsr		.chrout
++	jsr		chrout
 
 	plx
 	pla
@@ -470,7 +471,7 @@ biosversion	!text "V1005", $00	; Version String
    bcc -
    tay
    lda tmp0
-   jsr .chrout
+   jsr chrout
    tya
    ldy #$13
    dex
@@ -506,7 +507,7 @@ biosversion	!text "V1005", $00	; Version String
    beq ++
    stx tmp1
 +  eor #$30
-   jsr .chrout
+   jsr chrout
 ++ tya
    ldy #$10
    dex
@@ -628,9 +629,9 @@ biosversion	!text "V1005", $00	; Version String
 
 
 sys_chrout
-chrout		jmp .chrout
+chrout		jmp (outvec)
 sys_chrin
-chrin		jmp .chrin
+chrin		jmp (invec)
 sys_lcdclear
 lcdclear	jmp .lcdclear
 sys_lcdprint
