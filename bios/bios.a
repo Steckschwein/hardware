@@ -5,7 +5,7 @@
 !src <via.h.a>
 !src <sdcard.h.a>
 !src <uart.h.a>
-!src <lcd.h.a>
+; !src <lcd.h.a>
 !src <fat32.h.a>
 !address	.target = $00
 *= $e000			; ROM Start
@@ -14,7 +14,7 @@ charset_8x8
 ;!align 255,0
 charset_5x8
 !src "../charsets/char.ascii.6x8.big.h.a"
-biosversion	!text "V1005", $00	; Version String
+biosversion	!text "V1105nolcd", $00	; Version String
 
 .start_msg
 !text "SteckBIOS 0.1", $0d
@@ -28,13 +28,13 @@ biosversion	!text "V1005", $00	; Version String
 *=$f100
 
 .upload
-			ldx #$00
-			ldy #$01
-			jsr .lcdxy
+			; ldx #$00
+			; ldy #$01
+			; jsr .lcdxy
 
-			lda #$c0
-			sta lcdctl
-			jsr .lcdbusy
+			; lda #$c0
+			; sta lcdctl
+			; jsr .lcdbusy
 
 			; load start address
 			jsr .uart_rx
@@ -44,13 +44,13 @@ biosversion	!text "V1005", $00	; Version String
 			sta .startaddr+1
 
 
-			lda .startaddr+1
-			jsr .lcdhex
-			lda .startaddr
-			jsr .lcdhex
+			; lda .startaddr+1
+			; ; jsr .lcdhex
+			; lda .startaddr
+			; jsr .lcdhex
 
-			lda #' '
-			jsr .lcdprint
+			; lda #' '
+			; jsr .lcdprint
 
 			lda #'O'
 			jsr .uart_tx
@@ -74,14 +74,14 @@ biosversion	!text "V1005", $00	; Version String
 			adc .startaddr+1
 			sta .endaddr+1
 
-			lda .endaddr+1
-			jsr .lcdhex
+			; lda .endaddr+1
+			; jsr .lcdhex
 
-			lda .endaddr
-			jsr .lcdhex
+			; lda .endaddr
+			; jsr .lcdhex
 			
-			lda #' '
-			jsr .lcdprint
+			; lda #' '
+			; jsr .lcdprint
 
 			lda .startaddr
 			sta .addr
@@ -119,10 +119,10 @@ biosversion	!text "V1005", $00	; Version String
 			lda #'K'
 			jsr .uart_tx
 
-			lda #'O'
-			jsr .lcdprint
-			lda #'K'
-			jsr .lcdprint
+			; lda #'O'
+			; jsr .lcdprint
+			; lda #'K'
+			; jsr .lcdprint
 
 			rts
 			
@@ -205,33 +205,33 @@ biosversion	!text "V1005", $00	; Version String
 .back_from_memcheck
 
 			; init IO devices
-			jsr init_lcd
+			; jsr init_lcd
 			jsr init_via1
 			jsr init_uart
 
 			; Set IRQ Vector
 			+SetVector .irqhandler, irqvec
 
-			+SetVector .lcdprint, outvec
+			+SetVector .uart_tx, outvec
 			+SetVector .kbd_chrin, invec
 
-			+PrintStringAt biosversion, $00, $01
+			; +PrintStringAt biosversion, $00, $01
 
-			ldx #$06
-			jsr .lcdxy
+			; ldx #$06
+			; jsr .lcdxy
 
-			lda #'$'
-			jsr chrout
+			; lda #'$'
+			; jsr chrout
 
-			lda ram_end_l
-			jsr .hexout
-			lda ram_end_h
-			jsr .hexout
+			; lda ram_end_l
+			; jsr .hexout
+			; lda ram_end_h
+			; jsr .hexout
 
 		
-			ldy #$02
-			ldx #$00
-			jsr .lcdxy
+			; ldy #$02
+			; ldx #$00
+			; jsr .lcdxy
 
 			jsr .init_sdcard
 
@@ -239,27 +239,27 @@ biosversion	!text "V1005", $00	; Version String
 			beq +
 
 			; SD Card init failed
-			cmp #$ff
-			bne ++
+; 			cmp #$ff
+; 			bne ++
 
-			+PrintString .nocard               
+; 			; +PrintString .nocard               
 
-++			cmp #$0f
-			bne ++
-
-
+; ++			cmp #$0f
+; 			bne ++
 
 
-			+PrintString .invalidcard
-++			cmp #$ef 
-			bne ++
-			+PrintString .unsupportedcard
-++			cmp #$1f
-			bne ++
 
-			+PrintString .initfail
 
-			bra ++
+; 			+PrintString .invalidcard
+; ++			cmp #$ef 
+; 			bne ++
+; 			+PrintString .unsupportedcard
+; ++			cmp #$1f
+; 			bne ++
+
+; 			+PrintString .initfail
+
+; 			bra ++
 
 
 +
@@ -278,7 +278,7 @@ biosversion	!text "V1005", $00	; Version String
 			jmp (.startaddr)
 
 .boot_from_card
-			+PrintString .bootup_txt
+			; +PrintString .bootup_txt
 
 			lda #%01111110
 			sta via1portb
@@ -299,7 +299,7 @@ biosversion	!text "V1005", $00	; Version String
 .fat_end
 			jsr .sd_deselect_card
 
-			+PrintString .bootup_failed
+			; +PrintString .bootup_failed
 
 ++			rts
 	
@@ -448,7 +448,7 @@ biosversion	!text "V1005", $00	; Version String
 
 
 
-!src "lcd.a"
+; !src "lcd.a"
 
 
 ;----------------------------------------------------------------------------------------------
@@ -633,13 +633,13 @@ chrout		jmp (outvec)
 sys_chrin
 chrin		jmp (invec)
 sys_lcdclear
-lcdclear	jmp .lcdclear
+lcdclear	jmp lcdclear
 sys_lcdprint
-lcdprint 	jmp .lcdprint
+lcdprint 	jmp lcdprint
 sys_lcdstring
-lcdstring 	jmp .lcdstring
+lcdstring 	jmp lcdstring
 sys_lcdhex
-lcdhex 		jmp .lcdhex 
+lcdhex 		jmp lcdhex 
 sys_decout
 decout 		jmp .decout
 sys_decoutz
@@ -647,9 +647,9 @@ decoutz 	jmp .decoutz
 sys_irqhandler
 irqhandler  jmp .irqhandler
 sys_lcdbusy
-lcdbusy 	jmp .lcdbusy
+lcdbusy 	jmp lcdbusy
 sys_lcdxy
-lcdxy 		jmp .lcdxy
+lcdxy 		jmp lcdxy
 
 sys_spi_rw_byte	
 spi_rw_byte	jmp .spi_rw_byte
