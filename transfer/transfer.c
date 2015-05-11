@@ -16,6 +16,12 @@
 #define BUFSIZE 	65535
 #define BAUDRATE	B115200
 
+struct address
+{
+	uint8_t h;
+	uint8_t l;
+};
+
 // function to open the port
 int open_port(char * device)
 {
@@ -46,6 +52,8 @@ int main(int argc, char *argv[])
 		uint16_t length;
 		char buf[2];
 		char buffer[BUFSIZE];
+
+		struct address addr;
 
 
 		char *end;
@@ -130,9 +138,11 @@ int main(int argc, char *argv[])
 		// Send start address 0x1000
 		
 		
-		buf[0] = (uint8_t)startaddr;
-		buf[1] = (uint8_t)(startaddr >> 8);
-		n = write(port,buf,2); // n = no of bytes written
+		addr.h = (uint8_t)startaddr;
+		addr.l = (uint8_t)(startaddr >> 8);
+		// buf[0] = (uint8_t)startaddr;
+		// buf[1] = (uint8_t)(startaddr >> 8);
+		n = write(port,&addr,2); // n = no of bytes written
 		if (n<0) 
 		{
 		 	printf("\nError");
@@ -147,10 +157,10 @@ int main(int argc, char *argv[])
 		}
 
 
-		buf[0] = (uint8_t)length;
-		buf[1] = (uint8_t)(length >> 8);
+		addr.h = (uint8_t)length;
+		addr.l = (uint8_t)(length >> 8);
 
-		n = write(port,buf,2); // n = no of bytes written
+		n = write(port, &addr,2); // n = no of bytes written
 		if (n<0) {
 			printf("\nError");
 		}
