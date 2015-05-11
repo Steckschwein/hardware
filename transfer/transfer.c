@@ -1,5 +1,12 @@
+/*
+	Steckschwein serial transfer program
+	usage:
+		transfer -d /dev/cu.usbserial-FTAJMAUJ -a 0x1000 ../hello/hello.bin
+*/
+
 #include <stdio.h>     // Standard input/output definitions
 #include <stdlib.h>     
+#include <ctype.h>     
 #include <string.h>    // String function definitions
 #include <unistd.h>   // UNIX standard function definitions
 #include <fcntl.h>      // File control definitions
@@ -8,11 +15,10 @@
 
 #define BUFSIZE 65535
 #define BAUDRATE	B115200
-char * device = "/dev/cu.usbserial-FTAJMAUJ";
 char buffer[BUFSIZE];
 
 // function to open the port
-int open_port(void)
+int open_port(char * device)
 {
           int port;
           //open the port and store the file descriptor in 'port'
@@ -20,7 +26,9 @@ int open_port(void)
           if (port == -1)
           {
                  // Could not open the port
-                perror("open_port: Unable to open DEVICE - ");
+                
+                fprintf(stderr, "Error opening serial device %s: %s\n", device, strerror(errno));
+
           }
           else
           {
@@ -31,17 +39,47 @@ int open_port(void)
 
 int main(int argc, char *argv[])
 {
-		int port,n;
+		char * device = NULL;
+		char * filename = NULL;
+		uint16_t startaddr = 0x1000;
+
+		int port,n,c;
 		
 		uint16_t length;
 		char buf[2];
 
+		char *end;
+
+		opterr = 0;
+		while ((c = getopt (argc, argv, "d:a:")) != -1)
+		{
+			switch (c)
+			{
+				case 'd':
+					device = optarg;
+					break;
+				case 'a':
+					startaddr = strtol(optarg, &end, 16);
+
+			}
+		}
+
+		
+		if (argc == optind)
+		{
+			fprintf(stderr, "No filename provided\n");
+			return 1;	
+		}
+
+		filename = argv[argc - 1];
+
+
 		FILE *fp; // input file
-		fp = fopen(argv[1], "r");
+		fp = fopen(filename, "r");
 		if (!fp )
 		{
-		printf("Open error %d: %s\n", errno, argv[1]);
-		return 1;
+			fprintf(stderr, "Error opening %s: %s\n", filename, strerror(errno));
+			return 1;
 		}
 
 		length = fread(buffer, 1, sizeof(buffer), fp);
@@ -52,7 +90,12 @@ int main(int argc, char *argv[])
 		struct termios specs; // for setting baud rate 
 
 		//setup part
-		port = open_port();
+		port = open_port(device);
+
+		if (port < 0)
+		{
+			return 1;
+		}
 		tcgetattr(port, &specs); 
 
 		//now the specs points to the opened port's specifications
@@ -76,7 +119,7 @@ int main(int argc, char *argv[])
 
 	
 		// Send start address 0x1000
-		uint16_t startaddr = 0x1000;
+		
 		
 		buf[0] = (uint8_t)startaddr;
 		buf[1] = (uint8_t)(startaddr >> 8);
@@ -90,7 +133,7 @@ int main(int argc, char *argv[])
 		read(port, buf, 2);
 		if (strncmp(buf, "OK", 2) != 0)
 		{
-			printf("Error sending startaddr\n");
+			fprintf(stderr, "Error sending startaddr\n");
 			exit(1);
 		}
 
@@ -106,20 +149,21 @@ int main(int argc, char *argv[])
 		read(port, buf, 2);
 		if (strncmp(buf, "OK", 2) != 0)
 		{
-			printf("Error sending length\n");
+			fprintf(stderr, "Error sending length\n");
 			exit(1);
 		}
 
+		printf("Sending $%04X bytes of data to $%04X\n", length, startaddr);
 
 		n = write(port, buffer, length);
 		read(port, buf, 2);
 		if (strncmp(buf, "OK", 2) != 0)
 		{
-			printf("Error sending data at byte %d\n", n);
+			fprintf(stderr, "Error sending data at byte %d\n", n);
 			exit(1);
 		}
 
-		printf("%d bytes written.\n", n);
+		printf("$%04X (%d) bytes written.\n", n, n);
 
 		//close the port
 		close(port);
