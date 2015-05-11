@@ -12,6 +12,7 @@
 #include <fcntl.h>      // File control definitions
 #include <errno.h>     // Error number definitions
 #include <termios.h>  // POSIX terminal control definitions 
+#include <inttypes.h>
 
 #define BUFSIZE 	65535
 #define BAUDRATE	B115200
