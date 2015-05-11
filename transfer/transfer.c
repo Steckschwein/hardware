@@ -13,9 +13,8 @@
 #include <errno.h>     // Error number definitions
 #include <termios.h>  // POSIX terminal control definitions 
 
-#define BUFSIZE 65535
+#define BUFSIZE 	65535
 #define BAUDRATE	B115200
-char buffer[BUFSIZE];
 
 // function to open the port
 int open_port(char * device)
@@ -26,7 +25,6 @@ int open_port(char * device)
           if (port == -1)
           {
                  // Could not open the port
-                
                 fprintf(stderr, "Error opening serial device %s: %s\n", device, strerror(errno));
 
           }
@@ -39,14 +37,16 @@ int open_port(char * device)
 
 int main(int argc, char *argv[])
 {
-		char * device = NULL;
-		char * filename = NULL;
-		uint16_t startaddr = 0x1000;
+		char * device 		= NULL;
+		char * filename 	= NULL;
+		uint16_t startaddr 	= 0x1000;
 
 		int port,n,c;
 		
 		uint16_t length;
 		char buf[2];
+		char buffer[BUFSIZE];
+
 
 		char *end;
 
@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
 					device = optarg;
 					break;
 				case 'a':
-					startaddr = strtol(optarg, &end, 16);
+					startaddr = strtol(optarg, &end, 0);
 					break;
 
 			}
