@@ -50,6 +50,8 @@ int main(int argc, char *argv[])
 
 		char *end;
 
+		device = getenv("SERIAL_DEVICE");
+
 		opterr = 0;
 		while ((c = getopt (argc, argv, "d:a:")) != -1)
 		{
@@ -60,6 +62,7 @@ int main(int argc, char *argv[])
 					break;
 				case 'a':
 					startaddr = strtol(optarg, &end, 16);
+					break;
 
 			}
 		}
@@ -72,6 +75,12 @@ int main(int argc, char *argv[])
 		}
 
 		filename = argv[argc - 1];
+
+		if (! device)
+		{
+			fprintf(stderr, "No serial device provided\n");
+			return 1;			
+		}
 
 
 		FILE *fp; // input file
