@@ -1,5 +1,5 @@
 all: transfer.o
-	gcc -Wall -Os -o transfer transfer.o
+	gcc -o transfer transfer.o
 
 transfer.o: transfer.c
 	gcc -c transfer.c
