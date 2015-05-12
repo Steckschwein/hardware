@@ -12,10 +12,11 @@ t9929_h_a = 1
 TEXT_COLOR	= Dark_Green
 TEXT_BGCOLOR = Black
 
-a_vdp		= $0220
-a_vram		= a_vdp
-a_vreg		= a_vdp+1
-
+!address{
+	a_vdp		= $0220
+	a_vram		= a_vdp
+	a_vreg		= a_vdp+1
+}
 v_reg0_m3			= 1<<1
 v_reg0_extV			= 1<<0
 

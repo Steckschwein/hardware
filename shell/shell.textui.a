@@ -1,8 +1,5 @@
 !source <t99xx.lib.a>
 
-.sprite_sanduhr
-	!byte	$ff,	$f0,	0,	Gray
-	
 .screen=$c000
 .screen_status !byte .TEXTUI_ENABLED
 .screen_frames !byte 0
@@ -82,7 +79,6 @@
 
 .textui_init0
 	jsr	vdp_display_off			;display off
-	
 	jsr vdp_mode_gfx1_sprites_off
 	
 ;	jsr vdp_mode_text_blank

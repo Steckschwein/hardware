@@ -25,8 +25,7 @@ biosversion	!text "V1105nolcd", $00	; Version String
 !text $0d,$0d,"READY.", $0d
 !text $0
 .crlf	!byte $0d, $00
-*=$f100
-
+*=$f040
 .upload
 			; ldx #$00
 			; ldy #$01
@@ -208,13 +207,14 @@ biosversion	!text "V1105nolcd", $00	; Version String
 			; jsr init_lcd
 			jsr init_via1
 			jsr init_uart
-
+			jsr	init_vdp
+			
 			; Set IRQ Vector
 			+SetVector .irqhandler, irqvec
 
 			+SetVector .uart_tx, outvec
 			+SetVector .kbd_chrin, invec
-
+			
 			; +PrintStringAt biosversion, $00, $01
 
 			; ldx #$06
@@ -331,13 +331,6 @@ biosversion	!text "V1105nolcd", $00	; Version String
 			
 
 .irqhandler
-			pha
-			phy
-			; lda a_vreg
-
-			; jsr vdp_cursor
-			pla
-			ply
 			rti
 
 ;----------------------------------------------------------------------------------------------
@@ -370,8 +363,6 @@ biosversion	!text "V1105nolcd", $00	; Version String
 			bne +
 
 			pla
-			; jmp vdp_print
-
 +			phy
 
 			ldy #$00
@@ -517,14 +508,12 @@ biosversion	!text "V1105nolcd", $00	; Version String
 
    rts
 
+!src <t99xx.lib.a>
+!src "vdp.a"
 !src "uart.a"
 !src "spi.a"
 !src "sdcard.a"
 !src "kbd.a"
-
-
-
-
 ;---------------------------------------------------------------------
 ; FAT32 routines
 ;---------------------------------------------------------------------

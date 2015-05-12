@@ -416,3 +416,6 @@ mainloop
 !src "sanduhr_225.raw"
 !src "sanduhr_270.raw"
 !src "sanduhr_315.raw"
+
+.sprite_sanduhr
+	!byte	$ff,	$f0,	0,	Gray
