@@ -23,6 +23,7 @@ struct address
 	uint8_t l;
 };
 
+
 // function to open the port
 int open_port(char * device)
 {
@@ -47,16 +48,12 @@ int main(int argc, char *argv[])
 		char * device 		= NULL;
 		char * filename 	= NULL;
 		uint16_t startaddr 	= 0x1000;
-
-		int port,n,c;
+    uint16_t length;
 		
-		uint16_t length;
+    int port,n,c;
+		
 		char buf[2];
 		char buffer[BUFSIZE];
-
-		struct address addr;
-
-
 		char *end;
 
 		device = getenv("SERIAL_DEVICE");
@@ -139,11 +136,11 @@ int main(int argc, char *argv[])
 		// Send start address 0x1000
 		
 		
-		addr.h = (uint8_t)startaddr;
-		addr.l = (uint8_t)(startaddr >> 8);
-		// buf[0] = (uint8_t)startaddr;
+		// addr.h = (uint8_t)startaddr;
+		// addr.l = (uint8_t)(startaddr >> 8);
+		// // buf[0] = (uint8_t)startaddr;
 		// buf[1] = (uint8_t)(startaddr >> 8);
-		n = write(port,&addr,2); // n = no of bytes written
+		n = write(port,&startaddr,2); // n = no of bytes written
 		if (n<0) 
 		{
 		 	printf("\nError");
@@ -158,10 +155,10 @@ int main(int argc, char *argv[])
 		}
 
 
-		addr.h = (uint8_t)length;
-		addr.l = (uint8_t)(length >> 8);
+		// addr.h = (uint8_t)length;
+		// addr.l = (uint8_t)(length >> 8);
 
-		n = write(port, &addr,2); // n = no of bytes written
+    n = write(port, &length,2); // n = no of bytes written
 		if (n<0) {
 			printf("\nError");
 		}
