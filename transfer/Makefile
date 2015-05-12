@@ -5,4 +5,4 @@ transfer.o: transfer.c
 	gcc -c transfer.c
 
 clean:
-	rm *.o transfer
+	rm -f *.o transfer

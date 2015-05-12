@@ -114,13 +114,11 @@ int main(int argc, char *argv[])
 		tcgetattr(port, &specs); 
 
 		//now the specs points to the opened port's specifications
-		specs.c_cflag = (CLOCAL | CREAD ); //control flags
-
-
+		specs.c_cflag = (CLOCAL | CREAD | CS8 ); //control flags
 		//output flags
 		//CR3 - delay of 150ms after transmitting every line
-		specs.c_oflag = (OPOST | CR3);
-
+		specs.c_oflag = (OPOST | CR3 );
+		specs.c_iflag = (IXOFF);
 
 		//set Baud Rate to 115200bps
 		cfsetospeed(&specs,BAUDRATE);
@@ -131,7 +129,6 @@ int main(int argc, char *argv[])
 		//TCSANOW - constant that prompts the system to set
 		//specifications immediately.
 		tcsetattr(port,TCSANOW,&specs);
-
 	
 		// Send start address 0x1000
 		
@@ -144,13 +141,13 @@ int main(int argc, char *argv[])
 		if (n<0) 
 		{
 		 	printf("\nError");
+			return 1;
 		}
-
-
-		read(port, buf, 2);
-		if (strncmp(buf, "OK", 2) != 0)
+		
+		n = read(port, buf, 2);
+		if (strncmp(buf, "OK", 1) != 0)// only the 'O' could be read back :/
 		{
-			fprintf(stderr, "Error sending startaddr\n");
+			fprintf(stderr, "Error sending startaddr. Handshake %d\n", n);
 			exit(1);
 		}
 
@@ -158,15 +155,15 @@ int main(int argc, char *argv[])
 		// addr.h = (uint8_t)length;
 		// addr.l = (uint8_t)(length >> 8);
 
-    n = write(port, &length,2); // n = no of bytes written
+		n = write(port, &length,2); // n = no of bytes written
 		if (n<0) {
 			printf("\nError");
 		}
 
-		read(port, buf, 2);
+		n = read(port, buf, 2);
 		if (strncmp(buf, "OK", 2) != 0)
 		{
-			fprintf(stderr, "Error sending length\n");
+			fprintf(stderr, "Error sending length. Handshake %d\n", n);
 			exit(1);
 		}
 
