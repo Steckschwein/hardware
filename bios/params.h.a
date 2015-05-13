@@ -1,0 +1,10 @@
+!ifdef params_h_a !eof
+params_h_a = 1
+
+param_sig	= $00 ; 1  byte  - parameter array signature byte. must be $42
+param_version	= $01 ; 1  byte  - version number. initially zero
+param_filename	= $02 ; 11 bytes - file to boot
+param_baud	= $0d ; 1  byte  - baudrate divisor value, entry# from .uart_divisor, default 15 (9600 baud)    
+param_lsr       = $0e ; 1  byte  - uart lcr value , default %00000011 (8N1)
+param_checksum  = $5f ; checksum
+
