@@ -16,7 +16,7 @@ charset_8x8
 ;!align 255,0
 charset_5x8
 !src "../charsets/char.ascii.6x8.big.h.a"
-biosversion	!text "V1305", $00	; Version String
+biosversion	!text "V1405", $00	; Version String
 
 .start_msg
 !text "SteckBIOS 0.1", $0d
@@ -212,30 +212,12 @@ biosversion	!text "V1305", $00	; Version String
 			jsr init_lcd
 			jsr init_via1
 
+
 			jsr .read_nvram
 
 
-			lda #$42
-			cmp .nvram + param_sig
-			bne +					; Wrong signature? stick to the default
-
-			stz <CRC
--			lda .nvram,x
-			jsr crc8
-			inx
-			cpx #param_checksum
-			bne -
-		
-			cmp .nvram + param_checksum
-			bne +
-
-
-			lda #'K'
-			jsr lcdprint
-			+SetVector .nvram, paramvec
-
-+
 			jsr init_uart
+
 			jsr	init_vdp
 			
 			; Set IRQ Vector
@@ -244,18 +226,22 @@ biosversion	!text "V1305", $00	; Version String
 			+SetVector .lcdprint, outvec
 			+SetVector .kbd_chrin, invec
 
-			+Print biosversion
-			+Print .crlf
+			+PrintString biosversion
+
+			; +Print biosversion
+			; +Print .crlf
 			
 			; for testing purpose only, feel free...
-			ldx	#$40
--			txa
-			jsr	vdp_chrout
-			lda	#$0a
-			jsr	vdp_chrout
-			inx
-			bne	-
+; 			ldx	#$40
+; -			txa
+; 			jsr	vdp_chrout
+; 			lda	#$0a
+; 			jsr	vdp_chrout
+; 			inx
+; 			bne	-
 			; end test
+
+
 			
 			ldx #$06
 			jsr .lcdxy
@@ -419,29 +405,6 @@ biosversion	!text "V1305", $00	; Version String
 ;----------------------------------------------------------------------------------------------
 ; Output byte as hex string on active output device
 ;----------------------------------------------------------------------------------------------
-; .hexout    pha
-; 			phy
-; 			phx
-			
-; 			tax
-; 			lsr                ;shift high nybble into low nybble
-; 			lsr 
-; 			lsr 
-; 			lsr 
-; 			tay
-; 			lda hexascii,y      ;convert to ascii
-; 			jsr .chrout        ;print value 
-			
-; 			txa                 ;restore original value
-; 			and #$0f            ;select low nybble
-; 			tay
-; 			lda hexascii,y      ;convert to ascii
-; 			jsr .chrout        ;print value 
-			
-; 			plx
-; 			ply
-; 			pla
-; 			rts
 
 .hexout
 	pha
@@ -472,15 +435,6 @@ biosversion	!text "V1305", $00	; Version String
 	rts
 
 			
-
-
-
-!src "via.a"
-
-
-
-!src "lcd.a"
-
 
 ;----------------------------------------------------------------------------------------------
 ; LCDDECZ - output byte in A as decimal ASCII with leading zeros
@@ -548,17 +502,24 @@ biosversion	!text "V1305", $00	; Version String
 
    rts
 
+!src "via.a"
+!src "lcd.a"
 !src "uart.a"
 !src "spi.a"
 !src "sdcard.a"
 !src "kbd.a"
+
 ;---------------------------------------------------------------------
 ; FAT32 routines
 ;---------------------------------------------------------------------
 !src "fat32.a"
 
+;---------------------------------------------------------------------
+; read 96 bytes from RTC as parameter buffer
+;---------------------------------------------------------------------
 .read_nvram
 	+save
+	; select RTC
 	lda #%01110110
 	sta via1portb
 
@@ -575,8 +536,27 @@ biosversion	!text "V1305", $00	; Version String
 	cpx #96
 	bne -
 
+	; deselect all SPI devices
 	lda #%01111110
 	sta via1portb
+
+
+	lda #$42 
+	cmp .nvram + param_sig
+	bne +					; Wrong signature? stick to the default
+
+	stz <CRC
+-	lda .nvram,x
+	jsr crc8
+	inx
+	cpx #param_checksum
+	bne -
+
+	cmp .nvram + param_checksum
+	bne +					; Wrong checksum? defaults
+
+	+SetVector .nvram, paramvec
++
 	+restore
 	rts
 
@@ -585,17 +565,17 @@ biosversion	!text "V1305", $00	; Version String
 !address CRC  = $f8
 ; CRC     EQU $6          ; current value of CRC
 crc8:
-        EOR <CRC         ; A contained the data
-        STA <CRC         ; XOR it with the byte
+        EOR addr(<CRC)         ; A contained the data
+        STA addr(<CRC)         ; XOR it with the byte
         ASL             ; current contents of A will become x^2 term
         BCC +         ; if b7 = 1
         EOR #$07        ; then apply polynomial with feedback
-+		EOR <CRC         ; apply x^1
++		EOR addr(<CRC)         ; apply x^1
         ASL             ; C contains b7 ^ b6
         BCC +
         EOR #$07
-+		EOR <CRC         ; apply unity term
-        STA <CRC         ; save result
++		EOR addr(<CRC)         ; apply unity term
+        STA addr(<CRC)         ; save result
         RTS
 
 
@@ -647,10 +627,9 @@ crc8:
 .default_params
 	!byte $42
 	!byte $00
-	!text "LOADER  BIN"
+	!text "LOADER  BIN" 
 	!byte $0f
 	!byte %00000011
-	;!fill 95-15, $00
 	!fill .default_params + param_checksum - *, $00
 	!byte $00
 
