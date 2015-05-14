@@ -244,7 +244,7 @@
 	
 .inc_cursor_y
 	lda crs_y
-	cmp	#23		;last line
+	cmp	#.ROWS-1		;last line
 	bne	+
 	jmp	.textui_scroll_up	; scroll and exit
 +	inc crs_y
