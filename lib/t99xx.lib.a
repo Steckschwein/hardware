@@ -142,9 +142,6 @@ vdp_mode_gfx1:
 	inx
 	cpy	#$08
 	bne   -
-	
-	stz	vdp_ctrl	;reset vdp control
-	
 	rts
 
 ;	
