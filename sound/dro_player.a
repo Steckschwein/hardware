@@ -143,7 +143,7 @@ song:
 ; !bin "prowla.dro"
 ;dn2_1.dro	dn2_2.dro	
 ; !bin "dro_v2.dro"
-; !bin "fahne.dro"
+!bin "fahne.dro"
 ; !bin "theevil.dro"
 ; !bin "pacman.dro"
 ; !bin "toohot.dro"

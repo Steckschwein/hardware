@@ -5,16 +5,18 @@
 !src <via.h.a>
 !src <sdcard.h.a>
 !src <uart.h.a>
-; !src <lcd.h.a>
+!src <lcd.h.a>
 !src <fat32.h.a>
+!src <params.h.a>
 !address	.target = $00
+!address	.nvram  = $0400
 *= $e000			; ROM Start
 charset_8x8
 !src "../charsets/char.ascii.vc20.h.a"
 ;!align 255,0
 charset_5x8
 !src "../charsets/char.ascii.6x8.big.h.a"
-biosversion	!text "V1105nolcd", $00	; Version String
+biosversion	!text "V1305", $00	; Version String
 
 .start_msg
 !text "SteckBIOS 0.1", $0d
@@ -27,13 +29,13 @@ biosversion	!text "V1105nolcd", $00	; Version String
 .crlf	!byte $0d, $00
 *=$f040
 .upload
-			; ldx #$00
-			; ldy #$01
-			; jsr .lcdxy
+			ldx #$00
+			ldy #$01
+			jsr .lcdxy
 
-			; lda #$c0
-			; sta lcdctl
-			; jsr .lcdbusy
+			lda #$c0
+			sta lcdctl
+			jsr .lcdbusy
 
 			; load start address
 			jsr .uart_rx
@@ -43,13 +45,13 @@ biosversion	!text "V1105nolcd", $00	; Version String
 			sta .startaddr+1
 
 
-			; lda .startaddr+1
-			; ; jsr .lcdhex
-			; lda .startaddr
-			; jsr .lcdhex
+			lda .startaddr+1
+			jsr .lcdhex
+			lda .startaddr
+			jsr .lcdhex
 
-			; lda #' '
-			; jsr .lcdprint
+			lda #' '
+			jsr .lcdprint
 
 			lda #'O'
 			jsr .uart_tx
@@ -73,14 +75,14 @@ biosversion	!text "V1105nolcd", $00	; Version String
 			adc .startaddr+1
 			sta .endaddr+1
 
-			; lda .endaddr+1
-			; jsr .lcdhex
+			lda .endaddr+1
+			jsr .lcdhex
 
-			; lda .endaddr
-			; jsr .lcdhex
+			lda .endaddr
+			jsr .lcdhex
 			
-			; lda #' '
-			; jsr .lcdprint
+			lda #' '
+			jsr .lcdprint
 
 			lda .startaddr
 			sta .addr
@@ -118,10 +120,10 @@ biosversion	!text "V1105nolcd", $00	; Version String
 			lda #'K'
 			jsr .uart_tx
 
-			; lda #'O'
-			; jsr .lcdprint
-			; lda #'K'
-			; jsr .lcdprint
+			lda #'O'
+			jsr .lcdprint
+			lda #'K'
+			jsr .lcdprint
 
 			rts
 			
@@ -203,35 +205,60 @@ biosversion	!text "V1105nolcd", $00	; Version String
 
 .back_from_memcheck
 
+			+SetVector .default_params, paramvec
 			; init IO devices
-			; jsr init_lcd
+			jsr init_lcd
 			jsr init_via1
+
+			jsr .read_nvram
+
+
+			lda #$42
+			cmp .nvram + param_sig
+			bne +					; Wrong signature? stick to the default
+
+			stz <CRC
+-			lda .nvram,x
+			jsr crc8
+			inx
+			cpx #param_checksum
+			bne -
+		
+			cmp .nvram + param_checksum
+			bne +
+
+
+			lda #'K'
+			jsr lcdprint
+			+SetVector .nvram, paramvec
+
++
 			jsr init_uart
 			jsr	init_vdp
 			
 			; Set IRQ Vector
 			+SetVector .irqhandler, irqvec
 
-			+SetVector .uart_tx, outvec
+			+SetVector .lcdprint, outvec
 			+SetVector .kbd_chrin, invec
 			
-			; +PrintStringAt biosversion, $00, $01
+			+PrintStringAt biosversion, $00, $01
 
-			; ldx #$06
-			; jsr .lcdxy
+			ldx #$06
+			jsr .lcdxy
 
-			; lda #'$'
-			; jsr chrout
+			lda #'$'
+			jsr chrout
 
-			; lda ram_end_l
-			; jsr .hexout
-			; lda ram_end_h
-			; jsr .hexout
+			lda ram_end_l
+			jsr .hexout
+			lda ram_end_h
+			jsr .hexout
 
 		
-			; ldy #$02
-			; ldx #$00
-			; jsr .lcdxy
+			ldy #$02
+			ldx #$00
+			jsr .lcdxy
 
 			jsr .init_sdcard
 
@@ -239,27 +266,27 @@ biosversion	!text "V1105nolcd", $00	; Version String
 			beq +
 
 			; SD Card init failed
-; 			cmp #$ff
-; 			bne ++
+ 			cmp #$ff
+ 			bne ++
 
-; 			; +PrintString .nocard               
+			+PrintString .nocard               
 
-; ++			cmp #$0f
-; 			bne ++
-
-
+++			cmp #$0f
+ 			bne ++
 
 
-; 			+PrintString .invalidcard
-; ++			cmp #$ef 
-; 			bne ++
-; 			+PrintString .unsupportedcard
-; ++			cmp #$1f
-; 			bne ++
 
-; 			+PrintString .initfail
 
-; 			bra ++
+			+PrintString .invalidcard
+++			cmp #$ef 
+			bne ++
+			+PrintString .unsupportedcard
+++			cmp #$1f
+			bne ++
+
+			+PrintString .initfail
+
+			bra ++
 
 
 +
@@ -439,7 +466,7 @@ biosversion	!text "V1105nolcd", $00	; Version String
 
 
 
-; !src "lcd.a"
+!src "lcd.a"
 
 
 ;----------------------------------------------------------------------------------------------
@@ -519,7 +546,46 @@ biosversion	!text "V1105nolcd", $00	; Version String
 ;---------------------------------------------------------------------
 !src "fat32.a"
 
+.read_nvram
+	+save
+	lda #%01110110
+	sta via1portb
 
+	lda #$20
+	jsr .spi_rw_byte
+
+	ldx #$00
+-		
+	phx
+	jsr .spi_r_byte
+	plx
+	sta .nvram,x
+	inx
+	cpx #96
+	bne -
+
+	lda #%01111110
+	sta via1portb
+	+restore
+	rts
+
+; stolen from 
+; http://6502.org/source/integers/crc-more.html
+!address CRC  = $f8
+; CRC     EQU $6          ; current value of CRC
+crc8:
+        EOR <CRC         ; A contained the data
+        STA <CRC         ; XOR it with the byte
+        ASL             ; current contents of A will become x^2 term
+        BCC +         ; if b7 = 1
+        EOR #$07        ; then apply polynomial with feedback
++		EOR <CRC         ; apply x^1
+        ASL             ; C contains b7 ^ b6
+        BCC +
+        EOR #$07
++		EOR <CRC         ; apply unity term
+        STA <CRC         ; save result
+        RTS
 
 
 ;----------------------------------------------------------------------------------------------
@@ -567,6 +633,15 @@ biosversion	!text "V1105nolcd", $00	; Version String
 	!word 2		; 56000	; 18
 	!word 1 	; 115200; 19
 ;----------------------------------------------------------------------------------------------
+.default_params
+	!byte $42
+	!byte $00
+	!text "LOADER  BIN"
+	!byte $0f
+	!byte %00000011
+	;!fill 95-15, $00
+	!fill .default_params + param_checksum - *, $00
+	!byte $00
 
 ;----------------------------------------------------------------------------------------------
 ; Memcheck routine to be copied to ZP
@@ -622,13 +697,13 @@ chrout		jmp (outvec)
 sys_chrin
 chrin		jmp (invec)
 sys_lcdclear
-lcdclear	jmp lcdclear
+lcdclear	jmp .lcdclear
 sys_lcdprint
-lcdprint 	jmp lcdprint
+lcdprint 	jmp .lcdprint
 sys_lcdstring
-lcdstring 	jmp lcdstring
+lcdstring 	jmp .lcdstring
 sys_lcdhex
-lcdhex 		jmp lcdhex 
+lcdhex 		jmp .lcdhex 
 sys_decout
 decout 		jmp .decout
 sys_decoutz
@@ -636,9 +711,9 @@ decoutz 	jmp .decoutz
 sys_irqhandler
 irqhandler  jmp .irqhandler
 sys_lcdbusy
-lcdbusy 	jmp lcdbusy
+lcdbusy 	jmp .lcdbusy
 sys_lcdxy
-lcdxy 		jmp lcdxy
+lcdxy 		jmp .lcdxy
 
 sys_spi_rw_byte	
 spi_rw_byte	jmp .spi_rw_byte
