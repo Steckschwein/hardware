@@ -7,7 +7,12 @@ init_uart
 	lda #%10000000
 	sta uart1lcr
 
-	ldx #19*2	; 115200 BAUD
+	ldy #param_baud
+	lda (paramvec),y
+	
+	asl 
+	tax
+	; ldx #19*2	; 115200 BAUD
 
 ;	ldx #17*2	; 38400 BAUD
 ;	ldx #15*2	; 9600 BAUD
@@ -19,7 +24,10 @@ init_uart
 	lda .uart_divisor+1,x
 	sta uart1dlh
 
-	lda #%00000011	; 8N1
+	ldy #param_lsr
+	lda (paramvec),y
+
+	; lda #%00000011	; 8N1
 
 	sta uart1lcr
 
