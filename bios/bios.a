@@ -26,8 +26,10 @@ biosversion	!text "V1305", $00	; Version String
 .ready_msg
 !text $0d,$0d,"READY.", $0d
 !text $0
-.crlf	!byte $0d, $00
-*=$f040
+.crlf	!byte $0a, $0d, $00
+*=$f050
+!src "vdp.a"
+
 .upload
 			ldx #$00
 			ldy #$01
@@ -241,9 +243,20 @@ biosversion	!text "V1305", $00	; Version String
 
 			+SetVector .lcdprint, outvec
 			+SetVector .kbd_chrin, invec
-			
-			+PrintStringAt biosversion, $00, $01
 
+			+Print biosversion
+			+Print .crlf
+			
+			; for testing purpose only, feel free...
+			ldx	#$40
+-			txa
+			jsr	vdp_chrout
+			lda	#$0a
+			jsr	vdp_chrout
+			inx
+			bne	-
+			; end test
+			
 			ldx #$06
 			jsr .lcdxy
 
@@ -535,8 +548,6 @@ biosversion	!text "V1305", $00	; Version String
 
    rts
 
-!src <t99xx.lib.a>
-!src "vdp.a"
 !src "uart.a"
 !src "spi.a"
 !src "sdcard.a"

@@ -4,18 +4,6 @@
 ;		improve some functions,  avoid nop for vdp write delay 2µs by opcode reordering
 ;		investigate the difference between wdc and rockwell if no nop is used
 ;
-
-.vdp_wait_blank
-	php
-	sei
--	bit	a_vreg
-	bpl -	   ; wait until blank - irq flag set?
-	pla
-	and	#$04	;check interupt was set?
-	bne	+
-	cli
-+	rts
-	
 vdp_sreg:
 	sta	a_vreg
 	+vnops
@@ -32,28 +20,102 @@ vdp_display_off:
 	sta   	a_vreg
 	rts
 
+;	input:
+;	a - low byte vram adress
+;	y - high byte vram adress
+;  	x - amount of bytes to fill with pattern
+;	adrl - pattern
+vdp_fills:
+	jsr   vdp_sreg
+	lda   .adrl
+-  	+vnops
+	sta   a_vram
+	dex
+	bne	-
+	rts
+	
+; fill vram with pattern
 ;
-;	gfx 2 - each pixel can be adressed - e.g. for image
-;	
-vdp_mode_gfx2
-	jsr	.vdp_fill_name_table
-	+SetVector	vdp_init_bytes_gfx2, .adrl
-	bra	vdp_init_reg
+vdp_fill:
+;	a - low byte vram adress
+;	y - high byte vram adress
+;	x - amount of 256byte blocks (page counter)
+;	adrl - pattern
+	jsr   vdp_sreg
+	ldy   #$00
+	lda   .adrl
+-  	+vnops
+	iny
+	sta   a_vram
+	bne   -
+	dex
+	bne   -
+	rts
 
-;
-;	gfx 3 - 4x4 color block - multicolor mode
-;	
-vdp_mode_gfx3
-	jsr	.vdp_fill_name_table
-	+SetVector	vdp_init_bytes_gfx3, .adrl
-	bra	vdp_init_reg
+;	input:
+;	adrl/adrh vector set
+;	a - low byte vram adress
+;	y - high byte vram adress
+;  	x - amount of 256byte blocks (page counter)
+vdp_memcpy:
+	jsr   vdp_sreg
+	ldy   #$00
+-  	lda   (.adrl),y
+	+vnops
+	iny
+	sta   a_vram
+	bne   -
+	inc   .adrh
+	dex
+	bne   -
+	rts
+	
+;	input:
+;	adrl/adrh vector set
+;	a - low byte vram adress
+;	y - high byte vram adress
+;  	x - amount of bytes to copy
+vdp_memcpys:
+	jsr	vdp_sreg
+	ldy   #$00
+-  	lda   (.adrl),y
+	+vnops
+	sta   a_vram
+	iny
+	dex
+	bne	-
+	rts
 
-;
-;	text mode - 40x24 character mode, 16 colors with same color for 8 characters in a block
-;
-vdp_mode_text
-	+SetVector vdp_init_bytes_text, .adrl
-	bra	vdp_init_reg
+vdp_mode_text_blank
+	ldx	#$04				; 4 x 256 bytes
+	bra	+
+vdp_mode_gfx1_blank:		; 3 x 256 bytes
+	ldx	#$03
++	lda	#' '					;fill vram screen with blank
+	sta	.adrl
+	lda	#$00
+	ldy	#.WRITE_ADDRESS+$18
+	jmp	vdp_fill
+
+vdp_mode_gfx1_sprites_off
+vdp_mode_sprites_off
+	lda	#$d0					;sprites off, at least y=$d0 will disable the sprite subsystem
+	sta	.adrl
+	ldx	#$32*4
+	lda	#$00
+	ldy	#.WRITE_ADDRESS+$3c
+	jmp	vdp_fills
+
+.vdp_init_bytes_gfx1
+	!byte 	0
+	!byte	v_reg1_16k|v_reg1_display_on|v_reg1_spr_size|v_reg1_int
+	!byte 	($1800 / $400)	; name table - value * $400					--> characters 
+	!byte 	($2000 / $40)	; color table - value * $40 (gfx1), 7f/ff (gfx2)
+	!byte 	($0000 / $800) ; pattern table (charset) - value * $800  	--> offset in VRAM 
+	!byte	($3c00 / $80)	; sprite attribute table - value * $80 		--> offset in VRAM
+	!byte 	($0800 / $800)  ; sprite pattern table - value * $800  		--> offset in VRAM
+	!byte	Black
+
 ;
 ;	gfx mode 1 - 32x24 character mode, 16 colors with same color for 8 characters in a block
 ;
@@ -63,13 +125,13 @@ vdp_mode_gfx1:
 	lda	#$00
 	ldy	#.WRITE_ADDRESS+$20	;color vram
 	jsr	vdp_fills
-	+SetVector vdp_init_bytes_gfx1, .adrl
-;	go on with code below
-
+	
+	+SetVector .vdp_init_bytes_gfx1, .adrl
+	
 ; setup video registers upon given table
 ;	input:
 ;	adrl/adrh vector set to vdp init table for al 8 vdp registers
-vdp_init_reg:
+.vdp_init_reg:
 ;	jsr		.vdp_wait_blank
 	ldy	#$00
 	ldx	#v_reg0
@@ -80,7 +142,47 @@ vdp_init_reg:
 	inx
 	cpy	#$08
 	bne   -
+	
+	stz	vdp_ctrl	;reset vdp control
+	
 	rts
+
+;	
+;
+!ifndef bios_stuff {
+;
+;	gfx 2 - each pixel can be adressed - e.g. for image
+;	
+vdp_mode_gfx2
+	jsr	.vdp_fill_name_table
+	+SetVector	vdp_init_bytes_gfx2, .adrl
+	bra	.vdp_init_reg
+
+;
+;	gfx 3 - 4x4 color block - multicolor mode
+;	
+vdp_mode_gfx3
+	jsr	.vdp_fill_name_table
+	+SetVector	vdp_init_bytes_gfx3, .adrl
+	bra	.vdp_init_reg
+
+;
+;	text mode - 40x24 character mode, 16 colors with same color for 8 characters in a block
+;
+vdp_mode_text
+	+SetVector vdp_init_bytes_text, .adrl
+	bra	.vdp_init_reg
+
+.vdp_wait_blank
+	php
+	sei
+-	bit	a_vreg
+	bpl -	   ; wait until blank - irq flag set?
+	pla
+	and	#$04	;check interupt was set?
+	bne	+
+	cli
++	rts
 
 ;
 ;	requires	gfx2_mode_bitmap_address and gfx2_mode_ptr_bitmap_color_address setup correctly with the adresses to image and color data
@@ -118,26 +220,6 @@ vdp_mode_gfx3_load_bitmap
 	jsr	vdp_memcpy					;load the pic data --> pattern table at vram $0000
 	rts
 	
-vdp_mode_text_blank
-	ldx	#$04				; 4 x 256 bytes
-	bra	+
-vdp_mode_gfx1_blank:		; 3 x 256 bytes
-	ldx	#$03
-+	lda	#' '					;fill vram screen with blank
-	sta	.adrl
-	lda	#$00
-	ldy	#.WRITE_ADDRESS+$18
-	jmp	vdp_fill
-
-vdp_mode_gfx1_sprites_off
-vdp_mode_sprites_off
-	lda	#$d0					;sprites off, at least y=$d0 will disable the sprite subsystem
-	sta	.adrl
-	ldx	#$32*4
-	lda	#$00
-	ldy	#.WRITE_ADDRESS+$3c
-	jmp	vdp_fills
-
 .vdp_fill_name_table
 	;set 768 different patterns --> name table
 	lda	#$00
@@ -153,20 +235,10 @@ vdp_mode_sprites_off
 	bne	-
 rts
 	
-vdp_init_bytes_gfx1
-	!byte 0
-	!byte v_reg1_16k|v_reg1_display_on|v_reg1_int|v_reg1_spr_size
-	!byte 	($1800 / $400)	; name table - value * $400					--> characters 
-	!byte 	($2000 / $40)	; color table - value * $40 (gfx1), 7f/ff (gfx2)
-	!byte 	($0000 / $800) ; pattern table (charset) - value * $800  	--> offset in VRAM 
-	!byte	($3c00 / $80)	; sprite attribute table - value * $80 		--> offset in VRAM
-	!byte 	($0800 / $800)  ; sprite pattern table - value * $800  		--> offset in VRAM
-	!byte	Black
-	
 vdp_init_bytes_text
 	!byte 0
 	!byte v_reg1_16k|v_reg1_display_on|v_reg1_int|v_reg1_m1
-	!byte 	($1800 / $400)	; name table - value * $400					--> characters 
+	!byte 	(ADDRESS_GFX1_SCREEN / $400)	; name table - value * $400					--> characters 
 	!byte 	0	; not used
 	!byte 	($0000 / $800) ; pattern table (charset) - value * $800  	--> offset in VRAM 
 	!byte	0	; not used
@@ -235,76 +307,111 @@ vdp_load_sprites16
 	dex
 	bne   --
 	rts
-	
-;	input:
-;	a - low byte vram adress
-;	y - high byte vram adress
-;  x - amount of bytes to fill with pattern
-;	adrl - pattern
-vdp_fills:
-	jsr   vdp_sreg
-	lda   .adrl
--  	+vnops
-	sta   a_vram
-	dex
-	bne	-
-	rts
-	
-; fill vram with pattern
-;
-vdp_fill:
-;	a - low byte vram adress
-;	y - high byte vram adress
-;	x - amount of 256byte blocks (page counter)
-;	adrl - pattern
-	jsr   vdp_sreg
-	ldy   #$00
-	lda   .adrl
--  	+vnops
-	iny
-	sta   a_vram
-	bne   -
-	dex
-	bne   -
-	rts
-	
-;	input:
-;	adrl/adrh vector set
-;	a - low byte vram adress
-;	y - high byte vram adress
-;  	x - amount of 256byte blocks (page counter)
-vdp_memcpy:
-	jsr   vdp_sreg
-	ldy   #$00
--  	lda   (.adrl),y
-	+vnops
-	iny
-	sta   a_vram
-	bne   -
-	inc   .adrh
-	dex
-	bne   -
-	rts
-	
-;	input:
-;	adrl/adrh vector set
-;	a - low byte vram adress
-;	y - high byte vram adress
-;  	x - amount of bytes to copy
-vdp_memcpys:
-	jsr	vdp_sreg
-	ldy   #$00
--  	lda   (.adrl),y
-	+vnops
-	sta   a_vram
-	iny
-	dex
-	bne	-
-	rts
+
 
 !macro V_GotoXY .x, .y {
 	lda	.x
 	sta crs_x
 	lda .y
 	sta	crs_y
+}
+}
+;
+;direct vram access - used i.e. in bios
+;
+!ifdef bios_stuff {
+
+.inc_cursor_y
+	lda crs_y
+	cmp	#23		;last line
+	bne	+
+;	jmp	.textui_scroll_up	; scroll and exit
+	stz	crs_y ; TODO maybe improve
+	rts	
++	inc crs_y
+	rts
+
+!macro Print .msg {
+	+SetVector .msg, msgptr
+	jsr	vdp_print
+}
+
+vdp_print:
+	ldy	#$00
+-   lda (msgptr),y
+	beq ++
+	jsr	vdp_chrout
+	iny
+	bne             -
+++  rts
+
+.KEY_CR=$0a
+.KEY_LF=$0d
+.KEY_BACKSPACE=$08
+vdp_chrout
+	cmp	#.KEY_CR			;cariage return ?
+	bne	+
+	stz	crs_x
+	bra	+++
++	cmp	#.KEY_LF			;line feed
+	bne	+
+	jsr	.inc_cursor_y
+	bra	+++
++	cmp	#.KEY_BACKSPACE
+	bne	+
+	lda	crs_x
+	beq	++
+	dec	crs_x
+;	lda	#' '			;blank at char position and also the saved char 
+;	sta	(crs_ptr)
+;	jsr	.textui_update_crs_ptr
+;	sta	(crs_ptr)		;also erase char at the new position
+	rts
+++	lda	crs_y			; cursor y=0, no dec
+	beq	+++
+	dec	crs_y
+	lda	#(.COLS-1)			; set x to end of line above
+	sta	crs_x
+	bra	+++
++	jsr	.vdp_write_char
+;	sta	(crs_ptr)
+	lda	crs_x
+	cmp	#(.COLS-1)
+	beq +
+	inc	crs_x
+	bra	+++
++	stz	crs_x
+	jsr	.inc_cursor_y
++++	rts
+	;jmp	textui_update_crs_ptr
+
+.vdp_write_char
+	pha
+	lda	#$00
+-	bit	a_vreg
+	bpl	-
+	jsr .vdp_set_addr
+	pla
+	sta a_vram
+	rts
+	
+.vdp_set_addr:
+	lda     crs_y   ; * 32
+	asl
+	asl
+	asl
+	asl
+	asl
+	clc
+	adc     crs_x
+	sta     a_vreg
+
+	lda     crs_y   ; * 32
+	lsr                     ; /8 -> page offset 0-2
+	lsr
+	lsr
+	clc
+	adc     #.WRITE_ADDRESS + $18;>ADDRESS_GFX1_SCREEN
+	sta     a_vreg
+	rts
 }

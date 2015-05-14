@@ -9,8 +9,7 @@ t9929_h_a = 1
 }
 
 .WRITE_ADDRESS=$40
-TEXT_COLOR	= Dark_Green
-TEXT_BGCOLOR = Black
+ADDRESS_GFX1_SCREEN=$1800
 
 !address{
 	a_vdp		= $0220

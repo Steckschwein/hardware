@@ -16,7 +16,7 @@ bios.h.a: bios.bin
 	cat bios.h.a.stub bios.h.a.tmp > ../lib/bios.h.a
 	rm bios.h.a.tmp
 	
-%.bin: %.a ${ACME}/t9929.h.a
+%.bin: %.a ${ACME}/t9929.h.a ${ACME}/t99xx.lib.a vdp.a 
 	acme -Wtype-mismatch -l $<.labels $(ACME_OPTS) -o $@ $<
 
 burn: bios.bin
