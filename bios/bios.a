@@ -217,14 +217,11 @@ biosversion	!text "V1505", $00	; Version String
 			; init IO devices
 			jsr init_lcd
 			jsr init_via1
-
+			jsr	init_vdp
 
 			jsr .read_nvram
-
-
 			jsr init_uart
 
-			jsr	init_vdp
 			
 			; Set IRQ Vector
 			+SetVector .irqhandler, irqvec
@@ -551,7 +548,7 @@ biosversion	!text "V1505", $00	; Version String
 
 	lda #$42 
 	cmp .nvram + param_sig
-	bne +					; Wrong signature? stick to the default
+	bne .nvram_invalid_sig					; Wrong signature? stick to the default
 
 	stz <CRC
 -	lda .nvram,x
@@ -561,29 +558,36 @@ biosversion	!text "V1505", $00	; Version String
 	bne -
 
 	cmp .nvram + param_checksum
-	bne +					; Wrong checksum? defaults
+	bne .nvram_crc_error					; Wrong checksum? defaults
 
 	+SetVector .nvram, paramvec
-+
-	+restore
+
+-	+restore
 	rts
+.nvram_invalid_sig
+	+Print .txt_nvram_invalid_sig
+	bra -
+.nvram_crc_error
+	+Print .txt_nvram_crc_error
+	bra -
+
 
 ; stolen from 
 ; http://6502.org/source/integers/crc-more.html
 !address CRC  = $f8
 ; CRC     EQU $6          ; current value of CRC
 crc8:
-        EOR addr(<CRC)         ; A contained the data
-        STA addr(<CRC)         ; XOR it with the byte
-        ASL             ; current contents of A will become x^2 term
-        BCC +         ; if b7 = 1
-        EOR #$07        ; then apply polynomial with feedback
-+		EOR addr(<CRC)         ; apply x^1
-        ASL             ; C contains b7 ^ b6
+        EOR addr(<CRC)    ; A contained the data
+        STA addr(<CRC)    ; XOR it with the byte
+        ASL               ; current contents of A will become x^2 term
+        BCC +             ; if b7 = 1
+        EOR #$07          ; then apply polynomial with feedback
++		EOR addr(<CRC)    ; apply x^1
+        ASL               ; C contains b7 ^ b6
         BCC +
         EOR #$07
-+		EOR addr(<CRC)         ; apply unity term
-        STA addr(<CRC)         ; save result
++		EOR addr(<CRC)    ; apply unity term
+        STA addr(<CRC)    ; save result
         RTS
 
 
@@ -598,6 +602,8 @@ crc8:
 
 ; SD Card init status messages
 ; .cardok		!text "SD Card OK", $00
+.txt_nvram_invalid_sig 	!text "NVRAM invalid signature",$0a, $0d, $00
+.txt_nvram_crc_error	!text "NVRAM CRC error", $0a, $0d, $00
 .serial_upload			!text "Serial upload. baud rate: $", $00
 .nocard					!text "NO SD Card ", $00
 .invalidcard			!text "Invalid SD Card!", $00
