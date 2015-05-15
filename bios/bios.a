@@ -16,11 +16,10 @@ charset_8x8
 ;!align 255,0
 charset_5x8
 !src "../charsets/char.ascii.6x8.big.h.a"
-biosversion	!text "V1405", $00	; Version String
+biosversion	!text "V1505", $00	; Version String
 
 .start_msg
-!text "SteckBIOS 0.1", $0d
-!text "BIOS    : V1804", $0d
+!text "BIOS    : ", $0d
 ;!text "Clock   :", $0d
 !text "RAM end : ", $0
 .ready_msg
@@ -31,13 +30,20 @@ biosversion	!text "V1405", $00	; Version String
 !src "vdp.a"
 
 .upload
-			ldx #$00
-			ldy #$01
-			jsr .lcdxy
+			+Print .crlf
+			+Print .serial_upload
+			ldy #param_baud
+			lda (paramvec),y
+			jsr .hexout
+			+Print .crlf
 
-			lda #$c0
-			sta lcdctl
-			jsr .lcdbusy
+			; ldx #$00
+			; ldy #$01
+			; jsr .lcdxy
+
+			; lda #$c0
+			; sta lcdctl
+			; jsr .lcdbusy
 
 			; load start address
 			jsr .uart_rx
@@ -48,12 +54,12 @@ biosversion	!text "V1405", $00	; Version String
 
 
 			lda .startaddr+1
-			jsr .lcdhex
+			jsr .hexout
 			lda .startaddr
-			jsr .lcdhex
+			jsr .hexout
 
 			lda #' '
-			jsr .lcdprint
+			jsr chrout
 
 			lda #'O'
 			jsr .uart_tx
@@ -78,13 +84,13 @@ biosversion	!text "V1405", $00	; Version String
 			sta .endaddr+1
 
 			lda .endaddr+1
-			jsr .lcdhex
+			jsr .hexout
 
 			lda .endaddr
-			jsr .lcdhex
+			jsr .hexout
 			
 			lda #' '
-			jsr .lcdprint
+			jsr chrout
 
 			lda .startaddr
 			sta .addr
@@ -123,9 +129,9 @@ biosversion	!text "V1405", $00	; Version String
 			jsr .uart_tx
 
 			lda #'O'
-			jsr .lcdprint
+			jsr chrout
 			lda #'K'
-			jsr .lcdprint
+			jsr chrout
 
 			rts
 			
@@ -228,8 +234,8 @@ biosversion	!text "V1405", $00	; Version String
 
 			+PrintString biosversion
 
-			; +Print biosversion
-			; +Print .crlf
+			+Print biosversion
+			+Print .crlf
 			
 			; for testing purpose only, feel free...
 ; 			ldx	#$40
@@ -243,21 +249,25 @@ biosversion	!text "V1405", $00	; Version String
 
 
 			
-			ldx #$06
-			jsr .lcdxy
-
+			; ldx #$06
+			; jsr .lcdxy
+			
+			+SetVector vdp_chrout, outvec
+			
 			lda #'$'
 			jsr chrout
-
+			
 			lda ram_end_l
 			jsr .hexout
 			lda ram_end_h
 			jsr .hexout
 
+			+Print .crlf
+
 		
-			ldy #$02
-			ldx #$00
-			jsr .lcdxy
+			; ldy #$02
+			; ldx #$00
+			; jsr .lcdxy
 
 			jsr .init_sdcard
 
@@ -268,7 +278,7 @@ biosversion	!text "V1405", $00	; Version String
  			cmp #$ff
  			bne ++
 
-			+PrintString .nocard               
+			+Print .nocard               
 
 ++			cmp #$0f
  			bne ++
@@ -276,14 +286,14 @@ biosversion	!text "V1405", $00	; Version String
 
 
 
-			+PrintString .invalidcard
+			+Print .invalidcard
 ++			cmp #$ef 
 			bne ++
-			+PrintString .unsupportedcard
+			+Print .unsupportedcard
 ++			cmp #$1f
 			bne ++
 
-			+PrintString .initfail
+			+Print .initfail
 
 			bra ++
 
@@ -304,7 +314,7 @@ biosversion	!text "V1405", $00	; Version String
 			jmp (.startaddr)
 
 .boot_from_card
-			; +PrintString .bootup_txt
+			+Print .bootup_txt
 
 			lda #%01111110
 			sta via1portb
@@ -325,13 +335,11 @@ biosversion	!text "V1405", $00	; Version String
 .fat_end
 			jsr .sd_deselect_card
 
-			; +PrintString .bootup_failed
+			+Print .bootup_failed
 
 ++			rts
 	
 
-.bootup_txt 	!text "Boot ", $00
-.bootup_failed 	!text "failed ", $00
 ;----------------------------------------------------------------------------------------------
 ; IO_NMI Routine. Handle NMI
 ;----------------------------------------------------------------------------------------------
@@ -590,6 +598,7 @@ crc8:
 
 ; SD Card init status messages
 ; .cardok		!text "SD Card OK", $00
+.serial_upload			!text "Serial upload. baud rate: $", $00
 .nocard					!text "NO SD Card ", $00
 .invalidcard			!text "Invalid SD Card!", $00
 .unsupportedcard		!text "Unsupp. SD Card!", $00
@@ -598,6 +607,10 @@ crc8:
 .fat_err_partition 		!text "invalid partition type", $00
 .fat_err_bad_sect_size 	!text "sector size unsupported", $00
 .fat_err_num_fats	  	!text "invalid number of FATs (!= 2)", $00
+.bootup_txt 			!text "Boot ", $00
+.bootup_failed 			!text "failed ", $00
+
+
 
 ;----------------------------------------------------------------------------------------------
 ;	divisor values for 1.8432 MHz Crystal
