@@ -334,19 +334,20 @@ vdp_load_sprites16
 }
 
 vdp_print:
+	phy
 	ldy	#$00
 -   lda (msgptr),y
 	beq ++
 	jsr	vdp_chrout
 	iny
 	bne             -
-++  rts
+++	ply
+    rts
 
 .KEY_CR=$0a
 .KEY_LF=$0d
 .KEY_BACKSPACE=$08
 vdp_chrout
-	+save
 	cmp	#.KEY_CR			;cariage return ?
 	bne	+
 	stz	crs_x
@@ -364,7 +365,8 @@ vdp_chrout
 ;	sta	(crs_ptr)
 ;	jsr	.textui_update_crs_ptr
 ;	sta	(crs_ptr)		;also erase char at the new position
-	rts
+	; rts
+	bra +++
 ++	lda	crs_y			; cursor y=0, no dec
 	beq	+++
 	dec	crs_y
@@ -380,7 +382,8 @@ vdp_chrout
 	bra	+++
 +	stz	crs_x
 	jsr	.inc_cursor_y
-+++	+restore
++++	
+	
 	rts
 	;jmp	textui_update_crs_ptr
 
