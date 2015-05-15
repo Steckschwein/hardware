@@ -9,7 +9,7 @@
 !src <fat32.h.a>
 !src <params.h.a>
 !address	.target = $00
-!address	.nvram  = $0400
+!address	.nvram  = $0800
 *= $e000			; ROM Start
 charset_8x8
 !src "../charsets/char.ascii.vc20.h.a"
@@ -34,6 +34,7 @@ biosversion	!text "V1505", $00	; Version String
 			+Print .serial_upload
 			ldy #param_baud
 			lda (paramvec),y
+
 			jsr .hexout
 			+Print .crlf
 
@@ -550,15 +551,17 @@ biosversion	!text "V1505", $00	; Version String
 	cmp .nvram + param_sig
 	bne .nvram_invalid_sig					; Wrong signature? stick to the default
 
-	stz <CRC
--	lda .nvram,x
-	jsr crc8
-	inx
-	cpx #param_checksum
-	bne -
-
-	cmp .nvram + param_checksum
-	bne .nvram_crc_error					; Wrong checksum? defaults
+; 	stz <CRC
+; -	lda .nvram,x
+; 	jsr crc8
+; 	inx
+; 	cpx #param_checksum
+; 	bne -
+	
+	
+; 	cmp .nvram + param_checksum - 1
+	
+; 	bne .nvram_crc_error					; Wrong checksum? defaults
 
 	+SetVector .nvram, paramvec
 
