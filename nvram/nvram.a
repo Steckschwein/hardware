@@ -1,0 +1,103 @@
+* = $1000
+!src <defs.h.a>
+!src <bios.h.a>
+!src <via.h.a>
+!src <params.h.a>
+
+
+!macro Space {
+	lda #' '
+	jsr chrout
+}
+
+; 	; select RTC
+; 	lda #%01110110
+; 	sta via1portb
+
+; 	lda #$20
+; 	jsr spi_rw_byte
+
+; 	ldx #$00
+; -	phx
+; 	jsr spi_r_byte
+; 	plx
+; 	jsr hexout
+; 	+Space
+; 	inx
+; 	cpx #param_checksum
+; 	bne -
+
+; 	; deselect all SPI devices
+; 	lda #%01111110
+; 	sta via1portb
+
+
+; -	jmp -
+
+
+; 	ldx #$00
+
+; 	stz <CRC
+; -	lda .nvram,x
+; 	jsr crc8
+; 	inx
+; 	cpx #param_checksum
+; 	bne -
+
+; 	lda <CRC
+; 	sta .nvram + param_checksum -1
+	
+
+	; select RTC
+	lda #%01110110
+	sta via1portb
+
+
+	lda #$a0
+	jsr spi_rw_byte
+
+	ldx #$00
+-		
+	lda .nvram,x
+	phx
+	jsr spi_rw_byte
+	plx
+	
+	inx
+	cpx #param_checksum +1
+	bne -
+
+	; deselect all SPI devices
+	lda #%01111110
+	sta via1portb
+
+-	jmp -
+
+
+; stolen from 
+; http://6502.org/source/integers/crc-more.html
+!address CRC  = $f8
+; CRC     EQU $6          ; current value of CRC
+crc8:
+        EOR addr(<CRC)         ; A contained the data
+        STA addr(<CRC)         ; XOR it with the byte
+        ASL             ; current contents of A will become x^2 term
+        BCC +         ; if b7 = 1
+        EOR #$07        ; then apply polynomial with feedback
++		EOR addr(<CRC)         ; apply x^1
+        ASL             ; C contains b7 ^ b6
+        BCC +
+        EOR #$07
++		EOR addr(<CRC)         ; apply unity term
+        STA addr(<CRC)         ; save result
+        RTS
+
+!align 255,0
+.nvram
+	!byte $42			; signature byte
+	!byte $00 			; version 	
+	!text "LOADER  BIN" ; bootloader filename
+	!byte $13			; baudrate 
+	!byte %00000011     ; line params (8N1)
+	!fill .nvram + param_checksum - *, $00
+	!byte $00
