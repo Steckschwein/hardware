@@ -346,6 +346,7 @@ vdp_print:
 .KEY_LF=$0d
 .KEY_BACKSPACE=$08
 vdp_chrout
+	+save
 	cmp	#.KEY_CR			;cariage return ?
 	bne	+
 	stz	crs_x
@@ -379,7 +380,8 @@ vdp_chrout
 	bra	+++
 +	stz	crs_x
 	jsr	.inc_cursor_y
-+++	rts
++++	+restore
+	rts
 	;jmp	textui_update_crs_ptr
 
 .vdp_write_char
