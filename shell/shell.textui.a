@@ -154,11 +154,11 @@
 +++	rts
 
 .textui_update_screen
-	bit	a_vreg
-	bmi +	   ; VDP IRQ flag set? 
+	lda	a_vreg
+	and	#.VDP_IRQ
+	bne +	   ; VDP IRQ flag set? 
 	rts
-+	
-	lda	.screen_status
++	lda	.screen_status
 	and	#.TEXTUI_ENABLED
 	bne	+
 	rts
