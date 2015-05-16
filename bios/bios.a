@@ -30,13 +30,13 @@ biosversion	!text "V1505", $00	; Version String
 !src "vdp.a"
 
 .upload
-			+Print .crlf
-			+Print .serial_upload
+			+PrintString .crlf
+			+PrintString .serial_upload
 			ldy #param_baud
 			lda (paramvec),y
 
 			jsr .hexout
-			+Print .crlf
+			+PrintString .crlf
 
 			; ldx #$00
 			; ldy #$01
@@ -210,42 +210,25 @@ biosversion	!text "V1505", $00	; Version String
 -			jmp -
 
 
-
-
 .back_from_memcheck
-
+			+SetVector vdp_chrout, outvec
+			
 			+SetVector .default_params, paramvec
 			; init IO devices
 			jsr init_lcd
 			jsr init_via1
 			jsr	init_vdp
-
+			
 			jsr .read_nvram
 			jsr init_uart
 
 			
 			; Set IRQ Vector
 			+SetVector .irqhandler, irqvec
-
-			+SetVector .lcdprint, outvec
 			+SetVector .kbd_chrin, invec
 
 			+PrintString biosversion
-
-			+Print biosversion
-			+Print .crlf
-			
-			; for testing purpose only, feel free...
-; 			ldx	#$40
-; -			txa
-; 			jsr	vdp_chrout
-; 			lda	#$0a
-; 			jsr	vdp_chrout
-; 			inx
-; 			bne	-
-			; end test
-
-
+			+PrintString .crlf
 			
 			; ldx #$06
 			; jsr .lcdxy
@@ -260,7 +243,7 @@ biosversion	!text "V1505", $00	; Version String
 			lda ram_end_h
 			jsr .hexout
 
-			+Print .crlf
+			+PrintString .crlf
 
 		
 			; ldy #$02
@@ -276,7 +259,7 @@ biosversion	!text "V1505", $00	; Version String
  			cmp #$ff
  			bne ++
 
-			+Print .nocard               
+			+PrintString .nocard               
 
 ++			cmp #$0f
  			bne ++
@@ -284,14 +267,14 @@ biosversion	!text "V1505", $00	; Version String
 
 
 
-			+Print .invalidcard
+			+PrintString .invalidcard
 ++			cmp #$ef 
 			bne ++
-			+Print .unsupportedcard
+			+PrintString .unsupportedcard
 ++			cmp #$1f
 			bne ++
 
-			+Print .initfail
+			+PrintString .initfail
 
 			bra ++
 
@@ -312,7 +295,7 @@ biosversion	!text "V1505", $00	; Version String
 			jmp (.startaddr)
 
 .boot_from_card
-			+Print .bootup_txt
+			+PrintString .bootup_txt
 
 			lda #%01111110
 			sta via1portb
@@ -333,7 +316,7 @@ biosversion	!text "V1505", $00	; Version String
 .fat_end
 			jsr .sd_deselect_card
 
-			+Print .bootup_failed
+			+PrintString .bootup_failed
 
 ++			rts
 	
@@ -381,21 +364,13 @@ biosversion	!text "V1505", $00	; Version String
 ; +
 ; 		pla
 ; 		rts
-;----------------------------------------------------------------------------------------------
-; Output character on active output device
-;----------------------------------------------------------------------------------------------
-; .chrout
-; 		jmp (outvec)
 
 ;----------------------------------------------------------------------------------------------
 ; Output string on active output device
 ;----------------------------------------------------------------------------------------------
-.strout 	pha                 ;save a, y to stack
-			lda chn_out
-			bne +
-
-			pla
-+			phy
+.strout
+			pha                 ;save a, y to stack
+			phy
 
 			ldy #$00
 -		  	lda (msgptr),y
@@ -568,10 +543,10 @@ biosversion	!text "V1505", $00	; Version String
 -	+restore
 	rts
 .nvram_invalid_sig
-	+Print .txt_nvram_invalid_sig
+	+PrintString .txt_nvram_invalid_sig
 	bra -
 .nvram_crc_error
-	+Print .txt_nvram_crc_error
+	+PrintString .txt_nvram_crc_error
 	bra -
 
 
@@ -650,7 +625,8 @@ crc8:
 	!byte $42
 	!byte $00
 	!text "LOADER  BIN" 
-	!byte $0f
+;	!byte $0f
+	!byte $13
 	!byte %00000011
 	!fill .default_params + param_checksum - *, $00
 	!byte $00

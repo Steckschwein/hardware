@@ -328,22 +328,6 @@ vdp_load_sprites16
 +	inc crs_y
 	rts
 
-!macro Print .msg {
-	+SetVector .msg, msgptr
-	jsr	vdp_print
-}
-
-vdp_print:
-	phy
-	ldy	#$00
--   lda (msgptr),y
-	beq ++
-	jsr	vdp_chrout
-	iny
-	bne             -
-++	ply
-    rts
-
 .KEY_CR=$0a
 .KEY_LF=$0d
 .KEY_BACKSPACE=$08
@@ -361,11 +345,6 @@ vdp_chrout
 	lda	crs_x
 	beq	++
 	dec	crs_x
-;	lda	#' '			;blank at char position and also the saved char 
-;	sta	(crs_ptr)
-;	jsr	.textui_update_crs_ptr
-;	sta	(crs_ptr)		;also erase char at the new position
-	; rts
 	bra +++
 ++	lda	crs_y			; cursor y=0, no dec
 	beq	+++
@@ -374,7 +353,6 @@ vdp_chrout
 	sta	crs_x
 	bra	+++
 +	jsr	.vdp_write_char
-;	sta	(crs_ptr)
 	lda	crs_x
 	cmp	#(.COLS-1)
 	beq +
@@ -382,10 +360,7 @@ vdp_chrout
 	bra	+++
 +	stz	crs_x
 	jsr	.inc_cursor_y
-+++	
-	
-	rts
-	;jmp	textui_update_crs_ptr
++++	rts
 
 .vdp_write_char
 	pha
@@ -409,7 +384,7 @@ vdp_chrout
 	sta     a_vreg
 
 	lda     crs_y   ; * 32
-	lsr                     ; /8 -> page offset 0-2
+	lsr                     ; div 8 -> page offset 0-2
 	lsr
 	lsr
 	clc

@@ -37,6 +37,9 @@ v_reg4 	= $84
 v_reg5 	= $85
 v_reg6 	= $86
 v_reg7  = $87
+
+.VDP_IRQ=1<<7
+
 Transparent    =$00
 Black          =$01
 Medium_Green   =$02
