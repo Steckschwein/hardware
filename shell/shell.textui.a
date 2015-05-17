@@ -32,12 +32,11 @@
     asl
     rol    tmp1
     asl
-    bne    +
     rol    tmp1
 +	clc
     adc    tmp0    ; y*32 + y*8 = y*40
     bcc    +
-    rol    tmp1
+    inc    tmp1
 +	clc
     adc    crs_x
     sta    crs_ptr
