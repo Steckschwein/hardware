@@ -22,31 +22,28 @@
 .COLS=40
 .textui_update_crs_ptr
 	pha
-;	0 6 12 18
-	lda	crs_y	; * .COLS : y*6 = y*2+y*4 = o -> o - y*2 - y*4 
 	
-	lsr			; /6 -> page offset 0-3 => y/6 = y/(2*2+2)
-	lsr
-;	lsr
-	clc
-	adc	#>.screen
-	sta	crs_ptr+1
-	
-	lda	crs_y	; * .COLS
-	asl	
-	asl
-	asl
-	sta	tmp0	
-	asl			
-	asl
-	clc
-	adc	tmp0	; offs= y*.COLS -> y*40 = y*8+y*32	+ x
-	clc
-	adc	crs_x
-	sta	crs_ptr
-	lda	#$00	;add with carry
-	adc	crs_ptr+1
-;	sta	crs_ptr+1
+	stz	   tmp1
+	lda    crs_y
+    asl
+    asl
+    asl
+    sta    tmp0    ; result *8
+    asl
+    rol    tmp1
+    asl
+    bne    +
+    rol    tmp1
++	clc
+    adc    tmp0    ; y*32 + y*8 = y*40
+    bcc    +
+    rol    tmp1
++	clc
+    adc    crs_x
+    sta    crs_ptr
+    lda    #>.screen
+    adc    tmp1
+    sta    crs_ptr+1
 	
 	pla
 	rts
@@ -154,15 +151,11 @@
 +++	rts
 
 .textui_update_screen
-	lda	a_vreg
-	and	#.VDP_IRQ
-	bne +	   ; VDP IRQ flag set? 
-	rts
-+	lda	.screen_status
+	bit	a_vreg
+	bpl ++	   ; VDP IRQ flag set?
+	lda	.screen_status
 	and	#.TEXTUI_ENABLED
-	bne	+
-	rts
-+
+	beq	++
 	;lda	#Gray
 	;jsr	vdp_bgcolor	
 
@@ -188,7 +181,7 @@
 
 +	lda	#Medium_Green<<4|Black
 	jsr	vdp_bgcolor
-	rts	
+++	rts	
 
 .textui_busy
 	lda	.screen_status
