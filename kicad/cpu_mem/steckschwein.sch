@@ -35,8 +35,7 @@ LIBS:UART
 LIBS:osc
 LIBS:74xgxx
 LIBS:ttl_ieee
-LIBS:steckschwein-cache
-EELAYER 24 0
+EELAYER 25 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
