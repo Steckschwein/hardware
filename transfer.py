@@ -28,7 +28,7 @@ try:
 		port='/dev/cu.usbserial-FTAJMAUJ', 
 		baudrate=baudrate,
 		bytesize=8, 
-		parity='N', 
+		parity=serial.PARITY_NONE, 
 		stopbits=1,
 		xonxoff=0, 
 		rtscts=0,

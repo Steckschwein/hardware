@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
 		uint16_t startaddr 	= 0x1000;
     uint16_t length;
 		
-    int port,n,c;
+    int port,n,c,r;
 		
 		char buf[2];
 		char buffer[BUFSIZE];
@@ -100,25 +100,29 @@ int main(int argc, char *argv[])
 		length = fread(buffer, 1, sizeof(buffer), fp);
 		fclose(fp);
 
-
 		//termios - structure contains options for port manipulation
 		struct termios specs; // for setting baud rate 
 
 		//setup part
 		port = open_port(device);
-
 		if (port < 0)
 		{
 			return 1;
 		}
 		tcgetattr(port, &specs); 
 
+		printf("input: %x\n", specs.c_iflag);
+		printf("output: %x\n", specs.c_oflag);
+		printf("c: %x\n", specs.c_cflag);
+		printf("l: %x\n", specs.c_lflag);
+		
+		specs.c_lflag = (NOFLSH); //control flags
 		//now the specs points to the opened port's specifications
 		specs.c_cflag = (CLOCAL | CREAD | CS8 ); //control flags
 		//output flags
 		//CR3 - delay of 150ms after transmitting every line
 		specs.c_oflag = (OPOST | CR3 );
-		specs.c_iflag = (IXOFF);
+		specs.c_iflag = (IGNBRK);
 
 		//set Baud Rate to 115200bps
 		cfsetospeed(&specs,BAUDRATE);
@@ -130,37 +134,31 @@ int main(int argc, char *argv[])
 		//specifications immediately.
 		tcsetattr(port,TCSANOW,&specs);
 	
-		// Send start address 0x1000
-		
-		
-		// addr.h = (uint8_t)startaddr;
-		// addr.l = (uint8_t)(startaddr >> 8);
-		// // buf[0] = (uint8_t)startaddr;
-		// buf[1] = (uint8_t)(startaddr >> 8);
+		// Send start address
+		r = tcflush(port, TCIOFLUSH);
 		n = write(port,&startaddr,2); // n = no of bytes written
 		if (n<0) 
 		{
 		 	printf("\nError");
 			return 1;
 		}
-		
 		n = read(port, buf, 2);
-		if (strncmp(buf, "OK", 1) != 0)// only the 'O' could be read back :/
+		printf("%s", buf);
+		if (strncmp(buf, "OK", 2) != 0)// only the 'O' could be read back :/
 		{
 			fprintf(stderr, "Error sending startaddr. Handshake %d\n", n);
 			exit(1);
 		}
 
-
-		// addr.h = (uint8_t)length;
-		// addr.l = (uint8_t)(length >> 8);
-
+		r = tcflush(port, TCIOFLUSH);
 		n = write(port, &length,2); // n = no of bytes written
-		if (n<0) {
-			printf("\nError");
+		if (n!=2) {
+			printf("\nError sending length! Bytes written %d", n);
 		}
 
+		r = tcflush(port, TCIOFLUSH);
 		n = read(port, buf, 2);
+		printf("%s", buf);
 		if (strncmp(buf, "OK", 2) != 0)
 		{
 			fprintf(stderr, "Error sending length. Handshake %d\n", n);
@@ -169,7 +167,10 @@ int main(int argc, char *argv[])
 
 		printf("Sending $%04X bytes of data to $%04X\n", length, startaddr);
 
+		r = tcflush(port, TCIOFLUSH);
 		n = write(port, buffer, length);
+		
+		r = tcflush(port, TCIOFLUSH);
 		read(port, buf, 2);
 		if (strncmp(buf, "OK", 2) != 0)
 		{
@@ -183,4 +184,3 @@ int main(int argc, char *argv[])
 		close(port);
 		return(0);
 } 
-
