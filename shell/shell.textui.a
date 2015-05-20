@@ -7,6 +7,7 @@
 
 .ROWS=24
 
+.KEY_CARIAGE_RETURN=$0a
 .KEY_RETURN=$0d
 .KEY_BACKSPACE=$08
 
@@ -265,7 +266,7 @@ _textui_chrout
 +	rts
 
 .textui_dispatch_char
-	cmp	#$0a			;cariage return
+	cmp	#.KEY_CARIAGE_RETURN			;cariage return
 	bne	+
 	lda	.saved_char		
 	sta	(crs_ptr)		;restore char at cursor position
