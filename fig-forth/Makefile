@@ -1,4 +1,4 @@
-all: FIG65.bin fig6502.bin
+all: fig6502.bin FIG65.bin
 clean:
 	rm -f *.bin 
 

@@ -1,11 +1,8 @@
 *=$0400
-
 !src <defs.h.a>
 !src <bios.h.a>
 
-	jmp	ENTER
-	
-!src "../shell/shell.textui.a"
+text_mode_40 = 1
 ;
 ;                        Through the courtesy of
 ;
@@ -78,15 +75,18 @@ BRKBYTE   = MEM           ;XSAVE+1       ;?flag if break is pressed
 ;
                          ; User cold entry point
 ENTER    
+		sei
+		
+		+SetVector _textui_chrout, outvec
+	;	+SetVector  , invec
+		+SetVector .irq, irqvec
+		jsr	.textui_init0
+
         lda #dev_uart
         sta chn_out
         stz chn_in
 		
-        jsr lcdclear
-        lda	#'a'
-		jsr	lcdprint
-		
-		jsr chrin
+		cli
 
           NOP            ; Vector to COLD entry
           JMP COLD+2     ;
@@ -3958,3 +3958,12 @@ TOP  ; end of listing
 
 ;HEX
 ;: S0 0B3 @ ;
+
+.irq
+	+save
+	jsr	.textui_update_screen
+	+restore
+	rti
+
+.sprite_sanduhr
+!src "../shell/shell.textui.a"

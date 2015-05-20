@@ -1,5 +1,8 @@
 !src <defs.h.a>
 !src <bios.h.a>
+
+text_mode_40 = 1
+
 ;
 ;                        Through the courtesy of
 ;
@@ -72,9 +75,20 @@ INCH	= chrin
 ;
                          ; User cold entry point
 ENTER     
+	sei
+	
+	+SetVector _textui_chrout, outvec
+;	+SetVector  , invec
+	+SetVector .irq, irqvec
+	jsr	.textui_init0
+	cli
+	
+	
 	lda #dev_uart
 	sta chn_out
 	stz chn_in
+
+	
    	  NOP            ; Vector to COLD entry
           JMP COLD+2     ;
 REENTR    NOP            ; User Warm entry point
@@ -3848,4 +3862,12 @@ XBLANK
 	jsr OUTCH
 	pla
 	rts
+	
+.irq
+	+save
+	jsr	.textui_update_screen
+	+restore
+	rti
 
+.sprite_sanduhr
+!src "../shell/shell.textui.a"
