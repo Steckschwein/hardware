@@ -1,4 +1,5 @@
-all: fig6502.bin FIG65.bin
+all: fig6502.bin 
+#FIG65.bin
 clean:
 	rm -f *.bin 
 
@@ -6,5 +7,5 @@ clean:
 	acme -v -f plain --cpu 65c02 -o $@ $<
 
 transfer: all
-	../transfer.py FIG65.bin 0x0400
-#	../transfer.py fig6502.bin 0x0400
+#	../transfer.py FIG65.bin 0x0400
+	../transfer.py fig6502.bin 0x0400

@@ -96,18 +96,7 @@
 	ldx	#$08					;load charset
 	jsr	vdp_memcpy
 	
-	+SetVector	.assets, .adrl	;load cursor sprites to vram
-	ldx	#$02*8
-	lda	#$00
-	ldy	#.WRITE_ADDRESS+$08
-	jsr	vdp_load_sprites16x16
-	
 	jsr	vdp_mode_gfx1_sprites_off	;clean sprite attribute table
-	+SetVector	.sprite_sanduhr, .adrl
-	ldx	#$04
-	lda	#$00
-	ldy	#.WRITE_ADDRESS+$3c
-	jsr	vdp_memcpys
 
 !ifndef text_mode_40 {
 	lda	#Medium_Green<<4|Black		;enable gfx 1

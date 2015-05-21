@@ -3,6 +3,7 @@
 !src <defs.h.a>
 !src <bios.h.a>
 !src <via.h.a>
+!source <lcd.h.a>
 
 	sei
 
@@ -12,7 +13,7 @@
   	sta chn_out
 
   	
-	jsr lcdclear
+	jsr .lcdclear
 
 -	jsr .kbd_chrin
 	jsr chrout
@@ -43,3 +44,5 @@
 	beq -
 	jsr .kbd_disable
 	rts
+	
+!source "../bios/lcd.a"

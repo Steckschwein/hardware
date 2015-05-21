@@ -11,7 +11,7 @@ init_vdp
 	stz	crs_x
 	stz	crs_y
 
-	+SetVector	charset, .adrl	
+	+SetVector	charset, .adrl
 	lda	#$00
 	ldy	#.WRITE_ADDRESS+$00
 	ldx	#$08					;load charset

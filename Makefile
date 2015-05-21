@@ -13,7 +13,7 @@ clean:
 
 build:
 	(cd bios; make)
-	(cd memtest; make)
+#	(cd memtest; make)
 #	(cd charsets; make)
 	(cd vdp; make)
 	(cd keyboard; make )

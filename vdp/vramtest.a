@@ -6,12 +6,13 @@
     jmp   main
    
 !source <t99xx.lib.a>
+!source "../bios/lcd.a"
 
 adr_h_w	= $f0
 adr_h_r	= $f1
 
 main:	
-	jsr   lcdclear
+	jsr   .lcdclear
 	
 	lda	#v_reg1_16k; 16K RAM, display off
 	ldy	#v_reg1
@@ -22,8 +23,8 @@ main:
 	lda   #>memtest_msg
 	sta   msgptr+1
 
-	jsr   lcdclear
-	jsr   lcdstring
+	jsr   .lcdclear
+	jsr   .lcdstring
 
 	lda   #$40
 	sta   adr_h_w
@@ -62,22 +63,22 @@ main:
 +	pha            	;save erroneous pattern
 	jsr   mem_ca
 	lda   #$20
-	jsr   lcdprint   
+	jsr   .lcdprint   
 	pla   
-	jsr   lcdhex
+	jsr   .lcdhex
 	jmp   upload
 
 mem_ca:	; output value
    phx
    phy
-   jsr 	lcdclear
+   jsr 	.lcdclear
    plx
    ply 
    phy            ;save memory adress low byte
    lda   adr_h_r
-   jsr   lcdhex
+   jsr   .lcdhex
    pla
-   jsr   lcdhex   
+   jsr   .lcdhex   
    rts
    
 memtest_msg	!text "Mem:$", $00

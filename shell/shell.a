@@ -330,12 +330,12 @@ mainloop
 .upload
 
 	sei
-	jsr lcdclear
+;	jsr lcdclear
 	+SetVector .uploadtxt, msgptr
-	jsr lcdstring
+;	jsr lcdstring
 	ldx #$00
 	ldy #$02
-	jsr lcdxy
+;	jsr lcdxy
 
 	jsr upload
 

@@ -5,7 +5,6 @@
 !src <via.h.a>
 !src <sdcard.h.a>
 !src <uart.h.a>
-!src <lcd.h.a>
 !src <fat32.h.a>
 !src <params.h.a>
 !address	.target = $00
@@ -13,22 +12,9 @@
 *= $e000			; ROM Start
 charset_8x8
 !src "../charsets/char.ascii.vc20.h.a"
-;!align 255,0
-charset_5x8
 !src "../charsets/char.ascii.6x8.big.h.a"
-biosversion	!text "V1505", $00	; Version String
-
-.start_msg
-!text "BIOS    : ", $0d
-;!text "Clock   :", $0d
-!text "RAM end : ", $0
-.ready_msg
-!text $0d,$0d,"READY.", $0d
-!text $0
-.crlf	!byte $0a, $0d, $00
+biosversion	!text "BIOS    : V152105", $00	; Version String
 *=$f050
-!src "vdp.a"
-
 .upload
 			+PrintString .crlf
 			+PrintString .serial_upload
@@ -37,14 +23,6 @@ biosversion	!text "V1505", $00	; Version String
 
 			jsr .hexout
 			+PrintString .crlf
-
-			; ldx #$00
-			; ldy #$01
-			; jsr .lcdxy
-
-			; lda #$c0
-			; sta lcdctl
-			; jsr .lcdbusy
 
 			; load start address
 			jsr .uart_rx
@@ -215,40 +193,26 @@ biosversion	!text "V1505", $00	; Version String
 			
 			+SetVector .default_params, paramvec
 			; init IO devices
-			jsr init_lcd
 			jsr init_via1
 			jsr	init_vdp
 			
 			jsr .read_nvram
 			jsr init_uart
 
-			
 			; Set IRQ Vector
 			+SetVector .irqhandler, irqvec
 			+SetVector .kbd_chrin, invec
-
+			
 			+PrintString biosversion
 			+PrintString .crlf
 			
-			; ldx #$06
-			; jsr .lcdxy
-			
-			+SetVector vdp_chrout, outvec
-			
-			lda #'$'
-			jsr chrout
-			
+			+PrintString .ramend ; display ram end
 			lda ram_end_l
 			jsr .hexout
 			lda ram_end_h
 			jsr .hexout
 
 			+PrintString .crlf
-
-		
-			; ldy #$02
-			; ldx #$00
-			; jsr .lcdxy
 
 			jsr .init_sdcard
 
@@ -259,13 +223,10 @@ biosversion	!text "V1505", $00	; Version String
  			cmp #$ff
  			bne ++
 
-			+PrintString .nocard               
+			+PrintString .nocard
 
 ++			cmp #$0f
  			bne ++
-
-
-
 
 			+PrintString .invalidcard
 ++			cmp #$ef 
@@ -275,10 +236,7 @@ biosversion	!text "V1505", $00	; Version String
 			bne ++
 
 			+PrintString .initfail
-
 			bra ++
-
-
 +
 			jsr .boot_from_card
 
@@ -418,7 +376,7 @@ biosversion	!text "V1505", $00	; Version String
 			
 
 ;----------------------------------------------------------------------------------------------
-; LCDDECZ - output byte in A as decimal ASCII with leading zeros
+; decoutz - output byte in A as decimal ASCII with leading zeros
 ;----------------------------------------------------------------------------------------------
 .decoutz
    phx
@@ -447,7 +405,7 @@ biosversion	!text "V1505", $00	; Version String
    rts
 
 ;----------------------------------------------------------------------------------------------
-; LCDDEC - output byte in A as decimal ASCII without leading zeros
+; decout - output byte in A as decimal ASCII without leading zeros
 ;----------------------------------------------------------------------------------------------
 .decout
    phx
@@ -483,8 +441,8 @@ biosversion	!text "V1505", $00	; Version String
 
    rts
 
+!src "vdp.a"
 !src "via.a"
-!src "lcd.a"
 !src "uart.a"
 !src "spi.a"
 !src "sdcard.a"
@@ -580,6 +538,8 @@ crc8:
 
 ; SD Card init status messages
 ; .cardok		!text "SD Card OK", $00
+.ramend					!text "RAM end : $", $0
+.crlf					!byte $0a, $0d, $00
 .txt_nvram_invalid_sig 	!text "NVRAM invalid signature",$0a, $0d, $00
 .txt_nvram_crc_error	!text "NVRAM CRC error", $0a, $0d, $00
 .serial_upload			!text "Serial upload. baud rate: $", $00
@@ -684,24 +644,12 @@ sys_chrout
 chrout		jmp (outvec)
 sys_chrin
 chrin		jmp (invec)
-sys_lcdclear
-lcdclear	jmp .lcdclear
-sys_lcdprint
-lcdprint 	jmp .lcdprint
-sys_lcdstring
-lcdstring 	jmp .lcdstring
-sys_lcdhex
-lcdhex 		jmp .lcdhex 
 sys_decout
 decout 		jmp .decout
 sys_decoutz
 decoutz 	jmp .decoutz
 sys_irqhandler
 irqhandler  jmp .irqhandler
-sys_lcdbusy
-lcdbusy 	jmp .lcdbusy
-sys_lcdxy
-lcdxy 		jmp .lcdxy
 
 sys_spi_rw_byte	
 spi_rw_byte	jmp .spi_rw_byte

@@ -2,11 +2,11 @@
 !src <defs.h.a>
 !src <bios.h.a>
 
-	lda #dev_lcd
-	sta chn_out 
+;	lda #dev_lcd
+;	sta chn_out 
 
-	jsr lcdclear
-	+PrintString msg
+;	jsr lcdclear
+;	+PrintString msg
 -
 a	lda biosdata
 b	sta $e000
@@ -20,7 +20,7 @@ b	sta $e000
 	bne -
 
 done
-	+PrintString msgdone
+;	+PrintString msgdone
 	
 	lda #$01
 	sta $02f0
