@@ -206,7 +206,6 @@ mainloop
 	jmp mainloop 
 
 .cd
-	+ShellPrintString .crlf
 	; php
 	; sei
 	jsr .fat_open
@@ -215,7 +214,6 @@ mainloop
 
 
 .load	
-	+ShellPrintString .crlf
 	jsr .readfile		
 	
 	lda fat_errno
@@ -233,7 +231,6 @@ mainloop
 	jmp .init 
 
 .type
-	+ShellPrintString .crlf
 	jsr .readfile
 	lda fat_errno
 	bne +
