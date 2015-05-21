@@ -144,7 +144,9 @@ mainloop
 	stz .buf, x
 	bra .next	
 
+
 .parse
+	+ShellPrintString .crlf
 	lda .buf
 
 	ldx #$00
@@ -164,6 +166,8 @@ mainloop
 	iny
 	lda #$00
 	sta .filename,y
+
+	+SetVector .filename, filenameptr
 
 ; ++	
 	bra -

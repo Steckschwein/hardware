@@ -93,11 +93,12 @@ FD_file_size = $08
 
 	ldx #$00
 .find
-	lda .filename,x
+	; lda .filename,x
+	lda (filenameptr),y
 	beq .found
 	cmp (sd_blkptr),y
 	bne .open_next
-	inx
+	; inx
 	iny
 	bra .find
 

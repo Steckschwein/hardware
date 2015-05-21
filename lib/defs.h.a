@@ -59,6 +59,7 @@ outvec		= $e6
 invec		= $e8
 paramvec	= $ea
 
+
 ; general purpose temp variables
 tmp0		= $f0
 tmp1		= $f1
@@ -70,8 +71,12 @@ tmp6		= $f6
 tmp7		= $f7
 
 
+; pointer to filename for fs operations (open...)
+filenameptr		= $fa
+
 ; pointer for io block operations
 sd_blkptr 	= $fc
+
 
 ; pointer for string output functions 
 msgptr 		= $fe
