@@ -3,28 +3,159 @@
 !source	<defs.h.a>
 !source <t99xx.lib.a>
 
+yOffs=tmp0
+seed=tmp1
+control=tmp2
+
 !macro nops .n{
 	!for i,.n,0{
 		nop
 	}
 }
 
-main:
-	
+main:	
 	sei
 	
+	+SetVector	stars_irq,	irqvec
+
+	+SetVector	vdp_tab, .adrl
+	jsr	vdp_init_reg
 	
+	lda	#$d0					;sprites off, at least y=$d0 will disable the sprite subsystem
+	sta	.adrl
+	lda	#$80
+	ldy	#.WRITE_ADDRESS+$0b
+	ldx	#$0c
+	jsr	vdp_fill
+	
+	+SetVector	sprite_pattern, .adrl
+	lda	#$00
+	ldy	#.WRITE_ADDRESS+$00
+	ldx	#$10
+	jsr	vdp_memcpys	
+
+	lda	#Cyan<<4|Black						;setup screen color gfx1
+	sta	.adrl
+	lda	#$00
+	ldy	#.WRITE_ADDRESS+$0b					;color table
+	ldx	#$20
+	jsr	vdp_fills
+	
+	lda	#' '								;clear screen gfx1
+	sta	.adrl
+	lda	#$00
+	ldy	#.WRITE_ADDRESS+$08					;name table
+	ldx	#$03		; $300 chars
+	jsr	vdp_fill
+
+	jsr	init_sprites
+
+	
+	lda	#v_reg1_16k|v_reg1_display_on|v_reg1_int
+	ldy	#v_reg1
+	jsr	vdp_sreg
+	
+	stz	control
 	
 	cli
+
+--	bit	control
+	bmi	--
 	
+	jsr	.delay_line
+	lda	#96;96
+	jsr	.delay_lines
+	ldy	#$17		;$0b80/$80 -> $17 - sprite attr table
+-	tya
+	jsr	.sprite_bank
+	jsr	.delay_line
+	iny
+	cpy	#$7b
+	bne	-
+	lda	#Black
+	jsr	.vdp_bgcolor
+
+	dec	control
+	jmp	--
+
+.sprite_bank
+	sta	a_vreg
+	nop
+	lda   #v_reg5	; sprite attr table pointer
+	sta   a_vreg
+	rts
+	
+.vdp_bgcolor
+	sta   a_vreg
+	nop
+	nop
+	nop
+	nop
+	lda   #v_reg7
+	sta   a_vreg
+	rts
+	
+.delay_lines
+-	jsr	.delay_line	
+	dec
+	bne	-
+	rts
+.delay_line		; 63,695µs -->
+	ldx	#22		;2
+-	dex			;2
+	+nops	2	;2*2
+	bne	-		;3
+	rts
+	
+init_sprites:
+	lda	#$30
+	sta seed
+	stz yOffs
+	ldx #$00
+-	lda #$ff
+	sta starfield_spritetab,y	; y pos
+	clc
+	adc #$06
+	sta yOffs
+	jsr rnd
+	sta starfield_spritetab+1,y		; x offset
+	and	#$07
+	ora	#$01
+	sta starfield_speed_tab,x		; speed
+	and	#$0f
+	lda	#White
+	;and	#$07
+	sta starfield_spritetab+3,y
+	lda	#$00
+	sta starfield_spritetab+2,y		; pattern
+	iny
+	iny
+	iny
+	iny
+	inx
+	cpx	#32
+	bne -
+	rts
+
+rnd:
+   lda seed
+   beq doEor
+   asl
+   beq noEor ;if the input was $80, skip the EOR
+   bcc noEor
+doEor:    
+	eor #$1d
+noEor:  
+	sta seed
+	rts
 	
 stars_irq:
-	+save
-	
-	bit	a_vreg ; Check VDP interrupt. IRQ is acknowledged by reading.
-	bpl +	   ; VDP IRQ flag set? 
+	bit	a_vreg 			; Check VDP interrupt. IRQ is acknowledged by reading.
+	bmi +		; VDP IRQ flag set? 
 	rti
-+
+
++	+save
+	
 	+nops	89	;align 
 	ldx		#$00
 -	lda		raster_bar_colors,x
@@ -38,16 +169,47 @@ stars_irq:
 	
 	;update sprite tab
 	+SetVector	starfield_spritetab, .adrl
+	lda	#$80
+	ldy	#.WRITE_ADDRESS+$0b
+	ldx	#4*4
+	jsr vdp_memcpys
+	+SetVector	starfield_spritetab+1*4*4, .adrl
 	lda	#$00
-	ldy	#$3c+$40
-	ldx	#$20*4
+	ldy	#.WRITE_ADDRESS+$0c
+	ldx	#4*4
+	jsr vdp_memcpys
+	+SetVector	starfield_spritetab+2*4*4, .adrl
+	lda	#$80
+	ldy	#.WRITE_ADDRESS+$0c
+	ldx	#$4*4
+	jsr vdp_memcpys
+	+SetVector	starfield_spritetab+3*4*4, .adrl
+	lda	#$00
+	ldy	#.WRITE_ADDRESS+$0d
+	ldx	#$4*4
+	jsr vdp_memcpys
+	+SetVector	starfield_spritetab+4*4*4, .adrl
+	lda	#$80
+	ldy	#.WRITE_ADDRESS+$0d
+	ldx	#$4*4
 	jsr vdp_memcpys
 
+	stz	control
+	
 .irq_end
 	+restore
 	rti
 
-chars:
+sprite_pattern:
++SpriteLine	%....#...
++SpriteLine	%....#...
++SpriteLine	%....#...
++SpriteLine	%....#...
++SpriteLine	%....#...
++SpriteLine	%....#...
++SpriteLine	%....#...
++SpriteLine	%....#...
+
 +SpriteLine	%...#....
 +SpriteLine	%........
 +SpriteLine	%........
@@ -59,16 +221,16 @@ chars:
 
 starfield_speed_tab:
 	!fill 32, 0
-starfield_spritetab:;y,x,pattern,attr
+starfield_spritetab:	; y,x,pattern,attr
 	!fill 32*4, 0
 
-starfield_tab
+vdp_tab
 	!byte	0
-	!byte v_reg1_16k
-	!byte ($1800 / $400)	; name table - value * $400
-	!byte	($2000 / $40)	; color table
+	!byte 	v_reg1_16k
+	!byte 	($0800 / $400)	; name table - value * $400
+	!byte	($0b00 / $40)	; color table
 	!byte	($0000 / $800) ; pattern table
-	!byte	($3c00 / $80)	; sprite attribute table - value * $80 --> offset in VRAM
+	!byte	($0b80 / $80)	; sprite attribute table - value * $80 --> offset in VRAM
 	!byte	($0000 / $800)	; sprite pattern table - value * $800  --> offset in VRAM
 	!byte	Black
 

@@ -56,7 +56,6 @@ main:
 	ldy	#$18+$40
 	ldx	#$03		; $300 chars
 	jsr	vdp_fill
-
 		
 	jsr	init_via
 
