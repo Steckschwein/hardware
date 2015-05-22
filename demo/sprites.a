@@ -63,8 +63,10 @@ main:
 	bmi	--
 	
 	jsr	.delay_line
-	lda	#96;96
+	lda	#94;96
 	jsr	.delay_lines
+	lda	#White
+	jsr	vdp_bgcolor
 	ldy	#$17		;$0b80/$80 -> $17 - sprite attr table
 -	tya
 	jsr	.sprite_bank
@@ -168,7 +170,7 @@ stars_irq:
 	jsr		vdp_bgcolor
 	
 	;update sprite tab
-	+SetVector	starfield_spritetab, .adrl
+	+SetVector	starfield_spritetab+0*4*4, .adrl
 	lda	#$80
 	ldy	#.WRITE_ADDRESS+$0b
 	ldx	#4*4
@@ -191,6 +193,21 @@ stars_irq:
 	+SetVector	starfield_spritetab+4*4*4, .adrl
 	lda	#$80
 	ldy	#.WRITE_ADDRESS+$0d
+	ldx	#$4*4
+	jsr vdp_memcpys
+	+SetVector	starfield_spritetab+5*4*4, .adrl
+	lda	#$00
+	ldy	#.WRITE_ADDRESS+$0e
+	ldx	#$4*4
+	jsr vdp_memcpys
+	+SetVector	starfield_spritetab+6*4*4, .adrl
+	lda	#$80
+	ldy	#.WRITE_ADDRESS+$0e
+	ldx	#$4*4
+	jsr vdp_memcpys
+	+SetVector	starfield_spritetab+7*4*4, .adrl
+	lda	#$00
+	ldy	#.WRITE_ADDRESS+$0f
 	ldx	#$4*4
 	jsr vdp_memcpys
 
