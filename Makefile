@@ -16,5 +16,5 @@ build:
 #	(cd memtest; make)
 #	(cd charsets; make)
 	(cd vdp; make)
+	(cd demo; make)
 	(cd keyboard; make )
-

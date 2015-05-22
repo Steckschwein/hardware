@@ -3,8 +3,7 @@
 !src <defs.h.a>
 !src <bios.h.a>
 !src <via.h.a>
-!source "../vdp/t9929.h.a"
-!source "../vdp/t99xx.lib.a"
+!source <t99xx.lib.a>
 
 yOffs=tmp0
 seed=tmp1
@@ -29,8 +28,7 @@ seconds=tmp7
 main:
 	sei
 
-	+SetVector	starfield_tab, .adrl
-	jsr	vdp_init_reg
+	jsr	vdp_display_off
 
 	+SetVector charset, .adrl
 	lda #$00
@@ -66,18 +64,19 @@ main:
 	jsr	init_sprites
 	
 	+SetVector	stars_irq,	irqvec
+
+	+SetVector	starfield_tab, .adrl
+	jsr	vdp_init_reg
 	
 	lda	#v_reg1_16k|v_reg1_display_on|v_reg1_int
-	; lda	#v_reg1_16k|v_reg1_display_on
-
 	ldy	#v_reg1
 	jsr	vdp_sreg
 	
-	ldx		#08
-	ldy		#12
-	jsr		vdp_xy
+	lda		#08
+	sta		crs_x
+	lda		#12
+	sta		crs_y
 	+SetVector	.line1, .adrl
-;	jsr		vdp_print
 	
 	cli
 	
@@ -133,6 +132,11 @@ main:
 
 	rts
 
+!macro nops .n{
+	!for i,.n,0{
+		nop
+	}
+}
 
 stars_irq:
 	bit via1ifr		; Interrupt from VIA?
@@ -142,7 +146,6 @@ stars_irq:
 +
 	+save
 
-	lda	a_vreg
 	bit	a_vreg ; Check VDP interrupt. IRQ is acknowledged by reading.
 	bpl +	   ; VDP IRQ flag set? 
 	rti

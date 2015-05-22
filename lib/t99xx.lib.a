@@ -131,7 +131,7 @@ vdp_mode_gfx1:
 ; setup video registers upon given table
 ;	input:
 ;	adrl/adrh vector set to vdp init table for al 8 vdp registers
-.vdp_init_reg:
+vdp_init_reg
 ;	jsr		.vdp_wait_blank
 	ldy	#$00
 	ldx	#v_reg0
@@ -153,7 +153,7 @@ vdp_mode_gfx1:
 vdp_mode_gfx2
 	jsr	.vdp_fill_name_table
 	+SetVector	vdp_init_bytes_gfx2, .adrl
-	bra	.vdp_init_reg
+	bra	vdp_init_reg
 
 ;
 ;	gfx 3 - 4x4 color block - multicolor mode
@@ -161,14 +161,14 @@ vdp_mode_gfx2
 vdp_mode_gfx3
 	jsr	.vdp_fill_name_table
 	+SetVector	vdp_init_bytes_gfx3, .adrl
-	bra	.vdp_init_reg
+	bra	vdp_init_reg
 
 ;
 ;	text mode - 40x24 character mode, 16 colors with same color for 8 characters in a block
 ;
 vdp_mode_text
 	+SetVector vdp_init_bytes_text, .adrl
-	bra	.vdp_init_reg
+	bra	vdp_init_reg
 
 .vdp_wait_blank
 	php

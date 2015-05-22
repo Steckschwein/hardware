@@ -3,14 +3,8 @@ clean:
 	rm -f *.ca* *.bin *.labels
 blocks.bin:
 
-%.raw:
-	cp	../tetris.c64/$(*F).raw $(*F).raw
-
-%.ca: ../tetris.c64/%.asm
-	cp	../tetris.c64/$(*F).asm $(*F).ca
-	#bugs
-	if [ "$(*F)" = "test_blocks" ]; then sed -ir "s/ora #\\\$$00000011/ora #%00000011/g" $(*F).ca; sed -n 7~1p -i $(*F).ca;	fi
-	#comments and addresses
+fig6502.a: forth65/FIG6502.ASM
+	cp forth65/FIG6502.ASM fig6502.a
 	sed -ir "s/\/\//;/g" $(*F).ca
 	sed -ir "s/\.const //g" $(*F).ca
 	sed -ir "s/\.pc.*code.*/*=0xc000/g" $(*F).ca
@@ -36,7 +30,7 @@ blocks.bin:
 
 #.SECONDARY: blocks.ca test_blocks.ca input.ca screens.ca lines2.ca scores.ca
 
-%.bin: %.ca blocks.ca test_blocks.ca input.ca screens.ca lines2.ca scores.ca tetris_chars.raw tetris_playscreen.raw
+fig6502.bin: fig6502.a
 	acme -v -f plain --cpu 65c02 -o $@ $<
 
 transfer: all

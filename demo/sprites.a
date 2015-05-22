@@ -1,0 +1,87 @@
+*=0x1000
+	jmp	main
+!source	<defs.h.a>
+!source <t99xx.lib.a>
+
+!macro nops .n{
+	!for i,.n,0{
+		nop
+	}
+}
+
+main:
+	
+	sei
+	
+	
+	
+	cli
+	
+	
+stars_irq:
+	+save
+	
+	bit	a_vreg ; Check VDP interrupt. IRQ is acknowledged by reading.
+	bpl +	   ; VDP IRQ flag set? 
+	rti
++
+	+nops	89	;align 
+	ldx		#$00
+-	lda		raster_bar_colors,x
+	jsr		vdp_bgcolor
+	+nops	$6d
+	inx
+	cpx		#$0b
+	bne		-
+	lda		#Black
+	jsr		vdp_bgcolor
+	
+	;update sprite tab
+	+SetVector	starfield_spritetab, .adrl
+	lda	#$00
+	ldy	#$3c+$40
+	ldx	#$20*4
+	jsr vdp_memcpys
+
+.irq_end
+	+restore
+	rti
+
+chars:
++SpriteLine	%...#....
++SpriteLine	%........
++SpriteLine	%........
++SpriteLine	%........
++SpriteLine	%........
++SpriteLine	%........
++SpriteLine	%........
++SpriteLine	%........
+
+starfield_speed_tab:
+	!fill 32, 0
+starfield_spritetab:;y,x,pattern,attr
+	!fill 32*4, 0
+
+starfield_tab
+	!byte	0
+	!byte v_reg1_16k
+	!byte ($1800 / $400)	; name table - value * $400
+	!byte	($2000 / $40)	; color table
+	!byte	($0000 / $800) ; pattern table
+	!byte	($3c00 / $80)	; sprite attribute table - value * $80 --> offset in VRAM
+	!byte	($0000 / $800)	; sprite pattern table - value * $800  --> offset in VRAM
+	!byte	Black
+
+
+raster_bar_colors:
+	!byte Magenta
+	!byte Dark_Red
+	!byte	Medium_Red
+	!byte	Light_Red
+	!byte	Dark_Yellow
+	!byte	Light_Yellow
+	!byte	Dark_Yellow
+	!byte	Light_Red
+	!byte	Medium_Red
+	!byte Dark_Red
+	!byte Magenta
