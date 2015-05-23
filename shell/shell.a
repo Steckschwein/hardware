@@ -330,12 +330,6 @@ mainloop
 .upload
 
 	sei
-;	jsr lcdclear
-	+SetVector .uploadtxt, msgptr
-;	jsr lcdstring
-	ldx #$00
-	ldy #$02
-;	jsr lcdxy
 
 	jsr upload
 
@@ -364,6 +358,60 @@ mainloop
 	+ShellPrintString .helptxt
 	jmp mainloop
 
+.date 
+-	lda via1portb ; wait for spi bus to become free
+    and #%01111110
+    cmp #$7e
+    bne -
+
+    ; Select SPI SS for RTC
+	lda #%01110110
+	; and via1portb
+	sta via1portb
+
+    lda #$00
+    jsr spi_rw_byte
+
+    jsr spi_r_byte
+    sta tmp6
+	
+	jsr spi_r_byte
+    sta tmp7
+	
+	jsr spi_r_byte
+    jsr hexout
+	+ShellPrintChar ':'
+
+	lda tmp7
+    jsr hexout
+	+ShellPrintChar ':'
+	
+	lda tmp6	
+	jsr hexout
+
+
+
+
+    jsr spi_r_byte
+	+ShellPrintChar ' '
+
+    jsr spi_r_byte
+    jsr hexout
+    +ShellPrintChar '.'
+	
+	jsr spi_r_byte
+    jsr hexout
+    +ShellPrintChar '.'
+	
+	jsr spi_r_byte
+    jsr hexout
+
+    lda #$7e
+    sta via1portb
+
+    jmp mainloop
+
+
 .cmdlist
 	!word .dir
 	!byte 'D'
@@ -386,6 +434,10 @@ mainloop
 	!word .upload
 	!byte 'U'
 
+	!word .date
+	!byte 'I'
+
+
 	!word .help
 	!byte 'H'
 
@@ -398,13 +450,14 @@ mainloop
 !src <fat.a>
 
 .hellotxt		!text "SteckShell 0.06 ",$00
-.helptxt		!text $0a,$0d,"d        - directory"
+.helptxt		!text $0a,$0d,"d        - Directory"
 				!text $0a,$0d,"/        - root dir"
-				!text $0a,$0d,"c <name> - change directory"
-				!text $0a,$0d,"l <name> - load file"
-				!text $0a,$0d,"t <name> - display file"
-				!text $0a,$0d,"v <name> - display gfx file"
-				!text $0a,$0d,"u        - serial upload"
+				!text $0a,$0d,"c <name> - Change directory"
+				!text $0a,$0d,"l <name> - Load file"
+				!text $0a,$0d,"t <name> - Type (display file)"
+				!text $0a,$0d,"v <name> - View (display gfx file)"
+				!text $0a,$0d,"i        - show tIme and date"
+				!text $0a,$0d,"u        - serial Upload"
 .crlf			!byte $0a,$0d,$00
 .prompt			!text ">",$00
 .uploadtxt		!text "serial upload",$00
@@ -421,14 +474,3 @@ mainloop
 
 .sprite_sanduhr
 	!byte	$ff,	$f0,	0,	Gray
-; .default_params
-; 	!byte $42
-; 	!byte $00
-; 	!text "LOADER  BIN"
-; 	!byte $0f
-; 	!byte %00000011
-; 	;!fill 95-15, $00
-; 	!fill .default_params + param_checksum - *, $00
-; 	!byte $00
-	
-
