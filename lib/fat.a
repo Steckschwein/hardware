@@ -93,12 +93,11 @@ FD_file_size = $08
 
 	ldx #$00
 .find
-	; lda .filename,x
+	; this works because the filename is located at the very beginning of the dir entry
 	lda (filenameptr),y
 	beq .found
 	cmp (sd_blkptr),y
 	bne .open_next
-	; inx
 	iny
 	bra .find
 
