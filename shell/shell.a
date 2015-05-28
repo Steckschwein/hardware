@@ -109,6 +109,7 @@ text_mode_40 = 1
 mainloop
 	stz .filename
 	stz .cmd
+	stz .buf
 
 	+ShellPrintString .crlf
 	+ShellPrintString .prompt
@@ -139,7 +140,8 @@ mainloop
 .backspace
 	dex
 	stz .buf, x
-	bra .next	
+	+ShellPrint
+	bra .inputloop	
 
 
 .parse
@@ -491,14 +493,14 @@ dir
 
 
 .hellotxt		!text "SteckShell 0.07 ",$00
-.helptxt		!text $0a,$0d,"dir         - Directory"
+.helptxt		!text $0a,$0d,"dir         - directory"
 				!text $0a,$0d,"/           - root dir"
-				!text $0a,$0d,"cd <name>   - Change directory"
-				!text $0a,$0d,"load <name> - Load file"
-				!text $0a,$0d,"type <name> - Type (display file)"
-				!text $0a,$0d,"view <name> - View (display gfx file)"
-				!text $0a,$0d,"date        - show tIme and date"
-				!text $0a,$0d,"upload      - serial Upload"
+				!text $0a,$0d,"cd <name>   - change directory"
+				!text $0a,$0d,"load <name> - load file"
+				!text $0a,$0d,"type <name> - display text file"
+				!text $0a,$0d,"view <name> - display gfx file"
+				!text $0a,$0d,"date        - show time and date"
+				!text $0a,$0d,"upload      - serial upload"
 .crlf			!byte $0a,$0d,$00
 .prompt			!text ">",$00
 .txt_msg_unknown_cmd	!text $0a,$0d,"unknown command (try 'help')",$00
