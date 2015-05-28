@@ -16,7 +16,8 @@ text_mode_40 = 1
 !address {
 .key = $10
 .buf 				= $0350 ; Input buffer 80 bytes. end: $03a1
-.filename  			= $03a2
+.cmd  				= $03a2
+.filename 			= .cmd + 12
 }
 
 !macro ShellPrint {
@@ -101,16 +102,14 @@ text_mode_40 = 1
 	jsr .fat_mount
 	+V_ToggleCursorBusy
 	
-.init
-	lda #dev_uart
-	sta chn_out
-	stz chn_in
-
-	
+.init	
 	jmp	.hello
 
 	
 mainloop
+	stz .filename
+	stz .cmd
+
 	+ShellPrintString .crlf
 	+ShellPrintString .prompt
 	ldx #$00
@@ -126,8 +125,6 @@ mainloop
 
 .next
 	+ShellPrint
-
-	+toUpper
 
 	sta .buf, x
 	inx
@@ -147,48 +144,82 @@ mainloop
 
 .parse
 	+ShellPrintString .crlf
-	lda .buf
 
 	ldx #$00
-	ldy #$00
+-	lda .buf,x
+	beq .end_parse
+	
+	cmp #$20
+	beq .param	; everything till space is our command
+	+toUpper	; uppercase
+	sta .cmd,x
+	inx
+	stz .cmd,x
+	bra -
 
+.param
+	ldy #$00
 -	inx
 	lda .buf,x
-	beq .end_parse   ; end of input line?
-    cmp #"-" ; Ignore everything below "-"
-    bcc -
+	beq .end_parse
     
-    cpy #12
-    beq -   ; read 11 bytes?
+    cmp #$20 
+    beq .end_parse
 
+    cpy #11
+    beq .end_parse
 
+    +toUpper
     sta .filename,y
 	iny
 	lda #$00
 	sta .filename,y
 
-	+SetVector .filename, filenameptr
-
-; ++	
 	bra -
 
 
 .end_parse
 	ldx #$00
--	lda .cmdlist+2,x
-	beq +
-	
-	cmp .buf
-	bne ++
-	
-+	jmp (.cmdlist,x) ; 65c02 FTW!!
+-	ldy #$00
+--	lda .cmdlist,x
+	cmp #$ff
+	beq .unknown
 
-++	; Next entry in list
+	cmp .cmd,y
+	bne +	; difference. this isnt the command were looking for
+
+	cmp #$00
+	beq .cmdfound
+
+
+	iny
+	inx
+
+	jmp --
+
+	; next cmdlist entry
++
+--	inx
+	lda .cmdlist,x
+	bne --
 	inx
 	inx
 	inx
-	bra -
-	
+	jmp -
+
+.cmdfound	
+	inx
+	jmp (.cmdlist,x) ; 65c02 FTW!!	
+
+.unknown
+	lda .buf
+	beq +
+	+ShellPrintString .txt_msg_unknown_cmd
++	jmp mainloop
+
+
+!src <fat.a>
+dir
 .dir
 	+ShellPrintString .crlf
 	; php
@@ -206,6 +237,7 @@ mainloop
 	jmp mainloop 
 
 .cd
+	+SetVector .filename, filenameptr
 	; php
 	; sei
 	jsr .fat_open
@@ -255,6 +287,7 @@ mainloop
 +	jmp mainloop
 
 .readfile
+	+SetVector .filename, filenameptr
 	; php
 	; sei
 
@@ -340,11 +373,6 @@ mainloop
 
 
 	
-.unknown
-	lda .buf
-	beq +
-	+ShellPrintString .txt_msg_unknown_cmd
-+	jmp mainloop
 
 .hello
 	+ShellPrintString .crlf
@@ -357,6 +385,7 @@ mainloop
 	; +ShellPrintString .hellotxt
 	+ShellPrintString .helptxt
 	jmp mainloop
+
 
 .date 
 -	lda via1portb ; wait for spi bus to become free
@@ -412,52 +441,60 @@ mainloop
     jmp mainloop
 
 
+
 .cmdlist
-	!word .dir
-	!byte 'D'
-	
-	!word .load
-	!byte 'L'
-
-	!word .type
-	!byte 'T'
-	
-	!word .gfxview
-	!byte 'V'
-
-	!word .cd
-	!byte 'C'
-	
-	!word .cdroot
-	!byte '/'
-	
-	!word .upload
-	!byte 'U'
-
-	!word .date
-	!byte 'I'
-
-
-	!word .help
-	!byte 'H'
-
-	; End of list
-	!word .unknown
+	!text "DIR"
 	!byte $00
+	!word .dir
+
+	!text "LOAD"
+	!byte $00
+	!word .load
+
+	!text "TYPE"
+	!byte $00
+	!word .type
+
+	!text "VIEW"
+	!byte $00	
+	!word .gfxview
+
+	!text "CD"
+	!byte $00	
+	!word .cd
+
+	!text "/"
+	!byte $00	
+	!word .cdroot
+	
+	!text "DATE"
+	!byte $00	
+	!word .date
+
+	!text "UPLOAD"
+	!byte $00	
+	!word .upload
+
+	!text "HELP"
+	!byte $00	
+	!word .help
+	
+	; End of list
+	!byte $ff
 
 
 
-!src <fat.a>
 
-.hellotxt		!text "SteckShell 0.06 ",$00
-.helptxt		!text $0a,$0d,"d        - Directory"
-				!text $0a,$0d,"/        - root dir"
-				!text $0a,$0d,"c <name> - Change directory"
-				!text $0a,$0d,"l <name> - Load file"
-				!text $0a,$0d,"t <name> - Type (display file)"
-				!text $0a,$0d,"v <name> - View (display gfx file)"
-				!text $0a,$0d,"i        - show tIme and date"
-				!text $0a,$0d,"u        - serial Upload"
+
+.hellotxt		!text "SteckShell 0.07 ",$00
+.helptxt		!text $0a,$0d,"dir         - Directory"
+				!text $0a,$0d,"/           - root dir"
+				!text $0a,$0d,"cd <name>   - Change directory"
+				!text $0a,$0d,"load <name> - Load file"
+				!text $0a,$0d,"type <name> - Type (display file)"
+				!text $0a,$0d,"view <name> - View (display gfx file)"
+				!text $0a,$0d,"date        - show tIme and date"
+				!text $0a,$0d,"upload      - serial Upload"
 .crlf			!byte $0a,$0d,$00
 .prompt			!text ">",$00
 .uploadtxt		!text "serial upload",$00
