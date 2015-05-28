@@ -447,6 +447,10 @@ dir
 	!byte $00
 	!word .dir
 
+	!text "LL"
+	!byte $00
+	!word .dir
+
 	!text "LOAD"
 	!byte $00
 	!word .load
@@ -497,8 +501,7 @@ dir
 				!text $0a,$0d,"upload      - serial Upload"
 .crlf			!byte $0a,$0d,$00
 .prompt			!text ">",$00
-.uploadtxt		!text "serial upload",$00
-.txt_msg_unknown_cmd	!text $0a,$0d,"unknown command (h for help)",$00
+.txt_msg_unknown_cmd	!text $0a,$0d,"unknown command (try 'help')",$00
 .assets
 !src "sanduhr.raw"
 !src "sanduhr_45.raw"
