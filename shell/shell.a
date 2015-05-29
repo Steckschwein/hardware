@@ -16,8 +16,7 @@ text_mode_40 = 1
 !address {
 .key = $10
 .buf 				= $0350 ; Input buffer 80 bytes. end: $03a1
-.cmd  				= $03a2
-.filename 			= .cmd + 12
+.cmd_params 		= $03a2
 }
 
 !macro ShellPrint {
@@ -61,6 +60,8 @@ text_mode_40 = 1
 	
 	stz .key	
 	+SetVector _textui_chrout, outvec
+	+SetVector .cmd_params, filenameptr
+
 	
 	lda #<count
 	sta via1t1cl            ; set low byte of count
@@ -107,15 +108,13 @@ text_mode_40 = 1
 
 	
 mainloop
-	stz .filename
-	stz .cmd
-	stz .buf
 
 	+ShellPrintString .crlf
 	+ShellPrintString .prompt
 	ldx #$00
 	stz .buf
-	
+	stz .cmd_params
+
 .inputloop	
 	jsr .keyin
 	cmp #$0d ; return?
@@ -134,12 +133,15 @@ mainloop
 	beq mainloop
 
 	jsr chrout
-	
+
 	bra .inputloop
 
 .backspace
-	dex
-	
+	cpx #$00
+	bne +
+	stz .buf, x
+	bra .inputloop	
++	dex
 	bra -
 
 
@@ -147,51 +149,19 @@ mainloop
 	+ShellPrintString .crlf
 
 	ldx #$00
--	lda .buf,x
-	beq .end_parse
-	
-	cmp #$20
-	beq .param	; everything till space is our command
-	+toUpper	; uppercase
-	sta .cmd,x
-	inx
-	stz .cmd,x
-	bra -
-
-.param
-	ldy #$00
--	inx
-	lda .buf,x
-	beq .end_parse
-    
-    cmp #$20 
-    beq .end_parse
-
-    cpy #11
-    beq .end_parse
-
-    +toUpper
-    sta .filename,y
-	iny
-	lda #$00
-	sta .filename,y
-
-	bra -
-
-
-.end_parse
-	ldx #$00
 -	ldy #$00
 --	lda .cmdlist,x
 	cmp #$ff
 	beq .unknown
 
-	cmp .cmd,y
-	bne +	; difference. this isnt the command were looking for
 
+	cmp #$20
+	beq .cmdfound
 	cmp #$00
 	beq .cmdfound
 
+	cmp .buf,y
+	bne +	; difference. this isnt the command were looking for
 
 	iny
 	inx
@@ -208,8 +178,23 @@ mainloop
 	inx
 	jmp -
 
-.cmdfound	
+.cmdfound
 	inx
+	phx
+
+	ldx #$00
+-	iny
+	lda .buf,y
+	beq +
+	cmp #$20
+	beq -
+	+toUpper
+	sta .cmd_params,x
+	inx
+	stz .cmd_params,x
+	bra -	
++
+	plx
 	jmp (.cmdlist,x) ; 65c02 FTW!!	
 
 .unknown
@@ -220,7 +205,6 @@ mainloop
 
 
 !src <fat.a>
-dir
 .dir
 	+ShellPrintString .crlf
 	; php
@@ -238,7 +222,6 @@ dir
 	jmp mainloop 
 
 .cd
-	+SetVector .filename, filenameptr
 	; php
 	; sei
 	jsr .fat_open
@@ -288,7 +271,6 @@ dir
 +	jmp mainloop
 
 .readfile
-	+SetVector .filename, filenameptr
 	; php
 	; sei
 
@@ -362,7 +344,6 @@ dir
 	rts
 
 .upload
-
 	sei
 
 	jsr upload
@@ -444,27 +425,27 @@ dir
 
 
 .cmdlist
-	!text "DIR"
+	!text "dir"
 	!byte $00
 	!word .dir
 
-	!text "LL"
+	!text "ll"
 	!byte $00
 	!word .dir
 
-	!text "LOAD"
+	!text "load"
 	!byte $00
 	!word .load
 
-	!text "TYPE"
+	!text "type"
 	!byte $00
 	!word .type
 
-	!text "VIEW"
+	!text "view"
 	!byte $00	
 	!word .gfxview
 
-	!text "CD"
+	!text "cd"
 	!byte $00	
 	!word .cd
 
@@ -472,15 +453,15 @@ dir
 	!byte $00	
 	!word .cdroot
 	
-	!text "DATE"
+	!text "date"
 	!byte $00	
 	!word .date
 
-	!text "UPLOAD"
+	!text "upload"
 	!byte $00	
 	!word .upload
 
-	!text "HELP"
+	!text "help"
 	!byte $00	
 	!word .help
 	
@@ -503,6 +484,7 @@ dir
 .crlf			!byte $0a,$0d,$00
 .prompt			!text ">",$00
 .txt_msg_unknown_cmd	!text $0a,$0d,"unknown command (try 'help')",$00
+
 .assets
 !src "sanduhr.raw"
 !src "sanduhr_45.raw"
