@@ -863,22 +863,16 @@ POUT6	JSR   	syschout	; PRINT ONE ASCII CHR - "-"
 		; RTS	 		
 
 POUT8	jsr	POUT10		;
-		jsr lcdclear 
 		LDA   	DIS1
 		JSR   	syshexout	; PRINT 1 BYTE AS 2 HEX CHRS	
-		jsr 	lcdhex
         LDA   	#$20
 		JSR   	syschout	; PRINT ONE ASCII CHR - SPACE
-		jsr 	lcdprint
        	LDA   	DIS2
 		JSR   	syshexout	; PRINT 1 BYTE AS 2 HEX CHRS	
-		jsr 	lcdhex
        	LDA   	#$20
 		JSR   	syschout	; PRINT ONE ASCII CHR - SPACE
-		jsr 	lcdprint
        	LDA   	DIS3
 		JSR   	syshexout	; PRINT 1 BYTE AS 2 HEX CHRS	
-		jsr 	lcdhex
 
 POUT9   LDA   	#$0D
 		JSR   	syschout	; PRINT ONE ASCII CHR - CR
@@ -1037,3 +1031,5 @@ OPNING  	!byte 	$99, $25, $0B, $25, $01, $00, $33, $25
 !src "../shell/sanduhr_225.raw"
 !src "../shell/sanduhr_270.raw"
 !src "../shell/sanduhr_315.raw"
+.sprite_sanduhr
+	!byte	$ff,	$f0,	0,	Gray

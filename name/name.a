@@ -3,7 +3,6 @@ jmp init
 !src <defs.h.a>
 !src <bios.h.a>
 !src <via.h.a>
-!src "../shell/util.h.a"
 !src "../shell/shell.textui.a"
 
 
@@ -22,7 +21,6 @@ init
 	sei
 
 	stz .key
-	jsr lcdclear
 
 	+SetVector _textui_chrout, outvec
 	lda #<count
@@ -47,7 +45,6 @@ init
 	cli
 
 main
-	jsr lcdclear
 	stz txtbuf
 
 	+ShellPrintString text1
@@ -67,7 +64,7 @@ main
 
 
 	; pha
-	jsr mychrout
+	jsr chrout
 	; pla
 
 	sta txtbuf,x
@@ -87,8 +84,6 @@ out
 	cmp #'X'
 	beq .end
 
-	jsr lcdclear
-	
 	+ShellPrintString  text2
 	+ShellPrintString  txtbuf
 	
@@ -165,3 +160,5 @@ name	!text "Bitte Namen eingeben.", $0a,$0d,$00
 .crlf	!text $0a,$0d
 .null	!text $00
 .assets
+.sprite_sanduhr
+	!byte	$ff,	$f0,	0,	Gray
