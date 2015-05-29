@@ -124,24 +124,23 @@ mainloop
 	cmp #$08 ; backspace?
 	beq .backspace
 
-.next
-	+ShellPrint
-
 	sta .buf, x
 	inx
-	stz .buf, x
+-	stz .buf, x
+
 
 	; prevent overflow of input buffer 
 	cpx #30
 	beq mainloop
+
+	jsr chrout
 	
 	bra .inputloop
 
 .backspace
 	dex
-	stz .buf, x
-	+ShellPrint
-	bra .inputloop	
+	
+	bra -
 
 
 .parse
