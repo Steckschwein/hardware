@@ -16,7 +16,6 @@ text_mode_40 = 1
 !address {
 .key = $10
 .buf 				= $0350 ; Input buffer 80 bytes. end: $03a1
-.cmd_params 		= $03a2
 }
 
 !macro ShellPrint {
@@ -52,7 +51,6 @@ text_mode_40 = 1
 	
 	stz .key	
 	+SetVector _textui_chrout, outvec
-	+SetVector .cmd_params, filenameptr
 
 	
 	lda #<count
@@ -114,7 +112,8 @@ mainloop
 	+ShellPrintString .prompt
 	ldx #$00
 	stz .buf
-	stz .cmd_params
+	+SetVector .buf, filenameptr
+
 
 .inputloop	
 	jsr .keyin
@@ -180,22 +179,22 @@ mainloop
 	jmp -
 
 .cmdfound
-	inx
-	phx
 
-	ldx #$00
+	; find begin of parameter part
 -	iny
 	lda .buf,y
 	beq +
 	cmp #$20
 	beq -
-	; +toUpper
-	sta .cmd_params,x
+
+	; add offset to first character of parameter to filenameptr
++	tya
+
+	clc
+	adc filenameptr
+	sta filenameptr
+
 	inx
-	stz .cmd_params,x
-	bra -	
-+
-	plx
 	jmp (.cmdlist,x) ; 65c02 FTW!!	
 
 .unknown
