@@ -47,14 +47,6 @@ text_mode_40 = 1
 	jsr _textui_print
 }
 
-!macro toUpper {
-    cmp #$60 ; Is lowercase?
-	bcc +
-	sec
-	sbc #$20 ; Yes, make uppercase
-+	
-}
-
 .init0
 	sei
 	
@@ -197,7 +189,7 @@ mainloop
 	beq +
 	cmp #$20
 	beq -
-	+toUpper
+	; +toUpper
 	sta .cmd_params,x
 	inx
 	stz .cmd_params,x

@@ -184,6 +184,15 @@ charset_6x8  =$e800
 	bpl -
 }
 
+!macro toUpper {
+    cmp #$60 ; Is lowercase?
+	bcc +
+	sec
+	sbc #$20 ; Yes, make uppercase
++	
+}
+
+
 ; !macro SDBlockAddr .src {
 ; 	ldx #$03
 ; 	ldy #$00

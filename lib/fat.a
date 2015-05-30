@@ -96,6 +96,7 @@ FD_file_size = $08
 	; this works because the filename is located at the very beginning of the dir entry
 	lda (filenameptr),y
 	beq .found
+	+toUpper
 	cmp (sd_blkptr),y
 	bne .open_next
 	iny
