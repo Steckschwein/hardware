@@ -16,6 +16,8 @@ text_mode_40 = 1
 !address {
 .key = $10
 .buf 				= $0350 ; Input buffer 80 bytes. end: $03a1
+.paramptr			= $11
+.nameptr			= $13
 }
 
 !macro ShellPrint {
@@ -107,16 +109,15 @@ text_mode_40 = 1
 	
 	
 mainloop
-
 	+ShellPrintString .crlf
 	+ShellPrintString .prompt
 	ldx #$00
 	stz .buf
-	+SetVector .buf, filenameptr
-
+	
 
 .inputloop	
 	jsr .keyin
+
 	cmp #$0d ; return?
 	beq .parse
 
@@ -129,7 +130,7 @@ mainloop
 
 
 	; prevent overflow of input buffer 
-	cpx #30
+	cpx #80
 	beq mainloop
 
 	jsr chrout
@@ -146,8 +147,6 @@ mainloop
 
 
 .parse
-	+ShellPrintString .crlf
-
 	ldx #$00
 -	ldy #$00
 --	lda .cmdlist,x
@@ -166,7 +165,7 @@ mainloop
 	iny
 	inx
 
-	jmp --
+	bra --
 
 	; next cmdlist entry
 +
@@ -176,7 +175,7 @@ mainloop
 	inx
 	inx
 	inx
-	jmp -
+	bra -
 
 .cmdfound
 
@@ -187,12 +186,13 @@ mainloop
 	cmp #$20
 	beq -
 
-	; add offset to first character of parameter to filenameptr
-+	tya
+	; add offset to first character of parameter to paramptr
++	+SetVector .buf, .paramptr
+	tya
 
 	clc
-	adc filenameptr
-	sta filenameptr
+	adc .paramptr
+	sta .paramptr
 
 	inx
 	jmp (.cmdlist,x) ; 65c02 FTW!!	
@@ -207,12 +207,7 @@ mainloop
 !src <fat.a>
 .dir
 	+ShellPrintString .crlf
-	; php
-	; sei
-	
 	jsr .fat_read_dir
-	
-	; plp
 	jmp mainloop
 
 
@@ -222,17 +217,26 @@ mainloop
 	jmp mainloop 
 
 .cd
-	; php
-	; sei
+	
+	jsr .makefilename
+	+ShellPrintChar '('
+	+ShellPrintString .name
+	+ShellPrintChar ')'
+
+	+SetVector .name, filenameptr
+	+ShellPrintString .crlf
 	jsr .fat_open
-	; plp
 -	jmp mainloop 
 
 
 .load	
+	+SetVector .name, .nameptr
+	jsr .makefilename
+	+SetVector .name, filenameptr
+
 	jsr .readfile		
 	
-	lda fat_errno
+	lda errno
 	bne -
 
 	ldx #$ff
@@ -247,8 +251,17 @@ mainloop
 	jmp .init 
 
 .type
+	
+	jsr .makefilename
+
+	+ShellPrintChar '('
+	+ShellPrintString .name
+	+ShellPrintChar ')'
+
+	+SetVector .name, filenameptr
+
 	jsr .readfile
-	lda fat_errno
+	lda errno
 	bne +
 	+ShellPrintString .crlf
 	+ShellPrintString .steckos_start	
@@ -256,8 +269,18 @@ mainloop
 +	jmp mainloop
 	
 .gfxview
+	
+	jsr .makefilename
+	
+	+ShellPrintChar '('
+	+ShellPrintString .name
+	+ShellPrintChar ')'
+	
+
+	+SetVector .name, filenameptr
+
 	jsr .readfile	; read data to .steckos_start ($1000)
-	lda fat_errno
+	lda errno
 	bne +
 	jsr	.textui_disable			;disable textui
 	jsr	.gfxui_init
@@ -271,8 +294,6 @@ mainloop
 +	jmp mainloop
 
 .readfile
-	; php
-	; sei
 
 	jsr .fat_open
  	sta tmp5
@@ -422,6 +443,64 @@ mainloop
 
     jmp mainloop
 
+
+
+; TODO: shitty code. make pretty
+;       fix for ROCKWELL.RAW
+.makefilename
+	+save
+
+	ldx #$00
+	ldy #$00
+-	lda (.paramptr),y
+	beq ++
+	cmp #'.'
+	bne +
+
+	; allow ".." and "."
+	; its a dot
+	cpy #$00
+	beq +
+	; its at pos 0
+	cpy #$01
+	beq +
+	; its at pos 1
+
+	; fill with spaces 
+	lda #' '
+--	sta .name,x
+	inx
+	cpx #$07
+	bne --
+	
+
++
+	+toUpper
+	sta .name,x
+	inx
+	iny
+
+	cpy #$0b
+	bne -
+
+++  
+	txa 
+	jsr hexout
+	tya 
+	jsr hexout
+
+	stx tmp0
+	cpy tmp0
+	bcc +
+
+	lda #' '
+-	sta .name,x
+	inx
+	cpx #$0b
+	bne -
++
+	+restore
+	rts
 
 
 .cmdlist
@@ -638,12 +717,10 @@ sd_busy_wait
 				!text $0a,$0d,"type <name> - display text file"
 				!text $0a,$0d,"view <name> - display gfx file"
 				!text $0a,$0d,"date        - show time and date"
-				!text $0a,$0d,"upload      - serial upload"
-				!text $0a,$0d,"init        - init and mount sd-card"
 .crlf			!byte $0a,$0d,$00
 .prompt			!text ">",$00
 .txt_msg_unknown_cmd	!text $0a,$0d,"unknown command (try 'help')",$00
-
+.name       	!text "           ",$00
 .assets
 !src "sanduhr.raw"
 !src "sanduhr_45.raw"

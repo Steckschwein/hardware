@@ -120,6 +120,7 @@ sd_blktarget 		= $0400
 ; $0f - Invalid Card
 ; $00 - No error
 sd_cmd_errno = $0300
+errno = $0300
 
 charset  	 =$e000
 charset_6x8  =$e800

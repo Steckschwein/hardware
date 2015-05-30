@@ -65,7 +65,7 @@ FD_file_size = $08
 	phx
 	phy
 
-	stz fat_errno
+	stz errno
 
 	+SetVector sd_blktarget, sd_blkptr
 
@@ -91,17 +91,25 @@ FD_file_size = $08
 	cmp #$e5 ; deleted file
 	beq .open_next   ; skip
 
-	ldx #$00
+	; ldx #$00
 .find
 	; this works because the filename is located at the very beginning of the dir entry
+	
 	lda (filenameptr),y
-	beq .found
-	+toUpper
+	; beq .fat_no_such_file
+	; +toUpper
 	cmp (sd_blkptr),y
 	bne .open_next
-	iny
-	bra .find
 
+	iny
+	cpy #$0B
+	bne .find
+	bra .found
+; +	
+; 	lda #$20
+; 	cmp (sd_blkptr),y
+; 	beq .found
+	
 .open_next
 	; Increment blkptr by 32 bytes, jump to next dir entry
 	jsr .inc_blkptr
@@ -114,16 +122,16 @@ FD_file_size = $08
 	; yes, increase lba_addr and go again
 	+SetVector sd_blktarget, sd_blkptr
 	jsr .inc_lba_address
-	jmp -
+	bra -
 
 .fat_no_such_file
 	+ShellPrintString .fat_err_no_such_file
-	inc fat_errno
+	inc errno
 	bra .end_open
 
 .fat_open_error
 	+ShellPrintString .fat_err_open
-	inc fat_errno
+	inc errno
 
 	
 .end_open
@@ -256,7 +264,7 @@ FD_file_size = $08
 
 .fat_check_signature
 	; pha
-	stz fat_errno
+	stz errno
 
 	lda sd_blktarget + BS_Signature
 	cmp #$55
@@ -264,7 +272,7 @@ FD_file_size = $08
 	lda sd_blktarget + BS_Signature+1
 	cmp #$aa
 	beq +
-++	inc fat_errno
+++	inc errno
 +	rts
 
 
@@ -311,7 +319,7 @@ FD_file_size = $08
 
 .file_not_open
 	+ShellPrintString .fat_err_file_not_open
-	inc fat_errno
+	inc errno
 	bra .calc_end
 
 .inc_lba_address
@@ -463,7 +471,7 @@ FD_file_size = $08
 
 	jsr .fat_check_signature
 
-	lda fat_errno
+	lda errno
 	beq +
 	+ShellPrintString .fat_err_signature
 	jmp .end_mount
@@ -479,7 +487,7 @@ FD_file_size = $08
 
 	; type code not $0b or $0c
 	+ShellPrintString .fat_err_partition
-	inc fat_errno
+	inc errno
 	jmp .end_mount
 
 +
@@ -500,7 +508,7 @@ FD_file_size = $08
 	jsr sd_read_block
 
 	jsr .fat_check_signature
-	lda fat_errno
+	lda errno
 	beq +
 	+ShellPrintString .fat_err_signature
 	jmp .end_mount
@@ -513,7 +521,7 @@ FD_file_size = $08
 	cmp #$02
 	beq ++
 +	+ShellPrintString .fat_err_bad_sect_size
-	inc fat_errno
+	inc errno
 	jmp .end_mount
 ++
 	; Sectors per Cluster. Valid: 1,2,4,8,16,32,64,128
@@ -592,7 +600,7 @@ FD_file_size = $08
 	rts
 
 .fat_alloc_fd
-	stz fat_errno
+	stz errno
 	ldx #$08
 	
 -	lda fd_area + FD_start_cluster +3, x
@@ -646,4 +654,8 @@ FD_file_size = $08
 ; .fat_loading_done  		!text " done.",$00
 ; .crlf					!byte $0a,$0d,$00
 
-;s
+; FAT error codes
+fat_bad_block_signature		= 	$01
+fat_invalid_partition_type	=	$02
+fat_invalid_sector_size		=	$03
+fat_invalid_num_fats		=	$04
