@@ -466,6 +466,9 @@ mainloop
 	beq +
 	; its at pos 1
 
+	cpx #$07
+	beq +
+
 	; fill with spaces 
 	lda #' '
 --	sta .name,x
