@@ -95,16 +95,19 @@ FD_file_size = $08
 .find
 	; this works because the filename is located at the very beginning of the dir entry
 	
-	lda (filenameptr),y
-	; beq .fat_no_such_file
-	; +toUpper
-	cmp (sd_blkptr),y
-	bne .open_next
+	; lda (filenameptr),y
+	; ; beq .fat_no_such_file
+	; ; +toUpper
+	; cmp (sd_blkptr),y
+	; bne .open_next
 
-	iny
-	cpy #$0B
-	bne .find
-	bra .found
+	; iny
+	; cpy #$0B
+	; bne .find
+	; bra .found
+	jsr .compare_filename
+	bcs .found
+	; bcc .open_next
 ; +	
 ; 	lda #$20
 ; 	cmp (sd_blkptr),y
@@ -637,6 +640,60 @@ FD_file_size = $08
 	iny
 	cpy #$0b
 	bne -
+	rts
+
+
+
+.compare_filename
+	pha
+
+	ldy #$00
+	sty tmp6
+	sty tmp7
+
+-	lda (sd_blkptr),y
+	cpy #$01    ; dont ignore everything below '.' for the first 2 bytes to allow ".." and "."
+	bcc ++
+	cmp #$2e	; ignore everything below '.'
+	bcc +
+++
+	sta tmp5
+	; jsr chrout
+	sty tmp6
+
+	; inner loop 
+	ldy tmp7
+--	lda (filenameptr),y
+	cmp #'.' ; if its a dot, inc y and go again
+	bne ++
+	cpy #$02
+	bcc ++
+	iny
+	bne --
+++
+	+toUpper	
+	; jsr chrout
+	cmp tmp5
+	bne .nomatch
+
+	iny
+	sty tmp7
+	; inner loop 
+
+	ldy tmp6
+	
++	iny
+	cpy #11
+	bne -
+
+	; match, set carry flag
+	sec
+	bcs +
+
+.nomatch
+	; no match, clear carry flag
+	clc
++	pla
 	rts
 ;fat_begin_lba = Partition_LBA_Begin + Number_of_Reserved_Sectors;
 ;cluster_begin_lba = Partition_LBA_Begin + Number_of_Reserved_Sectors + (Number_of_FATs * Sectors_Per_FAT);

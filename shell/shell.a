@@ -219,9 +219,6 @@ mainloop
 .cd
 	
 	jsr .makefilename
-	+ShellPrintChar '('
-	+ShellPrintString .name
-	+ShellPrintChar ')'
 
 	+SetVector .name, filenameptr
 	+ShellPrintString .crlf
@@ -230,7 +227,6 @@ mainloop
 
 
 .load	
-	+SetVector .name, .nameptr
 	jsr .makefilename
 	+SetVector .name, filenameptr
 
@@ -254,10 +250,6 @@ mainloop
 	
 	jsr .makefilename
 
-	+ShellPrintChar '('
-	+ShellPrintString .name
-	+ShellPrintChar ')'
-
 	+SetVector .name, filenameptr
 
 	jsr .readfile
@@ -271,11 +263,7 @@ mainloop
 .gfxview
 	
 	jsr .makefilename
-	
-	+ShellPrintChar '('
-	+ShellPrintString .name
-	+ShellPrintChar ')'
-	
+		
 
 	+SetVector .name, filenameptr
 
@@ -448,61 +436,23 @@ mainloop
 ; TODO: shitty code. make pretty
 ;       fix for ROCKWELL.RAW
 .makefilename
-	+save
+	pha
+	phy
 
-	ldx #$00
 	ldy #$00
 -	lda (.paramptr),y
 	beq ++
-	cmp #'.'
-	bne +
-
-	; allow ".." and "."
-	; its a dot
-	cpy #$00
-	beq +
-	; its at pos 0
-	cpy #$01
-	beq +
-	; its at pos 1
-
-	cpx #$07
-	beq +
-
-	; fill with spaces 
-	lda #' '
---	sta .name,x
-	inx
-	cpx #$07
-	bne --
 	
-
-+
-	+toUpper
-	sta .name,x
-	inx
+	sta .name,y
 	iny
+	lda #$00
+	sta .name,y
+	
+	bra -
 
-	cpy #$0b
-	bne -
-
-++  
-	txa 
-	jsr hexout
-	tya 
-	jsr hexout
-
-	stx tmp0
-	cpy tmp0
-	bcc +
-
-	lda #' '
--	sta .name,x
-	inx
-	cpx #$0b
-	bne -
-+
-	+restore
+++
+	ply
+	pla
 	rts
 
 
