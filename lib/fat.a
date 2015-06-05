@@ -144,8 +144,6 @@ FD_file_size = $08
 	rts
 
 .found
-	jsr .print_filename
-	+ShellPrintString .fat_ok
 
 	ldy #DIR_Attr
 	lda (sd_blkptr),y
@@ -652,15 +650,16 @@ FD_file_size = $08
 	sty tmp7
 
 -	lda (sd_blkptr),y
-	cpy #$01    ; dont ignore everything below '.' for the first 2 bytes to allow ".." and "."
+	cpy #$02    ; dont ignore everything below '.' for the first 2 bytes to allow ".." and "."
 	bcc ++
 	cmp #$2e	; ignore everything below '.'
 	bcc +
 ++
 	sta tmp5
-	; jsr chrout
 	sty tmp6
-
+	
+	; jsr chrout
+	
 	; inner loop 
 	ldy tmp7
 --	lda (filenameptr),y
