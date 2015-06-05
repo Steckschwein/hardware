@@ -223,8 +223,17 @@ mainloop
 	+SetVector .name, filenameptr
 	+ShellPrintString .crlf
 	jsr .fat_open
+	lda errno
+	bne +
+	+ShellPrintString .txt_cd
+	+ShellPrintString .name
+	+ShellPrintString .txt_ok
++
+
 -	jmp mainloop 
 
+.txt_cd !text "cd ",$00
+.txt_ok !text " OK",$00
 
 .load	
 	jsr .makefilename
@@ -447,7 +456,7 @@ mainloop
 	iny
 	lda #$00
 	sta .name,y
-	
+
 	bra -
 
 ++
