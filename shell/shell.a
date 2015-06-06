@@ -217,28 +217,22 @@ mainloop
 	jmp mainloop 
 
 .cd
+	lda .paramptr
+	sta filenameptr
+	lda .paramptr+1
+	sta filenameptr+1
 	
-	jsr .makefilename
-
-	+SetVector .name, filenameptr
 	+ShellPrintString .crlf
 	jsr .fat_open
 	lda errno
 	bne +
 	+ShellPrintString .txt_cd
-	+ShellPrintString .name
-	+ShellPrintString .txt_ok
 +
 
 -	jmp mainloop 
 
-.txt_cd !text "cd ",$00
-.txt_ok !text " OK",$00
 
 .load	
-	jsr .makefilename
-	+SetVector .name, filenameptr
-
 	jsr .readfile		
 	
 	lda errno
@@ -256,11 +250,6 @@ mainloop
 	jmp .init 
 
 .type
-	
-	jsr .makefilename
-
-	+SetVector .name, filenameptr
-
 	jsr .readfile
 	lda errno
 	bne +
@@ -270,12 +259,6 @@ mainloop
 +	jmp mainloop
 	
 .gfxview
-	
-	jsr .makefilename
-		
-
-	+SetVector .name, filenameptr
-
 	jsr .readfile	; read data to .steckos_start ($1000)
 	lda errno
 	bne +
@@ -291,6 +274,12 @@ mainloop
 +	jmp mainloop
 
 .readfile
+
+	lda .paramptr
+	sta filenameptr
+	lda .paramptr+1
+	sta filenameptr+1
+
 
 	jsr .fat_open
  	sta tmp5
@@ -439,30 +428,6 @@ mainloop
     sta via1portb
 
     jmp mainloop
-
-
-
-; TODO: shitty code. make pretty
-;       fix for ROCKWELL.RAW
-.makefilename
-	pha
-	phy
-
-	ldy #$00
--	lda (.paramptr),y
-	beq ++
-	
-	sta .name,y
-	iny
-	lda #$00
-	sta .name,y
-
-	bra -
-
-++
-	ply
-	pla
-	rts
 
 
 .cmdlist
@@ -682,7 +647,9 @@ sd_busy_wait
 .crlf			!byte $0a,$0d,$00
 .prompt			!text ">",$00
 .txt_msg_unknown_cmd	!text $0a,$0d,"unknown command (try 'help')",$00
-.name       	!text "           ",$00
+.txt_cd 		!text "cd ok",$00
+
+; .name       	!text "           ",$00
 .assets
 !src "sanduhr.raw"
 !src "sanduhr_45.raw"
