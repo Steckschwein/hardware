@@ -1,0 +1,10 @@
+!ifdef errors_h_a !eof
+errors_h_a = 1
+
+; generic io error codes
+
+; FAT error codes
+fat_bad_block_signature		= 	$01
+fat_invalid_partition_type	=	$02
+fat_invalid_sector_size		=	$03
+fat_invalid_num_fats		=	$04
