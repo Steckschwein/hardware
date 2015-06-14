@@ -8,6 +8,7 @@ text_mode_40 = 1
 !src <via.h.a>
 !src <fat32.h.a>
 !src <params.h.a>
+!src <errors.h.a>
 
 	jmp	.init0
 !src "shell.textui.a"
@@ -224,9 +225,11 @@ mainloop
 	
 	+ShellPrintString .crlf
 	jsr .fat_open
+
 	lda errno
-	bne +
-	+ShellPrintString .txt_cd
+	beq +
+	jsr .errmsg
+	; +ShellPrintString .txt_cd
 +
 
 -	jmp mainloop 
@@ -284,7 +287,7 @@ mainloop
 	jsr .fat_open
  	sta tmp5
  
-	lda fat_errno
+	lda errno
 	bne +
 
 	
@@ -297,6 +300,7 @@ mainloop
 	jsr .fat_close
 	
 +	
+	jsr .errmsg
 	; plp	
 	rts
 
@@ -633,7 +637,20 @@ sd_busy_wait
        bne -
        rts
 
+.errmsg
+		
+		+errMsgEntry fat_bad_block_signature, .fat_err_signature
+		+errMsgEntry fat_invalid_partition_type, .fat_err_partition
+		+errMsgEntry fat_invalid_sector_size, .fat_err_bad_sect_size
+		+errMsgEntry fat_invalid_num_fats, .fat_err_bad_sect_size		
+		+errMsgEntry fat_open_error, .fat_err_open
+		+errMsgEntry fat_too_many_files, .fat_err_too_many_open
+		+errMsgEntry fat_file_not_found, .fat_err_no_such_file
+		+errMsgEntry fat_file_not_open, .fat_err_file_not_open
 
+		jsr strout
+		
+		rts
 
 
 .hellotxt		!text "SteckShell 0.08 ",$00
@@ -649,8 +666,17 @@ sd_busy_wait
 .txt_msg_unknown_cmd	!text $0a,$0d,"unknown command (try 'help')",$00
 .txt_cd 		!text "cd ok",$00
 
-; .name       	!text "           ",$00
+.fat_err_signature 		!text "bad block signature", $00
+.fat_err_partition 		!text "invalid partition type", $00
+.fat_err_bad_sect_size 	!text "sector size unsupported", $00
+.fat_err_open			!text "open error",$00
+.fat_err_no_such_file	!text "no such file or directory",$00
+.fat_err_file_not_open	!text "file not open error",$00
+.fat_err_too_many_open	!text "too many open files",$00
+
+
 .assets
+!ifndef text_mode_40 {
 !src "sanduhr.raw"
 !src "sanduhr_45.raw"
 !src "sanduhr_90.raw"
@@ -659,6 +685,6 @@ sd_busy_wait
 !src "sanduhr_225.raw"
 !src "sanduhr_270.raw"
 !src "sanduhr_315.raw"
-
+}
 .sprite_sanduhr
 	!byte	$ff,	$f0,	0,	Gray

@@ -1,3 +1,4 @@
+!src <errors.h.a>
 ; *=$c000
 FD_start_cluster = $00
 FD_file_size = $08
@@ -26,7 +27,6 @@ FD_file_size = $08
 } 
 
 .blocks = tmp7
-; .rest   = tmp6
 
 .fat_read
 
@@ -119,13 +119,13 @@ FD_file_size = $08
 	bra -
 
 .fat_no_such_file
-	+ShellPrintString .fat_err_no_such_file
-	inc errno
+	lda #fat_file_not_found
+	sta errno
 	bra .end_open
 
 .fat_open_error
-	+ShellPrintString .fat_err_open
-	inc errno
+	lda #fat_open_error
+	sta errno
 
 	
 .end_open
@@ -255,16 +255,14 @@ FD_file_size = $08
 	rts
 
 .fat_check_signature
-	; pha
-	stz errno
-
 	lda sd_blktarget + BS_Signature
 	cmp #$55
 	bne ++
 	lda sd_blktarget + BS_Signature+1
 	cmp #$aa
 	beq +
-++	inc errno
+++	lda #fat_bad_block_signature
+	sta errno
 +	rts
 
 
@@ -310,8 +308,8 @@ FD_file_size = $08
 	rts
 
 .file_not_open
-	+ShellPrintString .fat_err_file_not_open
-	inc errno
+	lda #fat_file_not_open
+	sta errno
 	bra .calc_end
 
 .inc_lba_address
@@ -448,8 +446,6 @@ FD_file_size = $08
 	phx
 	phy
 
-	; jsr .sd_select_card
-	; jsr sd_param_init
 
 	; set lba_addr to $00000000 since we want to read the bootsector
 	!for .i,0,3 {
@@ -465,10 +461,8 @@ FD_file_size = $08
 
 	lda errno
 	beq +
-	+ShellPrintString .fat_err_signature
 	jmp .end_mount
-
-+	
++
 	part0 = sd_blktarget + BS_Partition0
 
 	lda part0 + PE_TypeCode
@@ -478,8 +472,8 @@ FD_file_size = $08
 	beq +
 
 	; type code not $0b or $0c
-	+ShellPrintString .fat_err_partition
-	inc errno
+	lda #fat_invalid_partition_type
+	sta errno
 	jmp .end_mount
 
 +
@@ -502,9 +496,7 @@ FD_file_size = $08
 	jsr .fat_check_signature
 	lda errno
 	beq +
-	+ShellPrintString .fat_err_signature
 	jmp .end_mount
-
 +
 	; Bytes per Sector, must be 512 = $0200
 	lda sd_blktarget + BPB_BytsPerSec
@@ -512,8 +504,8 @@ FD_file_size = $08
 	lda sd_blktarget + BPB_BytsPerSec + 1
 	cmp #$02
 	beq ++
-+	+ShellPrintString .fat_err_bad_sect_size
-	inc errno
++	lda #fat_invalid_sector_size
+	sta errno
 	jmp .end_mount
 ++
 	; Sectors per Cluster. Valid: 1,2,4,8,16,32,64,128
@@ -592,7 +584,6 @@ FD_file_size = $08
 	rts
 
 .fat_alloc_fd
-	stz errno
 	ldx #$08
 	
 -	lda fd_area + FD_start_cluster +3, x
@@ -608,10 +599,11 @@ FD_file_size = $08
 	bne -
 
 	; Too many open files, no free file descriptor found
-	+ShellPrintString .fat_err_too_many_open
-	ldx #$ff
+	lda #fat_too_many_files
+	sta errno
+	
+	
 +	txa
-	+ShellPrintHex
 	rts
 
 .fat_close
@@ -680,22 +672,11 @@ FD_file_size = $08
 
 ;fat_begin_lba = Partition_LBA_Begin + Number_of_Reserved_Sectors;
 ;cluster_begin_lba = Partition_LBA_Begin + Number_of_Reserved_Sectors + (Number_of_FATs * Sectors_Per_FAT);
-.fat_err_signature 		!text "bad block signature", $00
-.fat_err_partition 		!text "invalid partition type", $00
-.fat_err_bad_sect_size 	!text "sector size unsupported", $00
-.fat_err_num_fats	  	!text "invalid number of FATs (!= 2)", $00
-.fat_err_open			!text "open error",$00
-.fat_err_no_such_file	!text "no such file or directory",$00
-.fat_err_file_not_open	!text "file not open error",$00
-.fat_err_too_many_open	!text "too many open files",$00
+; .fat_err_signature 		!text "bad block signature", $00
+; .fat_err_partition 		!text "invalid partition type", $00
+; .fat_err_bad_sect_size 	!text "sector size unsupported", $00
+; .fat_err_open			!text "open error",$00
+; .fat_err_no_such_file	!text "no such file or directory",$00
+; .fat_err_file_not_open	!text "file not open error",$00
+; .fat_err_too_many_open	!text "too many open files",$00
 
-.fat_ok					!text " OK",$00
-; .fat_loading		  	!text "Loading ",$00
-; .fat_loading_done  		!text " done.",$00
-; .crlf					!byte $0a,$0d,$00
-
-; FAT error codes
-fat_bad_block_signature		= 	$01
-fat_invalid_partition_type	=	$02
-fat_invalid_sector_size		=	$03
-fat_invalid_num_fats		=	$04
