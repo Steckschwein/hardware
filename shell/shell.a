@@ -285,7 +285,7 @@ mainloop
 
 
 	jsr .fat_open
- 	sta tmp5
+ 	stx tmp5
  
 	lda errno
 	bne +
@@ -296,7 +296,7 @@ mainloop
 	; jsr .fat_read_singleblock
 	jsr .fat_read
 
-	lda tmp5
+	ldx tmp5
 	jsr .fat_close
 	
 +	

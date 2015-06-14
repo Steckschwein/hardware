@@ -150,9 +150,9 @@ FD_file_size = $08
 	beq .fat_open_error
 
 	jsr .fat_alloc_fd
-	cmp #$ff
+	cpx #$ff
 	beq .fat_open_error
-	tax
+	
 
 ++	stz fd_area + FD_start_cluster +3, x
 	stz fd_area + FD_start_cluster +2, x
@@ -184,7 +184,7 @@ FD_file_size = $08
 	}
 
 
-	txa
+	; txa
     bra .end_open
 
 	
@@ -603,15 +603,12 @@ FD_file_size = $08
 	sta errno
 	
 	
-+	txa
++
 	rts
 
 .fat_close
-	phx
-	tax 
 	lda #$ff
 	sta fd_area + FD_start_cluster +3 , x
-	plx
 	rts
 
 .print_filename
