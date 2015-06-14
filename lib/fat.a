@@ -61,8 +61,8 @@ FD_file_size = $08
 
 
 .fat_open
-	; pha
-	phx
+	pha
+	; phx
 	phy
 
 	stz errno
@@ -130,8 +130,8 @@ FD_file_size = $08
 	
 .end_open
 	ply
-	plx
-	; pla
+	; plx
+	pla
 	rts
 
 .found
