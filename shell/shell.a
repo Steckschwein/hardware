@@ -17,7 +17,6 @@ text_mode_40 = 1
 .key = $10
 .buf 				= $0350 ; Input buffer 80 bytes. end: $03a1
 .paramptr			= $11
-.nameptr			= $13
 }
 
 !macro ShellPrint {
@@ -53,6 +52,7 @@ text_mode_40 = 1
 	
 	stz .key	
 	+SetVector _textui_chrout, outvec
+
 
 	
 	lda #<count

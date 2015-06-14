@@ -69,12 +69,16 @@ FD_file_size = $08
 
 	+SetVector sd_blktarget, sd_blkptr
 
+	jsr .convert_filename
+
+
 	lda #$00
 	jsr .calc_lba_addr
 
 -	
 	; +SDBlockAddr lba_addr
 	jsr sd_read_block
+
 
 --  ldy #DIR_Attr
 	lda (sd_blkptr),y
@@ -91,28 +95,15 @@ FD_file_size = $08
 	cmp #$e5 ; deleted file
 	beq .open_next   ; skip
 
-	; ldx #$00
-.find
-	; this works because the filename is located at the very beginning of the dir entry
-	
-	; lda (filenameptr),y
-	; ; beq .fat_no_such_file
-	; ; +toUpper
-	; cmp (sd_blkptr),y
-	; bne .open_next
+---	
+	lda (sd_blkptr),y
+	cmp filename_buf,y
+	bne .open_next
+	iny
+	cpy #$0b 
+	beq .found
+	bra ---
 
-	; iny
-	; cpy #$0B
-	; bne .find
-	; bra .found
-	jsr .compare_filename
-	bcs .found
-	; bcc .open_next
-; +	
-; 	lda #$20
-; 	cmp (sd_blkptr),y
-; 	beq .found
-	
 .open_next
 	; Increment blkptr by 32 bytes, jump to next dir entry
 	jsr .inc_blkptr
@@ -640,60 +631,53 @@ FD_file_size = $08
 	bne -
 	rts
 
-
-
-.compare_filename
-	pha
-
+.convert_filename	
+	ldx #$00
 	ldy #$00
-	sty tmp6
-	sty tmp7
+-	lda (filenameptr),y
+	beq +
+	cmp #'.' ; is it a dot
+	bne ++   ; not a dot
+	cpy #$02 ; is it at pos 0 or 1?
+	bcc ++	 ; a dot at pos 0 or 1 is not the dot we are looking for
+	
+	; the dot we are looking for denotes the end of the filename and the begin of the filename extension
+	; fill buffer with spaces until position $08 to continue writing to buffer at that pos.
+	; then, read next char from input
 
--	lda (sd_blkptr),y
-	cpy #$02    ; dont ignore everything below '.' for the first 2 bytes to allow ".." and "."
-	bcc ++
-	cmp #$2e	; ignore everything below '.'
-	bcc +
-++
-	sta tmp5
-	sty tmp6
-	
-	; jsr chrout
-	
-	; inner loop 
-	ldy tmp7
---	lda (filenameptr),y
-	cmp #'.' ; if its a dot, inc y and go again
-	bne ++
-	cpy #$02
-	bcc ++
-	iny
-	bne --
-++
-	+toUpper	
-	; jsr chrout
-	cmp tmp5
-	bne .nomatch
+	lda #' '
+--	cpx #$08
+	bcc .fill
 
 	iny
-	sty tmp7
-	; inner loop 
+	bne - ; replace with bra
 
-	ldy tmp6
-	
-+	iny
-	cpy #11
-	bne -
-
-	; match, set carry flag
-	sec
-	bcs +
-
-.nomatch
-	; no match, clear carry flag
-	clc
-+	pla
+++	
+	+toUpper
+	sta filename_buf,x
+	inx
+	iny
+	bne - ; replace with bra
++	
+	; are we at the end of the buffer? 
+	; fill with spaces if not
+	lda #' '
+	cpx #$0b
+	bcc .fill2
 	rts
+.fill
+	sta filename_buf,x
+	inx
+	bne -- ; replace with bra
+	
+.fill2
+-	sta filename_buf,x
+  	inx
+  	cpx #$0b
+  	bne -
+	rts
+
+
 ;fat_begin_lba = Partition_LBA_Begin + Number_of_Reserved_Sectors;
 ;cluster_begin_lba = Partition_LBA_Begin + Number_of_Reserved_Sectors + (Number_of_FATs * Sectors_Per_FAT);
 .fat_err_signature 		!text "bad block signature", $00
