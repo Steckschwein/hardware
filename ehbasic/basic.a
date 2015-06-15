@@ -1,4 +1,6 @@
 
+!src <defs.h.a>
+!src <bios.h.a>
 ; Enhanced BASIC to assemble under 6502 simulator, $ver 2.22
 
 ; $E7E1 $E7CF $E7C6 $E7D3 $E7D1 $E7D5 $E7CF $E81E $E825
@@ -425,18 +427,18 @@ ccnull		= ccbyte+1	; BASIC CTRL-C byte timeout
 
 VEC_CC		= ccnull+1	; ctrl c check vector
 
-VEC_IN		= VEC_CC+2	; input vector
-VEC_OUT		= VEC_IN+2	; output vector
-VEC_LD		= VEC_OUT+2	; load vector
-VEC_SV		= VEC_LD+2	; save vector
+; VEC_IN		= VEC_CC+2	; input vector
+; VEC_OUT		= VEC_IN+2	; output vector
+; VEC_LD		= VEC_OUT+2	; load vector
+; VEC_SV		= VEC_LD+2	; save vector
 
 ; Ibuffs can now be anywhere in RAM, ensure that the max length is < $80
 
-Ibuffs		= IRQ_vec+$14
+Ibuffs		= $0600+$14
 					; start of input buffer after IRQ/NMI code
 Ibuffe		= Ibuffs+$47; end of input buffer
 
-Ram_base		= $0600	; start of user RAM (set as needed, should be page aligned)
+Ram_base		= $1000	; start of user RAM (set as needed, should be page aligned)
 Ram_top		= $8000	; end of user RAM+1 (set as needed, should be page aligned)
 
 ; This start can be changed to suit your system
@@ -446,7 +448,7 @@ Ram_top		= $8000	; end of user RAM+1 (set as needed, should be page aligned)
 ; For convenience, put jump here to reset location so it can be
 ; run from the load address.
 
-JMP	RES_vec
+; JMP	RES_vec
         
 ; BASIC cold start entry point
 
@@ -7713,13 +7715,13 @@ LAB_TWOPI
 ; these are in RAM and are set by the monitor at start-up
 
 V_INPT
-	JMP	(VEC_IN)		; non halting scan input device
+	JMP	(invec)		; non halting scan input device
 V_OUTP
-	JMP	(VEC_OUT)		; send byte to output device
+	JMP	(outvec)		; send byte to output device
 V_LOAD
-	JMP	(VEC_LD)		; load BASIC program
+	JMP	($ffff)		; load BASIC program
 V_SAVE
-	JMP	(VEC_SV)		; save BASIC program
+	JMP	($ffff)		; save BASIC program
 
 ; The rest are tables messages and code for RAM
 
