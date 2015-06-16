@@ -103,13 +103,15 @@ cluster_begin_lba 	= $0303 ; begin of cluster area, 4 bytes
 sectors_per_cluster = $0307 ; sectors per cluster, 1 byte
 root_dir_first_clus = $0308 ; first cluster of root dir, 4 bytes
 filename_buf		= $030c ; file name buffer, 11 bytes
-
+fat_dir_display_hook	= $030d
 fd_area				= $0320 ; File descriptor area, 16x8byte 
 
 
 sd_blktarget 		= $0400
 
 .steckos_start		= $1000	
+
+
 
 ; SD Card error
 ; $ff - No Card

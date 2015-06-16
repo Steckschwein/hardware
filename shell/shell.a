@@ -208,6 +208,16 @@ mainloop
 !src <fat.a>
 .dir
 	+ShellPrintString .crlf
+	+SetVector .fat_list_entry, fat_dir_display_hook
+	jsr .fat_read_dir
+	jmp mainloop
+
+.ls
+	+ShellPrintString .crlf
+	+SetVector .fat_list_entry_short, fat_dir_display_hook
+		lda #$03
+	sta .entries
+
 	jsr .fat_read_dir
 	jmp mainloop
 
@@ -443,6 +453,10 @@ mainloop
 	!byte $00
 	!word .dir
 
+	!text "ls"
+	!byte $00
+	!word .ls
+
 	!text "load"
 	!byte $00
 	!word .load
@@ -674,7 +688,7 @@ sd_busy_wait
 .fat_err_file_not_open	!text "file not open error",$00
 .fat_err_too_many_open	!text "too many open files",$00
 
-
+.entries 		!byte $03
 .assets
 !ifndef text_mode_40 {
 !src "sanduhr.raw"

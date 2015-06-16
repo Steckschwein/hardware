@@ -199,23 +199,20 @@ FD_file_size = $08
 	inc sd_blkptr+1	
 +	rts
 
+.fat_dir_display
+	jmp (fat_dir_display_hook)
+
 
 .fat_read_dir
 	pha
 	phy
-	phx
 
-	; jsr sd_param_init
-	; jsr .sd_select_card
-
+	; +SetVector .fat_list_entry_short, .fat_dir_display_hook
 	lda #$00
 	jsr .calc_lba_addr
 
-	+SetVector sd_blktarget, sd_blkptr
--	
-	; +SDBlockAddr lba_addr
+-	+SetVector sd_blktarget, sd_blkptr
 	jsr sd_read_block
-	
 	
 --	ldy #DIR_Attr
 	lda (sd_blkptr),y
@@ -224,7 +221,6 @@ FD_file_size = $08
 	bit #$02 ; Hidden attribute set, skip
 	bne .nextentry
 
-	tax
     ldy #DIR_Name
 	lda (sd_blkptr),y
 	beq .end ; end of dir 
@@ -232,8 +228,8 @@ FD_file_size = $08
 	cmp #$e5 ; deleted file
 	beq .nextentry   ; skip
 
-	jsr .fat_list_entry
-
+	; jsr .fat_list_entry
+	jsr .fat_dir_display
 .nextentry
 	; Increment blkptr by 32 bytes, jump to next dir entry
 	jsr .inc_blkptr
@@ -243,12 +239,10 @@ FD_file_size = $08
 	bne -- ; no
 
 	; yes, increase lba_addr and go again
-	+SetVector sd_blktarget, sd_blkptr
 	jsr .inc_lba_address
-	jmp -
+	bra -
 
 .end
-	plx
 	ply
 	pla
 
@@ -325,6 +319,20 @@ FD_file_size = $08
 	bcc +
 	inc lba_addr + 3
 +
+	rts
+
+.fat_list_entry_short
+	pha
+	jsr .print_filename
+	+ShellPrintChar ' '
+	+ShellPrintChar ' '
+	dec .entries
+	bne +	
+	+ShellPrintString .crlf
+	lda #$03
+	sta .entries
++
+	pla
 	rts
 
 .fat_list_entry
@@ -614,7 +622,7 @@ FD_file_size = $08
 .print_filename
 	ldy #DIR_Name
 -	lda (sd_blkptr),y
-	+ShellPrint
+	+ShellPrint	
 	iny
 	cpy #$0b
 	bne -
@@ -665,15 +673,3 @@ FD_file_size = $08
   	cpx #$0b
   	bne -
 	rts
-
-
-;fat_begin_lba = Partition_LBA_Begin + Number_of_Reserved_Sectors;
-;cluster_begin_lba = Partition_LBA_Begin + Number_of_Reserved_Sectors + (Number_of_FATs * Sectors_Per_FAT);
-; .fat_err_signature 		!text "bad block signature", $00
-; .fat_err_partition 		!text "invalid partition type", $00
-; .fat_err_bad_sect_size 	!text "sector size unsupported", $00
-; .fat_err_open			!text "open error",$00
-; .fat_err_no_such_file	!text "no such file or directory",$00
-; .fat_err_file_not_open	!text "file not open error",$00
-; .fat_err_too_many_open	!text "too many open files",$00
-
