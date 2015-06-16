@@ -62,31 +62,25 @@ FD_file_size = $08
 
 .fat_open
 	pha
-	; phx
 	phy
 
-	stz errno
-
-	+SetVector sd_blktarget, sd_blkptr
-
 	jsr .convert_filename
-
 
 	lda #$00
 	jsr .calc_lba_addr
 
--	
+	+SetVector .fat_dir_filter_open, fat_dir_filter_hook
+
+-	+SetVector sd_blktarget, sd_blkptr
 	; +SDBlockAddr lba_addr
 	jsr sd_read_block
 
 
 --  ldy #DIR_Attr
 	lda (sd_blkptr),y
-	cmp #$0f ; Long filename, skip this one
-	beq .open_next
-	bit #$08 ; is volume id, we cant open this. skip, too
-	bne .open_next
 
+	jsr .fat_dir_filter
+	bcs .open_next
 
 	ldy #DIR_Name
 	lda (sd_blkptr),y
@@ -114,7 +108,7 @@ FD_file_size = $08
 	bne -- ; no
 
 	; yes, increase lba_addr and go again
-	+SetVector sd_blktarget, sd_blkptr
+	; +SetVector sd_blktarget, sd_blkptr
 	jsr .inc_lba_address
 	bra -
 
@@ -199,15 +193,39 @@ FD_file_size = $08
 	inc sd_blkptr+1	
 +	rts
 
+.fat_dir_filter
+	jmp (fat_dir_filter_hook)
+
 .fat_dir_display
 	jmp (fat_dir_display_hook)
 
+; default filter hook, skips long filenames and hidden files
+; carry flag is set on match
+.fat_dir_filter_default
+	cmp #$0f ; Long filename, skip this one
+	beq +
+	bit #$02 ; Hidden attribute set, skip
+	bne +
+	clc
+	rts
++	sec
+	rts
+; filter for open routine, skips long filenames and volume id
+.fat_dir_filter_open
+	cmp #$0f ; Long filename, skip this one
+	beq +
+	bit #$08 ; is volume id, we cant open this. skip, too
+	bne +
+	clc
+	rts
++	sec
+	rts
 
 .fat_read_dir
 	pha
 	phy
 
-	; +SetVector .fat_list_entry_short, .fat_dir_display_hook
+
 	lda #$00
 	jsr .calc_lba_addr
 
@@ -216,10 +234,13 @@ FD_file_size = $08
 	
 --	ldy #DIR_Attr
 	lda (sd_blkptr),y
-	cmp #$0f ; Long filename, skip this one
-	beq .nextentry
-	bit #$02 ; Hidden attribute set, skip
-	bne .nextentry
+
+	jsr .fat_dir_filter
+	bcs .nextentry
+	; cmp #$0f ; Long filename, skip this one
+	; beq .nextentry
+	; bit #$02 ; Hidden attribute set, skip
+	; bne .nextentry
 
     ldy #DIR_Name
 	lda (sd_blkptr),y

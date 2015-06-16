@@ -58,8 +58,8 @@ ram_end_h   = ram_end_l+1
 outvec		= $e6
 invec		= $e8
 paramvec	= $ea
-
-
+fat_dir_display_hook	= $ec
+fat_dir_filter_hook		= $ee
 ; general purpose temp variables
 tmp0		= $f0
 tmp1		= $f1
@@ -103,7 +103,7 @@ cluster_begin_lba 	= $0303 ; begin of cluster area, 4 bytes
 sectors_per_cluster = $0307 ; sectors per cluster, 1 byte
 root_dir_first_clus = $0308 ; first cluster of root dir, 4 bytes
 filename_buf		= $030c ; file name buffer, 11 bytes
-fat_dir_display_hook	= $030d
+
 fd_area				= $0320 ; File descriptor area, 16x8byte 
 
 

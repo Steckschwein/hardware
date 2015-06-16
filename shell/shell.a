@@ -216,6 +216,8 @@ mainloop
 .dir
 	+SetVector .fat_list_entry, fat_dir_display_hook
 +	+ShellPrintString .crlf
+	+SetVector .fat_dir_filter_default, fat_dir_filter_hook
+
 	jsr .fat_read_dir
 	jmp mainloop
 
