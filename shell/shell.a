@@ -1,6 +1,7 @@
 *= $c800
 
 text_mode_40 = 1
+num_ls_entries = $03
 
 .nvram = $a000
 !src <defs.h.a>
@@ -206,20 +207,18 @@ mainloop
 
 
 !src <fat.a>
-.dir
-	+ShellPrintString .crlf
-	+SetVector .fat_list_entry, fat_dir_display_hook
-	jsr .fat_read_dir
-	jmp mainloop
 
 .ls
-	+ShellPrintString .crlf
 	+SetVector .fat_list_entry_short, fat_dir_display_hook
-		lda #$03
+	lda #num_ls_entries
 	sta .entries
-
+	bra +
+.dir
+	+SetVector .fat_list_entry, fat_dir_display_hook
++	+ShellPrintString .crlf
 	jsr .fat_read_dir
 	jmp mainloop
+
 
 
 .cdroot
@@ -667,8 +666,10 @@ sd_busy_wait
 		rts
 
 
-.hellotxt		!text "SteckShell 0.08 ",$00
-.helptxt		!text $0a,$0d,"dir         - directory"
+.hellotxt		!text "SteckShell 0.09 ",$00
+.helptxt		
+				!text $0a,$0d,"ll          - directory (long)"
+				!text $0a,$0d,"ls          - directory (short)"
 				!text $0a,$0d,"/           - root dir"
 				!text $0a,$0d,"cd <name>   - change directory"
 				!text $0a,$0d,"load <name> - load file"
