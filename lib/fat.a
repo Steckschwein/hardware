@@ -59,20 +59,20 @@ FD_file_size = $08
 	rts
 
 
-
 .fat_open
 	pha
 	phy
 
-	jsr .convert_filename
+	stz errno
+
+	+SetVector .fat_dir_filter_open, 	fat_dir_filter_hook
 
 	lda #$00
 	jsr .calc_lba_addr
 
-	+SetVector .fat_dir_filter_open, fat_dir_filter_hook
+	jsr .convert_filename
 
 -	+SetVector sd_blktarget, sd_blkptr
-	; +SDBlockAddr lba_addr
 	jsr sd_read_block
 
 
@@ -80,25 +80,25 @@ FD_file_size = $08
 	lda (sd_blkptr),y
 
 	jsr .fat_dir_filter
-	bcs .open_next
+	bcs +
 
 	ldy #DIR_Name
 	lda (sd_blkptr),y
 	beq .fat_no_such_file ; end of dir 
 	
 	cmp #$e5 ; deleted file
-	beq .open_next   ; skip
+	beq +   ; skip
 
 ---	
 	lda (sd_blkptr),y
 	cmp filename_buf,y
-	bne .open_next
+	bne +
 	iny
 	cpy #$0b 
 	beq .found
 	bra ---
 
-.open_next
++
 	; Increment blkptr by 32 bytes, jump to next dir entry
 	jsr .inc_blkptr
 
@@ -121,15 +121,8 @@ FD_file_size = $08
 	lda #fat_open_error
 	sta errno
 
-	
-.end_open
-	ply
-	; plx
-	pla
-	rts
 
 .found
-
 	ldy #DIR_Attr
 	lda (sd_blkptr),y
 	bit #$10 ; Is a directory
@@ -179,9 +172,11 @@ FD_file_size = $08
 
 
 	; txa
-    bra .end_open
-
-	
+.end_open
+	ply
+	; plx
+	pla
+	rts
 
 .inc_blkptr
 	; Increment blkptr by 32 bytes, jump to next dir entry
@@ -221,10 +216,11 @@ FD_file_size = $08
 +	sec
 	rts
 
+
+
 .fat_read_dir
 	pha
 	phy
-
 
 	lda #$00
 	jsr .calc_lba_addr
@@ -236,23 +232,19 @@ FD_file_size = $08
 	lda (sd_blkptr),y
 
 	jsr .fat_dir_filter
-	bcs .nextentry
-	; cmp #$0f ; Long filename, skip this one
-	; beq .nextentry
-	; bit #$02 ; Hidden attribute set, skip
-	; bne .nextentry
+	bcs +
 
     ldy #DIR_Name
 	lda (sd_blkptr),y
 	beq .end ; end of dir 
 	
 	cmp #$e5 ; deleted file
-	beq .nextentry   ; skip
+	beq +   ; skip
 
 	; jsr .fat_list_entry
 	jsr .fat_dir_display
-.nextentry
-	; Increment blkptr by 32 bytes, jump to next dir entry
+
++	; Increment blkptr by 32 bytes, jump to next dir entry
 	jsr .inc_blkptr
 	; end of block?
 	lda sd_blkptr+1
