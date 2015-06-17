@@ -30,7 +30,6 @@ FD_file_size = $08
 
 .fat_read
 
-	tax
 	jsr .calc_lba_addr
 
 	; ldy #DIR_FileSize + 3
@@ -58,7 +57,6 @@ FD_file_size = $08
 +	
 	rts
 
-
 .fat_open
 	pha
 	phy
@@ -67,7 +65,7 @@ FD_file_size = $08
 
 	+SetVector .fat_dir_filter_open, 	fat_dir_filter_hook
 
-	lda #$00
+	ldx #$00
 	jsr .calc_lba_addr
 
 	jsr .convert_filename
@@ -95,7 +93,7 @@ FD_file_size = $08
 	bne +
 	iny
 	cpy #$0b 
-	beq .found
+	beq ++
 	bra ---
 
 +
@@ -120,10 +118,10 @@ FD_file_size = $08
 .fat_open_error
 	lda #fat_open_error
 	sta errno
+	bra .end_open
 
-
-.found
-	ldy #DIR_Attr
+; found
+++	ldy #DIR_Attr
 	lda (sd_blkptr),y
 	bit #$10 ; Is a directory
     beq +
@@ -158,7 +156,6 @@ FD_file_size = $08
 	lda fd_area + FD_start_cluster +0, x
 	bne +
 
-	; lda #$02
 	lda root_dir_first_clus +1
 	sta fd_area + FD_start_cluster +1, x
 	lda root_dir_first_clus +0
@@ -171,10 +168,8 @@ FD_file_size = $08
 	}
 
 
-	; txa
 .end_open
 	ply
-	; plx
 	pla
 	rts
 
@@ -222,7 +217,7 @@ FD_file_size = $08
 	pha
 	phy
 
-	lda #$00
+	ldx #$00
 	jsr .calc_lba_addr
 
 -	+SetVector sd_blktarget, sd_blkptr
@@ -236,7 +231,7 @@ FD_file_size = $08
 
     ldy #DIR_Name
 	lda (sd_blkptr),y
-	beq .end ; end of dir 
+	beq ++ ; end of dir 
 	
 	cmp #$e5 ; deleted file
 	beq +   ; skip
@@ -255,8 +250,7 @@ FD_file_size = $08
 	jsr .inc_lba_address
 	bra -
 
-.end
-	ply
+++	ply
 	pla
 
 	rts
@@ -274,10 +268,12 @@ FD_file_size = $08
 
 
 
+; calculate LBA address of first block from cluster number found in file descriptor entry
+; file descriptor index must be in x
 .calc_lba_addr
 	pha
 	phx
-	tax
+	
 	lda fd_area + FD_start_cluster +3, x 
 
 	cmp #$ff
@@ -583,6 +579,8 @@ FD_file_size = $08
 	pla
 
 	rts
+
+	
 .fat_open_rootdir
 	; Open root dir
 	+Copy root_dir_first_clus, fd_area + FD_start_cluster, 3
