@@ -8,17 +8,6 @@ clockspeed	= 4 ; 4 MHz
 jiffies    = 32767  ; jiffy count 100Hz for 1MHz systen
 count		= clockspeed * jiffies
 
-; IO Channels
-!address {
-chn_out = $00
-chn_in  = $01
-}
-
-dev_screen = $00
-dev_lcd    = $01
-dev_uart   = $02
-
-
 ;
 ;CSUART   ; UART at $0200
 ;CSVIA    ; VIA  at $0210
