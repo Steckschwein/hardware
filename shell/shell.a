@@ -53,6 +53,7 @@ num_ls_entries = $03
 	sei
 	
 	stz .key	
+
 	+SetVector _textui_chrout, outvec
 
 
@@ -296,14 +297,14 @@ mainloop
 
 
 	jsr .fat_open
- 	stx tmp5
+ 	; stx tmp5
  
 	lda errno
 	bne +
 
 	
 	+SetVector .steckos_start, sd_blkptr
-	lda tmp5
+	; lda tmp5
 	; jsr .fat_read_singleblock
 	jsr .fat_read
 
@@ -361,7 +362,6 @@ mainloop
 .keyin
 -	lda .key 		; wait for .key to become != 00
 	beq -
-
 	stz .key 		; reset .key to signal isr to fetch next key
 	rts
 
