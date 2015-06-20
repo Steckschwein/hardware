@@ -333,8 +333,8 @@ FD_file_size = $08
 .fat_list_entry_short
 	pha
 	jsr .print_filename
-	+ShellPrintChar ' '
-	+ShellPrintChar ' '
+	+PrintChar ' '
+	+PrintChar ' '
 	dec .entries
 	bne +	
 	+ShellPrintString .crlf
@@ -347,7 +347,7 @@ FD_file_size = $08
 .fat_list_entry
 	pha
 	jsr .print_filename
-	+ShellPrintChar ' '
+	+PrintChar ' '
 
 	ldy #DIR_Attr
 	lda (sd_blkptr),y
@@ -370,7 +370,7 @@ FD_file_size = $08
 	lda #'F'
 ++	+ShellPrint
 
-	+ShellPrintChar ' '
+	+PrintChar ' '
 	ldy #DIR_FileSize + 1 +1
 -	dey
 	lda (sd_blkptr),y
@@ -378,7 +378,7 @@ FD_file_size = $08
 	cpy #DIR_FileSize
 	bne -	
 
-	+ShellPrintChar ' '
+	+PrintChar ' '
 
 	; day
 	ldy #DIR_WrtDate 
@@ -386,7 +386,7 @@ FD_file_size = $08
 	and #%00011111
 	+ShellPrintDec
 
-	; +ShellPrintChar '.'
+	; +PrintChar '.'
 	; month
 	iny
 	lda (sd_blkptr),y
@@ -401,7 +401,7 @@ FD_file_size = $08
 	lsr
 	+ShellPrintDec
 	
-	; +ShellPrintChar '.'
+	; +PrintChar '.'
 	; year
 	txa
 	clc 
@@ -414,7 +414,7 @@ FD_file_size = $08
 
 	
 
-	+ShellPrintChar ' '
+	+PrintChar ' '
 
 	ldy #DIR_WrtTime +1
 	lda (sd_blkptr),y
@@ -424,7 +424,7 @@ FD_file_size = $08
 	lsr
 	+ShellPrintDec
 
-	+ShellPrintChar ':'
+	+PrintChar ':'
 
 	txa
 	and #%00000111

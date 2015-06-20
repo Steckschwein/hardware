@@ -21,33 +21,6 @@ num_ls_entries = $03
 .paramptr			= $11
 }
 
-!macro ShellPrint {
-	jsr chrout
-}
-
-!macro ShellPrintChar char {
-	lda #char
-    jsr chrout
-}
-
-!macro ShellPrintHex {
-	jsr	hexout
-}
-!macro ShellPrintDec {
-	; leading zero hack
-	cmp #10
-	bcs +
-	pha
-	+ShellPrintChar '0'
-	pla
-+	
-	jsr decout
-}
-
-!macro ShellPrintString .word {
-	+SetVector .word,	msgptr
-	jsr _textui_print
-}
 
 .init0
 	sei
@@ -225,7 +198,7 @@ mainloop
 
 
 .cdroot
-	+ShellPrintChar '/'
+	+PrintChar '/'
 	jsr .fat_open_rootdir
 	jmp mainloop 
 
@@ -413,11 +386,11 @@ mainloop
 	
 	jsr spi_r_byte
     jsr hexout
-	+ShellPrintChar ':'
+	+PrintChar ':'
 
 	lda tmp7
     jsr hexout
-	+ShellPrintChar ':'
+	+PrintChar ':'
 	
 	lda tmp6	
 	jsr hexout
@@ -426,15 +399,15 @@ mainloop
 
 
     jsr spi_r_byte
-	+ShellPrintChar ' '
+	+PrintChar ' '
 
     jsr spi_r_byte
     jsr hexout
-    +ShellPrintChar '.'
+    +PrintChar '.'
 	
 	jsr spi_r_byte
     jsr hexout
-    +ShellPrintChar '.'
+    +PrintChar '.'
 	
 	jsr spi_r_byte
     jsr hexout
