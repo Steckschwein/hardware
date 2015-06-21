@@ -1,3 +1,0 @@
- - [X] isr: keyboard abfrage nur , wenn bus frei (via1portb and %01111110 = 01111110)
- - [X] beim sd-card aktivieren checken, ob bus frei (via1portb and %01111110 = 01111110), wenn nicht, warten. 
-   statt timeout n versuche
