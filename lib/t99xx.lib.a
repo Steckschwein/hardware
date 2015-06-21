@@ -144,6 +144,11 @@ vdp_init_reg
 	bne   -
 	rts
 
+vdp_irq_off
+	lda #v_reg1_16k|v_reg1_display_on	;switch interupt off
+	ldy	#v_reg1
+	jmp	vdp_sreg
+
 ;	
 ;
 !ifndef bios_stuff {
@@ -265,7 +270,7 @@ vdp_init_bytes_gfx3
 ;
 ;   input:	a - color
 ;
-vdp_bgcolor:
+vdp_bgcolor
 	sta   a_vreg
 	+vnops
 	lda   #v_reg7
@@ -304,15 +309,8 @@ vdp_load_sprites16
 	dex
 	bne   --
 	rts
-
-
-!macro V_GotoXY .x, .y {
-	lda	.x
-	sta crs_x
-	lda .y
-	sta	crs_y
 }
-}
+
 ;
 ;direct vram access - used i.e. in bios
 ;
@@ -323,8 +321,8 @@ vdp_load_sprites16
 	cmp	#23		;last line
 	bne	+
 ;	jmp	.textui_scroll_up	; scroll and exit
-	stz	crs_y ; TODO maybe improve
-	rts	
+	stz	crs_y ; goto y position 0 - TODO improve, maybe scroll
+	rts
 +	inc crs_y
 	rts
 
@@ -364,7 +362,6 @@ vdp_chrout
 
 .vdp_write_char
 	pha
-	lda	#$00
 -	bit	a_vreg
 	bpl	-
 	jsr .vdp_set_addr
@@ -372,7 +369,7 @@ vdp_chrout
 	sta a_vram
 	rts
 	
-.vdp_set_addr:
+.vdp_set_addr
 	lda     crs_y   ; * 32
 	asl
 	asl

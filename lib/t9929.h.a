@@ -61,15 +61,10 @@ White          =$0f
 	!byte .v&255
 }
 
-!macro SpriteLine16 .v {
-	!byte (.v>>8)& 255
-	!byte  .v	 &255
-}
-
 !macro SpriteLine16start{
 	!set sprite_row=0
 }
-!macro SpriteLine16n .v {
+!macro SpriteLine16 .v {
 	!byte (.v>>8)& 255
 	*=*+15
 	!byte  .v	 &255
