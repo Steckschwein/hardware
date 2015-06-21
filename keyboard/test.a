@@ -7,16 +7,8 @@
 
 	sei
 
-	
-	stz chn_in
-	lda #dev_uart
-  	sta chn_out
-
-  	
-	jsr .lcdclear
-
 -	jsr .kbd_chrin
-	jsr chrout
+	jsr hexout
 ; 	cmp #$0d
 ; 	beq +
 ; 	jsr hexout
@@ -45,4 +37,3 @@
 	jsr .kbd_disable
 	rts
 	
-!source "../bios/lcd.a"
