@@ -36,7 +36,6 @@ main:
 	ldx	#$08
 	jsr	vdp_memcpy
 	
-	
 	+SetVector	chars, .adrl
 	lda	#$00		;setup pattern
 	ldy	#$00+$40
@@ -58,7 +57,6 @@ main:
 	jsr	vdp_fill
 		
 	jsr	init_via
-
 	
 	jsr	init_sprites
 	
@@ -146,7 +144,7 @@ stars_irq:
 	+save
 
 	bit	a_vreg ; Check VDP interrupt. IRQ is acknowledged by reading.
-	bpl +	   ; VDP IRQ flag set? 
+	bmi +	   ; VDP IRQ flag set? 
 	rti
 +
 	+nops	89
@@ -193,7 +191,6 @@ stars_irq:
 	inc	frame_end
 
 	+restore
-.irq_end
 	rti
 
 joystick:
