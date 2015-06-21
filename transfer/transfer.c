@@ -48,9 +48,9 @@ int main(int argc, char *argv[])
 		char * device 		= NULL;
 		char * filename 	= NULL;
 		uint16_t startaddr 	= 0x1000;
-    uint16_t length;
+    	uint16_t length;
 		
-    int port,n,c,r;
+    	int port,n,c,r;
 		
 		char buf[2];
 		char buffer[BUFSIZE];
@@ -111,14 +111,21 @@ int main(int argc, char *argv[])
 		}
 		tcgetattr(port, &specs); 
 
-		printf("input: %x\n", specs.c_iflag);
-		printf("output: %x\n", specs.c_oflag);
-		printf("c: %x\n", specs.c_cflag);
-		printf("l: %x\n", specs.c_lflag);
+		// printf("input: %x\n", specs.c_iflag);
+		// printf("output: %x\n", specs.c_oflag);
+		// printf("c: %x\n", specs.c_cflag);
+		// printf("l: %x\n", specs.c_lflag);
 		
 		specs.c_lflag = (NOFLSH); //control flags
 		//now the specs points to the opened port's specifications
-		specs.c_cflag = (CLOCAL | CREAD | CS8 ); //control flags
+		specs.c_cflag = (CLOCAL | CREAD ); //control flags
+		
+		specs.c_cflag &= ~PARENB;
+		specs.c_cflag &= ~CSTOPB;
+		specs.c_cflag &= ~CSIZE; /* Mask the character size bits */
+		specs.c_cflag |= CS8; /* Select 8 data bits */
+
+
 		//output flags
 		//CR3 - delay of 150ms after transmitting every line
 		specs.c_oflag = (OPOST | CR3 );
