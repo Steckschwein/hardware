@@ -24,7 +24,7 @@ $(PRG).lss: $(PRG).elf
 	$(OBJDUMP) -h -S $< > $@
 
 clean :
-	rm -f *.hex *.obj *.o *.elf
+	rm -f *.hex *.obj *.o *.elf *.eep *.lss
 
 burn : $(PRG).hex
 	$(LOADER) -U flash:w:$(PRG).hex 
