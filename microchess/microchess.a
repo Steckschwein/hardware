@@ -651,8 +651,8 @@ PUSH	CMP	BESTV         	; IS THIS BEST
 		LDA	SQUARE
 		STA	BESTM        	; FLASH DISPLAY
 RETP	
-		; LDA	#"."		; print ... instead of flashing disp
-		; Jmp	syschout	; print . and return
+		LDA	#"."		; print ... instead of flashing disp
+		Jmp	syschout	; print . and return
 		rts
 ;			
 ;       MAIN PROGRAM TO PLAY CHESS
