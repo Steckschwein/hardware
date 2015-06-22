@@ -148,9 +148,6 @@ song:
 !ifdef prowla {
 !bin "prowla.dro"
 }
-!ifdef drofile {
-!bin drofile
-}
 song_end:
 
 ;dro_file_name: .BYTE DRO_FILE
@@ -353,15 +350,14 @@ play_loop:
 	; However, at this point we have enough instructions between writes,
 	; so I simply don't need any additional delay (I hope so, at least)
 	STA SFX_YM_SELECT_REGISTER
-	STA ZP ; store YM register number in ZP
-
 	; Wait 12 cycles according to spec
 	!for .i,1,.nops_addr {
 		NOP 
 	}
+	STA ZP ; store YM register number in ZP
+
 	LDA ZP+1
 	STA SFX_YM_DATA_REGISTER
-
 	jsr .wait_data
 
 	; show it!
@@ -416,6 +412,7 @@ chk_kbd:  ; if I am correct, it's about 14 cycles normally
 	RTS		; 6 cycles
 reset: ; It's now safe to turn off your computer. :)
 	JSR reset_sfx
+
 .wait_data
 	; .nops_data - 2*6 cycles (JSR/RTS)
 	!for .i,1,.nops_data - 12 {
