@@ -11,20 +11,21 @@
 !macro oplSetReg .reg, .val {
 	lda #.reg
 	sta opl_stat
-	!for .i,1,12 {
+	; http://www.shipbrook.net/jeff/sb.html
+	; The AdLib manual gives the wait times in microseconds: three point three (3.3) microseconds for the address, and twenty-three (23) microseconds for the data.
+	; 3.300 ns / 0.25ns = 13.2 cycles / 2 = 6.6 NOPs
+
+	!for .i,1,7 {
 		nop
 	} 
 	lda #.val
 	sta opl_data
-	!for .i,1,48 {
+	; 23.000 ns / 0.25ns = 92 cycles / 92 = 46 NOPs
+	!for .i,1,46 {
 		nop
 	} 
 
 }
-	jsr		lcdclear
-	lda		#'x'
-	jsr		lcdprint
-
 	; Set the modulator's multiple to 1
 	+oplSetReg $20, $01
 
