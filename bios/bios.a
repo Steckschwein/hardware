@@ -13,7 +13,7 @@
 charset_8x8
 !src "../charsets/char.ascii.vc20.h.a"
 !src "../charsets/char.ascii.6x8.big.h.a"
-biosversion	!text "BIOS    : V150521", $00	; Version String
+biosversion	!text "BIOS    : V150626", $00	; Version String
 *=$f050
 .upload
 			+PrintString .crlf
@@ -169,6 +169,12 @@ biosversion	!text "BIOS    : V150521", $00	; Version String
 			sta addr(<(.target - 1)) , x
 			dex
 			bne -
+
+			lda #>.start_check
+			sta ram_end_h
+			ldy #<.start_check
+			sty ram_end_l
+
  			jmp .target ; Execute memcheck routine in ZP
 
 .mem_broken
@@ -207,9 +213,9 @@ biosversion	!text "BIOS    : V150521", $00	; Version String
 			+PrintString .crlf
 			
 			+PrintString .ramend ; display ram end
-			lda ram_end_l
-			jsr .hexout
 			lda ram_end_h
+			jsr .hexout
+			lda ram_end_l
 			jsr .hexout
 
 			+PrintString .crlf
@@ -594,41 +600,34 @@ crc8:
 ;----------------------------------------------------------------------------------------------
 ; Memcheck routine to be copied to ZP
 ;----------------------------------------------------------------------------------------------
-.num_patterns = $03
-.pattern  !byte $aa,$55,$ff,$00
+.num_patterns = $01
+.pattern  !byte $aa,$55
 
 .selfmod_start
 !pseudopc .target {
-
-      stz ram_end_h
       
 -     ldx #.num_patterns
 --    lda .pattern,x
-.a     sta .start_check   ; Start at $0200. skip stack for now      
-.b     cmp .start_check
+	  sta (ram_end_l),y
+	  cmp (ram_end_l),y
       bne +
       
       dex 
       bne --
 
-      inc .a+1
-      inc .b+1
+	  iny
       bne -
 
       ; Stop at $e000 to prevent overwriting BIOS Code when ROMOFF
-      ldx .a+2
+      ldx ram_end_h
       inx
-      stx .a+2
-      stx .b+2
+      stx ram_end_h
       cpx #$e0
       
       bne -
 
 +	  
-	  lda .a+2
-	  sta ram_end_l
-	  lda .a+1
-	  sta ram_end_h
+	  sty ram_end_l
 
       jmp .back_from_memcheck
 }
