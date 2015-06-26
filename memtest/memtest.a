@@ -2,40 +2,30 @@
 !src <defs.h.a>
 !src <bios.h.a>
 !address {
-	start_check = $0300
+	.start_check = $0300
+      .zp_pattern  = $00
 }
 
-main
-      ; Check zeropage
-check_zp      
-      ; Start at $ff
-      ldy #$ff
-      ; Start with pattern $03 : $ff
--     ldx #$01
+num_patterns = 6
 
---    lda .pattern,x
-      sta $00,y
- 
-      cmp $00,y
-      bne .zp_kaputt
-
-      dex
-      bne --
-
-      dey
-      bne -
-	
-      lda #>start_check
+main	
+      lda #>.start_check
       sta ram_end_h
-      ldy #<start_check
+      ldy #<.start_check
       sty ram_end_l
+
+      ldx #num_patterns-1
+-     lda .pattern,x
+      sta .zp_pattern,x
+      dex
+      bne -
 
       ldx #.selfmod_end - .selfmod_start
 -     lda .selfmod_start - 1, x
       sta .target - 1, x
       dex
       bne -
-      jsr .target
+      jmp .target
 
       ; Broken ZP
 .zp_kaputt
@@ -46,10 +36,10 @@ check_zp
 
 
 .selfmod_start
-!pseudopc $0000 {
+!pseudopc $000f {
 .target
--     ldx #$01
---    lda .pattern,x
+-     ldx #num_patterns-1
+--    lda .zp_pattern,x
       sta (ram_end_l),y
       cmp (ram_end_l),y
       bne +
@@ -74,9 +64,8 @@ check_zp
       tya
       jsr hexout
 
-      rts
+-     jmp -
 }
 .selfmod_end
--     jmp -
       
-.pattern  !byte $aa,$55
+.pattern  !byte $00,$ff,$aa,$55,$f0,$0f
