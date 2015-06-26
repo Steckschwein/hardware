@@ -1,6 +1,9 @@
 *=$0300
 !src <defs.h.a>
 !src <bios.h.a>
+!address {
+	start_check = $0300
+}
 
 main
       ; Check zeropage
@@ -10,110 +13,70 @@ check_zp
       ; Start with pattern $03 : $ff
 -     ldx #$01
 
---    lda pattern,x
+--    lda .pattern,x
       sta $00,y
  
       cmp $00,y
-      bne zp_kaputt
+      bne .zp_kaputt
 
       dex
       bne --
 
       dey
       bne -
+	
+      lda #>start_check
+      sta ram_end_h
+      ldy #<start_check
+      sty ram_end_l
 
       ldx #.selfmod_end - .selfmod_start
 -     lda .selfmod_start - 1, x
       sta .target - 1, x
       dex
       bne -
-      stz chn_out
-      jmp .target
-;      jmp check_mem 
+      jsr .target
 
       ; Broken ZP
-zp_kaputt
+.zp_kaputt
       txa
-      jsr lcdclear
-      jsr lcdhex
+      jsr hexout
 -     jmp -
 
 
-start_check = $0300
 
 .selfmod_start
 !pseudopc $0000 {
 .target
-check_mem
-      stz tmp1
-loop      
 -     ldx #$01
---    lda pattern,x
-a     sta start_check   ; Start at $0200. skip stack for now      
-b     cmp start_check
+--    lda .pattern,x
+      sta (ram_end_l),y
+      cmp (ram_end_l),y
       bne +
-      
 
-      ; phx
-      ; phy
-      ; ldx #$00
-      ; ldy #$00
-      ; jsr lcdxy
-      ; lda loop+3
-      ; jsr lcdhex
-      ; lda loop+4
-      ; jsr lcdhex
-      ; ply  
-      ; plx
-      
       dex 
       bne --
 
-      inc a+1
-      inc b+1
-      bne loop
+      iny
+      bne -
 
-      inc a+2
-      inc b+2
-      bne loop
+      inc ram_end_h
+      bne -
 
       
 
-+     sta tmp0
-
-      jsr lcdclear
-
++  
+      sty ram_end_l
       lda #'$'
       jsr chrout
-      lda a+2
+      lda ram_end_h
       jsr hexout
-      lda a+1
-      jsr hexout
-
-      lda #' '
-      jsr chrout
-      lda #'$'
-      jsr chrout
-      lda tmp0 
+      tya
       jsr hexout
 
-      ;ldx #$0a
-      ;ldy #$01
-      ;jsr lcdxy
-      
-      lda tmp1
-      jsr hexout
-
-      inc tmp1
-
-      +SetVector start_check, a+1
-      +SetVector start_check, b+1
-
-      jmp loop
+      rts
 }
 .selfmod_end
 -     jmp -
       
-pattern  !byte $aa,$55
-; memcheck_zp
-;       !bin "memtest_zp.bin"
+.pattern  !byte $aa,$55
