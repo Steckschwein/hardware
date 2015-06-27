@@ -164,8 +164,8 @@ biosversion	!text "BIOS    : V150626", $00	; Version String
 
 
 			; Copy self modifying memcheck routine to ZP
-			ldx #.selfmod_end - .selfmod_start
--			lda .selfmod_start - 1, x
+			ldx #.memcheck_end - .memcheck_start
+-			lda .memcheck_start - 1, x
 			sta addr(<(.target - 1)) , x
 			dex
 			bne -
@@ -603,7 +603,7 @@ crc8:
 .num_patterns = $01
 .pattern  !byte $aa,$55
 
-.selfmod_start
+.memcheck_start
 !pseudopc .target {
       
 -     ldx #.num_patterns  ; 2 cycles
@@ -631,7 +631,7 @@ crc8:
 	  					  ; 42 cycles
       jmp .back_from_memcheck
 }
-.selfmod_end
+.memcheck_end
 
 ; old selfmod
 
