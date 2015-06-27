@@ -606,33 +606,66 @@ crc8:
 .selfmod_start
 !pseudopc .target {
       
--     ldx #.num_patterns
---    lda .pattern,x
-	  sta (ram_end_l),y
-	  cmp (ram_end_l),y
-      bne +
+-     ldx #.num_patterns  ; 2 cycles
+--    lda .pattern,x      ; 4 cycles
+	  sta (ram_end_l),y   ; 6 cycles
+	  cmp (ram_end_l),y   ; 5 cycles
+      bne +				  ; 2 cycles, 3 if taken
       
-      dex 
-      bne --
+      dex  				  ; 2 cycles
+      bne --			  ; 2 cycles, 3 if taken
 
-	  iny
-      bne -
+	  iny  				  ; 2 cycles		
+	  bne -				  ; 2 cycles, 3 if taken
 
       ; Stop at $e000 to prevent overwriting BIOS Code when ROMOFF
-      ldx ram_end_h
-      inx
-      stx ram_end_h
-      cpx #$e0
+      ldx ram_end_h		  ; 3 cycles
+      inx				  ; 2 cycles
+      stx ram_end_h		  ; 3 cycles
+      cpx #$e0			  ; 2 cycles
       
-      bne -
+      bne - 			  ; 2 cycles, 3 if taken
 
 +	  
-	  sty ram_end_l
-
+	  sty ram_end_l		  ; 3 cycles
+	  					  ; 42 cycles
       jmp .back_from_memcheck
 }
 .selfmod_end
 
+; old selfmod
+
+;       stz ram_end_h	   ; 3 cycles
+      
+; -     ldx #.num_patterns ; 2 cycles
+; --    lda .pattern,x     ; 4 cycles
+; .a     sta .start_check  ; 4 cycles
+; .b     cmp .start_check  ; 4 cycles
+;       bne +			   ; 2 cycles, 3 if taken
+      
+;       dex 			   ; 2 cycles
+;       bne --			   ; 2 cycles, 3 if taken
+
+;       inc .a+1 		   ; 6 cycles(!)
+;       inc .b+1 		   ; 6 cycles(!)
+;       bne -			   ; 2 cycles, 3 if taken
+
+;       ; Stop at $e000 to prevent overwriting BIOS Code when ROMOFF
+;       ldx .a+2 		   ; 4 cycles
+;       inx 			   ; 2 cycles
+;       stx .a+2 		   ; 4 cycles
+;       stx .b+2 		   ; 4 cycles
+;       cpx #$e0 		   ; 3 cycles
+      
+;       bne -			   ; 2 cycles, 3 if taken
+
+; +	  
+; 	  lda .a+2 		       ; 4 cycles
+; 	  sta ram_end_l		   ; 3 cycles
+; 	  lda .a+1 		       ; 4 cycles
+; 	  sta ram_end_h		   ; 3 cycles
+                           ; 70 cycles(!)
+      jmp .back_from_memcheck
 ;----------------------------------------------------------------------------------------------
 ; Jump table
 ;----------------------------------------------------------------------------------------------
