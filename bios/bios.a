@@ -13,7 +13,7 @@
 charset_8x8
 !src "../charsets/char.ascii.vc20.h.a"
 !src "../charsets/char.ascii.6x8.big.h.a"
-biosversion	!text "BIOS    : V150626", $00	; Version String
+biosversion	!text "BIOS    : V150628", $00	; Version String
 *=$f050
 .upload
 			+PrintString .crlf
@@ -137,7 +137,6 @@ biosversion	!text "BIOS    : V150626", $00	; Version String
 -			ldx #.num_patterns
 --			lda .pattern,x
 			sta addr($00),y
-
 			cmp addr($00),y
 			bne .zp_broken
 
@@ -163,19 +162,37 @@ biosversion	!text "BIOS    : V150626", $00	; Version String
 			bne --	
 
 
-			; Copy self modifying memcheck routine to ZP
-			ldx #.memcheck_end - .memcheck_start
--			lda .memcheck_start - 1, x
-			sta addr(<(.target - 1)) , x
-			dex
-			bne -
-
+			; Check Memory
+.check_memory
 			lda #>.start_check
 			sta ram_end_h
 			ldy #<.start_check
 			sty ram_end_l
 
- 			jmp .target ; Execute memcheck routine in ZP
+
+-		    ldx #.num_patterns  ; 2 cycles
+--			lda .pattern,x      ; 4 cycles
+	  		sta (ram_end_l),y   ; 6 cycles
+			cmp (ram_end_l),y   ; 5 cycles
+			bne +				  ; 2 cycles, 3 if taken
+
+			dex  				  ; 2 cycles
+			bne --			  ; 2 cycles, 3 if taken
+
+			iny  				  ; 2 cycles		
+			bne -				  ; 2 cycles, 3 if taken
+
+			; Stop at $e000 to prevent overwriting BIOS Code when ROMOFF
+			ldx ram_end_h		  ; 3 cycles
+			inx				  ; 2 cycles
+			stx ram_end_h		  ; 3 cycles
+			cpx #$e0			  ; 2 cycles
+
+			bne - 			  ; 2 cycles, 3 if taken
++	  		sty ram_end_l		  ; 3 cycles
+		
+	  					  ; 42 cycles
+	  	    bra .mem_ok
 
 .mem_broken
  			lda #$c0
@@ -193,22 +210,26 @@ biosversion	!text "BIOS    : V150626", $00	; Version String
 			sta memctl
 -			jmp -
 
-
-.back_from_memcheck
-			+SetVector vdp_chrout, outvec
+.mem_ok	
 			
-			+SetVector .default_params, paramvec
-			; init IO devices
-			jsr init_via1
-			jsr	init_vdp
-			
-			jsr .read_nvram
-			jsr init_uart
-
 			; Set IRQ Vector
 			+SetVector .irqhandler, irqvec
+
+			; Set input vector
 			+SetVector .kbd_chrin, invec
 			
+			; Set output vector
+			+SetVector vdp_chrout, outvec
+			
+			; set parameter vector
+			+SetVector .default_params, paramvec
+			
+			; init IO devices
+			jsr init_uart
+			jsr	init_vdp
+			jsr init_via1
+			jsr .read_nvram
+
 			+PrintString biosversion
 			+PrintString .crlf
 			
@@ -217,7 +238,6 @@ biosversion	!text "BIOS    : V150626", $00	; Version String
 			jsr .hexout
 			lda ram_end_l
 			jsr .hexout
-
 			+PrintString .crlf
 
 			jsr .init_sdcard
@@ -299,7 +319,7 @@ biosversion	!text "BIOS    : V150626", $00	; Version String
 			ldx #$ff
 			txs
 		
-			jmp .back_from_memcheck
+			jmp .mem_ok
 ;			rti
 
 ;----------------------------------------------------------------------------------------------
@@ -598,74 +618,11 @@ crc8:
 	!byte $00
 
 ;----------------------------------------------------------------------------------------------
-; Memcheck routine to be copied to ZP
+; Memcheck patterns
 ;----------------------------------------------------------------------------------------------
 .num_patterns = $01
 .pattern  !byte $aa,$55
 
-.memcheck_start
-!pseudopc .target {
-      
--     ldx #.num_patterns  ; 2 cycles
---    lda .pattern,x      ; 4 cycles
-	  sta (ram_end_l),y   ; 6 cycles
-	  cmp (ram_end_l),y   ; 5 cycles
-      bne +				  ; 2 cycles, 3 if taken
-      
-      dex  				  ; 2 cycles
-      bne --			  ; 2 cycles, 3 if taken
-
-	  iny  				  ; 2 cycles		
-	  bne -				  ; 2 cycles, 3 if taken
-
-      ; Stop at $e000 to prevent overwriting BIOS Code when ROMOFF
-      ldx ram_end_h		  ; 3 cycles
-      inx				  ; 2 cycles
-      stx ram_end_h		  ; 3 cycles
-      cpx #$e0			  ; 2 cycles
-      
-      bne - 			  ; 2 cycles, 3 if taken
-
-+	  
-	  sty ram_end_l		  ; 3 cycles
-	  					  ; 42 cycles
-      jmp .back_from_memcheck
-}
-.memcheck_end
-
-; old selfmod
-
-;       stz ram_end_h	   ; 3 cycles
-      
-; -     ldx #.num_patterns ; 2 cycles
-; --    lda .pattern,x     ; 4 cycles
-; .a     sta .start_check  ; 4 cycles
-; .b     cmp .start_check  ; 4 cycles
-;       bne +			   ; 2 cycles, 3 if taken
-      
-;       dex 			   ; 2 cycles
-;       bne --			   ; 2 cycles, 3 if taken
-
-;       inc .a+1 		   ; 6 cycles(!)
-;       inc .b+1 		   ; 6 cycles(!)
-;       bne -			   ; 2 cycles, 3 if taken
-
-;       ; Stop at $e000 to prevent overwriting BIOS Code when ROMOFF
-;       ldx .a+2 		   ; 4 cycles
-;       inx 			   ; 2 cycles
-;       stx .a+2 		   ; 4 cycles
-;       stx .b+2 		   ; 4 cycles
-;       cpx #$e0 		   ; 3 cycles
-      
-;       bne -			   ; 2 cycles, 3 if taken
-
-; +	  
-; 	  lda .a+2 		       ; 4 cycles
-; 	  sta ram_end_l		   ; 3 cycles
-; 	  lda .a+1 		       ; 4 cycles
-; 	  sta ram_end_h		   ; 3 cycles
-                           ; 70 cycles(!)
-      jmp .back_from_memcheck
 ;----------------------------------------------------------------------------------------------
 ; Jump table
 ;----------------------------------------------------------------------------------------------
