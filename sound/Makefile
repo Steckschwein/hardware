@@ -1,4 +1,4 @@
-SONGS=prowla.bin dn2_1.bin dn2_2.bin
+SONGS=prowla.bin dn2_1.bin dn2_2.bin setup.bin imfplay.bin
 
 %.bin: %.a
 	acme -v -f plain --cpu 65c02 -o $@ $<
@@ -11,6 +11,10 @@ dn2_1.bin: dro_player.a
 	acme -v -f plain --cpu 65c02 -Ddn2_1=1 -o $@ $<
 dn2_2.bin: dro_player.a
 	acme -v -f plain --cpu 65c02 -Ddn2_2=1 -o $@ $<
+setup.bin: dro_player.a
+	acme -v -f plain --cpu 65c02 -Dsetup=1 -o $@ $<
+imfplay.bin: dro_player.a
+	acme -v -f plain --cpu 65c02 -Dimfplay=1 -o $@ $<
 
 clean:
 	rm -f *.bin

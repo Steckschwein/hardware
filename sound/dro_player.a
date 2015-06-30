@@ -148,6 +148,13 @@ song:
 !ifdef prowla {
 !bin "prowla.dro"
 }
+!ifdef setup {
+!bin "setup_000.dro"
+}
+!ifdef imfplay {
+!bin "imfplay_001.dro"
+}
+
 song_end:
 
 ;dro_file_name: .BYTE DRO_FILE
@@ -403,7 +410,7 @@ chk_kbd:  ; if I am correct, it's about 14 cycles normally
 ;	LDA $DC01	; 4 cycles
 
 ;	AND #%10000000	; 2 cycles
-	!for .i,0,34 {
+	!for .i,0,28 {
 		nop
 	} 
 	
