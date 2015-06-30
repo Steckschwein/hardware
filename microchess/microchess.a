@@ -228,7 +228,8 @@ NOGO	CMP	#$0D            ; [Enter]
 NOMV	CMP #$41		; [Q] ***Added to allow game exit***
 		BEQ DONE		; quit the game, exit back to system.  
 		JMP	INPUT		; process move
-DONE	RTS
+DONE	
+		jmp $c800
 		;JMP     ($FFFA)		; *** MUST set this to YOUR OS starting address
 ;		
 ;       THE ROUTINE JANUS DIRECTS THE
@@ -1023,13 +1024,13 @@ OPNING  	!byte 	$99, $25, $0B, $25, $01, $00, $33, $25
 ; * = $2000
 !align 255,0
 .assets
-!src "../shell/sanduhr.raw"
-!src "../shell/sanduhr_45.raw"
-!src "../shell/sanduhr_90.raw"
-!src "../shell/sanduhr_135.raw"
-!src "../shell/sanduhr_180.raw"
-!src "../shell/sanduhr_225.raw"
-!src "../shell/sanduhr_270.raw"
-!src "../shell/sanduhr_315.raw"
+; !src "../shell/sanduhr.raw"
+; !src "../shell/sanduhr_45.raw"
+; !src "../shell/sanduhr_90.raw"
+; !src "../shell/sanduhr_135.raw"
+; !src "../shell/sanduhr_180.raw"
+; !src "../shell/sanduhr_225.raw"
+; !src "../shell/sanduhr_270.raw"
+; !src "../shell/sanduhr_315.raw"
 .sprite_sanduhr
 	!byte	$ff,	$f0,	0,	Gray
