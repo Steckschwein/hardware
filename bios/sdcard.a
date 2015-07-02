@@ -280,7 +280,7 @@
        ; Wait for data token
 -             
        lda #$ff
-       jsr spi_rw_byte             
+       jsr .spi_rw_byte             
        cmp #$fe
        bne -
 
