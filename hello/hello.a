@@ -3,22 +3,39 @@ jmp main
 !src <defs.h.a>
 !src <bios.h.a>
 
+spi 	  = $260
+spidata   = spi
+spistatus = spi+1
+spictrl   = spi+1
+spidiv    = spi+2
+spiss     = spi+3
+
 main 
-	lda #dev_lcd
-	sta chn_out
+	lda #$01
+	sta spiss
 
-	jsr lcdclear
+	lda #$00
+	sta spidiv
 
-	+SetVector hello, msgptr
-	jsr lcdstring
-	ldx #$00
-	ldy #$02
-	jsr lcdxy
-	+SetVector num, msgptr
-	jsr lcdstring
+	lda #$00
+	sta spictrl
+	; sta spidata
+	sta spistatus
 
-	rts
-hello
-	!text "**Hello World!**", $00
-num
-	!text "1234567890123456", $00
+	
+	bit spistatus
+	bpl +
+	lda spidata
++
+
+
+ 	lda #$f0
+ 	sta spidata
+
+--	bit spistatus
+	bpl --
+	; lda spidata
+	
+- 	jmp -
+; hello
+; 	!text "**Hello World!**", $00

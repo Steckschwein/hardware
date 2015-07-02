@@ -3,19 +3,17 @@
 !src <defs.h.a>
 !src <bios.h.a>
 !src <via.h.a>
-!source <lcd.h.a>
 
 	sei
 
--	jsr .kbd_chrin
+-	
+	jsr .kbd_enable	
+	lda #$00
+	jsr spi_rw_byte
+	jsr .kbd_disable
+
+	beq -
 	jsr hexout
-; 	cmp #$0d
-; 	beq +
-; 	jsr hexout
-; 	jmp -
-; +	jsr hexout
-; 	lda #$0a
-; 	jsr hexout
 	bra -
 
 .kbd_enable

@@ -28,6 +28,8 @@ seconds=tmp7
 main:
 	sei
 
+	jsr getkey
+
 	jsr	vdp_display_off
 
 	+SetVector charset, .adrl
@@ -102,32 +104,17 @@ main:
 
 	dec		frame_end
 
-	; lda via1portb
-	; and #%01111110
-	; cmp #$7e
-	; bne +
 
-	; lda #%01111010
-	; ; and via1portb
-	; sta via1portb
-
-	; TAX             ; aufheben
- ;    ORA #$01
- ;    !for .i,0,7 {
-	; 	STA via1portb ; Takt An 1
-	; 	STX via1portb ; Takt aus  
- ;    }
-       
-	; ldx #%11111110
-	; stx via1portb
-
-	; lda via1sr
-	; bne .out
-; +	
+	jsr getkey
+	cmp #$0d
+	beq .out
+	cmp #$20
+	beq .out
++	
 	jmp	-
 .out
-
-	rts
+	jmp $c800
+	
 
 !macro nops .n{
 	!for i,.n,0{
