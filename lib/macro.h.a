@@ -56,11 +56,11 @@ macro_h_a = 1
 }
 
 !macro toUpper {
-    cmp #$60 ; Is lowercase?
-	bcc +
-	sec
-	sbc #$20 ; Yes, make uppercase
-+	
+	and	#$DF
+}
+
+!macro toLower {
+	ora #$20
 }
 
 
