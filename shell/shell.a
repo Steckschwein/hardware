@@ -1,4 +1,4 @@
-*= $c800
+*= $5000
 
 text_mode_40 = 1
 num_ls_entries = $03
@@ -6,64 +6,63 @@ num_ls_entries = $03
 .nvram = $a000
 !src <defs.h.a>
 !src <bios.h.a>
+!src <kernel.h.a>
 !src <via.h.a>
 !src <fat32.h.a>
 !src <params.h.a>
 !src <errors.h.a>
 
 	jmp	.init0
-!src "shell.textui.a"
-!src "shell.gfxui.a"
 
 !address {
-.key = $10
+; .key = $10
 .buf 				= $0350 ; Input buffer 80 bytes. end: $03a1
 .paramptr			= $11
 }
 
 
 .init0
-	sei
+; 	sei
 	
-	stz .key	
+; 	stz .key	
 
-	+SetVector _textui_chrout, outvec
+; 	+SetVector _textui_chrout, outvec
 
 
 	
-	lda #<count
-	sta via1t1cl            ; set low byte of count
-	lda #>count
-	sta via1t1ch            ; set high byte of count
+; 	lda #<count
+; 	sta via1t1cl            ; set low byte of count
+; 	lda #>count
+; 	sta via1t1ch            ; set high byte of count
 
-	lda #%11000000
-	sta via1ier             ; enable VIA1 T1 interrupts
+; 	lda #%11000000
+; 	sta via1ier             ; enable VIA1 T1 interrupts
 
-	lda #%01000000
-	sta via1acr             ; T1 continuous, PB7 disabled
+; 	lda #%01000000
+; 	sta via1acr             ; T1 continuous, PB7 disabled
 
-	+SetVector .irq, irqvec
+; 	+SetVector .irq, irqvec
 
 
-	; read from keyboard buffer until empty to filter crap from kbd init
--	lda #%01111010
-	sta via1portb
+; 	; read from keyboard buffer until empty to filter crap from kbd init
+; -	lda #%01111010
+; 	sta via1portb
 
-	TAX             ; aufheben
-    ORA #$01
-    !for .i,0,7 {
-		STA via1portb ; Takt An 1
-		STX via1portb ; Takt aus  
-    }
+; 	TAX             ; aufheben
+;     ORA #$01
+;     !for .i,0,7 {
+; 		STA via1portb ; Takt An 1
+; 		STX via1portb ; Takt aus  
+;     }
        
-	ldx #%11111110
-	stx via1portb
+; 	ldx #%11111110
+; 	stx via1portb
 
-	lda via1sr
-	cmp #$00
-	bne -
+; 	lda via1sr
+; 	cmp #$00
+; 	bne -
 
-	jsr	.textui_init0
+; 	jsr	.textui_init0
 	
 	
 	cli
@@ -92,7 +91,7 @@ mainloop
 	
 
 .inputloop	
-	jsr .keyin
+	jsr keyin
 
 	cmp #$0d ; return?
 	beq .parse
@@ -252,7 +251,7 @@ mainloop
 	bne +
 	jsr	.textui_disable			;disable textui
 	jsr	.gfxui_init
--	jsr .keyin
+-	jsr keyin
 	cmp #$0d ; wait return?
 	bne	-
 	jsr	vdp_display_off			;restore textui
@@ -289,54 +288,54 @@ mainloop
 	; plp	
 	rts
 
-.irq
-	+save
+; .irq
+; 	+save
 
-	;via
-	bit via1ifr		; Interrupt from VIA?
-	bpl +			; no? get out
+; 	;via
+; 	bit via1ifr		; Interrupt from VIA?
+; 	bpl +			; no? get out
 
-	bit via1t1cl	; Acknowledge timer interrupt
+; 	bit via1t1cl	; Acknowledge timer interrupt
 
-	lda .key		; already char in buffer? do nothing
-	bne +
+; 	lda .key		; already char in buffer? do nothing
+; 	bne +
 
-	; jsr getkey
-	lda via1portb
-	and #%01111110
-	cmp #$7e
-	bne +
+; 	; jsr getkey
+; 	lda via1portb
+; 	and #%01111110
+; 	cmp #$7e
+; 	bne +
 
-	lda #%01111010
-	; and via1portb
-	sta via1portb
+; 	lda #%01111010
+; 	; and via1portb
+; 	sta via1portb
 
-	TAX             ; aufheben
-    ORA #$01
-    !for .i,0,7 {
-		STA via1portb ; Takt An 1
-		STX via1portb ; Takt aus  
-    }
+; 	TAX             ; aufheben
+;     ORA #$01
+;     !for .i,0,7 {
+; 		STA via1portb ; Takt An 1
+; 		STX via1portb ; Takt aus  
+;     }
        
-	ldx #%11111110
-	stx via1portb
+; 	ldx #%11111110
+; 	stx via1portb
 
-	lda via1sr
-	cmp #$00
-	beq +
-	sta .key
+; 	lda via1sr
+; 	cmp #$00
+; 	beq +
+; 	sta .key
 
-+
-	jsr	.textui_update_screen
+; +
+; 	jsr	.textui_update_screen
 	
-	+restore
-	rti
+; 	+restore
+; 	rti
 
-.keyin
--	lda .key 		; wait for .key to become != 00
-	beq -
-	stz .key 		; reset .key to signal isr to fetch next key
-	rts
+; .keyin
+; -	lda .key 		; wait for .key to become != 00
+; 	beq -
+; 	stz .key 		; reset .key to signal isr to fetch next key
+; 	rts
 
 .upload
 	sei
@@ -678,3 +677,7 @@ sd_busy_wait
 }
 .sprite_sanduhr
 	!byte	$ff,	$f0,	0,	Gray
+
+; !src "shell.textui.a"
+; !src "shell.gfxui.a"
+
