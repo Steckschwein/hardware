@@ -1,6 +1,9 @@
 !source <t99xx.lib.a>
 
-.screen=$c000
+!address {
+.screen=$c000	
+}
+
 .screen_status !byte .TEXTUI_ENABLED
 .screen_frames !byte 0
 .saved_char	!byte ' '
@@ -141,8 +144,8 @@
 +++	rts
 
 .textui_update_screen
-	bit	a_vreg
-	bpl ++	   ; VDP IRQ flag set?
+	; bit	a_vreg
+	; bpl ++	   ; VDP IRQ flag set?
 	lda	.screen_status
 	and	#.TEXTUI_ENABLED
 	beq	++
@@ -150,7 +153,7 @@
 	;jsr	vdp_bgcolor	
 
 	inc	.screen_frames
-	jsr	.textui_busy
+	; jsr	.textui_busy
 
 	jsr	.textui_cursor
 	
@@ -173,37 +176,37 @@
 	jsr	vdp_bgcolor
 ++	rts	
 
-.textui_busy
-	lda	.screen_status
-	and	#.CURSOR_BUSY
-	beq	+++
-	lda	.screen_frames
-	and	#$03
-	bne	++
-	lda	#$00
-	ldy	#.WRITE_ADDRESS+$3c
-	jsr vdp_sreg
-	lda	#$ff		;y - $ff top 
-	sta	a_vram		
-	+vnops
-	lda	#$f0		;x - $f0 before right border
-	sta	a_vram		
-	+vnops
-	lda .sprite_sanduhr+2	;ptr
-	sta	a_vram
-	clc
-	adc	#$04		;16x16 sprites, pointer * 4
-	cmp	#$04*8
-	bne	+
-	lda	#$00
-+	sta	.sprite_sanduhr+2
-++	rts
-+++	lda	#$00
-	ldy	#.WRITE_ADDRESS+$3c
-	jsr vdp_sreg
-	lda #$d0		;y-pos off screen
-	sta	a_vram
-	rts
+; .textui_busy
+; 	lda	.screen_status
+; 	and	#.CURSOR_BUSY
+; 	beq	+++
+; 	lda	.screen_frames
+; 	and	#$03
+; 	bne	++
+; 	lda	#$00
+; 	ldy	#.WRITE_ADDRESS+$3c
+; 	jsr vdp_sreg
+; 	lda	#$ff		;y - $ff top 
+; 	sta	a_vram		
+; 	+vnops
+; 	lda	#$f0		;x - $f0 before right border
+; 	sta	a_vram		
+; 	+vnops
+; 	lda .sprite_sanduhr+2	;ptr
+; 	sta	a_vram
+; 	clc
+; 	adc	#$04		;16x16 sprites, pointer * 4
+; 	cmp	#$04*8
+; 	bne	+
+; 	lda	#$00
+; +	sta	.sprite_sanduhr+2
+; ++	rts
+; +++	lda	#$00
+; 	ldy	#.WRITE_ADDRESS+$3c
+; 	jsr vdp_sreg
+; 	lda #$d0		;y-pos off screen
+; 	sta	a_vram
+; 	rts
 	
 .textui_scroll_up
 	ldx	#$00
