@@ -1,0 +1,45 @@
+*=$1000
+!src <defs.h.a>
+!src <bios.h.a>
+
+; 	system attribute has to be set on file system
+
+.dest = $c800
+.bios = $f000
+
+-
+a	lda .payload
+b	sta .dest
+
+	inc a+1
+	inc b+1
+	bne -
+
+	inc a+2
+	inc b+2
+	bne -
+
+; -
+; a2	lda .bios
+; b2	sta .bios
+
+; 	inc a2+1
+; 	inc b2+1
+; 	bne -
+
+; 	inc a2+2
+; 	inc b2+2
+; 	bne -
+
+
+done
+	
+	; lda #$01
+	; sta $02f0
+	
+	jmp .dest
+	
+!align 255,0
+; *=$1100
+.payload
+!bin "shell.bin"
