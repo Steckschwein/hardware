@@ -2,6 +2,9 @@
 ; *=$c000
 FD_start_cluster = $00
 FD_file_size = $08
+!address {
+.entries = tmp0	
+}
 
 
 
