@@ -56,7 +56,11 @@ macro_h_a = 1
 }
 
 !macro toUpper {
+
+	cmp #$60 ; Is lowercase?
+	bcc +
 	and	#$DF
++
 }
 
 !macro toLower {
@@ -105,6 +109,6 @@ macro_h_a = 1
 
 !macro ShellPrintString .word {
 	+SetVector .word,	msgptr
-	jsr _textui_print
+	jsr strout
 }
 
