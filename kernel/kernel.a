@@ -1,5 +1,5 @@
-*= $4000
-
+*= $d600
+.shell_addr		= $d000
 text_mode_40 = 1
 num_ls_entries = $03
 
@@ -63,7 +63,43 @@ kern_init
 ; 	jsr chrout 
 ; 	jmp -
 
-	jmp $5000	
+	jsr .fat_mount 
+	lda errno
+	bne .error 
+	
+	+SetVector .filename, filenameptr
+
+	jsr .fat_open 
+	lda errno
+	bne .error 
+
+	+SetVector .shell_addr, sd_blkptr
+
+	; +SetVector .txt_msg_loading, msgptr
+	; jsr strout
+	; +SetVector .filename, msgptr
+	; jsr strout
+	; +SetVector .crlf, msgptr
+	; jsr strout
+
+
+	jsr .fat_read
+	lda errno
+	bne .error 
+
+	ldx #$ff 
+	txs 
+
+
+	jmp .shell_addr	
+
+.error
+	tax 
+	lda #'E'
+	jsr chrout 
+	txa 
+	jsr hexout
+-	jmp -
 
 .keyin
 -	lda .key 		; wait for .key to become != 00
@@ -145,6 +181,5 @@ krn_display_off			jmp vdp_display_off
 ; strings
 .kernel_version 	!text "SteckOS Kernel 0.1",$0d,$0a,$00
 .crlf			!byte $0a,$0d,$00
-
-*=$5000
-!bin "../shell/shell.bin"
+.txt_msg_loading !text "Loading ",$00
+.filename		!text "shell.bin",$00

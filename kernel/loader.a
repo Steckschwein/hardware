@@ -4,7 +4,7 @@
 
 ; 	system attribute has to be set on file system
 
-.dest = $c800
+.dest = $d600
 .bios = $f000
 
 -
@@ -42,4 +42,4 @@ done
 !align 255,0
 ; *=$1100
 .payload
-!bin "shell.bin"
+!bin "kernel.bin"
