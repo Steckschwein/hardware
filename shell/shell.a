@@ -1,4 +1,4 @@
-*= $5000
+*= $d000
 
 text_mode_40 = 1
 num_ls_entries = $03
