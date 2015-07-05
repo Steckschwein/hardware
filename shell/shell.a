@@ -8,10 +8,11 @@ num_ls_entries = $03
 !src <bios.h.a>
 !src <kernel.h.a>
 !src <via.h.a>
-!src <fat32.h.a>
+; !src <fat32.h.a>
 !src <params.h.a>
 !src <errors.h.a>
-
+!src <t9929.h.a>
+!src <sdcard.h.a>
 	jmp	.init0
 
 !address {
@@ -75,7 +76,7 @@ num_ls_entries = $03
 	lda #%01111110
 	sta via1portb
 	; +V_ToggleCursorBusy	
-	jsr .fat_mount
+	jsr mount
 	; +V_ToggleCursorBusy
 	
 
@@ -179,26 +180,26 @@ mainloop
 +	jmp mainloop
 
 
-!src <fat.a>
+; !src <fat.a>
 
 .ls
-	+SetVector .fat_list_entry_short, fat_dir_display_hook
+	+SetVector list_entry_short, fat_dir_display_hook
 	lda #num_ls_entries
 	sta .entries
 	bra +
 .dir
-	+SetVector .fat_list_entry, fat_dir_display_hook
+	+SetVector list_entry, fat_dir_display_hook
 +	+ShellPrintString .crlf
-	+SetVector .fat_dir_filter_default, fat_dir_filter_hook
+	+SetVector dir_filter_default, fat_dir_filter_hook
 
-	jsr .fat_read_dir
+	jsr read_dir
 	jmp mainloop
 
 
 
 .cdroot
 	+PrintChar '/'
-	jsr .fat_open_rootdir
+	jsr open_rootdir
 	jmp mainloop 
 
 .cd
@@ -208,7 +209,7 @@ mainloop
 	sta filenameptr+1
 	
 	+ShellPrintString .crlf
-	jsr .fat_open
+	jsr open
 
 	lda errno
 	beq +
@@ -249,14 +250,14 @@ mainloop
 	jsr .readfile	; read data to .steckos_start ($1000)
 	lda errno
 	bne +
-	jsr	.textui_disable			;disable textui
-	jsr	.gfxui_init
+	jsr	textui_disable			;disable textui
+	jsr	gfxui_init
 -	jsr keyin
 	cmp #$0d ; wait return?
 	bne	-
-	jsr	vdp_display_off			;restore textui
-	jsr	.textui_init
-	jsr	.textui_enable
+	jsr	display_off			;restore textui
+	jsr	textui_init
+	jsr	textui_enable
 
 +	jmp mainloop
 
@@ -268,7 +269,7 @@ mainloop
 	sta filenameptr+1
 
 
-	jsr .fat_open
+	jsr open
  	; stx tmp5
  
 	lda errno
@@ -276,12 +277,10 @@ mainloop
 
 	
 	+SetVector .steckos_start, sd_blkptr
-	; lda tmp5
-	; jsr .fat_read_singleblock
-	jsr .fat_read
+	jsr read
 
 	ldx tmp5
-	jsr .fat_close
+	jsr close
 	
 +	
 	jsr .errmsg

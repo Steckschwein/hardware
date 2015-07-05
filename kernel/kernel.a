@@ -6,7 +6,7 @@ num_ls_entries = $03
 !src <defs.h.a>
 !src <bios.h.a>
 !src <via.h.a>
-; !src <fat32.h.a>
+!src <fat32.h.a>
 ; !src <params.h.a>
 ; !src <errors.h.a>
 
@@ -122,12 +122,29 @@ kern_init
 
 !src "../shell/shell.textui.a"
 !src "../shell/shell.gfxui.a"
+!src <fat.a>
 
 ; "kernel" jumptable
-krn_keyin	jmp .keyin
+krn_keyin			jmp .keyin
+krn_mount 			jmp .fat_mount 
+krn_open 			jmp .fat_open
+krn_read_dir		jmp .fat_read_dir
+krn_close 			jmp .fat_close
+krn_read 			jmp .fat_read 
+krn_open_rootdir 	jmp .fat_open_rootdir
 
+krn_list_entry 		jmp .fat_list_entry
+krn_list_entry_short jmp .fat_list_entry_short
+krn_dir_filter_default			jmp .fat_dir_filter_default
+
+krn_textui_init 		jmp	.textui_init
+krn_textui_enable		jmp	.textui_enable
+krn_textui_disable		jmp .textui_disable			;disable textui
+krn_gfxui_init			jmp	.gfxui_init
+krn_display_off			jmp vdp_display_off
 ; strings
 .kernel_version 	!text "SteckOS Kernel 0.1",$0d,$0a,$00
+.crlf			!byte $0a,$0d,$00
 
-
-!src "../shell/shell.a"
+*=$5000
+!bin "../shell/shell.bin"
