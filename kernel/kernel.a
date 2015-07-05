@@ -1,4 +1,4 @@
-*= $d600
+*= $d700
 .shell_addr		= $d000
 text_mode_40 = 1
 num_ls_entries = $03
@@ -169,9 +169,9 @@ krn_close 			jmp .fat_close
 krn_read 			jmp .fat_read 
 krn_open_rootdir 	jmp .fat_open_rootdir
 
-krn_list_entry 		jmp .fat_list_entry
-krn_list_entry_short jmp .fat_list_entry_short
-krn_dir_filter_default			jmp .fat_dir_filter_default
+krn_list_entry 			jmp .fat_list_entry
+krn_list_entry_short 	jmp .fat_list_entry_short
+krn_dir_filter_default	jmp .fat_dir_filter_default
 
 krn_textui_init 		jmp	.textui_init
 krn_textui_enable		jmp	.textui_enable
