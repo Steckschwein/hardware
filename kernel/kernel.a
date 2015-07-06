@@ -1,5 +1,5 @@
-*= $d700
-.shell_addr		= $d000
+*= $d600
+
 text_mode_40 = 1
 num_ls_entries = $03
 
@@ -11,7 +11,8 @@ num_ls_entries = $03
 ; !src <errors.h.a>
 
 !address {
-.key = $10
+	.shell_addr		= $d000
+	.key = $10
 }
 
 
@@ -56,40 +57,31 @@ kern_init
 
 	+SetVector _textui_chrout, outvec
 
-	cli
+	
 	+SetVector .kernel_version, msgptr
 	jsr strout
-; -	jsr .keyin
-; 	jsr chrout 
-; 	jmp -
 
 	jsr .fat_mount 
 	lda errno
 	bne .error 
 	
-	+SetVector .filename, filenameptr
 
+	+SetVector .filename, filenameptr
 	jsr .fat_open 
 	lda errno
 	bne .error 
 
 	+SetVector .shell_addr, sd_blkptr
-
-	; +SetVector .txt_msg_loading, msgptr
-	; jsr strout
-	; +SetVector .filename, msgptr
-	; jsr strout
-	; +SetVector .crlf, msgptr
-	; jsr strout
-
-
 	jsr .fat_read
 	lda errno
 	bne .error 
 
+	jsr .fat_close
+	
+
 	ldx #$ff 
 	txs 
-
+	cli
 
 	jmp .shell_addr	
 
@@ -159,7 +151,12 @@ kern_init
 !src "../shell/shell.textui.a"
 !src "../shell/shell.gfxui.a"
 !src <fat.a>
-
+; strings
+.kernel_version 	!text "SteckOS Kernel 0.1",$0d,$0a,$00
+.crlf			!byte $0a,$0d,$00
+.txt_msg_loading !text "Loading ",$00
+.filename		!text "shell.bin",$00
+*=$dfa0
 ; "kernel" jumptable
 krn_keyin			jmp .keyin
 krn_mount 			jmp .fat_mount 
@@ -178,8 +175,3 @@ krn_textui_enable		jmp	.textui_enable
 krn_textui_disable		jmp .textui_disable			;disable textui
 krn_gfxui_init			jmp	.gfxui_init
 krn_display_off			jmp vdp_display_off
-; strings
-.kernel_version 	!text "SteckOS Kernel 0.1",$0d,$0a,$00
-.crlf			!byte $0a,$0d,$00
-.txt_msg_loading !text "Loading ",$00
-.filename		!text "shell.bin",$00
