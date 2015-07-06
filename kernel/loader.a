@@ -4,8 +4,14 @@
 
 ; 	system attribute has to be set on file system
 
-.dest = $d600
-.bios = $f000
+!address {
+	.dest = $d600
+	.bios = $f000	
+}
+
+.pages = (.payload_end - .payload) / 256 + 1
+
+
 
 -
 a	lda .payload
@@ -15,6 +21,15 @@ b	sta .dest
 	inc b+1
 	bne -
 
+	lda a+2
+	cmp >.payload_end
+	bne +
+	
+	lda a+1
+	cmp <.payload_end
+	bne +
+	bra done
++
 	inc a+2
 	inc b+2
 	bne -
@@ -43,3 +58,4 @@ done
 ; *=$1100
 .payload
 !bin "kernel.bin"
+.payload_end
