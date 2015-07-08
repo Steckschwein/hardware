@@ -60,60 +60,6 @@ FD_file_size = $08
 +	
 	rts
 
-; Read cbm-format executable (first 2 bytes=load address) 
-.fat_read_exec
-
-	jsr .calc_lba_addr
-
-	+SetVector sd_blktarget, sd_blkptr
-
-	jsr sd_read_block
-
-	; first 2 bytes of the block are the new destination for sd_blkptr
-	lda <sd_blktarget
-	sta <sd_blkptr
-	sta <.addr
-
-	lda >sd_blktarget
-	sta >sd_blkptr
-	sta >.addr
-
-	; copy rest of the block minus first 2 bytes to destination
-	; first half
-	ldx #$02
-	ldy #$00
--	lda sd_blktarget,x
-	sta (sd_blkptr),y
-	iny
-	inx
-	bne -
-	
-	; x is now $00, y should be $fe
-
--	lda sd_blktarget + $100,x
-	sta (sd_blkptr),y
-	inx				; x wrapped around (page end reached)? then we are done
-	beq +
-	iny				; y wrapped around?
-	bne -
-	inc >sd_blkptr			; y wrapped around. inc blkptr msg
-	bra -				; and again
-+			
-	sty <sd_blkptr			; set blkptr lsb to setup destination for the remaining blocks to be read
-
-	; calculate number of blocks to be read
-	lda fd_area + FD_file_size+1,x
-	lsr
-	dec				; minus one block, we read that one already
-	sta .blocks
-	bcs +
-	lda fd_area + FD_file_size+0,x
-	beq ++
-+	inc .blocks
-++  
-	jsr sd_read_multiblock
-	rts
-
 .fat_open
 	pha
 	phy
