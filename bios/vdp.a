@@ -10,7 +10,10 @@ init_vdp
 	
 	stz	crs_x
 	stz	crs_y
-
+	stz	char_buf_ptr
+	
+	;+SetVector	.vdp_isr, irqvec
+	
 	+SetVector	charset, .adrl
 	lda	#$00
 	ldy	#.WRITE_ADDRESS+$00
@@ -18,5 +21,7 @@ init_vdp
 	jsr	vdp_memcpy
 	lda	#Cyan<<4|Black			;enable gfx 1
 	jsr	vdp_mode_gfx1
+	
 	jsr	vdp_irq_off				;switch gfx int off
+	
 	rts

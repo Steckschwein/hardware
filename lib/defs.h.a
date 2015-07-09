@@ -19,8 +19,8 @@ count		= clockspeed * jiffies
 ;----------------------------------------------------------------------------------------------
 
 !address {
-; 	dividend = $c0
-; ; divisor = $c4
+; dividend = $c0
+; divisor = $c4
 ; remainder = $c6
 ; result = dividend
 
@@ -29,14 +29,13 @@ count		= clockspeed * jiffies
 .endaddr    = $c2
 .length		= $c4
 
-; Cursor Position
+; Cursor Position and buffer
 crs_x	= $d0
 crs_y	= $d1
-crs_ptr	= $d2 ; 2 bytes
-
-; Character Ouput stream
-;coutvec = $d4
-
+crs_ptr	= $d2 	; 2 byte ram address pointer
+char_buf_ptr = $d4	; buffer pointer
+char_buf_adr = $d5	; $d5-$df buffer (11 bytes)
+char_buf_end = $df
 
 ; IRQ vector
 irqvec		= $e0
