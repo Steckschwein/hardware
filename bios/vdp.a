@@ -12,8 +12,6 @@ init_vdp
 	stz	crs_y
 	stz	char_buf_ptr
 	
-	;+SetVector	.vdp_isr, irqvec
-	
 	+SetVector	charset, .adrl
 	lda	#$00
 	ldy	#.WRITE_ADDRESS+$00

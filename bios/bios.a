@@ -227,9 +227,11 @@ biosversion	!text "BIOS    : V150628", $00	; Version String
 			; init IO devices
 			jsr init_uart
 			jsr	init_vdp
+;			cli
+
 			jsr init_via1
 			jsr .read_nvram
-
+			
 			+PrintString biosversion
 			+PrintString .crlf
 			
@@ -328,8 +330,9 @@ biosversion	!text "BIOS    : V150628", $00	; Version String
 .do_irq
 			jmp (irqvec)
 			
-
 .irqhandler
+;			jsr	.vdp_isr
+			
 			rti
 
 ;----------------------------------------------------------------------------------------------

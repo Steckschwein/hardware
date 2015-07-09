@@ -365,6 +365,17 @@ vdp_chrout
 	bpl ++	   ; VDP IRQ flag set?
 	
 	+save
+
+	lda	#White
+	sta   a_vreg
+	+vnops
+	lda   #v_reg7
+	sta   a_vreg
+	lda	#Black
+	sta   a_vreg
+	+vnops
+	lda   #v_reg7
+	sta   a_vreg
 	
 	lda	char_buf_ptr
 	beq	+					;buffer empty?
@@ -379,16 +390,16 @@ vdp_chrout
 	
 +	+restore
 
-++	rti
+++	rts
 
 .vdp_write_char
 	pha
 -   bit a_vreg
-	bpl -
+    bpl -
 	jsr .vdp_set_addr
 	pla
 	sta a_vram
-	rts
+    rts
 	
 	phx
 -	ldx	char_buf_ptr					;block buffer i/o until freed
