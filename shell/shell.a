@@ -22,50 +22,7 @@ num_ls_entries = $03
 }
 
 
-.init0
-; 	sei
-	
-; 	stz .key	
-
-; 	+SetVector _textui_chrout, outvec
-
-
-	
-; 	lda #<count
-; 	sta via1t1cl            ; set low byte of count
-; 	lda #>count
-; 	sta via1t1ch            ; set high byte of count
-
-; 	lda #%11000000
-; 	sta via1ier             ; enable VIA1 T1 interrupts
-
-; 	lda #%01000000
-; 	sta via1acr             ; T1 continuous, PB7 disabled
-
-; 	+SetVector .irq, irqvec
-
-
-; 	; read from keyboard buffer until empty to filter crap from kbd init
-; -	lda #%01111010
-; 	sta via1portb
-
-; 	TAX             ; aufheben
-;     ORA #$01
-;     !for .i,0,7 {
-; 		STA via1portb ; Takt An 1
-; 		STX via1portb ; Takt aus  
-;     }
-       
-; 	ldx #%11111110
-; 	stx via1portb
-
-; 	lda via1sr
-; 	cmp #$00
-; 	bne -
-
-; 	jsr	.textui_init0
-	
-	
+.init0	
 	cli
 .init	
 	sei
@@ -75,9 +32,8 @@ num_ls_entries = $03
 	jsr hexout
 	lda #%01111110
 	sta via1portb
-	; +V_ToggleCursorBusy	
+	
 	jsr mount
-	; +V_ToggleCursorBusy
 	
 
 	jmp	.hello
@@ -85,7 +41,6 @@ num_ls_entries = $03
 	
 	
 mainloop
-	+ShellPrintString .crlf
 	+ShellPrintString .prompt
 	ldx #$00
 	stz .buf
@@ -650,7 +605,7 @@ sd_busy_wait
 				!text $0a,$0d,"view <name> - display gfx file"
 				!text $0a,$0d,"date        - show time and date"
 .crlf			!byte $0a,$0d,$00
-.prompt			!text ">",$00
+.prompt			!text $0a,$0d,">",$00
 .txt_msg_unknown_cmd	!text $0a,$0d,"unknown command (try 'help')",$00
 .txt_cd 		!text "cd ok",$00
 

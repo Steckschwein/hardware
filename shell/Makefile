@@ -11,7 +11,7 @@ clean:
 shell.bin: $(DEPS)
 loader.bin: shell.bin
 transfer: shell.bin
-	../transfer.py shell.bin 0xc800
+	../transfer.py shell.bin 0xd000
 loader: loader.bin
 	sudo mcopy loader.bin a:
 	sudo mattrib +s a:loader.bin
