@@ -80,9 +80,8 @@
 
 .textui_init0
 	jsr	vdp_display_off			;display off
-	jsr vdp_mode_gfx1_sprites_off
 	
-;	jsr vdp_mode_text_blank
+	; jsr vdp_mode_text_blank
 
 	jsr	.textui_blank			;blank screen buffer
 	
@@ -98,9 +97,9 @@
 	ldy	#.WRITE_ADDRESS+$00
 	ldx	#$08					;load charset
 	jsr	vdp_memcpy
-	
+!ifndef text_mode_40 {
 	jsr	vdp_mode_gfx1_sprites_off	;clean sprite attribute table
-
+}
 !ifndef text_mode_40 {
 	lda	#Medium_Green<<4|Black		;enable gfx 1
 	jmp	vdp_mode_gfx1
