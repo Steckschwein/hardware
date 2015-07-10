@@ -154,8 +154,8 @@ kern_init
 	+restore
 	rti
 
-!src "../shell/shell.textui.a"
-!src "../shell/shell.gfxui.a"
+!src "textui.a"
+!src "gfxui.a"
 !src <fat.a>
 .upload
 	+PrintString .crlf
@@ -262,6 +262,7 @@ kern_init
 	jsr chrout
 
 	rts
+
 
 ; strings
 .kernel_version 			!text "SteckOS Kernel 0.2",$0d,$0a,$00
