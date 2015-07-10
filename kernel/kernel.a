@@ -63,11 +63,15 @@ kern_init
 	+SetVector .kernel_version, msgptr
 	jsr strout
 
+	; check errno. if != 00, sd card init failed.
+	; do not attempt to mount card, jump to upload instead
+	lda errno
+	bne .error
+
 	jsr .fat_mount 
 	lda errno
 	bne .error 
 	
-
 	+SetVector .filename, filenameptr
 	jsr .fat_open 
 	lda errno
@@ -80,24 +84,19 @@ kern_init
 
 	jsr .fat_close
 
-
 	ldx #$ff 
 	txs 
 	
-
 	jmp .shell_addr	
 
 .error
 	; Card could not be mounted, contains no shell.bin, whatever
 	; serial upload it is
 	
-	
 	jsr .upload
 	ldx #$ff 
 	txs 
 	
-	
-
 	jmp (.startaddr)
 
 .keyin
@@ -159,113 +158,113 @@ kern_init
 !src "../shell/shell.gfxui.a"
 !src <fat.a>
 .upload
-			+PrintString .crlf
-			+PrintString .serial_upload
-			; ldy #param_baud
-			; lda (paramvec),y
+	+PrintString .crlf
+	+PrintString .serial_upload
+	; ldy #param_baud
+	; lda (paramvec),y
 
-			; jsr hexout
-			+PrintString .crlf
+	; jsr hexout
+	+PrintString .crlf
 
-			; load start address
-			jsr uart_rx
-			sta .startaddr
-			
-			jsr uart_rx
-			sta .startaddr+1
+	; load start address
+	jsr uart_rx
+	sta .startaddr
+	
+	jsr uart_rx
+	sta .startaddr+1
 
-			lda .startaddr+1
-			jsr hexout
-			lda .startaddr
-			jsr hexout
+	lda .startaddr+1
+	jsr hexout
+	lda .startaddr
+	jsr hexout
 
-			lda #' '
-			jsr chrout
+	lda #' '
+	jsr chrout
 
-			lda #'O'
-			jsr uart_tx
-			lda #'K'
-			jsr uart_tx
+	lda #'O'
+	jsr uart_tx
+	lda #'K'
+	jsr uart_tx
 
-			; load number of bytes to be uploaded
-			jsr uart_rx
-			sta .length
-				
-			jsr uart_rx
-			sta .length+1
+	; load number of bytes to be uploaded
+	jsr uart_rx
+	sta .length
+		
+	jsr uart_rx
+	sta .length+1
 
-			; calculate end address
-			clc
-			lda .length
-			adc .startaddr
-			sta .endaddr
+	; calculate end address
+	clc
+	lda .length
+	adc .startaddr
+	sta .endaddr
 
-			lda .length+1
-			adc .startaddr+1
-			sta .endaddr+1
+	lda .length+1
+	adc .startaddr+1
+	sta .endaddr+1
 
-			lda .endaddr+1
-			jsr hexout
+	lda .endaddr+1
+	jsr hexout
 
-			lda .endaddr
-			jsr hexout
-			
-			lda #' '
-			jsr chrout
+	lda .endaddr
+	jsr hexout
+	
+	lda #' '
+	jsr chrout
 
-			lda .startaddr
-			sta .addr
-			lda .startaddr+1
-			sta .addr+1	
+	lda .startaddr
+	sta .addr
+	lda .startaddr+1
+	sta .addr+1	
 
-			lda #'O'
-			jsr uart_tx
-			lda #'K'
-			jsr uart_tx
+	lda #'O'
+	jsr uart_tx
+	lda #'K'
+	jsr uart_tx
 
-			sei 
+	sei 
 
-			ldy #$00
+	ldy #$00
 -			jsr uart_rx
-			sta (.addr),y
+	sta (.addr),y
 
-			iny	
-			cpy #$00
-			bne +
-			inc .addr+1
+	iny	
+	cpy #$00
+	bne +
+	inc .addr+1
 +		
 
-			; msb of current address equals msb of end address?
-			lda .addr+1
-			cmp .endaddr+1
-			bne - ; no? read next byte
+	; msb of current address equals msb of end address?
+	lda .addr+1
+	cmp .endaddr+1
+	bne - ; no? read next byte
 
-			; yes? compare y to lsb of endaddr
-			cpy .endaddr
-			bne - ; no? read next byte
+	; yes? compare y to lsb of endaddr
+	cpy .endaddr
+	bne - ; no? read next byte
 
-			; yes? write OK and jump to start addr	
+	; yes? write OK and jump to start addr	
 
-			lda #'O'
-			jsr uart_tx
-			lda #'K'
-			jsr uart_tx
+	lda #'O'
+	jsr uart_tx
+	lda #'K'
+	jsr uart_tx
 
-			cli 
-			
-			lda #'O'
-			jsr chrout
-			lda #'K'
-			jsr chrout
+	cli 
 
-			rts
+	lda #'O'
+	jsr chrout
+	lda #'K'
+	jsr chrout
+
+	rts
 
 ; strings
-.kernel_version 	!text "SteckOS Kernel 0.1",$0d,$0a,$00
-.crlf			!byte $0a,$0d,$00
-.txt_msg_loading !text "Loading ",$00
-.serial_upload	!text "Upload ",$00
-.filename		!text "shell.bin",$00
+.kernel_version 			!text "SteckOS Kernel 0.2",$0d,$0a,$00
+.crlf						!byte $0a,$0d,$00
+.txt_msg_loading 			!text "Loading ",$00
+.serial_upload				!text "Serial Upload ",$00
+.filename					!text "shell.bin",$00
 *=$dfa0
 ; "kernel" jumptable
 krn_keyin			jmp .keyin
