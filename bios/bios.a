@@ -13,7 +13,7 @@
 charset_8x8
 !src "../charsets/char.ascii.vc20.h.a"
 !src "../charsets/char.ascii.6x8.big.h.a"
-biosversion	!text "BIOS    : V150628", $00	; Version String
+biosversion	!text "BIOS    : V150710", $00	; Version String
 *=$f050
 .upload
 			+PrintString .crlf
