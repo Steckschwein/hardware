@@ -184,11 +184,8 @@ kern_init
 	jsr chrout
 	jsr .textui_screen_dirty
 
-	lda #'O'
-	jsr uart_tx
-	lda #'K'
-	jsr uart_tx
-
+	jsr .upload_ok
+	
 	; load number of bytes to be uploaded
 	jsr uart_rx
 	sta .length
@@ -214,6 +211,7 @@ kern_init
 	
 	lda #' '
 	jsr chrout
+
 	jsr .textui_screen_dirty
 	sei 
 	lda .startaddr
@@ -221,15 +219,11 @@ kern_init
 	lda .startaddr+1
 	sta .addr+1	
 
-	lda #'O'
-	jsr uart_tx
-	lda #'K'
-	jsr uart_tx
-
+	jsr .upload_ok
 	
 
 	ldy #$00
--			jsr uart_rx
+-	jsr uart_rx
 	sta (.addr),y
 
 	iny	
@@ -249,11 +243,7 @@ kern_init
 
 	; yes? write OK and jump to start addr	
 
-	lda #'O'
-	jsr uart_tx
-	lda #'K'
-	jsr uart_tx
-
+	jsr .upload_ok
 	cli 
 
 	lda #'O'
@@ -261,6 +251,13 @@ kern_init
 	lda #'K'
 	jsr chrout
 
+	rts
+
+.upload_ok
+	lda #'O'
+	jsr uart_tx
+	lda #'K'
+	jsr uart_tx
 	rts
 
 
