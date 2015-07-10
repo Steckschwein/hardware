@@ -57,6 +57,8 @@ kern_init
 
 	+SetVector _textui_chrout, outvec
 
+
+	cli
 	
 	+SetVector .kernel_version, msgptr
 	jsr strout
@@ -77,21 +79,23 @@ kern_init
 	bne .error 
 
 	jsr .fat_close
-	
+
 
 	ldx #$ff 
 	txs 
-	cli
+	
 
 	jmp .shell_addr	
 
 .error
-	tax 
-	lda #'E'
-	jsr chrout 
-	txa 
-	jsr hexout
--	jmp -
+	; Card could not be mounted, contains no shell.bin, whatever
+	; serial upload it is
+	sei 
+	jsr upload
+	ldx #$ff 
+	txs 
+	cli
+	jmp (.startaddr)
 
 .keyin
 -	lda .key 		; wait for .key to become != 00
