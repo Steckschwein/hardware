@@ -90,11 +90,14 @@ kern_init
 .error
 	; Card could not be mounted, contains no shell.bin, whatever
 	; serial upload it is
-	sei 
-	jsr upload
+	
+	
+	jsr .upload
 	ldx #$ff 
 	txs 
-	cli
+	
+	
+
 	jmp (.startaddr)
 
 .keyin
@@ -155,10 +158,113 @@ kern_init
 !src "../shell/shell.textui.a"
 !src "../shell/shell.gfxui.a"
 !src <fat.a>
+.upload
+			+PrintString .crlf
+			+PrintString .serial_upload
+			; ldy #param_baud
+			; lda (paramvec),y
+
+			; jsr hexout
+			+PrintString .crlf
+
+			; load start address
+			jsr uart_rx
+			sta .startaddr
+			
+			jsr uart_rx
+			sta .startaddr+1
+
+			lda .startaddr+1
+			jsr hexout
+			lda .startaddr
+			jsr hexout
+
+			lda #' '
+			jsr chrout
+
+			lda #'O'
+			jsr uart_tx
+			lda #'K'
+			jsr uart_tx
+
+			; load number of bytes to be uploaded
+			jsr uart_rx
+			sta .length
+				
+			jsr uart_rx
+			sta .length+1
+
+			; calculate end address
+			clc
+			lda .length
+			adc .startaddr
+			sta .endaddr
+
+			lda .length+1
+			adc .startaddr+1
+			sta .endaddr+1
+
+			lda .endaddr+1
+			jsr hexout
+
+			lda .endaddr
+			jsr hexout
+			
+			lda #' '
+			jsr chrout
+
+			lda .startaddr
+			sta .addr
+			lda .startaddr+1
+			sta .addr+1	
+
+			lda #'O'
+			jsr uart_tx
+			lda #'K'
+			jsr uart_tx
+
+			sei 
+
+			ldy #$00
+-			jsr uart_rx
+			sta (.addr),y
+
+			iny	
+			cpy #$00
+			bne +
+			inc .addr+1
++		
+
+			; msb of current address equals msb of end address?
+			lda .addr+1
+			cmp .endaddr+1
+			bne - ; no? read next byte
+
+			; yes? compare y to lsb of endaddr
+			cpy .endaddr
+			bne - ; no? read next byte
+
+			; yes? write OK and jump to start addr	
+
+			lda #'O'
+			jsr uart_tx
+			lda #'K'
+			jsr uart_tx
+
+			cli 
+			
+			lda #'O'
+			jsr chrout
+			lda #'K'
+			jsr chrout
+
+			rts
+
 ; strings
 .kernel_version 	!text "SteckOS Kernel 0.1",$0d,$0a,$00
 .crlf			!byte $0a,$0d,$00
 .txt_msg_loading !text "Loading ",$00
+.serial_upload	!text "Upload ",$00
 .filename		!text "shell.bin",$00
 *=$dfa0
 ; "kernel" jumptable
