@@ -360,56 +360,14 @@ vdp_chrout
 	jsr	.inc_cursor_y
 +++	rts
 
-.vdp_isr
-	bit	a_vreg
-	bpl ++	   ; VDP IRQ flag set?
-	
-	+save
-
-	lda	#White
-	sta   a_vreg
-	+vnops
-	lda   #v_reg7
-	sta   a_vreg
-	lda	#Black
-	sta   a_vreg
-	+vnops
-	lda   #v_reg7
-	sta   a_vreg
-	
-	lda	char_buf_ptr
-	beq	+					;buffer empty?
-	jsr .vdp_set_addr
-	ldx	#$00
--	lda	char_buf_adr,x		;flush buffer to vram
-	sta a_vram
-	inx
-	cpx	char_buf_ptr
-	bne -
-	stz	char_buf_ptr
-	
-+	+restore
-
-++	rts
-
 .vdp_write_char
 	pha
--   bit a_vreg
-    bpl -
 	jsr .vdp_set_addr
+	nop
+	nop
 	pla
 	sta a_vram
     rts
-	
-	phx
--	ldx	char_buf_ptr					;block buffer i/o until freed
-	cpx	#char_buf_end-char_buf_adr+1	
-	beq	-
-	sta	char_buf_adr,x 					;safe char in buffer
-	inx
-	stx	char_buf_ptr
-	plx
-	rts
 	
 .vdp_set_addr			; set the vdp vram adress to write one byte afterwards
 	lda	crs_y   		; * 32
