@@ -58,6 +58,7 @@ tmp5		= $f5
 tmp6		= $f6
 tmp7		= $f7
 
+.entries 	= $f8
 
 ; pointer to filename for fs operations (open...)
 filenameptr		= $fa

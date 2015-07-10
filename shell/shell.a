@@ -617,7 +617,7 @@ sd_busy_wait
 .fat_err_file_not_open	!text "file not open error",$00
 .fat_err_too_many_open	!text "too many open files",$00
 
-.entries 		!byte $03
+; .entries 		!byte $03
 .assets
 !ifndef text_mode_40 {
 !src "sanduhr.raw"
