@@ -166,6 +166,8 @@ kern_init
 	; jsr hexout
 	+PrintString .crlf
 
+	jsr .textui_screen_dirty
+
 	; load start address
 	jsr uart_rx
 	sta .startaddr
@@ -180,6 +182,7 @@ kern_init
 
 	lda #' '
 	jsr chrout
+	jsr .textui_screen_dirty
 
 	lda #'O'
 	jsr uart_tx
@@ -211,7 +214,8 @@ kern_init
 	
 	lda #' '
 	jsr chrout
-
+	jsr .textui_screen_dirty
+	sei 
 	lda .startaddr
 	sta .addr
 	lda .startaddr+1
@@ -222,7 +226,7 @@ kern_init
 	lda #'K'
 	jsr uart_tx
 
-	sei 
+	
 
 	ldy #$00
 -			jsr uart_rx
