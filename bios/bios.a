@@ -1,6 +1,6 @@
 !initmem $ff
 !cpu 65c02
-
+!set bios=1
 !src <defs.h.a>
 !src <via.h.a>
 !src <sdcard.h.a>
@@ -473,8 +473,8 @@ biosversion	!text "BIOS    : V150710", $00	; Version String
 !src "vdp.a"
 !src "via.a"
 !src "uart.a"
-!src "spi.a"
-!src "sdcard.a"
+!src <spi.a>
+!src <sdcard.a>
 !src "kbd.a"
 
 ;---------------------------------------------------------------------
@@ -651,8 +651,9 @@ spi_r_byte	jmp .spi_r_byte
 
 sys_upload	jmp .upload
 
-sys_sd_write_block
-sd_write_block 	jmp .sd_write_block
+; sys_sd_write_block
+; sd_write_block 	jmp .sd_write_block
+!byte $ff,$ff,$ff ; placeholder
 
 sys_sd_read_block
 sd_read_block 	jmp .sd_read_block
