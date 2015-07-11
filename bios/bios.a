@@ -404,71 +404,6 @@ biosversion	!text "BIOS    : V150710", $00	; Version String
 
 			
 
-;----------------------------------------------------------------------------------------------
-; decoutz - output byte in A as decimal ASCII with leading zeros
-;----------------------------------------------------------------------------------------------
-.decoutz
-   phx
-   phy
-   ldx #2
-   ldy #$4c
--- sty tmp0
-   lsr
--  rol
-   bcs +
-   cmp .dec_tbl,x
-   bcc ++
-+  sbc .dec_tbl,x
-   sec
-++ rol tmp0
-   bcc -
-   tay
-   lda tmp0
-   jsr chrout
-   tya
-   ldy #$13
-   dex
-   bpl --
-   ply
-   plx
-   rts
-
-;----------------------------------------------------------------------------------------------
-; decout - output byte in A as decimal ASCII without leading zeros
-;----------------------------------------------------------------------------------------------
-.decout
-   phx
-   phy
-   ldx #1
-   stx tmp1
-   inx
-   ldy #$40
--- sty tmp0
-   lsr
--  rol
-   bcs ++
-   cmp .dec_tbl,x
-   bcc +
-++ sbc .dec_tbl,x
-   sec
-+  rol tmp0
-   bcc -
-   tay
-   cpx tmp1
-   lda tmp0
-   bcc +
-   beq ++
-   stx tmp1
-+  eor #$30
-   jsr chrout
-++ tya
-   ldy #$10
-   dex
-   bpl --
-   ply
-   plx
-
-   rts
 
 !src "vdp.a"
 !src "via.a"
@@ -559,11 +494,6 @@ crc8:
 ;----------------------------------------------------------------------------------------------
 ; Tables and lookup data
 ;----------------------------------------------------------------------------------------------
-; Lookup table for HEX to ASCII
-;hexascii	!text "0123456789ABCDEF"
-
-; Lookup table for decimal to ASCII
-.dec_tbl		!byte 128,160,200
 
 ; SD Card init status messages
 ; .cardok		!text "SD Card OK", $00
@@ -636,10 +566,13 @@ sys_chrout
 chrout		jmp (outvec)
 sys_chrin
 chrin		jmp (invec)
-sys_decout
-decout 		jmp .decout
-sys_decoutz
-decoutz 	jmp .decoutz
+; sys_decout
+; decout 		jmp .decout
+; sys_decoutz
+; decoutz 	jmp .decoutz
+!byte $ff,$ff,$ff ; placeholder
+!byte $ff,$ff,$ff ; placeholder
+
 sys_irqhandler
 irqhandler  jmp .irqhandler
 
