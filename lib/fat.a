@@ -1,8 +1,9 @@
 !src <errors.h.a>
+
+
 ; *=$c000
 FD_start_cluster = $00
 FD_file_size = $08
-
 
 
 !macro saveClusterNo .where {
@@ -384,8 +385,8 @@ FD_file_size = $08
 	ldy #DIR_WrtDate 
 	lda (sd_blkptr),y
 	and #%00011111
-	+ShellPrintDec
-
+	jsr .decoutz
+	
 	; +PrintChar '.'
 	; month
 	iny
@@ -399,7 +400,8 @@ FD_file_size = $08
 	lsr
 	lsr
 	lsr
-	+ShellPrintDec
+	
+	jsr .decoutz
 	
 	; +PrintChar '.'
 	; year
@@ -410,7 +412,7 @@ FD_file_size = $08
 	bcc +		; greater than 100 (post-2000)
 	sec 		; yes, substract 100
 	sbc #100
-+	+ShellPrintDec  ; there we go
++	jsr .decoutz ; there we go
 
 	
 
@@ -422,7 +424,8 @@ FD_file_size = $08
 	lsr
 	lsr
 	lsr
-	+ShellPrintDec
+	
+	jsr .decoutz
 
 	+PrintChar ':'
 
@@ -437,7 +440,8 @@ FD_file_size = $08
 		ror 
 	}	
 
-	+ShellPrintDec
+
+	jsr .decoutz
 
 
 	; Bits 11–15: Hours, valid value range 0–23 inclusive.
@@ -684,3 +688,5 @@ FD_file_size = $08
   	cpx #$0b
   	bne -
 	rts
+
+!src <util.a>

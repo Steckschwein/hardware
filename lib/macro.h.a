@@ -96,16 +96,16 @@ macro_h_a = 1
 !macro ShellPrintHex {
 	jsr	hexout
 }
-!macro ShellPrintDec {
-	; leading zero hack
-	cmp #10
-	bcs +
-	pha
-	+PrintChar '0'
-	pla
-+	
-	jsr decout
-}
+; !macro ShellPrintDec {
+; 	; leading zero hack
+; 	cmp #10
+; 	bcs +
+; 	pha
+; 	+PrintChar '0'
+; 	pla
+; +	
+; 	jsr decout
+; }
 
 !macro ShellPrintString .word {
 	+SetVector .word,	msgptr
