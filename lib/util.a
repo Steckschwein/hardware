@@ -1,0 +1,76 @@
+; ;----------------------------------------------------------------------------------------------
+; ; decoutz - output byte in A as decimal ASCII with leading zeros
+; ;----------------------------------------------------------------------------------------------
+; .decoutz
+;    phx
+;    phy
+;    ldx #2
+;    ldy #$4c
+; -- sty tmp0
+;    lsr
+; -  rol
+;    bcs +
+;    cmp .dec_tbl,x
+;    bcc ++
+; +  sbc .dec_tbl,x
+;    sec
+; ++ rol tmp0
+;    bcc -
+;    tay
+;    lda tmp0
+;    jsr chrout
+;    tya
+;    ldy #$13
+;    dex
+;    bpl --
+;    ply
+;    plx
+;    rts
+
+; ;----------------------------------------------------------------------------------------------
+; ; decout - output byte in A as decimal ASCII without leading zeros
+; ;----------------------------------------------------------------------------------------------
+.decout
+   phx
+   phy
+   ldx #1
+   stx tmp1
+   inx
+   ldy #$40
+-- sty tmp0
+   lsr
+-  rol
+   bcs ++
+   cmp .dec_tbl,x
+   bcc +
+++ sbc .dec_tbl,x
+   sec
++  rol tmp0
+   bcc -
+   tay
+   cpx tmp1
+   lda tmp0
+   bcc +
+   beq ++
+   stx tmp1
++  eor #$30
+   jsr chrout
+++ tya
+   ldy #$10
+   dex
+   bpl --
+   ply
+   plx
+
+   rts
+.decoutz
+  	cmp #10
+	bcs +
+	pha
+	+PrintChar '0'
+	pla
++	
+	jmp .decout
+ 
+; Lookup table for decimal to ASCII
+.dec_tbl		!byte 128,160,200
