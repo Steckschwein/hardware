@@ -5,31 +5,27 @@
     jmp   main
    
 !source <t99xx.lib.a>
+!source <defs.h.a>
 
-adr_h_w	= $f0
-adr_h_r	= $f1
+adr_h_w=.ptr1
+adr_h_r=.ptr2
 
-main:	
-	jsr   .lcdclear
+main:		
 	
-	lda	#v_reg1_16k; 16K RAM, display off
-	ldy	#v_reg1
-	jsr	vdp_sreg
+	stz	crs_x
+	lda	#08
+	sta	crs_y
 
-	lda   #<memtest_msg
-	sta   msgptr
-	lda   #>memtest_msg
-	sta   msgptr+1
-
-	jsr   .lcdclear
-	jsr   .lcdstring
-
-	lda   #$40
-	sta   adr_h_w
-	ldx   #$00
-	stx	  adr_h_r
-	ldy   #$00
-	jsr   mem_ca
+	+PrintString	memtest_msg
+	
+	lda #.WRITE_ADDRESS + $21
+	sta adr_h_w
+	ldx #$00			+ $21
+	stx	adr_h_r
+	ldy #$00
+	jsr mem_ca
+--	bit	a_vreg
+	bpl	--
 -	tya
 	phy
 	ldy	  adr_h_w
@@ -39,9 +35,13 @@ main:
 	sta	  a_vram
 	tya
 	phy
+	nop
+	nop
 	ldy	  adr_h_r
 	jsr	  vdp_sreg
 	ply
+	nop
+	nop
 	lda	  a_vram	
 	cmp   pattern, x
 	bne   +
@@ -50,35 +50,36 @@ main:
 	bne   -
 	ldx   #$00
 	iny
-	bne   -
+	bne   --
 	inc   adr_h_w	; next 256 byte page
 	inc   adr_h_r
     jsr   mem_ca
 	lda	  adr_h_r
-	cmp	  #$40
-	bne   -
-	jmp	  upload
+	cmp	  #.WRITE_ADDRESS
+	bne   --
+	+PrintString	memtest_msg_ok
+-	bra	-
 +	pha            	;save erroneous pattern
 	jsr   mem_ca
-	lda   #$20
-	jsr   .lcdprint   
+	lda   #' '
+	jsr   chrout
 	pla   
-	jsr   .lcdhex
-	jmp   upload
+	jsr   hexout
+	+PrintString	memtest_msg_err
+-	bra	-
 
 mem_ca:	; output value
-   phx
-   phy
-   jsr 	.lcdclear
-   plx
-   ply 
-   phy            ;save memory adress low byte
-   lda   adr_h_r
-   jsr   .lcdhex
-   pla
-   jsr   .lcdhex   
-   rts
+	lda	#05
+	sta crs_x
+	phy            ;save memory adress low byte
+	lda adr_h_r
+	jsr	hexout
+	pla
+	jsr hexout
+	rts
    
 memtest_msg	!text "Mem:$", $00
-
+memtest_msg_ok	!text " OK", $00
+memtest_msg_err	!text " FAILED", $00
+.crlf					!byte $0a, $0d, $00
 pattern  !byte $f0,$0f,$96,$69,$a9,$9a,$00,$ff

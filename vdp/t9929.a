@@ -2,7 +2,6 @@
 !source <defs.h.a>
 !source <bios.h.a>
 !source <via.h.a>
-!source <lcd.h.a>
 !source <t9929.h.a>
 
 txtptr   =$f2
@@ -18,7 +17,6 @@ adrh=	tmp1
 
    jmp   main   
 !source <t99xx.lib.a>
-!source "../bios/lcd.a"
 
 ;msg_2	!text " Hey Thomas, these are the first letters written on screen with          THE TMS9929 VDP!         TODAY IS THE 15.04.2014          +++HAPPY BIRTHDAY+++           so far... /MLA ;)", $00
 msg_2	!text "      Welcome to VCFE 15.0!                                         These are some letters         written on screen with          THE TMS9929 VDP!", $00
@@ -38,9 +36,8 @@ pic4_col:
 !src "../charsets/char.ascii.vc20.h.a"
 
 main:
-	jsr   .lcdclear
 	lda   #'0'
-	jsr   .lcdprint
+	jsr   chrout
 
 	jsr   vdp_init
  	jsr   vdp_clear_vram
@@ -50,7 +47,7 @@ main:
 	
 	jsr	vdp_colortest
 	lda   #'1'
-	jsr   .lcdprint
+	jsr   chrout
 
 ;   jsr   vdp_color
 ;   jsr   vdp_write
@@ -64,8 +61,9 @@ main:
    ldy   #v_reg1
    jsr   vdp_sreg
 
-   lda   #'2'
-   jsr   .lcdprint 
+	lda   #'2'
+	jsr   chrout
+
 
 ;  	jsr	vdp_gfx2_init	
 ;	lda	#v_reg0_m3
