@@ -336,22 +336,19 @@ vdp_load_sprites16
 	nop
 	nop
 	nop
-	
-	ldx	a_vram	; 6µs/4Mhz = 24cl required
+	ldx	a_vram	; 
 	nop			; 2cl
 	nop			; 2cl
 	nop			; 2cl
 	nop			; 2cl
-	nop			; 2cl
-	nop			; 2cl	
 	lda	.ptr2l	; 3cl
 	sta	a_vreg
 	lda	.ptr2h	; 3cl
 	sta a_vreg
-	nop
-	nop
-	nop
-	nop
+	nop			; 2cl
+	nop			; 2cl
+	nop			; 2cl
+	nop			; 2cl
 	stx	a_vram
 	inc	.ptr1l	; 5cl
 	bne	+		; 3cl
@@ -363,7 +360,16 @@ vdp_load_sprites16
 	bne	-		; 3cl
 	inc	.ptr2h
 	bra	--
-++	rts
+++	ldx	#.COLS	; write address is already setup from loop
+	lda	#' '
+-	sta	a_vram
+	nop
+	nop
+	nop
+	nop
+	dex
+	bne	-
+	rts
 	
 .KEY_CR=$0a
 .KEY_LF=$0d
