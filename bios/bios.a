@@ -227,7 +227,6 @@ biosversion	!text "BIOS    : V150710", $00	; Version String
 			; init IO devices
 			jsr init_uart
 			jsr	init_vdp
-;			cli
 
 			jsr init_via1
 			jsr .read_nvram
@@ -268,7 +267,30 @@ biosversion	!text "BIOS    : V150710", $00	; Version String
 +
 			jsr .boot_from_card
 
-++			
+++		
+			bra	++	
+seed=$00
+			lda	#13
+			sta seed
+-			bit	a_vreg
+			bpl	-
+			jsr	rnd
+			jsr .hexout
+			bra	-
+			
+rnd		   lda seed
+		   beq doEor
+		   asl
+		   beq noEor ;if the input was $80, skip the EOR
+		   bcc noEor
+		doEor:    
+			eor #$1d
+		noEor:  
+			sta seed
+			rts
+
+			
+++		
 			jsr .upload
 			
 			; re-init stack pointer
@@ -329,10 +351,7 @@ biosversion	!text "BIOS    : V150710", $00	; Version String
 ;----------------------------------------------------------------------------------------------
 .do_irq
 			jmp (irqvec)
-			
-.irqhandler
-;			jsr	.vdp_isr
-			
+.irqhandler			
 			rti
 
 ;----------------------------------------------------------------------------------------------

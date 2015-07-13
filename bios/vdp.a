@@ -10,7 +10,6 @@ init_vdp
 	
 	stz	crs_x
 	stz	crs_y
-	stz	char_buf_ptr
 	
 	+SetVector	charset, .adrl
 	lda	#$00

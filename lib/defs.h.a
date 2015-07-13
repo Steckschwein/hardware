@@ -33,12 +33,22 @@ count		= clockspeed * jiffies
 crs_x	= $d0
 crs_y	= $d1
 crs_ptr	= $d2 	; 2 byte ram address pointer
-char_buf_ptr = $d4	; buffer pointer
-char_buf_adr = $d5	; $d5-$df buffer (11 bytes)
-char_buf_end = $df
+
+; general purpose address location
+; transfer routine addresses
+.addr 		= $d4
+.adrl     = .addr
+.adrh     = .addr+1
+.ptr1		= $d6
+.ptr1l		= .ptr1
+.ptr1h		= .ptr1+1
+.ptr2		= $d8
+.ptr2l		= .ptr2
+.ptr2h		= .ptr2+1
 
 ; IRQ vector
 irqvec		= $e0
+
 ; ramend
 ram_end_l   = $e4
 ram_end_h   = ram_end_l+1
@@ -66,15 +76,8 @@ filenameptr		= $fa
 ; pointer for io block operations
 sd_blkptr 	= $fc
 
-
 ; pointer for string output functions 
 msgptr 		= $fe
-
-; general purpose address location
-; transfer routine addresses
-.addr 		= $e2
-.adrl     = .addr
-.adrh     = .addr+1
 
 ; MEMCTL Register
 memctl    = $02f0

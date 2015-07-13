@@ -109,7 +109,7 @@ vdp_mode_sprites_off
 .vdp_init_bytes_gfx1
 	!byte 	0
 	!byte	v_reg1_16k|v_reg1_display_on|v_reg1_spr_size|v_reg1_int
-	!byte 	($1800 / $400)	; name table - value * $400					--> characters 
+	!byte 	(ADDRESS_GFX1_SCREEN / $400)	; name table - value * $400					--> characters 
 	!byte 	($2000 / $40)	; color table - value * $40 (gfx1), 7f/ff (gfx2)
 	!byte 	($0000 / $800) ; pattern table (charset) - value * $800  	--> offset in VRAM 
 	!byte	($3c00 / $80)	; sprite attribute table - value * $80 		--> offset in VRAM
@@ -318,14 +318,61 @@ vdp_load_sprites16
 
 .inc_cursor_y
 	lda crs_y
-	cmp	#23		;last line
+	cmp	#23		;last line ?
 	bne	+
-;	jmp	.textui_scroll_up	; scroll and exit
-	stz	crs_y ; goto y position 0 - TODO improve, maybe scroll
-	rts
+	bra	.vdp_scroll_up	; scroll up, dont inc y, exit
 +	inc crs_y
 	rts
 
+.vdp_scroll_up
+	+SetVector	ADDRESS_GFX1_SCREEN+.COLS, .ptr1			; +.COLS - offset second row
+	+SetVector	ADDRESS_GFX1_SCREEN+(.WRITE_ADDRESS<<8), .ptr2	; offset first row
+-	nop
+	nop
+	nop
+	lda	.ptr1l	; 3cl
+	ldy	.ptr1h	; 3cl
+	jsr	vdp_sreg
+	nop			; 2µs/4Mhz = 8cl => 4 nop
+	nop
+	nop
+	nop
+	
+	nop
+	nop
+	ldx	a_vram	; 6µs/4Mhz = 24cl required
+	nop			; 2cl
+	nop			; 2cl
+	nop			; 2cl
+	nop			; 2cl
+	nop			; 2cl
+	nop			; 2cl
+	
+	nop			; 2cl
+	nop			; 2cl
+	lda	.ptr2l	; 3cl
+	ldy	.ptr2h	; 3cl
+	jsr	vdp_sreg	;6cl
+	nop
+	nop
+	nop
+	nop
+	
+	nop			;
+	nop			;
+	stx	a_vram
+	inc	.ptr1l	; 5cl
+	bne	+		; 3cl
+	inc	.ptr1h
+	lda	.ptr1h
+	cmp	#$1b	;screen ram $1800 - $1b00
+	beq	++
++	inc	.ptr2l  ; 5cl
+	bne	-		; 3cl
+	inc	.ptr2h
+	bra	-
+++	rts
+	
 .KEY_CR=$0a
 .KEY_LF=$0d
 .KEY_BACKSPACE=$08
@@ -385,7 +432,7 @@ vdp_chrout
 	lsr
 	lsr
 	clc
-	adc	#.WRITE_ADDRESS + $18;>ADDRESS_GFX1_SCREEN
+	adc	#.WRITE_ADDRESS + >ADDRESS_GFX1_SCREEN
 	sta a_vreg
 	rts
 }

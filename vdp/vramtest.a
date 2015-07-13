@@ -1,12 +1,10 @@
 *=$1000
 !source <bios.h.a>
 !source <defs.h.a>
-!source <lcd.h.a>
 
     jmp   main
    
 !source <t99xx.lib.a>
-!source "../bios/lcd.a"
 
 adr_h_w	= $f0
 adr_h_r	= $f1
