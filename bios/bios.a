@@ -268,7 +268,7 @@ biosversion	!text "BIOS    : V150710", $00	; Version String
 			jsr .boot_from_card
 
 ++		
-			bra	++	
+			;bra	++	
 seed=$00
 			lda	#13
 			sta seed

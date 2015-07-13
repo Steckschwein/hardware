@@ -6,7 +6,6 @@
 ;
 vdp_sreg:
 	sta	a_vreg
-	+vnops
 	nop
 	sty   a_vreg
 	rts
@@ -327,39 +326,32 @@ vdp_load_sprites16
 .vdp_scroll_up
 	+SetVector	ADDRESS_GFX1_SCREEN+.COLS, .ptr1			; +.COLS - offset second row
 	+SetVector	ADDRESS_GFX1_SCREEN+(.WRITE_ADDRESS<<8), .ptr2	; offset first row
--	nop
-	nop
-	nop
-	lda	.ptr1l	; 3cl
-	ldy	.ptr1h	; 3cl
-	jsr	vdp_sreg
+--	bit	a_vreg
+	bpl	--
+-	lda	.ptr1l	; 3cl
+	sta	a_vreg
+	lda	.ptr1h	; 3cl
+	sta	a_vreg
 	nop			; 2µs/4Mhz = 8cl => 4 nop
 	nop
 	nop
 	nop
 	
-	nop
-	nop
 	ldx	a_vram	; 6µs/4Mhz = 24cl required
 	nop			; 2cl
 	nop			; 2cl
 	nop			; 2cl
 	nop			; 2cl
 	nop			; 2cl
-	nop			; 2cl
-	
-	nop			; 2cl
-	nop			; 2cl
+	nop			; 2cl	
 	lda	.ptr2l	; 3cl
-	ldy	.ptr2h	; 3cl
-	jsr	vdp_sreg	;6cl
+	sta	a_vreg
+	lda	.ptr2h	; 3cl
+	sta a_vreg
 	nop
 	nop
 	nop
 	nop
-	
-	nop			;
-	nop			;
 	stx	a_vram
 	inc	.ptr1l	; 5cl
 	bne	+		; 3cl
@@ -370,7 +362,7 @@ vdp_load_sprites16
 +	inc	.ptr2l  ; 5cl
 	bne	-		; 3cl
 	inc	.ptr2h
-	bra	-
+	bra	--
 ++	rts
 	
 .KEY_CR=$0a
