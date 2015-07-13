@@ -13,7 +13,7 @@
 charset_8x8
 !src "../charsets/char.ascii.vc20.h.a"
 !src "../charsets/char.ascii.6x8.big.h.a"
-biosversion	!text "BIOS    : V150710", $00	; Version String
+biosversion	!text "BIOS    : V150713", $00	; Version String
 *=$f050
 .upload
 			+PrintString .crlf
@@ -268,26 +268,26 @@ biosversion	!text "BIOS    : V150710", $00	; Version String
 			jsr .boot_from_card
 
 ++		
-			bra	++	
-seed=$00
-			lda	#13
-			sta seed
--			bit	a_vreg
-			bpl	-
-			jsr	rnd
-			jsr .hexout
-			bra	-
+; 			;bra	++	
+; seed=$00
+; 			lda	#13
+; 			sta seed
+; -			bit	a_vreg
+; 			bpl	-
+; 			jsr	rnd
+; 			jsr .hexout
+; 			bra	-
 			
-rnd		   lda seed
-		   beq doEor
-		   asl
-		   beq noEor ;if the input was $80, skip the EOR
-		   bcc noEor
-		doEor:    
-			eor #$1d
-		noEor:  
-			sta seed
-			rts
+; rnd		   lda seed
+; 		   beq doEor
+; 		   asl
+; 		   beq noEor ;if the input was $80, skip the EOR
+; 		   bcc noEor
+; 		doEor:    
+; 			eor #$1d
+; 		noEor:  
+; 			sta seed
+; 			rts
 
 			
 ++		
