@@ -12,8 +12,8 @@ init_vdp
 	stz	crs_y
 	
 	+SetVector	charset, .adrl
-	lda	#$00
-	ldy	#.WRITE_ADDRESS+$00
+	lda	#<(ADDRESS_GFX1_SPRITE_PATTERN)
+	ldy	#>(ADDRESS_GFX1_SPRITE_PATTERN+(.WRITE_ADDRESS<<8))
 	ldx	#$08					;load charset
 	jsr	vdp_memcpy
 	lda	#Cyan<<4|Black			;enable gfx 1

@@ -18,15 +18,23 @@ main:
 
 	+PrintString	memtest_msg
 	
-	lda #.WRITE_ADDRESS + $21
+	lda #>($0bb0+(.WRITE_ADDRESS<<8))
 	sta adr_h_w
-	ldx #$00			+ $21
+	ldx #>($0bb0)
 	stx	adr_h_r
-	ldy #$00
+	ldy #<($0bb0)
 	jsr mem_ca
+	lda	a_vreg	;clear and wait next
 --	bit	a_vreg
 	bpl	--
--	tya
+-	
+	tya
+	and	#$07
+	bne	+
+--	bit	a_vreg
+	bpl	--
+--	
++	tya
 	phy
 	ldy	  adr_h_w
 	jsr	  vdp_sreg
@@ -36,29 +44,27 @@ main:
 	tya
 	phy
 	nop
-	nop
 	ldy	  adr_h_r
 	jsr	  vdp_sreg
 	ply
-	nop
 	nop
 	lda	  a_vram	
 	cmp   pattern, x
 	bne   +
 	inx
 	cpx   #$0a
-	bne   -
+	bne   --
 	ldx   #$00
 	iny
-	bne   --
+	bne   -
 	inc   adr_h_w	; next 256 byte page
 	inc   adr_h_r
     jsr   mem_ca
 	lda	  adr_h_r
 	cmp	  #.WRITE_ADDRESS
-	bne   --
+	bne   -
 	+PrintString	memtest_msg_ok
--	bra	-
+	bra	++
 +	pha            	;save erroneous pattern
 	jsr   mem_ca
 	lda   #' '
@@ -66,10 +72,10 @@ main:
 	pla   
 	jsr   hexout
 	+PrintString	memtest_msg_err
--	bra	-
+++	jmp	($fffc)
 
 mem_ca:	; output value
-	lda	#05
+	lda	#11
 	sta crs_x
 	phy            ;save memory adress low byte
 	lda adr_h_r
@@ -78,7 +84,7 @@ mem_ca:	; output value
 	jsr hexout
 	rts
    
-memtest_msg	!text "Mem:$", $00
+memtest_msg	!text "Video Mem:$", $00
 memtest_msg_ok	!text " OK", $00
 memtest_msg_err	!text " FAILED", $00
 .crlf					!byte $0a, $0d, $00
