@@ -354,7 +354,7 @@ vdp_load_sprites16
 	bne	+		; 3cl
 	inc	.ptr1h
 	lda	.ptr1h
-	cmp	#$1b	;screen ram $1800 - $1b00
+	cmp	#>(ADDRESS_GFX1_SCREEN+(.COLS * 24))	;screen ram $1800 - $1b00
 	beq	++
 +	inc	.ptr2l  ; 5cl
 	bne	-		; 3cl
