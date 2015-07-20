@@ -42,7 +42,8 @@
        sta sd_cmd_errno
        rts
 
-+      lda #$01
++      
+       lda #$01
        sta sd_cmd_param+2
        lda #$aa
        sta sd_cmd_param+3
@@ -78,15 +79,15 @@
 
 -
        
-       jsr .sd_busy_wait
-
        jsr .sd_param_init
-
+       jsr .sd_busy_wait
        lda #cmd55
        jsr .sd_cmd
 
        lda #$ff
        jsr .spi_rw_byte
+
+       ; jsr hexout
 
        cmp #$01
        beq + 
@@ -96,20 +97,34 @@
        sta sd_cmd_errno
        rts 
 
-+      lda #$40
++      
+       jsr .sd_param_init
+
+       lda #$40
        sta sd_cmd_param
 
        lda #$10
        sta sd_cmd_param+1
 
+       jsr .sd_busy_wait
        lda #acmd41
        jsr .sd_cmd
 
        lda #$ff
        jsr .spi_r_byte
 
+       ; jsr hexout
+
        cmp #$00
-       bne -
+       beq +
+
+       cmp #$01
+       beq -
+
+       lda #$42
+       sta sd_cmd_errno
+       rts
++
 
        stz sd_cmd_param
 
