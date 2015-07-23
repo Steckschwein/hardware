@@ -80,12 +80,12 @@ macro_h_a = 1
 ; }
 !macro debug .x {
 	lda #.x
-	jsr lcdprint
+	jsr chrout
 } 
 !macro debug32 .x {
 !for i,3,0 {
 	lda .x+i
-	jsr lcdhex
+	jsr hexout
 }
 }
 
