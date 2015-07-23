@@ -113,7 +113,7 @@
        lda #$ff
        jsr .spi_r_byte
 
-       ; jsr hexout
+       ; jsr hexout  
 
        cmp #$00
        beq +
@@ -276,10 +276,9 @@
 
        jsr .sd_select_card
 
-       jsr .sd_busy_wait  
-       ; +SDBusyWait
-
        ; Send CMD18 command byte
+       jsr .sd_busy_wait  
+
        lda #cmd18
        jsr spi_rw_byte
 
@@ -294,23 +293,20 @@
        jsr spi_rw_byte
 
        ; Wait for data token
--             
-       lda #$ff
+-      lda #$ff
        jsr .spi_rw_byte             
        cmp #$fe
        bne -
 
        ldy #$00
-
        lda via1portb   ; Port laden
-       AND #$7e             ;    * Daten und Takt ausschalten
+       AND #$7e        ;    * Daten und Takt ausschalten
        TAX             ; aufheben
        ORA #$01
        sta tmp0
  
        ; read 256 bytes twice, increase blkptr in between
-       !for .i,0,1 {
-                     
+       !for .i,0,1 {            
 --            lda tmp0
 
               !for .j,0,7 {
@@ -319,7 +315,6 @@
               }
               lda via1sr
               sta (sd_blkptr),y
-
               iny
               bne --
 
@@ -333,7 +328,7 @@
               stx via1portb 
        }
 
-
+   
        dec addr(<.blocks)
        beq +
        jmp -
@@ -347,11 +342,10 @@
        jsr sd_cmd
 
        jsr .sd_busy_wait  
-
-       jsr .sd_deselect_card
-
+       
        +restore
-       rts
+       jmp .sd_deselect_card
+       ; rts
 
 !ifndef bios {
 ;---------------------------------------------------------------------
