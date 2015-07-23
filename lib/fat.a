@@ -1,3 +1,4 @@
+!src <sdcard.h.a>
 !src <errors.h.a>
 
 
@@ -54,8 +55,16 @@ FD_file_size = $08
 	beq ++
 +	inc .blocks
 ++  
-	jsr sd_read_multiblock
-+	
+	; jsr sd_read_multiblock
+-	jsr sd_read_block
+
+	inc sd_blkptr+1
+	inc sd_blkptr+1
+	
+	jsr .inc_lba_address
+	dec .blocks
+	bne -
+
 	rts
 
 .fat_open
@@ -73,7 +82,6 @@ FD_file_size = $08
 
 -	+SetVector sd_blktarget, sd_blkptr
 	jsr sd_read_block
-
 
 --  ldy #DIR_Attr
 	lda (sd_blkptr),y
@@ -223,7 +231,7 @@ FD_file_size = $08
 
 -	+SetVector sd_blktarget, sd_blkptr
 	jsr sd_read_block
-	
+
 --	ldy #DIR_Attr
 	lda (sd_blkptr),y
 
@@ -453,7 +461,7 @@ FD_file_size = $08
 
 
 
-!src <sdcard.h.a>
+
 
 
 
