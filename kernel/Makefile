@@ -12,3 +12,7 @@ kernel.h.a: kernel.bin
 	acme -vv -f plain -Wtype-mismatch -l $<.labels --cpu 65c02 -o $@ $<
 transfer: kernel.bin
 	../transfer.py kernel.bin 0xd600
+
+loader: loader.bin
+	sudo mcopy loader.bin a:
+	sudo mattrib +s a:loader.bin
