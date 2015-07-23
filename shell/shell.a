@@ -461,6 +461,8 @@ mainloop
        ; No Card     
        lda #$ff
        sta sd_cmd_errno
+       jsr sd_deselect_card 
+
        rts
 
 +      lda #$01
@@ -497,9 +499,7 @@ mainloop
        rts
 +
 
--
-       
-       jsr sd_busy_wait
+-      jsr sd_busy_wait
 
        jsr sd_param_init
 
@@ -515,6 +515,8 @@ mainloop
        ; Init failed
        lda #$f1      
        sta sd_cmd_errno
+       jsr sd_deselect_card 
+
        rts 
 
 +      lda #$40
@@ -522,6 +524,8 @@ mainloop
 
        lda #$10
        sta sd_cmd_param+1
+
+       jsr sd_busy_wait
 
        lda #acmd41
        jsr sd_cmd
@@ -569,6 +573,8 @@ mainloop
 
        ; SD card init successful
        stz sd_cmd_errno
+       jsr sd_deselect_card 
+
        rts
 
 sd_busy_wait
