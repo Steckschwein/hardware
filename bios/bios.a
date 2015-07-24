@@ -630,10 +630,13 @@ sys_uart_tx
 uart_tx     jmp .uart_tx
 sys_fat_mount
 fat_mount   jmp .fat_mount
-sys_getkey
-getkey 		jmp .kbd_getkey	
+; sys_getkey
+; getkey 		jmp .kbd_getkey	
 sys_sd_read_multiblock
 sd_read_multiblock 	jmp .sd_read_multiblock
+sys_init_sdcard
+init_sdcard jmp .init_sdcard
+
 
 ;----------------------------------------------------------------------------------------------
 
