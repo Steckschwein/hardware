@@ -236,9 +236,9 @@ mainloop
 	bne +
 
 	+ShellPrintString .txt_msg_param_error
-	
 	jmp mainloop
-+	cpy #$02
+
++	cpy #$02		; only one byte specified. it's ok, we take $00 for the lsb
 	bne +
 	stz .dumpvec
 +
@@ -278,8 +278,8 @@ mainloop
 
 
 	jsr keyin
-	cmp #$0d
-	bne +
+	cmp #$04
+	beq +
 	clc
 	lda .dumpvec
 
