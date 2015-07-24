@@ -210,12 +210,21 @@ mainloop
 +	jmp mainloop
 
 
-.dumpvec = tmp5
+.dumpvec 		= tmp2
+.dumpvec_end   	= .dumpvec
+.dumpvec_start 	= .dumpvec+2
+
 .dump
+	stz .dumpvec
+	stz .dumpvec+1
+	stz .dumpvec+2
+	stz .dumpvec+3
+
 	ldy #$00
-	ldx #$01
+	ldx #$03
 -	lda (.paramptr),y
 	beq +
+
 	jsr .atoi
 	asl
 	asl
@@ -225,6 +234,7 @@ mainloop
 
 	iny
 	lda (.paramptr),y
+	beq +
 	jsr .atoi
 	ora .dumpvec,x
 	sta .dumpvec,x
@@ -232,22 +242,27 @@ mainloop
 	iny
 	cpy #$04
 	bne -
+
+	iny
+	bra -
+
 +	cpy #$00
-	bne +
+	bne ++
 
 	+ShellPrintString .txt_msg_param_error
-	jmp mainloop
+	bra +
 
-+	cpy #$02		; only one byte specified. it's ok, we take $00 for the lsb
-	bne +
-	stz .dumpvec
-+
-
+++	
+	; lda .dumpvec_end+1
+	; jsr hexout
+	; lda .dumpvec_end
+	; jsr hexout
+	
 -	
 	+ShellPrintString .crlf
-	lda .dumpvec+1
+	lda .dumpvec_start+1
 	jsr hexout
-	lda .dumpvec
+	lda .dumpvec_start
 	jsr hexout
 	lda #':'
 	jsr chrout
@@ -255,7 +270,7 @@ mainloop
 	jsr chrout
 
 	ldy #$00
---	lda (.dumpvec),y
+--	lda (.dumpvec_start),y
 	jsr hexout 
 	lda #' '
 	jsr chrout
@@ -267,27 +282,35 @@ mainloop
 	jsr chrout
 	
 	ldy #$00
---	lda (.dumpvec),y
+--	lda (.dumpvec_start),y
 	cmp #$20
-	bcs +
+	bcs ++
 	lda #'.'
-+	jsr chrout
+++	jsr chrout
 	iny
 	cpy #$08
 	bne --
 
+	lda .dumpvec_start+1
+	cmp .dumpvec_end+1
+	bne ++
+	lda .dumpvec_start
+	cmp .dumpvec_end
+	beq +
+	bcs +
 
-	jsr keyin
+++
+	jsr getkey
 	cmp #$04
 	beq +
 	clc
-	lda .dumpvec
+	lda .dumpvec_start
 
 	adc #$08
-	sta .dumpvec
-	lda .dumpvec+1
+	sta .dumpvec_start
+	lda .dumpvec_start+1
 	adc #$00
-	sta .dumpvec+1
+	sta .dumpvec_start+1
 	bra -
 
 +	jmp mainloop
@@ -472,166 +495,6 @@ mainloop
 	; End of list
 	!byte $ff
 
-; .init_sdcard
-;        ; 80 Taktzyklen
-;        ldx #74
-
-;        ; set ALL CS lines and DO to HIGH 
-;        lda #%11111110
-;        sta via1portb
-
-;        tay
-;        iny
-
-; -      sty via1portb
-;        sta via1portb
-;        dex
-;        bne -
-
-;        jsr sd_select_card
-       
-;        jsr sd_param_init
-
-;        ; CMD0 needs CRC7 checksum to be correct
-;        lda #$95
-;        sta sd_cmd_chksum
-
-;        ; send CMD0 - init SD card to SPI mode
-;        lda #cmd0
-;        jsr sd_cmd
-
-;        ; get result
-;        lda #$ff
-;        jsr spi_rw_byte
-
-;        cmp #$01
-;        beq +
-
-;        ; No Card     
-;        lda #$ff
-;        sta sd_cmd_errno
-;        jsr sd_deselect_card 
-
-;        rts
-
-; +      lda #$01
-;        sta sd_cmd_param+2
-;        lda #$aa
-;        sta sd_cmd_param+3
-;        lda #$87
-;        sta sd_cmd_chksum
-
-;        jsr sd_busy_wait
-
-;        lda #cmd8
-;        jsr sd_cmd
-
-;        ldx #$00
-; -      
-;        lda #$ff
-;        phx
-;        jsr spi_rw_byte
-;        plx
-;        sta sd_cmd_result,x
-;        inx
-;        cpx #$05
-;        bne -
-
-;        lda sd_cmd_result
-;        cmp #$01
-;        beq +
-       
-;        ; Invalid Card (or card we can't handle yet)
-;        lda #$0f
-;        sta sd_cmd_errno
-;        jsr sd_deselect_card 
-;        rts
-; +
-
-; -      jsr sd_busy_wait
-
-;        jsr sd_param_init
-
-;        lda #cmd55
-;        jsr sd_cmd
-
-;        lda #$ff
-;        jsr spi_rw_byte
-
-;        cmp #$01
-;        beq + 
-
-;        ; Init failed
-;        lda #$f1      
-;        sta sd_cmd_errno
-;        jsr sd_deselect_card 
-
-;        rts 
-
-; +      lda #$40
-;        sta sd_cmd_param
-
-;        lda #$10
-;        sta sd_cmd_param+1
-
-;        jsr sd_busy_wait
-
-;        lda #acmd41
-;        jsr sd_cmd
-
-;        lda #$ff
-;        jsr spi_r_byte
-
-;        cmp #$00
-;        bne -
-
-;        stz sd_cmd_param
-
-;        jsr sd_busy_wait
-
-;        lda #cmd58
-;        jsr sd_cmd
-
-;        ldx #$00
-; -      
-;        lda #$ff
-;        phx
-;        jsr spi_rw_byte
-;        plx
-;        sta sd_cmd_result,x
-;        inx
-;        cpx #$05
-;        bne -
-
-;        bit sd_cmd_result+1
-;        bvs +
-
-;        ; Set block size to 512 bytes
-;        lda #$02
-;        sta sd_cmd_param+2
-
-;        jsr sd_busy_wait
-       
-;        lda #cmd16
-;        jsr sd_cmd
-
-;        lda #$ff
-;        jsr spi_rw_byte
-
-; +      
-
-;        ; SD card init successful
-;        stz sd_cmd_errno
-;        jsr sd_deselect_card 
-
-;        rts
-
-; sd_busy_wait
-; -      lda #$ff
-;        jsr spi_rw_byte
-;        cmp #$ff
-;        bne -
-;        rts
 
 .errmsg
 		

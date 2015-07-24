@@ -105,6 +105,11 @@ kern_init
 	stz .key 		; reset .key to signal isr to fetch next key
 	rts
 
+.getkey
+	lda .key 		; wait for .key to become != 00	
+	stz .key 		; reset .key to signal isr to fetch next key
+	rts
+
 
 ; system interrupt handler
 ; handle keyboard input and text screen refresh
@@ -262,7 +267,7 @@ kern_init
 
 
 ; strings
-.kernel_version 			!text "SteckOS Kernel 0.2",$0d,$0a,$00
+.kernel_version 			!text "SteckOS Kernel 0.2a",$0d,$0a,$00
 .crlf						!byte $0a,$0d,$00
 .txt_msg_loading 			!text "Loading ",$00
 .serial_upload				!text "Serial Upload ",$00
@@ -286,3 +291,5 @@ krn_textui_enable		jmp	.textui_enable
 krn_textui_disable		jmp .textui_disable			;disable textui
 krn_gfxui_init			jmp	.gfxui_init
 krn_display_off			jmp vdp_display_off
+krn_getkey				jmp .getkey
+
