@@ -151,13 +151,21 @@ mainloop
 	jmp mainloop
 
 
-
-.cdroot
-	+PrintChar '/'
-	jsr open_rootdir
-	jmp mainloop 
-
 .cd
+	; is it a slash?
+	ldy #$00
+	lda (.paramptr),y
+	cmp #'/'
+	bne +
+	iny
+	lda (.paramptr),y
+	bne +
+	
+	; its a slash, nothing else. cd to /
+	jsr open_rootdir
+	jmp mainloop
+
++	; not a slash. cd to whatever
 	lda .paramptr
 	sta filenameptr
 	lda .paramptr+1
@@ -440,10 +448,6 @@ mainloop
 	!text "cd"
 	!byte $00	
 	!word .cd
-
-	!text "/"
-	!byte $00	
-	!word .cdroot
 	
 	!text "date"
 	!byte $00	
