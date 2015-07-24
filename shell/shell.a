@@ -652,7 +652,6 @@ mainloop
 .hellotxt		!text "SteckShell 0.10 ",$00
 .helptxt1		
 				!text $0a,$0d,"ll/ls       - directory (long/short)"
-				!text $0a,$0d,"/           - root dir"
 				!text $0a,$0d,"cd <name>   - change directory"
 				!text $0a,$0d,"load <name> - load file"
 				!text $0a,$0d,"run <name>  - run program"		
