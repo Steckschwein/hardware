@@ -520,7 +520,7 @@ mainloop
 				!text $0a,$0d,"run <name>  - run program"		
 				!text $0a,$0d,"type <name> - display text file"
 				!text $0a,$0d,"view <name> - display gfx file"
-				!text $0a,$0d,"dump <addr> - dump memory"
+				!text $0a,$0d,"dump <addr> <addr> - dump memory"
 				!byte $00
 .helptxt2				
 				!text $0a,$0d,"date        - show time and date"
