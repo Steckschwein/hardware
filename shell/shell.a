@@ -13,7 +13,7 @@ num_ls_entries = $03
 !src <errors.h.a>
 !src <t9929.h.a>
 !src <sdcard.h.a>
-	jmp	.init0
+	
 
 !address {
 ; .key = $10
@@ -205,15 +205,35 @@ mainloop
 .dumpvec = tmp5
 .dump
 	ldy #$00
-
+	ldx #$01
 -	lda (.paramptr),y
 	beq +
-	jsr chrout
-	iny
-	bra -
-+	+ShellPrintString .crlf
+	jsr .atoi
+	asl
+	asl
+	asl
+	asl
+	sta .dumpvec,x
 
-	+SetVector .steckos_start, .dumpvec
+	iny
+	lda (.paramptr),y
+	jsr .atoi
+	ora .dumpvec,x
+	sta .dumpvec,x
+	dex
+	iny
+	cpy #$04
+	bne -
++	cpy #$00
+	bne +
+
+	+ShellPrintString .param_error
+	
+	jmp mainloop
++	cpy #$02
+	bne +
+	stz .dumpvec
++
 
 -	
 	+ShellPrintString .crlf
@@ -329,7 +349,8 @@ mainloop
 .help
 	+ShellPrintString .crlf
 	; +ShellPrintString .hellotxt
-	+ShellPrintString .helptxt
+	+ShellPrintString .helptxt1
+	+ShellPrintString .helptxt2
 	jmp mainloop
 
 
@@ -624,21 +645,24 @@ sd_busy_wait
 		rts
 
 
-.hellotxt		!text "SteckShell 0.09 ",$00
-.helptxt		
-				!text $0a,$0d,"ll          - directory (long)"
-				!text $0a,$0d,"ls          - directory (short)"
+.hellotxt		!text "SteckShell 0.10 ",$00
+.helptxt1		
+				!text $0a,$0d,"ll/ls       - directory (long/short)"
 				!text $0a,$0d,"/           - root dir"
 				!text $0a,$0d,"cd <name>   - change directory"
 				!text $0a,$0d,"load <name> - load file"
+				!text $0a,$0d,"run <name>  - run program"		
 				!text $0a,$0d,"type <name> - display text file"
 				!text $0a,$0d,"view <name> - display gfx file"
+				!text $0a,$0d,"dump <addr> - dump memory"
+				!byte $00
+.helptxt2				
 				!text $0a,$0d,"date        - show time and date"
 .crlf			!byte $0a,$0d,$00
 .prompt			!text $0a,$0d,">",$00
 .txt_msg_unknown_cmd	!text $0a,$0d,"unknown command (try 'help')",$00
 .txt_cd 		!text "cd ok",$00
-
+.param_error			!text $0a,$0d,"parameter error",$0a,$0d,$00
 .fat_err_signature 		!text "bad block signature", $00
 .fat_err_partition 		!text "invalid partition type", $00
 .fat_err_bad_sect_size 	!text "sector size unsupported", $00
@@ -647,7 +671,6 @@ sd_busy_wait
 .fat_err_file_not_open	!text "file not open error",$00
 .fat_err_too_many_open	!text "too many open files",$00
 
-; .entries 		!byte $03
 .assets
 !ifndef text_mode_40 {
 !src "sanduhr.raw"
@@ -662,6 +685,14 @@ sd_busy_wait
 .sprite_sanduhr
 	!byte	$ff,	$f0,	0,	Gray
 
-; !src "shell.textui.a"
-; !src "shell.gfxui.a"
+.atoi
+	cmp #"9"+1
+	bcc + 	; 0-9?
+	; must be hex digit
+	adc #$08
+	and #$0f
+	rts
 
++	sec
+	sbc #$30
+	rts
