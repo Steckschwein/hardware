@@ -175,7 +175,7 @@ mainloop
 -	jmp mainloop 
 
 
-.load	
+.run	
 	jsr .readfile		
 	
 	lda errno
@@ -184,13 +184,13 @@ mainloop
 	ldx #$ff
 	txs
 
-	php
 	sei
+	jmp  .steckos_start
 
-	jsr .steckos_start
-
-	plp
-	jmp .init 
+.load
+	jsr .readfile		
+	
+	jmp mainloop
 
 .type
 	jsr .readfile
@@ -200,6 +200,70 @@ mainloop
 	+ShellPrintString .steckos_start	
 
 +	jmp mainloop
+
+
+.dumpvec = tmp5
+.dump
+	ldy #$00
+
+-	lda (.paramptr),y
+	beq +
+	jsr chrout
+	iny
+	bra -
++	+ShellPrintString .crlf
+
+	+SetVector .steckos_start, .dumpvec
+
+-	
+	+ShellPrintString .crlf
+	lda .dumpvec+1
+	jsr hexout
+	lda .dumpvec
+	jsr hexout
+	lda #':'
+	jsr chrout
+	lda #' '
+	jsr chrout
+
+	ldy #$00
+--	lda (.dumpvec),y
+	jsr hexout 
+	lda #' '
+	jsr chrout
+	iny
+	cpy #$08
+	bne --
+
+	lda #' '
+	jsr chrout
+	
+	ldy #$00
+--	lda (.dumpvec),y
+	cmp #$20
+	bcs +
+	lda #'.'
++	jsr chrout
+	iny
+	cpy #$08
+	bne --
+
+
+	jsr keyin
+	cmp #$0d
+	bne +
+	clc
+	lda .dumpvec
+
+	adc #$08
+	sta .dumpvec
+	lda .dumpvec+1
+	adc #$00
+	sta .dumpvec+1
+	bra -
+
++	jmp mainloop
+
 	
 .gfxview
 	jsr .readfile	; read data to .steckos_start ($1000)
@@ -236,60 +300,12 @@ mainloop
 
 	ldx tmp5
 	jsr close
-	
+
 +	
 	jsr .errmsg
 	; plp	
 	rts
 
-; .irq
-; 	+save
-
-; 	;via
-; 	bit via1ifr		; Interrupt from VIA?
-; 	bpl +			; no? get out
-
-; 	bit via1t1cl	; Acknowledge timer interrupt
-
-; 	lda .key		; already char in buffer? do nothing
-; 	bne +
-
-; 	; jsr getkey
-; 	lda via1portb
-; 	and #%01111110
-; 	cmp #$7e
-; 	bne +
-
-; 	lda #%01111010
-; 	; and via1portb
-; 	sta via1portb
-
-; 	TAX             ; aufheben
-;     ORA #$01
-;     !for .i,0,7 {
-; 		STA via1portb ; Takt An 1
-; 		STX via1portb ; Takt aus  
-;     }
-       
-; 	ldx #%11111110
-; 	stx via1portb
-
-; 	lda via1sr
-; 	cmp #$00
-; 	beq +
-; 	sta .key
-
-; +
-; 	jsr	.textui_update_screen
-	
-; 	+restore
-; 	rti
-
-; .keyin
-; -	lda .key 		; wait for .key to become != 00
-; 	beq -
-; 	stz .key 		; reset .key to signal isr to fetch next key
-; 	rts
 
 .upload
 	sei
@@ -388,6 +404,10 @@ mainloop
 	!byte $00
 	!word .load
 
+	!text "run"
+	!byte $00
+	!word .run
+
 	!text "type"
 	!byte $00
 	!word .type
@@ -419,6 +439,10 @@ mainloop
 	!text "help"
 	!byte $00	
 	!word .help
+
+	!text "dump"
+	!byte $00	
+	!word .dump
 	
 	; End of list
 	!byte $ff
