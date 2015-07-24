@@ -25,11 +25,11 @@ num_ls_entries = $03
 .init0	
 	cli
 .init	
-	sei
-	jsr .init_sdcard
-	cli
-	lda sd_cmd_errno
-	jsr hexout
+	; sei
+	; jsr init_sdcard
+	; cli
+	; lda sd_cmd_errno
+	; jsr hexout
 	lda #%01111110
 	sta via1portb
 	
@@ -227,7 +227,7 @@ mainloop
 +	cpy #$00
 	bne +
 
-	+ShellPrintString .param_error
+	+ShellPrintString .txt_msg_param_error
 	
 	jmp mainloop
 +	cpy #$02
@@ -468,166 +468,166 @@ mainloop
 	; End of list
 	!byte $ff
 
-.init_sdcard
-       ; 80 Taktzyklen
-       ldx #74
+; .init_sdcard
+;        ; 80 Taktzyklen
+;        ldx #74
 
-       ; set ALL CS lines and DO to HIGH 
-       lda #%11111110
-       sta via1portb
+;        ; set ALL CS lines and DO to HIGH 
+;        lda #%11111110
+;        sta via1portb
 
-       tay
-       iny
+;        tay
+;        iny
 
--      sty via1portb
-       sta via1portb
-       dex
-       bne -
+; -      sty via1portb
+;        sta via1portb
+;        dex
+;        bne -
 
-       jsr sd_select_card
+;        jsr sd_select_card
        
-       jsr sd_param_init
+;        jsr sd_param_init
 
-       ; CMD0 needs CRC7 checksum to be correct
-       lda #$95
-       sta sd_cmd_chksum
+;        ; CMD0 needs CRC7 checksum to be correct
+;        lda #$95
+;        sta sd_cmd_chksum
 
-       ; send CMD0 - init SD card to SPI mode
-       lda #cmd0
-       jsr sd_cmd
+;        ; send CMD0 - init SD card to SPI mode
+;        lda #cmd0
+;        jsr sd_cmd
 
-       ; get result
-       lda #$ff
-       jsr spi_rw_byte
+;        ; get result
+;        lda #$ff
+;        jsr spi_rw_byte
 
-       cmp #$01
-       beq +
+;        cmp #$01
+;        beq +
 
-       ; No Card     
-       lda #$ff
-       sta sd_cmd_errno
-       jsr sd_deselect_card 
+;        ; No Card     
+;        lda #$ff
+;        sta sd_cmd_errno
+;        jsr sd_deselect_card 
 
-       rts
+;        rts
 
-+      lda #$01
-       sta sd_cmd_param+2
-       lda #$aa
-       sta sd_cmd_param+3
-       lda #$87
-       sta sd_cmd_chksum
+; +      lda #$01
+;        sta sd_cmd_param+2
+;        lda #$aa
+;        sta sd_cmd_param+3
+;        lda #$87
+;        sta sd_cmd_chksum
 
-       jsr sd_busy_wait
+;        jsr sd_busy_wait
 
-       lda #cmd8
-       jsr sd_cmd
+;        lda #cmd8
+;        jsr sd_cmd
 
-       ldx #$00
--      
-       lda #$ff
-       phx
-       jsr spi_rw_byte
-       plx
-       sta sd_cmd_result,x
-       inx
-       cpx #$05
-       bne -
+;        ldx #$00
+; -      
+;        lda #$ff
+;        phx
+;        jsr spi_rw_byte
+;        plx
+;        sta sd_cmd_result,x
+;        inx
+;        cpx #$05
+;        bne -
 
-       lda sd_cmd_result
-       cmp #$01
-       beq +
+;        lda sd_cmd_result
+;        cmp #$01
+;        beq +
        
-       ; Invalid Card (or card we can't handle yet)
-       lda #$0f
-       sta sd_cmd_errno
-       jsr sd_deselect_card 
-       rts
-+
+;        ; Invalid Card (or card we can't handle yet)
+;        lda #$0f
+;        sta sd_cmd_errno
+;        jsr sd_deselect_card 
+;        rts
+; +
 
--      jsr sd_busy_wait
+; -      jsr sd_busy_wait
 
-       jsr sd_param_init
+;        jsr sd_param_init
 
-       lda #cmd55
-       jsr sd_cmd
+;        lda #cmd55
+;        jsr sd_cmd
 
-       lda #$ff
-       jsr spi_rw_byte
+;        lda #$ff
+;        jsr spi_rw_byte
 
-       cmp #$01
-       beq + 
+;        cmp #$01
+;        beq + 
 
-       ; Init failed
-       lda #$f1      
-       sta sd_cmd_errno
-       jsr sd_deselect_card 
+;        ; Init failed
+;        lda #$f1      
+;        sta sd_cmd_errno
+;        jsr sd_deselect_card 
 
-       rts 
+;        rts 
 
-+      lda #$40
-       sta sd_cmd_param
+; +      lda #$40
+;        sta sd_cmd_param
 
-       lda #$10
-       sta sd_cmd_param+1
+;        lda #$10
+;        sta sd_cmd_param+1
 
-       jsr sd_busy_wait
+;        jsr sd_busy_wait
 
-       lda #acmd41
-       jsr sd_cmd
+;        lda #acmd41
+;        jsr sd_cmd
 
-       lda #$ff
-       jsr spi_r_byte
+;        lda #$ff
+;        jsr spi_r_byte
 
-       cmp #$00
-       bne -
+;        cmp #$00
+;        bne -
 
-       stz sd_cmd_param
+;        stz sd_cmd_param
 
-       jsr sd_busy_wait
+;        jsr sd_busy_wait
 
-       lda #cmd58
-       jsr sd_cmd
+;        lda #cmd58
+;        jsr sd_cmd
 
-       ldx #$00
--      
-       lda #$ff
-       phx
-       jsr spi_rw_byte
-       plx
-       sta sd_cmd_result,x
-       inx
-       cpx #$05
-       bne -
+;        ldx #$00
+; -      
+;        lda #$ff
+;        phx
+;        jsr spi_rw_byte
+;        plx
+;        sta sd_cmd_result,x
+;        inx
+;        cpx #$05
+;        bne -
 
-       bit sd_cmd_result+1
-       bvs +
+;        bit sd_cmd_result+1
+;        bvs +
 
-       ; Set block size to 512 bytes
-       lda #$02
-       sta sd_cmd_param+2
+;        ; Set block size to 512 bytes
+;        lda #$02
+;        sta sd_cmd_param+2
 
-       jsr sd_busy_wait
+;        jsr sd_busy_wait
        
-       lda #cmd16
-       jsr sd_cmd
+;        lda #cmd16
+;        jsr sd_cmd
 
-       lda #$ff
-       jsr spi_rw_byte
+;        lda #$ff
+;        jsr spi_rw_byte
 
-+      
+; +      
 
-       ; SD card init successful
-       stz sd_cmd_errno
-       jsr sd_deselect_card 
+;        ; SD card init successful
+;        stz sd_cmd_errno
+;        jsr sd_deselect_card 
 
-       rts
+;        rts
 
-sd_busy_wait
--      lda #$ff
-       jsr spi_rw_byte
-       cmp #$ff
-       bne -
-       rts
+; sd_busy_wait
+; -      lda #$ff
+;        jsr spi_rw_byte
+;        cmp #$ff
+;        bne -
+;        rts
 
 .errmsg
 		
@@ -661,8 +661,9 @@ sd_busy_wait
 .crlf			!byte $0a,$0d,$00
 .prompt			!text $0a,$0d,">",$00
 .txt_msg_unknown_cmd	!text $0a,$0d,"unknown command (try 'help')",$00
-.txt_cd 		!text "cd ok",$00
-.param_error			!text $0a,$0d,"parameter error",$0a,$0d,$00
+.txt_msg_param_error	!text $0a,$0d,"parameter error",$0a,$0d,$00
+.txt_cd 				!text "cd ok",$00
+
 .fat_err_signature 		!text "bad block signature", $00
 .fat_err_partition 		!text "invalid partition type", $00
 .fat_err_bad_sect_size 	!text "sector size unsupported", $00
