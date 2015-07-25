@@ -195,7 +195,7 @@
 ;---------------------------------------------------------------------
 ; Read block from SD Card
 ;---------------------------------------------------------------------
-.sd_read_block
+.sd_read_block 
        jsr .sd_select_card
 
        jsr .sd_busy_wait
@@ -256,7 +256,7 @@
        iny
        bne -
 
-       dec sd_blkptr+1
+       ; dec sd_blkptr+1
 
        ; Read CRC bytes     
        !for .i,0,15 {

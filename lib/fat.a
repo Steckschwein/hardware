@@ -58,9 +58,9 @@ FD_file_size = $08
 	; jsr sd_read_multiblock
 -	jsr sd_read_block
 
-	inc sd_blkptr+1
-	inc sd_blkptr+1
-	
+	inc sd_blkptr+1 ; 3 bytes, 6 cycles
+	; inc sd_blkptr+1 ; 3 bytes, 6 cycles
+
 	jsr .inc_lba_address
 	dec .blocks
 	bne -
@@ -82,7 +82,8 @@ FD_file_size = $08
 
 -	+SetVector sd_blktarget, sd_blkptr
 	jsr sd_read_block
-
+	dec sd_blkptr+1
+	
 --  ldy #DIR_Attr
 	lda (sd_blkptr),y
 
@@ -234,6 +235,7 @@ FD_file_size = $08
 	beq ++
 	+SetVector sd_blktarget, sd_blkptr
 	jsr sd_read_block
+	dec sd_blkptr+1
 
 --	ldy #DIR_Attr
 	lda (sd_blkptr),y
