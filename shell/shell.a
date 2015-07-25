@@ -22,15 +22,17 @@ num_ls_entries = $03
 }
 
 
-.init0	
-	cli
 .init	
-	; sei
-	; jsr init_sdcard
-	; cli
-	; lda sd_cmd_errno
-	; jsr hexout
-	lda #%01111110
+	sei
+	jsr init_sdcard
+	cli
+	lda sd_cmd_errno
+	beq +
+
+	+ShellPrintString .txt_msg_sd_init_error
+	jmp .hello
+
++	lda #%01111110
 	sta via1portb
 	
 	jsr mount
@@ -528,6 +530,7 @@ mainloop
 .prompt			!text $0a,$0d,">",$00
 .txt_msg_unknown_cmd	!text $0a,$0d,"unknown command (try 'help')",$00
 .txt_msg_param_error	!text $0a,$0d,"parameter error",$0a,$0d,$00
+.txt_msg_sd_init_error	!text $0a,$0d,"sdcard init error",$0a,$0d,$00
 .txt_cd 				!text "cd ok",$00
 
 .fat_err_signature 		!text "bad block signature", $00
