@@ -34,6 +34,8 @@
        lda #$ff
        jsr .spi_rw_byte
 
+       ; jsr hexout
+
        cmp #$01
        beq +
 
@@ -147,6 +149,8 @@
        bit sd_cmd_result+1
        bvs +
 
+       jsr .sd_param_init
+
        ; Set block size to 512 bytes
        lda #$02
        sta sd_cmd_param+2
@@ -158,9 +162,7 @@
 
        lda #$ff
        jsr .spi_rw_byte
-
 +      
-
        ; SD card init successful
        stz sd_cmd_errno
        rts
@@ -198,8 +200,9 @@
 .sd_read_block 
        jsr .sd_select_card
 
-       jsr .sd_busy_wait
 
+       jsr .sd_busy_wait
+       
        ; Send CMD17 command byte
        lda #cmd17
        jsr spi_rw_byte
@@ -214,13 +217,11 @@
        lda #$01
        jsr spi_rw_byte
 
-
        ; wait for sd card data token
 -      lda #$ff
        jsr spi_rw_byte             
        cmp #sd_data_token
        bne -
-
 
        ldy #$00
        lda via1portb   ; Port laden
