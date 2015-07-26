@@ -342,7 +342,7 @@ mainloop
 
 
 	jsr open
- 	; stx tmp5
+ 	stx tmp5
  
 	lda errno
 	bne +
