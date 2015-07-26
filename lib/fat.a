@@ -83,7 +83,7 @@ FD_file_size = $08
 -	+SetVector sd_blktarget, sd_blkptr
 	jsr sd_read_block
 	dec sd_blkptr+1
-	
+
 --  ldy #DIR_Attr
 	lda (sd_blkptr),y
 
@@ -476,10 +476,7 @@ FD_file_size = $08
 ; Mount FAT32 on Partition 0
 ;---------------------------------------------------------------------
 .fat_mount
-	pha
-	phx
-	phy
-
+	+save
 
 	; set lba_addr to $00000000 since we want to read the bootsector
 	!for .i,0,3 {
@@ -490,7 +487,7 @@ FD_file_size = $08
 	+SetVector sd_blktarget, sd_blkptr
 
 	jsr sd_read_block
-
+	
 	jsr .fat_check_signature
 
 	lda errno
@@ -523,7 +520,7 @@ FD_file_size = $08
 	; Write LBA start address to sd param buffer
 	; +SDBlockAddr fat_begin_lba
 
-	+SetVector sd_blktarget, sd_blkptr
+	+SetVector sd_blktarget, sd_blkptr	
 	; Read FAT Volume ID at LBABegin and Check signature
 	jsr sd_read_block
 
@@ -591,10 +588,7 @@ FD_file_size = $08
 
 .end_mount
 	; jsr .sd_deselect_card
-	plx
-	ply
-	pla
-
+	+restore
 	rts
 
 	
