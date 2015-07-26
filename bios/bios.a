@@ -13,7 +13,7 @@
 charset_8x8
 !src "../charsets/char.ascii.vc20.h.a"
 !src "../charsets/char.ascii.6x8.big.h.a"
-biosversion	!text "BIOS    : V150725", $00	; Version String
+biosversion	!text "BIOS    : V150726f", $00	; Version String
 *=$f050
 .upload
 			+PrintString .crlf
@@ -297,8 +297,6 @@ biosversion	!text "BIOS    : V150725", $00	; Version String
 .startup	ldx #$ff
 			txs
 
-			
-
 			; jump to new code
 			jmp (.startaddr)
 
@@ -314,19 +312,35 @@ biosversion	!text "BIOS    : V150725", $00	; Version String
 
 
 			; just use cluster_begin_lba if reading root dir cluster
-			+Copy cluster_begin_lba, lba_addr, 4
+			; +Copy cluster_begin_lba, lba_addr, 4
 			; +Copy root_dir_first_clus, cluster_number,4
 			; Calculate cluster LBA address for anything else
 			; jsr .calc_lba_addr
 
-			jsr .fat_bootfile
-	
-.fat_end
+			+SetVector .filename, filenameptr
+			+SetVector .steckos_start, .startaddr
+			jsr .fat_open
+			lda errno 
+			bne .fat_end
+
+
+			+PrintString .filename
+			+SetVector .steckos_start, sd_blkptr
+			jsr .fat_read
+			lda errno 
+			bne .fat_end
+
+			jsr .fat_close
 			jsr .sd_deselect_card
 
+			jmp .startup
+			
+.fat_end	
+			jsr .sd_deselect_card
 			+PrintString .bootup_failed
-
-++			rts
+			lda errno 
+			jsr hexout
+			rts
 	
 
 ;----------------------------------------------------------------------------------------------
@@ -354,22 +368,6 @@ biosversion	!text "BIOS    : V150725", $00	; Version String
 .irqhandler			
 			rti
 
-;----------------------------------------------------------------------------------------------
-; IO Wrapper
-;----------------------------------------------------------------------------------------------
-; .chrin
-; 		pha
-; 		lda chn_in
-; 		bne +  ; $00 - keyboard
-; 		pla
-; 		jmp .kbd_chrin
-; +		cmp #dev_uart
-; 		bne +
-; 		pla
-; 		jmp .uart_rx
-; +
-; 		pla
-; 		rts
 
 ;----------------------------------------------------------------------------------------------
 ; Output string on active output device
@@ -434,7 +432,7 @@ biosversion	!text "BIOS    : V150725", $00	; Version String
 ;---------------------------------------------------------------------
 ; FAT32 routines
 ;---------------------------------------------------------------------
-!src "fat32.a"
+!src <fat.a>
 
 ;---------------------------------------------------------------------
 ; read 96 bytes from RTC as parameter buffer
@@ -493,21 +491,21 @@ biosversion	!text "BIOS    : V150725", $00	; Version String
 
 ; stolen from 
 ; http://6502.org/source/integers/crc-more.html
-!address CRC  = $f8
-; CRC     EQU $6          ; current value of CRC
-crc8:
-        EOR addr(<CRC)    ; A contained the data
-        STA addr(<CRC)    ; XOR it with the byte
-        ASL               ; current contents of A will become x^2 term
-        BCC +             ; if b7 = 1
-        EOR #$07          ; then apply polynomial with feedback
-+		EOR addr(<CRC)    ; apply x^1
-        ASL               ; C contains b7 ^ b6
-        BCC +
-        EOR #$07
-+		EOR addr(<CRC)    ; apply unity term
-        STA addr(<CRC)    ; save result
-        RTS
+; !address CRC  = $f8
+; ; CRC     EQU $6          ; current value of CRC
+; crc8:
+;         EOR addr(<CRC)    ; A contained the data
+;         STA addr(<CRC)    ; XOR it with the byte
+;         ASL               ; current contents of A will become x^2 term
+;         BCC +             ; if b7 = 1
+;         EOR #$07          ; then apply polynomial with feedback
+; +		EOR addr(<CRC)    ; apply x^1
+;         ASL               ; C contains b7 ^ b6
+;         BCC +
+;         EOR #$07
+; +		EOR addr(<CRC)    ; apply unity term
+;         STA addr(<CRC)    ; save result
+;         RTS
 
 
 ;----------------------------------------------------------------------------------------------
@@ -530,8 +528,8 @@ crc8:
 .fat_err_bad_sect_size 	!text "sector size unsupported", $00
 .fat_err_num_fats	  	!text "invalid number of FATs (!= 2)", $00
 .bootup_txt 			!text "Boot ", $00
-.bootup_failed 			!text "failed ", $00
-
+.bootup_failed 			!text "failed: ", $00
+.filename				!text "loader.bin",$00
 
 
 ;----------------------------------------------------------------------------------------------
@@ -562,7 +560,7 @@ crc8:
 .default_params
 	!byte $42
 	!byte $00
-	!text "LOADER  BIN" 
+	!text "           " 
 ;	!byte $0f
 	!byte $13
 	!byte %00000011
@@ -579,18 +577,10 @@ crc8:
 ; Jump table
 ;----------------------------------------------------------------------------------------------
 *=$ff00
-
-
 sys_chrout
 chrout		jmp (outvec)
 sys_chrin
 chrin		jmp (invec)
-; sys_decout
-; decout 		jmp .decout
-; sys_decoutz
-; decoutz 	jmp .decoutz
-!byte $ff,$ff,$ff ; placeholder
-!byte $ff,$ff,$ff ; placeholder
 
 sys_irqhandler
 irqhandler  jmp .irqhandler
@@ -603,13 +593,11 @@ spi_r_byte	jmp .spi_r_byte
 
 sys_upload	jmp .upload
 
-; sys_sd_write_block
-; sd_write_block 	jmp .sd_write_block
-!byte $ff,$ff,$ff ; placeholder
+sys_init_sdcard
+init_sdcard jmp .init_sdcard
 
 sys_sd_read_block
 sd_read_block 	jmp .sd_read_block
-
 
 sys_sd_param_init
 sd_param_init 	jmp .sd_param_init
@@ -618,8 +606,10 @@ sys_sd_deselect_card
 sd_deselect_card 	jmp .sd_deselect_card
 sys_sd_select_card
 sd_select_card 	jmp .sd_select_card
+
 sys_sd_cmd
 sd_cmd 		jmp .sd_cmd
+
 sys_strout
 strout 		jmp .strout
 sys_hexout
@@ -630,12 +620,10 @@ sys_uart_tx
 uart_tx     jmp .uart_tx
 sys_fat_mount
 fat_mount   jmp .fat_mount
-; sys_getkey
-; getkey 		jmp .kbd_getkey	
+!ifdef experimental {
 sys_sd_read_multiblock
-sd_read_multiblock 	jmp .sd_read_multiblock
-sys_init_sdcard
-init_sdcard jmp .init_sdcard
+sd_read_multiblock 	jmp .sd_read_multiblock	
+}
 
 
 ;----------------------------------------------------------------------------------------------

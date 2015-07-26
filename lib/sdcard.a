@@ -265,10 +265,10 @@
               STX via1portb ; Takt aus
        }
 
-       jsr .sd_deselect_card
-       rts
+       jmp .sd_deselect_card
+       ; rts
 
-
+!ifdef experimental {
 ;---------------------------------------------------------------------
 ; Read multiple blocks from SD Card
 ;---------------------------------------------------------------------
@@ -347,7 +347,7 @@
        +restore
        jmp .sd_deselect_card
        ; rts
-
+}
 !ifndef bios {
 ;---------------------------------------------------------------------
 ; Write block to SD Card
