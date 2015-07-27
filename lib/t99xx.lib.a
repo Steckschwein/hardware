@@ -275,39 +275,6 @@ vdp_bgcolor
 	lda   #v_reg7
 	sta   a_vreg
 	rts
-
-vdp_load_sprites16x16
-vdp_load_sprites16
-;	input:
-;	adrl/adrh vector set to sprite table
-;	a - low byte vram adress
-;	y - high byte vram adress
-;  	x - amount of sprites
-	jsr	vdp_sreg
---	ldy	#$00
--	lda	(.adrl),y	
-	+vnops
-	sta a_vram
-	iny
-	iny
-	cpy	#$20
-	bne	-
-	ldy	#$00
-	inc	.adrl
--	lda	(.adrl),y	
-	+vnops
-	sta a_vram
-	iny
-	iny
-	cpy	#$20
-	bne	-
-	lda	.adrl
-	clc	
-	adc	#$1f
-	sta	.adrl
-	dex
-	bne   --
-	rts
 }
 
 ;

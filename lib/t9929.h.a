@@ -78,6 +78,9 @@ White          =$0f
 	!set sprite_row=0
 }
 !macro SpriteLine16 .v {
+	!ifndef sprite_row{
+;		!set sprite_row=0
+	}
 	!byte (.v>>8)& 255
 	*=*+15
 	!byte  .v	 &255
