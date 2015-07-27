@@ -5,14 +5,14 @@
 !src <via.h.a>
 !source <t99xx.lib.a>
 
-yOffs=tmp0
-seed=tmp1
-frame_cnt=tmp2
-frame_end=tmp3
-scrollpos=tmp4
-scroll_ctl=tmp5
-text_color_ix=tmp6
-seconds=tmp7
+yOffs !byte 0
+seed !byte 0
+frame_cnt !byte 0
+frame_end !byte 0
+scrollpos !byte 0
+scroll_ctl !byte 0
+text_color_ix !byte 0
+seconds !byte 0
 
 .line1:
 !text	"      -+- VCFe 16 - 2015 -+-    ",1
@@ -110,7 +110,7 @@ main:
 	beq .out
 	cmp #$20
 	beq .out
-+	
+	
 	jmp	-
 .out
 	jmp $c800
@@ -125,7 +125,6 @@ main:
 stars_irq:
 	bit via1ifr		; Interrupt from VIA?
 	beq +
-	
 	bit via1t1cl	; acknowledge VIA timer 1 interrupt
 +
 	+save
@@ -222,9 +221,6 @@ text_scroll_e:
 	rts
 
 move_stars:
-	jsr	rnd
-	cmp	#$7f
-	
 	ldx #$00
 	ldy #$00
 -	
@@ -296,7 +292,7 @@ noEor:
 init_via:
 	;via port a
 	lda #$00
-	sta via1ier             ; disable VIA1 T1 interrupts
+	sta via1ier             ; disable VIA1 T1, T2 interrupts	
 	lda #%00000000 			; set latch
 	sta via1acr
 	lda #%11001100 			; set level

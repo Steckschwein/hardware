@@ -64,7 +64,7 @@ main:
 	cmp	  #.WRITE_ADDRESS
 	bne   -
 	+PrintString	memtest_msg_ok
-	bra	++
+	jmp	($fffc)
 +	pha            	;save erroneous pattern
 	jsr   mem_ca
 	lda   #' '
@@ -72,7 +72,7 @@ main:
 	pla   
 	jsr   hexout
 	+PrintString	memtest_msg_err
-++	jmp	($fffc)
+-	bra	  -
 
 mem_ca:	; output value
 	lda	#11
