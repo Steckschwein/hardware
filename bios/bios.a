@@ -13,7 +13,7 @@
 charset_8x8
 !src "../charsets/char.ascii.vc20.h.a"
 !src "../charsets/char.ascii.6x8.big.h.a"
-biosversion	!text "BIOS    : V150726f", $00	; Version String
+biosversion	!text "BIOS    : V150727", $00	; Version String
 *=$f050
 .upload
 			+PrintString .crlf
@@ -230,7 +230,8 @@ biosversion	!text "BIOS    : V150726f", $00	; Version String
 
 			jsr init_via1
 			jsr .read_nvram
-			
+
+
 			+PrintString biosversion
 			+PrintString .crlf
 			
@@ -310,21 +311,29 @@ biosversion	!text "BIOS    : V150726f", $00	; Version String
 			lda fat_errno
 			bne .fat_end
 
+			lda paramvec+1
+			sta filenameptr+1
+			lda paramvec
+			clc
+			adc #param_filename
+			sta filenameptr
 
-			; just use cluster_begin_lba if reading root dir cluster
-			; +Copy cluster_begin_lba, lba_addr, 4
-			; +Copy root_dir_first_clus, cluster_number,4
-			; Calculate cluster LBA address for anything else
-			; jsr .calc_lba_addr
-
-			+SetVector .filename, filenameptr
+			; +SetVector .filename, filenameptr
 			+SetVector .steckos_start, .startaddr
 			jsr .fat_open
 			lda errno 
 			bne .fat_end
 
+			ldy #$00
+-			lda (filenameptr),y
+			beq +
+			jsr chrout
+			iny
+			bne -
++
 
-			+PrintString .filename
+
+			
 			+SetVector .steckos_start, sd_blkptr
 			jsr .fat_read
 			lda errno 
@@ -560,7 +569,7 @@ biosversion	!text "BIOS    : V150726f", $00	; Version String
 .default_params
 	!byte $42
 	!byte $00
-	!text "           " 
+	!text "loader.bin",$00 
 ;	!byte $0f
 	!byte $13
 	!byte %00000011
