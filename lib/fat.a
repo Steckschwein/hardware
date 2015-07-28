@@ -580,7 +580,7 @@ FD_file_size = $08
 	pla
 
 	rts
-	.fat_list_entry_short
+.fat_list_entry_short
 	pha
 	jsr .print_filename
 	+PrintChar ' '
