@@ -218,8 +218,7 @@
        jsr spi_rw_byte
 
        ; wait for sd card data token
--      lda #$ff
-       jsr spi_rw_byte             
+-      jsr spi_r_byte                         
        cmp #sd_data_token
        bne -
 
@@ -294,8 +293,7 @@
        jsr spi_rw_byte
 
        ; Wait for data token
--      lda #$ff
-       jsr .spi_rw_byte             
+-      jsr .spi_r_byte             
        cmp #$fe
        bne -
 
