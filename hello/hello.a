@@ -1,41 +1,48 @@
 *= $1000
-jmp main 
+; jmp main 
 !src <defs.h.a>
 !src <bios.h.a>
 
-spi 	  = $260
-spidata   = spi
-spistatus = spi+1
-spictrl   = spi+1
-spidiv    = spi+2
-spiss     = spi+3
+; spi 	  = $260
+; spidata   = spi
+; spistatus = spi+1
+; spictrl   = spi+1
+; spidiv    = spi+2
+; spiss     = spi+3
 
-main 
-	lda #$01
-	sta spiss
+; main 
+; 	lda #$01
+; 	sta spiss
 
-	lda #$00
-	sta spidiv
+; 	lda #$00
+; 	sta spidiv
 
-	lda #$00
-	sta spictrl
-	; sta spidata
-	sta spistatus
+; 	lda #$00
+; 	sta spictrl
+; 	; sta spidata
+; 	sta spistatus
 
 	
-	bit spistatus
-	bpl +
-	lda spidata
-+
+; 	bit spistatus
+; 	bpl +
+; 	lda spidata
+; +
 
 
- 	lda #$f0
- 	sta spidata
+;  	lda #$f0
+;  	sta spidata
 
---	bit spistatus
-	bpl --
+; --	bit spistatus
+; 	bpl --
 	; lda spidata
-	
-- 	jmp -
-; hello
-; 	!text "**Hello World!**", $00
+
+	ldx #$00
+-	lda .hello,x
+	beq +
+	jsr chrout
+	inx
+	bra -
++		
+	rts
+.hello
+	!text "**Hello World!**", $00
