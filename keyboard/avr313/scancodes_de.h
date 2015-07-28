@@ -1,4 +1,12 @@
 
+// Control Characters
+#define C_SOH 0x01 // Ctrl-A, Start of heading
+#define C_STX 0x02 // Ctrl-B, Start of text
+#define C_ETX 0x03 // Ctrl-C, End of text
+#define C_EOT 0x04 // Ctrl-D, End of transmission
+#define C_BEL 0x07 // Ctrl-G, Bell
+#define C_BS  0x08 // Ctrl-H, Backspace
+
 // Unshifted characters
 const unsigned char scancodes[][5] PROGMEM = {
 	/*
@@ -11,12 +19,12 @@ const unsigned char scancodes[][5] PROGMEM = {
 	{0x16,'1', '!', 0, 0} ,
 	{0x1a,'y', 'Y', 0, 0} ,
 	{0x1b,'s', 'S', 0, 0} ,
-	{0x1c,'a', 'A', 0, 0} ,
+	{0x1c,'a', 'A', C_SOH, 0} ,
 	{0x1d,'w', 'W', 0, 0} ,
 	{0x1e,'2', '"', 0, 0} ,
-	{0x21,'c', 'C', 4, 0} ,
+	{0x21,'c', 'C', C_ETX, 0} ,
 	{0x22,'x', 'X', 0, 0} ,
-	{0x23,'d', 'D', 0, 0} ,
+	{0x23,'d', 'D', C_EOT, 0} ,
 	{0x24,'e', 'E', 0, '¤'} ,
 	{0x25,'4', '$', 0, 0} ,
 	{0x26,'3', '§', 0, 0} ,
@@ -27,9 +35,9 @@ const unsigned char scancodes[][5] PROGMEM = {
 	{0x2d,'r', 'R', 0, 0} ,
 	{0x2e,'5', '%', 0, 0} ,
 	{0x31,'n', 'N', 0, 0} ,
-	{0x32,'b', 'B', 0, 0} ,
-	{0x33,'h', 'H', 0, 0} ,
-	{0x34,'g', 'G', 0, 0} ,
+	{0x32,'b', 'B', C_STX, 0} ,
+	{0x33,'h', 'H', C_BS, 0} ,
+	{0x34,'g', 'G', C_BEL, 0} ,
 	{0x35,'z', 'Z', 0, 0} ,
 	{0x36,'6', '&', 0, 0} ,
 	{0x39,',', ';', 0, 0} ,
@@ -57,7 +65,7 @@ const unsigned char scancodes[][5] PROGMEM = {
 	{0x5b,'+', '*', 0, '~'} ,
 	{0x5d,'\\', '|', 0, 0} ,
 	{0x61,'<', '>', 0, 0} ,
-	{0x66, 8, 8 , 0, 0} ,
+	{0x66, C_BS, C_BS , 0, 0} ,
 	{0x69,'1', '!', 0, 0} ,
 	{0x6b,'4', '$', 0, 0} ,
 	{0x6c,'7', '/', 0, 0} ,
