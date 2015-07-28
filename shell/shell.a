@@ -185,11 +185,30 @@ mainloop
 -	jmp mainloop 
 
 
-.run	
-	jsr .readfile		
+.run
+	ldy #$00
+-	lda (.paramptr),y
+	beq ++
+	cmp #'.'
+	beq + ; has extension
+	iny
+	bra -	
+
+++	
+	ldx #$00
+-	lda .exec_extension,x
+	sta (.paramptr),y
+	iny
+	inx
+	cpx #$05
+	bne -
+
++	jsr .readfile		
 	
 	lda errno
-	bne -
+	beq + 
+	jmp mainloop
++
 
 	ldx #$ff
 	txs
@@ -217,7 +236,7 @@ mainloop
 .dumpvec_start 	= .dumpvec+2
 
 .dump
-	stz .dumpvec
+	; stz .dumpvec
 	stz .dumpvec+1
 	stz .dumpvec+2
 	stz .dumpvec+3
@@ -303,7 +322,7 @@ mainloop
 
 ++
 	jsr getkey
-	cmp #$04
+	cmp #$03
 	beq +
 	clc
 	lda .dumpvec_start
@@ -499,7 +518,6 @@ mainloop
 
 
 .errmsg
-		
 		+errMsgEntry fat_bad_block_signature, .fat_err_signature
 		+errMsgEntry fat_invalid_partition_type, .fat_err_partition
 		+errMsgEntry fat_invalid_sector_size, .fat_err_bad_sect_size
@@ -540,7 +558,7 @@ mainloop
 .fat_err_no_such_file	!text "no such file or directory",$00
 .fat_err_file_not_open	!text "file not open error",$00
 .fat_err_too_many_open	!text "too many open files",$00
-
+.exec_extension			!text ".bin",$00
 .assets
 !ifndef text_mode_40 {
 !src "sanduhr.raw"

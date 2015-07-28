@@ -543,7 +543,7 @@ FD_file_size = $08
 	jsr .calc_lba_addr
 
 -	jsr .getkey
-	cmp #$04 ; CTRL-C?
+	cmp #$03 ; CTRL-C?
 	beq ++
 	+SetVector sd_blktarget, sd_blkptr
 	jsr sd_read_block
