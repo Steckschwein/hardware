@@ -225,7 +225,7 @@
 
        ldy #$00
        lda via1portb   ; Port laden
-       AND #$7e  ;    * Daten und Takt ausschalten
+       AND #$fe        ; Takt ausschalten
        TAX             ; aufheben
        ORA #$01
        sta tmp0
@@ -301,7 +301,7 @@
 
        ldy #$00
        lda via1portb   ; Port laden
-       AND #$7e        ;    * Daten und Takt ausschalten
+       AND #$fe        ; Takt ausschalten
        TAX             ; aufheben
        ORA #$01
        sta tmp0
