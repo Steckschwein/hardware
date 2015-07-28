@@ -133,6 +133,9 @@ mainloop
 .unknown
 	lda .buf
 	beq +
+	+SetVector .buf, .paramptr
+	bra .run
+
 	+ShellPrintString .txt_msg_unknown_cmd
 +	jmp mainloop
 
@@ -210,12 +213,14 @@ mainloop
 	jmp mainloop
 +
 
-	ldx #$ff
-	txs
+	; ldx #$ff
+	; txs
 
-	sei
-	jmp  .steckos_start
+	; sei
+	; jmp  .steckos_start
 
+	jsr .steckos_start
+	
 .load
 	jsr .readfile		
 	
