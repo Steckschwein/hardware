@@ -9,7 +9,7 @@ kernel.h.a: kernel.bin
 	cat kernel.h.a.stub kernel.h.a.tmp > ../lib/kernel.h.a
 	rm kernel.h.a.tmp
 %.bin: %.a
-	acme -vv -f plain -Wtype-mismatch -l $<.labels --cpu 65c02 -o $@ $<
+	acme -Dexperimental=1 -vv -f plain -Wtype-mismatch -l $<.labels --cpu 65c02 -o $@ $<
 transfer: kernel.bin
 	../transfer.py kernel.bin 0xd600
 

@@ -17,7 +17,7 @@ bios.h.a: bios.bin
 	rm bios.h.a.tmp
 	
 %.bin: %.a ${ACME}/t9929.h.a ${ACME}/t99xx.lib.a vdp.a 
-	acme -Wtype-mismatch -l $<.labels $(ACME_OPTS) -o $@ $<
+	acme -Dexperimental=1 -Wtype-mismatch -l $<.labels $(ACME_OPTS) -o $@ $<
 
 burn: bios.bin
 	mkfile 24k 24k.bin
