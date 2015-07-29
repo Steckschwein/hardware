@@ -5,9 +5,9 @@
 	jsr vdp_mode_sprites_off	;sprites off
 
 	lda	#$00
-	sta	gfx2_mode_bitmap_address
+	sta	gfx2_mode_ptr_bitmap_address
 	lda	#$10
-	sta	gfx2_mode_bitmap_address+1
+	sta	gfx2_mode_ptr_bitmap_address+1
 	lda	#$00
 	sta	gfx2_mode_ptr_bitmap_color_address
 	lda	#$28
