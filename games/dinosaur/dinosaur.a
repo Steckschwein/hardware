@@ -1,0 +1,317 @@
+*=$1000
+	jmp main
+	
+!src <defs.h.a>
+!src <bios.h.a>
+!src <macro.h.a>
+!src <kernel.h.a>
+!src <via.h.a>
+!src <joystick.h.a>
+!src <t99xx.lib.a>
+	
+.frame_cnt=tmp0
+.seed=tmp1
+.sin_tab_ptr=tmp2
+
+.screen=$2000
+.dinosaur_color=Dark_Green
+.DINOSAUR_Y=125
+
+main:
+	sei
+	jsr	.init_via
+	jsr	vdp_display_off
+	jsr	.init_vram
+
+	jsr	.init_screen
+	
+	lda	#33
+	sta	.seed
+	
+	jsr	.update_vram
+
+	+SetVector	.game_isr, irqvec
+	lda	#Light_Blue
+	jsr	vdp_mode_gfx1
+	
+	cli
+	
+-	
+	bra	-
+
+.init_via
+	;via port a
+	lda #$00
+	sta via1ier             ; disable VIA1 T1 interrupts
+	lda #%00000000 			; set latch
+	sta via1acr
+	lda #%11001100 			; set level
+	sta via1pcr
+	lda #%11000000 			; set PA6,7 to output (port select), PA1-5 to input (directions)
+	sta via1ddra
+	rts 
+	
+.init_screen
+	ldx	#$00
+-	lda	.game_char_tab,x
+	sta	.screen,x
+	inx
+	cpx	#32*4
+	bne	-
+	rts
+	
+.scroll_background
+	lda	.screen
+	sta	.screen+128
+	lda	.screen+32
+	sta	.screen+128+1
+	lda	.screen+64
+	sta	.screen+128+2
+	lda	.screen+96
+	sta	.screen+128+3
+	
+	ldx	#$00
+-	lda	.screen+1,x
+	sta	.screen,x
+	lda	.screen+32+1,x
+	sta	.screen+32,x
+	lda	.screen+64+1,x
+	sta	.screen+64,x
+	lda	.screen+96+1,x
+	sta	.screen+96,x
+	inx	
+	cpx	#32
+	bne	-
+	lda	.screen+128
+	sta	.screen+31
+	lda	.screen+128+1
+	sta	.screen+31+32
+	lda	.screen+128+2
+	sta	.screen+31+64
+	lda	.screen+128+3
+	sta	.screen+31+96
+	
+	rts
+
+.animate_dinosaur
+	lda	.frame_cnt
+	and	#3
+	bne	++
+;	sin
+;	inc	.sprite_tab
+;	inc	.sprite_tab+1*4
+;	inc	.sprite_tab+2*4
+;	inc	.sprite_tab+3*4
+	
+	lda	.sprite_tab+2*4+2
+	cmp	#$08
+	beq	+
+	lda	#08
+	sta	.sprite_tab+2*4+2
+	lda	#12
+	sta	.sprite_tab+3*4+2
+++	rts	
++	lda	#16
+	sta	.sprite_tab+2*4+2
+	lda	#20
+	sta	.sprite_tab+3*4+2
+	rts
+
+.animate_sky
+	ldx	#$00
+-	dec	.sprite_tab_sky+1,x
+	bne	++
+	lda	.sprite_tab_sky+3,x
+	tay
+	and	#Sprite_EC
+	bne	+
+	tya	
+	ora	#Sprite_EC
+	sta	.sprite_tab_sky+3,x
+	lda	#32
+	sta .sprite_tab_sky+1,x
+	bra	++
++	tya
+	and	#<!Sprite_EC
+	sta	.sprite_tab_sky+3,x
+	lda	#$ff
+	sta .sprite_tab_sky+1,x
+++	inx
+	inx
+	inx
+	inx
+	cpx	#32
+	bne	-
+	rts
+	
+.game_isr
+	bit	a_vreg
+	bpl	.game_isr_exit
+	+save
+	
+;	lda	#Dark_Yellow
+;	jsr	vdp_bgcolor
+
+	jsr	.animate_dinosaur
+	jsr	.animate_sky
+			
+	lda	.frame_cnt
+	and	#$03
+	bne	+
+	jsr	.scroll_background
++			
+	jsr	.update_vram
+
+	jsr	.action_handler
+	
+;	jsr keyin
+	cmp	#$20
+	bne	+
+	lda	White
+	jsr	vdp_bgcolor
++
+	
+	inc	.frame_cnt
+;	inc	
+;	cmp	#50
+;	bne	+
+;	lda	#0
+;+	sta	.frame_cnt
+
+	lda	#Black
+	jsr	vdp_bgcolor
+	
+	+restore
+.game_isr_exit	
+	rti
+	
+.action_handler
+	lda	#PORT_SEL_2		;port 1
+	sta	via1porta
+	nop
+	nop
+	nop
+	nop
+	lda	via1porta
+	and #JOY_UP
+	bne	+
+	dec	.sprite_tab
+	dec	.sprite_tab+1*4
+	dec	.sprite_tab+2*4
+	dec	.sprite_tab+3*4
++	
+	lda	via1porta
+	and #JOY_DOWN
+	bne	++
+	ldx	.sin_tab_ptr
+	lda	.sin_tab,x
+	clc	
+	adc	#.DINOSAUR_Y
+	sta	.sprite_tab
+;	sta	.sprite_tab+1*4
+	sta	.sprite_tab+2*4
+;	sta	.sprite_tab+3*4
+	inx	
+	cpx	#46
+	bne	+
+	ldx	#$00
++	stx	.sin_tab_ptr
+++
+	rts
+	
+		
+.init_vram
+	stz	.frame_cnt
+
+	jsr	vdp_mode_gfx1_blank
+
+	+SetVector charset, .adrl
+	lda #<ADDRESS_GFX1_PATTERN
+	ldy #.WRITE_ADDRESS + >ADDRESS_GFX1_PATTERN
+	ldx	#$08
+	jsr	vdp_memcpy
+
+	+SetVector .game_chars, .adrl
+	lda #<ADDRESS_GFX1_PATTERN
+	ldy #.WRITE_ADDRESS + >ADDRESS_GFX1_PATTERN
+	ldx	#$01
+	jsr	vdp_memcpy
+	
+	+SetVector .sprites, .adrl
+	lda	#<ADDRESS_GFX1_SPRITE_PATTERN
+	ldy	#.WRITE_ADDRESS + >ADDRESS_GFX1_SPRITE_PATTERN
+	ldx	#$02
+	jsr	vdp_memcpy
+	
+	+PrintStringAt .text_game_label, 0, 22
+	
+	rts
+	
+.update_vram
+	+SetVector .sprite_tab, .adrl
+	lda	#<ADDRESS_GFX1_SPRITE
+	ldy	#.WRITE_ADDRESS + >ADDRESS_GFX1_SPRITE
+	ldx	#12*4
+	jsr	vdp_memcpys
+	
+	+SetVector .screen, .adrl
+	lda	#<(ADDRESS_GFX1_SCREEN + (16*32))
+	ldy	#.WRITE_ADDRESS + >(ADDRESS_GFX1_SCREEN+(16*32))
+	ldx	#32*4
+	jmp	vdp_memcpys
+	
+	rts
+
+.rnd:
+   lda .seed
+   beq .doEor
+   asl
+   beq .noEor ;if the input was $80, skip the EOR
+   bcc .noEor
+.doEor:    
+	eor #$1d
+.noEor:  
+	sta .seed
+	rts
+
+.sprite_tab
+	!byte	.DINOSAUR_Y,		32,0, .dinosaur_color
+	!byte	.DINOSAUR_Y+16,	32,4, .dinosaur_color
+	!byte	.DINOSAUR_Y,16,	8, .dinosaur_color	;0100 ->  1000
+	!byte	.DINOSAUR_Y+16,	16,12, .dinosaur_color  ;1100 -> 10100
+.sprite_tab_sky
+	!byte	40,100,36, White
+	!byte	40,116,40, White
+	!byte	56,30,36, White
+	!byte	56,46,40, White
+	!byte	72,70,36, White
+	!byte	72,86,40, White
+	!byte	98,200,36, White
+	!byte	98,216,40, White
+
+.text_game_label	!text "Verbindung zum Internet konnte  nicht hergestellt werden.",$0
+.text_game_over	!text "GAME OVER",$0
+.text_HI			!text "HI ",$0
+
+.sprites
++SpriteLine16start
+!src "dinosaur.sprites.a"
+
+.game_char_tab
+	!byte 0, 4, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32
+	!byte 1, 5, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32
+	!byte 2, 6, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32
+	!byte 3, 7, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32
+	
+.game_chars
+!src "dinosaur.chars.1.res"
+!src "dinosaur.chars.2.res"
+!src "dinosaur.chars.3.res"
+!src "dinosaur.chars.4.res"
+!src "dinosaur.chars.5.res"
+
+!fill 255,0
+.sin_tab
+	!for i, 0, 45 {
+		!byte sin(i*4)*32
+	}

@@ -118,7 +118,7 @@ vdp_mode_sprites_off
 ;
 ;	gfx mode 1 - 32x24 character mode, 16 colors with same color for 8 characters in a block
 ;
-vdp_mode_gfx1:
+vdp_mode_gfx1
 	sta	.adrl		;set character color
 	ldx	#$20
 	lda	#<ADDRESS_GFX1_COLOR

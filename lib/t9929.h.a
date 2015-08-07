@@ -8,14 +8,14 @@ t9929_h_a = 1
 	nop
 }
 
-.WRITE_ADDRESS		=$40
+.WRITE_ADDRESS			=$40
 ADDRESS_GFX_SPRITE		=$3f80
 
 ADDRESS_GFX1_SCREEN		=$0800
 ADDRESS_GFX1_PATTERN	=$0000
 ADDRESS_GFX1_COLOR		=$0b80
 ADDRESS_GFX1_SPRITE		=ADDRESS_GFX_SPRITE
-ADDRESS_GFX1_SPRITE_PATTERN=ADDRESS_GFX1_PATTERN
+ADDRESS_GFX1_SPRITE_PATTERN=$1000;ADDRESS_GFX1_PATTERN
 
 ADDRESS_GFX2_SCREEN		=$1800
 ADDRESS_GFX2_PATTERN	=$0000
@@ -70,6 +70,8 @@ Magenta        =$0d ; (Purple)
 Gray           =$0e
 White          =$0f
 
+Sprite_EC	   =1<<7
+
 !macro SpriteLine .v {
 	!byte .v&255
 }
@@ -78,16 +80,13 @@ White          =$0f
 	!set sprite_row=0
 }
 !macro SpriteLine16 .v {
-	!ifndef sprite_row{
-;		!set sprite_row=0
-	}
-	!byte (.v>>8)& 255
+	!byte (.v>>8)&255
 	*=*+15
 	!byte  .v	 &255
 	!if sprite_row < 15{
 		*=*-16
+		!set sprite_row=sprite_row+1
 	}else{
 		!set sprite_row=0
-	}	
-	!set sprite_row=sprite_row+1
+	}
 }

@@ -1,0 +1,12 @@
+
+
+
+
+wolken 96
+chars1 18
+
+chars4 36
+
+digits 10
+alpha  26
+

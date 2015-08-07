@@ -26,15 +26,13 @@ macro_h_a = 1
 		bne -
 +		ply
 }
-; !macro PrintStringAt .word,.x,.y {
-; 	ldx #.x
-; 	ldy #.y
-; 	jsr lcdxy	
-
-; 	+SetVector .word, msgptr
-;     jsr lcdstring
-
-; }
+!macro PrintStringAt .word,.x,.y {
+ 	lda #.x
+	sta	crs_x
+	lda	#.y
+	sta crs_y
+	+PrintString .word
+ }
 
 !macro save{
 	pha
