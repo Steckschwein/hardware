@@ -568,45 +568,45 @@ dirptr = tmp3 ; 2 byte
 
 
 
-!macro crlf {
-	lda #$0d
-	jsr chrout
-	lda #$0a
-	jsr chrout
-} 
-!macro hexout16 .ptr {
-	lda .ptr+1
-	jsr hexout
+; !macro crlf {
+; 	lda #$0d
+; 	jsr chrout
+; 	lda #$0a
+; 	jsr chrout
+; } 
+; !macro hexout16 .ptr {
+; 	lda .ptr+1
+; 	jsr hexout
 
-	lda .ptr
-	jsr hexout
+; 	lda .ptr
+; 	jsr hexout
 
-	lda #' '
-	jsr chrout 
-}
+; 	lda #' '
+; 	jsr chrout 
+; }
 
 
-.fat_show
-	phy
-	pha
-	jsr .keyin
-	+hexout16 dirptr
-	lda (dirptr)
-	jsr hexout
-	lda #' '
-	jsr chrout 
+; .fat_show
+; 	phy
+; 	pha
+; 	jsr .keyin
+; 	+hexout16 dirptr
+; 	lda (dirptr)
+; 	jsr hexout
+; 	lda #' '
+; 	jsr chrout 
 
-	ldy #$00
--	lda (dirptr),y
-	jsr chrout
-	iny
-	cpy #$0b
-	bne -
+; 	ldy #$00
+; -	lda (dirptr),y
+; 	jsr chrout
+; 	iny
+; 	cpy #$0b
+; 	bne -
 
-	+crlf
-	pla
-	ply
-	rts
+; 	+crlf
+; 	pla
+; 	ply
+; 	rts
 
 .fat_dir_scan
 	; +save
@@ -625,8 +625,27 @@ dirptr = tmp3 ; 2 byte
 	cmp #$03 ; CTRL-C?
 	beq +
 
+	ldy #DIR_Attr
+	lda (dirptr),y
+
+	cmp #$0f 		; Long filename?
+	beq ++			; skip
+
+	ror 			; skip read only bit
+
+	ror 			; Hidden attribute set?
+	bcs ++			; skip
+
+	ror 			; system attribute set?
+	bcs ++			; skip
+
+	ror 			; volume id?
+	bcs ++			; skip
+
+
 	jsr .fat_dir_action
 	bcs +
+++	
 ---	
 	lda dirptr
 	clc
@@ -641,23 +660,13 @@ dirptr = tmp3 ; 2 byte
 	cmp #$e5		; deleted file (first byte $e5?)
 	beq ---			; skip
 
-	ldy #DIR_Attr
-	lda (dirptr),y
-
-	cmp #$0f 		; Long filename?
-	beq ---			; skip
-
-	ror 			; skip read only bit
-
-	ror 			; Hidden attribute set?
-	bcs ---			; skip
-
-	ror 			; system attribute set?
-	bcs ---			; skip
 
 	lda dirptr+1 	; end of block?
 	cmp #$06
-	bcc --			; no, show entry
+	bcc --			; no, show entr
+
+
+
 
 
 	; increment lba address to read next block 
