@@ -36,22 +36,17 @@ kern_init
 
 
 	; read from keyboard buffer until empty to filter crap from kbd init
--	lda #%01111010
+	; select keyboard controller
+	lda #%01111010
 	sta via1portb
 
-	TAX             ; aufheben
-    ORA #$01
-    !for .i,0,7 {
-		STA via1portb ; Takt An 1
-		STX via1portb ; Takt aus  
-    }
-       
-	ldx #%11111110
-	stx via1portb
-
-	lda via1sr
-	cmp #$00
+-	jsr spi_r_byte
 	bne -
+
+	; deselect keyboard controller
+	lda #%01111110
+	sta via1portb
+
 
 	jsr	.textui_init0
 
@@ -63,15 +58,20 @@ kern_init
 	+SetVector .kernel_version, msgptr
 	jsr strout
 
+	jsr init_sdcard
+
 	; check errno. if != 00, sd card init failed.
 	; do not attempt to mount card, jump to upload instead
 	lda errno
 	bne .error
 
+	lda #%01111110
+	sta via1portb
+
 	jsr .fat_mount 
 	lda errno
 	bne .error 
-	
+
 	+SetVector .filename, filenameptr
 	jsr .fat_open 
 	lda errno
@@ -282,8 +282,8 @@ krn_close 			jmp .fat_close
 krn_read 			jmp .fat_read 
 krn_open_rootdir 	jmp .fat_open_rootdir
 
-krn_list_entry 			jmp .fat_list_entry
-krn_list_entry_short 	jmp .fat_list_entry_short
+krn_dir_show_entry 			jmp .fat_dir_show_entry
+krn_dir_show_entry_short 	jmp .fat_dir_show_entry_short
 krn_dir_filter_default	jmp .fat_dir_filter_default
 
 krn_textui_init 		jmp	.textui_init
