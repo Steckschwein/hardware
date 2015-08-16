@@ -1,4 +1,4 @@
-*= $d600
+*= $d000
 
 text_mode_40 = 1
 num_ls_entries = $03
@@ -11,7 +11,7 @@ num_ls_entries = $03
 ; !src <errors.h.a>
 
 !address {
-	.shell_addr		= $d000
+	.shell_addr		= $b000
 	.key = $10
 }
 
@@ -277,14 +277,10 @@ kern_init
 krn_keyin			jmp .keyin
 krn_mount 			jmp .fat_mount 
 krn_open 			jmp .fat_open
-krn_read_dir		jmp .fat_read_dir
+krn_read_dir		jmp .fat_dir_scan
 krn_close 			jmp .fat_close
 krn_read 			jmp .fat_read 
 krn_open_rootdir 	jmp .fat_open_rootdir
-
-krn_dir_show_entry 			jmp .fat_dir_show_entry
-krn_dir_show_entry_short 	jmp .fat_dir_show_entry_short
-krn_dir_filter_default	jmp .fat_dir_filter_default
 
 krn_textui_init 		jmp	.textui_init
 krn_textui_enable		jmp	.textui_enable
