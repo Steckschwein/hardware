@@ -143,12 +143,12 @@ mainloop
 ; !src <fat.a>
 
 .ls
-	+SetVector list_entry_short, fat_dir_display_hook
+	+SetVector dir_show_entry_short, fat_dir_display_hook
 	lda #num_ls_entries
 	sta .entries
 	bra +
 .dir
-	+SetVector list_entry, fat_dir_display_hook
+	+SetVector dir_show_entry, fat_dir_display_hook
 +	+ShellPrintString .crlf
 	+SetVector dir_filter_default, fat_dir_filter_hook
 
@@ -191,7 +191,10 @@ mainloop
 .run
 	ldy #$00
 -	lda (.paramptr),y
+	beq +
+	cmp #' '
 	beq ++
+	
 	cmp #'.'
 	beq + ; has extension
 	iny
@@ -205,6 +208,8 @@ mainloop
 	inx
 	cpx #$05
 	bne -
+
+	; +ShellPrintString .filename
 
 +	jsr .readfile		
 	
@@ -220,7 +225,7 @@ mainloop
 	; jmp  .steckos_start
 
 	jsr .steckos_start
-	
+
 .load
 	jsr .readfile		
 	
@@ -577,7 +582,7 @@ mainloop
 }
 .sprite_sanduhr
 	!byte	$ff,	$f0,	0,	Gray
-
+.filename !text "            ",$00
 .atoi
 	cmp #"9"+1
 	bcc + 	; 0-9?
