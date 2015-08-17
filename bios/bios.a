@@ -11,9 +11,10 @@
 !address	.nvram  = $0800
 *= $e000			; ROM Start
 charset_8x8
-!src "../charsets/char.ascii.vc20.h.a"
+blobbel
+!src "../charsets/char.ascii.c64.h.a"
 !src "../charsets/char.ascii.6x8.big.h.a"
-biosversion	!text "BIOS    : V150728e", $00	; Version String
+biosversion	!text "BIOS    : V150817e", $00	; Version String
 *=$f050
 .upload
 			+PrintString .crlf

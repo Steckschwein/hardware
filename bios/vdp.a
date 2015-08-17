@@ -11,7 +11,7 @@ init_vdp
 	stz	crs_x
 	stz	crs_y
 	
-	+SetVector	charset, .adrl
+	+SetVector	blobbel, .adrl
 	lda	#<(ADDRESS_GFX1_SPRITE_PATTERN)
 	ldy	#>(ADDRESS_GFX1_SPRITE_PATTERN+(.WRITE_ADDRESS<<8))
 	ldx	#$08					;load charset

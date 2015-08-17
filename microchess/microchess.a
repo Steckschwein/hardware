@@ -43,6 +43,7 @@
 !src <defs.h.a>
 !src <via.h.a>
 !src <bios.h.a>
+!src <kernel.h.a>
 !address {
 .key = $09
 }
@@ -141,7 +142,7 @@ temp    =   $6C
 		jmp .init
 
 ; !src "../shell/util.h.a"
-!src "../shell/shell.textui.a"
+!src "../kernel/textui.a"
 
 .init
 		stz .key

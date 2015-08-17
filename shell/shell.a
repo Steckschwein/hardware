@@ -1,4 +1,4 @@
-*= $d000
+*= $b000
 
 text_mode_40 = 1
 num_ls_entries = $03
@@ -8,7 +8,7 @@ num_ls_entries = $03
 !src <bios.h.a>
 !src <kernel.h.a>
 !src <via.h.a>
-; !src <fat32.h.a>
+!src <fat32.h.a>
 !src <params.h.a>
 !src <errors.h.a>
 !src <t9929.h.a>
@@ -143,14 +143,14 @@ mainloop
 ; !src <fat.a>
 
 .ls
-	+SetVector dir_show_entry_short, fat_dir_display_hook
+	+SetVector .dir_show_entry_short, fat_dir_display_hook
 	lda #num_ls_entries
 	sta .entries
 	bra +
 .dir
-	+SetVector dir_show_entry, fat_dir_display_hook
+	+SetVector .dir_show_entry, fat_dir_display_hook
 +	+ShellPrintString .crlf
-	+SetVector dir_filter_default, fat_dir_filter_hook
+	; +SetVector dir_filter_default, fat_dir_filter_hook
 
 	jsr read_dir
 	jmp mainloop
@@ -594,3 +594,133 @@ mainloop
 +	sec
 	sbc #$30
 	rts
+
+
+.dir_show_entry_short
+	pha
+	jsr .print_filename
+	+PrintChar ' '
+	+PrintChar ' '
+	dec .entries
+	bne +	
+	+ShellPrintString .crlf
+	lda #$03
+	sta .entries
++
+	pla
+	rts
+
+.dir_show_entry
+	pha
+	jsr .print_filename
+	+PrintChar ' '
+
+	ldy #DIR_Attr
+	lda (dirptr),y
+
+ 	bit #$10 ; Is a directory
+    beq +
+    lda #'D'
+    bra ++ 
+
++	bit #$04 ; Is system
+	beq +
+    lda #'S'
+    bra ++
+ 
++	bit #$08 ; Is volume ID
+	beq +
+    lda #'V'
+    bra ++ 
++	
+	lda #'F'
+++	+ShellPrint
+
+	+PrintChar ' '
+	ldy #DIR_FileSize + 1 +1
+-	dey
+	lda (dirptr),y
+	+ShellPrintHex
+	cpy #DIR_FileSize
+	bne -	
+
+	+PrintChar ' '
+
+	; day
+	ldy #DIR_WrtDate 
+	lda (dirptr),y
+	and #%00011111
+	jsr .decoutz
+	
+	; +PrintChar '.'
+	; month
+	iny
+	lda (dirptr),y
+	lsr
+	tax
+	dey
+	lda (dirptr),y
+	ror
+	lsr
+	lsr
+	lsr
+	lsr
+	
+	jsr .decoutz
+	
+	; +PrintChar '.'
+	; year
+	txa
+	clc 
+	adc #80   	; add begin of msdos epoch (1980)
+	cmp #100	
+	bcc +		; greater than 100 (post-2000)
+	sec 		; yes, substract 100
+	sbc #100
++	jsr .decoutz ; there we go
+
+	
+
+	+PrintChar ' '
+
+	ldy #DIR_WrtTime +1
+	lda (dirptr),y
+	tax
+	lsr
+	lsr
+	lsr
+	
+	jsr .decoutz
+
+	+PrintChar ':'
+
+	txa
+	and #%00000111
+	sta tmp1
+	dey
+	lda (dirptr),y
+	
+	!for .i,0,4 {
+		lsr tmp1
+		ror 
+	}	
+
+
+	jsr .decoutz
+
+
+	; Bits 11–15: Hours, valid value range 0–23 inclusive.
+	
+	+ShellPrintString .crlf
+	pla
+	rts	
+
+.print_filename
+	ldy #DIR_Name
+-	lda (dirptr),y
+	+ShellPrint	
+	iny
+	cpy #$0b
+	bne -
+	rts
+!src <util.a>
