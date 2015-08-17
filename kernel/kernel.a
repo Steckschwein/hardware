@@ -11,7 +11,7 @@ num_ls_entries = $03
 ; !src <errors.h.a>
 
 !address {
-	.shell_addr		= $b000
+	.shell_addr		= $d900
 	.key = $10
 }
 
@@ -272,7 +272,7 @@ kern_init
 .txt_msg_loading 			!text "Loading ",$00
 .serial_upload				!text "Serial Upload ",$00
 .filename					!text "shell.bin",$00
-*=$dfa0
+*=$d800
 ; "kernel" jumptable
 krn_keyin			jmp .keyin
 krn_mount 			jmp .fat_mount 

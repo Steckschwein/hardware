@@ -1,4 +1,4 @@
-*= $b000
+*= $d900
 
 text_mode_40 = 1
 num_ls_entries = $03
