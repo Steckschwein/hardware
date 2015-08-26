@@ -12,7 +12,13 @@
 .frame_cnt=tmp0
 .seed=tmp1
 .sin_tab_ptr=tmp2
-
+.BLANK=74
+.A_GX_SCR=$1800
+.A_GX_COL=$1c80
+.A_GX_PAT_1=$0000
+.A_GX_PAT_2=$0800
+.A_SP_PAT=$1000
+.A_SP_ATR=$1c00
 .screen=$2000
 .dinosaur_color=Dark_Green
 .DINOSAUR_Y=125
@@ -31,13 +37,38 @@ main:
 	jsr	.update_vram
 
 	+SetVector	.game_isr, irqvec
+	
 	lda	#Light_Blue
-	jsr	vdp_mode_gfx1
+	sta	.adrl		;set character color
+	ldx	#$20
+	lda	#<.A_GX_COL
+	ldy	#.WRITE_ADDRESS + >.A_GX_COL	;color vram
+	jsr	vdp_fills
+	
+	lda	#$d0					;sprites off, at least y=$d0 will disable the sprite subsystem
+	sta	.adrl
+	ldx	#32*4
+	lda	#<.A_SP_ATR
+	ldy	#.WRITE_ADDRESS + >.A_SP_ATR
+	jsr	vdp_fills
+	
+	+SetVector .vdp_init_gfx, .adrl
+	jsr	vdp_init_reg
 	
 	cli
 	
 -	
 	bra	-
+
+.vdp_init_gfx
+	!byte 	0
+	!byte	v_reg1_16k|v_reg1_display_on|v_reg1_spr_size|v_reg1_int
+	!byte 	(.A_GX_SCR / $400)	; name table - value * $400					--> characters 
+	!byte 	(.A_GX_COL /  $40)	; color table - value * $40 (gfx1), 7f/ff (gfx2)
+	!byte 	(.A_GX_PAT_1 / $800) ; pattern table (charset) - value * $800  	--> offset in VRAM 
+	!byte	(.A_SP_ATR / $80)	; sprite attribute table - value * $80 		--> offset in VRAM
+	!byte 	(.A_SP_PAT / $800)  ; sprite pattern table - value * $800  		--> offset in VRAM
+	!byte	Light_Blue
 
 .init_via
 	;via port a
@@ -61,6 +92,7 @@ main:
 	rts
 	
 .scroll_background
+	rts
 	lda	.screen
 	sta	.screen+128
 	lda	.screen+32
@@ -223,23 +255,38 @@ main:
 .init_vram
 	stz	.frame_cnt
 
-	jsr	vdp_mode_gfx1_blank
+	ldx	#$03
+	lda	#.BLANK					;fill vram screen with blank
+	sta	.adrl
+	lda	#<.A_GX_SCR
+	ldy	#.WRITE_ADDRESS + >.A_GX_SCR
+	jsr	vdp_fill
 
 	+SetVector charset, .adrl
-	lda #<ADDRESS_GFX1_PATTERN
-	ldy #.WRITE_ADDRESS + >ADDRESS_GFX1_PATTERN
+	lda #<.A_GX_PAT_1
+	ldy #.WRITE_ADDRESS + >.A_GX_PAT_1
 	ldx	#$08
 	jsr	vdp_memcpy
-
+	lda #<.A_GX_PAT_2
+	ldy #.WRITE_ADDRESS + >.A_GX_PAT_2
+	ldx	#$08
+	jsr	vdp_memcpy
+	
 	+SetVector .game_chars, .adrl
-	lda #<ADDRESS_GFX1_PATTERN
-	ldy #.WRITE_ADDRESS + >ADDRESS_GFX1_PATTERN
-	ldx	#$01
+	lda #<.A_GX_PAT_1
+	ldy #.WRITE_ADDRESS + >.A_GX_PAT_1
+	ldx	#$03
+	jsr	vdp_memcpy
+	
+	+SetVector .game_chars_4px, .adrl
+	lda #<.A_GX_PAT_2
+	ldy #.WRITE_ADDRESS + >.A_GX_PAT_2
+	ldx	#$03
 	jsr	vdp_memcpy
 	
 	+SetVector .sprites, .adrl
-	lda	#<ADDRESS_GFX1_SPRITE_PATTERN
-	ldy	#.WRITE_ADDRESS + >ADDRESS_GFX1_SPRITE_PATTERN
+	lda	#<.A_SP_PAT
+	ldy	#.WRITE_ADDRESS + >.A_SP_PAT
 	ldx	#$02
 	jsr	vdp_memcpy
 	
@@ -249,14 +296,14 @@ main:
 	
 .update_vram
 	+SetVector .sprite_tab, .adrl
-	lda	#<ADDRESS_GFX1_SPRITE
-	ldy	#.WRITE_ADDRESS + >ADDRESS_GFX1_SPRITE
+	lda	#<.A_SP_ATR
+	ldy	#.WRITE_ADDRESS + >.A_SP_ATR
 	ldx	#12*4
 	jsr	vdp_memcpys
 	
 	+SetVector .screen, .adrl
-	lda	#<(ADDRESS_GFX1_SCREEN + (16*32))
-	ldy	#.WRITE_ADDRESS + >(ADDRESS_GFX1_SCREEN+(16*32))
+	lda	#<(.A_GX_SCR + (16*32))
+	ldy	#.WRITE_ADDRESS + >(.A_GX_SCR+(16*32))
 	ldx	#32*4
 	jmp	vdp_memcpys
 	
@@ -289,7 +336,7 @@ main:
 	!byte	98,200,36, White
 	!byte	98,216,40, White
 
-.text_game_label	!text "Verbindung zum Internet konnte  nicht hergestellt werden.",$0
+.text_game_label	!text "verbindung zum internet konnte  nicht hergestellt werden.",$0
 .text_game_over	!text "GAME OVER",$0
 .text_HI			!text "HI ",$0
 
@@ -298,10 +345,10 @@ main:
 !src "dinosaur.sprites.a"
 
 .game_char_tab
-	!byte 0, 4, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32
-	!byte 1, 5, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32
-	!byte 2, 6, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32
-	!byte 3, 7, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32
+	!byte 74, 0, 4, 74, 74, 74, 74, 74, 74, 74, 74, 0, 26, 30, 34, 38, 42, 74, 74, 47, 51, 55, 59, 74, 74, 74, 74, 74, 32, 74, 74, 74
+	!byte 74, 1, 5, 74, 74,  9, 12, 15, 18, 74, 74, 1, 27, 31, 35, 39, 43, 74, 74, 48, 52, 56, 60, 74, 74, 74, 74, 74, 74, 74, 74, 74
+	!byte 74, 2, 6, 74, 74, 10, 13, 16, 19, 74, 74, 2, 28, 32, 36, 40, 44, 74, 74, 49, 53, 57, 61, 74, 74, 65, 67, 69, 71, 74, 74, 74
+	!byte 74, 3, 7,  8, 74, 11, 14, 17, 20, 21, 74, 3, 29, 33, 37, 41, 45, 46, 74, 50, 54, 58, 62, 21, 74, 68, 70, 72, 74, 74, 74, 74
 	
 .game_chars
 !src "dinosaur.chars.1.res"
@@ -309,6 +356,14 @@ main:
 !src "dinosaur.chars.3.res"
 !src "dinosaur.chars.4.res"
 !src "dinosaur.chars.5.res"
+!src "dinosaur.chars.6.res"
+.game_chars_4px
+!src "dinosaur.chars.1.4px.res"
+!src "dinosaur.chars.2.4px.res"
+!src "dinosaur.chars.3.4px.res"
+!src "dinosaur.chars.4.4px.res"
+!src "dinosaur.chars.5.4px.res"
+!src "dinosaur.chars.6.4px.res"
 
 !fill 255,0
 .sin_tab
