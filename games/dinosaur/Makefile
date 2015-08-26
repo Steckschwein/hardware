@@ -22,4 +22,4 @@ clean:
 	acme -v -f plain --cpu 65c02 -o $@ $<
 
 transfer: all
-	/cygdrive/c/development/steckschwein-code/transfer.py dinosaur.bin	
+	../../transfer.py dinosaur.bin	

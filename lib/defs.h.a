@@ -53,9 +53,11 @@ irqvec		= $e0
 ram_end_l   = $e4
 ram_end_h   = ram_end_l+1
 
+dirptr 		= $e4 ; 2 byte
 outvec		= $e6
 invec		= $e8
 paramvec	= $ea
+fat_dir_action_hook		= $ec
 fat_dir_display_hook	= $ec
 fat_dir_filter_hook		= $ee
 ; general purpose temp variables

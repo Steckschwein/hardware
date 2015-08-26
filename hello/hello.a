@@ -42,6 +42,22 @@
 	jsr chrout
 	inx
 	bra -
++
+	ldx #$00
+-	lda $0350,x
+	beq +
+	jsr chrout
+	inx
+	bra -
++
+	inx
+-	lda $0350,x
+	beq +
+	jsr chrout
+	inx
+	bra -
+
+
 +		
 	rts
 .hello

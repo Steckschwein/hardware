@@ -70,6 +70,22 @@ FD_file_size = $08
 }
 	rts
 
+.fat_dir_find_entry
+	ldy #DIR_Name
+-
+	lda (dirptr),y
+	cmp filename_buf,y
+	bne +
+	iny
+	cpy #$0b 
+	bne -
+
+	; bra .fat_open_found
+	sec
+	rts
++	clc
+	rts
+
 .fat_open
 	pha
 	phy
@@ -81,48 +97,14 @@ FD_file_size = $08
 	ldx #$00
 	jsr .calc_lba_addr
 
+
 	jsr .convert_filename
 
--	+SetVector sd_blktarget, sd_blkptr
-	jsr sd_read_block
-	dec sd_blkptr+1
+	+SetVector .fat_dir_find_entry, fat_dir_action_hook
 
---  ldy #DIR_Attr
-	lda (sd_blkptr),y
-
-	jsr .fat_dir_filter
-	bcs +
-
-	ldy #DIR_Name
-	lda (sd_blkptr),y
-	beq .fat_no_such_file ; end of dir 
+	jsr .fat_dir_scan
+	bcs .fat_open_found
 	
-	cmp #$e5 ; deleted file
-	beq +   ; skip
-
----	
-	lda (sd_blkptr),y
-	cmp filename_buf,y
-	bne +
-	iny
-	cpy #$0b 
-	beq ++
-	bra ---
-
-+
-	; Increment blkptr by 32 bytes, jump to next dir entry
-	jsr .inc_blkptr
-
-	; end of block?
-	lda sd_blkptr+1
-	cmp #06
-	bne -- ; no
-
-	; yes, increase lba_addr and go again
-	; +SetVector sd_blktarget, sd_blkptr
-	jsr .inc_lba_address
-	bra -
-
 .fat_no_such_file
 	lda #fat_file_not_found
 	sta errno
@@ -134,8 +116,10 @@ FD_file_size = $08
 	bra .end_open
 
 ; found
-++	ldy #DIR_Attr
-	lda (sd_blkptr),y
+.fat_open_found
+
+	ldy #DIR_Attr
+	lda (dirptr),y
 	bit #$10 ; Is a directory
     beq +
 
@@ -156,11 +140,11 @@ FD_file_size = $08
 	stz fd_area + FD_start_cluster +2, x
 	
 	ldy #DIR_FstClusLO +1
-	lda (sd_blkptr),y
+	lda (dirptr),y
 	sta fd_area + FD_start_cluster +1, x
 	
 	dey
-	lda (sd_blkptr),y
+	lda (dirptr),y
 	sta fd_area + FD_start_cluster +0, x
 
 	; Cluster no = 0? assume its root dir and add 2
@@ -176,7 +160,7 @@ FD_file_size = $08
 
 +	!for .i,3,0 {
 		ldy #DIR_FileSize + .i
-		lda (sd_blkptr),y
+		lda (dirptr),y
 		sta fd_area + FD_file_size + .i, x
 	}
 
@@ -184,6 +168,7 @@ FD_file_size = $08
 .end_open
 	ply
 	pla
+
 	rts
 
 .inc_blkptr
@@ -202,6 +187,8 @@ FD_file_size = $08
 .fat_dir_display
 	jmp (fat_dir_display_hook)
 
+.fat_dir_action
+	jmp (fat_dir_action_hook)
 ; default filter hook, skips long filenames and hidden files
 ; carry flag is set on match
 .fat_dir_filter_default
@@ -420,19 +407,19 @@ FD_file_size = $08
 
 	+Copy sd_blktarget + BPB_RootClus, root_dir_first_clus, 3
 
-	jsr .fat_open_rootdir
-
 	; now we have the lba address of the first sector of the first cluster
 
 .end_mount
 	; jsr .sd_deselect_card
 	+restore
-	rts
+	; rts
 
+	; fall through to open_rootdir
 	
 .fat_open_rootdir
 	; Open root dir
 	+Copy root_dir_first_clus, fd_area + FD_start_cluster, 3
+	jmp .calc_lba_addr
 	rts
 
 .fat_init_fdarea
@@ -477,15 +464,6 @@ FD_file_size = $08
 .fat_close
 	lda #$ff
 	sta fd_area + FD_start_cluster +3 , x
-	rts
-
-.print_filename
-	ldy #DIR_Name
--	lda (sd_blkptr),y
-	+ShellPrint	
-	iny
-	cpy #$0b
-	bne -
 	rts
 
 .convert_filename	
@@ -534,171 +512,73 @@ FD_file_size = $08
   	bne -
 	rts
 
-!ifndef bios {
-.fat_read_dir
-	pha
-	phy
 
+.fat_dir_scan
+	; +save
+
+	+SetVector sd_blktarget, sd_blkptr
 	ldx #$00
 	jsr .calc_lba_addr
 
--	jsr .getkey
-	cmp #$03 ; CTRL-C?
-	beq ++
-	+SetVector sd_blktarget, sd_blkptr
+	
+-	+SetVector sd_blktarget, dirptr	
 	jsr sd_read_block
 	dec sd_blkptr+1
 
---	ldy #DIR_Attr
-	lda (sd_blkptr),y
-
-	jsr .fat_dir_filter
-	bcs +
-
-    ldy #DIR_Name
-	lda (sd_blkptr),y
-	beq ++ ; end of dir 
-	
-	cmp #$e5 ; deleted file
-	beq +   ; skip
-
-	; jsr .fat_list_entry
-	jsr .fat_dir_display
-
-+	; Increment blkptr by 32 bytes, jump to next dir entry
-	jsr .inc_blkptr
-	; end of block?
-	lda sd_blkptr+1
-	cmp #06
-	bne -- ; no
-
-	; yes, increase lba_addr and go again
-	jsr .inc_lba_address
-	bra -
-
-++	ply
-	pla
-
-	rts
-.fat_list_entry_short
-	pha
-	jsr .print_filename
-	+PrintChar ' '
-	+PrintChar ' '
-	dec .entries
-	bne +	
-	+ShellPrintString .crlf
-	lda #$03
-	sta .entries
-+
-	pla
-	rts
-
-.fat_list_entry
-	pha
-	jsr .print_filename
-	+PrintChar ' '
-
-	ldy #DIR_Attr
-	lda (sd_blkptr),y
-
- 	bit #$10 ; Is a directory
-    beq +
-    lda #'D'
-    bra ++ 
-
-+	bit #$04 ; Is system
+--	
+!ifndef bios {
+	jsr .getkey
+	cmp #$03 ; CTRL-C?
 	beq +
-    lda #'S'
-    bra ++
- 
-+	bit #$08 ; Is volume ID
-	beq +
-    lda #'V'
-    bra ++ 
-+	
-	lda #'F'
-++	+ShellPrint
-
-	+PrintChar ' '
-	ldy #DIR_FileSize + 1 +1
--	dey
-	lda (sd_blkptr),y
-	+ShellPrintHex
-	cpy #DIR_FileSize
-	bne -	
-
-	+PrintChar ' '
-
-	; day
-	ldy #DIR_WrtDate 
-	lda (sd_blkptr),y
-	and #%00011111
-	jsr .decoutz
-	
-	; +PrintChar '.'
-	; month
-	iny
-	lda (sd_blkptr),y
-	lsr
-	tax
-	dey
-	lda (sd_blkptr),y
-	ror
-	lsr
-	lsr
-	lsr
-	lsr
-	
-	jsr .decoutz
-	
-	; +PrintChar '.'
-	; year
-	txa
-	clc 
-	adc #80   	; add begin of msdos epoch (1980)
-	cmp #100	
-	bcc +		; greater than 100 (post-2000)
-	sec 		; yes, substract 100
-	sbc #100
-+	jsr .decoutz ; there we go
-
-	
-
-	+PrintChar ' '
-
-	ldy #DIR_WrtTime +1
-	lda (sd_blkptr),y
-	tax
-	lsr
-	lsr
-	lsr
-	
-	jsr .decoutz
-
-	+PrintChar ':'
-
-	txa
-	and #%00000111
-	sta tmp1
-	dey
-	lda (sd_blkptr),y
-	
-	!for .i,0,4 {
-		lsr tmp1
-		ror 
-	}	
-
-
-	jsr .decoutz
-
-
-	; Bits 11–15: Hours, valid value range 0–23 inclusive.
-	
-	+ShellPrintString .crlf
-	pla
-	rts	
-
-!src <util.a>
 }
 
+	ldy #DIR_Attr
+	lda (dirptr),y
+
+	cmp #$0f 		; Long filename?
+	beq ++			; skip
+
+	ror 			; skip read only bit
+
+	ror 			; Hidden attribute set?
+	bcs ++			; skip
+
+	ror 			; system attribute set?
+	bcs ++			; skip
+
+	ror 			; volume id?
+	bcs ++			; skip
+
+
+	jsr .fat_dir_action
+	bcs +
+++	
+---	
+	lda dirptr
+	clc
+	adc #$20
+	sta dirptr
+	bcc ++
+	inc dirptr+1
+++	
+	lda (dirptr)
+	beq +			; end of directory?
+
+	cmp #$e5		; deleted file (first byte $e5?)
+	beq ---			; skip
+
+
+	lda dirptr+1 	; end of block?
+	cmp #$06
+	bcc --			; no, show entr
+
+
+
+
+
+	; increment lba address to read next block 
+	jsr .inc_lba_address	
+	bra -
++	
+	; +restore
+	rts

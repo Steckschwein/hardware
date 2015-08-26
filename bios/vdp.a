@@ -12,11 +12,15 @@ init_vdp
 	stz	crs_y
 	
 	+SetVector	charset, .adrl
-	lda	#<(ADDRESS_GFX1_SPRITE_PATTERN)
-	ldy	#>(ADDRESS_GFX1_SPRITE_PATTERN+(.WRITE_ADDRESS<<8))
+	lda	#<ADDRESS_GFX1_PATTERN
+	ldy	#.WRITE_ADDRESS + >ADDRESS_GFX1_PATTERN
+
 	ldx	#$08					;load charset
 	jsr	vdp_memcpy
+	; jsr	vdp_mode_gfx1_sprites_off	;clean sprite attribute table
 	lda	#Cyan<<4|Black			;enable gfx 1
+
+
 	jsr	vdp_mode_gfx1
 	
 	jsr	vdp_irq_off				;switch gfx int off

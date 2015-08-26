@@ -89,6 +89,9 @@
 	
 .textui_init
 	+SetVector	.charset, .adrl	;load charset
+	; lda	#<(ADDRESS_GFX1_SPRITE_PATTERN)
+	; ldy	#>(ADDRESS_GFX1_SPRITE_PATTERN+(.WRITE_ADDRESS<<8))
+
 	lda	#<ADDRESS_GFX1_PATTERN
 	ldy	#.WRITE_ADDRESS + >ADDRESS_GFX1_PATTERN
 	ldx	#$08					

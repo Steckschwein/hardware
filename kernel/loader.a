@@ -5,12 +5,15 @@
 ; 	system attribute has to be set on file system
 
 !address {
-	.dest = $d600
+	.dest = $d000
 	.bios = $f000	
 }
 
 .pages = (.payload_end - .payload) / 256 + 1
 
+
+	lda #.pages
+	jsr hexout
 
 
 -

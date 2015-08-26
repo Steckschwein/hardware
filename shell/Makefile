@@ -8,4 +8,4 @@ clean:
 %.raw: %.xpm
 	sh xpm2acme.sh $< > $@
 transfer: shell.bin
-	../transfer.py shell.bin 0xd000
+	../transfer.py shell.bin 0xd900
