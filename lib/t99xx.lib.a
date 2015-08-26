@@ -131,7 +131,6 @@ vdp_mode_gfx1
 ;	input:
 ;	adrl/adrh vector set to vdp init table for al 8 vdp registers
 vdp_init_reg
-;	jsr		.vdp_wait_blank
 	ldy	#$00
 	ldx	#v_reg0
 -  	lda (.adrl),y
