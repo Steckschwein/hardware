@@ -532,6 +532,13 @@ FD_file_size = $08
 	beq +
 }
 
+	lda #DIR_Name
+	lda (dirptr)
+	beq +
+
+	cmp #$e5
+	beq ++
+
 	ldy #DIR_Attr
 	lda (dirptr),y
 
@@ -561,12 +568,6 @@ FD_file_size = $08
 	bcc ++
 	inc dirptr+1
 ++	
-	lda (dirptr)
-	beq +			; end of directory?
-
-	cmp #$e5		; deleted file (first byte $e5?)
-	beq ---			; skip
-
 
 	lda dirptr+1 	; end of block?
 	cmp #$06
