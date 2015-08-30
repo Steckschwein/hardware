@@ -618,22 +618,41 @@ mainloop
 	ldy #DIR_Attr
 	lda (dirptr),y
 
- 	bit #$10 ; Is a directory
-    beq +
-    lda #'D'
-    bra ++ 
-
-+	bit #$04 ; Is system
-	beq +
+	ror
+	ror
+	ror
+	bcc +
+	lda #'V'
+	bra ++
++
+	ror
+	bcc +
     lda #'S'
     bra ++
- 
-+	bit #$08 ; Is volume ID
-	beq +
-    lda #'V'
-    bra ++ 
 +	
-	lda #'F'
+	ror
+	bcc +
+	lda #'D'
+	bra ++
++
+	lda #'F'	
+++
+;  	bit #$10 ; Is a directory
+;     beq +
+;     lda #'D'
+;     bra ++ 
+
+; +	bit #$04 ; Is system
+; 	beq +
+;     lda #'S'
+;     bra ++
+ 
+; +	bit #$08 ; Is volume ID
+; 	beq +
+;     lda #'V'
+;     bra ++ 
+; +	
+; 	lda #'F'
 ++	+ShellPrint
 
 	+PrintChar ' '
