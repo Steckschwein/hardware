@@ -7,7 +7,7 @@
 vdp_sreg:
 	sta	a_vreg
 	nop
-	sty   a_vreg
+	sty	a_vreg
 	rts
 
 vdp_display_off:

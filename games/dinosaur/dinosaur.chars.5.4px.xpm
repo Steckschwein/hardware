@@ -1,8 +1,16 @@
 /* XPM */ 
 static const unsigned char * dinosaur_chars_5_4px_xpm[] = {
-"8 48 2 1",
+"8 56 2 1",
 " 	c None",
 "!	c black",
+"        ",
+"        ",
+"        ",
+"        ",
+"        ",
+"        ",
+"        ",
+"        ",
 "      !!",
 "     !! ",
 "!!!!!!  ",

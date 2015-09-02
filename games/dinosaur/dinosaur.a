@@ -12,28 +12,37 @@
 .frame_cnt=tmp0
 .seed=tmp1
 .sin_tab_ptr=tmp2
-.BLANK=74
+.status=tmp3
+.dinosaur_state=tmp4
+.score_board_cnt=tmp5
+
+.BLANK=210
 .A_GX_SCR=$1800
 .A_GX_COL=$1c80
 .A_GX_PAT_1=$0000
 .A_GX_PAT_2=$0800
 .A_SP_PAT=$1000
 .A_SP_ATR=$1c00
+.GAME_CHAR_OFFS=$0400
 .screen=$2000
 .dinosaur_color=Dark_Green
 .DINOSAUR_Y=125
+.DINOSAUR_JUMP=1<<0
 
 main:
 	sei
 	jsr	.init_via
 	jsr	vdp_display_off
 	jsr	.init_vram
-
 	jsr	.init_screen
 	
 	lda	#33
 	sta	.seed
-	
+	stz	.status
+	stz .sin_tab_ptr
+	stz	.dinosaur_state	; run initialy
+	stz .score_board_cnt
+		
 	jsr	.update_vram
 
 	+SetVector	.game_isr, irqvec
@@ -65,7 +74,7 @@ main:
 	!byte	v_reg1_16k|v_reg1_display_on|v_reg1_spr_size|v_reg1_int
 	!byte 	(.A_GX_SCR / $400)	; name table - value * $400					--> characters 
 	!byte 	(.A_GX_COL /  $40)	; color table - value * $40 (gfx1), 7f/ff (gfx2)
-	!byte 	(.A_GX_PAT_1 / $800) ; pattern table (charset) - value * $800  	--> offset in VRAM 
+	!byte 	(.A_GX_PAT_2 / $800) ; pattern table (charset) - value * $800  	--> offset in VRAM 
 	!byte	(.A_SP_ATR / $80)	; sprite attribute table - value * $80 		--> offset in VRAM
 	!byte 	(.A_SP_PAT / $800)  ; sprite pattern table - value * $800  		--> offset in VRAM
 	!byte	Light_Blue
@@ -92,7 +101,17 @@ main:
 	rts
 	
 .scroll_background
-	rts
+	lda	.status
+	bne	+
+	inc	.status
+	lda	#00
+	ldy	#v_reg4
+	jmp	vdp_sreg
++	stz	.status
+	lda	#(.A_GX_PAT_2 / $800)
+	ldy	#v_reg4
+	jsr	vdp_sreg
+
 	lda	.screen
 	sta	.screen+128
 	lda	.screen+32
@@ -126,15 +145,33 @@ main:
 	rts
 
 .animate_dinosaur
-	lda	.frame_cnt
+	lda	.dinosaur_state
+	and	#.DINOSAUR_JUMP
+	beq	++
+	lda	#28
+	sta	.sprite_tab+3*4+2
+	ldy	.sin_tab_ptr
+	lda	#.DINOSAUR_Y
+	clc
+	sbc	.sin_tab, y
+	sta	.sprite_tab		
+	sta	.sprite_tab+2*4
+	clc
+	adc #16				;+16px y offset for the lower sprites
+	sta	.sprite_tab+1*4
+	sta	.sprite_tab+3*4
+	iny
+	cpy	#36
+	bne	+
+	lda	.dinosaur_state
+	and	#(!.DINOSAUR_JUMP)
+	sta .dinosaur_state
+	ldy	#$00
++	sty	.sin_tab_ptr
+	rts
+++	lda	.frame_cnt
 	and	#3
-	bne	++
-;	sin
-;	inc	.sprite_tab
-;	inc	.sprite_tab+1*4
-;	inc	.sprite_tab+2*4
-;	inc	.sprite_tab+3*4
-	
+	bne	++	
 	lda	.sprite_tab+2*4+2
 	cmp	#$08
 	beq	+
@@ -181,34 +218,19 @@ main:
 	bpl	.game_isr_exit
 	+save
 	
-;	lda	#Dark_Yellow
+	lda	#Dark_Yellow
 ;	jsr	vdp_bgcolor
-
+	
+	jsr	.scroll_background
+	
+	jsr	.update_vram
+	
+	jsr	.action_handler
 	jsr	.animate_dinosaur
 	jsr	.animate_sky
-			
-	lda	.frame_cnt
-	and	#$03
-	bne	+
-	jsr	.scroll_background
-+			
-	jsr	.update_vram
+	jsr	.score_board
 
-	jsr	.action_handler
-	
-;	jsr keyin
-	cmp	#$20
-	bne	+
-	lda	White
-	jsr	vdp_bgcolor
-+
-	
 	inc	.frame_cnt
-;	inc	
-;	cmp	#50
-;	bne	+
-;	lda	#0
-;+	sta	.frame_cnt
 
 	lda	#Black
 	jsr	vdp_bgcolor
@@ -217,40 +239,46 @@ main:
 .game_isr_exit	
 	rti
 	
+.score_board
+	lda	.score_board_cnt	;every 5 frames update score, which means 10 digits per second
+	inc
+	cmp #$05
+	beq	+
+	sta	.score_board_cnt
+	rts
++	stz	.score_board_cnt
+
+	sed						;add in decimal mode
+	lda .score_value+2
+	clc
+	adc	#$01
+	sta .score_value+2
+	bcc	+
+	adc	.score_value+1
+	sta	.score_value+1
+	bcc	+
+	adc	.score_value
+	sta	.score_value	
++	cld
+	rts
+	
+	
 .action_handler
 	lda	#PORT_SEL_2		;port 1
 	sta	via1porta
-	nop
-	nop
-	nop
-	nop
 	lda	via1porta
 	and #JOY_UP
 	bne	+
-	dec	.sprite_tab
-	dec	.sprite_tab+1*4
-	dec	.sprite_tab+2*4
-	dec	.sprite_tab+3*4
-+	
-	lda	via1porta
-	and #JOY_DOWN
-	bne	++
-	ldx	.sin_tab_ptr
-	lda	.sin_tab,x
-	clc	
-	adc	#.DINOSAUR_Y
-	sta	.sprite_tab
-;	sta	.sprite_tab+1*4
-	sta	.sprite_tab+2*4
-;	sta	.sprite_tab+3*4
-	inx	
-	cpx	#46
-	bne	+
-	ldx	#$00
-+	stx	.sin_tab_ptr
-++
+	lda	#.DINOSAUR_JUMP
+	ora	.dinosaur_state
+	sta .dinosaur_state
 	rts
++	lda	.sin_tab_ptr
+	cmp	#5
+	bne	+
 	
++
+	rts
 		
 .init_vram
 	stz	.frame_cnt
@@ -262,25 +290,26 @@ main:
 	ldy	#.WRITE_ADDRESS + >.A_GX_SCR
 	jsr	vdp_fill
 
-	+SetVector charset, .adrl
+	+SetVector charset, .adrl			; init 2 game charset with character set
 	lda #<.A_GX_PAT_1
 	ldy #.WRITE_ADDRESS + >.A_GX_PAT_1
 	ldx	#$08
 	jsr	vdp_memcpy
+	+SetVector charset, .adrl			; 
 	lda #<.A_GX_PAT_2
 	ldy #.WRITE_ADDRESS + >.A_GX_PAT_2
 	ldx	#$08
 	jsr	vdp_memcpy
 	
-	+SetVector .game_chars, .adrl
-	lda #<.A_GX_PAT_1
-	ldy #.WRITE_ADDRESS + >.A_GX_PAT_1
+	+SetVector .game_chars, .adrl		; first game charset
+	lda #<(.A_GX_PAT_1+.GAME_CHAR_OFFS)
+	ldy #.WRITE_ADDRESS + >(.A_GX_PAT_1+.GAME_CHAR_OFFS)
 	ldx	#$03
 	jsr	vdp_memcpy
 	
-	+SetVector .game_chars_4px, .adrl
-	lda #<.A_GX_PAT_2
-	ldy #.WRITE_ADDRESS + >.A_GX_PAT_2
+	+SetVector .game_chars_4px, .adrl	; 2nd game charset with 4px offset
+	lda #<(.A_GX_PAT_2+.GAME_CHAR_OFFS)
+	ldy #.WRITE_ADDRESS + >(.A_GX_PAT_2+.GAME_CHAR_OFFS)
 	ldx	#$03
 	jsr	vdp_memcpy
 	
@@ -289,19 +318,53 @@ main:
 	ldy	#.WRITE_ADDRESS + >.A_SP_PAT
 	ldx	#$02
 	jsr	vdp_memcpy
+
+	+SetVector .screen, .adrl
+	lda	#<(.A_GX_SCR + (22*32))
+	ldy	#.WRITE_ADDRESS + >(.A_GX_SCR+(22*32))
+	jsr	vdp_sreg
+	ldx	#$00
+-	lda	.text_game_label,x
+	beq	+
+	sta	a_vram
+	inx
+	bne	-
 	
-	+PrintStringAt .text_game_label, 0, 22
-	
-	rts
++	rts
 	
 .update_vram
-	+SetVector .sprite_tab, .adrl
+	+SetVector .sprite_tab, .adrl		;update sprite tab
 	lda	#<.A_SP_ATR
 	ldy	#.WRITE_ADDRESS + >.A_SP_ATR
 	ldx	#12*4
 	jsr	vdp_memcpys
+
+	+SetVector .screen, .adrl			;score_board
+	lda	#<(.A_GX_SCR + (1*32))+17
+	ldy	#.WRITE_ADDRESS + >(.A_GX_SCR+(1*32)+17)
+	jsr	vdp_sreg
+	ldx	#$00
+-	lda	.text_score_board,x
+	beq	+
+	sta	a_vram
+	inx
+	bne	-
++	lda	.score_value_high
+	jsr .digit_out
+	lda	.score_value_high+1
+	jsr .digits_out
+	lda	.score_value_high+2
+	jsr .digits_out
+	lda	#' '
+	sta a_vram
+	lda	.score_value
+	jsr .digit_out
+	lda	.score_value+1
+	jsr .digits_out
+	lda	.score_value+2
+	jsr .digits_out
 	
-	+SetVector .screen, .adrl
+	+SetVector .screen, .adrl			;copy screen
 	lda	#<(.A_GX_SCR + (16*32))
 	ldy	#.WRITE_ADDRESS + >(.A_GX_SCR+(16*32))
 	ldx	#32*4
@@ -309,6 +372,21 @@ main:
 	
 	rts
 
+.digits_out
+	pha
+	lsr
+	lsr
+	lsr
+	lsr
+	ora	#'0'
+	sta a_vram
+	pla
+.digit_out
+	and #$0f
+	ora	#'0'
+	sta a_vram
+	rts
+	
 .rnd:
    lda .seed
    beq .doEor
@@ -322,9 +400,9 @@ main:
 	rts
 
 .sprite_tab
-	!byte	.DINOSAUR_Y,		32,0, .dinosaur_color
+	!byte	.DINOSAUR_Y,	32,0, .dinosaur_color
 	!byte	.DINOSAUR_Y+16,	32,4, .dinosaur_color
-	!byte	.DINOSAUR_Y,16,	8, .dinosaur_color	;0100 ->  1000
+	!byte	.DINOSAUR_Y,	16,8, .dinosaur_color	;0100 ->  1000
 	!byte	.DINOSAUR_Y+16,	16,12, .dinosaur_color  ;1100 -> 10100
 .sprite_tab_sky
 	!byte	40,100,36, White
@@ -336,20 +414,27 @@ main:
 	!byte	98,200,36, White
 	!byte	98,216,40, White
 
-.text_game_label	!text "verbindung zum internet konnte  nicht hergestellt werden.",$0
-.text_game_over	!text "GAME OVER",$0
-.text_HI			!text "HI ",$0
+.text_game_label	!text " Verbindung zum Internet konnte  nicht hergestellt werden.",$0
+.text_game_over		!text "GAME OVER",$0
+.text_score_board	!text "HI ",$0
+.score_value		!byte 0,0,0
+.score_value_high 	!byte 0,0,0
 
 .sprites
 +SpriteLine16start
 !src "dinosaur.sprites.a"
 
 .game_char_tab
-	!byte 74, 0, 4, 74, 74, 74, 74, 74, 74, 74, 74, 0, 26, 30, 34, 38, 42, 74, 74, 47, 51, 55, 59, 74, 74, 74, 74, 74, 32, 74, 74, 74
-	!byte 74, 1, 5, 74, 74,  9, 12, 15, 18, 74, 74, 1, 27, 31, 35, 39, 43, 74, 74, 48, 52, 56, 60, 74, 74, 74, 74, 74, 74, 74, 74, 74
-	!byte 74, 2, 6, 74, 74, 10, 13, 16, 19, 74, 74, 2, 28, 32, 36, 40, 44, 74, 74, 49, 53, 57, 61, 74, 74, 65, 67, 69, 71, 74, 74, 74
-	!byte 74, 3, 7,  8, 74, 11, 14, 17, 20, 21, 74, 3, 29, 33, 37, 41, 45, 46, 74, 50, 54, 58, 62, 21, 74, 68, 70, 72, 74, 74, 74, 74
-	
+	!byte 128, 132, 136, 210, 210, 210, 210, 210, 128, 155, 159, 163, 167, 171, 175, 179, 183, 187, 191, 195, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210
+	!byte 129, 133, 137, 140, 143, 146, 149, 152, 129, 156, 160, 164, 168, 172, 176, 180, 184, 188, 192, 196, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210
+	!byte 130, 134, 138, 141, 144, 147, 150, 153, 130, 157, 161, 165, 169, 173, 177, 181, 185, 189, 193, 197, 199, 201, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210
+	!byte 131, 135, 139, 142, 145, 148, 151, 154, 131, 158, 162, 166, 170, 174, 178, 182, 186, 190, 194, 198, 200, 202, 203, 204, 205, 206, 207, 208, 209, 206, 207, 208
+
+.sin_tab
+	!src "sintab.a"
+.sin_tab_short
+	!src "sintab.short.a"
+
 .game_chars
 !src "dinosaur.chars.1.res"
 !src "dinosaur.chars.2.res"
@@ -366,7 +451,3 @@ main:
 !src "dinosaur.chars.6.4px.res"
 
 !fill 255,0
-.sin_tab
-	!for i, 0, 45 {
-		!byte sin(i*4)*32
-	}
