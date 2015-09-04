@@ -11,10 +11,11 @@
 	
 .frame_cnt=tmp0
 .seed=tmp1
-.sin_tab_ptr=tmp2
-.status=tmp3
-.dinosaur_state=tmp4
-.score_board_cnt=tmp5
+.status=tmp2
+.dinosaur_state=tmp3
+.score_board_cnt=tmp4
+.sin_tab_offs=tmp5
+.sin_tab_ptr=.ptr1
 
 .BLANK=210
 .A_GX_SCR=$1800
@@ -39,10 +40,10 @@ main:
 	lda	#33
 	sta	.seed
 	stz	.status
-	stz .sin_tab_ptr
 	stz	.dinosaur_state	; run initialy
 	stz .score_board_cnt
-		
+	stz	.sin_tab_offs
+
 	jsr	.update_vram
 
 	+SetVector	.game_isr, irqvec
@@ -150,10 +151,10 @@ main:
 	beq	++
 	lda	#28
 	sta	.sprite_tab+3*4+2
-	ldy	.sin_tab_ptr
+	ldy .sin_tab_offs
 	lda	#.DINOSAUR_Y
 	clc
-	sbc	.sin_tab, y
+	sbc	(.sin_tab_ptr), y
 	sta	.sprite_tab		
 	sta	.sprite_tab+2*4
 	clc
@@ -161,13 +162,13 @@ main:
 	sta	.sprite_tab+1*4
 	sta	.sprite_tab+3*4
 	iny
-	cpy	#36
+	cmp	#(.DINOSAUR_Y+16) ;detect end of sin tab, accu must be dino y+16
 	bne	+
 	lda	.dinosaur_state
 	and	#(!.DINOSAUR_JUMP)
 	sta .dinosaur_state
 	ldy	#$00
-+	sty	.sin_tab_ptr
++	sty	.sin_tab_offs
 	rts
 ++	lda	.frame_cnt
 	and	#3
@@ -268,15 +269,19 @@ main:
 	sta	via1porta
 	lda	via1porta
 	and #JOY_UP
-	bne	+
-	lda	#.DINOSAUR_JUMP
+	beq	+
+	lda	via1porta
+	and #JOY_FIRE
+	bne	++
++	lda	#.DINOSAUR_JUMP
 	ora	.dinosaur_state
 	sta .dinosaur_state
+	+SetVector .sin_tab, .sin_tab_ptr	;long jump
 	rts
-+	lda	.sin_tab_ptr
-	cmp	#5
+++	lda	.sin_tab_offs	;no joy/key pressed after 5 frames, switch to short jump
+	cmp	#6
 	bne	+
-	
+	+SetVector .sin_tab_short, .sin_tab_ptr
 +
 	rts
 		
@@ -429,6 +434,37 @@ main:
 	!byte 129, 133, 137, 140, 143, 146, 149, 152, 129, 156, 160, 164, 168, 172, 176, 180, 184, 188, 192, 196, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210
 	!byte 130, 134, 138, 141, 144, 147, 150, 153, 130, 157, 161, 165, 169, 173, 177, 181, 185, 189, 193, 197, 199, 201, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210
 	!byte 131, 135, 139, 142, 145, 148, 151, 154, 131, 158, 162, 166, 170, 174, 178, 182, 186, 190, 194, 198, 200, 202, 203, 204, 205, 206, 207, 208, 209, 206, 207, 208
+
+.level_bg_1; cactus
+	!byte 128, 132, 136 
+	!byte 129, 133, 137 
+	!byte 130, 134, 138 
+	!byte 131, 135, 139
+.level_bg_2 ;3 cacti
+	!byte 210, 210, 210, 210, 210
+	!byte 140, 143, 146, 149, 152
+	!byte 141, 144, 147, 150, 153
+	!byte 142, 145, 148, 151, 154
+.level_bg_3 ;4 cacti
+	!byte 128, 155, 159, 163, 167, 171, 175
+	!byte 129, 156, 160, 164, 168, 172, 176
+	!byte 130, 157, 161, 165, 169, 173, 177
+	!byte 131, 158, 162, 166, 170, 174, 178
+.level_bg_4 ;2 cacti
+	!byte 179, 183, 187, 191, 195
+	!byte 180, 184, 188, 192, 196 
+	!byte 181, 185, 189, 193, 197 
+	!byte 182, 186, 190, 194, 198 
+.level_bg_5 ;hills
+	!byte 210, 210, 210, 210, 210
+	!byte 210, 210, 210, 210, 210 
+	!byte 199, 201, 210, 210, 210 
+	!byte 200, 202, 203, 204, 205
+.level_bg_6 ;desert
+	!byte 210, 210, 210, 210
+	!byte 210, 210, 210, 210
+	!byte 210, 210, 210, 210
+	!byte 206, 207, 208, 209
 
 .sin_tab
 	!src "sintab.a"
