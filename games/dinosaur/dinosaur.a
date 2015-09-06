@@ -11,10 +11,13 @@
 	
 .frame_cnt=tmp0
 .seed=tmp1
-.status=tmp2
+.game_status=tmp2
 .dinosaur_state=tmp3
 .score_board_cnt=tmp4
 .sin_tab_offs=tmp5
+.level_bg_cnt=tmp6
+.level_script_ptr=tmp7
+.level_bg_ptr=.ptr2
 .sin_tab_ptr=.ptr1
 
 .BLANK=210
@@ -29,6 +32,9 @@
 .dinosaur_color=Dark_Green
 .DINOSAUR_Y=125
 .DINOSAUR_JUMP=1<<0
+.DINOSAUR_DEAD=1<<1
+.STATUS_PLAY=1<<0
+.STATUS_GAME_OVER=1<<1
 
 main:
 	sei
@@ -39,10 +45,16 @@ main:
 	
 	lda	#33
 	sta	.seed
-	stz	.status
+	lda #.STATUS_GAME_OVER
+	sta	.game_status
 	stz	.dinosaur_state	; run initialy
 	stz .score_board_cnt
 	stz	.sin_tab_offs
+	stz	.level_script_ptr
+	stz .frame_cnt
+	
+	stz .level_bg_cnt
+	+SetVector .level_bg_3, .level_bg_ptr
 
 	jsr	.update_vram
 
@@ -102,49 +114,94 @@ main:
 	rts
 	
 .scroll_background
-	lda	.status
+	lda	.frame_cnt
+	and	#01
 	bne	+
-	inc	.status
 	lda	#00
 	ldy	#v_reg4
 	jmp	vdp_sreg
-+	stz	.status
-	lda	#(.A_GX_PAT_2 / $800)
++	lda	#(.A_GX_PAT_2 / $800)
 	ldy	#v_reg4
 	jsr	vdp_sreg
-
-	lda	.screen
-	sta	.screen+128
-	lda	.screen+32
-	sta	.screen+128+1
-	lda	.screen+64
-	sta	.screen+128+2
-	lda	.screen+96
-	sta	.screen+128+3
 	
 	ldx	#$00
 -	lda	.screen+1,x
 	sta	.screen,x
 	lda	.screen+32+1,x
 	sta	.screen+32,x
-	lda	.screen+64+1,x
-	sta	.screen+64,x
-	lda	.screen+96+1,x
-	sta	.screen+96,x
+	lda	.screen+32*2+1,x
+	sta	.screen+32*2,x
+	lda	.screen+32*3+1,x
+	sta	.screen+32*3,x
 	inx	
 	cpx	#32
 	bne	-
-	lda	.screen+128
-	sta	.screen+31
-	lda	.screen+128+1
-	sta	.screen+31+32
-	lda	.screen+128+2
-	sta	.screen+31+64
-	lda	.screen+128+3
-	sta	.screen+31+96
 	
+	lda	.level_bg_cnt
+	cmp	(.level_bg_ptr)
+	beq	+
+-	asl	; x4, rows
+	asl
+	tay	
+	iny ;+1 into bg table
+	lda	(.level_bg_ptr),y
+	sta	.screen+31
+	iny
+	lda	(.level_bg_ptr),y
+	sta	.screen+31+(32*1)
+	iny
+	lda	(.level_bg_ptr),y
+	sta	.screen+31+(32*2)
+	iny
+	lda	(.level_bg_ptr),y
+	sta	.screen+31+(32*3)
+	inc	.level_bg_cnt
 	rts
+	
++	
+	ldx	.level_script_ptr
+	lda	.level_script, x
+	pha
+	inx	
+	cpx	#12			;bg_level length
+	bne	+
+	ldx	#$00
++	stx	.level_script_ptr
+	pla	
+	beq	+				;background desert/hills
+	jsr .rnd			;otherwise choose cacti randomly
+	and	#$03
+	asl
+	tax
+	lda	.bg_table, x	;set adress to level table
+	sta	.level_bg_ptr
+	lda	.bg_table+1, x
+	sta	.level_bg_ptr+1
+	bra	++
+	
+	jsr .rnd			;desert/hills randomly
+	and	#$10
+	beq	+
+	+SetVector .level_bg_5, .level_bg_ptr
+	bra	++
++	+SetVector .level_bg_6, .level_bg_ptr
+++	lda	#$00
+	sta .level_bg_cnt
+	bra	-
 
+.bg_table
+	!word .level_bg_1
+	!word .level_bg_2
+	!word .level_bg_3
+	!word .level_bg_4
+	
+	!word .level_bg_5	; hills
+	!word .level_bg_6	; desert
+	
+.level_script ; 0 - background, 1 cacti
+	!byte 0,0,0,1,0,0,0,1,0			;9
+	!byte 0,0,0,1,0,0,0,1,0,0,1,0	;12	
+	
 .animate_dinosaur
 	lda	.dinosaur_state
 	and	#.DINOSAUR_JUMP
@@ -169,10 +226,19 @@ main:
 	sta .dinosaur_state
 	ldy	#$00
 +	sty	.sin_tab_offs
-	rts
-++	lda	.frame_cnt
+-	rts
+++	lda	.dinosaur_state
+	and	#.DINOSAUR_DEAD
+	beq	+
+	lda	#32
+	sta	.sprite_tab+0*4+2
+	lda	#28
+	sta	.sprite_tab+3*4+2
+	rts	
+	
++	lda	.frame_cnt
 	and	#3
-	bne	++	
+	bne	-
 	lda	.sprite_tab+2*4+2
 	cmp	#$08
 	beq	+
@@ -180,7 +246,7 @@ main:
 	sta	.sprite_tab+2*4+2
 	lda	#12
 	sta	.sprite_tab+3*4+2
-++	rts	
+	rts	
 +	lda	#16
 	sta	.sprite_tab+2*4+2
 	lda	#20
@@ -222,15 +288,27 @@ main:
 	lda	#Dark_Yellow
 ;	jsr	vdp_bgcolor
 	
+	lda	.game_status
+	and	#.STATUS_PLAY
+	beq	+
+		
 	jsr	.scroll_background
-	
-	jsr	.update_vram
-	
-	jsr	.action_handler
-	jsr	.animate_dinosaur
 	jsr	.animate_sky
 	jsr	.score_board
-
+	jsr	.action_handler
+	jsr	.animate_dinosaur
+	jsr	.detect_collision
+	bra	++
+	
++	lda	#PORT_SEL_2		;port 1
+	sta	via1porta
+	lda	via1porta
+	and #JOY_UP
+	bne	++
+	lda	#.STATUS_PLAY
+	sta .game_status
+	
+++	jsr	.update_vram
 	inc	.frame_cnt
 
 	lda	#Black
@@ -239,6 +317,11 @@ main:
 	+restore
 .game_isr_exit	
 	rti
+	
+.detect_collision
+	
+	
+	rts
 	
 .score_board
 	lda	.score_board_cnt	;every 5 frames update score, which means 10 digits per second
@@ -286,8 +369,6 @@ main:
 	rts
 		
 .init_vram
-	stz	.frame_cnt
-
 	ldx	#$03
 	lda	#.BLANK					;fill vram screen with blank
 	sta	.adrl
@@ -408,7 +489,7 @@ main:
 	!byte	.DINOSAUR_Y,	32,0, .dinosaur_color
 	!byte	.DINOSAUR_Y+16,	32,4, .dinosaur_color
 	!byte	.DINOSAUR_Y,	16,8, .dinosaur_color	;0100 ->  1000
-	!byte	.DINOSAUR_Y+16,	16,12, .dinosaur_color  ;1100 -> 10100
+	!byte	.DINOSAUR_Y+16,	16,28, .dinosaur_color  ;1100 -> 10100
 .sprite_tab_sky
 	!byte	40,100,36, White
 	!byte	40,116,40, White
@@ -430,41 +511,57 @@ main:
 !src "dinosaur.sprites.a"
 
 .game_char_tab
-	!byte 128, 132, 136, 210, 210, 210, 210, 210, 128, 155, 159, 163, 167, 171, 175, 179, 183, 187, 191, 195, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210
-	!byte 129, 133, 137, 140, 143, 146, 149, 152, 129, 156, 160, 164, 168, 172, 176, 180, 184, 188, 192, 196, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210
-	!byte 130, 134, 138, 141, 144, 147, 150, 153, 130, 157, 161, 165, 169, 173, 177, 181, 185, 189, 193, 197, 199, 201, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210
-	!byte 131, 135, 139, 142, 145, 148, 151, 154, 131, 158, 162, 166, 170, 174, 178, 182, 186, 190, 194, 198, 200, 202, 203, 204, 205, 206, 207, 208, 209, 206, 207, 208
+	!byte 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210
+	!byte 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210
+	!byte 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210
+	!byte 206, 207, 208, 209, 206, 207, 208, 209, 206, 207, 208, 209, 206, 207, 208, 209, 206, 207, 208, 209, 206, 207, 208, 209, 206, 207, 208, 209, 206, 207, 208, 209
+
+;	!byte 128, 132, 136, 210, 210, 210, 210, 210, 128, 155, 159, 163, 167, 171, 175, 179, 183, 187, 191, 195, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210
+;	!byte 129, 133, 137, 140, 143, 146, 149, 152, 129, 156, 160, 164, 168, 172, 176, 180, 184, 188, 192, 196, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210
+;	!byte 130, 134, 138, 141, 144, 147, 150, 153, 130, 157, 161, 165, 169, 173, 177, 181, 185, 189, 193, 197, 199, 201, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210
+;	!byte 131, 135, 139, 142, 145, 148, 151, 154, 131, 158, 162, 166, 170, 174, 178, 182, 186, 190, 194, 198, 200, 202, 203, 204, 205, 206, 207, 208, 209, 206, 207, 208
 
 .level_bg_1; cactus
-	!byte 128, 132, 136 
-	!byte 129, 133, 137 
-	!byte 130, 134, 138 
-	!byte 131, 135, 139
+    !byte 3
+	!byte 128, 129, 130, 131
+	!byte 132, 133, 134, 135
+	!byte 136, 137, 138, 139
 .level_bg_2 ;3 cacti
-	!byte 210, 210, 210, 210, 210
-	!byte 140, 143, 146, 149, 152
-	!byte 141, 144, 147, 150, 153
-	!byte 142, 145, 148, 151, 154
+	!byte 5
+	!byte 210, 140, 141, 142
+	!byte 210, 143, 144, 145
+	!byte 210, 146, 147, 148
+	!byte 210, 149, 150, 151
+	!byte 210, 152, 153, 154
 .level_bg_3 ;4 cacti
-	!byte 128, 155, 159, 163, 167, 171, 175
-	!byte 129, 156, 160, 164, 168, 172, 176
-	!byte 130, 157, 161, 165, 169, 173, 177
-	!byte 131, 158, 162, 166, 170, 174, 178
+	!byte 7
+	!byte 128, 129, 130, 131
+	!byte 155, 156, 157, 158
+	!byte 159, 160, 161, 162
+	!byte 163, 164, 165, 166
+	!byte 167, 168, 169, 170
+	!byte 171, 172, 173, 174
+	!byte 175, 176, 177, 178
 .level_bg_4 ;2 cacti
-	!byte 179, 183, 187, 191, 195
-	!byte 180, 184, 188, 192, 196 
-	!byte 181, 185, 189, 193, 197 
-	!byte 182, 186, 190, 194, 198 
+	!byte 5
+	!byte 179, 180, 181, 182
+	!byte 183, 184, 185, 186
+	!byte 187, 188, 189, 190
+	!byte 191, 192, 193, 194
+	!byte 195, 196, 197, 198
 .level_bg_5 ;hills
-	!byte 210, 210, 210, 210, 210
-	!byte 210, 210, 210, 210, 210 
-	!byte 199, 201, 210, 210, 210 
-	!byte 200, 202, 203, 204, 205
+	!byte 5
+	!byte 210, 210, 199, 200
+	!byte 210, 210, 201, 202
+	!byte 210, 210, 210, 203
+	!byte 210, 210, 210, 204
+	!byte 210, 210, 210, 205
 .level_bg_6 ;desert
-	!byte 210, 210, 210, 210
-	!byte 210, 210, 210, 210
-	!byte 210, 210, 210, 210
-	!byte 206, 207, 208, 209
+	!byte 4
+	!byte 210, 210, 210, 206
+	!byte 210, 210, 210, 207
+	!byte 210, 210, 210, 208
+	!byte 210, 210, 210, 209
 
 .sin_tab
 	!src "sintab.a"
