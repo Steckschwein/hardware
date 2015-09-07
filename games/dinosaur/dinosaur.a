@@ -403,24 +403,25 @@ main:
 	stz .level_bg_cnt
 	+SetVector .level_bg_3, .level_bg_ptr
 
-	lda	.score_value+2
-	cmp	.score_value_high+2
+	;set new highscore
+	lda	.score_value
+	cmp	.score_value_high
 	bcc	++
 	bne	+
 	lda	.score_value+1
 	cmp	.score_value_high+1
 	bcc	++
 	bne	+
-	lda	.score_value
-	cmp	.score_value_high
+	lda	.score_value+2
+	cmp	.score_value_high+2
 	bcc	++
+	beq	++
 +	lda	.score_value+2
 	sta	.score_value_high+2
 	lda	.score_value+1
 	sta	.score_value_high+1
 	lda	.score_value
 	sta	.score_value_high
-	
 ++	stz	.score_value
 	stz	.score_value+1
 	stz	.score_value+2
