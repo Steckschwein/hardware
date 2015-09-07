@@ -20,7 +20,9 @@
 .level_bg_ptr=.ptr2
 .sin_tab_ptr=.ptr1
 
-.BLANK=210
+.CHAR_BLANK=210
+.CHAR_LAST_FG=198		; last character of foreground (cacti), range 128-198
+
 .A_GX_SCR=$1800
 .A_GX_COL=$1c80
 .A_GX_PAT_1=$0000
@@ -30,6 +32,7 @@
 .GAME_CHAR_OFFS=$0400
 .screen=$2000
 .dinosaur_color=Dark_Green
+.DINOSAUR_X=16
 .DINOSAUR_Y=125
 .DINOSAUR_JUMP=1<<0
 .DINOSAUR_DEAD=1<<1
@@ -137,7 +140,7 @@ main:
 	cpx	#32
 	bne	-
 	
-	lda	.level_bg_cnt
+	lda	.level_bg_cnt		;
 	cmp	(.level_bg_ptr)
 	beq	+
 -	asl	; x4, rows
@@ -156,8 +159,7 @@ main:
 	lda	(.level_bg_ptr),y
 	sta	.screen+31+(32*3)
 	inc	.level_bg_cnt
-	rts
-	
+	rts	
 +	
 	ldx	.level_script_ptr
 	lda	.level_script, x
@@ -173,7 +175,7 @@ main:
 	and	#$03
 	asl
 	tax
-	lda	.bg_table, x	;set adress to level table
+	lda	.bg_table, x	;set level background ptr into level table
 	sta	.level_bg_ptr
 	lda	.bg_table+1, x
 	sta	.level_bg_ptr+1
@@ -200,7 +202,61 @@ main:
 	
 .level_script ; 0 - background, 1 cacti
 	!byte 0,0,0,1,0,0,0,1,0			;9
-	!byte 0,0,0,1,0,0,0,1,0,0,1,0	;12	
+	!byte 0,0,1,0,0,1,0,0,0,1,0,0	;12	
+	
+;	detection algorithm - dinosaur is 32*32px, we check only char positions and sprites as follows, best matches the dinosaur shape
+;	 ##		-> ##
+;	 ##		   #
+;	##		  #
+;	##
+.detect_collision
+	ldx	#(.DINOSAUR_Y-4*8)				; 4x8px height cacti char
+	lda	#.CHAR_LAST_FG					; test cacti chars
+	cmp	.screen+(.DINOSAUR_X/8)+1
+	bcs	+
+	cmp	.screen+(.DINOSAUR_X/8)+2
+	bcs	+
+	ldx	#(.DINOSAUR_Y-3*8)				; 3x8px height cacti char
+	cmp	.screen+(.DINOSAUR_X/8)+1+32*1
+	bcs	+
+	ldx	#(.DINOSAUR_Y-2*8)				; 2x8px height cacti char
+	cmp	.screen+(.DINOSAUR_X/8)+32*2
+	bcs	+
+	rts
++
+	txa
+	cmp	.sprite_tab+1*4					; test the y pos of the lower sprites, sufficient for collision
+	bcc	+
+	beq	+
+	cmp	.sprite_tab+3*4					
+	bcc	+
+	beq	+
+	rts
++	lda	#.DINOSAUR_DEAD
+	sta .dinosaur_state
+	jmp	.game_over
+	rts
+	
+.game_over
+	lda	#.STATUS_GAME_OVER
+	sta .game_status
+	
+	+SetVector .text_game_over, .adrl
+	lda	#<(.A_GX_SCR + (8*32))
+	ldy	#.WRITE_ADDRESS + >(.A_GX_SCR+(8*32))
+	
+	rts
+	
+.vdp_print
+	jsr	vdp_sreg
+	ldy	#$00
+-	lda	(.adrl), y
+	beq	+
+	sta	a_vram
+	iny
+	bne	-
++	rts
+
 	
 .animate_dinosaur
 	lda	.dinosaur_state
@@ -212,7 +268,7 @@ main:
 	lda	#.DINOSAUR_Y
 	clc
 	sbc	(.sin_tab_ptr), y
-	sta	.sprite_tab		
+	sta	.sprite_tab
 	sta	.sprite_tab+2*4
 	clc
 	adc #16				;+16px y offset for the lower sprites
@@ -308,7 +364,8 @@ main:
 	lda	#.STATUS_PLAY
 	sta .game_status
 	
-++	jsr	.update_vram
+++	
+	jsr	.update_vram
 	inc	.frame_cnt
 
 	lda	#Black
@@ -317,12 +374,7 @@ main:
 	+restore
 .game_isr_exit	
 	rti
-	
-.detect_collision
-	
-	
-	rts
-	
+		
 .score_board
 	lda	.score_board_cnt	;every 5 frames update score, which means 10 digits per second
 	inc
@@ -370,7 +422,7 @@ main:
 		
 .init_vram
 	ldx	#$03
-	lda	#.BLANK					;fill vram screen with blank
+	lda	#.CHAR_BLANK					;fill vram screen with blank
 	sta	.adrl
 	lda	#<.A_GX_SCR
 	ldy	#.WRITE_ADDRESS + >.A_GX_SCR
@@ -405,27 +457,21 @@ main:
 	ldx	#$02
 	jsr	vdp_memcpy
 
-	+SetVector .screen, .adrl
+	+SetVector .text_game_label, .adrl
 	lda	#<(.A_GX_SCR + (22*32))
 	ldy	#.WRITE_ADDRESS + >(.A_GX_SCR+(22*32))
-	jsr	vdp_sreg
-	ldx	#$00
--	lda	.text_game_label,x
-	beq	+
-	sta	a_vram
-	inx
-	bne	-
-	
-+	rts
+	jsr .vdp_print
+	rts
 	
 .update_vram
-	+SetVector .sprite_tab, .adrl		;update sprite tab
+	;update sprite tab
+	+SetVector .sprite_tab, .adrl		
 	lda	#<.A_SP_ATR
 	ldy	#.WRITE_ADDRESS + >.A_SP_ATR
 	ldx	#12*4
 	jsr	vdp_memcpys
-
-	+SetVector .screen, .adrl			;score_board
+	
+	;score_board
 	lda	#<(.A_GX_SCR + (1*32))+17
 	ldy	#.WRITE_ADDRESS + >(.A_GX_SCR+(1*32)+17)
 	jsr	vdp_sreg
@@ -486,10 +532,10 @@ main:
 	rts
 
 .sprite_tab
-	!byte	.DINOSAUR_Y,	32,0, .dinosaur_color
-	!byte	.DINOSAUR_Y+16,	32,4, .dinosaur_color
-	!byte	.DINOSAUR_Y,	16,8, .dinosaur_color	;0100 ->  1000
-	!byte	.DINOSAUR_Y+16,	16,28, .dinosaur_color  ;1100 -> 10100
+	!byte	.DINOSAUR_Y		,.DINOSAUR_X+16	,0	,.dinosaur_color
+	!byte	.DINOSAUR_Y+16	,.DINOSAUR_X+16	,4	,.dinosaur_color
+	!byte	.DINOSAUR_Y		,.DINOSAUR_X	,8	,.dinosaur_color
+	!byte	.DINOSAUR_Y+16	,.DINOSAUR_X	,28	,.dinosaur_color 	
 .sprite_tab_sky
 	!byte	40,100,36, White
 	!byte	40,116,40, White
@@ -501,7 +547,7 @@ main:
 	!byte	98,216,40, White
 
 .text_game_label	!text " Verbindung zum Internet konnte  nicht hergestellt werden.",$0
-.text_game_over		!text "GAME OVER",$0
+.text_game_over		!text "           GAME OVER!",$0
 .text_score_board	!text "HI ",$0
 .score_value		!byte 0,0,0
 .score_value_high 	!byte 0,0,0
