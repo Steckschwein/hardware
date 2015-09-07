@@ -30,10 +30,12 @@
 .A_SP_PAT=$1000
 .A_SP_ATR=$1c00
 .GAME_CHAR_OFFS=$0400
+.Y_OFS_GAME_OVER=11
 .screen=$2000
 .dinosaur_color=Dark_Green
-.DINOSAUR_X=16
+.DINOSAUR_X=18
 .DINOSAUR_Y=125
+.DINOSAUR_HEIGHT=30
 .DINOSAUR_JUMP=1<<0
 .DINOSAUR_DEAD=1<<1
 .STATUS_PLAY=1<<0
@@ -48,16 +50,10 @@ main:
 	
 	lda	#33
 	sta	.seed
+	
+	jsr	.new_game
 	lda #.STATUS_GAME_OVER
 	sta	.game_status
-	stz	.dinosaur_state	; run initialy
-	stz .score_board_cnt
-	stz	.sin_tab_offs
-	stz	.level_script_ptr
-	stz .frame_cnt
-	
-	stz .level_bg_cnt
-	+SetVector .level_bg_3, .level_bg_ptr
 
 	jsr	.update_vram
 
@@ -109,10 +105,19 @@ main:
 	
 .init_screen
 	ldx	#$00
--	lda	.game_char_tab,x
+	ldy	#206
+-	lda	#.CHAR_BLANK
 	sta	.screen,x
-	inx
-	cpx	#32*4
+	sta	.screen+32*1,x
+	sta	.screen+32*2,x
+	tya
+	sta	.screen+32*3,x
+	iny
+	cpy	#.CHAR_BLANK
+	bne	+
+	ldy	#206
++	inx
+	cpx	#32
 	bne	-
 	rts
 	
@@ -181,7 +186,7 @@ main:
 	sta	.level_bg_ptr+1
 	bra	++
 	
-	jsr .rnd			;desert/hills randomly
++	jsr .rnd			;desert/hills randomly
 	and	#$10
 	beq	+
 	+SetVector .level_bg_5, .level_bg_ptr
@@ -210,16 +215,16 @@ main:
 ;	##		  #
 ;	##
 .detect_collision
-	ldx	#(.DINOSAUR_Y-4*8)				; 4x8px height cacti char
-	lda	#.CHAR_LAST_FG					; test cacti chars
+	ldx	#(.DINOSAUR_Y-4*8+.DINOSAUR_HEIGHT)	; 4x8px height cacti char
+	lda	#.CHAR_LAST_FG							; test cacti chars
 	cmp	.screen+(.DINOSAUR_X/8)+1
 	bcs	+
 	cmp	.screen+(.DINOSAUR_X/8)+2
 	bcs	+
-	ldx	#(.DINOSAUR_Y-3*8)				; 3x8px height cacti char
+	ldx	#(.DINOSAUR_Y-3*8+.DINOSAUR_HEIGHT)		; 3x8px height cacti char
 	cmp	.screen+(.DINOSAUR_X/8)+1+32*1
 	bcs	+
-	ldx	#(.DINOSAUR_Y-2*8)				; 2x8px height cacti char
+	ldx	#(.DINOSAUR_Y-2*8+.DINOSAUR_HEIGHT)		; 2x8px height cacti char
 	cmp	.screen+(.DINOSAUR_X/8)+32*2
 	bcs	+
 	rts
@@ -242,9 +247,9 @@ main:
 	sta .game_status
 	
 	+SetVector .text_game_over, .adrl
-	lda	#<(.A_GX_SCR + (8*32))
-	ldy	#.WRITE_ADDRESS + >(.A_GX_SCR+(8*32))
-	
+	lda	#<(.A_GX_SCR + (.Y_OFS_GAME_OVER*32))
+	ldy	#.WRITE_ADDRESS + >(.A_GX_SCR+(.Y_OFS_GAME_OVER*32))
+	jsr .vdp_print
 	rts
 	
 .vdp_print
@@ -352,18 +357,16 @@ main:
 	jsr	.animate_sky
 	jsr	.score_board
 	jsr	.action_handler
-	jsr	.animate_dinosaur
 	jsr	.detect_collision
+	jsr	.animate_dinosaur
 	bra	++
 	
 +	lda	#PORT_SEL_2		;port 1
 	sta	via1porta
 	lda	via1porta
-	and #JOY_UP
+	and #JOY_FIRE
 	bne	++
-	lda	#.STATUS_PLAY
-	sta .game_status
-	
+	jsr .new_game	
 ++	
 	jsr	.update_vram
 	inc	.frame_cnt
@@ -374,7 +377,36 @@ main:
 	+restore
 .game_isr_exit	
 	rti
-		
+
+.new_game
+	jsr	.init_screen
+	
+	ldx	#$00
+-	lda	.sprite_init_tab, x
+	sta .sprite_tab,x
+	inx	
+	cpx	#4*4
+	bne	-
+
+	lda	#.CHAR_BLANK
+	sta .adrl
+	lda	#<(.A_GX_SCR + (.Y_OFS_GAME_OVER*32))
+	ldy	#.WRITE_ADDRESS + >(.A_GX_SCR+(.Y_OFS_GAME_OVER*32))
+	ldx #32
+	jsr vdp_fills
+	
+	stz	.dinosaur_state	; run initialy
+	stz .score_board_cnt
+	stz	.sin_tab_offs
+	stz	.level_script_ptr
+	stz .frame_cnt
+	stz .level_bg_cnt
+	+SetVector .level_bg_3, .level_bg_ptr
+	
+	lda	#.STATUS_PLAY
+	sta .game_status	
+	rts
+	
 .score_board
 	lda	.score_board_cnt	;every 5 frames update score, which means 10 digits per second
 	inc
@@ -405,9 +437,10 @@ main:
 	lda	via1porta
 	and #JOY_UP
 	beq	+
-	lda	via1porta
-	and #JOY_FIRE
-	bne	++
+;	lda	via1porta
+;	and #JOY_FIRE
+;	bne	++
+	bra	++
 +	lda	#.DINOSAUR_JUMP
 	ora	.dinosaur_state
 	sta .dinosaur_state
@@ -531,6 +564,11 @@ main:
 	sta .seed
 	rts
 
+.sprite_init_tab
+	!byte	.DINOSAUR_Y		,.DINOSAUR_X+16	,0	,.dinosaur_color
+	!byte	.DINOSAUR_Y+16	,.DINOSAUR_X+16	,4	,.dinosaur_color
+	!byte	.DINOSAUR_Y		,.DINOSAUR_X	,8	,.dinosaur_color
+	!byte	.DINOSAUR_Y+16	,.DINOSAUR_X	,28	,.dinosaur_color 	
 .sprite_tab
 	!byte	.DINOSAUR_Y		,.DINOSAUR_X+16	,0	,.dinosaur_color
 	!byte	.DINOSAUR_Y+16	,.DINOSAUR_X+16	,4	,.dinosaur_color
@@ -555,17 +593,6 @@ main:
 .sprites
 +SpriteLine16start
 !src "dinosaur.sprites.a"
-
-.game_char_tab
-	!byte 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210
-	!byte 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210
-	!byte 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210
-	!byte 206, 207, 208, 209, 206, 207, 208, 209, 206, 207, 208, 209, 206, 207, 208, 209, 206, 207, 208, 209, 206, 207, 208, 209, 206, 207, 208, 209, 206, 207, 208, 209
-
-;	!byte 128, 132, 136, 210, 210, 210, 210, 210, 128, 155, 159, 163, 167, 171, 175, 179, 183, 187, 191, 195, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210
-;	!byte 129, 133, 137, 140, 143, 146, 149, 152, 129, 156, 160, 164, 168, 172, 176, 180, 184, 188, 192, 196, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210
-;	!byte 130, 134, 138, 141, 144, 147, 150, 153, 130, 157, 161, 165, 169, 173, 177, 181, 185, 189, 193, 197, 199, 201, 210, 210, 210, 210, 210, 210, 210, 210, 210, 210
-;	!byte 131, 135, 139, 142, 145, 148, 151, 154, 131, 158, 162, 166, 170, 174, 178, 182, 186, 190, 194, 198, 200, 202, 203, 204, 205, 206, 207, 208, 209, 206, 207, 208
 
 .level_bg_1; cactus
     !byte 3
