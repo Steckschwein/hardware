@@ -33,7 +33,7 @@
 .Y_OFS_GAME_OVER=11
 .screen=$2000
 .dinosaur_color=Dark_Green
-.DINOSAUR_X=18
+.DINOSAUR_X=20
 .DINOSAUR_Y=125
 .DINOSAUR_HEIGHT=30
 .DINOSAUR_JUMP=1<<0
@@ -148,7 +148,7 @@ main:
 	lda	.level_bg_cnt		;
 	cmp	(.level_bg_ptr)
 	beq	+
--	asl	; x4, rows
+--	asl	; x4, rows
 	asl
 	tay	
 	iny ;+1 into bg table
@@ -166,15 +166,14 @@ main:
 	inc	.level_bg_cnt
 	rts	
 +	
-	ldx	.level_script_ptr
+-	ldx	.level_script_ptr
 	lda	.level_script, x
-	pha
-	inx	
-	cpx	#12			;bg_level length
-	bne	+
-	ldx	#$00
-+	stx	.level_script_ptr
-	pla	
+	bpl	+
+	stz	.level_script_ptr
+	bra	-
++	tax
+	inc .level_script_ptr
+	txa
 	beq	+				;background desert/hills
 	jsr .rnd			;otherwise choose cacti randomly
 	and	#$03
@@ -194,7 +193,7 @@ main:
 +	+SetVector .level_bg_6, .level_bg_ptr
 ++	lda	#$00
 	sta .level_bg_cnt
-	bra	-
+	bra	--
 
 .bg_table
 	!word .level_bg_1
@@ -202,12 +201,8 @@ main:
 	!word .level_bg_3
 	!word .level_bg_4
 	
-	!word .level_bg_5	; hills
-	!word .level_bg_6	; desert
-	
 .level_script ; 0 - background, 1 cacti
-	!byte 0,0,0,1,0,0,0,1,0			;9
-	!byte 0,0,1,0,0,1,0,0,0,1,0,0	;12	
+	!byte 0,0,0,0,0,0,1,0,0,0,1,0,0,0,1,0,0,1,0,0,0,1,0,0,1,0,0,0,0,1,$80
 	
 ;	detection algorithm - dinosaur is 32*32px, we check only char positions and sprites as follows, best matches the dinosaur shape
 ;	 ##		-> ##
@@ -459,22 +454,20 @@ main:
 	sta	via1porta
 	lda	via1porta
 	and #JOY_UP
-	beq	+
-;	lda	via1porta
-;	and #JOY_FIRE
-;	bne	++
-	bra	++
-+	lda	#.DINOSAUR_JUMP
+	bne	+
+	lda	.dinosaur_state
+	and #.DINOSAUR_JUMP	;only trigger jump, if dinosaur is not already jumping
+	bne	++	
+	lda	#.DINOSAUR_JUMP
 	ora	.dinosaur_state
 	sta .dinosaur_state
 	+SetVector .sin_tab, .sin_tab_ptr	;long jump
 	rts
-++	lda	.sin_tab_offs	;no joy/key pressed after 5 frames, switch to short jump
++	lda	.sin_tab_offs	;no joy/key pressed after 5 frames, switch to short jump
 	cmp	#6
-	bne	+
+	bne	++
 	+SetVector .sin_tab_short, .sin_tab_ptr
-+
-	rts
+++	rts
 		
 .init_vram
 	ldx	#$03
