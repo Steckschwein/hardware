@@ -2,6 +2,7 @@ all: dinosaur.bin
 
 %.res: %.xpm
 	sh xpm2acme16bit.sh dinosaur.sprites.xpm > dinosaur.sprites.res
+	sh xpm2acme16bit.sh dinosaur.sprites.pterodactyl.xpm > dinosaur.sprites.pterodactyl.res
 	sh xpm2acme8bit.sh dinosaur.chars.1.xpm > dinosaur.chars.1.res
 	sh xpm2acme8bit.sh dinosaur.chars.2.xpm > dinosaur.chars.2.res
 	sh xpm2acme8bit.sh dinosaur.chars.3.xpm > dinosaur.chars.3.res
