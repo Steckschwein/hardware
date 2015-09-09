@@ -45,6 +45,8 @@
 
 main:
 	sei
+	lda a_vreg
+
 	jsr	.init_via
 	jsr	vdp_display_off
 	jsr	.init_vram
@@ -97,7 +99,6 @@ main:
 	;via port a
 	lda #$00
 	sta via1ier             ; disable VIA1 T1 interrupts
-	lda #%00000000 			; set latch
 	sta via1acr
 	lda #%11001100 			; set level
 	sta via1pcr
@@ -375,6 +376,7 @@ main:
 .game_isr
 	bit	a_vreg
 	bpl	.game_isr_exit
+
 	+save
 	
 	lda	#Dark_Yellow
