@@ -96,7 +96,6 @@ crc8:
 .nvram
 	!byte $42			; signature byte
 	!byte $00 			; version 	
-	;!text "LOADER  BIN" ; bootloader filename
 	!text "loader.bin",$00 ; bootloader filename
 	!byte $13			; baudrate 
 	!byte %00000011     ; line params (8N1)
