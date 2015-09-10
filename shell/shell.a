@@ -191,7 +191,7 @@ mainloop
 .run
 	ldy #$00
 -	lda (.paramptr),y
-	beq +
+	beq ++
 	cmp #' '
 	beq ++
 	
