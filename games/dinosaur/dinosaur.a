@@ -45,7 +45,7 @@
 
 main:
 	sei
-	lda a_vreg
+	lda	a_vreg
 
 	jsr	.init_via
 	jsr	vdp_display_off
@@ -104,7 +104,7 @@ main:
 	sta via1pcr
 	lda #%11000000 			; set PA6,7 to output (port select), PA1-5 to input (directions)
 	sta via1ddra
-	rts 
+	rts
 	
 .init_screen
 	ldx	#$00
@@ -327,22 +327,22 @@ main:
 +	lda	.frame_cnt
 	and	#$01
 	beq	+
-	lda	#44
-	sta	.sprite_tab_enemy+2
-	lda	#48
-	sta	.sprite_tab_enemy+2+1*4
-	lda	#52
-	sta	.sprite_tab_enemy+2+2*4
 	lda	#56
+	sta	.sprite_tab_enemy+2
+	lda	#60
+	sta	.sprite_tab_enemy+2+1*4
+	lda	#64
+	sta	.sprite_tab_enemy+2+2*4
+	lda	#68
 	sta	.sprite_tab_enemy+2+3*4
 	rts
-+	lda	#60
++	lda	#72
 	sta	.sprite_tab_enemy+2
-	lda	#64
+	lda	#76
 	sta	.sprite_tab_enemy+2+1*4
-	lda	#68
+	lda	#80
 	sta	.sprite_tab_enemy+2+2*4
-	lda	#72
+	lda	#84
 	sta	.sprite_tab_enemy+2+3*4
 	rts
 	
@@ -542,7 +542,7 @@ main:
 	+SetVector .sprites, .adrl
 	lda	#<.A_SP_PAT
 	ldy	#.WRITE_ADDRESS + >.A_SP_PAT
-	ldx	#$03
+	ldx	#$03			; 3 pages, 768 sprite bytes
 	jsr	vdp_memcpy
 
 	+SetVector .text_game_label, .adrl
@@ -630,19 +630,19 @@ main:
 	!byte	.DINOSAUR_Y		,.DINOSAUR_X	,8	,.dinosaur_color
 	!byte	.DINOSAUR_Y+16	,.DINOSAUR_X	,28	,.dinosaur_color
 .sprite_tab_enemy
-	!byte	.PD_Y		,100,	44, Dark_Red
-	!byte	.PD_Y+16	,100,	48, Dark_Red
-	!byte	.PD_Y		,100+16,52, Dark_Red
-	!byte	.PD_Y+16	,100+16,56, Dark_Red
+	!byte	.PD_Y		,100,	56, Dark_Red
+	!byte	.PD_Y+16	,100,	60, Dark_Red
+	!byte	.PD_Y		,100+16,64, Dark_Red
+	!byte	.PD_Y+16	,100+16,68, Dark_Red
 .sprite_tab_sky
-	!byte	40,100,36, White
-	!byte	40,116,40, White
-	!byte	56,30,36, White
-	!byte	56,46,40, White
-	!byte	72,70,36, White
-	!byte	72,86,40, White
-	!byte	98,200,36, White
-	!byte	98,216,40, White
+	!byte	40,100,48, White
+	!byte	40,116,52, White
+	!byte	56,30,48, White
+	!byte	56,46,52, White
+	!byte	72,70,48, White
+	!byte	72,86,52, White
+	!byte	98,200,48, White
+	!byte	98,216,52, White
 	!byte	$d0 ; end of sprites
 	
 	
@@ -701,7 +701,7 @@ main:
 
 .sprites
 +SpriteLine16start
-!src "dinosaur.sprites.a"
+!src "dinosaur.sprites.res"
 !src "dinosaur.sprites.pterodactyl.res"
 
 .game_chars
