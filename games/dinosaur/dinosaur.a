@@ -267,8 +267,8 @@ main:
 	lda	.dinosaur_state
 	bit	#.DINOSAUR_JUMP
 	beq	++
-	lda	#28
-	sta	.sprite_tab+3*4+2
+	+SetVector	.dino_jump, .adrl
+	jsr	.set_sprite_pointer
 	ldy .sin_tab_offs
 	lda	#.DINOSAUR_Y
 	clc
