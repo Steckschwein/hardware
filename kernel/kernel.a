@@ -2,6 +2,7 @@
 
 text_mode_40 = 1
 num_ls_entries = $03
+.kbd_frame_div  = $01
 
 !src <defs.h.a>
 !src <bios.h.a>
@@ -11,7 +12,7 @@ num_ls_entries = $03
 ; !src <errors.h.a>
 
 !address {
-	.shell_addr		= $d900
+	.shell_addr		= $b000
 	.key = $10
 }
 
@@ -26,8 +27,10 @@ kern_init
 	lda #>count
 	sta via1t1ch            ; set high byte of count
 
-	lda #%11000000
-	sta via1ier             ; enable VIA1 T1 interrupts
+	; lda #%11000000
+	; sta via1ier             ; enable VIA1 T1 interrupts
+
+	stz via1ier
 
 	lda #%01000000
 	sta via1acr             ; T1 continuous, PB7 disabled
@@ -52,6 +55,8 @@ kern_init
 
 	+SetVector _textui_chrout, outvec
 
+	lda #.kbd_frame_div
+	sta .kbd_div
 
 	cli
 	
@@ -97,6 +102,7 @@ kern_init
 	ldx #$ff 
 	txs 
 	
+	sei
 	jmp (.startaddr)
 
 .keyin
@@ -116,16 +122,16 @@ kern_init
 .kern_irq
 	+save
 
-	;via
-	bit via1ifr		; Interrupt from VIA?
-	bpl +			; no? get out
+	bit	a_vreg
+	bpl ++	   ; VDP IRQ flag set?
 
-	bit via1t1cl	; Acknowledge timer interrupt
-
-	lda .key		; already char in buffer? do nothing
+	dec .kbd_div
+	lda .kbd_div
 	bne +
 
-	; jsr getkey
+	lda #.kbd_frame_div
+	sta .kbd_div
+
 	lda via1portb
 	and #%01111110
 	cmp #$7e
@@ -149,13 +155,13 @@ kern_init
 	cmp #$00
 	beq +
 	sta .key
-
 +
-	bit	a_vreg
-	bpl +	   ; VDP IRQ flag set?
-
+	lda .screen_status
+	bit #.TEXTUI_ENABLED
+	beq +
 	jsr	.textui_update_screen
 +
+++
 	+restore
 	rti
 
@@ -265,6 +271,8 @@ kern_init
 	jsr uart_tx
 	rts
 
+; locations
+.kbd_div					!byte $00
 
 ; strings
 .kernel_version 			!text "SteckOS Kernel 0.2a",$0d,$0a,$00
@@ -272,7 +280,7 @@ kern_init
 .txt_msg_loading 			!text "Loading ",$00
 .serial_upload				!text "Serial Upload ",$00
 .filename					!text "shell.bin",$00
-*=$d800
+*=$df00
 ; "kernel" jumptable
 krn_keyin			jmp .keyin
 krn_mount 			jmp .fat_mount 
@@ -281,6 +289,7 @@ krn_read_dir		jmp .fat_dir_scan
 krn_close 			jmp .fat_close
 krn_read 			jmp .fat_read 
 krn_open_rootdir 	jmp .fat_open_rootdir
+krn_open_dir 		jmp .fat_open_dir
 
 krn_textui_init 		jmp	.textui_init
 krn_textui_enable		jmp	.textui_enable

@@ -1,4 +1,4 @@
-*= $d900
+*= $b000
 
 text_mode_40 = 1
 num_ls_entries = $03
@@ -221,7 +221,7 @@ mainloop
 	; ldx #$ff
 	; txs
 
-	; sei
+	sei
 	; jmp  .steckos_start
 
 	jsr .steckos_start
@@ -636,23 +636,7 @@ mainloop
 	bra ++
 +
 	lda #'F'	
-++
-;  	bit #$10 ; Is a directory
-;     beq +
-;     lda #'D'
-;     bra ++ 
 
-; +	bit #$04 ; Is system
-; 	beq +
-;     lda #'S'
-;     bra ++
- 
-; +	bit #$08 ; Is volume ID
-; 	beq +
-;     lda #'V'
-;     bra ++ 
-; +	
-; 	lda #'F'
 ++	+ShellPrint
 
 	+PrintChar ' '
