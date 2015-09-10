@@ -38,8 +38,10 @@
 ;.PD_Y=114
 .PD_Y=40
 .DINOSAUR_HEIGHT=30
-.DINOSAUR_JUMP=1<<0
-.DINOSAUR_DEAD=1<<1
+.DINOSAUR_RUN=1<<0
+.DINOSAUR_JUMP=1<<1
+.DINOSAUR_DUCK=1<<2
+.DINOSAUR_DEAD=1<<3
 .STATUS_PLAY=1<<0
 .STATUS_GAME_OVER=1<<1
 
@@ -263,10 +265,10 @@ main:
 	
 .animate_dinosaur
 	lda	.dinosaur_state
-	and	#.DINOSAUR_JUMP
+	bit	#.DINOSAUR_JUMP
 	beq	++
-	lda	#28
-	sta	.sprite_tab+3*4+2
+	+SetVector	.dino_jump, .adrl
+	jsr	.set_sprite_pointer
 	ldy .sin_tab_offs
 	lda	#.DINOSAUR_Y
 	clc
@@ -280,38 +282,51 @@ main:
 	iny
 	cmp	#(.DINOSAUR_Y+16) ;detect end of sin tab, accu must be dino y+16
 	bne	+
-	lda	.dinosaur_state
-	and	#(!.DINOSAUR_JUMP)
+	lda	#.DINOSAUR_RUN
 	sta .dinosaur_state
 	ldy	#$00
 +	sty	.sin_tab_offs
 -	rts
-++	lda	.dinosaur_state
-	and	#.DINOSAUR_DEAD
+++	bit #.DINOSAUR_DEAD
 	beq	+
-	lda	#32
-	sta	.sprite_tab+0*4+2
-	lda	#28
-	sta	.sprite_tab+3*4+2
-	rts	
-	
+	+SetVector	.dino_dead, .adrl
+	jmp	.set_sprite_pointer
 +	lda	.frame_cnt
-	and	#3
+	bit	#03
 	bne	-
-	lda	.sprite_tab+2*4+2
-	cmp	#$08
+	lda	.dinosaur_state
+	and	#.DINOSAUR_DUCK
+	beq	++
+	lda	.frame_cnt
+	and	#04
 	beq	+
-	lda	#08
-	sta	.sprite_tab+2*4+2
-	lda	#12
-	sta	.sprite_tab+3*4+2
-	rts	
-+	lda	#16
-	sta	.sprite_tab+2*4+2
-	lda	#20
-	sta	.sprite_tab+3*4+2
-	rts
+	+SetVector	.dino_duck_1, .adrl
+	jmp .set_sprite_pointer
++	+SetVector	.dino_duck_2, .adrl
+	jmp .set_sprite_pointer
+++	lda	.frame_cnt
+	and	#04
+	beq	+
+	+SetVector	.dino_run_1, .adrl
+	jmp .set_sprite_pointer
++	+SetVector	.dino_run_2, .adrl
+	jmp .set_sprite_pointer
 
+.set_sprite_pointer	
+	ldy	#$00
+	lda	(.adrl),y
+	sta	.sprite_tab+2
+	iny
+	lda	(.adrl),y
+	sta	.sprite_tab+2+1*4
+	iny
+	lda	(.adrl),y
+	sta	.sprite_tab+2+2*4
+	iny
+	lda	(.adrl),y
+	sta	.sprite_tab+2+3*4
+	rts
+	
 .animate_enemy
 	dec	.sprite_tab_enemy+1
 	dec	.sprite_tab_enemy+1
@@ -325,7 +340,7 @@ main:
 	beq	+
 	rts
 +	lda	.frame_cnt
-	and	#$01
+	and	#$04
 	beq	+
 	lda	#56
 	sta	.sprite_tab_enemy+2
@@ -494,18 +509,28 @@ main:
 	lda	via1porta
 	and #JOY_UP
 	bne	+
-	lda	.dinosaur_state
-	and #.DINOSAUR_JUMP	;only trigger jump, if dinosaur is not already jumping
-	bne	++	
+ 	lda	.dinosaur_state
+	and #.DINOSAUR_JUMP	;only allow jump, if dinosaur is not already jumping
+	bne	++
 	lda	#.DINOSAUR_JUMP
-	ora	.dinosaur_state
 	sta .dinosaur_state
 	+SetVector .sin_tab, .sin_tab_ptr	;long jump
 	rts
 +	lda	.sin_tab_offs	;no joy/key pressed after 5 frames, switch to short jump
 	cmp	#6
-	bne	++
+	bne	+
 	+SetVector .sin_tab_short, .sin_tab_ptr
++	lda	.dinosaur_state
+	and #.DINOSAUR_JUMP	;only allow jump, if dinosaur is not already jumping
+	bne	++
+	lda via1porta
+	and #JOY_DOWN
+	bne	+
+	lda	#.DINOSAUR_DUCK
+	sta .dinosaur_state
+	rts
++	lda	#.DINOSAUR_RUN
+	sta .dinosaur_state		
 ++	rts
 		
 .init_vram
@@ -644,7 +669,20 @@ main:
 	!byte	98,200,48, White
 	!byte	98,216,52, White
 	!byte	$d0 ; end of sprites
-	
+
+.dino_run_1
+	!byte 0,4,8,12
+.dino_run_2
+	!byte 0,4,16,20
+.dino_duck_1
+	!byte 88,36,88,40
+.dino_duck_2
+	!byte 88,36,88,44
+.dino_jump
+	!byte 0,4,8,28
+.dino_dead
+	!byte 32,4,8,28
+
 	
 .text_game_label	!text " Verbindung zum Internet konnte  nicht hergestellt werden.",$0
 .text_game_over		!text "           GAME OVER!",$0
@@ -714,6 +752,8 @@ foo
 +SpriteLine16start
 !src "dinosaur.sprites.res"
 !src "dinosaur.sprites.pterodactyl.res"
+; the empty sprite
+!fill 32,0
 
 .game_chars
 !src "dinosaur.chars.1.res"
