@@ -702,8 +702,13 @@ PI = 3.14159265358979323846
 }
 !byte	$ff
 
+foo
 .sin_tab_short
-	!src "sintab.short.a"
+	; !src "sintab.short.a"
+!for .i, 0, 23 {
+	!byte sin(float(.i) * 5 * 1.5 * PI/180)*48 + 0.5
+}
+!byte	$ff
 
 .sprites
 +SpriteLine16start
