@@ -35,7 +35,6 @@ PI = 3.14159265358979323846
 ; !byte	10
 ; !byte	5
 !for .i, 1, 35 {
-	!set .x = .i * 5
-	!byte (sin( .x * PI/180)*56)
+	!byte sin(float(.i) * 5 * PI/180)*56 + 0.5
 }
 !byte	$ff
