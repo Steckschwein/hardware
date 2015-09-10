@@ -695,7 +695,13 @@ main:
 	!byte 210, 210, 210, 209
 
 .sin_tab
-	!src "sintab.a"
+	; !src "sintab.a"
+PI = 3.14159265358979323846
+!for .i, 1, 35 {
+	!byte sin(float(.i) * 5 * PI/180)*56 + 0.5
+}
+!byte	$ff
+
 .sin_tab_short
 	!src "sintab.short.a"
 
