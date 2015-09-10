@@ -28,7 +28,7 @@ seconds !byte 0
 main:
 	sei
 
-	jsr getkey
+	; jsr getkey
 
 	jsr	vdp_display_off
 
@@ -105,11 +105,11 @@ main:
 	dec		frame_end
 
 
-	jsr getkey
-	cmp #$0d
-	beq .out
-	cmp #$20
-	beq .out
+	; jsr getkey
+	; cmp #$0d
+	; beq .out
+	; cmp #$20
+	; beq .out
 	
 	jmp	-
 .out
