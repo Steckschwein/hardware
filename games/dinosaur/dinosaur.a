@@ -56,7 +56,7 @@ main:
 	
 	lda	#33
 	sta	.seed
-	
+
 	jsr	.new_game
 	lda #.STATUS_GAME_OVER
 	sta	.game_status
@@ -84,8 +84,7 @@ main:
 	
 	cli
 	
--	
-	bra	-
+-	bra	-
 
 .vdp_init_gfx
 	!byte 	0
@@ -108,7 +107,7 @@ main:
 	sta via1ddra
 	rts
 	
-.init_screen
+.init_screen				;draw desert 
 	ldx	#$00
 	ldy	#206
 -	lda	#.CHAR_BLANK
@@ -290,7 +289,7 @@ main:
 ++	bit #.DINOSAUR_DEAD
 	beq	+
 	+SetVector	.dino_dead, .adrl
-	jmp	.set_sprite_pointer
+	bra	.set_sprite_pointer
 +	lda	.frame_cnt
 	bit	#03
 	bne	-
@@ -301,16 +300,16 @@ main:
 	and	#04
 	beq	+
 	+SetVector	.dino_duck_1, .adrl
-	jmp .set_sprite_pointer
+	bra .set_sprite_pointer
 +	+SetVector	.dino_duck_2, .adrl
-	jmp .set_sprite_pointer
+	bra .set_sprite_pointer
 ++	lda	.frame_cnt
 	and	#04
 	beq	+
 	+SetVector	.dino_run_1, .adrl
-	jmp .set_sprite_pointer
+	bra .set_sprite_pointer
 +	+SetVector	.dino_run_2, .adrl
-	jmp .set_sprite_pointer
+	bra .set_sprite_pointer
 
 .set_sprite_pointer	
 	ldy	#$00
@@ -504,7 +503,7 @@ main:
 	
 	
 .action_handler
-	lda	#PORT_SEL_2		;port 1
+	lda	#PORT_SEL_2		;port 2
 	sta	via1porta
 	lda	via1porta
 	and #JOY_UP
