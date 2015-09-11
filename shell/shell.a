@@ -128,15 +128,17 @@ mainloop
 	sta .paramptr
 
 	inx
+
 	jmp (.cmdlist,x) ; 65c02 FTW!!	
 
 .unknown
 	lda .buf
 	beq +
+
 	+SetVector .buf, .paramptr
+	+ShellPrintString .crlf
 	bra .run
 
-	+ShellPrintString .txt_msg_unknown_cmd
 +	jmp mainloop
 
 
@@ -382,8 +384,22 @@ mainloop
 
 	ldx tmp5
 	jsr close
+	rts
 
-+	
++	tax
+	+ShellPrintString .crlf
+	ldy #$00
+-	lda (filenameptr),y
+	beq +
+	jsr chrout
+	iny
+	bra -
++
+	lda #':'
+	jsr chrout	
+	lda #' '
+	jsr chrout	
+	txa
 	jsr .errmsg
 	; plp	
 	rts
@@ -487,9 +503,9 @@ mainloop
 	!byte $00
 	!word .load
 
-	!text "run"
-	!byte $00
-	!word .run
+	; !text "run"
+	; !byte $00
+	; !word .run
 
 	!text "type"
 	!byte $00
@@ -547,7 +563,7 @@ mainloop
 				!text $0a,$0d,"ll/ls       - directory (long/short)"
 				!text $0a,$0d,"cd <name>   - change directory"
 				!text $0a,$0d,"load <name> - load file"
-				!text $0a,$0d,"run <name>  - run program"		
+				; !text $0a,$0d,"run <name>  - run program"		
 				!text $0a,$0d,"type <name> - display text file"
 				!text $0a,$0d,"view <name> - display gfx file"
 				!text $0a,$0d,"dump <addr> <addr> - dump memory"
