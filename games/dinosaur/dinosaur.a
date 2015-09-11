@@ -99,9 +99,9 @@ main:
 
 .init_via
 	;via port a
-	lda #$00
-	sta via1ier             ; disable VIA1 T1 interrupts
-	sta via1acr
+	; lda #$00
+	stz via1ier             ; disable VIA1 T1 interrupts
+	stz via1acr
 	lda #%11001100 			; set level
 	sta via1pcr
 	lda #%11000000 			; set PA6,7 to output (port select), PA1-5 to input (directions)
@@ -285,7 +285,7 @@ main:
 	lda	#.DINOSAUR_RUN
 	sta .dinosaur_state
 	ldy	#$00
-+	sty	.sin_tab_offs
++	sty .sin_tab_offs
 -	rts
 ++	bit #.DINOSAUR_DEAD
 	beq	+
