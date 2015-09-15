@@ -1,0 +1,16 @@
+*=$1000
+	jmp .main
+	
+!src <gfx.lib.a>
+!src <t99xx.lib.a>
+
+.main
+	sei
+	
+	jsr	vdp_mode_gfx2
+	
+	+setPixel 100, 100, Cyan
+	
+-	bra	-
+	
+	
