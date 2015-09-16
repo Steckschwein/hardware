@@ -225,7 +225,7 @@ kern_init
 .kbd_div					!byte $00
 
 ; strings
-.kernel_version 			!text "SteckOS Kernel 0.2a",$0d,$0a,$00
+.kernel_version 			!text "SteckOS Kernel 0.2b",$0d,$0a,$00
 .crlf						!byte $0a,$0d,$00
 .txt_msg_loading 			!text "Loading ",$00
 .serial_upload				!text "Serial Upload ",$00
