@@ -13,28 +13,12 @@ num_ls_entries = $03
 
 !address {
 	.shell_addr		= $b000
-	.key = $10
 }
 
 
 kern_init
 	sei
 	
-	stz .key	
-	
-	lda #<count
-	sta via1t1cl            ; set low byte of count
-	lda #>count
-	sta via1t1ch            ; set high byte of count
-
-	; lda #%11000000
-	; sta via1ier             ; enable VIA1 T1 interrupts
-
-	stz via1ier
-
-	lda #%01000000
-	sta via1acr             ; T1 continuous, PB7 disabled
-
 	+SetVector .kern_irq, irqvec
 
 
@@ -43,22 +27,10 @@ kern_init
 -	jsr .getkey
 	cmp #$00
 	bne -
-; 	lda #%01111010
-; 	sta via1portb
-
-; -	jsr spi_r_byte
-; 	bne -
-
-; 	; deselect keyboard controller
-; 	lda #%01111110
-; 	sta via1portb
 
 	jsr	.textui_init0
 
 	+SetVector _textui_chrout, outvec
-
-	lda #.kbd_frame_div
-	sta .kbd_div
 
 	cli
 	
