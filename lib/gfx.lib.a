@@ -2,12 +2,18 @@
 !src <t9929.h.a>
 
 !macro setPixel .x, .y, .color{
-	ldx	.x
-	ldy	.y
-	lda	.color
+	ldx	#.x
+	ldy	#.y
+	lda	#.color
 	jsr	set_pixel
 }
 
+!macro drawLine .x1, .y1, x2, y2, .color{
+	ldx	#.x1
+	ldy	#.y1
+	lda	#.color
+	jsr	draw_line
+}
 
 .bitmask
 	!byte $80,$40,$20,$10,$08,$04,$02,$01
@@ -16,16 +22,13 @@
 ; VRAM ADDRESS = 8(INT(X DIV 8)) + 256(INT(Y DIV 8)) + (Y MOD 8)
 set_pixel
 ;	pha
-	stz	.adrl
-	stz .adrh	;	ADDRESS_GFX2_PATTERN = $0000, safe cycles here, by init with 0
+;	stz	.adrl
+;	stz .adrh	;	ADDRESS_GFX2_PATTERN = $0000, safe cycles here, by init with 0
 ;	+SetVector ADDRESS_GFX2_PATTERN, .adrl 
 	
 	; low byte vram adress
 	txa
-	and	#$f0
-	lsr
-	lsr
-	lsr
+	and	#$f8
 ;	clc			- adress low is zero, therefore we must not add
 ;	adc	.adrl
 
@@ -65,4 +68,7 @@ set_pixel
 	sta a_vram
 	
 ;	pla		
+	rts
+	
+draw_line
 	rts
