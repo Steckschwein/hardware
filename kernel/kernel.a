@@ -40,16 +40,18 @@ kern_init
 
 	; read from keyboard buffer until empty to filter crap from kbd init
 	; select keyboard controller
-	lda #%01111010
-	sta via1portb
-
--	jsr spi_r_byte
+-	jsr .getkey
+	cmp #$00
 	bne -
+; 	lda #%01111010
+; 	sta via1portb
 
-	; deselect keyboard controller
-	lda #%01111110
-	sta via1portb
+; -	jsr spi_r_byte
+; 	bne -
 
+; 	; deselect keyboard controller
+; 	lda #%01111110
+; 	sta via1portb
 
 	jsr	.textui_init0
 
@@ -62,6 +64,7 @@ kern_init
 	
 	+SetVector .kernel_version, msgptr
 	jsr strout
+
 
 	jsr init_sdcard
 
@@ -106,14 +109,23 @@ kern_init
 	jmp (.startaddr)
 
 .keyin
--	lda .key 		; wait for .key to become != 00
+-	jsr .getkey
+	cmp #$00
 	beq -
-	stz .key 		; reset .key to signal isr to fetch next key
 	rts
 
 .getkey
-	lda .key 		; wait for .key to become != 00	
-	stz .key 		; reset .key to signal isr to fetch next key
+	phx
+
+	lda #%01111010
+	sta via1portb
+
+	jsr spi_r_byte
+       
+	ldx #%11111110
+	stx via1portb
+
+	plx
 	rts
 
 
@@ -125,37 +137,6 @@ kern_init
 	bit	a_vreg
 	bpl ++	   ; VDP IRQ flag set?
 
-	dec .kbd_div
-	lda .kbd_div
-	bne +
-
-	lda #.kbd_frame_div
-	sta .kbd_div
-
-	lda via1portb
-	and #%01111110
-	cmp #$7e
-	bne +
-
-	lda #%01111010
-	; and via1portb
-	sta via1portb
-
-	TAX             ; aufheben
-    ORA #$01
-    !for .i,0,7 {
-		STA via1portb ; Takt An 1
-		STX via1portb ; Takt aus  
-    }
-       
-	ldx #%11111110
-	stx via1portb
-
-	lda via1sr
-	cmp #$00
-	beq +
-	sta .key
-+
 	jsr	.textui_update_screen
 
 ++
