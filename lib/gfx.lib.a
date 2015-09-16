@@ -15,60 +15,45 @@
 	jsr	draw_line
 }
 
-.bitmask
-	!byte $80,$40,$20,$10,$08,$04,$02,$01
-
 ;
 ; VRAM ADDRESS = 8(INT(X DIV 8)) + 256(INT(Y DIV 8)) + (Y MOD 8)
 set_pixel
-;	pha
-;	stz	.adrl
-;	stz .adrh	;	ADDRESS_GFX2_PATTERN = $0000, safe cycles here, by init with 0
-;	+SetVector ADDRESS_GFX2_PATTERN, .adrl 
-	
 	; low byte vram adress
 	txa
 	and	#$f8
-;	clc			- adress low is zero, therefore we must not add
-;	adc	.adrl
-
 	sta	.adrl
 	tya
 	and	#$07
-	clc
-	adc	.adrl
-	sta	.adrl			;safe vram low byte
-	sta	a_vreg
+	ora	.adrl
+	sta	.adrl	;safe vram low byte
+	sta	a_vreg	;set vdp vram address low byte
 	
-	; high byte vram address
+	; high byte vram address - div 8, result is vram address "page" $0000, $0100, ...
 	tya
 	lsr
 	lsr
 	lsr
-;	clc
-;	adc	#(.WRITE_ADDRESS + >ADDRESS_GFX2_PATTERN)
-	sta	a_vreg
-	
 	sta	.adrh	;safe vram high byte
+	sta	a_vreg	;set vdp vram address high byte
 	
-	txa
+	txa			;set the appropriate bit 
 	and	#$07
 	tax
-	lda	a_vram	;read current byte 
+	lda	a_vram	;read current byte in vram and OR with new pixel
 	ora	.bitmask,x
 	tax
 	
 	lda	.adrl
 	sta a_vreg
 	lda	.adrh
-	clc
-	adc	#.WRITE_ADDRESS
+	ora	#.WRITE_ADDRESS
 	sta	a_vreg
 	txa
-	sta a_vram
-	
-;	pla		
+	sta a_vram	;set vdp vram address high byte
 	rts
+
+.bitmask
+	!byte $80,$40,$20,$10,$08,$04,$02,$01
 	
 draw_line
 	rts
