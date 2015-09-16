@@ -386,7 +386,7 @@ mainloop
 	jsr close
 	rts
 
-+	tax
++	
 	+ShellPrintString .crlf
 	ldy #$00
 -	lda (filenameptr),y
@@ -398,8 +398,9 @@ mainloop
 	lda #':'
 	jsr chrout	
 	lda #' '
-	jsr chrout	
-	txa
+	jsr chrout
+
+	lda errno
 	jsr .errmsg
 	; plp	
 	rts
@@ -544,6 +545,8 @@ mainloop
 
 
 .errmsg
+		; jsr hexout
+
 		+errMsgEntry fat_bad_block_signature, .fat_err_signature
 		+errMsgEntry fat_invalid_partition_type, .fat_err_partition
 		+errMsgEntry fat_invalid_sector_size, .fat_err_bad_sect_size
@@ -742,4 +745,6 @@ mainloop
 	cpy #$0b
 	bne -
 	rts
+
+
 !src <util.a>
