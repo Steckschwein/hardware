@@ -5,6 +5,11 @@
 ;		improve some functions,  avoid nop for vdp write delay 2µs by opcode reordering
 ;		investigate the difference between wdc and rockwell if no nop is used
 ;
+vdp_irq_off
+	lda #v_reg1_16k|v_reg1_display_on	;switch interupt off
+	ldy	#v_reg1
+	bra	vdp_sreg
+
 vdp_sreg:
 	sta	a_vreg
 	nop
@@ -95,7 +100,19 @@ vdp_mode_gfx1_blank:		; 3 x 256 bytes
 	sta	.adrl
 	lda	#<ADDRESS_GFX1_SCREEN
 	ldy	#.WRITE_ADDRESS + >ADDRESS_GFX1_SCREEN
-	jmp	vdp_fill
+	bra	vdp_fill
+vdp_mode_gfx2_blank:		; 2 x 6K
+	sta .adrl
+	lda #<ADDRESS_GFX2_COLOR
+	ldy #.WRITE_ADDRESS + >ADDRESS_GFX2_COLOR
+	ldx	#$18
+	jsr	vdp_fill
+	lda	#$00
+	sta .adrl
+	lda #<ADDRESS_GFX2_PATTERN
+	ldy #.WRITE_ADDRESS + >ADDRESS_GFX2_PATTERN
+	ldx	#$18
+	bra	vdp_fill
 
 vdp_mode_gfx1_sprites_off
 vdp_mode_sprites_off
@@ -142,11 +159,6 @@ vdp_init_reg
 	cpy	#$08
 	bne   -
 	rts
-
-vdp_irq_off
-	lda #v_reg1_16k|v_reg1_display_on	;switch interupt off
-	ldy	#v_reg1
-	jmp	vdp_sreg
 
 ;	
 ;

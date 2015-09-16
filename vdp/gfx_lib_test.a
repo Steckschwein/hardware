@@ -7,21 +7,12 @@
 .main
 	sei
 	
+	;disable vdp
 	jsr	vdp_display_off
 	
+	;clear bitmap space
 	lda	#Cyan<<4|Black
-	sta .adrl
-	lda #<ADDRESS_GFX2_COLOR
-	ldy #.WRITE_ADDRESS + >ADDRESS_GFX2_COLOR
-	ldx	#$18
-	jsr	vdp_fill
-	
-	lda	#$00
-	sta .adrl
-	lda #<ADDRESS_GFX2_PATTERN
-	ldy #.WRITE_ADDRESS + >ADDRESS_GFX2_PATTERN
-	ldx	#$18
-	jsr	vdp_fill
+	jsr	vdp_mode_gfx2_blank
 	
 	!for i,0,10{
 		+setPixel 10+i, 10+i, Cyan
@@ -30,6 +21,7 @@
 		+setPixel 100-i, 100+i, Cyan
 	}
 	
+	;enable gfx2
 	jsr	vdp_mode_gfx2
 
 -	bra	-
