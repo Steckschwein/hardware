@@ -40,6 +40,30 @@ void init_kb(void)
 	last_scancode = 0;
 }
 
+void send_kb(uint8_t char data)
+{
+	uint8_t tmp = SREG;
+	cli();
+
+	DDRD	=  (1 << CLOCK) | (1 << DATA);
+	PORTD	= ~(1 << CLOCK);
+	_delay_us(100);
+	PORTD	= ~(1 << DATA);
+	DDRD	= ~(1 << CLOCK);
+
+	
+	while(PORTD & (1 << CLOCK));
+
+	
+
+
+	
+
+
+
+	SREG = tmp;
+}
+
 
 
 
