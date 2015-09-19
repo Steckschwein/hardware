@@ -6,8 +6,13 @@
 #include "gpr.h"
 #include "scancodes_de.h"
 
-#define KB_BUFF_SIZE 32
+#define SCAN_BUFF_SIZE 96
+volatile uint8_t scan_buffer[SCAN_BUFF_SIZE];
+volatile uint8_t *scan_inptr;
+volatile uint8_t *scan_outptr;
+volatile uint8_t scan_buffcnt;
 
+#define KB_BUFF_SIZE 32
 volatile uint8_t kb_buffer[KB_BUFF_SIZE];
 volatile uint8_t *kb_inptr;
 volatile uint8_t *kb_outptr;
@@ -16,15 +21,23 @@ volatile uint8_t kb_buffcnt;
 
 void init_kb(void)
 {
+	scan_inptr = scan_buffer;					  // Initialize buffer
+	scan_outptr = scan_buffer;
+	scan_buffcnt = 0;
+
+
 	kb_inptr =  kb_buffer;					  // Initialize buffer
 	kb_outptr = kb_buffer;
 	kb_buffcnt = 0;
+
 
 	MCUCR 	= (1 << ISC01);					  // INT0 interrupt on falling edge
 	GIMSK	= (1 << INT0);						  // Enable INT0 interrupt
 
 	PORTC  	= 3;
 	DDRC	= (1 << PC0) | (1 << PC1);
+
+	last_scancode = 0;
 }
 
 
@@ -46,8 +59,7 @@ ISR (INT0_vect)
 	{
 		bitcount = 11;
 		
-		// put_kbbuff(data);
-		decode(data);
+		put_scanbuff(data);
 	}
 }
 
@@ -217,8 +229,9 @@ void decode(uint8_t sc)
 //-------------------------------------------------------------------
 void put_kbbuff(uint8_t c)
 {
-	// uint8_t tmp = SREG;
-	// cli();
+	// FIXME: do we really need to disable interrupts during buffer access?
+	uint8_t tmp = SREG;
+	cli();
 
 	if (kb_buffcnt < KB_BUFF_SIZE)			  // If buffer not full
 	{
@@ -232,7 +245,27 @@ void put_kbbuff(uint8_t c)
 			kb_inptr = kb_buffer;
 	}
 
-	// SREG = tmp;
+	SREG = tmp;
+}
+
+void put_scanbuff(uint8_t c)
+{
+	uint8_t tmp = SREG;
+	cli();
+
+	if (scan_buffcnt < SCAN_BUFF_SIZE)			  // If buffer not full
+	{
+		// Put character into buffer
+		// Increment pointer
+		*scan_inptr++ = c;
+		scan_buffcnt++;
+
+		// Pointer wrapping
+		if (scan_inptr >= scan_buffer + SCAN_BUFF_SIZE)
+			scan_inptr = scan_buffer;
+	}
+
+	SREG = tmp;
 }
 
 
@@ -245,15 +278,16 @@ int get_kbchar(void)
 {
 	int byte;
 
+
 	// Wait for data
 	// while(kb_buffcnt == 0);
 	if (kb_buffcnt == 0)
 	{
 		return 0;
 	}
+	// uint8_t tmp = SREG;
+	// cli();
 
-	uint8_t tmp = SREG;
-	cli();
 
 	// Get byte - Increment pointer
 	byte = *kb_outptr++;
@@ -264,6 +298,36 @@ int get_kbchar(void)
 
 	// Decrement buffer count
 	kb_buffcnt--;
+
+	// SREG = tmp;
+
+	return byte;
+}
+
+int get_scanchar(void)
+{
+	int byte;
+
+
+	// Wait for data
+	// while(kb_buffcnt == 0);
+	if (scan_buffcnt == 0)
+	{
+		return 0;
+	}
+	uint8_t tmp = SREG;
+	cli();
+
+
+	// Get byte - Increment pointer
+	byte = *scan_outptr++;
+
+	// Pointer wrapping
+	if (scan_outptr >= scan_buffer + SCAN_BUFF_SIZE)
+		scan_outptr = scan_buffer;
+
+	// Decrement buffer count
+	scan_buffcnt--;
 
 	SREG = tmp;
 

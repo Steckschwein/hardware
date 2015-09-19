@@ -1,8 +1,26 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <util/delay.h>
+
 
 #include "spi.h"
 #include "kb.h"
+
+
+/* -------------------------------------------------------------------
+Design:
+1. 	INT0 für Tastaturabfrage hat IMMER prio
+	INT0-ISR stopft scancodes in scancode buffer
+
+2. 	Mainloop 
+	- dekodiert Scancodes aus scancode-Buffer 
+	- Lookup ASCII Zeichen (decode())
+	- Zeichen in Zeichenpuffer
+	- Abfrage SPI-Enabled
+		- Zeichen transportieren 
+3. 
+-------------------------------------------------------------------*/
+
 
 
 /* -------------------------------------------------------------------
@@ -25,21 +43,22 @@
 
 -------------------------------------------------------------------*/
 
+
 int main(void)
 {
-	uint8_t key;
-
+	uint8_t tmp;
 	init_kb();
 	spiInitSlave();
 	sei();
 
-	
+
 	while(1)
 	{		
-		while(! spiEnabled());
-
-		key = get_kbchar();
-		spiTransfer(key);						
+		tmp = get_scanchar();
+		if (tmp != 0)
+		{
+			decode(tmp);
+		}
 	}
 	return 0;
 }
