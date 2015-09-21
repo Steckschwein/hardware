@@ -27,29 +27,21 @@ void init_kb(void)
 	DDRC	= (1 << PC0) | (1 << PC1);
 }
 
-// void send_kb(uint8_t char data)
-// {
-// 	uint8_t tmp = SREG;
-// 	cli();
+void send_kb(uint8_t data)
+{
+	uint8_t tmp = SREG;
+	cli();
 
-// 	DDRD	=  (1 << CLOCK) | (1 << DATA);
-// 	PORTD	= ~(1 << CLOCK);
-// 	_delay_us(100);
-// 	PORTD	= ~(1 << DATA);
-// 	DDRD	= ~(1 << CLOCK);
-
+	DDRD	=  (1 << CLOCK) | (1 << DATAPIN);
+	PORTD	= ~(1 << CLOCK);
+	_delay_us(100);
+	PORTD	= ~(1 << DATAPIN);
+	DDRD	= ~(1 << CLOCK);
 	
-// 	while(PORTD & (1 << CLOCK));
+	while(PORTD & (1 << CLOCK));
 
-
-
-
-	
-
-
-
-// 	SREG = tmp;
-// }
+	SREG = tmp;
+}
 
 
 
@@ -69,8 +61,21 @@ ISR (INT0_vect)
 	if(--bitcount == 0)						  // All bits received
 	{
 		bitcount = 11;
+
+		if (scan_buffcnt < SCAN_BUFF_SIZE)			  // If buffer not full
+		{
+			// Put character into buffer
+			// Increment pointer
+			*scan_inptr++ = data;
+			scan_buffcnt++;
+
+			// Pointer wrapping
+			if (scan_inptr >= scan_buffer + SCAN_BUFF_SIZE)
+				scan_inptr = scan_buffer;
+		}
+
 		
-		put_scanbuff(data);
+		// put_scanbuff(data);
 	}
 }
 
@@ -231,25 +236,25 @@ void put_kbbuff(uint8_t c)
 	// SREG = tmp;
 }
 
-void put_scanbuff(uint8_t c)
-{
-	// uint8_t tmp = SREG;
-	// cli();
+// void put_scanbuff(uint8_t c)
+// {
+// 	// uint8_t tmp = SREG;
+// 	// cli();
 
-	if (scan_buffcnt < SCAN_BUFF_SIZE)			  // If buffer not full
-	{
-		// Put character into buffer
-		// Increment pointer
-		*scan_inptr++ = c;
-		scan_buffcnt++;
+// 	if (scan_buffcnt < SCAN_BUFF_SIZE)			  // If buffer not full
+// 	{
+// 		// Put character into buffer
+// 		// Increment pointer
+// 		*scan_inptr++ = c;
+// 		scan_buffcnt++;
 
-		// Pointer wrapping
-		if (scan_inptr >= scan_buffer + SCAN_BUFF_SIZE)
-			scan_inptr = scan_buffer;
-	}
+// 		// Pointer wrapping
+// 		if (scan_inptr >= scan_buffer + SCAN_BUFF_SIZE)
+// 			scan_inptr = scan_buffer;
+// 	}
 
-	// SREG = tmp;
-}
+// 	// SREG = tmp;
+// }
 
 
 //-------------------------------------------------------------------

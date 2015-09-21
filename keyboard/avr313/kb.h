@@ -13,6 +13,7 @@ void init_kb(void);
 void decode(unsigned char sc);
 void put_kbbuff(unsigned char c);
 // int  get_kbchar(void);
+void send_kb(uint8_t);
 void put_scanbuff(unsigned char c);
 int  get_scanchar(void);
 
