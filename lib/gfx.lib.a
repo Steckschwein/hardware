@@ -9,9 +9,12 @@
 }
 
 !macro drawLine .x1, .y1, x2, y2, .color{
-	ldx	#.x1
-	ldy	#.y1
-	lda	#.color
+	lda	#.x2
+    sta tmp0
+	lda	#.y2
+    sta tmp1
+    ldx #.x1
+    ldy #.y1
 	jsr	draw_line
 }
 
@@ -20,6 +23,7 @@
 set_pixel
 	; low byte vram adress
 	txa
+.set_pixel_0
 	and	#$f8
 	sta	.adrl
 	tya
@@ -56,4 +60,15 @@ set_pixel
 	!byte $80,$40,$20,$10,$08,$04,$02,$01
 	
 draw_line
+       
+    jsr set_pixel
+    cpx tmp0
+;    bmi +
+    
+    
+    txa
+    clc
+    sbc tmp0
+    
 	rts
+    

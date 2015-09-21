@@ -17,3 +17,8 @@ transfer: all
 #	../transfer.py gfx_mode3.bin 0x1000
 #	../transfer.py text_mode.bin 0x1000
 	../transfer.py gfx_lib_test.bin 0x1000
+    
+    
+#
+# cl65 --cpu 65c02 --start-addr $1000 --config ../cc65/steckschwein.cfg gfx_lib_test.c -o gfx_lib_test.o
+#

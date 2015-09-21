@@ -7,12 +7,21 @@
 #define C_BEL 0x07 // Ctrl-G, Bell
 #define C_BS  0x08 // Ctrl-H, Backspace
 
-// Unshifted characters
+// Unshifted characters - for a "US QWERTY" keyboard only - Scan Code Set 2
 const unsigned char scancodes[][5] PROGMEM = {
 	/*
 	{scancode, keycode, shifted, ctrl, alt}
 	*/
-
+	{0x01,' ', ' ', 0, 0} ,// F9
+	{0x03,' ', ' ', 0, 0} ,// F5
+	{0x04,' ', ' ', 0, 0} ,// F3
+	{0x05,' ', ' ', 0, 0} ,// F1
+	{0x06,' ', ' ', 0, 0} ,// F2
+	{0x07,' ', ' ', 0, 0} ,// F12
+	{0x09,' ', ' ', 0, 0} ,// F10
+	{0x0a,' ', ' ', 0, 0} ,// F8
+	{0x0b,' ', ' ', 0, 0} ,// F6
+	{0x0c,' ', ' ', 0, 0} ,// F4
 	{0x0d,	 9,	 9,	 9,	 9},
 	{0x0e,	'^', '°', 0, 0},
 	{0x15,'q', 'Q', 0, '@'} ,
@@ -75,10 +84,12 @@ const unsigned char scancodes[][5] PROGMEM = {
 	{0x73,'5', '5', 0, 0} ,
 	{0x74,'6', '6', 0, 0} ,
 	{0x75,'8', '8', 0, 0} ,
+	{0x78,' ', ' ', 0, 0} ,// F11
 	{0x79,'+', '+', 0, 0} ,
 	{0x7a,'3', '3', 0, 0} ,
 	{0x7b,'-', '-', 0, 0} ,
 	{0x7c,'*', '*', 0, 0} ,
 	{0x7d,'9', '9', 0, 0} ,
+	{0x83,' ', ' ', 0, 0} ,// F7
 	{0,0, 0, 0}
 };

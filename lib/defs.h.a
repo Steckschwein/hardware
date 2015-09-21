@@ -19,30 +19,25 @@ count		= clockspeed * jiffies
 ;----------------------------------------------------------------------------------------------
 
 !address {
-; dividend = $c0
-; divisor = $c4
-; remainder = $c6
-; result = dividend
-
 ; Address pointers for serial upload
-.startaddr	= $c0
-.endaddr    = $c2
-.length		= $c4
+.startaddr	= $d0
+.endaddr    = $d2
+.length		= $d4
 
 ; Cursor Position and buffer
-crs_x	= $d0
-crs_y	= $d1
-crs_ptr	= $d2 	; 2 byte ram address pointer
+crs_x	= $d6
+crs_y	= $d7
+crs_ptr	= $d8 	; 2 byte ram address pointer
 
 ; general purpose address location
 ; transfer routine addresses
-.addr 		= $d4
+.addr 		= $da
 .adrl     = .addr
 .adrh     = .addr+1
-.ptr1		= $d6
+.ptr1		= $dc
 .ptr1l		= .ptr1
 .ptr1h		= .ptr1+1
-.ptr2		= $d8
+.ptr2		= $de
 .ptr2l		= .ptr2
 .ptr2h		= .ptr2+1
 
@@ -50,7 +45,7 @@ crs_ptr	= $d2 	; 2 byte ram address pointer
 irqvec		= $e0
 
 ; ramend
-ram_end_l   = $e4
+ram_end_l   = $e2
 ram_end_h   = ram_end_l+1
 
 dirptr 		= $e4 ; 2 byte
