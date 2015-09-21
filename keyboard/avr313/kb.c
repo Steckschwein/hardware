@@ -256,7 +256,7 @@ void put_scanbuff(uint8_t c)
 // Get a char from the keyboard buffer.
 // Routine does not return until a character is ready!
 //-------------------------------------------------------------------
-
+/*
 int get_kbchar(void)
 {
 	int byte;
@@ -286,7 +286,7 @@ int get_kbchar(void)
 
 	return byte;
 }
-
+*/
 int get_scanchar(void)
 {
 	uint8_t byte;
