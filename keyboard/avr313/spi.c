@@ -6,14 +6,30 @@
 
 #include "spi.h"
 #include "kb.h"
-uint8_t spitmp;
-char transfer_done = 0;
 
 //SPI Transfer Complete Interrupt starting on page 124 in datasheet
-ISR( SPI_STC_vect )
-{
-  spitmp = SPDR;
-  SPDR = get_kbchar();
+ISR( SPI_STC_vect)
+{ 
+	if (kb_buffcnt == 0)
+	{
+		spiin = 0;
+	}
+	else
+	{
+		spiin = *kb_outptr++;
+
+		// Pointer wrapping
+		if (kb_outptr >= kb_buffer + KB_BUFF_SIZE)
+			kb_outptr = kb_buffer;
+
+		// Decrement buffer count
+		kb_buffcnt--;
+
+	}
+
+	spiout = SPDR;
+	SPDR = spiin;
+	// reti();
 }
 
 
@@ -27,23 +43,6 @@ void spiInitSlave()
 	/* Enable SPI */
 	// SPCR = (1<<SPE);
 	SPCR = 0xC0;
+	spiin = 0;
+
 }
-
-// unsigned char spiEnabled()
-// {
-// 	return 	!(PORTB & (1<<PB2));
-// }
-
-// unsigned char spiTransfer(unsigned char val)
-// {
-// 	// while(!(SPSR & (1<<SPIF)));
-	
-// 	SPDR = val;	
-	
-
-// 	 Wait for reception complete 
-// 	while(!(SPSR & (1<<SPIF)));
-
-// 	/* Return data register */
-// 	return SPDR;
-// }

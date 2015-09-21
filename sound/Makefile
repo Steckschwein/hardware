@@ -3,7 +3,7 @@ SONGS=prowla.bin dn2_1.bin dn2_2.bin setup.bin imfplay.bin
 %.bin: %.a
 	acme -v -f plain --cpu 65c02 -o $@ $<
 
-all: soundtest.bin $(SONGS)
+all: soundtest.bin #$(SONGS)
 
 prowla.bin: dro_player.a
 	acme -v -f plain --cpu 65c02 -Dprowla=1 -o $@ $<
@@ -19,6 +19,6 @@ imfplay.bin: dro_player.a
 clean:
 	rm -f *.bin
 transfer: all
-#	../transfer.py soundtest.bin 0x0801
+	../transfer.py soundtest.bin
 #	../transfer.py dro_player.bin 0x1000
-	../transfer.py imfplayer.bin 0x1000
+#	../transfer.py imfplayer.bin 0x1000

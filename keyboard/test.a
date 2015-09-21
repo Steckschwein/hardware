@@ -8,11 +8,15 @@
 
 -	
 	jsr .kbd_enable	
-	lda #$00
-	jsr spi_rw_byte
+	; lda #$00
+	jsr spi_r_byte
 	jsr .kbd_disable
-
-	beq -
+	; cmp #$00
+	; beq -
+; 	; lda #'N'
+; 	; jsr chrout
+; 	bra -
+	; lda #'X'
 	jsr hexout
 	bra -
 
@@ -28,10 +32,17 @@
 	rts
 
 .kbd_chrin
+	lda #%01111010
+	sta via1portb
+
 	jsr .kbd_enable
--	lda #$00
-	jsr spi_rw_byte
-	beq -
-	jsr .kbd_disable
+; -	lda #$00
+	jsr spi_r_byte
+
+
+	ldx #$7e
+	stx via1portb	
+
+	
 	rts
 	

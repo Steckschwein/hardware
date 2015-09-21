@@ -6,17 +6,6 @@
 #include "gpr.h"
 #include "scancodes_de.h"
 
-#define SCAN_BUFF_SIZE 96
-volatile uint8_t scan_buffer[SCAN_BUFF_SIZE];
-volatile uint8_t *scan_inptr;
-volatile uint8_t *scan_outptr;
-volatile uint8_t scan_buffcnt;
-
-#define KB_BUFF_SIZE 32
-volatile uint8_t kb_buffer[KB_BUFF_SIZE];
-volatile uint8_t *kb_inptr;
-volatile uint8_t *kb_outptr;
-volatile uint8_t kb_buffcnt;
 
 
 void init_kb(void)
@@ -36,33 +25,31 @@ void init_kb(void)
 
 	PORTC  	= 3;
 	DDRC	= (1 << PC0) | (1 << PC1);
-
-	last_scancode = 0;
 }
 
-void send_kb(uint8_t char data)
-{
-	uint8_t tmp = SREG;
-	cli();
+// void send_kb(uint8_t char data)
+// {
+// 	uint8_t tmp = SREG;
+// 	cli();
 
-	DDRD	=  (1 << CLOCK) | (1 << DATA);
-	PORTD	= ~(1 << CLOCK);
-	_delay_us(100);
-	PORTD	= ~(1 << DATA);
-	DDRD	= ~(1 << CLOCK);
-
-	
-	while(PORTD & (1 << CLOCK));
+// 	DDRD	=  (1 << CLOCK) | (1 << DATA);
+// 	PORTD	= ~(1 << CLOCK);
+// 	_delay_us(100);
+// 	PORTD	= ~(1 << DATA);
+// 	DDRD	= ~(1 << CLOCK);
 
 	
+// 	while(PORTD & (1 << CLOCK));
+
+
 
 
 	
 
 
 
-	SREG = tmp;
-}
+// 	SREG = tmp;
+// }
 
 
 
@@ -86,34 +73,6 @@ ISR (INT0_vect)
 		put_scanbuff(data);
 	}
 }
-
-// void send(uint8_t data)
-// {
-// 	static uint8_t bitcount = 11;			  // 0 = neg.  1 = pos.	
-
-// 	DDRD |= (1 << CLOCK) | (1 << DATA)
-
-
-// 	uint8_t tmp = SREG;
-// 	cli();
-
-// 	// request to send
-// 	PORT_KB &= ~(1 << CLOCK);
-// 	_delay_us(110);
-// 	PORT_KB &= ~(1 << DATA);
-// 	DDRD 	&= ~(1 << CLOCK); 
-// 	PORT_KB |= (1 << CLOCK);
-
-
-// 	while(PORT_KB & (1 << CLOCK) );
-
-
-
-
-// 	SREG = tmp;
-
-// }
-
 
 
 void decode(uint8_t sc)
@@ -197,12 +156,12 @@ void decode(uint8_t sc)
 			 
 
 			}								  // Scan code mode
-			else
-			{
-				print_hexbyte(sc);			  // Print scan code
-				put_kbbuff(' ');
-				put_kbbuff(' ');
-			}
+			// else
+			// {
+			// 	print_hexbyte(sc);			  // Print scan code
+			// 	put_kbbuff(' ');
+			// 	put_kbbuff(' ');
+			// }
 		}
 	}
 	else
@@ -254,8 +213,8 @@ void decode(uint8_t sc)
 void put_kbbuff(uint8_t c)
 {
 	// FIXME: do we really need to disable interrupts during buffer access?
-	uint8_t tmp = SREG;
-	cli();
+	// uint8_t tmp = SREG;
+	// cli();
 
 	if (kb_buffcnt < KB_BUFF_SIZE)			  // If buffer not full
 	{
@@ -269,13 +228,13 @@ void put_kbbuff(uint8_t c)
 			kb_inptr = kb_buffer;
 	}
 
-	SREG = tmp;
+	// SREG = tmp;
 }
 
 void put_scanbuff(uint8_t c)
 {
-	uint8_t tmp = SREG;
-	cli();
+	// uint8_t tmp = SREG;
+	// cli();
 
 	if (scan_buffcnt < SCAN_BUFF_SIZE)			  // If buffer not full
 	{
@@ -289,7 +248,7 @@ void put_scanbuff(uint8_t c)
 			scan_inptr = scan_buffer;
 	}
 
-	SREG = tmp;
+	// SREG = tmp;
 }
 
 
@@ -330,7 +289,7 @@ int get_kbchar(void)
 
 int get_scanchar(void)
 {
-	int byte;
+	uint8_t byte;
 
 
 	// Wait for data
@@ -339,8 +298,8 @@ int get_scanchar(void)
 	{
 		return 0;
 	}
-	uint8_t tmp = SREG;
-	cli();
+	// uint8_t tmp = SREG;
+	// cli();
 
 
 	// Get byte - Increment pointer
@@ -353,7 +312,7 @@ int get_scanchar(void)
 	// Decrement buffer count
 	scan_buffcnt--;
 
-	SREG = tmp;
+	// SREG = tmp;
 
 	return byte;
 }

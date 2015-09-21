@@ -16,9 +16,8 @@ Design:
 	- dekodiert Scancodes aus scancode-Buffer 
 	- Lookup ASCII Zeichen (decode())
 	- Zeichen in Zeichenpuffer
-	- Abfrage SPI-Enabled
-		- Zeichen transportieren 
-3. 
+	
+3.  SPI-Transport in Interrupt
 -------------------------------------------------------------------*/
 
 
@@ -58,7 +57,8 @@ int main(void)
 		if (tmp != 0)
 		{
 			decode(tmp);
-		}
+		}	
+		
 	}
 	return 0;
 }

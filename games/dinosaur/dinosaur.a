@@ -393,8 +393,8 @@ main:
 
 	+save
 	
-	lda	#Dark_Yellow
-;	jsr	vdp_bgcolor
+	; lda	#Dark_Yellow
+	; jsr	vdp_bgcolor
 	
 	lda	.game_status
 	and	#.STATUS_PLAY
