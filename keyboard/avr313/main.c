@@ -43,7 +43,7 @@ Design:
 -------------------------------------------------------------------*/
 
 
-int main(void)
+int __attribute__((OS_main noreturn)) main(void)
 {
 	uint8_t tmp;
 	init_kb();
@@ -60,7 +60,7 @@ int main(void)
 		}	
 		
 	}
-	return 0;
+	// return 0;
 }
 
 
