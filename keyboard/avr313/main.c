@@ -42,24 +42,26 @@ Design:
 
 -------------------------------------------------------------------*/
 
-
-int main(void)
+static void main_loop (void) __attribute__((noreturn));
+void main_loop(void)
 {
-	uint8_t tmp;
-	init_kb();
-	spiInitSlave();
-	sei();
-
-
 	while(1)
 	{		
+		uint8_t tmp;
 		tmp = get_scanchar();
 		if (tmp != 0)
 		{
 			decode(tmp);
 		}	
-		
-	}
+	}	
+}
+
+int __attribute__((OS_main))
+main(void)
+{
+	init_kb();
+	spiInitSlave();
+	main_loop();
 	return 0;
 }
 
