@@ -12,7 +12,7 @@ OBJDUMP = avr-objdump
 LOADER=avrdude -c stk500v2 -P $(SERIALDEVICE) -p m8 -b 19200 
 #LOADER=avrdude -c avrispmkII -P usb -p m8 -b 19200 
 PRG=keyboard
-OBJ= gpr.o kb.o spi.o main.o 
+OBJ= kb.o spi.o main.o 
 all: $(PRG).elf $(PRG).hex $(PRG).lss $(PRG).eep
 
 kb.o: scancodes_de.h
