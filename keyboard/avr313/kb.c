@@ -3,6 +3,7 @@
 #include <util/delay.h>
 
 #include "kb.h"
+#include "gpr.h"
 #include "scancodes_de.h"
 
 

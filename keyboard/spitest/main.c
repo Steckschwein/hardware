@@ -1,26 +1,7 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
-#include <util/delay.h>
-
 
 #include "spi.h"
-#include "kb.h"
-
-
-/* -------------------------------------------------------------------
-Design:
-1. 	INT0 für Tastaturabfrage hat IMMER prio
-	INT0-ISR stopft scancodes in scancode buffer
-
-2. 	Mainloop 
-	- dekodiert Scancodes aus scancode-Buffer 
-	- Lookup ASCII Zeichen (decode())
-	- Zeichen in Zeichenpuffer
-	
-3.  SPI-Transport in Interrupt
--------------------------------------------------------------------*/
-
-
 
 /* -------------------------------------------------------------------
 	Atmel application note AVR313 ported for use with GCC
@@ -42,23 +23,40 @@ Design:
 
 -------------------------------------------------------------------*/
 
-
 int main(void)
 {
-	uint8_t tmp;
-	init_kb();
+
+	// uint8_t key;
+	uint8_t * chars = "Hello World! \0";
+	uint8_t * p;
+	uint8_t key;
+
+	// Initializes UART transmit buffer and keyboard reception
+	// init_uart();
+	// init_kb();
 	spiInitSlave();
 	sei();
 
+	p = chars;
 
 	while(1)
-	{		
-		tmp = get_scanchar();
-		if (tmp != 0)
-		{
-			decode(tmp);
-		}	
+	{
+
 		
+		// key = get_kbchar();
+		// if (!key)
+		// {
+		// 	continue;
+		// }
+
+		if (! *p ) 
+		{
+				p = chars;
+		}		
+		key = *p;
+		p++;
+		
+		spiTransfer(key);
 	}
 	return 0;
 }

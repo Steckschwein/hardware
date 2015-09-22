@@ -24,10 +24,12 @@ ISR( SPI_STC_vect)
 
 		// Decrement buffer count
 		kb_buffcnt--;
+
 	}
 
 	spiout = SPDR;
 	SPDR = spiin;
+	// reti();
 }
 
 
