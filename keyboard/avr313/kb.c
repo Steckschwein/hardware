@@ -69,7 +69,7 @@ void send_kb(uint8_t data)
     // set parity bit
     while(PORTD & (1 << CLOCK));
 
-    if ((parity & 0x01) == 0)
+    if ((++parity & 0x01) == 0)
     {
     	PORTD &= ~(1 << DATAPIN);
     }
