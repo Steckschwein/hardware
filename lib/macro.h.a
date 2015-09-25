@@ -12,6 +12,13 @@ macro_h_a = 1
         lda #char
         jsr chrout
 }
+!macro Println {
+    lda #10
+    jsr chrout
+    lda #13
+    jsr chrout
+}
+
 !macro PrintString .word {
 		+SetVector .word, msgptr
         jsr strout

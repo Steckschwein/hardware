@@ -1,4 +1,4 @@
-all:  set_rtc.bin 
+all: set_rtc.bin read_rtc.bin rtc.bin
 clean:
 	rm -f *.bin *.labels
 
@@ -9,5 +9,7 @@ transfer: all
 	../transfer.py rtc.bin 
 set: set_rtc.bin
 	../transfer.py set_rtc.bin 
-read: set_rtc.bin
+read: read_rtc.bin
 	../transfer.py read_rtc.bin 
+rtc: rtc.bin
+	../transfer.py rtc.bin

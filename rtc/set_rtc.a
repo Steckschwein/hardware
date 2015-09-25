@@ -1,10 +1,7 @@
 *=$1000
 !src <defs.h.a>
-!src <via.h.a>
 !src <bios.h.a>
-
-	lda #dev_lcd
-    sta chn_out
+!src <via.h.a>
 
 	jsr rtc_enable
 	lda #$8f
