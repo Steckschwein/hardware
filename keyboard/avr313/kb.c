@@ -26,7 +26,7 @@ void init_kb(void)
 	DDRC	= (1 << PC0) | (1 << PC1);
 
 
-//	send_kb(0xff);
+	// send_kb(0xaa);
 }
 
 void send_kb(uint8_t data)
@@ -42,17 +42,22 @@ void send_kb(uint8_t data)
 	_delay_us(100);
 	PORTD	= ~(1 << DATAPIN);
 	DDRD	= ~(1 << CLOCK);
+
 	
 	// set startbit
-	while(PORTD & (1 << CLOCK));
+	while(PIND & (1 << CLOCK));
 	PORTD &= ~(1 << DATAPIN);
-	while(PORTD | (1 << CLOCK));
+	while(PIND | (1 << CLOCK));
+
+	PORTD |= (1 << DATAPIN);
+
+	return;
 
 	parity = 0;
 
 	for (loop=0,mask=0x80;loop<8;loop++, mask=mask>>1)
 	{
-		while(PORTD & (1 << CLOCK));
+		while(PIND & (1 << CLOCK));
 
 		if (data & mask) 
 		{
@@ -63,11 +68,11 @@ void send_kb(uint8_t data)
 		{
 			PORTD &= ~(1 << DATAPIN);
 		}
-		while(PORTD | (1 << CLOCK));
+		while(PIND | (1 << CLOCK));
     }
 
     // set parity bit
-    while(PORTD & (1 << CLOCK));
+    while(PIND & (1 << CLOCK));
 
     if ((++parity & 0x01) == 0)
     {
@@ -77,11 +82,11 @@ void send_kb(uint8_t data)
     {
     	PORTD |= (1 << DATAPIN);
     }
-	while(PORTD | (1 << CLOCK));
+	while(PIND | (1 << CLOCK));
 	// set stopbit
-	while(PORTD & (1 << CLOCK));
+	while(PIND & (1 << CLOCK));
 	PORTD |= (1 << DATAPIN);
-	while(PORTD | (1 << CLOCK));
+	while(PIND | (1 << CLOCK));
 
 	DDRD	= ~(1 << DATAPIN);
 	SREG = tmp;
