@@ -26,7 +26,7 @@ void init_kb(void)
 	DDRC	= (1 << PC0) | (1 << PC1);
 
 
-	// send_kb(2);
+//	send_kb(0xff);
 }
 
 void send_kb(uint8_t data)
@@ -83,6 +83,7 @@ void send_kb(uint8_t data)
 	PORTD |= (1 << DATAPIN);
 	while(PORTD | (1 << CLOCK));
 
+	DDRD	= ~(1 << DATAPIN);
 	SREG = tmp;
 }
 
