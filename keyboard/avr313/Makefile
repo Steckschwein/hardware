@@ -1,4 +1,7 @@
 SERIALDEVICE=$(shell ls -1r /dev/cu.usbmodem* | head -1)
+# 2MHz
+#CPUSPEED=2000000
+#FUSES=-U lfuse:w:0xc2:m -U hfuse:w:0xd9:m
 # 4MHz
 CPUSPEED=4000000
 FUSES=-U lfuse:w:0xc3:m -U hfuse:w:0xd9:m
