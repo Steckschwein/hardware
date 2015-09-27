@@ -26,7 +26,7 @@ void init_kb(void)
 	DDRC	= (1 << PC0) | (1 << PC1);
 
 
-	// send_kb(0xff);
+	send_kb(0xff);
 	
 }
 
@@ -37,14 +37,22 @@ void send_kb(uint8_t data)
 	uint8_t tmp = SREG;
 	cli();
 
+	// Request to send
+	// Pull CLOCK line low
 	PORTD	= ~(1 << CLOCK);
+	// Set CLOCK and DATA to output
 	DDRD	=  (1 << CLOCK) | (1 << DATAPIN);
 
+	// wait 100us for device to check that we a pulling CLOCK low
 	_delay_us(100);
+
+	// Pull DATA low
 	PORTD	= ~(1 << DATAPIN);
+	// make CLOCK input again to be able to receive clock from device
 	DDRD	= ~(1 << CLOCK);
-	
+	// wait for device to pull CLOCK line
 	// loop_until_bit_is_clear(PIND, CLOCK);
+
 
 	// set startbit (always 0)
 	PORTD &= ~(1 << DATAPIN);
@@ -54,48 +62,55 @@ void send_kb(uint8_t data)
 	parity = 0;
 
 	// shift data byte out LSB first
-    for (loop=0,mask=0x01;loop<8;loop++, mask=mask<<1)   
+	for (loop=0,mask=0x01;loop<8;loop++, mask=mask<<1)   
 	{
-
-
 		if (data & mask) 
 		{
 			PORTD |= (1 << DATAPIN);
 			parity++;
 		}
- 		else 
+		else 
 		{
 			PORTD &= ~(1 << DATAPIN);
 		}
 
 		loop_until_bit_is_set(PIND, CLOCK);
 		loop_until_bit_is_clear(PIND, CLOCK);
-    }
+	}
 
-    // set parity bit
-    
-    if ((++parity & 0x01) == 0)
-    {
-    	PORTD &= ~(1 << DATAPIN);
-    }
-    else
-    {
-    	PORTD |= (1 << DATAPIN);
-    }
-    loop_until_bit_is_set(PIND, CLOCK);
+	// set parity bit
+	if ((++parity & 0x01) == 0)
+	{
+		PORTD &= ~(1 << DATAPIN);
+	}
+	else
+	{
+		PORTD |= (1 << DATAPIN);
+	}
+	loop_until_bit_is_set(PIND, CLOCK);
 	loop_until_bit_is_clear(PIND, CLOCK);
-    
-    // set stopbit (always 1)
-	
+
+	// set stopbit (always 1)
 	PORTD |= (1 << DATAPIN);
-    loop_until_bit_is_set(PIND, CLOCK);
+	loop_until_bit_is_set(PIND, CLOCK);
 	loop_until_bit_is_clear(PIND, CLOCK);
-	
-    DDRD	= ~(1 << DATAPIN);
+
+  
+
+	// Release data line
+	PORTD &= ~(1 << DATAPIN);
+	DDRD	= ~(1 << DATAPIN);
 	loop_until_bit_is_clear(PIND, CLOCK);
 	loop_until_bit_is_clear(PIND, DATAPIN);
     
+    DDRD=0;
+    for (loop=0;loop<11;loop++)
+    {
+		loop_until_bit_is_set(PIND, CLOCK);
+		loop_until_bit_is_clear(PIND, DATAPIN);    	
+    }
 
+	
     SREG = tmp;
 }
 
