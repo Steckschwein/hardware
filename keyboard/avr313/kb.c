@@ -25,17 +25,16 @@ void init_kb(void)
 	PORTC  	= 3;
 	DDRC	= (1 << PC0) | (1 << PC1);
 
-
 	send_kb(0xff);
-	
 }
 
 void send_kb(uint8_t data)
 {
 	uint8_t loop, mask, parity;
+	// uint8_t bitcount = 11;
 
-	uint8_t tmp = SREG;
-	cli();
+	// uint8_t tmp = SREG;
+	// cli();
 
 	// Request to send
 	// Pull CLOCK line low
@@ -54,6 +53,8 @@ void send_kb(uint8_t data)
 	// loop_until_bit_is_clear(PIND, CLOCK);
 
 
+
+
 	// set startbit (always 0)
 	PORTD &= ~(1 << DATAPIN);
 	loop_until_bit_is_set(PIND, CLOCK);
@@ -64,6 +65,7 @@ void send_kb(uint8_t data)
 	// shift data byte out LSB first
 	for (loop=0,mask=0x01;loop<8;loop++, mask=mask<<1)   
 	{
+		// if (data & mask) 
 		if (data & mask) 
 		{
 			PORTD |= (1 << DATAPIN);
@@ -104,14 +106,25 @@ void send_kb(uint8_t data)
 	loop_until_bit_is_clear(PIND, DATAPIN);
     
     DDRD=0;
-    for (loop=0;loop<11;loop++)
-    {
+	for (loop=0;loop<11;loop++)
+	{
 		loop_until_bit_is_set(PIND, CLOCK);
 		loop_until_bit_is_clear(PIND, DATAPIN);    	
-    }
+		// if(bitcount < 11 && bitcount > 2)		  // Bit 3 to 10 is data. Parity bit,
+		// {										  // start and stop bits are ignored.
+		// 	data = (data >> 1);
+		// 	if(PIND & (1 << DATAPIN))
+		// 		data = data | 0x80;				  // Store a '1'
+		// }
 
-	
-    SREG = tmp;
+		// if(--bitcount == 0)						  // All bits received
+		// {
+		// 	bitcount = 11;
+		// }
+
+	}
+   
+    // SREG = tmp;
 }
 
 
