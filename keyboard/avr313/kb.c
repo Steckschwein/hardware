@@ -25,7 +25,7 @@ void init_kb(void)
 	PORTC  	= 3;
 	DDRC	= (1 << PC0) | (1 << PC1);
 
-	send_kb(0xff);
+//	send_kb(0xff);
 }
 
 void send_kb(uint8_t data)
