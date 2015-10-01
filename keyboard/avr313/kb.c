@@ -43,7 +43,7 @@ void send_kb(uint8_t data)
 	DDRD	=  (1 << CLOCK) | (1 << DATAPIN);
 
 	// wait 100us for device to check that we a pulling CLOCK low
-	_delay_us(100);
+	_delay_us(150);
 
 	// Pull DATA low
 	PORTD	= ~(1 << DATAPIN);
