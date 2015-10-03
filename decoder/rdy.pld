@@ -1,0 +1,25 @@
+GAL16V8    ; first line : used GAL
+
+; PIN assignment
+;
+Clock LORAM  HIRAM  VDP  NC  NC  NC  Set  Clear GND
+/OE   W1     W2     NC   NC  NC  RDY  Q1  Q0    VCC
+;
+;  boolean expressions
+
+
+W1 		= LORAM * HIRAM * VDP
+W2		= LORAM * HIRAM * /VDP
+
+Q0.R = Clear * /Q0  
+       
+Q1.R =  Clear * /Q1 * Q0
+       + Clear *  Q1 * /Q0
+
+RDY = W1 * /W2 * Q0
+	+ /W1 * W2 * Q1
+	+ /W1 * /W2
+	
+
+
+DESCRIPTION:
