@@ -86,7 +86,7 @@
 	stz	crs_x
 	stz	crs_y
 	jsr .textui_update_crs_ptr		;init cursor pointer
-	
+
 .textui_init
 	+SetVector	.charset, .adrl	;load charset
 	; lda	#<(ADDRESS_GFX1_SPRITE_PATTERN)
@@ -96,6 +96,7 @@
 	ldy	#.WRITE_ADDRESS + >ADDRESS_GFX1_PATTERN
 	ldx	#$08					
 	jsr	vdp_memcpy
+
 !ifndef text_mode_40 {
 	jsr	vdp_mode_gfx1_sprites_off	;clean sprite attribute table
 	lda	#Medium_Green<<4|Black		;enable gfx 1
