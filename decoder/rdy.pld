@@ -1,4 +1,5 @@
-GAL16V8    ; first line : used GAL
+GAL16V8    
+RDYGEN
 
 ; PIN assignment
 ;
@@ -29,3 +30,5 @@ RDY =	/Q0 * /Q1
 
 
 DESCRIPTION:
+Generation of /RDY line using modeled after http://sbc.rictor.org/parts/wsgen.html
+and adapted to galasm syntax

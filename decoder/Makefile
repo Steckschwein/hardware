@@ -1,14 +1,9 @@
-all: decoder.jed
+all: decoder.jed rdy.jed
 
 clean:
 	rm -f *.jed *.fus *.chp *.pin *.bin *.label
 
 %.jed: %.pld
-	galasm $<
+	galasm -fp $<
 
-%.bin: %.a
-	acme -v -f plain --cpu 65c02 -o $@ $<
-
-transfer: romram.bin
-	../transfer.py romram.bin 0x1000
 	
