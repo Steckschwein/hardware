@@ -8,6 +8,7 @@ Clock LORAM  HIRAM  VIA  VDP  NC  NC  CLK  Clear GND
 ;
 ;  boolean expressions
 
+; TODO: simplify decoding
 
 W1 		= LORAM * HIRAM * VIA *  VDP 
 W2		= LORAM * HIRAM * VIA * /VDP 
