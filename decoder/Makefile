@@ -1,4 +1,4 @@
-all: decoder.jed rdy.jed
+all: decoder.jed 
 
 clean:
 	rm -f *.jed *.fus *.chp *.pin *.bin *.label
