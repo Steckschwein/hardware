@@ -1,9 +1,9 @@
-SONGS=prowla.bin dn2_1.bin dn2_2.bin setup.bin imfplay.bin
+SONGS=prowla.bin dn2_1.bin dn2_2.bin setup.bin imfplay.bin 
 
 %.bin: %.a
 	acme -v -f plain --cpu 65c02 -o $@ $<
 
-all: soundtest.bin #$(SONGS)
+all: soundtest.bin synth.bin  #$(SONGS)
 
 prowla.bin: dro_player.a
 	acme -v -f plain --cpu 65c02 -Dprowla=1 -o $@ $<

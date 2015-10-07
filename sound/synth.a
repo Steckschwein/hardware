@@ -1,0 +1,144 @@
+*=$1000
+!source <defs.h.a>
+!source <bios.h.a>
+
+
+!address {
+	opl_stat = $0250
+	opl_data = opl_stat + 1
+} 
+
+!macro oplSetReg .reg, .val {
+	lda #.reg
+	sta opl_stat
+	; http://www.shipbrook.net/jeff/sb.html
+	; The AdLib manual gives the wait times in microseconds: three point three (3.3) microseconds for the address, and twenty-three (23) microseconds for the data.
+	; 3.300 ns / 0.25ns = 13.2 cycles / 2 = 6.6 NOPs
+
+	!for .i,1,7 {
+		nop
+	} 
+	lda #.val
+	sta opl_data
+	; 23.000 ns / 0.25ns = 92 cycles / 92 = 46 NOPs
+	!for .i,1,46 {
+		nop
+	} 
+}
+
+!macro oplSetReg .reg {
+	pha
+	lda #.reg
+	sta opl_stat
+	; http://www.shipbrook.net/jeff/sb.html
+	; The AdLib manual gives the wait times in microseconds: three point three (3.3) microseconds for the address, and twenty-three (23) microseconds for the data.
+	; 3.300 ns / 0.25ns = 13.2 cycles / 2 = 6.6 NOPs
+
+	!for .i,1,7 {
+		nop
+	} 
+	pla
+	sta opl_data
+	; 23.000 ns / 0.25ns = 92 cycles / 92 = 46 NOPs
+	!for .i,1,46 {
+		nop
+	} 
+
+}
+	ldx #240
+-	stx opl_stat
+
+	!for .i,1,7 {
+		nop
+	} 
+
+	stz opl_data
+
+	!for .i,1,46 {
+		nop
+	} 
+	dex
+	bne -
+
+
+
+	+oplSetReg $20, $01
+
+	; Set the modulator's level to about 40 dB
+	+oplSetReg $40, $10
+
+	; Modulator attack: quick; decay: long
+	+oplSetReg $60, $F0
+
+	; Modulator sustain: medium; release: medium
+	+oplSetReg $80, $20
+
+
+	; Set the carrier's multiple to 1
+	+oplSetReg $23, $01
+
+	; Set the carrier to maximum volume (about 47 dB)
+	+oplSetReg $43, $00
+
+	; Carrier attack: quick; decay: long
+	+oplSetReg $63, $F0
+
+	; Carrier sustain: medium; release: medium
+	+oplSetReg $83, $77
+
+
+	+PrintString .txt
+-
+	jsr chrin
+	cmp #'q'
+	bne +
+	lda #$ae
+	ldx #$30
++	cmp #'w'
+	bne +
+	lda #$81
+	ldx #$31
++	cmp #'e'
+	bne +
+	lda #$b0
+	ldx #$31
++	cmp #'r'
+	bne +
+	lda #$ca
+	ldx #$31
++	cmp #'t'
+	bne +
+	lda #$02
+	ldx #$32
++	cmp #'z'
+	bne +
+	lda #$41
+	ldx #$32
++	cmp #'u'
+	bne +
+	lda #$87
+	ldx #$32
++	
+	cmp #' '
+	bne +
+	jsr .shut_up
+	jmp -
++
+	jsr .play_sound
+	jmp -
+.play_sound
+	; Set the modulator's multiple to 1
+	+oplSetReg $A0
+	txa
+	; Turn the voice on; set the octave and freq MSB
+	+oplSetReg $B0
+	rts
+.shut_up
+	+oplSetReg $B0, $11
+	rts
+
+
+.txt
+	!text "Orgel dir einen!",$0a,$0c,$00
+
+
