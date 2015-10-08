@@ -19,6 +19,6 @@ imfplay.bin: dro_player.a
 clean:
 	rm -f *.bin
 transfer: all
-	../transfer.py soundtest.bin
+	../transfer.py synth.bin
 #	../transfer.py dro_player.bin 0x1000
 #	../transfer.py imfplayer.bin 0x1000

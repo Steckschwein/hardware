@@ -21,9 +21,14 @@
 	lda #.val
 	sta opl_data
 	; 23.000 ns / 0.25ns = 92 cycles / 92 = 46 NOPs
-	!for .i,1,46 {
-		nop
-	} 
+	; !for .i,1,46 {
+	; 	nop
+	; } 
+	ldy #46
+--	
+	dey
+	bne --
+
 }
 
 !macro oplSetReg .reg {
@@ -40,12 +45,20 @@
 	pla
 	sta opl_data
 	; 23.000 ns / 0.25ns = 92 cycles / 92 = 46 NOPs
-	!for .i,1,46 {
-		nop
-	} 
+	; !for .i,1,46 {
+	; 	nop
+	; } 
+	ldy #46
+--	
+	dey
+	bne --
 
 }
-	ldx #240
+
+	
+; "init" opl2 by writing zeros into all registers
+
+	ldx #$F5 ; until reg 245
 -	stx opl_stat
 
 	!for .i,1,7 {
@@ -54,13 +67,17 @@
 
 	stz opl_data
 
-	!for .i,1,46 {
-		nop
-	} 
+	ldy #46
+--	
+	dey
+	bne --
+
 	dex
 	bne -
+	
+	
 
-
+	+oplSetReg $01, $20 ; enable waveform control
 
 	+oplSetReg $20, $01
 
@@ -71,8 +88,7 @@
 	+oplSetReg $60, $F0
 
 	; Modulator sustain: medium; release: medium
-	+oplSetReg $80, $20
-
+	+oplSetReg $80, $77
 
 	; Set the carrier's multiple to 1
 	+oplSetReg $23, $01
@@ -85,10 +101,12 @@
 
 	; Carrier sustain: medium; release: medium
 	+oplSetReg $83, $77
-
+	
+	+oplSetReg $e3, $04
 
 	+PrintString .txt
 -
+	; jsr .shut_up
 	jsr chrin
 	cmp #'q'
 	bne +
@@ -109,30 +127,27 @@
 +	cmp #'t'
 	bne +
 	lda #$02
-	ldx #$32
+	ldx #$31
 +	cmp #'z'
 	bne +
 	lda #$41
-	ldx #$32
+	ldx #$31
 +	cmp #'u'
 	bne +
 	lda #$87
 	ldx #$32
 +	
-	cmp #' '
-	bne +
-	jsr .shut_up
-	jmp -
-+
-	jsr .play_sound
-	jmp -
-.play_sound
+
 	; Set the modulator's multiple to 1
 	+oplSetReg $A0
 	txa
 	; Turn the voice on; set the octave and freq MSB
 	+oplSetReg $B0
-	rts
+
+	jmp -
+
+
+
 .shut_up
 	+oplSetReg $B0, $11
 	rts
