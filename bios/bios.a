@@ -7,6 +7,8 @@
 !src <uart.h.a>
 !src <fat32.h.a>
 !src <params.h.a>
+!src <ym3812.h.a>
+;--------------------------------------------------------------------------------------------------------------
 !address	.target = $00
 !address	.nvram  = $0800
 *= $e000			; ROM Start
@@ -436,7 +438,7 @@ biosversion	!text "BIOS    : V151008", $00	; Version String
 !src "vdp.a"
 !src "via.a"
 !src "uart.a"
-!src <opl2.a>
+!src <ym3812.a>
 !src <spi.a>
 !src <sdcard.a>
 !src "kbd.a"
