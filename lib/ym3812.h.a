@@ -8,19 +8,67 @@ ym3812_h_a = 1
 	opl_data = opl_stat + 1 ; data register (write only)
 } 
 
+;--------------------------------------------------------------------------------------------------------------
+; For some of the parameters, there is one register per output channel. For those
+; parameters, channel number can be used as an offset into the map. For many
+; parameters, there is one register per operator. However, there are holes in the
+; address map so that in this case, the operator number CANNOT be used as an
+; offset. The operator offsets for those registers are (in hex form):
+;--------------------------------------------------------------------------------------------------------------
+opl2_op1 	= $00
+opl2_op2 	= $01
+opl2_op3 	= $02
+opl2_op4 	= $03
+opl2_op5 	= $04
+opl2_op6 	= $05
+opl2_op6 	= $05
+opl2_op7 	= $08
+opl2_op8 	= $09
+opl2_op9 	= $0A
+opl2_op10 	= $0B
+opl2_op11 	= $0C
+opl2_op12 	= $0D
+opl2_op13 	= $10
+opl2_op14 	= $11
+opl2_op15 	= $12
+opl2_op16 	= $13
+opl2_op17 	= $14
+opl2_op18 	= $15
+;--------------------------------------------------------------------------------------------------------------
+opl2_chan0_op1	= opl2_op1
+opl2_chan0_op2	= opl2_op4
 
-!macro snd_write r, v{
-	ldy	r
-	lda	v
-	jsr	snd_sreg
-}
+opl2_chan1_op1	= opl2_op2
+opl2_chan1_op2	= opl2_op5
 
-!macro snd_nops{
-	nop
-	nop
-	nop
-	nop
-}
+opl2_chan2_op1	= opl2_op3
+opl2_chan2_op2	= opl2_op6
+
+opl2_chan3_op1	= opl2_op7
+opl2_chan3_op2	= opl2_op10
+
+opl2_chan4_op1	= opl2_op8
+opl2_chan4_op2	= opl2_op11
+
+opl2_chan5_op1	= opl2_op9
+opl2_chan5_op2	= opl2_op12
+
+opl2_chan6_op1	= opl2_op13
+opl2_chan6_op2	= opl2_op16
+
+opl2_chan7_op1	= opl2_op14
+opl2_chan7_op2	= opl2_op17
+
+opl2_chan8_op1	= opl2_op15
+opl2_chan8_op2	= opl2_op18
+;--------------------------------------------------------------------------------------------------------------
+
+; !macro snd_write r, v{
+; 	ldy	r
+; 	lda	v
+; 	jsr	snd_sreg
+; }
+
 
 !macro oplSetReg .reg, .val {
 	lda #.reg
@@ -66,5 +114,4 @@ ym3812_h_a = 1
 --	
 	dey
 	bne --
-
 }
