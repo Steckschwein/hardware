@@ -83,9 +83,12 @@ sd_cmd_param = $0300
 sd_cmd_chksum	= sd_cmd_param+4
 sd_cmd_result = $031f
 
-fat_errno	 		= $0300
-;OBSOLETE
-; fat_begin_lba 		= $0301 ; Begin of FAT32, 4 bytes
+; SD Card error
+; $ff - No Card
+; $0f - Invalid Card
+; $00 - No error
+
+errno	 		= $0300
 lba_addr = $20
 fat_reserved_sect 	= $0301 ; number of reserved sectors, 2 bytes
 cluster_begin_lba 	= $0303 ; begin of cluster area, 4 bytes
@@ -93,21 +96,11 @@ sectors_per_cluster = $0307 ; sectors per cluster, 1 byte
 root_dir_first_clus = $0308 ; first cluster of root dir, 4 bytes
 filename_buf		= $030c ; file name buffer, 11 bytes
 
-fd_area				= $0320 ; File descriptor area, 16x8byte 
-
-
+fd_area				= $0318 ; File descriptor area, 16x8byte 
+xxx					= $0391 ;
 sd_blktarget 		= $0400
 
 .steckos_start		= $1000	
-
-
-
-; SD Card error
-; $ff - No Card
-; $0f - Invalid Card
-; $00 - No error
-sd_cmd_errno = $0300
-errno = $0300
 
 charset  	 =$e000
 charset_6x8  =$e800
