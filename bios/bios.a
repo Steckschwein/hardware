@@ -248,7 +248,7 @@ biosversion	!text "BIOS    : V151008", $00	; Version String
 
 			jsr .init_sdcard
 
-			lda sd_cmd_errno
+			lda errno
 			beq +
 
 			; SD Card init failed
@@ -312,7 +312,7 @@ biosversion	!text "BIOS    : V151008", $00	; Version String
 			sta via1portb
 
 			jsr .fat_mount
-			lda fat_errno
+			lda errno
 			bne .fat_end
 
 			lda paramvec+1
