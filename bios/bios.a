@@ -13,7 +13,7 @@
 charset_8x8
 !src "../charsets/char.ascii.vc20.h.a"
 !src "../charsets/char.ascii.6x8.big.h.a"
-biosversion	!text "BIOS    : V151003v", $00	; Version String
+biosversion	!text "BIOS    : V151008", $00	; Version String
 *=$f050
 .upload
 			+PrintString .crlf
@@ -229,6 +229,8 @@ biosversion	!text "BIOS    : V151003v", $00	; Version String
 			jsr	init_vdp
 
 			jsr init_via1
+			jsr .init_opl2
+
 			jsr .read_nvram
 
 
@@ -350,7 +352,7 @@ biosversion	!text "BIOS    : V151003v", $00	; Version String
 			lda errno 
 			jsr hexout
 			rts
-	
+
 
 ;----------------------------------------------------------------------------------------------
 ; IO_NMI Routine. Handle NMI
@@ -434,6 +436,7 @@ biosversion	!text "BIOS    : V151003v", $00	; Version String
 !src "vdp.a"
 !src "via.a"
 !src "uart.a"
+!src <opl2.a>
 !src <spi.a>
 !src <sdcard.a>
 !src "kbd.a"
