@@ -28,19 +28,14 @@ CSVDP	 ; VDP  at $0220
 MEMCTL	 ; SND  at $0230
 CSIO    ; 4xIO  at $0240  - $0270
 VCC
+
 ;
 ;  boolean expressions
-
 ;
 /CSROM   = /ROMOFF*RW*A15*A14*A13			; Reads  to $e000-$ffff go to the ROM, IF ROMOFF is High
-; f= /b */c * /d */e */f * g */H + a
-;           b      c      d      e      f     g     h    a
-;CSLORAM = /A14 * /A13 * /A12 * /A11 * /A10 * A9 * /A8 * /A7 + A15
+
+;            0000 010? 0000 0000
 CSLORAM = /A14 * /A13 * /A12 * /A11 * /A10 * A9 * /A8 + A15
-
-
-;             /A*/G   + /A*H    + /A*F     + /A*E     + /A*D     + /A*C     + /A*B
-;/CSLORAM = /A15 * /A9 + /A15*A8 + /A15*A10 + /A15*A11 + /A15*A12 + /A15*A13 + /A15*A14
 
 /CSHIRAM = A15*/A13                       
          + A15*/A14
@@ -51,10 +46,10 @@ CSLORAM = /A14 * /A13 * /A12 * /A11 * /A10 * A9 * /A8 + A15
 /CSUART	= /A15*/A14*/A13*/A12 * /A11*/A10*A9*/A8 * /A7*/A6*/A5*/A4	; $0200
 /CSVIA	= /A15*/A14*/A13*/A12 * /A11*/A10*A9*/A8 * /A7*/A6*/A5*A4	; $0210
 /CSVDP	= /A15*/A14*/A13*/A12 * /A11*/A10*A9*/A8 * /A7*/A6*A5*/A4	; $0220
-;/CSSND	= /A15*/A14*/A13*/A12 * /A11*/A10*A9*/A8 * /A7*/A6*A5*A4 	; $0230
-;/MEMCTL	= /A15*/A14*/A13*/A12 * /A11*/A10*A9*/A8 * A7*A6*A5*A4 * /RW	; $02f0
+
 /MEMCTL	= /A15*/A14*/A13*/A12 * /A11*/A10*A9*/A8 * A7*A6*A5*A4 		; $02f0
-/CSIO	= /A15*/A14*/A13*/A12 * /A11*/A10*A9*/A8 * /A7*A6			; $0240 - $0270
+/CSIO	= /A15*/A14*/A13*/A12 * /A11*/A10*A9*/A8 * /A7*A6			; $0240 - $027f
 
 
 DESCRIPTION:
+-
