@@ -44,10 +44,7 @@ biosversion	!text "BIOS    : V151013", $00	; Version String
 			lda #' '
 			jsr chrout
 
-			lda #'O'
-			jsr .uart_tx
-			lda #'K'
-			jsr .uart_tx
+			jsr .upload_ok
 
 			; load number of bytes to be uploaded
 			jsr .uart_rx
@@ -80,10 +77,7 @@ biosversion	!text "BIOS    : V151013", $00	; Version String
 			lda .startaddr+1
 			sta .addr+1	
 
-			lda #'O'
-			jsr .uart_tx
-			lda #'K'
-			jsr .uart_tx
+			jsr .upload_ok
 
 			ldy #$00
 -			jsr .uart_rx
@@ -104,12 +98,9 @@ biosversion	!text "BIOS    : V151013", $00	; Version String
 			cpy .endaddr
 			bne - ; no? read next byte
 
-			; yes? write OK and jump to start addr	
+			; yes? write OK 
 
-			lda #'O'
-			jsr .uart_tx
-			lda #'K'
-			jsr .uart_tx
+			jsr .upload_ok
 
 			lda #'O'
 			jsr chrout
@@ -117,6 +108,12 @@ biosversion	!text "BIOS    : V151013", $00	; Version String
 			jsr chrout
 
 			rts
+.upload_ok
+			lda #'O'
+			jsr .uart_tx
+			lda #'K'
+			jmp .uart_tx
+			;rts
 			
 ;----------------------------------------------------------------------------------------------
 ; RESET Routine. Call subroutines to init all components 
@@ -173,8 +170,6 @@ biosversion	!text "BIOS    : V151013", $00	; Version String
 			ldy #<.start_check
 			stz .ptr1l
 
-			; ldy #$00
-
 -		    ldx #.num_patterns  ; 2 cycles
 --			lda .pattern,x      ; 4 cycles
 	  		sta (.ptr1l),y   ; 6 cycles
@@ -197,6 +192,8 @@ biosversion	!text "BIOS    : V151013", $00	; Version String
 +	  		sty .ptr1l		  ; 3 cycles
 		
 	  					  ; 42 cycles
+
+	  		; save end address
 	  		lda .ptr1l
 	  		sta ram_end_l
 	  		lda .ptr1h
