@@ -77,7 +77,7 @@ sd_blkptr 	= $fc
 msgptr 		= $fe
 
 ; MEMCTL Register
-memctl    = $02f0
+memctl    = $0230
 ; SD CArd command parameter/result buffer
 sd_cmd_param = $0300
 sd_cmd_chksum	= sd_cmd_param+4
