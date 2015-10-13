@@ -139,37 +139,37 @@ temp    =   $6C
 ; temp    =   $FC
 		
 		*=$1000			; load into RAM @ $1000-$15FF
-		jmp .init
+		; jmp .init
 
 ; !src "../shell/util.h.a"
-!src "../kernel/textui.a"
+; !src "../kernel/textui.a"
 
 .init
-		stz .key
-		jsr	.textui_init0
+		; stz .key
+		; jsr	.textui_init0
 
-		+SetVector _textui_chrout, outvec
+		; +SetVector _textui_chrout, outvec
 
 		; +SetVector uart_tx, outvec	
 
-		lda #<count
-		sta via1t1cl            ; set low byte of count
-		lda #>count
-		sta via1t1ch            ; set high byte of count
+		; lda #<count
+		; sta via1t1cl            ; set low byte of count
+		; lda #>count
+		; sta via1t1ch            ; set high byte of count
 
-		lda #%11000000
-		sta via1ier             ; enable VIA1 T1 interrupts
+		; lda #%11000000
+		; sta via1ier             ; enable VIA1 T1 interrupts
 
-		lda #%01000000
-		sta via1acr             ; T1 continuous, PB7 disabled
+		; lda #%01000000
+		; sta via1acr             ; T1 continuous, PB7 disabled
 
-		+SetVector .irq, irqvec
+		; +SetVector .irq, irqvec
 
-		lda #%01111110
-		sta via1portb
+		; lda #%01111110
+		; sta via1portb
 
 
-		cli
+		; cli
 
 		LDA     #$00		; REVERSE TOGGLE
 		STA     REV
@@ -661,7 +661,7 @@ RETP
 ;       PLAY FROM OPENING OR THINK
 ;		
 GO		
-		+V_ToggleCursorBusy
+
 		LDX	OMOVE        	; OPENING?
 		BMI	NOOPEN          ; -NO   *ADD CHANGE FROM BPL
 		LDA	DIS3         	; -YES WAS
@@ -702,7 +702,7 @@ MV2		LDX	BESTP        	; MOVE
 		LDA	BESTM
 		STA	SQUARE       	; AND DISPLAY
 		JSR	MOVE           	; IT
-				+V_ToggleCursorBusy
+				
 
 		JMP	CHESS
 ;		
@@ -915,7 +915,7 @@ KIN    	LDA   	#"?"
        	AND   	#$4F            ; MASK 0-7, AND ALPHA'S
        	RTS
 
-syskin		= .keyin
+syskin		= chrin
 ; syschout	= mychrout
 syshexout	= hexout
 
@@ -969,69 +969,3 @@ OPNING  	!byte 	$99, $25, $0B, $25, $01, $00, $33, $25
 ;
 ; end of file
 ;
-
-.irq
-	+save
-
-	;via
-	bit via1ifr		; Interrupt from VIA?
-	bpl +			; no? get out
-
-	bit via1t1cl	; Acknowledge timer interrupt
-
-	lda .key		; already char in buffer? do nothing
-	bne +
-
-	; jsr getkey
-
-	lda via1portb
-	and #%01111110
-	cmp #$7e
-	bne +
-
-	lda #%01111010
-	; and via1portb
-	sta via1portb
-
-	TAX             ; aufheben
-    ORA #$01
-    !for .i,0,7 {
-		STA via1portb ; Takt An 1
-		STX via1portb ; Takt aus  
-    }
-       
-	ldx #%11111110
-	stx via1portb
-
-	lda via1sr
-	cmp #$00
-	beq +
-	sta .key
-
-+
-	;	gfx	expensive screen copy handling, placed at the end
-	jsr	.textui_update_screen
-	
-+	
-	+restore
-	rti
-
-.keyin
--	lda .key 		; wait for .key to become != 00
-	beq -
-
-	stz .key 		; reset .key to signal isr to fetch next key
-	rts
-; * = $2000
-!align 255,0
-.assets
-; !src "../shell/sanduhr.raw"
-; !src "../shell/sanduhr_45.raw"
-; !src "../shell/sanduhr_90.raw"
-; !src "../shell/sanduhr_135.raw"
-; !src "../shell/sanduhr_180.raw"
-; !src "../shell/sanduhr_225.raw"
-; !src "../shell/sanduhr_270.raw"
-; !src "../shell/sanduhr_315.raw"
-.sprite_sanduhr
-	!byte	$ff,	$f0,	0,	Gray
