@@ -20,10 +20,9 @@ count		= clockspeed * jiffies
 
 !address {
 ; Address pointers for serial upload
-.startaddr	= $d0
-.endaddr    = $d2
-.length		= $d4
-
+; .startaddr	= $d0
+; .endaddr    = $d2
+; .length		= $d4
 ; Cursor Position and buffer
 crs_x	= $d6
 crs_y	= $d7
@@ -42,15 +41,20 @@ crs_ptr	= $d8 	; 2 byte ram address pointer
 .ptr2h		= .ptr2+1
 
 ; IRQ vector
-irqvec		= $e0
+; irqvec		= $e0
+irqvec		= $0280
+nmivec		= $0282
+outvec		= $0284
+invec		= $0286
+
 
 ; ramend
-ram_end_l   = $e2
-ram_end_h   = ram_end_l+1
+; ram_end_l   = $e2
+; ram_end_h   = ram_end_l+1
 
 dirptr 		= $e4 ; 2 byte
-outvec		= $e6
-invec		= $e8
+; outvec		= $e6
+; invec		= $e8
 paramvec	= $ea
 fat_dir_action_hook		= $ec
 fat_dir_display_hook	= $ec
@@ -66,6 +70,9 @@ tmp6		= $f6
 tmp7		= $f7
 
 .entries 	= $f8
+.startaddr	= .ptr1
+.endaddr	= .ptr2
+.length		= tmp0
 
 ; pointer to filename for fs operations (open...)
 filenameptr		= $fa
@@ -96,8 +103,8 @@ sectors_per_cluster = $0307 ; sectors per cluster, 1 byte
 root_dir_first_clus = $0308 ; first cluster of root dir, 4 bytes
 filename_buf		= $030c ; file name buffer, 11 bytes
 
-fd_area				= $0318 ; File descriptor area, 16x8byte 
-xxx					= $0391 ;
+fd_area				= $0320 ; File descriptor area, 16x8byte 
+xxx					= $0393 ;
 sd_blktarget 		= $0400
 
 .steckos_start		= $1000	

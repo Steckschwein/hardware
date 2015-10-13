@@ -23,7 +23,7 @@ done
 ;	+PrintString msgdone
 	
 	lda #$01
-	sta $02f0
+	sta memctl
 	
 	jmp ($fffc)
 	

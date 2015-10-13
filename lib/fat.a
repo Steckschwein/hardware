@@ -271,10 +271,10 @@ FD_file_size = $08
 	
 	lda fd_area + FD_start_cluster +3, x 
 
+	
 	cmp #$ff
 	beq .file_not_open
 	
-
 	; lba_addr = cluster_begin_lba + (cluster_number - 2) * sectors_per_cluster;
 	sec
 	lda fd_area + FD_start_cluster, x 

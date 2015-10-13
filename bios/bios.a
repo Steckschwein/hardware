@@ -11,11 +11,13 @@
 ;--------------------------------------------------------------------------------------------------------------
 !address	.target = $00
 !address	.nvram  = $0800
+!address 	.start_check = $0300
+
 *= $e000			; ROM Start
 charset_8x8
 !src "../charsets/char.ascii.vc20.h.a"
 !src "../charsets/char.ascii.6x8.big.h.a"
-biosversion	!text "BIOS    : V151008", $00	; Version String
+biosversion	!text "BIOS    : V151013", $00	; Version String
 *=$f050
 .upload
 			+PrintString .crlf
@@ -119,7 +121,7 @@ biosversion	!text "BIOS    : V151008", $00	; Version String
 ;----------------------------------------------------------------------------------------------
 ; RESET Routine. Call subroutines to init all components 
 ;----------------------------------------------------------------------------------------------
-!address 	.start_check = $0300
+
 .do_reset
 			; disable interrupt
 			sei
@@ -167,15 +169,15 @@ biosversion	!text "BIOS    : V151008", $00	; Version String
 			; Check Memory
 .check_memory
 			lda #>.start_check
-			sta ram_end_h
+			sta .ptr1h
 			ldy #<.start_check
-			sty ram_end_l
+			sty .ptr1l
 
 
 -		    ldx #.num_patterns  ; 2 cycles
 --			lda .pattern,x      ; 4 cycles
-	  		sta (ram_end_l),y   ; 6 cycles
-			cmp (ram_end_l),y   ; 5 cycles
+	  		sta (.ptr1l),y   ; 6 cycles
+			cmp (.ptr1l),y   ; 5 cycles
 			bne +				  ; 2 cycles, 3 if taken
 
 			dex  				  ; 2 cycles
@@ -185,13 +187,13 @@ biosversion	!text "BIOS    : V151008", $00	; Version String
 			bne -				  ; 2 cycles, 3 if taken
 
 			; Stop at $e000 to prevent overwriting BIOS Code when ROMOFF
-			ldx ram_end_h		  ; 3 cycles
+			ldx .ptr1h		  ; 3 cycles
 			inx				  ; 2 cycles
-			stx ram_end_h		  ; 3 cycles
+			stx .ptr1h		  ; 3 cycles
 			cpx #$e0			  ; 2 cycles
 
 			bne - 			  ; 2 cycles, 3 if taken
-+	  		sty ram_end_l		  ; 3 cycles
++	  		sty .ptr1l		  ; 3 cycles
 		
 	  					  ; 42 cycles
 	  	    bra .mem_ok
@@ -215,7 +217,10 @@ biosversion	!text "BIOS    : V151008", $00	; Version String
 .mem_ok	
 			
 			; Set IRQ Vector
-			+SetVector .irqhandler, irqvec
+			+SetVector default_irqhandler, irqvec
+
+			; Set NMI Vector
+			+SetVector default_nmihandler, nmivec
 
 			; Set input vector
 			+SetVector .kbd_chrin, invec
@@ -240,9 +245,9 @@ biosversion	!text "BIOS    : V151008", $00	; Version String
 			+PrintString .crlf
 			
 			+PrintString .ramend ; display ram end
-			lda ram_end_h
+			lda .ptr1h
 			jsr .hexout
-			lda ram_end_l
+			lda .ptr1l
 			jsr .hexout
 			+PrintString .crlf
 
@@ -360,6 +365,10 @@ biosversion	!text "BIOS    : V151008", $00	; Version String
 ; IO_NMI Routine. Handle NMI
 ;----------------------------------------------------------------------------------------------
 .do_nmi 
+			jmp (nmivec)
+			
+
+default_nmihandler
 			; disable interrupt
 			sei
 
@@ -378,7 +387,7 @@ biosversion	!text "BIOS    : V151008", $00	; Version String
 ;----------------------------------------------------------------------------------------------
 .do_irq
 			jmp (irqvec)
-.irqhandler			
+default_irqhandler			
 			rti
 
 
@@ -597,8 +606,8 @@ sys_chrin
 chrin		jmp (invec)
 
 sys_irqhandler
-irqhandler  jmp .irqhandler
-
+irqhandler  jmp default_irqhandler
+;nmihandler  jmp default_nmihandler
 sys_spi_rw_byte	
 spi_rw_byte	jmp .spi_rw_byte
 
