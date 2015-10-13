@@ -11,7 +11,7 @@
 ;--------------------------------------------------------------------------------------------------------------
 !address	.target = $00
 !address	.nvram  = $0800
-!address 	.start_check = $0300
+!address 	.start_check = $0280
 
 *= $e000			; ROM Start
 charset_8x8
@@ -171,8 +171,9 @@ biosversion	!text "BIOS    : V151013", $00	; Version String
 			lda #>.start_check
 			sta .ptr1h
 			ldy #<.start_check
-			sty .ptr1l
+			stz .ptr1l
 
+			; ldy #$00
 
 -		    ldx #.num_patterns  ; 2 cycles
 --			lda .pattern,x      ; 4 cycles
@@ -196,6 +197,11 @@ biosversion	!text "BIOS    : V151013", $00	; Version String
 +	  		sty .ptr1l		  ; 3 cycles
 		
 	  					  ; 42 cycles
+	  		lda .ptr1l
+	  		sta ram_end_l
+	  		lda .ptr1h
+	  		sta ram_end_h
+	  		
 	  	    bra .mem_ok
 
 .mem_broken
@@ -245,9 +251,9 @@ biosversion	!text "BIOS    : V151013", $00	; Version String
 			+PrintString .crlf
 			
 			+PrintString .ramend ; display ram end
-			lda .ptr1h
+			lda ram_end_h
 			jsr .hexout
-			lda .ptr1l
+			lda ram_end_l
 			jsr .hexout
 			+PrintString .crlf
 
