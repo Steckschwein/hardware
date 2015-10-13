@@ -8,12 +8,6 @@ clockspeed	= 4 ; 4 MHz
 jiffies    = 32767  ; jiffy count 100Hz for 1MHz systen
 count		= clockspeed * jiffies
 
-;
-;CSUART   ; UART at $0200
-;CSVIA    ; VIA  at $0210
-;CSVDP    ; VDP  at $0220
-;CSSND    ; SND  at $0230
-;CSLCD    ; LCD  at $0240
 ;----------------------------------------------------------------------------------------------
 ; zeropage locations 
 ;----------------------------------------------------------------------------------------------
@@ -47,7 +41,9 @@ nmivec		= $0282
 outvec		= $0284
 invec		= $0286
 
-
+ram_end 	= $0288
+ram_end_l   = ram_end
+ram_end_h   = ram_end+1
 ; ramend
 ; ram_end_l   = $e2
 ; ram_end_h   = ram_end_l+1
