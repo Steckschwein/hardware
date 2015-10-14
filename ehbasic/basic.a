@@ -434,7 +434,7 @@ Ibuffs		= IRQ_vec+$14
 					; start of input buffer after IRQ/NMI code
 Ibuffe		= Ibuffs+$47; end of input buffer
 
-Ram_base	= $0300	; start of user RAM (set as needed, should be page aligned)
+Ram_base	= $0400	; start of user RAM (set as needed, should be page aligned)
 Ram_top		= $b700	; end of user RAM+1 (set as needed, should be page aligned)
 
 ; This start can be changed to suit your system
@@ -458,7 +458,7 @@ LAB_2D13
 	BPL	LAB_2D13		; loop if not done
 
 	LDX	#$FF			; set byte
-    STX Ibuffs-1      ; *** Added by Daryl Rictor for SBC-2 compatibility
+;    STX Ibuffs-1      ; *** Added by Daryl Rictor for SBC-2 compatibility
 	STX	Clineh		; set current line high byte (set immediate mode)
 	TXS				; reset stack pointer
 
@@ -565,7 +565,7 @@ LAB_2DB6
 ; uncomment these lines if you want to check on the high limit of memory. Note if
 ; Ram_top is set too low then this will fail. default is ignore it and assume the
 ; users know what they're doing!
-
+; TODO FIXME RAM CHECK
 ;	CPY	#>Ram_top		; compare with top of RAM high byte
 ;	BCC	MEM_OK		; branch if < RAM top
 
@@ -573,10 +573,8 @@ LAB_2DB6
 					; else was = so compare low bytes
 ;	CMP	#<Ram_top		; compare with top of RAM low byte
 ;	BEQ	MEM_OK		; branch if = RAM top
-
 ;	BCS	LAB_GMEM		; if too large go try again
-
-;MEM_OK
+MEM_OK
 	STA	Ememl			; set end of mem low byte
 	STY	Ememh			; set end of mem high byte
 	STA	Sstorl		; set bottom of string space low byte
@@ -7809,7 +7807,7 @@ EndTab
 LAB_MSZM
 	!raw	$0D,$0A,"Memory size ",$00
 LAB_MSZM_INIT
-    !raw    "$b09d",$0d,0
+    !raw    "$b300",$0d,0
 
 LAB_SMSG
 	!raw	" Bytes free",$0D,$0A,$0A
