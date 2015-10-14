@@ -28,9 +28,9 @@ Usrjmp		= $0A		; USR function JMP address
 Usrjpl		= Usrjmp+1	; USR function JMP vector low byte
 Usrjph		= Usrjmp+2	; USR function JMP vector high byte
 Nullct		= $0D		; nulls output after each line
-TPos			= $0E		; BASIC terminal position byte
+TPos		= $0E		; BASIC terminal position byte
 TWidth		= $0F		; BASIC terminal width byte
-Iclim			= $10		; input column limit
+Iclim		= $10		; input column limit
 Itempl		= $11		; temporary integer low byte
 Itemph		= Itempl+1	; temporary integer high byte
 
@@ -242,12 +242,10 @@ Sendl			= Asptl	; BASIC pointer temp low byte
 Sendh			= Aspth	; BASIC pointer temp low byte
 
 LAB_IGBY		= $BC		; get next BASIC byte subroutine
-
 LAB_GBYT		= $C2		; get current BASIC byte subroutine
-Bpntrl		= $C3		; BASIC execute (get byte) pointer low byte
-Bpntrh		= Bpntrl+1	; BASIC execute (get byte) pointer high byte
-
-;			= $D7		; end of get BASIC char subroutine
+Bpntrl		    = $C3		; BASIC execute (get byte) pointer low byte
+Bpntrh		    = Bpntrl+1	; BASIC execute (get byte) pointer high byte
+;			    = $D7		; end of get BASIC char subroutine
 
 Rbyte4		= $D8		; extra PRNG byte
 Rbyte1		= Rbyte4+1	; most significant PRNG byte
@@ -268,25 +266,24 @@ IrqBase		= $DF		; IRQ handler enabled/setup/triggered flags
 
 ;			= $DE		; unused
 ;			= $DF		; unused
+
 ;			= $E0		; unused
 ;			= $E1		; unused
-;			= $E2		; unused
-;			= $E3		; unused
-;			= $E4		; unused
-;			= $E5		; unused
-;			= $E6		; unused
-;			= $E7		; unused
-;			= $E8		; unused
-;			= $E9		; unused
-;			= $EA		; unused
-;			= $EB		; unused
-;			= $EC		; unused
-;			= $ED		; unused
-;			= $EE		; unused
-
-Decss			= $EF		; number to decimal string start
+;                     = $E2           ; unused
+;                     = $E3           ; unused
+;                     = $E4           ; unused
+;                     = $E5           ; unused
+;                     = $E6           ; unused
+;                     = $E7           ; unused
+;                     = $E8           ; unused
+;                     = $E9           ; unused
+;                     = $EA           ; unused
+;                     = $EB           ; unused
+;                     = $EC           ; unused
+;                     = $ED           ; unused
+;                     = $EE           ; unused
+Decss		= $EF	    ; number to decimal string start
 Decssp1		= Decss+1	; number to decimal string start
-
 ;			= $FF		; decimal string end
 
 ; token values needed for BASIC
@@ -425,10 +422,8 @@ ccnull		= ccbyte+1	; BASIC CTRL-C byte timeout
 
 VEC_CC		= ccnull+1	; ctrl c check vector
 
-VEC_IN		= VEC_CC+2	; input vector
-VEC_OUT		= VEC_IN+2	; output vector
-; VEC_IN		= .getkey	; input vector
-; VEC_OUT		= chrout	; output vector
+VEC_IN      = VEC_CC+2	; input vector
+VEC_OUT     = VEC_IN+2	; output vector
 
 VEC_LD		= VEC_OUT+2	; load vector
 VEC_SV		= VEC_LD+2	; save vector
@@ -439,13 +434,11 @@ Ibuffs		= IRQ_vec+$14
 					; start of input buffer after IRQ/NMI code
 Ibuffe		= Ibuffs+$47; end of input buffer
 
-Ram_base		= $1000	; start of user RAM (set as needed, should be page aligned)
-Ram_top		= $8000	; end of user RAM+1 (set as needed, should be page aligned)
+Ram_base	= $0300	; start of user RAM (set as needed, should be page aligned)
+Ram_top		= $b700	; end of user RAM+1 (set as needed, should be page aligned)
 
 ; This start can be changed to suit your system
-
-	;.org	$5000
-	* = $8000
+    *=$b700
 
 ; For convenience, put jump here to reset location so it can be
 ; run from the load address.
@@ -455,32 +448,31 @@ JMP	RES_vec
 ; BASIC cold start entry point
 
 ; new page 2 initialisation, copy block to ccflag on
-
 LAB_COLD
 	LDY	#PG2_TABE-PG2_TABS-1
 					; byte count-1
 LAB_2D13
 	LDA	PG2_TABS,Y		; get byte
 	STA	ccflag,Y		; store in page 2
-	DEY				; decrement count
+	DEY				    ; decrement count
 	BPL	LAB_2D13		; loop if not done
 
 	LDX	#$FF			; set byte
+    STX Ibuffs-1      ; *** Added by Daryl Rictor for SBC-2 compatibility
 	STX	Clineh		; set current line high byte (set immediate mode)
 	TXS				; reset stack pointer
 
 	LDA	#$4C			; code for JMP
-	STA	Fnxjmp		; save for jump vector for functions
+	STA	Fnxjmp		    ; save for jump vector for functions
 
-; copy block from LAB_2CEE to $00BC - $00D3
-
-	LDX	#StrTab-LAB_2CEE	; set byte count
+; copy block from LAB_2CEE to $00BC - $00D8
+	LDX	#StrTab-LAB_2CEE	; set byte count    
 LAB_2D4E
 	LDA	LAB_2CEE-1,X	; get byte from table
 	STA	LAB_IGBY-1,X	; save byte in page zero
-	DEX				; decrement count
+	DEX				    ; decrement count
 	BNE	LAB_2D4E		; loop if not all done
-
+ 
 ; copy block from StrTab to $0000 - $0012
 
 LAB_GMEM
@@ -489,10 +481,9 @@ TabLoop
 	LDA	StrTab,X		; get byte from table
 	STA	PLUS_0,X		; save byte in page zero
 	DEX				; decrement count
-	BPL	TabLoop		; loop if not all done
-
+	BNE	TabLoop		; loop if not all done
+    
 ; set-up start values
-
 	LDA	#$00			; clear A
 	STA	NmiBase		; clear NMI handler enabled flag
 	STA	IrqBase		; clear IRQ handler enabled flag
@@ -505,13 +496,27 @@ TabLoop
 	STA	g_step		; save it
 	LDX	#des_sk		; descriptor stack start
 	STX	next_s		; set descriptor stack pointer
-	JSR	LAB_CRLF		; print CR/LF
+    
+	JSR	LAB_CRLF	; print CR/LF    
+    
 	LDA	#<LAB_MSZM		; point to memory size message (low addr)
 	LDY	#>LAB_MSZM		; point to memory size message (high addr)
 	JSR	LAB_18C3		; print null terminated string from memory
-	JSR	LAB_INLN		; print "? " and get BASIC input
-	STX	Bpntrl		; set BASIC execute pointer low byte
-	STY	Bpntrh		; set BASIC execute pointer high byte
+; fix memory patch    
+	;JSR	LAB_INLN		; print "? " and get BASIC input
+    ;fake ram setting
+    ldx #$00
+-   lda LAB_MSZM_INIT,x
+    beq +
+    sta Ibuffs,x
+    inx 
+    bne -
++   jsr LAB_1866        ;jump direclty to input scan
+; fix memory patch end 
+ 
+	STX	Bpntrl		    ; set BASIC execute pointer low byte
+	STY	Bpntrh		    ; set BASIC execute pointer high byte
+
 	JSR	LAB_GBYT		; get last byte back
 
 	BNE	LAB_2DAA		; branch if not null (user typed something)
@@ -955,24 +960,23 @@ LAB_133E
 LAB_INLN
 	JSR	LAB_18E3		; print "?" character
 	JSR	LAB_18E0		; print " "
-	BNE	LAB_1357		; call for BASIC input and return
+	BRA	LAB_1357		; call for BASIC input and return
 
 ; receive line from keyboard
 
 					; $08 as delete key (BACKSPACE on standard keyboard)
 LAB_134B
 	JSR	LAB_PRNA		; go print the character
-	DEX				; decrement the buffer counter (delete)
-	!raw	$2C			; make LDX into BIT abs
+	DEX				    ; decrement the buffer counter (delete)
+	!byte	$2C			; make LDX into BIT abs
 
 ; call for BASIC input (main entry point)
 
 LAB_1357
 	LDX	#$00			; clear BASIC line buffer pointer
 LAB_1359
-	JSR	V_INPT		; call scan input device
+	JSR	V_INPT		    ; call scan input device
 	BCC	LAB_1359		; loop if no byte
-
 	BEQ	LAB_1359		; loop until valid input (ignore NULLs)
 
 	CMP	#$07			; compare with [BELL]
@@ -998,7 +1002,7 @@ LAB_1378
 	BCS	LAB_138E		; skip store and do [BELL] if buffer full
 
 	STA	Ibuffs,X		; else store in buffer
-	INX				; increment pointer
+	INX				    ; increment pointer
 LAB_137F
 	JSR	LAB_PRNA		; go print the character
 	BNE	LAB_1359		; always loop for next character
@@ -1011,7 +1015,7 @@ LAB_1384
 LAB_138E
 	LDA	#$07			; [BELL] character into A
 	BNE	LAB_137F		; go print the [BELL] but ignore input character
-					; branch always
+                        ; branch always
 
 ; crunch keywords into Basic tokens
 ; position independent buffer version ..
@@ -1584,8 +1588,8 @@ LAB_1629
 ; if there was a key press it gets back here ..
 
 LAB_1636
-	CMP	#$03			; compare with CTRL-C
-
+;	CMP	#$03			; compare with CTRL-C
+    CMP	#'z'			; compare 'z'
 ; perform STOP
 
 LAB_STOP
@@ -1889,7 +1893,7 @@ LoopDone
 
 LAB_16F4
 	LDX	#$04			; error code $04 ("RETURN without GOSUB" error)
-	!raw	$2C			; makes next line BIT LAB_0EA2
+	!byte	$2C			; makes next line BIT LAB_0EA2
 
 LAB_16F7				; do undefined statement error
 	LDX	#$0E			; error code $0E ("Undefined statement" error)
@@ -1947,7 +1951,7 @@ LAB_16FC
 
 LAB_SNBS
 	LDX	#':'			; set look for character = ":"
-	!raw	$2C			; makes next line BIT $00A2
+	!byte	$2C			; makes next line BIT $00A2
 
 ; scan for next BASIC line
 ; returns Y as index to [EOL]
@@ -2176,7 +2180,7 @@ LAB_17B3
 
 LAB_DEC
 	LDA	#<LAB_2AFD		; set -1 pointer low byte
-	!raw	$2C			; BIT abs to skip the LDA below
+	!byte	$2C			; BIT abs to skip the LDA below
 
 ; perform INC
 
@@ -2337,7 +2341,7 @@ LAB_PRINT
 	BEQ	LAB_CRLF		; if nothing following just print CR/LF
 
 LAB_1831
-	CMP	#TK_TAB		; compare with TAB( token
+	CMP	#TK_TAB		    ; compare with TAB( token
 	BEQ	LAB_18A2		; go do TAB/SPC
 
 	CMP	#TK_SPC		; compare with SPC( token
@@ -2362,7 +2366,7 @@ LAB_1831
 	LDA	TWidth		; get terminal width byte
 	BEQ	LAB_185E		; skip check if zero
 
-	SEC				; set carry for subtract
+	SEC				    ; set carry for subtract
 	SBC	TPos			; subtract terminal position
 	SBC	(des_pl),Y		; subtract string length
 	BCS	LAB_185E		; branch if less than terminal width
@@ -2379,24 +2383,23 @@ LAB_1866
 	STA	Ibuffs,X		; null terminate input
 	LDX	#<Ibuffs		; set X to buffer start-1 low byte
 	LDY	#>Ibuffs		; set Y to buffer start-1 high byte
-
 ; print CR/LF
 
 LAB_CRLF
-	LDA	#$0D			; load [CR]
+	LDA	#$0D    		; load [CR]
 	JSR	LAB_PRNA		; go print the character
 	LDA	#$0A			; load [LF]
 	BNE	LAB_PRNA		; go print the character and return, branch always
-
+ 
 LAB_188B
 	LDA	TPos			; get terminal position
-	CMP	Iclim			; compare with input column limit
-	BCC	LAB_1897		; branch if less
-
+	CMP	Iclim   		; compare with input column limit
+    BCC	LAB_1897		; branch if less
 	JSR	LAB_CRLF		; else print CR/LF (next line)
 	BNE	LAB_18BD		; continue with PRINT processing (branch always)
 
 LAB_1897
+
 	SEC				; set carry for subtract
 LAB_1898
 	SBC	TabSiz		; subtract TAB size
@@ -2439,13 +2442,10 @@ LAB_18BA
 LAB_18BD
 	JSR	LAB_IGBY		; increment and scan memory
 	BNE	LAB_1831		; if more to print go do it
-
 	RTS
 
-; print null terminated string from memory
-
 LAB_18C3
-	JSR	LAB_20AE		; print " terminated string to Sutill/Sutilh
+	JSR	LAB_20AE	; print " terminated string to Sutill/Sutilh
 
 ; print string from Sutill/Sutilh
 
@@ -2466,18 +2466,18 @@ LAB_18CD
 	BNE	LAB_18CD		; loop if not done yet
 
 	RTS
-
+    
 					; Print single format character
 ; print " "
 
 LAB_18E0
 	LDA	#$20			; load " "
-	!raw	$2C			; change next line to BIT LAB_3FA9
+	!byte $2C			; change next line to BIT LAB_3FA9
 
 ; print "?" character
 
 LAB_18E3
-	LDA	#$3F			; load "?" character
+	LDA	#'?'			; load "?" character
 
 ; print character in A
 ; now includes the null handler
@@ -2487,19 +2487,20 @@ LAB_18E3
 LAB_PRNA
 	CMP	#' '			; compare with " "
 	BCC	LAB_18F9		; branch if less (non printing)
-
-					; else printable character
-	PHA				; save the character
+                        
+                        ; else printable character
+    PHA                 ; save the character
 
 ; don't check fit if terminal width byte is zero
 
-	LDA	TWidth		; get terminal width
+    
+	LDA	TWidth		    ; get terminal width
 	BNE	LAB_18F0		; branch if not zero (not infinite length)
 
 ; is "infinite line" so check TAB position
 
 	LDA	TPos			; get position
-	SBC	TabSiz		; subtract TAB size, carry set by CMP #$20 above
+	SBC	TabSiz		    ; subtract TAB size, carry set by CMP #$20 above
 	BNE	LAB_18F7		; skip reset if different
 
 	STA	TPos			; else reset position
@@ -2512,17 +2513,19 @@ LAB_18F0
 	JSR	LAB_CRLF		; else print CR/LF
 LAB_18F7
 	INC	TPos			; increment terminal position
-	PLA				; get character back
+    PLA				    ; get character back
 LAB_18F9
-	JSR	V_OUTP		; output byte via output vector
+
+	JSR	V_OUTP		    ; output byte via output vector
+    
 	CMP	#$0D			; compare with [CR]
 	BNE	LAB_188A		; branch if not [CR]
 
-					; else print nullct nulls after the [CR]
+                        ; else print nullct nulls after the [CR]
 	STX	TempB			; save buffer index
-	LDX	Nullct		; get null count
+	LDX	Nullct		    ; get null count
 	BEQ	LAB_1886		; branch if no nulls
-
+    
 	LDA	#$00			; load [NULL]
 LAB_1880
 	JSR	LAB_PRNA		; go print the character
@@ -3906,7 +3909,7 @@ LAB_1E77
 
 LAB_1E85
 	LDX	#$10			; error code $10 ("Array bounds" error)
-	!raw	$2C			; makes next bit BIT LAB_08A2
+	!byte	$2C			; makes next bit BIT LAB_08A2
 
 ; do function call error
 
@@ -4354,7 +4357,7 @@ LAB_MSSP
 ; print " terminated string to Sutill/Sutilh
 
 LAB_20AE
-	LDX	#$22			; set terminator to "
+	LDX	#'"'			; set terminator to "
 	STX	Srchc			; set search character (terminator 1)
 	STX	Asrch			; set terminator 2
 
@@ -4377,9 +4380,9 @@ LAB_20BE
 
 	CMP	Asrch			; compare with terminator 2
 	BNE	LAB_20BE		; loop if not terminator 2
-
+    
 LAB_20CB
-	CMP	#$22			; compare with "
+	CMP	#'"'			; compare with "
 	BEQ	LAB_20D0		; branch if " (carry set if = !)
 
 LAB_20CF
@@ -4398,7 +4401,7 @@ LAB_20DC
 	LDA	ssptr_h		; get string start high byte
 	CMP	#>Ram_base		; compare with start of program memory
 	BCS	LAB_RTST		; branch if not in utility area
-
+    
 					; string in utility area, move to string memory
 	TYA				; copy length to A
 	JSR	LAB_209C		; copy des_pl/h to des_2l/h and make string space A bytes
@@ -4411,7 +4414,7 @@ LAB_20DC
 ; put string address and length on descriptor stack and update stack pointers
 
 LAB_RTST
-	LDX	next_s		; get string stack pointer
+	LDX	next_s		    ; get string stack pointer
 	CPX	#des_sk+$09		; compare with max+1
 	BNE	LAB_20F8		; branch if space on string stack
 
@@ -5753,7 +5756,7 @@ LAB_2675
 	BMI	LAB_269B		; do overflow error
 
 	CLC				; clear carry for the add
-	!raw	$2C			; makes next line BIT $1410
+	!byte	$2C			; makes next line BIT $1410
 LAB_2680
 	BPL	LAB_2696		; if +ve go handle underflow
 
@@ -7228,10 +7231,10 @@ LAB_EXCH
 
 CTRLC
 	LDA	ccflag		; get [CTRL-C] check flag
-	BNE	LAB_FBA2		; exit if inhibited
-
-	JSR	V_INPT		; scan input device
-	BCC	LAB_FBA0		; exit if buffer empty
+	BNE	LAB_FBA2	; exit if inhibited
+    
+	JSR	V_INPT		    ; scan input device
+	BCC	LAB_FBA0	    ; exit if buffer empty
 
 	STA	ccbyte		; save received byte
 	LDX	#$20			; "life" timer for bytes
@@ -7300,7 +7303,7 @@ LAB_CKIN
 
 INGET
 	JSR	V_INPT		; call scan input device
-	BCS	LAB_FB95		; if byte go reset timer
+	BCS	LAB_FB95	; if byte go reset timer
 
 	LDA	ccnull		; get countdown
 	BEQ	LAB_FB96		; exit if empty
@@ -7320,7 +7323,7 @@ LAB_FB96
 
 LAB_IRQ
 	LDX	#IrqBase		; set pointer to IRQ values
-	!raw	$2C			; make next line BIT abs.
+	!byte	$2C			; make next line BIT abs.
 
 ; perform NMI {ON|OFF|CLEAR}
 
@@ -7356,9 +7359,9 @@ LAB_INEX
 ; perform ON IRQ
 
 LAB_SIRQ
-	CLI				; enable interrupts
+;	CLI				    ; enable interrupts
 	LDX	#IrqBase		; set pointer to IRQ values
-	!raw	$2C			; make next line BIT abs.
+	!byte	$2C			; make next line BIT abs.
 
 ; perform ON NMI
 
@@ -7716,6 +7719,7 @@ LAB_TWOPI
 ; system dependant i/o vectors
 ; these are in RAM and are set by the monitor at start-up
 
+
 V_INPT
 	JMP	(VEC_IN)		; non halting scan input device
 V_OUTP
@@ -7730,14 +7734,14 @@ V_SAVE
 ; the rest of the code is tables and BASIC start-up code
 
 PG2_TABS
-	!raw	$00			; ctrl-c flag		-	$00 = enabled
-	!raw	$00			; ctrl-c byte		-	GET needs this
-	!raw	$00			; ctrl-c byte timeout	-	GET needs this
+	!byte	$00			; ctrl-c flag		-	$00 = enabled
+	!byte	$00			; ctrl-c byte		-	GET needs this
+	!byte	$00			; ctrl-c byte timeout	-	GET needs this
 	!word	CTRLC			; ctrl c check vector
-	!word	V_INPT			; non halting key input	-	monitor to set this
-	!word	V_OUTP			; output vector		-	monitor to set this
-;	!word	xxxx			; load vector		-	monitor to set this
-;	!word	xxxx			; save vector		-	monitor to set this
+;	!word	V_INPT			; non halting key input	-	monitor to set this
+;	!word	V_OUTP			; output vector		-	monitor to set this
+;	!word	V_LOAD			; load vector		-	monitor to set this
+;	!word	V_SAVE			; save vector		-	monitor to set this
 PG2_TABE
 
 ; character get subroutine for zero page
@@ -7756,16 +7760,15 @@ PG2_TABE
 ; increment and scan memory
 
 LAB_2CEE
-	INC	Bpntrl		; increment BASIC execute pointer low byte
-	BNE	LAB_2CF4		; branch if no carry
+	INC	Bpntrl		; increment BASIC execute pointer low byte      ;bc
+	BNE	LAB_2CF4	; branch if no carry                            ;be
 					; else
-	INC	Bpntrh		; increment BASIC execute pointer high byte
+	INC	Bpntrh		; increment BASIC execute pointer high byte     ;c0
 
 ; page 0 initialisation table from $C2
 ; scan memory
-
 LAB_2CF4
-	LDA	$FFFF			; get byte to scan (addr set by call routine)
+	LDA	$FFFF			; get byte to scan (addr set by call routine) ;c2
 	CMP	#TK_ELSE		; compare with the token for ELSE
 	BEQ	LAB_2D05		; exit if ELSE, not numeric, carry set
 
@@ -7786,25 +7789,27 @@ LAB_2D05
 ; page zero initialisation table $00-$12 inclusive
 
 StrTab
-	!raw	$4C			; JMP opcode
-	!word LAB_COLD		; initial warm start vector (cold start)
+	!byte	$4C			; JMP opcode
+	!word   LAB_COLD	; initial cold start vector (cold start)
 
-	!raw	$00			; these bytes are not used by BASIC
+	!byte	$00			; these bytes are not used by BASIC
 	!word	$0000			; 
 	!word	$0000			; 
 	!word	$0000			; 
 
 	!raw	$4C			; JMP opcode
 	!word	LAB_FCER		; initial user function vector ("Function call" error)
-	!raw	$00			; default NULL count
-	!raw	$00			; clear terminal position
-	!raw	$00			; default terminal width byte
-	!raw	$F2			; default limit for TAB = 14
-	!word	Ram_base		; start of user RAM
+	!byte	$00			; default NULL count
+	!byte	$00			; clear terminal position
+	!byte	$00			; default terminal width byte
+	!byte	$F2			; default limit for TAB = 14
+	!word	Ram_base	; start of user RAM
 EndTab
 
 LAB_MSZM
 	!raw	$0D,$0A,"Memory size ",$00
+LAB_MSZM_INIT
+    !raw    "$b09d",$0d,0
 
 LAB_SMSG
 	!raw	" Bytes free",$0D,$0A,$0A

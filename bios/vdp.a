@@ -11,7 +11,7 @@ init_vdp
     stz crs_x
     stz crs_y
     
-    +SetVector    charset, .adrl
+    +SetVector    charset, .addr
     lda #<ADDRESS_GFX1_PATTERN
     ldy #.WRITE_ADDRESS + >ADDRESS_GFX1_PATTERN
 

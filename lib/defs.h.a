@@ -13,55 +13,40 @@ count		= clockspeed * jiffies
 ;----------------------------------------------------------------------------------------------
 
 !address {
-; Cursor Position and buffer
-crs_x	= $d6
-crs_y	= $d7
-crs_ptr	= $d8 	; 2 byte ram address pointer
-
-; general purpose address location
-; transfer routine addresses
-.addr 		= $da
+; general purpose pointer
+.addr 		= $e0
 .adrl     	= .addr
 .adrh     	= .addr+1
-.ptr1		= $dc
+.ptr1		= $e2
 .ptr1l		= .ptr1
 .ptr1h		= .ptr1+1
-.ptr2		= $de
+.ptr2		= $e4
 .ptr2l		= .ptr2
 .ptr2h		= .ptr2+1
 
-; IRQ vector
-; irqvec		= $e0
-irqvec		= $0280
-nmivec		= $0282
-outvec		= $0284
-invec		= $0286
+; Cursor Position and buffer
+crs_x	= $e6
+crs_y	= $e7
+crs_ptr	= $e8 	; 2 byte ram address pointer
 
-ram_end 	= $0288
-ram_end_l   = ram_end
-ram_end_h   = ram_end+1
-; ramend
-; ram_end_l   = $e2
-; ram_end_h   = ram_end_l+1
-
-dirptr 		= $e4 ; 2 byte
-; outvec		= $e6
-; invec		= $e8
-paramvec	= $ea
-fat_dir_action_hook		= $ec
-fat_dir_display_hook	= $ec
-fat_dir_filter_hook		= $ee
 ; general purpose temp variables
-tmp0		= $f0
-tmp1		= $f1
-tmp2		= $f2
-tmp3		= $f3
-tmp4		= $f4
-tmp5		= $f5
-tmp6		= $f6
-tmp7		= $f7
+tmp0		= $ea
+tmp1		= $eb
+tmp2		= $ec
+tmp3		= $ed
+tmp4		= $ee
+tmp5		= $ef
+tmp6		= $f0
+tmp7		= $f1
+.entries 	= $f2   ; TODO FIXME shell cleanup... use temp instead
 
-.entries 	= $f8
+dirptr 		= $f4 ; 2 byte
+fat_dir_action_hook		= $f6
+fat_dir_display_hook	= $f6
+fat_dir_filter_hook		= $f8
+paramvec	= $f8
+
+; Address pointers for serial upload
 .startaddr	= .ptr1
 .endaddr	= .ptr2
 .length		= tmp0
@@ -74,6 +59,20 @@ sd_blkptr 	= $fc
 
 ; pointer for string output functions 
 msgptr 		= $fe
+; zeropage end
+
+; 
+; vector addresses
+;
+irqvec		= $0280
+nmivec		= $0282
+outvec		= $0284
+invec		= $0286
+
+ram_end 	= $0288
+ram_end_l   = ram_end
+ram_end_h   = ram_end+1
+
 
 ; MEMCTL Register
 memctl    = $0230

@@ -294,28 +294,21 @@ vdp_bgcolor
 ;
 !ifdef bios_stuff {
 
-.inc_cursor_y
-	lda crs_y
-	cmp	#23		;last line ?
-	bne	+
-	bra	.vdp_scroll_up	; scroll up, dont inc y, exit
-+	inc crs_y
-	rts
-
 .vdp_scroll_up
-	+SetVector	ADDRESS_GFX1_SCREEN+.COLS, .ptr1			; +.COLS - offset second row
+	+SetVector	ADDRESS_GFX1_SCREEN+.COLS, .ptr1		        ; +.COLS - offset second row
 	+SetVector	ADDRESS_GFX1_SCREEN+(.WRITE_ADDRESS<<8), .ptr2	; offset first row
---	bit	a_vreg
+	lda	a_vreg  ; clear v-blank bit, we dont know where we are...
+--	bit	a_vreg  ; sync with next v-blank, so that we have the full 4,3µs
 	bpl	--
 -	lda	.ptr1l	; 3cl
 	sta	a_vreg
 	lda	.ptr1h	; 3cl
 	sta	a_vreg
-	nop			; 2µs/4Mhz = 8cl => 4 nop
-	nop
-	nop
-	nop
-	ldx	a_vram	; 
+	nop			; wait 2µs, 4Mhz = 8cl => 4 nop
+	nop			; 2cl
+	nop			; 2cl
+	nop			; 2cl
+	ldx	a_vram	;
 	nop			; 2cl
 	nop			; 2cl
 	nop			; 2cl
@@ -328,7 +321,7 @@ vdp_bgcolor
 	nop			; 2cl
 	nop			; 2cl
 	nop			; 2cl
-	stx	a_vram
+    stx	a_vram
 	inc	.ptr1l	; 5cl
 	bne	+		; 3cl
 	inc	.ptr1h
@@ -342,12 +335,17 @@ vdp_bgcolor
 ++	ldx	#.COLS	; write address is already setup from loop
 	lda	#' '
 -	sta	a_vram
-	nop
-	nop
-	nop
-	nop
+    nop
 	dex
 	bne	-
+	rts
+
+.inc_cursor_y
+	lda crs_y
+	cmp	#23		;last line ?
+	bne	+
+	bra	.vdp_scroll_up	; scroll up, dont inc y, exit
++	inc crs_y
 	rts
 	
 .KEY_CR=$0a
@@ -357,11 +355,10 @@ vdp_chrout
 	cmp	#.KEY_CR			;cariage return ?
 	bne	+
 	stz	crs_x
-	bra	+++
+	rts
 +	cmp	#.KEY_LF			;line feed
 	bne	+
-	jsr	.inc_cursor_y
-	bra	+++
+	bra	.inc_cursor_y
 +	cmp	#.KEY_BACKSPACE
 	bne	+
 	lda	crs_x
@@ -369,21 +366,21 @@ vdp_chrout
 	dec	crs_x
 	bra +++
 ++	lda	crs_y			; cursor y=0, no dec
-	beq	+++
+	beq	++
 	dec	crs_y
 	lda	#(.COLS-1)		; set x to end of line above
 	sta	crs_x
-	bra	+++
++++ lda #' '
+    bra	.vdp_write_char
 +	jsr	.vdp_write_char
 	lda	crs_x
 	cmp	#(.COLS-1)
 	beq +
 	inc	crs_x
-	bra	+++
+++	rts
 +	stz	crs_x
-	jsr	.inc_cursor_y
-+++	rts
-
+	bra	.inc_cursor_y
+    
 .vdp_write_char
 	pha
 	jsr .vdp_set_addr
