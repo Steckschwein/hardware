@@ -1586,8 +1586,9 @@ LAB_1629
 ; if there was a key press it gets back here ..
 
 LAB_1636
-;	CMP	#$03			; compare with CTRL-C
-    CMP	#'z'			; compare 'z'
+	CMP	#$03			; compare with CTRL-C
+;    TODO FIXME
+;    CMP	#'z'			; compare 'z'
 ; perform STOP
 
 LAB_STOP
