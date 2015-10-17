@@ -92,12 +92,13 @@
 	; lda	#<(ADDRESS_GFX1_SPRITE_PATTERN)
 	; ldy	#>(ADDRESS_GFX1_SPRITE_PATTERN+(.WRITE_ADDRESS<<8))
 
+
+!ifndef text_mode_40 {
 	lda	#<ADDRESS_GFX1_PATTERN
 	ldy	#.WRITE_ADDRESS + >ADDRESS_GFX1_PATTERN
 	ldx	#$08					
 	jsr	vdp_memcpy
 
-!ifndef text_mode_40 {
 	jsr	vdp_mode_gfx1_sprites_off	;clean sprite attribute table
 	lda	#Medium_Green<<4|Black		;enable gfx 1
 	jmp	vdp_mode_gfx1
