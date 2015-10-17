@@ -16,8 +16,8 @@
 *= $e000			; ROM Start
 charset_8x8
 !src "../charsets/char.ascii.vc20.h.a"
-!src "../charsets/char.ascii.6x8.big.h.a"
-biosversion	!text "BIOS    : V151013", $00	; Version String
+; !src "../charsets/char.ascii.6x8.big.h.a"
+biosversion	!text "BIOS    : V151017", $00	; Version String
 *=$f050
 .upload
 			+PrintString .crlf
