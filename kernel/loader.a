@@ -1,6 +1,8 @@
 *=$1000
 !src <defs.h.a>
 !src <bios.h.a>
+!src <t9929.h.a>
+
 
 ; 	system attribute has to be set on file system
 
@@ -9,14 +11,12 @@
 	.bios = $f000	
 }
 
-.pages = (.payload_end - .payload) / 256 + 1
+; .pages = (.payload_end - .payload) / 256 + 1
 
-
-	lda #.pages
-	jsr hexout
 
 
 -
+	
 a	lda .payload
 b	sta .dest
 
@@ -37,23 +37,35 @@ b	sta .dest
 	inc b+2
 	bne -
 
-; -
-; a2	lda .bios
-; b2	sta .bios
+-
+	; lda b2+2
+	; jsr hexout
+	; lda b2+1
+	; jsr hexout
 
-; 	inc a2+1
-; 	inc b2+1
-; 	bne -
+a2	lda .bios
+b2	sta .bios
 
-; 	inc a2+2
-; 	inc b2+2
-; 	bne -
+	inc a2+1
+	inc b2+1
+	bne -
+
+	inc a2+2
+	inc b2+2
+	bne -
 
 
 done
+	jsr	vdp_display_off			;display off
+	+SetVector	.charset, .adrl	;load charset
+	lda	#<ADDRESS_GFX1_PATTERN
+	ldy	#.WRITE_ADDRESS + >ADDRESS_GFX1_PATTERN
+	ldx	#$08					
+	jsr	vdp_memcpy
+
 	
-	; lda #$01
-	; sta $02f0
+	lda #$01
+	sta memctl
 	
 	jmp .dest
 	
@@ -62,3 +74,10 @@ done
 .payload
 !bin "kernel.bin"
 .payload_end
+
+!align 255,0
+.charset
+!bin "../charsets/char6x8.bin"
+.charset_end
+
+!src "../lib/t99xx.lib.a"
