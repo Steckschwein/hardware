@@ -15,8 +15,8 @@ transfer: all
 #	../transfer.py libtest.bin 0x1000
 #	../transfer.py gfx_mode2.bin 0x1000
 #	../transfer.py gfx_mode3.bin 0x1000
-#	../transfer.py text_mode.bin 0x1000
-	../transfer.py gfx_lib_test.bin 0x1000
+	../transfer.py text_mode.bin 0x1000
+#	../transfer.py gfx_lib_test.bin 0x1000
     
     
 #

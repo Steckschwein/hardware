@@ -94,7 +94,7 @@ vdp_memcpys:
 vdp_mode_text_blank
 	ldx	#$04				; 4 x 256 bytes
 	bra	+
-vdp_mode_gfx1_blank:		; 3 x 256 bytes
+vdp_mode_gfx1_blank		; 3 x 256 bytes
 	ldx	#$03
 +	lda	#' '					;fill vram screen with blank
 	sta	.adrl
@@ -183,7 +183,7 @@ vdp_mode_gfx3
 ;	text mode - 40x24 character mode, 16 colors with same color for 8 characters in a block
 ;
 vdp_mode_text
-	+SetVector vdp_init_bytes_text, .adrl
+	+SetVector .vdp_init_bytes_text, .adrl
 	bra	vdp_init_reg
 
 .vdp_wait_blank
@@ -248,12 +248,12 @@ vdp_mode_gfx3_load_bitmap
 	bne	-
 rts
 	
-vdp_init_bytes_text
+.vdp_init_bytes_text
 	!byte 0
 	!byte v_reg1_16k|v_reg1_display_on|v_reg1_int|v_reg1_m1
 	!byte 	(ADDRESS_GFX1_SCREEN / $400)	; name table - value * $400					--> characters 
 	!byte 	0	; not used
-	!byte 	($0000 / $800) ; pattern table (charset) - value * $800  	--> offset in VRAM 
+	!byte 	(ADDRESS_GFX1_PATTERN / $800) ; pattern table (charset) - value * $800  	--> offset in VRAM 
 	!byte	0	; not used
 	!byte 	0	; not used
 	!byte	Medium_Green<<4|Black

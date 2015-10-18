@@ -1,34 +1,42 @@
 ;
 ;	gfx mode 1 - 40x24 chars - text mode
 ;
+*=$1000
+    jmp main
+    
 !src <defs.h.a>
 !src <bios.h.a>
-*=$1000
+!src <t99xx.lib.a>
+.charset_6x8
+!src "../charsets/char.ascii.6x8.big.h.a"
+main
+    sei
+    
 	jsr	vdp_display_off			;display off
 
 	;+SetVector	charset,	.adrl	
 	;jsr	.mirror_charset				;inverse the charset
 	;jsr	.rotate_charset
 
-	+SetVector	charset_6x8,	.adrl	
-	lda	#$00
-	ldy	#$40+$00
+    jsr vdp_mode_sprites_off
+    jsr vdp_mode_text_blank
+    
+	+SetVector	.charset_6x8,	.addr
+    lda #<ADDRESS_GFX1_PATTERN
+    ldy #.WRITE_ADDRESS + >ADDRESS_GFX1_PATTERN
 	ldx	#$08
 	jsr	vdp_memcpy
 
-	jsr vdp_mode_text_blank
-
-	lda	#$00
-	ldy	#$40+$18
+	lda	#<ADDRESS_GFX1_SCREEN
+	ldy	#.WRITE_ADDRESS + >ADDRESS_GFX1_SCREEN
 	jsr	vdp_sreg
 	ldx	#$00
 -	stx	a_vram
 	inx	
 	bne	-
-
 	
-	lda	#$00+224
-	ldy	#$40+$18+$01
+	lda	#<ADDRESS_GFX1_SCREEN+224
+	ldy	#.WRITE_ADDRESS + >ADDRESS_GFX1_SCREEN
 	jsr	vdp_sreg
 	ldx	#$00
 -	lda	.msg,x
@@ -46,7 +54,7 @@ tmp9=$f9
 tmp10=$fa
 	
 .rotate_charset
-	+SetVector charset_6x8, .adrl	;setup vram with charset
+	+SetVector .charset_6x8, .adrl	;setup vram with charset
 	+SetVector .charset, tmp8	;setup vram with charset
 	ldx	#$08
 	ldy	#$00
@@ -137,8 +145,6 @@ tmp10=$fa
 	dex
 	bne	-
 	rts
-
-!src <t99xx.lib.a>
 
 .msg	
 	!text "This is just a test of the vdp text mode"
