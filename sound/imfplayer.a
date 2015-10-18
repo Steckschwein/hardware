@@ -14,41 +14,42 @@ CPU_CLOCK=4000000
 
 !source "ym3812.lib.a"
 !source <t99xx.lib.a>
+
 main	
-	jsr	lcdclear
-	
+    +Println
+    
 	jsr	snd_detect
 	bcs	+
-	bra	+			;FIXME - for testing purpose only
+;	bra	+			;FIXME - for testing purpose only
 	lda	#'N'
-	jsr	lcdprint
+	jsr	chrout
 	rts
 +	
 	lda	#'O'
-	jsr	lcdprint
+	jsr	chrout
 	
 	jsr	snd_reset
 	lda	#'P'
-	jsr	lcdprint
+	jsr	chrout
 	
 	jsr	.load_imf
 	bcs	+
 	lda	#'x'
-	jsr	lcdprint
+	jsr	chrout
 	rts
 +
 	lda	#'L'
-	jsr	lcdprint
+	jsr	chrout
 	
 	jsr	.init_timer
 	
 	lda	#'2'
-	jsr	lcdprint
+	jsr	chrout
 	
 	jsr	.play_imf
 	
 	lda	#'e'
-	jsr	lcdprint
+	jsr	chrout
 	
 -	jmp	-
 	
@@ -123,7 +124,7 @@ main
 	bne	--
 	inc	.adrh
 	lda	#'.'
-	jsr	lcdprint
+	jsr	chrout
 	jmp	--
 +	inc	.imf_update_wait	; trigger delay countdown
 	bra	-

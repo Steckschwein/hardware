@@ -63,11 +63,11 @@ opl2_chan8_op1	= opl2_op15
 opl2_chan8_op2	= opl2_op18
 ;--------------------------------------------------------------------------------------------------------------
 
-; !macro snd_write r, v{
-; 	ldy	r
-; 	lda	v
-; 	jsr	snd_sreg
-; }
+!macro snd_write .r, .v{
+ 	ldy	#.r
+ 	lda	#.v
+ 	jsr	opl_sreg
+}
 
 
 !macro oplSetReg .reg, .val {

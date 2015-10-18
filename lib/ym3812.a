@@ -20,3 +20,32 @@
 	bne -
 	
 	rts
+
+opl_sreg
+    
+    rts
+
+;
+;	return - C (carry) flag set - if an opl2 compatible chip is available
+;
+opl2_detect:
+	+snd_write 4, $60
+	+snd_write 4, $80
+	ldy	opl_stat
+	+snd_write 2, $ff
+	+snd_write 4, $21
+;  for(i=0;i<80;i++)			// wait for adlib
+;    INP(adp);
+;  stat2 = INP(adp);
+    nop
+    
+	ldx	opl_stat
+	+snd_write 4, $60
+	+snd_write 4, $80
+	tya
+	and	#$e0
+	beq	+
+	txa
+	and	#$e0
+	cmp	#$c0
++	rts
