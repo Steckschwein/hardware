@@ -239,7 +239,7 @@ biosversion	!text "BIOS    : V151017", $00	; Version String
 			jsr	init_vdp
 
 			jsr init_via1
-			jsr .init_opl2
+			; jsr .init_opl2
 
 			jsr .read_nvram
 
