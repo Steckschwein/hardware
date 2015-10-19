@@ -227,9 +227,10 @@ LAB_mess
 					; sign on string
 
 ; system vectors
-
 	;.org	$FFFA
-
 	;.word	NMI_vec		; NMI vector
 	;.word	RES_vec		; RESET vector
 	;.word	IRQ_vec		; IRQ vector
+
+*=$df30
+!src "ext/gfx.a"

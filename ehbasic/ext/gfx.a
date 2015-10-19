@@ -1,0 +1,9 @@
+!src <t9929.h.a>
+
+BGCOLOR
+        JSR LAB_SCGB ; scan for "," and get byte 
+        stx a_vreg
+        lda #$87
+        sta a_vreg
+        
+        RTS ; return to BASIC 	 
