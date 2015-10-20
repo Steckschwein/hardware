@@ -19,6 +19,10 @@
 }
 
 ;
+; x - x-value
+; y - y-value
+; a - color
+;
 ; VRAM ADDRESS = 8(INT(X DIV 8)) + 256(INT(Y DIV 8)) + (Y MOD 8)
 set_pixel
 	; low byte vram adress
@@ -71,4 +75,3 @@ draw_line
     sbc tmp0
     
 	rts
-    
