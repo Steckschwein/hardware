@@ -8,7 +8,7 @@
 !src <bios.h.a>
 !src <t99xx.lib.a>
 .charset_6x8
-!src "../charsets/char.ascii.6x8.big.h.a"
+!src "../charsets/char.ascii.6x8.big1px.h.a"
 main
     sei
     
@@ -35,8 +35,8 @@ main
 	inx	
 	bne	-
 	
-	lda	#<ADDRESS_GFX1_SCREEN+224
-	ldy	#.WRITE_ADDRESS + >ADDRESS_GFX1_SCREEN
+	lda	#<ADDRESS_GFX1_SCREEN+(40*16)
+	ldy	#.WRITE_ADDRESS + >ADDRESS_GFX1_SCREEN + (40*16)
 	jsr	vdp_sreg
 	ldx	#$00
 -	lda	.msg,x
@@ -151,6 +151,7 @@ tmp10=$fa
 	!text "where you can use 40 chars on each line."
 	!text "                                        "
 	!text "0123456789          0123456789          "
+	!text "$AbgKyAqua0123456789          0123456789"
 	!text "          0123456789          0123456789"
 	!text 224
 	!text 0

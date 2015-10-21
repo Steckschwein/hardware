@@ -166,7 +166,7 @@ vdp_init_reg
 ;
 ;	gfx 2 - each pixel can be addressed - e.g. for image
 ;	
-vdp_mode_gfx2
+vdp_mode_gfx2:
 	jsr	.vdp_fill_name_table
 	+SetVector	vdp_init_bytes_gfx2, .adrl
 	bra	vdp_init_reg

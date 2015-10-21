@@ -14,15 +14,25 @@
 	lda	#Cyan<<4|Black
 	jsr	vdp_mode_gfx2_blank
 	
-	!for i,0,10{
-		+setPixel 10+i, 10+i, Cyan
-	}
-	!for i,0,10{
-		+setPixel 100-i, 100+i, Cyan
-	}
-	
 	;enable gfx2
 	jsr	vdp_mode_gfx2
+    
+    lda a_vreg
+    
+	!for i,0,200{
+-   bit a_vreg
+    bpl -
+        ldx #10+i
+        ldy #10+i
+		jsr set_pixel
+	}
+	!for i,0,100{
+-   bit a_vreg
+    bpl -
+        ldx #100-i
+        ldy #100+i
+		jsr set_pixel
+	}
 
 -	bra	-
 	
