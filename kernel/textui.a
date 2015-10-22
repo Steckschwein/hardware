@@ -23,7 +23,7 @@
 !ifdef text_mode_40 {
 .charset=charset_6x8	; loaded after shell code, see shell.a
 .COLS=40
-.CURSOR_CHAR=224
+.CURSOR_CHAR=160
 .textui_update_crs_ptr
 	pha
 	

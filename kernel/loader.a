@@ -77,7 +77,7 @@ done
 
 !align 255,0
 .charset
-!bin "../charsets/char6x8.bin"
+!src "../charsets/char.ascii.vc20.6x8.h.a"
 .charset_end
 
 !src "../lib/t99xx.lib.a"
