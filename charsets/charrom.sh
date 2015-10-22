@@ -9,17 +9,18 @@ sed -n 97,158p characters.c64.a >> char.ascii.c64.h.a
 sed -n 161p characters.c64.a >> char.ascii.c64.h.a
 sed -n 258,283p characters.c64.a >> char.ascii.c64.h.a
 
-echo 'charset_vc20:' > char.ascii.vc20.h.a
-#cat characters.901460-03.a >> char.ascii.vc20.h.a
-sed -n 65,96p characters.901460-03.a >> char.ascii.vc20.h.a 	# 32 chars 
-sed -n 33,64p characters.901460-03.a >> char.ascii.vc20.h.a		# 32 chars
-sed -n 1,32p characters.901460-03.a >> char.ascii.vc20.h.a		# 32 chars
-sed -n 257,288p characters.901460-03.a >> char.ascii.vc20.h.a	# 32 chars
+target=char.ascii.vc20.6x8.h.a
+echo 'charset_vc20_6x8:' > ${target}
+#cat char.tmp.h.a >> char.ascii.vc20.h.a
+sed -n 65,96p char.tmp.h.a >> ${target}	# 32 chars 
+sed -n 33,64p char.tmp.h.a >> ${target}		# 32 chars
+sed -n 1,32p char.tmp.h.a >> ${target}		# 32 chars
+sed -n 257,288p char.tmp.h.a >> ${target}	# 32 chars
 #inverse
-sed -n 193,224p characters.901460-03.a >> char.ascii.vc20.h.a 	# 32 chars 
-sed -n 161,192p characters.901460-03.a >> char.ascii.vc20.h.a		# 32 chars
-sed -n 129,160p characters.901460-03.a >> char.ascii.vc20.h.a		# 32 chars
-sed -n 385,416p characters.901460-03.a >> char.ascii.vc20.h.a	# 32 chars
+sed -n 193,224p char.tmp.h.a >> ${target}	# 32 chars 
+sed -n 161,192p char.tmp.h.a >> ${target}		# 32 chars
+sed -n 129,160p char.tmp.h.a >> ${target}		# 32 chars
+sed -n 385,416p char.tmp.h.a >> ${target}	# 32 chars
 
 #sed -n 161p characters.901460-03.a >> char.ascii.vc20.h.a
 #sed -n 258,283p characters.901460-03.a >> char.ascii.vc20.h.a
