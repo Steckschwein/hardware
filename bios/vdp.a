@@ -12,12 +12,25 @@ init_vdp
     stz crs_y
     
     +SetVector    charset, .addr
+
+    ; we always copy the charset from rom
+    ; save state of memctl register
+    lda memctl
+    pha
+
+    ; enable rom
+    stz memctl
+
     lda #<ADDRESS_GFX1_PATTERN
     ldy #.WRITE_ADDRESS + >ADDRESS_GFX1_PATTERN
 
     ldx #$08                    ;load charset
     jsr vdp_memcpy
     
+    ;restore state of memctl
+    pla
+    sta memctl
+
     lda #Cyan<<4|Black          ;enable gfx 1 with cyan on black background
     jsr vdp_mode_gfx1
     
