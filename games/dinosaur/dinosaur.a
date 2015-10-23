@@ -409,7 +409,7 @@ main:
 	jsr	.animate_dinosaur
 	bra	++
 	
-+	lda	#PORT_SEL_2		;port 1
++	lda	#PORT_SEL_1		;port 1
 	sta	via1porta
 	lda	via1porta
 	and #JOY_FIRE
@@ -503,7 +503,7 @@ main:
 	
 	
 .action_handler
-	lda	#PORT_SEL_2		;port 2
+	lda	#PORT_SEL_1		;port 2
 	sta	via1porta
 	lda	via1porta
 	and #JOY_UP
@@ -540,6 +540,10 @@ main:
 	ldy	#.WRITE_ADDRESS + >.A_GX_SCR
 	jsr	vdp_fill
 
+	lda memctl
+	pha
+	stz memctl
+
 	+SetVector charset, .adrl			; init 2 game charset with character set
 	lda #<.A_GX_PAT_1
 	ldy #.WRITE_ADDRESS + >.A_GX_PAT_1
@@ -550,7 +554,10 @@ main:
 	ldy #.WRITE_ADDRESS + >.A_GX_PAT_2
 	ldx	#$08
 	jsr	vdp_memcpy
-	
+
+	pla 
+	sta memctl
+
 	+SetVector .game_chars, .adrl		; first game charset
 	lda #<(.A_GX_PAT_1+.GAME_CHAR_OFFS)
 	ldy #.WRITE_ADDRESS + >(.A_GX_PAT_1+.GAME_CHAR_OFFS)
