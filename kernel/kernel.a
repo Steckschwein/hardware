@@ -1,4 +1,10 @@
-*= $d000
+!address {
+	.shell_addr		= $d000
+	KERNEL_START = $e000
+}
+
+
+* = KERNEL_START
 
 text_mode_40 = 1
 num_ls_entries = $03
@@ -11,16 +17,12 @@ num_ls_entries = $03
 ; !src <params.h.a>
 ; !src <errors.h.a>
 
-!address {
-	.shell_addr		= $b000
-}
 
 
 kern_init
 	sei
 	
 	+SetVector .kern_irq, irqvec
-
 
 	; read from keyboard buffer until empty to filter crap from kbd init
 	; select keyboard controller
@@ -30,6 +32,7 @@ kern_init
 
 	jsr	.textui_init0
 
+	
 	+SetVector _textui_chrout, outvec
 
 	cli
@@ -231,7 +234,7 @@ kern_init
 .txt_msg_loading 			!text "Loading ",$00
 .serial_upload				!text "Serial Upload ",$00
 .filename					!text "shell.bin",$00
-*=$df00
+* = KERNEL_START + $f00
 ; "kernel" jumptable
 krn_keyin			jmp .keyin
 krn_mount 			jmp .fat_mount 

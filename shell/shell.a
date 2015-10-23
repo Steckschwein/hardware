@@ -1,4 +1,4 @@
-*= $b000
+*= $d000
 
 text_mode_40 = 1
 num_ls_entries = $03
@@ -12,7 +12,7 @@ num_ls_entries = $03
 !src <params.h.a>
 !src <errors.h.a>
 !src <t9929.h.a>
-!src <sdcard.h.a>
+; !src <sdcard.h.a>
 	
 
 !address {
