@@ -22,6 +22,13 @@ num_ls_entries = $03
 }
 
 
+;---------------------------------------------------------------------------------------------------------
+; init shell
+;  - init sd card (again)
+;  - mount sd card
+;  - print welcome message
+;---------------------------------------------------------------------------------------------------------
+
 .init	
 	sei
 	jsr init_sdcard
@@ -85,37 +92,20 @@ mainloop
 
 .parse
 
-	lda #>.buf
-	sta .cmdptr+1
-	lda #<.buf
-	sta .cmdptr
+	+SetVector .buf, .cmdptr
 
-
-
-	ldy #$00
--	lda (.cmdptr),y ; skip non alphanumeric stuff
+-	lda (.cmdptr)	; skip non alphanumeric stuff	
 	cmp #$20
 	bne +
-	iny
+	inc .cmdptr
 	bra -
 +
-
-	tya
-	clc
-	adc .cmdptr
-	sta .cmdptr
-	bcc +
-	inc .cmdptr+1
-+
 	
-
-
 	ldx #$00
 -	ldy #$00
 --	lda .cmdlist,x
 	cmp #$ff
 	beq .unknown
-
 
 	; command string in buffer is terminated with $20 if there are cmd line arguments
 	cmp #$20
