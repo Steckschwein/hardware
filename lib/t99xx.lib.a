@@ -62,7 +62,7 @@ vdp_fill:
 vdp_memcpy:
 	+vdp_sreg
 	ldy   #$00
--  	lda   (.adrl),y
+-  	lda   (.addr),y
 	+vnops
 	iny
 	sta   a_vram
@@ -98,14 +98,17 @@ vdp_mode_gfx1_blank		; 3 x 256 bytes
 	lda	#<ADDRESS_GFX1_SCREEN
 	ldy	#.WRITE_ADDRESS + >ADDRESS_GFX1_SCREEN
 	bra	vdp_fill
+;
+; blank gfx mode 2 with 
+; .adrl - color to fill
+;    
 vdp_mode_gfx2_blank:		; 2 x 6K
 	sta .adrl
 	lda #<ADDRESS_GFX2_COLOR
 	ldy #.WRITE_ADDRESS + >ADDRESS_GFX2_COLOR
 	ldx	#$18
 	jsr	vdp_fill
-	lda	#$00
-	sta .adrl
+	stz .adrl
 	lda #<ADDRESS_GFX2_PATTERN
 	ldy #.WRITE_ADDRESS + >ADDRESS_GFX2_PATTERN
 	ldx	#$18
@@ -186,8 +189,7 @@ vdp_mode_text
 .vdp_wait_blank
 	php
 	sei
--	bit	a_vreg
-	bpl -	   ; wait until blank - irq flag set?
+    +SyncBlank
 	pla
 	and	#$04	;check interupt was set?
 	bne	+

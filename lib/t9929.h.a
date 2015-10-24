@@ -8,8 +8,15 @@ t9929_h_a = 1
 	nop
 }
 
+!macro	SyncBlank{
+    lda a_vreg
+-	bit	a_vreg
+	bpl -	   ; wait until blank - irq flag set?
+}    
+
+
 .WRITE_ADDRESS			=$40
-ADDRESS_GFX_SPRITE		=$1880
+ADDRESS_GFX_SPRITE		=$1b00
 
 ADDRESS_GFX1_SCREEN		=$0800
 ADDRESS_GFX1_PATTERN	=$3800
