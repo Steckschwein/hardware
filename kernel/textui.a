@@ -1,7 +1,7 @@
 !source <t99xx.lib.a>
 
 !address {
-.screen=$c000	
+    .screen=$c000	
 }
 
 .screen_status !byte .TEXTUI_ENABLED
@@ -174,38 +174,6 @@
 	jsr	vdp_bgcolor
 ++	rts	
 
-; .textui_busy
-; 	lda	.screen_status
-; 	and	#.CURSOR_BUSY
-; 	beq	+++
-; 	lda	.screen_frames
-; 	and	#$03
-; 	bne	++
-; 	lda	#$00
-; 	ldy	#.WRITE_ADDRESS+$3c
-; 	jsr vdp_sreg
-; 	lda	#$ff		;y - $ff top 
-; 	sta	a_vram		
-; 	+vnops
-; 	lda	#$f0		;x - $f0 before right border
-; 	sta	a_vram		
-; 	+vnops
-; 	lda .sprite_sanduhr+2	;ptr
-; 	sta	a_vram
-; 	clc
-; 	adc	#$04		;16x16 sprites, pointer * 4
-; 	cmp	#$04*8
-; 	bne	+
-; 	lda	#$00
-; +	sta	.sprite_sanduhr+2
-; ++	rts
-; +++	lda	#$00
-; 	ldy	#.WRITE_ADDRESS+$3c
-; 	jsr vdp_sreg
-; 	lda #$d0		;y-pos off screen
-; 	sta	a_vram
-; 	rts
-	
 .textui_scroll_up
 	ldx	#$00
 -	lda	.screen+.COLS,x
@@ -230,10 +198,27 @@
 	lda crs_y
 	cmp	#.ROWS-1		;last line
 	bne	+
-	jmp	.textui_scroll_up	; scroll and exit
+	bra	.textui_scroll_up	; scroll and exit
 +	inc crs_y
 	rts
 
+_textui_println
+	bra	_textui_print
+
+.textui_enable
+	lda	.screen_status
+	ora	#.TEXTUI_ENABLED
+	bra	+
+.textui_disable
+	lda	.screen_status
+	and	#!.TEXTUI_ENABLED
++	sta	.screen_status
+	rts
+
+_textui_put
+	sta	(crs_ptr)
+	bra	.textui_screen_dirty
+    
 _textui_print
 	inc .screen_status	;write on
 	ldy	#$00
@@ -298,38 +283,9 @@ _textui_chrout
 	ora	#.DIRTY
 	sta	.screen_status
 	rts
-
 _textui_toggle_cursor_busy
 	lda	#.CURSOR_BUSY
 	tsb	.screen_status
 	beq	+
 	trb	.screen_status
 +	rts
-	
-_textui_put
-	sta	(crs_ptr)
-	jmp	.textui_screen_dirty
-	rts
-	
-_textui_println
-	jmp	_textui_print
-
-.textui_enable
-	lda	.screen_status
-	ora	#.TEXTUI_ENABLED
-	bra	+
-.textui_disable
-	lda	.screen_status
-	and	#!.TEXTUI_ENABLED
-+	sta	.screen_status
-	rts
-	
-
-!macro	V_ToggleCursorBusy {
-	jsr	_textui_toggle_cursor_busy
-}
-
-!macro	V_SetBgColor .color {
-	lda	.color
-	jsr	vdp_bgcolor
-}
