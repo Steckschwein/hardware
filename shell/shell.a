@@ -18,7 +18,7 @@ num_ls_entries = $03
 !address {
 ; .key = $10
 .buf 				= $0350 ; Input buffer 80 bytes. end: $03a1
-.paramptr			= $11
+.paramptr			= .ptr1
 }
 
 
