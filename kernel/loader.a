@@ -69,10 +69,8 @@ b2	sta .bios
 	ldy	#.WRITE_ADDRESS + >ADDRESS_GFX1_PATTERN
 	ldx	#$08					
 
-	sta	a_vreg
-	+vnops
-	sty	a_vreg
-
+	+vdp_sreg
+	
 	ldy   #$00
 -  	lda   (.adrl),y
 	asl
