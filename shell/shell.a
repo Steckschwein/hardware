@@ -12,13 +12,13 @@ num_ls_entries = $03
 !src <params.h.a>
 !src <errors.h.a>
 !src <t9929.h.a>
-; !src <sdcard.h.a>
+
 	
 
 !address {
-; .key = $10
 .buf 				= $0350 ; Input buffer 80 bytes. end: $03a1
-.paramptr			= .ptr1
+.cmdptr				= .ptr1
+.paramptr			= .ptr2
 }
 
 
@@ -43,11 +43,15 @@ num_ls_entries = $03
 	
 	
 mainloop
+	; output prompt character
 	+ShellPrintString .prompt
+
+	; reset input buffer
 	ldx #$00
 	stz .buf
 	
 
+	; put input into buffer until return is pressed
 .inputloop	
 	jsr keyin
 
@@ -57,9 +61,9 @@ mainloop
 	cmp #$08 ; backspace?
 	beq .backspace
 
-	sta .buf, x
+	sta .buf, x ; put byte into buffer
 	inx
--	stz .buf, x
+-	stz .buf, x ; null termination
 
 
 	; prevent overflow of input buffer 
@@ -87,8 +91,10 @@ mainloop
 	beq .unknown
 
 
+	; command string in buffer is terminated with $20 if there are cmd line arguments
 	cmp #$20
 	beq .cmdfound
+	; if not, there is a terminating null
 	cmp #$00
 	beq .cmdfound
 
@@ -286,11 +292,7 @@ mainloop
 	bra +
 
 ++	
-	; lda .dumpvec_end+1
-	; jsr hexout
-	; lda .dumpvec_end
-	; jsr hexout
-	
+
 -	
 	+ShellPrintString .crlf
 	lda .dumpvec_start+1
@@ -463,8 +465,6 @@ mainloop
 	
 	lda tmp6	
 	jsr hexout
-
-
 
 
     jsr spi_r_byte
