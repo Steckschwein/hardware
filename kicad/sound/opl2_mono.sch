@@ -31,8 +31,8 @@ LIBS:contrib
 LIBS:valves
 LIBS:y3014b
 LIBS:ym3812
-LIBS:opl2_mono-cache
-EELAYER 24 0
+LIBS:rc4136
+EELAYER 25 0
 EELAYER END
 $Descr A3 16535 11693
 encoding utf-8

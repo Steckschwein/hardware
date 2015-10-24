@@ -1,4 +1,4 @@
-update=Tue 06 Jan 2015 12:12:42 PM CET
+update=Sonntag, 18. Oktober 2015 20:56:08
 version=1
 last_client=kicad
 [cvpcb]
@@ -63,3 +63,4 @@ LibName29=contrib
 LibName30=valves
 LibName31=y3014b
 LibName32=ym3812
+LibName33=rc4136
