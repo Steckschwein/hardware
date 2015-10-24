@@ -95,8 +95,9 @@ sectors_per_cluster = $0307 ; sectors per cluster, 1 byte
 root_dir_first_clus = $0308 ; first cluster of root dir, 4 bytes
 filename_buf		= $030c ; file name buffer, 11 bytes
 
-fd_area				= $0320 ; File descriptor area, 16x8byte 
-xxx					= $0393 ;
+fd_area				= $0320 ; File descriptor area, 6x8byte until $0350 
+
+xxx					= $0350 ;
 sd_blktarget 		= $0400
 
 .steckos_start		= $1000	
