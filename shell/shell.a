@@ -84,6 +84,32 @@ mainloop
 
 
 .parse
+
+	lda #>.buf
+	sta .cmdptr+1
+	lda #<.buf
+	sta .cmdptr
+
+
+
+	ldy #$00
+-	lda (.cmdptr),y ; skip non alphanumeric stuff
+	cmp #$20
+	bne +
+	iny
+	bra -
++
+
+	tya
+	clc
+	adc .cmdptr
+	sta .cmdptr
+	bcc +
+	inc .cmdptr+1
++
+	
+
+
 	ldx #$00
 -	ldy #$00
 --	lda .cmdlist,x
@@ -98,7 +124,8 @@ mainloop
 	cmp #$00
 	beq .cmdfound
 
-	cmp .buf,y
+	; cmp .buf,y
+	cmp (.cmdptr),y
 	bne +	; difference. this isnt the command were looking for
 
 	iny
