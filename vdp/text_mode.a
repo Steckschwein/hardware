@@ -8,7 +8,6 @@
 !src <bios.h.a>
 !src <t99xx.lib.a>
 .charset_6x8
-;!src "../charsets/char.ascii.6x8.big1px.h.a"
 !src "../charsets/char.ascii.vc20.6x8.h.a"
 main
     sei
