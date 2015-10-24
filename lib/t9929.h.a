@@ -90,3 +90,8 @@ Sprite_EC	   =1<<7
 		!set sprite_row=0
 	}
 }
+!macro vdp_sreg {
+	sta	a_vreg
+	nop
+	sty	a_vreg	
+}

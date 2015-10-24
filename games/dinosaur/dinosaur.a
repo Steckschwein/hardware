@@ -134,7 +134,7 @@ main:
 	jmp	vdp_sreg
 +	lda	#(.A_GX_PAT_2 / $800)
 	ldy	#v_reg4
-	jsr	vdp_sreg
+	+vdp_sreg
 	
 	ldx	#$00
 -	lda	.screen+1,x
@@ -252,7 +252,7 @@ main:
 	rts
 	
 .vdp_print
-	jsr	vdp_sreg
+	+vdp_sreg
 	ldy	#$00
 -	lda	(.adrl), y
 	beq	+
@@ -593,7 +593,7 @@ main:
 	;score_board
 	lda	#<(.A_GX_SCR + (1*32))+17
 	ldy	#.WRITE_ADDRESS + >(.A_GX_SCR+(1*32)+17)
-	jsr	vdp_sreg
+	+vdp_sreg
 	ldx	#$00
 -	lda	.text_score_board,x
 	beq	+

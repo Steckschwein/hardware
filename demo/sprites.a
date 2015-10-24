@@ -52,7 +52,7 @@ main:
 
 	lda	#$80
 	ldy	#.WRITE_ADDRESS+$0b
-	jsr	vdp_sreg
+	+vdp_sreg
 	ldx	#0
 -  	lda	starfield_spritetab,x
 	sta	a_vram
@@ -62,7 +62,7 @@ main:
 	
 	lda	#v_reg1_16k|v_reg1_display_on|v_reg1_spr_size	;|v_reg1_int
 	ldy	#v_reg1
-	jsr	vdp_sreg
+	+vdp_sreg
 	
 -	jmp	-
 	
@@ -187,7 +187,7 @@ stars_irq:
 	ldy	#.WRITE_ADDRESS+$0b
 ---	lda	#$80
 --	and	#$80
-	jsr	vdp_sreg
+	+vdp_sreg
 	ldx	#00
 -  	lda	starfield_spritetab,x
 	sta	a_vram
