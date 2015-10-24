@@ -41,9 +41,6 @@ tmp7		= $f1
 .entries 	= $f2   ; TODO FIXME shell cleanup... use temp instead
 
 dirptr 		= $f4 ; 2 byte
-fat_dir_action_hook		= $f6
-fat_dir_display_hook	= $f6
-fat_dir_filter_hook		= $f8
 paramvec	= $f8
 
 ; Address pointers for serial upload
@@ -68,6 +65,10 @@ irqvec		= $0280
 nmivec		= $0282
 outvec		= $0284
 invec		= $0286
+
+fat_dir_action_hook		= $0288
+fat_dir_display_hook	= fat_dir_action_hook
+fat_dir_filter_hook		= $0290
 
 ram_end 	= $0288
 ram_end_l   = ram_end
