@@ -100,6 +100,7 @@ mainloop
 	inc .cmdptr
 	bra -
 +
+
 	
 	ldx #$00
 -	ldy #$00
@@ -165,7 +166,6 @@ mainloop
 +	jmp mainloop
 
 
-; !src <fat.a>
 
 .ls
 	+SetVector .dir_show_entry_short, fat_dir_display_hook
@@ -175,7 +175,6 @@ mainloop
 .dir
 	+SetVector .dir_show_entry, fat_dir_display_hook
 +	+ShellPrintString .crlf
-	; +SetVector dir_filter_default, fat_dir_filter_hook
 
 	jsr read_dir
 	jmp mainloop
@@ -208,12 +207,21 @@ mainloop
 	beq +
 	jsr .errmsg
 	; +ShellPrintString .txt_cd
+	jmp mainloop
 +
-
+	+ShellPrintString .txt_cd
 -	jmp mainloop 
 
 
 .run
+
+-	lda (.paramptr)	; skip non alphanumeric stuff	
+	cmp #$20
+	bne +
+	inc .paramptr
+	bra -
++
+
 	ldy #$00
 -	lda (.paramptr),y
 	beq ++
@@ -605,19 +613,7 @@ mainloop
 .fat_err_file_not_open	!text "file not open error",$00
 .fat_err_too_many_open	!text "too many open files",$00
 .exec_extension			!text ".bin",$00
-.assets
-!ifndef text_mode_40 {
-!src "sanduhr.raw"
-!src "sanduhr_45.raw"
-!src "sanduhr_90.raw"
-!src "sanduhr_135.raw"
-!src "sanduhr_180.raw"
-!src "sanduhr_225.raw"
-!src "sanduhr_270.raw"
-!src "sanduhr_315.raw"
-}
-.sprite_sanduhr
-	!byte	$ff,	$f0,	0,	Gray
+
 .filename !text "            ",$00
 .atoi
 	cmp #"9"+1
