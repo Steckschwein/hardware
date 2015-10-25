@@ -382,9 +382,10 @@ mainloop
 	bne +
 	jsr	textui_disable			;disable textui
 	jsr	gfxui_init
+    jsr	gfxui_blend_on
 -	jsr keyin
-	cmp #$0d ; wait return?
-	bne	-
+	beq -
+	jsr	gfxui_blend_off
 	jsr	display_off			;restore textui
 	jsr	textui_init
 	jsr	textui_enable

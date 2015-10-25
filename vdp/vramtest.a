@@ -11,11 +11,8 @@ adr_h_w=.ptr1
 adr_h_r=.ptr2
 
 main:		
-	
-	stz	crs_x
-	lda	#08
-	sta	crs_y
 
+    +Println
 	+PrintString	memtest_msg
 	
 	lda #>($0bb0+(.WRITE_ADDRESS<<8))

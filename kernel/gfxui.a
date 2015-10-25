@@ -4,14 +4,60 @@
 	jsr	vdp_display_off			;display off
 	jsr vdp_mode_sprites_off	;sprites off
 
-	lda	#$00
-	sta	gfx2_mode_ptr_bitmap_address
-	lda	#$10
-	sta	gfx2_mode_ptr_bitmap_address+1
-	lda	#$00
-	sta	gfx2_mode_ptr_bitmap_color_address
-	lda	#$28
-	sta	gfx2_mode_ptr_bitmap_color_address+1
-	jsr	vdp_mode_gfx2_load_bitmap
+    lda #Black<<4|Black
+    jsr vdp_mode_gfx2_blank
+    
+    ;TODO FIXME .steckos_start may vary
+    +SetVector  .steckos_start, .addr    ; where the image data are loaded
+	lda	#<ADDRESS_GFX2_PATTERN
+	ldy	#.WRITE_ADDRESS + >ADDRESS_GFX2_PATTERN
+	ldx	#$18	;6k bitmap - $1800
+	jsr	vdp_memcpy					;load the pic data
 	
-	jmp vdp_mode_gfx2;			;enable gfx2 mode
+	jmp vdp_mode_gfx2			;enable gfx2 mode
+    
+.gfxui_blend_off
+    lda #$80
+    bra +
+.gfxui_blend_on
+    lda #$00
++   sta tmp2
+    .offs=$0
+    +SetVector  (.WRITE_ADDRESS<<8)+ADDRESS_GFX2_COLOR+.offs,     .ptr1
+    lda #.offs
+    sta tmp0
+    lda #.offs+8
+    sta tmp1
+--  +SyncBlank
+    ldx	#24
+-   lda .ptr1l
+    ldy .ptr1h
+	+vdp_sreg
+ 	ldy tmp0
+.c  lda .steckos_start+$1800,y
+    bit tmp2
+    bpl +
+    lda #Black<<4|Black
++	sta a_vram
+	iny
+    cpy tmp1
+	bne   .c
+	inc   .c+2
+    inc   .ptr1h
+	dex
+	bne  -
+    
+    lda #(.WRITE_ADDRESS)+>ADDRESS_GFX2_COLOR
+    sta .ptr1h
+    lda #>(.steckos_start+$1800)
+    sta .c+2
+
+    lda tmp1
+    clc
+    adc #08
+    sta tmp1
+    sty tmp0
+    sty .ptr1l
+    tya ;update psr
+    bne --
+    rts

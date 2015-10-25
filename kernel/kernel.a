@@ -251,4 +251,6 @@ krn_textui_disable		jmp .textui_disable			;disable textui
 krn_gfxui_init			jmp	.gfxui_init
 krn_display_off			jmp vdp_display_off
 krn_getkey				jmp .getkey
-
+;TODO FIXME externalize it, imgviewer
+krn_gfxui_blend_off	    jmp	.gfxui_blend_off
+krn_gfxui_blend_on	    jmp	.gfxui_blend_on

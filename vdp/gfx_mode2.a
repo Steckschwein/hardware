@@ -1,21 +1,90 @@
 ;
 ;	gfx mode 2 - 40x24 chars - all colors
 ;
-!src <defs.h.a>
 *=$1000
+    jmp main
+!src <defs.h.a>
+!src <t99xx.lib.a>
+
+main
+    +SetVector  $1000, .addr
+    
 	jsr	vdp_display_off			;display off
 	jsr vdp_mode_sprites_off	;sprites off
 
-	+SetVector .pattern,	gfx2_mode_ptr_bitmap_address
-	+SetVector .color,		gfx2_mode_ptr_bitmap_color_address
-	jsr	vdp_mode_gfx2_load_bitmap
+	+SetVector .pattern,	.ptr1
+	+SetVector .color,		.ptr2
+    
+    lda #Black<<4|Black
+    jsr vdp_mode_gfx2_blank
+    
+	;jsr	vdp_mode_gfx2_load_bitmap
+    
+    +SetVector .pattern, .addr
+	lda	#<ADDRESS_GFX2_PATTERN
+	ldy	#.WRITE_ADDRESS + >ADDRESS_GFX2_PATTERN
+	ldx	#$18	;6k bitmap - $1800
+	jsr	vdp_memcpy					;load the pic data --> pattern table at vram $0000
+    
 	jsr vdp_mode_gfx2			;enable gfx2 mode
+    
+-
+    jsr vdp_gfx2_blend_on
+    jsr vdp_gfx2_blend_off
+	bra	-
 
--	jmp	-
-	
-!src <t99xx.lib.a>
+vdp_gfx2_blend_off
+    lda #$00
+    bra +
+vdp_gfx2_blend_on
+    lda #$80
++   sta tmp2
+    .offs=$0
+    +SetVector  (.WRITE_ADDRESS<<8)+ADDRESS_GFX2_COLOR+.offs,     .ptr1
+    lda #.offs
+    sta tmp0
+    lda #.offs+8
+    sta tmp1
+--  +SyncBlank
+    ldx	#24
+-   lda .ptr1l
+    ldy .ptr1h
+	+vdp_sreg
+ 	ldy tmp0
+.c  lda .color,y
+    bit tmp2
+    bpl +
+    lda #Black<<4|Black
++	sta a_vram
+	iny
+    cpy tmp1
+	bne   .c
+	inc   .c+2
+    inc   .ptr1h
+	dex
+	bne  -
+    
+    lda #(.WRITE_ADDRESS)+>ADDRESS_GFX2_COLOR
+    sta .ptr1h
+    lda #>.color
+    sta .c+2
 
+    lda tmp1
+    clc
+    adc #08
+    sta tmp1
+    sty tmp0
+    sty .ptr1l
+    tya ;update psr
+    bne --
+    rts
+
+!align 255,0
 .pattern
 !bin "test/BRUNI_TRUDI.TIAP"
+;!bin "VESPA.TIAP"
+;!bin "test/GIRL_02.TIAP"
 .color
 !bin "test/BRUNI_TRUDI.TIAC"
+;!bin "VESPA.TIAC"
+;!bin "test/GIRL_02.TIAC"

@@ -99,6 +99,6 @@ Sprite_EC	   =1<<7
 }
 !macro vdp_sreg {
 	sta	a_vreg
-	nop
+	+vnops
 	sty	a_vreg	
 }
