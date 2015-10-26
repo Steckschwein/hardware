@@ -243,7 +243,6 @@ krn_read_dir		jmp .fat_dir_scan
 krn_close 			jmp .fat_close
 krn_read 			jmp .fat_read 
 krn_open_rootdir 	jmp .fat_open_rootdir
-krn_open_dir 		jmp .fat_open_dir
 
 krn_textui_init 		jmp	.textui_init
 krn_textui_enable		jmp	.textui_enable
