@@ -85,44 +85,6 @@ FD_file_size = $08
 +	clc
 	rts
 
-.fat_open_dir 
-	+save
-	stz errno
-
-	ldx #$00
-	jsr .calc_lba_addr
-
-
-	jsr .convert_filename
-	+SetVector .fat_dir_find_entry, fat_dir_action_hook
-
-	jsr .fat_dir_scan
-	bcs .fat_open_found
-
-	ldy #DIR_Attr
-	lda (dirptr),y
-	ror
-	ror
-	ror
-	ror
-	ror
-	bcc +
-
-	lda #fat_file_not_dir
-	sta errno
-	bra ++
-+
-
-	ldy #DIR_Name
--	lda (dirptr),y
-	jsr chrout
-	inx
-	cpx #$0b
-	bne -
-++
-	+restore
-	rts
-
 
 .fat_open
 	pha

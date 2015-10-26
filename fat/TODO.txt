@@ -18,7 +18,7 @@ TODO FAT32-Implementation
 	    - Checken ob aktueller Cluster der letzte Cluster ist
 	    - 
 
-- 	[ ] Zeit und Datum
+- 	[X] Zeit und Datum
 	    - Felder in Dir-Entry auswerten, bei list_dir_entry anzeigen
 
 - 	[ ] Support für Schreib- und Löschoperationen
