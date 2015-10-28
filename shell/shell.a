@@ -94,13 +94,36 @@ mainloop
 
 	+SetVector .buf, .cmdptr
 
+	; find begin of command word
 -	lda (.cmdptr)	; skip non alphanumeric stuff	
 	cmp #$20
 	bne +
 	inc .cmdptr
 	bra -
 +
+	lda .cmdptr+1
+	sta .paramptr+1
+	lda .cmdptr
+	sta .paramptr
 
+	; find begin of parameter (everything behind the command word, separated by space)
+	; first, fast forward until space or abort if null (no parameters then)
+-	lda (.paramptr)
+	beq ++
+	cmp #$20
+	beq +
+	inc .paramptr
+	bra -
++	
+	; space found.. fast forward until non space or null
+-	lda (.paramptr)
+	beq ++
+	cmp #$20
+	bne +
+	inc .paramptr
+	bra -
++
+++
 	
 	ldx #$00
 -	ldy #$00
@@ -135,21 +158,6 @@ mainloop
 	bra -
 
 .cmdfound
-
-	; find begin of parameter part
--	iny
-	lda .buf,y
-	beq +
-	cmp #$20
-	beq -
-
-	; add offset to first character of parameter to paramptr
-+	+SetVector .buf, .paramptr
-	tya
-
-	clc
-	adc .paramptr
-	sta .paramptr
 
 	inx
 
