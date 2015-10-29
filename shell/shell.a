@@ -13,7 +13,11 @@ num_ls_entries = $03
 !src <errors.h.a>
 !src <t9929.h.a>
 
-	
+KEY_RETURN 		= $0d
+KEY_BACKSPACE 	= $08
+BUF_SIZE		= 80
+
+
 
 !address {
 .buf 				= $0350 ; Input buffer 80 bytes. end: $03a1
@@ -62,10 +66,10 @@ mainloop
 .inputloop	
 	jsr keyin
 
-	cmp #$0d ; return?
+	cmp #KEY_RETURN ; return?
 	beq .parse
 
-	cmp #$08 ; backspace?
+	cmp #KEY_BACKSPACE ; backspace?
 	beq .backspace
 
 	sta .buf, x ; put byte into buffer
@@ -74,7 +78,7 @@ mainloop
 
 
 	; prevent overflow of input buffer 
-	cpx #80
+	cpx #BUF_SIZE
 	beq mainloop
 
 	jsr chrout
