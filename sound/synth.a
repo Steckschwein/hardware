@@ -1,59 +1,9 @@
 *=$1000
 !source <defs.h.a>
 !source <bios.h.a>
+!source <ym3812.h.a>
 
 
-!address {
-	opl_stat = $0250
-	opl_data = opl_stat + 1
-} 
-
-!macro oplSetReg .reg, .val {
-	lda #.reg
-	sta opl_stat
-	; http://www.shipbrook.net/jeff/sb.html
-	; The AdLib manual gives the wait times in microseconds: three point three (3.3) microseconds for the address, and twenty-three (23) microseconds for the data.
-	; 3.300 ns / 0.25ns = 13.2 cycles / 2 = 6.6 NOPs
-
-	!for .i,1,7 {
-		nop
-	} 
-	lda #.val
-	sta opl_data
-	; 23.000 ns / 0.25ns = 92 cycles / 92 = 46 NOPs
-	; !for .i,1,46 {
-	; 	nop
-	; } 
-	ldy #46
---	
-	dey
-	bne --
-
-}
-
-!macro oplSetReg .reg {
-	pha
-	lda #.reg
-	sta opl_stat
-	; http://www.shipbrook.net/jeff/sb.html
-	; The AdLib manual gives the wait times in microseconds: three point three (3.3) microseconds for the address, and twenty-three (23) microseconds for the data.
-	; 3.300 ns / 0.25ns = 13.2 cycles / 2 = 6.6 NOPs
-
-	!for .i,1,7 {
-		nop
-	} 
-	pla
-	sta opl_data
-	; 23.000 ns / 0.25ns = 92 cycles / 92 = 46 NOPs
-	; !for .i,1,46 {
-	; 	nop
-	; } 
-	ldy #46
---	
-	dey
-	bne --
-
-}
 
 	
 ; "init" opl2 by writing zeros into all registers
