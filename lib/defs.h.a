@@ -66,13 +66,16 @@ nmivec		= $0282
 outvec		= $0284
 invec		= $0286
 
-fat_dir_action_hook		= $0288
-fat_dir_display_hook	= fat_dir_action_hook
-fat_dir_filter_hook		= $0290
-
 ram_end 	= $0288
 ram_end_l   = ram_end
 ram_end_h   = ram_end+1
+
+retvec		= $0290
+
+fat_dir_action_hook		= $0292
+fat_dir_display_hook	= fat_dir_action_hook
+fat_dir_filter_hook		= $0294
+
 
 
 ; MEMCTL Register

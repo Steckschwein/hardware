@@ -50,6 +50,11 @@ BUF_SIZE		= 80
 	jsr mount
 	
 
+	lda #<mainloop
+	sta retvec
+	lda #>mainloop
+	sta retvec+1
+	
 	jmp	.hello
 
 	
@@ -207,7 +212,7 @@ mainloop
 
 +	; not a slash. cd to whatever
 
-	jsr param2fileptr
+	jsr .param2fileptr
 	
 	+ShellPrintString .crlf
 	jsr open
@@ -261,16 +266,16 @@ mainloop
 	sei
 	; jmp  .steckos_start
 
-	jsr .steckos_start
+	jmp .steckos_start
 
 .load
-	jsr param2fileptr
+	jsr .param2fileptr
 	jsr .readfile		
 	
 	jmp mainloop
 
 .type
-	jsr param2fileptr
+	jsr .param2fileptr
 	jsr .readfile
 	lda errno
 	bne +
@@ -384,7 +389,7 @@ mainloop
 	
 .gfxview
 	
-	jsr param2fileptr
+	jsr .param2fileptr
 
 	jsr .readfile	; read data to .steckos_start ($1000)
 	lda errno
@@ -515,9 +520,6 @@ mainloop
 
     jmp mainloop
 
-param2fileptr
- 	+copyPointer .paramptr, filenameptr
- 	rts
 
 .cmdlist
 	!text "dir"
@@ -633,6 +635,10 @@ param2fileptr
 +	sec
 	sbc #$30
 	rts
+
+.param2fileptr
+ 	+copyPointer .paramptr, filenameptr
+ 	rts
 
 
 .dir_show_entry_short
