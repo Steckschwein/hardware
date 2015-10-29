@@ -1,5 +1,69 @@
 EESchema Schematic File Version 2
+LIBS:ym3812
+LIBS:y3014b
+LIBS:tms99xx
 LIBS:power
+LIBS:conn
+LIBS:74xgxx
+LIBS:74xx
+LIBS:ac-dc
+LIBS:actel
+LIBS:adc-dac
+LIBS:analog_switches
+LIBS:atmel
+LIBS:audio
+LIBS:brooktre
+LIBS:cmos_ieee
+LIBS:cmos4000
+LIBS:contrib
+LIBS:cypress
+LIBS:dc-dc
+LIBS:device
+LIBS:digital-audio
+LIBS:display
+LIBS:dsp
+LIBS:elec-unifil
+LIBS:ftdi
+LIBS:gennum
+LIBS:graphic
+LIBS:hc11
+LIBS:intel
+LIBS:interface
+LIBS:ir
+LIBS:linear
+LIBS:logo
+LIBS:memory
+LIBS:microchip
+LIBS:microchip_pic10mcu
+LIBS:microchip_pic12mcu
+LIBS:microchip_pic16mcu
+LIBS:microchip_pic18mcu
+LIBS:microchip1
+LIBS:microcontrollers
+LIBS:motorola
+LIBS:msp430
+LIBS:nxp_armmcu
+LIBS:opto
+LIBS:philips
+LIBS:powerint
+LIBS:pspice
+LIBS:references
+LIBS:regul
+LIBS:relays
+LIBS:rfcom
+LIBS:sensors
+LIBS:siliconi
+LIBS:special
+LIBS:stm8
+LIBS:stm32
+LIBS:supertex
+LIBS:texas
+LIBS:transf
+LIBS:transistors
+LIBS:ttl_ieee
+LIBS:valves
+LIBS:video
+LIBS:xilinx
 LIBS:tms9929_sram_snd-cache
 EELAYER 24 0
 EELAYER END
@@ -1438,18 +1502,7 @@ NoConn ~ 7800 3600
 Text Label 1600 5950 0    60   ~ 0
 VCC
 Text Label 10050 3550 0    60   ~ 0
-12VS
-$Comp
-L CONN_01X03 P1
-U 1 1 551851B2
-P 15200 3650
-F 0 "P1" H 15200 3850 50  0000 C CNN
-F 1 "CONN_01X03" V 15300 3650 50  0000 C CNN
-F 2 "" H 15200 3650 60  0000 C CNN
-F 3 "" H 15200 3650 60  0000 C CNN
-	1    15200 3650
-	1    0    0    -1  
-$EndComp
+12Vss
 NoConn ~ 4350 4050
 $Comp
 L C C3
@@ -2423,7 +2476,7 @@ Wire Wire Line
 Wire Wire Line
 	4300 6000 4500 6000
 Wire Wire Line
-	3650 1350 3650 2150
+	3650 1000 3650 2150
 Wire Wire Line
 	13700 3550 13700 3650
 Wire Wire Line
@@ -2544,9 +2597,9 @@ Wire Wire Line
 Wire Wire Line
 	3850 10050 3900 10050
 Wire Wire Line
-	3900 10050 3900 10500
+	3900 10500 3900 10050
 Wire Wire Line
-	3900 10500 950  10500
+	950  10500 3900 10500
 Wire Wire Line
 	950  10500 950  9750
 Wire Wire Line
@@ -2705,7 +2758,7 @@ F 3 "" H 8450 10750 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	8800 9700 8800 10500
+	8800 10500 8800 9700
 Wire Wire Line
 	7800 10150 7800 10700
 Wire Wire Line
@@ -2714,7 +2767,7 @@ Wire Wire Line
 	7900 10500 7800 10500
 Connection ~ 7800 10500
 Wire Wire Line
-	8800 10500 8400 10500
+	8400 10500 8800 10500
 Wire Wire Line
 	8450 10700 8400 10700
 Connection ~ 8450 10500
@@ -2729,10 +2782,10 @@ Connection ~ 6350 9950
 Wire Wire Line
 	6350 9200 6350 9950
 $Comp
-L CONN_01X02 Audio
+L CONN_01X02 Audio1
 U 1 1 55264415
 P 9100 10100
-F 0 "Audio" H 9100 10250 50  0000 C CNN
+F 0 "Audio1" H 9100 10250 50  0000 C CNN
 F 1 "CONN_01X02" V 9200 10100 50  0000 C CNN
 F 2 "" H 9100 10100 60  0000 C CNN
 F 3 "" H 9100 10100 60  0000 C CNN
@@ -2808,4 +2861,45 @@ F 3 "" H 3500 6150 60  0000 C CNN
 $EndComp
 Connection ~ 3250 5950
 Connection ~ 3250 6350
+$Comp
+L CONN_01X04 P1
+U 1 1 55351FA6
+P 15200 3700
+F 0 "P1" H 15200 3950 50  0000 C CNN
+F 1 "CONN_01X04" V 15300 3700 50  0000 C CNN
+F 2 "" H 15200 3700 60  0000 C CNN
+F 3 "" H 15200 3700 60  0000 C CNN
+	1    15200 3700
+	1    0    0    -1  
+$EndComp
+$Comp
+L GND #PWR051
+U 1 1 5535386D
+P 14900 3850
+F 0 "#PWR051" H 14900 3850 30  0001 C CNN
+F 1 "GND" H 14900 3780 30  0001 C CNN
+F 2 "" H 14900 3850 60  0000 C CNN
+F 3 "" H 14900 3850 60  0000 C CNN
+	1    14900 3850
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	14900 3850 15000 3850
+$Comp
+L CTRIM C21
+U 1 1 55357E0C
+P 3850 1000
+F 0 "C21" H 3980 920 50  0000 C CNN
+F 1 "5-50pf" H 4000 840 50  0000 C CNN
+F 2 "" H 3850 1000 60  0000 C CNN
+F 3 "" H 3850 1000 60  0000 C CNN
+	1    3850 1000
+	0    -1   -1   0   
+$EndComp
+Wire Wire Line
+	4050 1000 4100 1000
+Wire Wire Line
+	4100 1000 4100 1350
+Text Notes 7000 7600 0    60   ~ 12
+TODO:\n- 5V -> 470Ohm bei Q1-Q6\n- jumper für CS - sound, video\n- audio out, cinch vs. klinke
 $EndSCHEMATC
