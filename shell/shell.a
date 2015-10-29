@@ -19,6 +19,7 @@ BUF_SIZE		= 80
 
 
 
+
 !address {
 .buf 				= $0350 ; Input buffer 80 bytes. end: $03a1
 .cmdptr				= .ptr1
@@ -105,10 +106,7 @@ mainloop
 	inc .cmdptr
 	bra -
 +
-	lda .cmdptr+1
-	sta .paramptr+1
-	lda .cmdptr
-	sta .paramptr
+	+copyPointer .cmdptr, .paramptr
 
 	; find begin of parameter (everything behind the command word, separated by space)
 	; first, fast forward until space or abort if null (no parameters then)
@@ -128,7 +126,8 @@ mainloop
 	bra -
 +
 ++
-	
+
+	; compare 	
 	ldx #$00
 -	ldy #$00
 --	lda .cmdlist,x
@@ -171,7 +170,7 @@ mainloop
 	lda .buf
 	beq +
 
-	+SetVector .buf, .paramptr
+	; +SetVector .buf, .paramptr
 	+ShellPrintString .crlf
 	bra .run
 
@@ -207,10 +206,8 @@ mainloop
 	jmp mainloop
 
 +	; not a slash. cd to whatever
-	lda .paramptr
-	sta filenameptr
-	lda .paramptr+1
-	sta filenameptr+1
+
+	jsr param2fileptr
 	
 	+ShellPrintString .crlf
 	jsr open
@@ -227,15 +224,9 @@ mainloop
 
 .run
 
--	lda (.paramptr)	; skip non alphanumeric stuff	
-	cmp #$20
-	bne +
-	inc .paramptr
-	bra -
-+
 
 	ldy #$00
--	lda (.paramptr),y
+-	lda (.cmdptr),y
 	beq ++
 	cmp #' '
 	beq ++
@@ -248,15 +239,16 @@ mainloop
 ++	
 	ldx #$00
 -	lda .exec_extension,x
-	sta (.paramptr),y
+	sta (.cmdptr),y
 	iny
 	inx
 	cpx #$05
 	bne -
 
-	; +ShellPrintString .filename
+	
 
-+	jsr .readfile		
++	+copyPointer .cmdptr, filenameptr
+	jsr .readfile		
 	
 	lda errno
 	beq + 
@@ -272,11 +264,13 @@ mainloop
 	jsr .steckos_start
 
 .load
+	jsr param2fileptr
 	jsr .readfile		
 	
 	jmp mainloop
 
 .type
+	jsr param2fileptr
 	jsr .readfile
 	lda errno
 	bne +
@@ -389,6 +383,9 @@ mainloop
 
 	
 .gfxview
+	
+	jsr param2fileptr
+
 	jsr .readfile	; read data to .steckos_start ($1000)
 	lda errno
 	bne +
@@ -405,12 +402,6 @@ mainloop
 +	jmp mainloop
 
 .readfile
-
-	lda .paramptr
-	sta filenameptr
-	lda .paramptr+1
-	sta filenameptr+1
-
 
 	jsr open
  	stx tmp5
@@ -524,6 +515,9 @@ mainloop
 
     jmp mainloop
 
+param2fileptr
+ 	+copyPointer .paramptr, filenameptr
+ 	rts
 
 .cmdlist
 	!text "dir"

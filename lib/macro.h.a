@@ -59,6 +59,12 @@ macro_h_a = 1
 	dex
 	bpl -
 }
+!macro copyPointer .fromptr, .toptr {
+	!for i,0,1 {
+		lda .fromptr+i
+		sta .toptr	+i	
+	}
+}
 
 !macro toUpper {
 
