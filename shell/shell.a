@@ -395,15 +395,19 @@ mainloop
 	lda errno
 	bne +
 	jsr	textui_disable			;disable textui
-	jsr	gfxui_init
+	
+    jsr	gfxui_on
     jsr	gfxui_blend_on
 -	jsr keyin
 	beq -
 	jsr	gfxui_blend_off
+	jsr	gfxui_off
+    
 	jsr	display_off			;restore textui
 	jsr	textui_init
 	jsr	textui_enable
-
+    cli
+    
 +	jmp mainloop
 
 .readfile

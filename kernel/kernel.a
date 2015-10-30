@@ -247,7 +247,8 @@ krn_open_rootdir 	jmp .fat_open_rootdir
 krn_textui_init 		jmp	.textui_init
 krn_textui_enable		jmp	.textui_enable
 krn_textui_disable		jmp .textui_disable			;disable textui
-krn_gfxui_init			jmp	.gfxui_init
+krn_gfxui_on			jmp	.gfxui_on
+krn_gfxui_off			jmp	.gfxui_off
 krn_display_off			jmp vdp_display_off
 krn_getkey				jmp .getkey
 ;TODO FIXME externalize it, imgviewer

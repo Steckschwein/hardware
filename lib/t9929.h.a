@@ -9,7 +9,6 @@ t9929_h_a = 1
 }
 
 !macro	SyncBlank{
-    lda a_vreg
 -	bit	a_vreg
 	bpl -	   ; wait until blank - irq flag set?
 }    

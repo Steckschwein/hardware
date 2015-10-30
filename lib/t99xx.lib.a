@@ -7,7 +7,7 @@
 ;		investigate the difference between wdc and rockwell if no nop is used
 ;
 vdp_irq_off
-	lda #v_reg1_16k|v_reg1_display_on	;switch interupt off
+	lda #v_reg1_16k|v_reg1_display_on|v_reg1_spr_size	;switch interupt off
 	ldy	#v_reg1
 vdp_sreg:
 	+vdp_sreg

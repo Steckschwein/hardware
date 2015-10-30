@@ -76,7 +76,8 @@ fat_dir_action_hook		= $0292
 fat_dir_display_hook	= fat_dir_action_hook
 fat_dir_filter_hook		= $0294
 
-
+; irq vector safe point
+irqsafe		= $0296
 
 ; MEMCTL Register
 memctl    = $0230

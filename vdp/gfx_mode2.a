@@ -6,9 +6,9 @@
 !src <defs.h.a>
 !src <t99xx.lib.a>
 
+.safeirq
 main
-    +SetVector  $1000, .addr
-    
+    sei
 	jsr	vdp_display_off			;display off
 	jsr vdp_mode_sprites_off	;sprites off
 
@@ -25,59 +25,118 @@ main
 	ldy	#.WRITE_ADDRESS + >ADDRESS_GFX2_PATTERN
 	ldx	#$18	;6k bitmap - $1800
 	jsr	vdp_memcpy					;load the pic data --> pattern table at vram $0000
-    
+
+    +SetVector  irqvec, .safeirq
+    +SetVector  .blend_isr, irqvec
 	jsr vdp_mode_gfx2			;enable gfx2 mode
-    
--
+    cli
+--  
     jsr vdp_gfx2_blend_on
     jsr vdp_gfx2_blend_off
-	bra	-
+    
+    bra	--
+    
+    sei
+    +SetVector  .safeirq, irqvec
+    cli
 
+.blend_isr
+    bit a_vreg
+    bpl +
+    
+    +save
+    lda #$80
+    sta tmp5
+    +restore
+    
++   rti
+    
+    
+.row=$100
 vdp_gfx2_blend_off
-    lda #$00
+    lda #Transparent<<4|Transparent
     bra +
 vdp_gfx2_blend_on
-    lda #$80
+    lda #$ff
 +   sta tmp2
-    .offs=$0
-    +SetVector  (.WRITE_ADDRESS<<8)+ADDRESS_GFX2_COLOR+.offs,     .ptr1
-    lda #.offs
-    sta tmp0
-    lda #.offs+8
+    +SetVector  (.WRITE_ADDRESS<<8)+ADDRESS_GFX2_COLOR+0,          .ptr1
+    +SetVector  (.WRITE_ADDRESS<<8)+ADDRESS_GFX2_COLOR+.row+$f8,   .ptr2; +1 row and $f8 end of line
+
+    stz tmp0
+    lda #8
     sta tmp1
---  +SyncBlank
-    ldx	#24
+    lda #$f8
+    sta tmp3
+    stz tmp4
+    stz tmp5
+    
+--  bit tmp5
+    bpl --
+    stz tmp5
+    
+    ldx	#12
 -   lda .ptr1l
     ldy .ptr1h
 	+vdp_sreg
  	ldy tmp0
 .c  lda .color,y
-    bit tmp2
-    bpl +
-    lda #Black<<4|Black
-+	sta a_vram
+    and tmp2
+	sta a_vram
 	iny
     cpy tmp1
 	bne   .c
 	inc   .c+2
+	inc   .c+2
+    inc   .ptr1h
     inc   .ptr1h
 	dex
 	bne  -
+
+    sty tmp0    ;new offset
+    sty .ptr1l
+    tya
+    clc
+    adc #08
+    sta tmp1
     
     lda #(.WRITE_ADDRESS)+>ADDRESS_GFX2_COLOR
     sta .ptr1h
     lda #>.color
     sta .c+2
-
-    lda tmp1
-    clc
-    adc #08
-    sta tmp1
-    sty tmp0
-    sty .ptr1l
-    tya ;update psr
-    bne --
-    rts
+    
+    ldx	#12
+-   lda .ptr2l
+    ldy .ptr2h
+	+vdp_sreg
+    ldy tmp3
+.c2 lda .color+.row,y
+    and tmp2
+	sta a_vram
+	iny
+    cpy tmp4
+	bne   .c2
+	inc   .c2+2
+	inc   .c2+2
+    inc   .ptr2h
+    inc   .ptr2h
+	dex
+	bne  -
+    
+    lda tmp3
+    sta tmp4
+    sec
+    sbc #08
+    sta tmp3
+    sta .ptr2l
+    
+    lda #(.WRITE_ADDRESS)+>ADDRESS_GFX2_COLOR+.row+$f8
+    sta .ptr2h
+    lda #>.color+.row
+    sta .c2+2
+    lda tmp0
+    beq +
+    jmp --
++   rts
 
 !align 255,0
 .pattern
