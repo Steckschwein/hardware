@@ -78,7 +78,7 @@ fat_dir_filter_hook		= $0294
 
 ; irq vector safe point
 irqsafe		= $0296
-
+sd_card_status = $0298
 ; MEMCTL Register
 memctl    = $0230
 ; SD CArd command parameter/result buffer

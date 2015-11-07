@@ -1,3 +1,24 @@
+
+;---------------------------------------------------------------------
+; check sd card presence and state of the read only switch
+; set appropriate bits in sd_card_status
+;---------------------------------------------------------------------
+.sd_check_card_status
+       pha
+       stz sd_card_status
+
+       lda via1portb
+       and #%01100000
+       rol
+
+       rol
+       rol sd_card_status
+       rol
+       rol sd_card_status
+
+       pla
+       rts
+
 ;---------------------------------------------------------------------
 ; Init SD Card 
 ; Destructive: A, X, Y

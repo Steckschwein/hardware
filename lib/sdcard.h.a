@@ -17,6 +17,15 @@ acmd41	= $40 + 41
 
 sd_data_token = $fe
 
+
+sd_card_rdonly		= 1<<0
+sd_card_present		= 1<<1
+sd_card_init_ok		= 1<<2
+; _reg1_m1			= 1<<4
+; v_reg1_m2			= 1<<3
+; v_reg1_spr_size		= 1<<1
+; v_reg1_spr_mag		= 1<<0
+
 !macro SDBusyWait {
 -		lda #$ff
 		jsr spi_rw_byte
