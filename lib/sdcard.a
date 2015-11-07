@@ -408,10 +408,10 @@
 ;---------------------------------------------------------------------
 .sd_select_card
        pha
--      lda via1portb ; wait for spi bus to become free
-       and #%01111110
-       cmp #$7e
-       bne -
+; -      lda via1portb ; wait for spi bus to become free
+;        and #%01111110
+;        cmp #$7e
+;        bne -
        ; set CS line to LOW
        lda #%01111100
        sta via1portb
