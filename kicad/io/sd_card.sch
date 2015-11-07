@@ -24,8 +24,7 @@ LIBS:ttl_ieee
 LIBS:dallas-rtc
 LIBS:mini_din
 LIBS:w_connectors
-LIBS:io-cache
-EELAYER 24 0
+EELAYER 25 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
@@ -389,12 +388,18 @@ F 3 "" H 6200 2500 60  0000 C CNN
 $EndComp
 Connection ~ 2900 2300
 Connection ~ 2700 2600
-NoConn ~ 7100 2300
-NoConn ~ 7100 2400
 NoConn ~ 7100 2600
 NoConn ~ 7100 2700
 Wire Wire Line
 	1450 1750 1450 1900
 Connection ~ 1450 1750
 Connection ~ 1900 1750
+Wire Wire Line
+	7100 2300 7450 2300
+Wire Wire Line
+	7100 2400 7450 2400
+Text HLabel 7450 2300 2    60   Output ~ 0
+SD_CARD_DETECT
+Text HLabel 7450 2400 2    60   Output ~ 0
+SD_WRITE_PROTECT
 $EndSCHEMATC
