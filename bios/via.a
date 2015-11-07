@@ -15,7 +15,8 @@ init_via1
 			sta via1acr
 
 			; Port b all outputs
-			lda #$ff
+			; lda #$ff
+			lda #%10011111
 			sta via1ddrb
 
 			; SPICLK low, MOSI low, SPI_SS HI
