@@ -1,4 +1,4 @@
-Cmp-Mod V01 Created by Cvpcb (2014-12-04 BZR 5312)-product   date = Sat 31 Jan 2015 02:42:30 PM CET
+Cmp-Mod V01 Created by Cvpcb (2014-09-16 BZR 5139)-product   date = 08/11/2015 23:04:14
 
 BeginCmp
 TimeStamp = /548DEF73;
@@ -78,6 +78,76 @@ IdModule  = Discret:C1;
 EndCmp
 
 BeginCmp
+TimeStamp = /54318D23/563F29E1;
+Reference = D1;
+ValeurCmp = DIODE;
+IdModule  = Diodes_ThroughHole:Diode_DO-35_SOD27_Horizontal_RM10;
+EndCmp
+
+BeginCmp
+TimeStamp = /54318D23/563F2A94;
+Reference = D2;
+ValeurCmp = DIODE;
+IdModule  = Diodes_ThroughHole:Diode_DO-35_SOD27_Horizontal_RM10;
+EndCmp
+
+BeginCmp
+TimeStamp = /54318D23/563F2AE0;
+Reference = D3;
+ValeurCmp = DIODE;
+IdModule  = Diodes_ThroughHole:Diode_DO-35_SOD27_Horizontal_RM10;
+EndCmp
+
+BeginCmp
+TimeStamp = /54318D23/563F2B0B;
+Reference = D4;
+ValeurCmp = DIODE;
+IdModule  = Diodes_ThroughHole:Diode_DO-35_SOD27_Horizontal_RM10;
+EndCmp
+
+BeginCmp
+TimeStamp = /54318D23/563F2B5F;
+Reference = D5;
+ValeurCmp = DIODE;
+IdModule  = Diodes_ThroughHole:Diode_DO-35_SOD27_Horizontal_RM10;
+EndCmp
+
+BeginCmp
+TimeStamp = /54318D23/563F329D;
+Reference = D6;
+ValeurCmp = DIODE;
+IdModule  = Diodes_ThroughHole:Diode_DO-35_SOD27_Horizontal_RM10;
+EndCmp
+
+BeginCmp
+TimeStamp = /54318D23/563F336C;
+Reference = D7;
+ValeurCmp = DIODE;
+IdModule  = Diodes_ThroughHole:Diode_DO-35_SOD27_Horizontal_RM10;
+EndCmp
+
+BeginCmp
+TimeStamp = /54318D23/563F33A7;
+Reference = D8;
+ValeurCmp = DIODE;
+IdModule  = Diodes_ThroughHole:Diode_DO-35_SOD27_Horizontal_RM10;
+EndCmp
+
+BeginCmp
+TimeStamp = /54318D23/563F33DF;
+Reference = D9;
+ValeurCmp = DIODE;
+IdModule  = Diodes_ThroughHole:Diode_DO-35_SOD27_Horizontal_RM10;
+EndCmp
+
+BeginCmp
+TimeStamp = /54318D23/563F340C;
+Reference = D10;
+ValeurCmp = DIODE;
+IdModule  = Diodes_ThroughHole:Diode_DO-35_SOD27_Horizontal_RM10;
+EndCmp
+
+BeginCmp
 TimeStamp = /548C6233;
 Reference = IC1;
 ValeurCmp = ATMEGA8-P;
@@ -117,20 +187,6 @@ TimeStamp = /54287A69/542071FB;
 Reference = P5;
 ValeurCmp = CONN_02X25;
 IdModule  = Pin_Headers:Pin_Header_Angled_2x25;
-EndCmp
-
-BeginCmp
-TimeStamp = /54B1948A;
-Reference = P6;
-ValeurCmp = SPI5;
-IdModule  = Pin_Headers:Pin_Header_Straight_2x03;
-EndCmp
-
-BeginCmp
-TimeStamp = /54B1904A;
-Reference = P7;
-ValeurCmp = SPI6;
-IdModule  = Pin_Headers:Pin_Header_Straight_2x03;
 EndCmp
 
 BeginCmp
@@ -185,42 +241,42 @@ EndCmp
 BeginCmp
 TimeStamp = /54318D23/54B3B295;
 Reference = R7;
-ValeurCmp = 12K;
+ValeurCmp = 12K-27K;
 IdModule  = Discret:R3;
 EndCmp
 
 BeginCmp
 TimeStamp = /54318D23/54B39601;
 Reference = R8;
-ValeurCmp = 12K;
+ValeurCmp = 12K-27K;
 IdModule  = Discret:R3;
 EndCmp
 
 BeginCmp
 TimeStamp = /54318D23/54B3B48A;
 Reference = R9;
-ValeurCmp = 12K;
+ValeurCmp = 12K-27K;
 IdModule  = Discret:R3;
 EndCmp
 
 BeginCmp
 TimeStamp = /54318D23/54B3B484;
 Reference = R10;
-ValeurCmp = 12K;
+ValeurCmp = 12K-27K;
 IdModule  = Discret:R3;
 EndCmp
 
 BeginCmp
 TimeStamp = /54318D23/54B3B47E;
 Reference = R11;
-ValeurCmp = 12K;
+ValeurCmp = 12K-27K;
 IdModule  = Discret:R3;
 EndCmp
 
 BeginCmp
 TimeStamp = /54318D23/54B3B478;
 Reference = R12;
-ValeurCmp = 12K;
+ValeurCmp = 12K-27K;
 IdModule  = Discret:R3;
 EndCmp
 
@@ -250,13 +306,6 @@ TimeStamp = /54318D23/54B370F0;
 Reference = R16;
 ValeurCmp = 1K;
 IdModule  = Discret:R3;
-EndCmp
-
-BeginCmp
-TimeStamp = /542907F9/54C3AF89;
-Reference = SDCARD1;
-ValeurCmp = SD_Card;
-IdModule  = Connect:SD_Card_Receptacle;
 EndCmp
 
 BeginCmp
