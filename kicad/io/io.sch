@@ -420,7 +420,6 @@ NoConn ~ 7550 3250
 NoConn ~ 7550 3350
 NoConn ~ 7550 3450
 NoConn ~ 7550 3550
-NoConn ~ 1450 6750
 NoConn ~ 1450 6950
 NoConn ~ 1450 7150
 NoConn ~ 2650 6150
@@ -1083,4 +1082,8 @@ Wire Wire Line
 	3050 3100 3050 3350
 Wire Wire Line
 	3050 3350 3700 3350
+Text GLabel 1150 6750 0    60   Input ~ 0
+/IRQ
+Wire Wire Line
+	1150 6750 1450 6750
 $EndSCHEMATC
