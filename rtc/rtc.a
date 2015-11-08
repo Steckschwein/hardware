@@ -2,104 +2,73 @@
 !src <defs.h.a>
 !src <via.h.a>
 !src <bios.h.a>
-!src <t9929.h.a>
 
-tsec = tmp6
-tmin = tmp5
-thou = tmp4
-tday = tmp3
-tmon = tmp2
-tyea = tmp1
-	jmp main
+
 main
     sei
  	;   Set IRQ Vector
  	+SetVector isr, irqvec
 
-   	lda #50
-	sta tmp7
-
-	+Println
     
+	jsr rtc_enable
+
+	lda #$87
+	jsr spi_rw_byte
+	lda #$80
+	jsr spi_rw_byte
+	lda #$80
+	jsr spi_rw_byte
+	lda #$80
+	jsr spi_rw_byte
+	lda #$80
+	jsr spi_rw_byte
+
+	jsr rtc_disable
+
 	jsr rtc_enable
 	lda #$8f
 	jsr spi_rw_byte
-	lda #$00
+	lda #$01
 	jsr spi_rw_byte
 	jsr rtc_disable
-
 	cli
+
+    lda #'A'
+    jsr chrout
     
-    jsr isr
-    rts
+    
 -	bra -
 
 isr
 	pha
-	phy
-	phx
 
-    lda #10
-    jsr chrout
-    
-	lda #50
-	sta tmp7
 
-	lda #24
-	sta crs_x
-	stz crs_y
 
-	; jsr read
+	; read status register. irq from rtc?
 	jsr rtc_enable
-    lda #$00
-   	jsr spi_rw_byte
+	lda #$10
+	jsr spi_rw_byte
+	jsr spi_r_byte
+	jsr rtc_disable
+	cmp #$01
+	bne + ; no, get out
 
-    jsr spi_r_byte
-    sta tsec
-    jsr spi_r_byte
-    sta tmin
-    jsr spi_r_byte
-    sta thou
+	
+	
+	; acknowledge RTC ALARM0 interrupt 
+	jsr rtc_enable
 
-    jsr spi_r_byte
-
-    jsr spi_r_byte
-    sta tday
-    jsr spi_r_byte
-    sta tmon
-    jsr spi_r_byte
-    sta tyea
+	lda #$87
+	jsr spi_rw_byte
+	jsr spi_r_byte
 	jsr rtc_disable
 
-	lda thou
-	jsr hexout
-    lda #':'
-    jsr chrout
-	lda tmin
-	jsr hexout
-    lda #':'
-    jsr chrout
-	lda tsec
-	jsr hexout
 
-    lda #' '
+    lda #'X'
     jsr chrout
     
-	lda tday
-	jsr hexout
-    lda #'.'
-    jsr chrout
-	lda tmon
-	jsr hexout
-    lda #'.'
-    jsr chrout
-	lda tyea
-	jsr hexout
-
 +	pla
-	ply	
-	plx
-	rts
+	rti
 
 rtc_disable
 	pha
