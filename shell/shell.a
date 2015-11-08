@@ -1,18 +1,21 @@
 *= $d000
 
-text_mode_40 = 1
-num_ls_entries = $03
+text_mode_40 	= 1
+num_ls_entries 	= $03
 
-.nvram = $a000
 !src <defs.h.a>
 !src <bios.h.a>
 !src <kernel.h.a>
+!src <shell.h.a>
 !src <via.h.a>
 !src <fat32.h.a>
 !src <params.h.a>
 !src <errors.h.a>
 !src <t9929.h.a>
 
+
+; TODO: find a better location for this
+.nvram 			= $a000
 KEY_RETURN 		= $0d
 KEY_BACKSPACE 	= $08
 BUF_SIZE		= 80
@@ -22,8 +25,6 @@ BUF_SIZE		= 80
 
 !address {
 .buf 				= $0350 ; Input buffer 80 bytes. end: $03a1
-.cmdptr				= .ptr1
-.paramptr			= .ptr2
 }
 
 
@@ -102,32 +103,32 @@ mainloop
 
 .parse
 
-	+SetVector .buf, .cmdptr
+	+SetVector .buf, cmdptr
 
 	; find begin of command word
--	lda (.cmdptr)	; skip non alphanumeric stuff	
+-	lda (cmdptr)	; skip non alphanumeric stuff	
 	cmp #$20
 	bne +
-	inc .cmdptr
+	inc cmdptr
 	bra -
 +
-	+copyPointer .cmdptr, .paramptr
+	+copyPointer cmdptr, paramptr
 
 	; find begin of parameter (everything behind the command word, separated by space)
 	; first, fast forward until space or abort if null (no parameters then)
--	lda (.paramptr)
+-	lda (paramptr)
 	beq ++
 	cmp #$20
 	beq +
-	inc .paramptr
+	inc paramptr
 	bra -
 +	
 	; space found.. fast forward until non space or null
--	lda (.paramptr)
+-	lda (paramptr)
 	beq ++
 	cmp #$20
 	bne +
-	inc .paramptr
+	inc paramptr
 	bra -
 +
 ++
@@ -147,7 +148,7 @@ mainloop
 	beq .cmdfound
 
 	; cmp .buf,y
-	cmp (.cmdptr),y
+	cmp (cmdptr),y
 	bne +	; difference. this isnt the command were looking for
 
 	iny
@@ -175,7 +176,7 @@ mainloop
 	lda .buf
 	beq +
 
-	; +SetVector .buf, .paramptr
+	; +SetVector .buf, paramptr
 	+ShellPrintString .crlf
 	bra .run
 
@@ -199,11 +200,11 @@ mainloop
 .cd
 	; is it a slash?
 	ldy #$00
-	lda (.paramptr),y
+	lda (paramptr),y
 	cmp #'/'
 	bne +
 	iny
-	lda (.paramptr),y
+	lda (paramptr),y
 	bne +
 	
 	; its a slash, nothing else. cd to /
@@ -231,7 +232,7 @@ mainloop
 
 
 	ldy #$00
--	lda (.cmdptr),y
+-	lda (cmdptr),y
 	beq ++
 	cmp #' '
 	beq ++
@@ -244,7 +245,7 @@ mainloop
 ++	
 	ldx #$00
 -	lda .exec_extension,x
-	sta (.cmdptr),y
+	sta (cmdptr),y
 	iny
 	inx
 	cpx #$05
@@ -252,7 +253,7 @@ mainloop
 
 	
 
-+	+copyPointer .cmdptr, filenameptr
++	+copyPointer cmdptr, filenameptr
 	jsr .readfile		
 	
 	lda errno
@@ -297,7 +298,7 @@ mainloop
 
 	ldy #$00
 	ldx #$03
--	lda (.paramptr),y
+-	lda (paramptr),y
 	beq +
 
 	jsr .atoi
@@ -308,7 +309,7 @@ mainloop
 	sta .dumpvec,x
 
 	iny
-	lda (.paramptr),y
+	lda (paramptr),y
 	beq +
 	jsr .atoi
 	ora .dumpvec,x
@@ -474,10 +475,6 @@ mainloop
 
 
 .date 
--	lda via1portb ; wait for spi bus to become free
-    and #%01111110
-    cmp #$7e
-    bne -
 
     ; Select SPI SS for RTC
 	lda #%01110110
@@ -641,7 +638,7 @@ mainloop
 	rts
 
 .param2fileptr
- 	+copyPointer .paramptr, filenameptr
+ 	+copyPointer paramptr, filenameptr
  	rts
 
 
