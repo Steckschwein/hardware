@@ -11,8 +11,8 @@
 	; lda #$00
 	jsr spi_r_byte
 	jsr .kbd_disable
-	; cmp #$00
-	; beq -
+	cmp #$00
+	beq -
 ; 	; lda #'N'
 ; 	; jsr chrout
 ; 	bra -
