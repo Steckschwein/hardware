@@ -307,6 +307,13 @@ void put_kbbuff(uint8_t c)
 
 	if (kb_buffcnt < KB_BUFF_SIZE)			  // If buffer not full
 	{
+		if (c & 0x80) 
+		{
+			c &= 0b01111111;  
+			*kb_inptr++ = 27;
+			kb_buffcnt++;
+		}
+
 		// Put character into buffer
 		// Increment pointer
 		*kb_inptr++ = c;
@@ -320,62 +327,6 @@ void put_kbbuff(uint8_t c)
 	// SREG = tmp;
 }
 
-// void put_scanbuff(uint8_t c)
-// {
-// 	// uint8_t tmp = SREG;
-// 	// cli();
-
-// 	if (scan_buffcnt < SCAN_BUFF_SIZE)			  // If buffer not full
-// 	{
-// 		// Put character into buffer
-// 		// Increment pointer
-// 		*scan_inptr++ = c;
-// 		scan_buffcnt++;
-
-// 		// Pointer wrapping
-// 		if (scan_inptr >= scan_buffer + SCAN_BUFF_SIZE)
-// 			scan_inptr = scan_buffer;
-// 	}
-
-// 	// SREG = tmp;
-// }
-
-
-//-------------------------------------------------------------------
-// Get a char from the keyboard buffer.
-// Routine does not return until a character is ready!
-//-------------------------------------------------------------------
-/*
-int get_kbchar(void)
-{
-	int byte;
-
-
-	// Wait for data
-	// while(kb_buffcnt == 0);
-	if (kb_buffcnt == 0)
-	{
-		return 0;
-	}
-	// uint8_t tmp = SREG;
-	// cli();
-
-
-	// Get byte - Increment pointer
-	byte = *kb_outptr++;
-
-	// Pointer wrapping
-	if (kb_outptr >= kb_buffer + KB_BUFF_SIZE)
-		kb_outptr = kb_buffer;
-
-	// Decrement buffer count
-	kb_buffcnt--;
-
-	// SREG = tmp;
-
-	return byte;
-}
-*/
 int get_scanchar(void)
 {
 	uint8_t byte;
