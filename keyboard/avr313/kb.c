@@ -243,7 +243,7 @@ void decode(uint8_t sc)
 				{
 					byte = pgm_read_byte(&scancodes[i][offs]);
 					
-					if (byte | 0x80) 
+					if (byte > 127) 
 					{
 						byte &= 0b01111111;  
 						put_kbbuff(27);
