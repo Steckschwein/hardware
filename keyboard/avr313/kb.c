@@ -171,6 +171,7 @@ void decode(uint8_t sc)
 	static uint8_t shift = 0;
 	static uint8_t ctrl  = 0;
 	static uint8_t alt   = 0;
+	static uint8_t byte  = 0;
 
 	uint8_t i, ch, offs;
 
@@ -240,7 +241,15 @@ void decode(uint8_t sc)
 				for(i = 0; (ch = pgm_read_byte(&scancodes[i][0])) != sc && ch; i++);
 				if (ch == sc)
 				{
-					put_kbbuff(pgm_read_byte(&scancodes[i][offs]));
+					byte = pgm_read_byte(&scancodes[i][offs]);
+					
+					if (byte | 0x80) 
+					{
+						byte &= 0b01111111;  
+						put_kbbuff(27);
+					}
+					put_kbbuff(byte);
+					
 				}
 			 
 

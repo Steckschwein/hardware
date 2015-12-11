@@ -7,6 +7,11 @@
 #define C_BEL 0x07 // Ctrl-G, Bell
 #define C_BS  0x08 // Ctrl-H, Backspace
 
+#define CRSR_UP 	 'A' | 0x80
+#define CRSR_DOWN 	 'B' | 0x80
+#define CRSR_RIGHT 	 'C' | 0x80
+#define CRSR_LEFT 	 'D' | 0x80
+
 // Unshifted characters - for a "US QWERTY" keyboard only - Scan Code Set 2
 const unsigned char scancodes[][5] PROGMEM = {
 	/*
@@ -74,16 +79,16 @@ const unsigned char scancodes[][5] PROGMEM = {
 	{0x5b,'+', '*', 0, '~'} ,
 	{0x5d,'\\', '|', 0, 0} ,
 	{0x61,'<', '>', 0, 0} ,
-	{0x66, C_BS, C_BS , 0, 0} ,
+	{0x66,C_BS, C_BS , 0, 0} ,
 	{0x69,'1', '!', 0, 0} ,
-	{0x6b,'4', '$', 0, 0} ,
+	{0x6b,CRSR_LEFT, CRSR_LEFT, 0, 0} ,
 	{0x6c,'7', '/', 0, 0} ,
 	{0x70,'0', '0', 0, 0} ,
 	{0x71,'.', '.', 0, 0} ,
-	{0x72,'2', '2', 0, 0} ,
+	{0x72,CRSR_DOWN, CRSR_DOWN, 0, 0} ,
 	{0x73,'5', '5', 0, 0} ,
-	{0x74,'6', '6', 0, 0} ,
-	{0x75,'8', '8', 0, 0} ,
+	{0x74,CRSR_RIGHT, CRSR_RIGHT, 0, 0} ,
+	{0x75,CRSR_UP, CRSR_UP, 0, 0} ,
 	{0x78,' ', ' ', 0, 0} ,// F11
 	{0x79,'+', '+', 0, 0} ,
 	{0x7a,'3', '3', 0, 0} ,
