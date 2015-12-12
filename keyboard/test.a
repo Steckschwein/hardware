@@ -10,6 +10,41 @@
 	jsr .kbd_disable
 	cmp #$00
 	beq -
+	cmp #$1b
+	bne +
+
+	jsr .kbd_enable	
+	jsr spi_r_byte
+	jsr .kbd_disable
+	cmp #'A'
+	bne ++
+	lda #'U'
+	jsr chrout
+	bra -
+++	cmp #'B'
+	bne ++
+
+	lda #'D'
+	jsr chrout
+	bra -
+
+++	cmp #'C'
+	bne ++
+
+	lda #'R'
+	jsr chrout
+	bra -
+
+
+++	cmp #'D'
+	bne +
+
+	lda #'L'
+	jsr chrout
+	bra -
+
+
++
 	jsr hexout
  	bra -
 
