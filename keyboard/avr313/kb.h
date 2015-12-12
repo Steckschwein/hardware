@@ -23,7 +23,7 @@ volatile uint8_t *scan_inptr;
 volatile uint8_t *scan_outptr;
 volatile uint8_t scan_buffcnt;
 
-#define KB_BUFF_SIZE 32
+#define KB_BUFF_SIZE 64
 volatile uint8_t kb_buffer[KB_BUFF_SIZE];
 volatile uint8_t *kb_inptr;
 volatile uint8_t *kb_outptr;

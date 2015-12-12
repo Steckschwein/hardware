@@ -9,10 +9,9 @@
 
 void init_kb(void)
 {
-	scan_inptr = scan_buffer;					  // Initialize buffer
+	scan_inptr = scan_buffer;				   // Initialize buffer
 	scan_outptr = scan_buffer;
 	scan_buffcnt = 0;
-
 
 	kb_inptr =  kb_buffer;					  // Initialize buffer
 	kb_outptr = kb_buffer;
@@ -20,7 +19,7 @@ void init_kb(void)
 
 
 	MCUCR 	= (1 << ISC01);					  // INT0 interrupt on falling edge
-	GIMSK	= (1 << INT0);						  // Enable INT0 interrupt
+	GIMSK	= (1 << INT0);					  // Enable INT0 interrupt
 
 	PORTC  	= 3;
 	DDRC	= (1 << PC0) | (1 << PC1);
@@ -148,9 +147,7 @@ ISR (INT0_vect)
 
 		if (scan_buffcnt < SCAN_BUFF_SIZE)			  // If buffer not full
 		{
-			// Put character into buffer
-			// Increment pointer
-			*scan_inptr++ = data;
+			*scan_inptr++ = data;   // Put character into buffer, Increment pointer
 			scan_buffcnt++;
 
 			// Pointer wrapping
@@ -164,7 +161,6 @@ ISR (INT0_vect)
 void decode(uint8_t sc)
 {
 	static uint8_t is_up = 0, mode = 0;
-
 	static uint8_t shift = 0;
 	static uint8_t ctrl  = 0;
 	static uint8_t alt   = 0;
@@ -172,7 +168,6 @@ void decode(uint8_t sc)
 	uint8_t i, ch, offs;
 
 	offs = 1;
-
 
 	if (!is_up)								  // Last data received was the up-key identifier
 	{
@@ -239,14 +234,9 @@ void decode(uint8_t sc)
 				{
 					put_kbbuff(pgm_read_byte(&scancodes[i][offs]));	
 				}
-			 
-
 			}								  // Scan code mode
 			// else
 			// {
-			// 	print_hexbyte(sc);			  // Print scan code
-			// 	put_kbbuff(' ');
-			// 	put_kbbuff(' ');
 			// }
 		}
 	}
@@ -300,24 +290,23 @@ void put_kbbuff(uint8_t c)
 {
 	if (kb_buffcnt < KB_BUFF_SIZE)			  // If buffer not full
 	{
-        cli();
-        
         if (c & 0x80)
         {
             c &= 0b01111111;
             *kb_inptr++ = 27;
-            
+            cli();
             kb_buffcnt++;
+            sei();
         }
         
 		*kb_inptr++ = c;    // Put character into buffer, Increment pointer
+        cli();
 		kb_buffcnt++;
         sei();
         
 		// Pointer wrapping
 		if (kb_inptr >= kb_buffer + KB_BUFF_SIZE)
 			kb_inptr = kb_buffer;
-
 	}
 }
 
@@ -325,30 +314,23 @@ int get_scanchar(void)
 {
 	uint8_t byte;
 
-
 	// Wait for data
 	// while(kb_buffcnt == 0);
 	if (scan_buffcnt == 0)
 	{
 		return 0;
 	}
-	// uint8_t tmp = SREG;
-	// cli();
-
 
 	// Get byte - Increment pointer
 	byte = *scan_outptr++;
-
-	
-
+    
 	// Pointer wrapping
 	if (scan_outptr >= scan_buffer + SCAN_BUFF_SIZE)
 		scan_outptr = scan_buffer;
-
 	// Decrement buffer count
+    cli();
 	scan_buffcnt--;
-
-	// SREG = tmp;
-
-	return byte;
+    sei();
+    
+    return byte;
 }

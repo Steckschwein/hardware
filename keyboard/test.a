@@ -4,6 +4,7 @@
 !src <bios.h.a>
 !src <via.h.a>
 
+    sei
 -	
 	jsr .kbd_enable	
 	jsr spi_r_byte
@@ -46,6 +47,7 @@
 
 +
 	jsr hexout
+    ;+Println
  	bra -
 
 .kbd_enable

@@ -46,10 +46,11 @@ Design:
 int __attribute__((OS_main noreturn)) main(void)
 {
 	uint8_t tmp;
+    
+    cli();
 	init_kb();
 	spiInitSlave();
 	sei();
-
 
 	while(1)
 	{		
@@ -57,7 +58,7 @@ int __attribute__((OS_main noreturn)) main(void)
 		if (tmp != 0)
 		{
 			decode(tmp);
-		}	
+		}
 		
 	}
 	// return 0;

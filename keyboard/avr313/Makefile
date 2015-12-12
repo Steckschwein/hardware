@@ -12,9 +12,9 @@ CC=avr-gcc
 CFLAGS= -g -Os -Wall -mcall-prologues -mmcu=atmega8 -DF_CPU=$(CPUSPEED) -D__PROG_TYPES_COMPAT__ -std=gnu99
 OBJ2HEX=avr-objcopy
 OBJDUMP = avr-objdump
-LOADER=avrdude -c stk500v2 -P $(SERIALDEVICE) -p m8 -b 19200 -U flash:w:$(PRG).hex 
+#LOADER=avrdude -c stk500v2 -P $(SERIALDEVICE) -p m8 -b 19200 -U flash:w:$(PRG).hex 
 #LOADER=avrdude -c avrispmkII -p m8 -b 19200 -P usb -U flash:w:$(PRG).hex 
-#LOADER=stk500 -cUSB -dATmega8 -e -if$(PRG).hex -pf -vf
+LOADER=stk500 -cUSB -dATmega8 -e -if$(PRG).hex -pf -vf
 
 PRG=keyboard
 OBJ=kb.o spi.o main.o 
