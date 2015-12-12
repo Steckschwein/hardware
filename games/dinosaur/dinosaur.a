@@ -35,8 +35,9 @@
 .dinosaur_color=Dark_Green
 .DINOSAUR_X=20
 .DINOSAUR_Y=125
-;.PD_Y=114
-.PD_Y=40
+.PD_X=100
+.PD_Y=32
+.PD_SPEED=5
 .DINOSAUR_HEIGHT=30
 .DINOSAUR_RUN=1<<0
 .DINOSAUR_JUMP=1<<1
@@ -72,18 +73,10 @@ main:
 	ldy	#.WRITE_ADDRESS + >.A_GX_COL	;color vram
 	jsr	vdp_fills
 	
-	lda	#$d0					;sprites off, at least y=$d0 will disable the sprite subsystem
-	sta	.adrl
-	ldx	#32*4
-	lda	#<.A_SP_ATR
-	ldy	#.WRITE_ADDRESS + >.A_SP_ATR
-	jsr	vdp_fills
-	
-	+SetVector .vdp_init_gfx, .adrl
+	+SetVector .vdp_init_gfx, .addr
 	jsr	vdp_init_reg
 	
 	cli
-	
 -	bra	-
 
 .vdp_init_gfx
@@ -148,7 +141,8 @@ main:
 	inx	
 	cpx	#32
 	bne	-
-	
+
+    ; level generator
 	lda	.level_bg_cnt		;
 	cmp	(.level_bg_ptr)
 	beq	+
@@ -178,8 +172,16 @@ main:
 +	tax
 	inc .level_script_ptr
 	txa
-	beq	+				;background desert/hills
-	jsr .rnd			;otherwise choose cacti randomly
+	beq	++				;0 - background desert/hills
+    bit #1              ;1 - cacti
+    bne +
+    
+    ;TODO implement me
+                        ;enable pterodactyl
+                        
+    bra ++              ;bg desert/hills
+    
++	jsr .rnd			;otherwise choose cacti randomly
 	and	#$03
 	asl
 	tax
@@ -187,15 +189,15 @@ main:
 	sta	.level_bg_ptr
 	lda	.bg_table+1, x
 	sta	.level_bg_ptr+1
-	bra	++
+	bra	+++
 	
-+	jsr .rnd			;desert/hills randomly
+++	jsr .rnd			;desert/hills randomly
 	and	#$10
 	beq	+
 	+SetVector .level_bg_5, .level_bg_ptr
-	bra	++
+	bra	+++
 +	+SetVector .level_bg_6, .level_bg_ptr
-++	lda	#$00
++++	lda	#$00
 	sta .level_bg_cnt
 	bra	--
 
@@ -205,10 +207,14 @@ main:
 	!word .level_bg_3
 	!word .level_bg_4
 	
-.level_script ; 0 - background, 1 cacti
+.level_script ; 
+    ; 0 - background
+    ; 1 - cacti
+    ; 2 - pterodactyl with background
 	!byte 0,0,0,0,0,0,1,0,0,0,1,0,0,0,1,0,0,1,0,0,0,1,0,0,1,0,0,0,0,1,$80
+	!byte 0,0,0,0,0,0,1,0,0,0,1,0,2,0,0,0,0,1,0,2,0,0,1,0,2,0,1,0,0,1,0,0,0,1,$80
 	
-;	detection algorithm - dinosaur is 32*32px, we check only char positions and sprites as follows, best matches the dinosaur shape
+;	detection algorithm - dinosaur is 32*32px, we check only char positions and sprites as follows - cause this best matches the dinosaur shape
 ;	 ##		-> ##
 ;	 ##		   #
 ;	##		  #
@@ -238,14 +244,13 @@ main:
 	rts
 +	lda	#.DINOSAUR_DEAD
 	sta .dinosaur_state
-	jmp	.game_over
-	rts
+	bra	.game_over
 	
 .game_over
 	lda	#.STATUS_GAME_OVER
 	sta .game_status
 	
-	+SetVector .text_game_over, .adrl
+	+SetVector .text_game_over, .addr
 	lda	#<(.A_GX_SCR + (.Y_OFS_GAME_OVER*32))
 	ldy	#.WRITE_ADDRESS + >(.A_GX_SCR+(.Y_OFS_GAME_OVER*32))
 	jsr .vdp_print
@@ -254,7 +259,7 @@ main:
 .vdp_print
 	+vdp_sreg
 	ldy	#$00
--	lda	(.adrl), y
+-	lda	(.addr), y
 	beq	+
 	sta	a_vram
 	iny
@@ -266,7 +271,7 @@ main:
 	lda	.dinosaur_state
 	bit	#.DINOSAUR_JUMP
 	beq	++
-	+SetVector	.dino_jump, .adrl
+	+SetVector	.dino_jump, .addr
 	jsr	.set_sprite_pointer
 	ldy .sin_tab_offs
 	lda	#.DINOSAUR_Y
@@ -288,7 +293,7 @@ main:
 -	rts
 ++	bit #.DINOSAUR_DEAD
 	beq	+
-	+SetVector	.dino_dead, .adrl
+	+SetVector	.dino_dead, .addr
 	bra	.set_sprite_pointer
 +	lda	.frame_cnt
 	bit	#03
@@ -299,47 +304,58 @@ main:
 	lda	.frame_cnt
 	and	#04
 	beq	+
-	+SetVector	.dino_duck_1, .adrl
+	+SetVector	.dino_duck_1, .addr
 	bra .set_sprite_pointer
-+	+SetVector	.dino_duck_2, .adrl
++	+SetVector	.dino_duck_2, .addr
 	bra .set_sprite_pointer
 ++	lda	.frame_cnt
 	and	#04
 	beq	+
-	+SetVector	.dino_run_1, .adrl
+	+SetVector	.dino_run_1, .addr
 	bra .set_sprite_pointer
-+	+SetVector	.dino_run_2, .adrl
++	+SetVector	.dino_run_2, .addr
 	bra .set_sprite_pointer
 
 .set_sprite_pointer	
 	ldy	#$00
-	lda	(.adrl),y
+	lda	(.addr),y
 	sta	.sprite_tab+2
 	iny
-	lda	(.adrl),y
+	lda	(.addr),y
 	sta	.sprite_tab+2+1*4
 	iny
-	lda	(.adrl),y
+	lda	(.addr),y
 	sta	.sprite_tab+2+2*4
 	iny
-	lda	(.adrl),y
+	lda	(.addr),y
 	sta	.sprite_tab+2+3*4
 	rts
 	
 .animate_enemy
-	dec	.sprite_tab_enemy+1
-	dec	.sprite_tab_enemy+1
-	dec	.sprite_tab_enemy+1+1*4
-	dec	.sprite_tab_enemy+1+1*4
-	dec	.sprite_tab_enemy+1+2*4
-	dec	.sprite_tab_enemy+1+2*4
-	dec	.sprite_tab_enemy+1+3*4
-	dec	.sprite_tab_enemy+1+3*4
-	lda	.score_board_cnt	;every 5 frames update score, which means 10 digits per second
-	beq	+
-	rts
+    ldx #$0
+-	lda	.sprite_tab_enemy+1,x
+	sec
+	sbc	#.PD_SPEED
+    bcs ++
+   	bit	.sprite_tab_enemy+3,x ;Sprite_EC => bit 7
+    bmi +
+    clc
+    adc #32 ; offset and EC enabled
++   tay
+    lda .sprite_tab_enemy+3,x
+    eor #Sprite_EC
+    sta .sprite_tab_enemy+3,x
+    sta .sprite_tab_enemy+3+1*4,x
+    tya
+++  sta	.sprite_tab_enemy+1,x
+	sta	.sprite_tab_enemy+1+1*4,x
+    cpx #$08
+    beq +
+    ldx #$08
+    bra -
+    
 +	lda	.frame_cnt
-	and	#$04
+	and	#08
 	beq	+
 	lda	#56
 	sta	.sprite_tab_enemy+2
@@ -359,6 +375,7 @@ main:
 	lda	#84
 	sta	.sprite_tab_enemy+2+3*4
 	rts
+
 	
 .animate_sky
 	ldx	#$00
@@ -383,7 +400,7 @@ main:
 	inx
 	inx
 	inx
-	cpx	#32
+	cpx	#4*4*2; 4 clouds, 2 sprites each shifted?
 	bne	-
 	rts
 	
@@ -409,7 +426,7 @@ main:
 	jsr	.animate_dinosaur
 	bra	++
 	
-+	lda	#PORT_SEL_1		;port 1
++	lda	#PORT_SEL_2		;port 2
 	sta	via1porta
 	lda	via1porta
 	and #JOY_FIRE
@@ -435,7 +452,7 @@ main:
 	inx	
 	cpx	#4*4
 	bne	-
-
+	
 	lda	#.CHAR_BLANK
 	sta .adrl
 	lda	#<(.A_GX_SCR + (.Y_OFS_GAME_OVER*32))
@@ -501,14 +518,37 @@ main:
 +	cld
 	rts
 	
+.kbd_enable
+	lda #%01111010
+	sta via1portb
+	rts
+
+.kbd_disable
+	; disable keyboard
+	ldx #$7e
+	stx via1portb	
+	rts
+
 	
 .action_handler
-	lda	#PORT_SEL_1		;port 2
+    ;TODO FIXME just for testing
+	jsr .kbd_enable	
+	jsr spi_r_byte
+	jsr .kbd_disable 
+	cmp #$1b
+    bne +
+	jsr .kbd_enable	
+	jsr spi_r_byte
+	jsr .kbd_disable
+	cmp #'A'
+    beq .up
+       
++	lda	#PORT_SEL_2		;port 2
 	sta	via1porta
 	lda	via1porta
 	and #JOY_UP
 	bne	+
- 	lda	.dinosaur_state
+.up	lda	.dinosaur_state
 	and #.DINOSAUR_JUMP	;only allow jump, if dinosaur is not already jumping
 	bne	++
 	lda	#.DINOSAUR_JUMP
@@ -544,12 +584,12 @@ main:
 	pha
 	stz memctl
 
-	+SetVector charset, .adrl			; init 2 game charset with character set
+	+SetVector charset, .addr			; init 2 game charset with character set
 	lda #<.A_GX_PAT_1
 	ldy #.WRITE_ADDRESS + >.A_GX_PAT_1
 	ldx	#$08
 	jsr	vdp_memcpy
-	+SetVector charset, .adrl			; 
+	+SetVector charset, .addr			; 
 	lda #<.A_GX_PAT_2
 	ldy #.WRITE_ADDRESS + >.A_GX_PAT_2
 	ldx	#$08
@@ -558,25 +598,25 @@ main:
 	pla 
 	sta memctl
 
-	+SetVector .game_chars, .adrl		; first game charset
+	+SetVector .game_chars, .addr		; first game charset
 	lda #<(.A_GX_PAT_1+.GAME_CHAR_OFFS)
 	ldy #.WRITE_ADDRESS + >(.A_GX_PAT_1+.GAME_CHAR_OFFS)
 	ldx	#$03
 	jsr	vdp_memcpy
 	
-	+SetVector .game_chars_4px, .adrl	; 2nd game charset with 4px offset
+	+SetVector .game_chars_4px, .addr	; 2nd game charset with 4px offset
 	lda #<(.A_GX_PAT_2+.GAME_CHAR_OFFS)
 	ldy #.WRITE_ADDRESS + >(.A_GX_PAT_2+.GAME_CHAR_OFFS)
 	ldx	#$03
 	jsr	vdp_memcpy
 	
-	+SetVector .sprites, .adrl
+	+SetVector .sprites, .addr
 	lda	#<.A_SP_PAT
 	ldy	#.WRITE_ADDRESS + >.A_SP_PAT
 	ldx	#$03			; 3 pages, 768 sprite bytes
 	jsr	vdp_memcpy
 
-	+SetVector .text_game_label, .adrl
+	+SetVector .text_game_label, .addr
 	lda	#<(.A_GX_SCR + (22*32))
 	ldy	#.WRITE_ADDRESS + >(.A_GX_SCR+(22*32))
 	jsr .vdp_print
@@ -584,10 +624,10 @@ main:
 	
 .update_vram
 	;update sprite tab
-	+SetVector .sprite_tab, .adrl		
+	+SetVector .sprite_tab, .addr		
 	lda	#<.A_SP_ATR
 	ldy	#.WRITE_ADDRESS + >.A_SP_ATR
-	ldx	#16*4
+	ldx	#17*4
 	jsr	vdp_memcpys
 	
 	;score_board
@@ -615,7 +655,7 @@ main:
 	lda	.score_value+2
 	jsr .digits_out
 	
-	+SetVector .screen, .adrl			;copy screen
+	+SetVector .screen, .addr			;copy screen
 	lda	#<(.A_GX_SCR + (16*32))
 	ldy	#.WRITE_ADDRESS + >(.A_GX_SCR+(16*32))
 	ldx	#32*4
@@ -656,15 +696,12 @@ main:
 	!byte	.DINOSAUR_Y		,.DINOSAUR_X	,8	,.dinosaur_color
 	!byte	.DINOSAUR_Y+16	,.DINOSAUR_X	,28	,.dinosaur_color 	
 .sprite_tab
-	!byte	.DINOSAUR_Y		,.DINOSAUR_X+16	,0	,.dinosaur_color
-	!byte	.DINOSAUR_Y+16	,.DINOSAUR_X+16	,4	,.dinosaur_color
-	!byte	.DINOSAUR_Y		,.DINOSAUR_X	,8	,.dinosaur_color
-	!byte	.DINOSAUR_Y+16	,.DINOSAUR_X	,28	,.dinosaur_color
+	!fill	4*4
 .sprite_tab_enemy
-	!byte	.PD_Y		,100,	56, Dark_Red
-	!byte	.PD_Y+16	,100,	60, Dark_Red
-	!byte	.PD_Y		,100+16,64, Dark_Red
-	!byte	.PD_Y+16	,100+16,68, Dark_Red
+	!byte	.PD_Y		,.PD_X,	56, Dark_Red
+	!byte	.PD_Y+16	,.PD_X,	60, Dark_Red
+	!byte	.PD_Y		,.PD_X+16,64, Dark_Red
+	!byte	.PD_Y+16	,.PD_X+16,68, Dark_Red
 .sprite_tab_sky
 	!byte	40,100,48, White
 	!byte	40,116,52, White
@@ -674,7 +711,8 @@ main:
 	!byte	72,86,52, White
 	!byte	98,200,48, White
 	!byte	98,216,52, White
-	!byte	$d0 ; end of sprites
+	; end of sprites
+	!byte	$d0
 
 .dino_run_1
 	!byte 0,4,8,12
@@ -739,14 +777,11 @@ main:
 	!byte 210, 210, 210, 209
 
 .sin_tab
-	; !src "sintab.a"
 PI = 3.14159265358979323846
 !for .i, 1, 35 {
 	!byte sin(float(.i) * 5 * PI/180)*56 + 0.5
 }
 !byte	$ff
-
-foo
 .sin_tab_short
 	; !src "sintab.short.a"
 !for .i, 0, 23 {
