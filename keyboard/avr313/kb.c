@@ -307,13 +307,6 @@ void put_kbbuff(uint8_t c)
 
 	if (kb_buffcnt < KB_BUFF_SIZE)			  // If buffer not full
 	{
-		if (c & 0x80) 
-		{
-			c &= 0b01111111;  
-			*kb_inptr++ = 27;
-			kb_buffcnt++;
-		}
-
 		// Put character into buffer
 		// Increment pointer
 		*kb_inptr++ = c;
@@ -344,6 +337,8 @@ int get_scanchar(void)
 
 	// Get byte - Increment pointer
 	byte = *scan_outptr++;
+
+	
 
 	// Pointer wrapping
 	if (scan_outptr >= scan_buffer + SCAN_BUFF_SIZE)
