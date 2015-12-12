@@ -157,9 +157,6 @@ ISR (INT0_vect)
 			if (scan_inptr >= scan_buffer + SCAN_BUFF_SIZE)
 				scan_inptr = scan_buffer;
 		}
-
-		
-		// put_scanbuff(data);
 	}
 }
 
@@ -301,23 +298,27 @@ void decode(uint8_t sc)
 //-------------------------------------------------------------------
 void put_kbbuff(uint8_t c)
 {
-	// FIXME: do we really need to disable interrupts during buffer access?
-	// uint8_t tmp = SREG;
-	// cli();
-
 	if (kb_buffcnt < KB_BUFF_SIZE)			  // If buffer not full
 	{
-		// Put character into buffer
-		// Increment pointer
-		*kb_inptr++ = c;
+        cli();
+        
+        if (c & 0x80)
+        {
+            c &= 0b01111111;
+            *kb_inptr++ = 27;
+            
+            kb_buffcnt++;
+        }
+        
+		*kb_inptr++ = c;    // Put character into buffer, Increment pointer
 		kb_buffcnt++;
-
+        sei();
+        
 		// Pointer wrapping
 		if (kb_inptr >= kb_buffer + KB_BUFF_SIZE)
 			kb_inptr = kb_buffer;
-	}
 
-	// SREG = tmp;
+	}
 }
 
 int get_scanchar(void)

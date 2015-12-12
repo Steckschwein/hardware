@@ -12,11 +12,13 @@ ISR( SPI_STC_vect)
 { 
 	if (kb_buffcnt == 0)
 	{
-		spiin = 0;
+		spiout = SPDR;
+        SPDR = 0;
 	}
 	else
 	{
-		spiin = *kb_outptr++;
+        spiout = SPDR;
+        SPDR = *kb_outptr++;
 
 		// Pointer wrapping
 		if (kb_outptr >= kb_buffer + KB_BUFF_SIZE)
@@ -24,12 +26,7 @@ ISR( SPI_STC_vect)
 
 		// Decrement buffer count
 		kb_buffcnt--;
-
 	}
-
-	spiout = SPDR;
-	SPDR = spiin;
-	// reti();
 }
 
 

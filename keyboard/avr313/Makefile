@@ -12,8 +12,10 @@ CC=avr-gcc
 CFLAGS= -g -Os -Wall -mcall-prologues -mmcu=atmega8 -DF_CPU=$(CPUSPEED) -D__PROG_TYPES_COMPAT__ -std=gnu99
 OBJ2HEX=avr-objcopy
 OBJDUMP = avr-objdump
-LOADER=avrdude -c stk500v2 -P $(SERIALDEVICE) -p m8 -b 19200 
-#LOADER=avrdude -c avrispmkII -P usb -p m8 -b 19200 
+LOADER=avrdude -c stk500v2 -P $(SERIALDEVICE) -p m8 -b 19200 -U flash:w:$(PRG).hex 
+#LOADER=avrdude -c avrispmkII -p m8 -b 19200 -P usb -U flash:w:$(PRG).hex 
+#LOADER=stk500 -cUSB -dATmega8 -e -if$(PRG).hex -pf -vf
+
 PRG=keyboard
 OBJ=kb.o spi.o main.o 
 all: $(PRG).elf $(PRG).hex $(PRG).lss $(PRG).eep
@@ -24,7 +26,7 @@ $(PRG).elf: $(OBJ)
 	$(CC) $(CFLAGS) -o $@ $^ $(LIBS) 
 
 $(PRG).hex: $(PRG).elf 
-	$(OBJ2HEX) -j .text -j .data -O ihex $< $@ 
+	$(OBJ2HEX) -j .text -j .data -O ihex $< $@
 
 $(PRG).eep: $(PRG).elf 
 	$(OBJ2HEX) -j .eeprom --change-section-lma .eeprom=0 -O ihex $< $@ 
@@ -36,7 +38,7 @@ clean :
 	rm -f *.hex *.obj *.o *.elf *.eep *.lss
 
 burn : $(PRG).hex
-	$(LOADER) -U flash:w:$(PRG).hex 
+	$(LOADER)p
 
 fuse : 
 	$(LOADER) $(FUSES)

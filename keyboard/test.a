@@ -4,21 +4,14 @@
 !src <bios.h.a>
 !src <via.h.a>
 
-	sei
-
 -	
 	jsr .kbd_enable	
-	; lda #$00
 	jsr spi_r_byte
 	jsr .kbd_disable
 	cmp #$00
 	beq -
-; 	; lda #'N'
-; 	; jsr chrout
-; 	bra -
-	; lda #'X'
 	jsr hexout
-	bra -
+ 	bra -
 
 .kbd_enable
 	lda #%01111010
@@ -38,7 +31,6 @@
 	jsr .kbd_enable
 ; -	lda #$00
 	jsr spi_r_byte
-
 
 	ldx #$7e
 	stx via1portb	
