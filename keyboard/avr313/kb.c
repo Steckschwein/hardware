@@ -233,7 +233,12 @@ void decode(uint8_t sc)
 				for(i = 0; (ch = pgm_read_byte(&scancodes[i][0])) != sc && ch; i++);
 				if (ch == sc)
 				{
-                    put_kbbuff(pgm_read_byte(&scancodes[i][offs]));
+                    ch = pgm_read_byte(&scancodes[i][offs]);
+                    if(ch & 0x80){ //escape sequence?
+                        put_kbbuff(0x1b);   // put 2 byte to buffer
+                        ch &= 0b01111111;
+                    }
+                    put_kbbuff(ch);
 				}
 			}								  
 			else // Scan code mode
@@ -292,12 +297,6 @@ void put_kbbuff(uint8_t c)
 {
 	if (kb_buffcnt < KB_BUFF_SIZE)			  // If buffer not full
 	{
-        if (c & 0x80)//escape sequence ?
-        {
-            put_kbbuff(0x1b);
-            c &= 0b01111111;
-        }
-        
 		*kb_inptr++ = c;    // Put character into buffer, Increment pointer
         cli();
 		kb_buffcnt++;
