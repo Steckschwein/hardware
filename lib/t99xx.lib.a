@@ -398,7 +398,8 @@ vdp_chrout
 	lsr					; div 8 -> page offset 0-2
 	lsr
 	lsr
-	ora	#.WRITE_ADDRESS + >ADDRESS_GFX1_SCREEN
+	clc
+	adc	#.WRITE_ADDRESS + >ADDRESS_GFX1_SCREEN
 	sta a_vreg
 	rts
 }
