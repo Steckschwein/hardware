@@ -17,7 +17,6 @@ vdp_display_off:
 ;	jsr	.vdp_wait_blank
 	lda		#v_reg1_16k	;enable 16K ram, disable screen
 	sta 	a_vreg
-	+vnops
 	lda	  	#v_reg1
 	sta   	a_vreg
 	rts
@@ -30,10 +29,10 @@ vdp_display_off:
 vdp_fills:
 	+vdp_sreg
 	lda   .adrl
--  	+vnops
-	sta   a_vram
-	dex
-	bne	-
+-  	+vnops          ;2
+	sta   a_vram    ;2
+	dex             ;2
+	bne	-           ;3
 	rts
 	
 ; fill vram with pattern
@@ -46,10 +45,10 @@ vdp_fill:
 	+vdp_sreg
 	ldy   #$00
 	lda   .adrl
--  	+vnops
-	iny
-	sta   a_vram
-	bne   -
+-  	+vnops          ;2
+	iny             ;2
+	sta   a_vram    ;
+	bne   -         ;3
 	dex
 	bne   -
 	rts
@@ -62,10 +61,9 @@ vdp_fill:
 vdp_memcpy:
 	+vdp_sreg
 	ldy   #$00
--  	lda   (.addr),y
-	+vnops
-	iny
-	sta   a_vram
+-  	lda   (.addr),y ;5
+	iny             ;2
+	sta   a_vram    ;1 opcode fetch
 	bne   -
 	inc   .adrh
 	dex
@@ -81,10 +79,9 @@ vdp_memcpys:
 	+vdp_sreg
 	ldy   #$00
 -  	lda   (.adrl),y
-	+vnops
-	sta   a_vram
 	iny
 	dex
+	sta   a_vram
 	bne	-
 	rts
 
@@ -240,9 +237,9 @@ vdp_mode_gfx3_load_bitmap
 	ldy	#$03
 	ldx	#$00
 -	+vnops
-	stx	a_vram
-	inx
-	bne	-
+    stx	a_vram  ;
+	inx         ;2
+	bne	-       ;3
 	dey
 	bne	-
 rts
@@ -282,7 +279,6 @@ vdp_init_bytes_gfx3
 ;
 vdp_bgcolor
 	sta   a_vreg
-	+vnops
 	lda   #v_reg7
 	sta   a_vreg
 	rts
@@ -383,8 +379,6 @@ vdp_chrout
 .vdp_write_char
 	pha
 	jsr .vdp_set_addr
-	nop
-	nop
 	pla
 	sta a_vram
     rts
@@ -404,8 +398,7 @@ vdp_chrout
 	lsr					; div 8 -> page offset 0-2
 	lsr
 	lsr
-	clc
-	adc	#.WRITE_ADDRESS + >ADDRESS_GFX1_SCREEN
+	ora	#.WRITE_ADDRESS + >ADDRESS_GFX1_SCREEN
 	sta a_vreg
 	rts
 }
