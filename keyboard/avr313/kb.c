@@ -139,7 +139,7 @@ ISR (INT0_vect)
 		data = (data >> 1);
 		if(PIND & (1 << DATAPIN))
 			data = data | 0x80;				  // Store a '1'
-	}
+	}     
 
 	if(--bitcount == 0)						  // All bits received
 	{
@@ -198,7 +198,8 @@ void decode(uint8_t sc)
 			if(mode == 2)
 				mode = 3;					  // Leave scan code mode
 		}
-
+//        else if(sc == 0x05)
+            
 		else
 		{
 			if(mode == 0 || mode == 3)		  // If ASCII mode
@@ -232,12 +233,13 @@ void decode(uint8_t sc)
 				for(i = 0; (ch = pgm_read_byte(&scancodes[i][0])) != sc && ch; i++);
 				if (ch == sc)
 				{
-					put_kbbuff(pgm_read_byte(&scancodes[i][offs]));	
+                    put_kbbuff(pgm_read_byte(&scancodes[i][offs]));
 				}
-			}								  // Scan code mode
-			// else
-			// {
-			// }
+			}								  
+			else // Scan code mode
+			{
+                
+			}
 		}
 	}
 	else
@@ -290,13 +292,10 @@ void put_kbbuff(uint8_t c)
 {
 	if (kb_buffcnt < KB_BUFF_SIZE)			  // If buffer not full
 	{
-        if (c & 0x80)
+        if (c & 0x80)//escape sequence ?
         {
+            put_kbbuff(0x1b);
             c &= 0b01111111;
-            *kb_inptr++ = 27;
-            cli();
-            kb_buffcnt++;
-            sei();
         }
         
 		*kb_inptr++ = c;    // Put character into buffer, Increment pointer
@@ -315,7 +314,6 @@ int get_scanchar(void)
 	uint8_t byte;
 
 	// Wait for data
-	// while(kb_buffcnt == 0);
 	if (scan_buffcnt == 0)
 	{
 		return 0;

@@ -3,7 +3,6 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
-
 #include "spi.h"
 #include "kb.h"
 
@@ -12,12 +11,12 @@ ISR( SPI_STC_vect)
 { 
 	if (kb_buffcnt == 0)
 	{
-		spiout = SPDR;
+		SPDR;   //read and forget
         SPDR = 0;
 	}
 	else
 	{
-        spiout = SPDR;
+        SPDR;  //read and forget
         SPDR = *kb_outptr++;
 
 		// Pointer wrapping
@@ -37,9 +36,7 @@ void spiInitSlave()
 {
 	/* Set MISO output, all others input */
 	DDR_SPI = (1<<DD_MISO);
-	/* Enable SPI */
-	// SPCR = (1<<SPE);
-	SPCR = 0xC0;
+	/* Enable SPI with Interrupt */
+	SPCR = (1<<SPE | 1<<SPIE);
 	spiin = 0;
-
 }
