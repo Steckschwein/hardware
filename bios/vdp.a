@@ -2,7 +2,6 @@
 
 !set bios_stuff=1               ;bios stuff only
 !src <t99xx.lib.a>
-
 init_vdp
     jsr vdp_display_off         ;display off
     jsr vdp_mode_gfx1_sprites_off

@@ -1,4 +1,4 @@
-ACME_OPTS=-v -f plain
+ACME_OPTS=-v1 -f plain --cpu 65c02
 
 .PHONY: all
 all: bios.bin bios.h.a

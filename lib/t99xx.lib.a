@@ -58,13 +58,14 @@ vdp_fill:
 ;	a - low byte vram adress
 ;	y - high byte vram adress
 ;  	x - amount of 256byte blocks (page counter)
-vdp_memcpy:
+vdp_memcpy
 	+vdp_sreg
 	ldy   #$00
+    +vnops
 -  	lda   (.addr),y ;5
 	iny             ;2
 	sta   a_vram    ;1 opcode fetch
-	bne   -
+	bne   -         ;3
 	inc   .adrh
 	dex
 	bne   -
@@ -78,10 +79,10 @@ vdp_memcpy:
 vdp_memcpys:
 	+vdp_sreg
 	ldy   #$00
--  	lda   (.adrl),y
-	iny
-	dex
-	sta   a_vram
+-  	lda   (.adrl),y ;5
+	iny             ;2
+	dex             ;2
+	sta   a_vram    ;4
 	bne	-
 	rts
 
@@ -390,16 +391,14 @@ vdp_chrout
 	asl
 	asl
 	asl
-	clc
-	adc	crs_x
+	ora	crs_x
 	sta	a_vreg
-
+    
 	lda crs_y   		; * 32
 	lsr					; div 8 -> page offset 0-2
 	lsr
 	lsr
-	clc
-	adc	#.WRITE_ADDRESS + >ADDRESS_GFX1_SCREEN
+	ora	#.WRITE_ADDRESS + >ADDRESS_GFX1_SCREEN
 	sta a_vreg
 	rts
 }
