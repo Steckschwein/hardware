@@ -140,18 +140,23 @@ mainloop
 	ldy #-1
 -	iny
 	lda .buf,y	
-	sta (.histptr),y
-	beq +
-	bra -
-+
-	iny
-	tya
-	clc
-	adc .histptr
-	sta .histptr
-	bcc +
+	sta (.histptr)
+	
+	inc .histptr
+	bne ++
 	inc .histptr+1
-+
+++
+	cmp #$00
+
+	bne -
+; 	iny
+; 	tya
+; 	clc
+; 	adc .histptr
+; 	sta .histptr
+; 	bcc +
+; 	inc .histptr+1
+; +
 
 	; find begin of command word
 -	lda (cmdptr)	; skip non alphanumeric stuff	
