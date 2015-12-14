@@ -126,12 +126,21 @@ mainloop
 	
 	ldy #$00
 -	lda (.histptr2),y
-	beq .inputloop
+	beq ++
 	sta .buf,y
 	jsr chrout
 	iny
 	bra -
-	
+++	
+	iny
+	tya
+	clc
+	adc .histptr2
+	sta .histptr2
+	bcc +++
+	inc .histptr2+1
++++
+	bra .inputloop
 
 +	cmp #'B'
 	bne +
