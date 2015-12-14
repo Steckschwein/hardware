@@ -27,8 +27,9 @@ BUF_SIZE		= 80
 !address {
 ; .buf 				= $0350 ; Input buffer 80 bytes. end: $03a1
 .buf 				= $d800 ; Input buffer 80 bytes. end: $d800
-.histbuf			= $d881
-.histptr			= tmp6
+.histbuf			= $d850
+.histptr			= $d0
+.histptr2			= $d2
 }
 
 
@@ -64,6 +65,11 @@ BUF_SIZE		= 80
 	sta .histptr
 	lda #>.histbuf
 	sta .histptr+1
+
+	lda #<.histbuf
+	sta .histptr2
+	lda #>.histbuf
+	sta .histptr2+1
 
 
 	jmp	.hello
@@ -118,9 +124,14 @@ mainloop
 	cmp #'A'
 	bne +
 	
-	lda #'U'
+	ldy #$00
+-	lda (.histptr2),y
+	beq .inputloop
+	sta .buf,y
 	jsr chrout
-	bra .inputloop
+	iny
+	bra -
+	
 
 +	cmp #'B'
 	bne +
@@ -128,7 +139,7 @@ mainloop
 	lda #'D'
 	jsr chrout
 	bra .inputloop
-
+++
 +   ;handle any other esc bytes here
 	bra .inputloop
 	
@@ -149,14 +160,6 @@ mainloop
 	cmp #$00
 
 	bne -
-; 	iny
-; 	tya
-; 	clc
-; 	adc .histptr
-; 	sta .histptr
-; 	bcc +
-; 	inc .histptr+1
-; +
 
 	; find begin of command word
 -	lda (cmdptr)	; skip non alphanumeric stuff	
