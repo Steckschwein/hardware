@@ -18,13 +18,17 @@ num_ls_entries 	= $03
 .nvram 			= $a000
 KEY_RETURN 		= $0d
 KEY_BACKSPACE 	= $08
+KEY_ESCAPE		= $1b
 BUF_SIZE		= 80
 
 
 
 
 !address {
-.buf 				= $0350 ; Input buffer 80 bytes. end: $03a1
+; .buf 				= $0350 ; Input buffer 80 bytes. end: $03a1
+.buf 				= $d800 ; Input buffer 80 bytes. end: $d800
+.histbuf			= $d881
+.histptr			= tmp6
 }
 
 
@@ -56,6 +60,12 @@ BUF_SIZE		= 80
 	lda #>mainloop
 	sta retvec+1
 	
+	lda #<.histbuf
+	sta .histptr
+	lda #>.histbuf
+	sta .histptr+1
+
+
 	jmp	.hello
 
 	
@@ -79,6 +89,9 @@ mainloop
 	cmp #KEY_BACKSPACE ; backspace?
 	beq .backspace
 
+	cmp #KEY_ESCAPE
+	beq .escape
+
 	sta .buf, x ; put byte into buffer
 	inx
 -	stz .buf, x ; null termination
@@ -100,10 +113,45 @@ mainloop
 +	dex
 	bra -
 
+.escape 
+	jsr getkey
+	cmp #'A'
+	bne +
+	
+	lda #'U'
+	jsr chrout
+	bra .inputloop
+
++	cmp #'B'
+	bne +
+
+	lda #'D'
+	jsr chrout
+	bra .inputloop
+
++   ;handle any other esc bytes here
+	bra .inputloop
+	
 
 .parse
 
 	+SetVector .buf, cmdptr
+
+	ldy #-1
+-	iny
+	lda .buf,y	
+	sta (.histptr),y
+	beq +
+	bra -
++
+	iny
+	tya
+	clc
+	adc .histptr
+	sta .histptr
+	bcc +
+	inc .histptr+1
++
 
 	; find begin of command word
 -	lda (cmdptr)	; skip non alphanumeric stuff	
