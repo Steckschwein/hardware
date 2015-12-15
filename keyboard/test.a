@@ -12,40 +12,52 @@
 	cmp #$00
 	beq -
 	cmp #$1b
-	bne +
+	bne ++
 
 	jsr .kbd_enable	
 	jsr spi_r_byte
 	jsr .kbd_disable
-	cmp #'A'
-	bne ++
+    
+	cmp #'E'
+	bne +
+    jsr chrout
+    bra -
++	cmp #'F'
+	bne +
+    jsr chrout
+    bra -
++	cmp #'G'
+	bne +
+    jsr chrout
+    bra -
+    
++	cmp #'A'
+	bne +
 	lda #'U'
 	jsr chrout
 	bra -
-++	cmp #'B'
-	bne ++
++	cmp #'B'
+	bne +
 
 	lda #'D'
 	jsr chrout
 	bra -
 
-++	cmp #'C'
-	bne ++
++	cmp #'C'
+	bne +
 
 	lda #'R'
 	jsr chrout
 	bra -
 
-
-++	cmp #'D'
-	bne +
++	cmp #'D'
+	bne ++
 
 	lda #'L'
 	jsr chrout
 	bra -
 
-
-+
+++
 	jsr hexout
     ;+Println
  	bra -

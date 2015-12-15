@@ -3,11 +3,15 @@
 .KEY_CRS_DOWN	= 'B'
 .KEY_CRS_RIGHT	= 'C'
 .KEY_CRS_LEFT	= 'D'
+.KEY_HOME	    = 'E'
+.KEY_END    	= 'F'
+.KEY_DEL	    = 'G'
 
 .MODE_ESCAPE	= 1<<0
 
 .flag !byte 0
 .textui_out
+    stz .flag
 	cmp #.KEY_ESCAPE
 	beq .escape
 	cmp #.KEY_CRS_UP
@@ -18,27 +22,40 @@
 	beq	.crs_left
 	cmp #.KEY_CRS_RIGHT
 	beq	.crs_right
-    stz .flag
+	cmp #.KEY_HOME
+	beq	.key_home
+	cmp #.KEY_DEL
+	beq	.key_del
+	cmp #.KEY_END
+	beq	.key_end
     jmp .textui_chrout
 	
 .cls
     jmp .textui_blank
 .crs_pos1
-	stz	.flag
 	jmp	.textui_pos1
 .crs_right
-	stz	.flag
 	jmp	.textui_incx
 .crs_left
-	stz	.flag
 	jmp	.textui_decx
 .crs_up	
-	stz	.flag
 	jmp	.textui_decy
 .crs_down
-	stz	.flag
 	jmp	.textui_incy
-		
+
+.key_home
+    ldx #0
+    ldy #0
+    jmp .textui_crsxy        
+.key_end
+    ldx #.COLS-1
+    ldy crs_y
+    jmp .textui_crsxy
+.key_del
+    ;TODO mhm... scroll n chars
+    lda #' '
+    jmp .textui_chrout
+    
 .escape
 	lda	#.MODE_ESCAPE
 	sta	.flag

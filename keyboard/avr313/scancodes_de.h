@@ -11,6 +11,9 @@
 #define CRSR_DOWN 	 'B' | 0x80
 #define CRSR_RIGHT 	 'C' | 0x80
 #define CRSR_LEFT 	 'D' | 0x80
+#define KEY_HOME 	 'E' | 0x80
+#define KEY_END 	 'F' | 0x80
+#define KEY_DEL 	 'G' | 0x80
 
 // Unshifted characters - for a "US QWERTY" keyboard only - Scan Code Set 2
 const unsigned char scancodes[][5] PROGMEM = {
@@ -80,15 +83,15 @@ const unsigned char scancodes[][5] PROGMEM = {
 	{0x5d,'\\', '|', 0, 0} ,
 	{0x61,'<', '>', 0, 0} ,
 	{0x66,C_BS, C_BS , 0, 0} ,
-	{0x69,'1', '!', 0, 0} ,
-	{0x6b,CRSR_LEFT, 0, 0, 0} ,
-	{0x6c,'7', '/', 0, 0} ,
+	{0x69,KEY_END, KEY_END, 0, 0} ,
+	{0x6b,CRSR_LEFT, CRSR_LEFT, 0, 0} ,
+	{0x6c,KEY_HOME, KEY_HOME, 0, 0} ,
 	{0x70,'0', '0', 0, 0} ,
-	{0x71,'.', '.', 0, 0} ,
-	{0x72,CRSR_DOWN, 0, 0, 0} ,
+	{0x71,KEY_DEL, KEY_DEL, 0, 0} ,
+	{0x72,CRSR_DOWN, CRSR_DOWN, 0, 0} ,
 	{0x73,'5', '5', 0, 0} ,
-	{0x74,CRSR_RIGHT, 0, 0, 0} ,
-	{0x75,CRSR_UP, 0, 0, 0} ,
+	{0x74,CRSR_RIGHT, CRSR_RIGHT, 0, 0} ,
+	{0x75,CRSR_UP, CRSR_UP, 0, 0} ,
 	{0x78,' ', ' ', 0, 0} ,// F11
 	{0x79,'+', '+', 0, 0} ,
 	{0x7a,'3', '3', 0, 0} ,
@@ -96,5 +99,6 @@ const unsigned char scancodes[][5] PROGMEM = {
 	{0x7c,'*', '*', 0, 0} ,
 	{0x7d,'9', '9', 0, 0} ,
 //	{0x83,' ', ' ', 0, 0} ,// F7
+//	{0xe0,' ', ' ', 0, 0} ,// Delete
 	{0,0, 0, 0, 0}
 };
