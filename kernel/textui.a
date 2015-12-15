@@ -1,5 +1,10 @@
 !source <t99xx.lib.a>
 
+;   
+;
+;
+;
+
 !address {
     .screen=$c000	
 }
@@ -9,12 +14,9 @@
 .saved_char	!byte ' '
 
 .ROWS=24
-
 .KEY_BACKSPACE=$08
 .KEY_CARIAGE_RETURN=$0a
 .KEY_RETURN=$0d
-.KEY_ESCAPE=$1b
-
 .WRITE=1<<0
 .DIRTY=1<<1
 .CURSOR=1<<2
@@ -135,11 +137,11 @@
 	beq	+
 	trb	.screen_status
   	lda	.saved_char
-	jmp _textui_put
+	jmp .textui_put
 +	lda	(crs_ptr)			;save char
 	sta	.saved_char
 	lda	#.CURSOR_CHAR
-	jmp _textui_put
+	jmp .textui_put
 +++	rts
 
 .textui_update_screen
@@ -152,7 +154,6 @@
 	;jsr	vdp_bgcolor	
 	
 	inc	.screen_frames
-	; jsr	.textui_busy
 
 	jsr	.textui_cursor
 	
@@ -203,9 +204,6 @@
 +	inc crs_y
 	rts
 
-_textui_println
-	bra	_textui_print
-
 .textui_enable
 	lda	.screen_status
 	ora	#.TEXTUI_ENABLED
@@ -216,11 +214,11 @@ _textui_println
 +	sta	.screen_status
 	rts
 
-_textui_put
+.textui_put
 	sta	(crs_ptr)
 	bra	.textui_screen_dirty
     
-_textui_print
+.textui_print
 	inc .screen_status	;write on
 	ldy	#$00
 -	lda	(msgptr),y
@@ -229,9 +227,9 @@ _textui_print
 	iny
 	bne	-
 +	dec	.screen_status	;write off
-	jmp	.textui_screen_dirty
+	bra	.textui_screen_dirty
 
-_textui_chrout
+.textui_chrout
 	beq	+	; \0 char
 	pha		; safe char
 	inc .screen_status	;write on
@@ -241,6 +239,12 @@ _textui_chrout
 	pla								; restore char
 +	rts
 
+; set crs x and y position absolutely - 0..32/0..23 or 0..39/0..23 40 char mode
+.textui_crsxy
+    stx crs_x
+    sty crs_y
+    jmp .textui_update_crs_ptr
+    
 .textui_dispatch_char
 	cmp	#.KEY_CARIAGE_RETURN			;cariage return
 	bne	+
@@ -284,9 +288,3 @@ _textui_chrout
 	ora	#.DIRTY
 	sta	.screen_status
 	rts
-_textui_toggle_cursor_busy
-	lda	#.CURSOR_BUSY
-	tsb	.screen_status
-	beq	+
-	trb	.screen_status
-+	rts

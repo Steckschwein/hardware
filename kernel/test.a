@@ -2,6 +2,8 @@
 !src <bios.h.a>
 !src <via.h.a>
 
+;text_mode_40 = 1
+
 *=  $1000
 
     jmp main
@@ -13,12 +15,16 @@ main
 
     jsr	.textui_init0
     
-	+SetVector _textui_chrout, outvec
+	+SetVector .textui_chrout, outvec
 
     cli
 -   
     jsr .keyin
     jsr chrout
+
+    ldx #02
+    ldy #01
+    jsr .textui_crsxy
     
     bra -
 

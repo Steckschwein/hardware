@@ -50,7 +50,7 @@ kern_init
 	jsr	.textui_init0
 
 	
-	+SetVector _textui_chrout, outvec
+	+SetVector .textui_chrout, outvec
 
 	cli
 	
