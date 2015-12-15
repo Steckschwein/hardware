@@ -20,12 +20,10 @@
 .WRITE=1<<0
 .DIRTY=1<<1
 .CURSOR=1<<2
-.CURSOR_BUSY=1<<3
 .TEXTUI_ENABLED=1<<4
 
 .textui_incy
-	jsr	.inc_cursor_y
-	bra	.textui_update_crs_ptr
+	jmp	.inc_cursor_y
 	
 .textui_decy
 	lda	crs_y
@@ -48,13 +46,21 @@
 	rts
 +	dec	crs_x	; go on with textui_update_crs_ptr below
 	
+
+;   updates the 16 bit pointer crs_p upon crs_x, crs_y values
+;    
+.textui_update_crs_ptr
+	pha
+    
+    lda .saved_char     ;restore saved char
+    sta (crs_ptr)
+    lda #.CURSOR
+    trb .screen_status  ;reset cursor state
+    
 !ifdef text_mode_40 {
 .charset=charset_6x8	; loaded after shell code, see shell.a
 .COLS=40
-.CURSOR_CHAR=160
-.textui_update_crs_ptr
-	pha
-	
+.CURSOR_CHAR=160	
 	stz	   tmp1
 	lda    crs_y
     asl
@@ -75,17 +81,12 @@
     lda    #>.screen
     adc    tmp1
     sta    crs_ptr+1
-	
-	pla
-	rts
 }
 
 !ifndef text_mode_40 {
 .charset=charset	; the one from ROM
 .COLS=32
 .CURSOR_CHAR=160
-.textui_update_crs_ptr
-	pha
 	lda	crs_y
 	asl	
 	asl
@@ -102,10 +103,14 @@
 	clc
 	adc	#>.screen
 	sta	crs_ptr+1
+}
+    lda (crs_ptr)
+    sta .saved_char     ;save char
 	pla
 	rts
-}
-
+;   
+;   
+;
 .textui_init0
 	jsr	vdp_display_off			;display off
 	
@@ -163,18 +168,17 @@
 	trb	.screen_status
   	lda	.saved_char
 	jmp .textui_put
-+	lda	(crs_ptr)			;save char
-	sta	.saved_char
-	lda	#.CURSOR_CHAR
++	lda	#.CURSOR_CHAR
 	jmp .textui_put
 +++	rts
 
 .textui_update_screen
+;	lda	#Gray
+;	jsr	vdp_bgcolor	
+    
 	lda	.screen_status
 	and	#.TEXTUI_ENABLED
 	beq	+
-	;lda	#Gray
-	;jsr	vdp_bgcolor	
 	
 	inc	.screen_frames
 
@@ -194,10 +198,11 @@
 	and	#!.DIRTY
 	sta	.screen_status
 
-;	lda	#Medium_Green<<4|Black
-;	jsr	vdp_bgcolor
-	
-+	rts	
+	lda	#Medium_Green<<4|Black
+	jsr	vdp_bgcolor
+ 	
++   
+    rts	
 
 .textui_scroll_up
 	ldx	#$00
@@ -223,9 +228,15 @@
 	lda crs_y
 	cmp	#.ROWS-1		;last line
 	bne	+
+
+    lda .saved_char     ;restore saved char
+    sta (crs_ptr)
+    lda #.CURSOR
+    trb .screen_status  ;reset cursor state
 	bra	.textui_scroll_up	; scroll and exit
+    
 +	inc crs_y
-	rts
+    jmp .textui_update_crs_ptr
 
 .textui_enable
 	lda	.screen_status
@@ -255,7 +266,9 @@
 .textui_chrout
 	beq	+	; \0 char
 	pha		; safe char
+ ;   sei
 	inc .screen_status	;write on
+;    cli
 	jsr .textui_dispatch_char
 	dec	.screen_status	;write off
 	jsr	.textui_screen_dirty
@@ -274,39 +287,33 @@
 	cmp	#.KEY_CARIAGE_RETURN	;cariage return?
 	bne	+
 .textui_pos1
-	lda	.saved_char		
-	sta	(crs_ptr)				;restore char at cursor position
 	stz	crs_x
 	bra	+++
 +	cmp	#.KEY_RETURN			;line feed
 	bne	+
-	jsr	.inc_cursor_y
-	bra	+++
+    jmp	.inc_cursor_y
 +	cmp	#.KEY_BACKSPACE
 	bne	+	
 	lda	crs_x
 	beq	++
 	dec	crs_x
-	lda	#' '			;blank at char position and also the saved char 
+	lda	#' '			;blank the saved char
 	sta	.saved_char		
-	sta	(crs_ptr)
-	jsr	.textui_update_crs_ptr
-	sta	(crs_ptr)		;also erase char at the new position
-	rts	
+	jmp	.textui_update_crs_ptr
 ++	lda	crs_y			; cursor y=0, no dec
 	beq	+++
 	dec	crs_y
 	lda	#(.COLS-1)			; set x to end of line above
 	sta	crs_x
-	jmp	.textui_update_crs_ptr	
-+	sta	(crs_ptr)
+	jmp	.textui_update_crs_ptr
++	sta	.saved_char         ; the trick, simple set saved value to plot as saved char, will be print by textui_update_crs_ptr
 	lda	crs_x
 	cmp	#(.COLS-1)
 	beq +
 	inc	crs_x
 	jmp	.textui_update_crs_ptr
 +	stz	crs_x
-	jsr	.inc_cursor_y
+	jmp	.inc_cursor_y
 +++	jmp	.textui_update_crs_ptr
 	
 .textui_screen_dirty
