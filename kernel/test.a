@@ -8,6 +8,7 @@
 
     jmp main
 !src "textui.a"
+!src "keyboard.textui.adapter.a"
 
 main
     sei
@@ -18,8 +19,9 @@ main
 	+SetVector .textui_chrout, outvec
 
     cli
+	
 -   
-    jsr .keyin
+	jsr .keyin
     jsr chrout
 
     ldx #02
@@ -27,7 +29,6 @@ main
     jsr .textui_crsxy
     
     bra -
-
     
 .test_irq
 	+save

@@ -9,7 +9,7 @@ kernel.h.a: kernel.bin
 	grep krn_ kernel.a.labels | sed -e"s/krn_//g" | sort > kernel.h.a.tmp
 	cat kernel.h.a.stub kernel.h.a.tmp > ../lib/kernel.h.a
 	rm kernel.h.a.tmp
-%.bin: %.a textui.a
+%.bin: %.a textui.a keyboard.textui.adapter.a
 	acme -Dexperimental=1 -f plain -Wtype-mismatch -l $<.labels --cpu 65c02 -o $@ $<
 transfer: loader.bin
 	../transfer.py loader.bin 0x1000

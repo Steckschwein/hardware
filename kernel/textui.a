@@ -23,6 +23,31 @@
 .CURSOR_BUSY=1<<3
 .TEXTUI_ENABLED=1<<4
 
+.textui_incy
+	jsr	.inc_cursor_y
+	bra	.textui_update_crs_ptr
+	
+.textui_decy
+	lda	crs_y
+	bne	+
+	rts
++	dec	crs_y	; go on with textui_update_crs_ptr below
+	bra	.textui_update_crs_ptr
+	
+.textui_incx
+	lda	crs_x
+	cmp	#(.COLS-1)
+	bne +
+	rts
++	inc	crs_x
+	bra	.textui_update_crs_ptr
+	
+.textui_decx
+	lda	crs_x
+	bne	+
+	rts
++	dec	crs_x	; go on with textui_update_crs_ptr below
+	
 !ifdef text_mode_40 {
 .charset=charset_6x8	; loaded after shell code, see shell.a
 .COLS=40
@@ -145,11 +170,9 @@
 +++	rts
 
 .textui_update_screen
-	; bit	a_vreg
-	; bpl ++	   ; VDP IRQ flag set?
 	lda	.screen_status
 	and	#.TEXTUI_ENABLED
-	beq	++
+	beq	+
 	;lda	#Gray
 	;jsr	vdp_bgcolor	
 	
@@ -157,7 +180,6 @@
 
 	jsr	.textui_cursor
 	
-	;TODO dirty check .screen_status AND 1 ...
 	lda	.screen_status
 	and	#.DIRTY
 	beq	+		;exit if not dirty
@@ -172,9 +194,10 @@
 	and	#!.DIRTY
 	sta	.screen_status
 
-+	lda	#Medium_Green<<4|Black
-	jsr	vdp_bgcolor
-++	rts	
+;	lda	#Medium_Green<<4|Black
+;	jsr	vdp_bgcolor
+	
++	rts	
 
 .textui_scroll_up
 	ldx	#$00
@@ -239,17 +262,20 @@
 	pla								; restore char
 +	rts
 
+	
 ; set crs x and y position absolutely - 0..32/0..23 or 0..39/0..23 40 char mode
+;
 .textui_crsxy
     stx crs_x
     sty crs_y
     jmp .textui_update_crs_ptr
     
 .textui_dispatch_char
-	cmp	#.KEY_CARIAGE_RETURN			;cariage return
+	cmp	#.KEY_CARIAGE_RETURN	;cariage return?
 	bne	+
+.textui_pos1
 	lda	.saved_char		
-	sta	(crs_ptr)		;restore char at cursor position
+	sta	(crs_ptr)				;restore char at cursor position
 	stz	crs_x
 	bra	+++
 +	cmp	#.KEY_RETURN			;line feed
@@ -257,7 +283,7 @@
 	jsr	.inc_cursor_y
 	bra	+++
 +	cmp	#.KEY_BACKSPACE
-	bne	+
+	bne	+	
 	lda	crs_x
 	beq	++
 	dec	crs_x
@@ -266,19 +292,19 @@
 	sta	(crs_ptr)
 	jsr	.textui_update_crs_ptr
 	sta	(crs_ptr)		;also erase char at the new position
-	rts
+	rts	
 ++	lda	crs_y			; cursor y=0, no dec
 	beq	+++
 	dec	crs_y
 	lda	#(.COLS-1)			; set x to end of line above
 	sta	crs_x
-	bra	+++
+	jmp	.textui_update_crs_ptr	
 +	sta	(crs_ptr)
 	lda	crs_x
 	cmp	#(.COLS-1)
 	beq +
 	inc	crs_x
-	bra	+++
+	jmp	.textui_update_crs_ptr
 +	stz	crs_x
 	jsr	.inc_cursor_y
 +++	jmp	.textui_update_crs_ptr
