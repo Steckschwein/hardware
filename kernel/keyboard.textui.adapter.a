@@ -1,0 +1,34 @@
+.KEY_ESCAPE		= $1b
+.KEY_CRS_UP		= 'A'
+.KEY_CRS_DOWN	= 'B'
+.KEY_CRS_RIGHT	= 'C'
+.KEY_CRS_LEFT	= 'D'
+
+.MODE_ESCAPE	= 1<<0
+
+.flag !byte 0
+out
+	cmp #.KEY_ESCAPE
+	beq .escape
+	cmp #.KEY_CRS_UP
+	beq	.crs_up
+	rts
+	
+.crs_pos1
+	stz	.flag
+	jmp	.textui_pos1
+.crs_right
+	stz	.flag
+	jmp	.textui_incx
+.crs_left
+	stz	.flag
+	jmp	.textui_decx
+.crs_up	
+	stz	.flag
+	jmp	.textui_decy
+	rts
+		
+.escape
+	lda	#.MODE_ESCAPE
+	sta	.flag
+	rts
