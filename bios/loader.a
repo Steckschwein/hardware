@@ -2,12 +2,6 @@
 !src <defs.h.a>
 !src <bios.h.a>
 
-;	lda #dev_lcd
-;	sta chn_out 
-
-;	jsr lcdclear
-;	+PrintString msg
-
 -
 a	lda biosdata
 b	sta $e000
