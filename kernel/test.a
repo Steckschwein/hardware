@@ -1,0 +1,30 @@
+!src <defs.h.a>
+
+*=  $1000
+
+    jmp main
+!src "textui.a"
+
+main
+    sei
+    +SetVector .test_irq, irqvec
+
+    jsr	.textui_init0
+    
+	+SetVector _textui_chrout, outvec
+
+    cli
+-   bra -
+
+    
+.test_irq
+	+save
+
+	bit	a_vreg
+	bpl ++	   ; VDP IRQ flag set?
+
+	jsr	.textui_update_screen
+
+++
+	+restore
+	rti
