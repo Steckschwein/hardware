@@ -27,9 +27,10 @@ BUF_SIZE		= 80
 !address {
 ; .buf 				= $0350 ; Input buffer 80 bytes. end: $03a1
 .buf 				= $d800 ; Input buffer 80 bytes. end: $d800
-.histbuf			= $d850
+.histbuf			= $d800
 .histptr			= $d0
 .histptr2			= $d2
+.bufptr				= $d4
 }
 
 
@@ -60,6 +61,12 @@ BUF_SIZE		= 80
 	sta retvec
 	lda #>mainloop
 	sta retvec+1
+
+	lda #<.buf
+	sta .bufptr
+	lda #>.buf
+	sta .bufptr+1
+
 	
 	lda #<.histbuf
 	sta .histptr
@@ -81,9 +88,9 @@ mainloop
 	+ShellPrintString .prompt
 
 	; reset input buffer
-	ldx #$00
-	stz .buf
-	
+	lda #$00
+	sta (.bufptr),y
+	tay
 
 	; put input into buffer until return is pressed
 .inputloop	
@@ -98,23 +105,26 @@ mainloop
 	cmp #KEY_ESCAPE
 	beq .escape
 
-	sta .buf, x ; put byte into buffer
-	inx
--	stz .buf, x ; null termination
+	jsr chrout
+
+	sta (.bufptr),y ; put byte into buffer
+	iny
+-	lda #$00
+	sta (.bufptr),y ; null termination
 
 
 	; prevent overflow of input buffer 
-	cpx #BUF_SIZE
+	cpy #BUF_SIZE
 	beq mainloop
 
-	jsr chrout
-
+	
 	bra .inputloop
 
 .backspace
 	cpx #$00
 	bne +
-	stz .buf, x
+	lda #$00
+	sta (.bufptr)
 	bra .inputloop	
 +	dex
 	bra -
@@ -155,20 +165,28 @@ mainloop
 
 .parse
 
-	+SetVector .buf, cmdptr
+	; +SetVector .buf, cmdptr
+	+copyPointer .bufptr, cmdptr
 
-	ldy #-1
--	iny
-	lda .buf,y	
-	sta (.histptr)
+	lda (.bufptr)
+	beq +
+	inc .bufptr
+	beq ++
+	inc .bufptr+1
+++  
++
+; 	ldy #-1
+; -	iny
+; 	lda (.bufptr),y	
+; 	sta (.histptr)
 	
-	inc .histptr
-	bne ++
-	inc .histptr+1
-++
-	cmp #$00
+; 	inc .histptr
+; 	bne ++
+; 	inc .histptr+1
+; ++
+; 	cmp #$00
 
-	bne -
+; 	bne -
 
 	; find begin of command word
 -	lda (cmdptr)	; skip non alphanumeric stuff	

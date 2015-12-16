@@ -102,6 +102,7 @@ filename_buf		= $030c ; file name buffer, 11 bytes
 fd_area				= $0320 ; File descriptor area, 6x8byte until $0350 
 
 xxx					= $0350 ;
+fat_first_block		= $0350
 sd_blktarget 		= $0400
 
 .steckos_start		= $1000	

@@ -16,10 +16,10 @@ CFLAGS= -g -Os -Wall -mcall-prologues -mmcu=atmega8 -DF_CPU=$(CPUSPEED) -D__PROG
 OBJ2HEX=avr-objcopy
 OBJDUMP = avr-objdump
 LOADER=avrdude
-#BURN=-c stk500v2 -P $(SERIALDEVICE) -p m8 -b 19200 -U flash:w:$(PRG).hex 
+BURN=-c stk500v2 -P $(SERIALDEVICE) -p m8 -b 19200 -U flash:w:$(PRG).hex 
 #BURN=-c avrispmkII -p m8 -b 19200 -P usb -U flash:w:$(PRG).hex 
-LOADER=stk500
-BURN=-cUSB -dATmega8 -e -if$(PRG).hex -pf -vf
+#LOADER=stk500
+#BURN=-cUSB -dATmega8 -e -if$(PRG).hex -pf -vf
 
 PRG=keyboard
 OBJ=kb.o spi.o main.o 

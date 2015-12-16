@@ -376,13 +376,30 @@ FD_file_size = $08
 	lda lba_addr + .i
 	adc sd_blktarget + BPB_RsvdSecCnt + .i
 	sta cluster_begin_lba + .i	
+	sta fat_first_block + .i	
 }
 !for .i,2,3 {
 	lda lba_addr + .i
 	adc #$00
 	sta cluster_begin_lba + .i
+	sta fat_first_block + .i	
 }
 
+; 	+Copy fat_first_block, lba_addr,4
+; 	+SetVector sd_blktarget, sd_blkptr
+
+; 	jsr sd_read_block
+
+; 	lda #$02
+; 	asl
+; 	asl
+; 	tax
+; -	lda sd_blktarget,x
+; 	jsr hexout
+; 	inx
+; 	cpx #$0c 
+; 	bne -
+; ; -	jmp -
 
 	; Number of FATs. Must be 2
 	; lda sd_blktarget + BPB_NumFATs	
