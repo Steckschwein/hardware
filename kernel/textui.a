@@ -173,8 +173,8 @@
 +++	rts
 
 .textui_update_screen
-;	lda	#Gray
-;	jsr	vdp_bgcolor	
+	;lda	#Gray
+	;jsr	vdp_bgcolor	
     
 	lda	.screen_status
 	and	#.TEXTUI_ENABLED
@@ -198,10 +198,9 @@
 	and	#!.DIRTY
 	sta	.screen_status
 
++   
 	lda	#Medium_Green<<4|Black
 	jsr	vdp_bgcolor
- 	
-+   
     rts	
 
 .textui_scroll_up
@@ -231,10 +230,12 @@
 
     lda .saved_char     ;restore saved char
     sta (crs_ptr)
+    lda #' '
+    sta .saved_char     ;reset .saved_char to blank, cause we scrolled up
     lda #.CURSOR
     trb .screen_status  ;reset cursor state
-	bra	.textui_scroll_up	; scroll and exit
-    
+	jsr	.textui_scroll_up	; scroll and exit
+    jmp .textui_update_crs_ptr    
 +	inc crs_y
     jmp .textui_update_crs_ptr
 
