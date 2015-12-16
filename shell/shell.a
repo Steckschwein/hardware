@@ -19,7 +19,7 @@ num_ls_entries 	= $03
 KEY_RETURN 		= $0d
 KEY_BACKSPACE 	= $08
 KEY_ESCAPE		= $1b
-BUF_SIZE		= 80
+BUF_SIZE		= 32
 
 
 
@@ -84,16 +84,24 @@ BUF_SIZE		= 80
 	
 	
 mainloop
+	lda .bufptr+1
+	jsr hexout
+	lda .bufptr
+	jsr hexout
+
 	; output prompt character
 	+ShellPrintString .prompt
 
-	; reset input buffer
+
+
 	lda #$00
-	sta (.bufptr),y
 	tay
+	sta (.bufptr),y
+
 
 	; put input into buffer until return is pressed
 .inputloop	
+	
 	jsr keyin
 
 	cmp #KEY_RETURN ; return?
@@ -105,29 +113,36 @@ mainloop
 	cmp #KEY_ESCAPE
 	beq .escape
 
-	jsr chrout
 
 	sta (.bufptr),y ; put byte into buffer
 	iny
--	lda #$00
+	
+-	tax
+	lda #$00
 	sta (.bufptr),y ; null termination
-
+	txa
 
 	; prevent overflow of input buffer 
 	cpy #BUF_SIZE
 	beq mainloop
 
+	jsr chrout
 	
 	bra .inputloop
 
 .backspace
-	cpx #$00
+	cpy #$00
 	bne +
+
+	tax
 	lda #$00
-	sta (.bufptr)
+	sta (.bufptr),y
+	txa
+
 	bra .inputloop	
-+	dex
++	dey
 	bra -
+
 
 .escape 
 	jsr getkey
@@ -164,29 +179,23 @@ mainloop
 	
 
 .parse
-
 	; +SetVector .buf, cmdptr
 	+copyPointer .bufptr, cmdptr
 
 	lda (.bufptr)
 	beq +
-	inc .bufptr
-	beq ++
+	clc
+	lda #BUF_SIZE
+	adc .bufptr
+	sta .bufptr
+	bcc ++
 	inc .bufptr+1
 ++  
 +
-; 	ldy #-1
-; -	iny
-; 	lda (.bufptr),y	
-; 	sta (.histptr)
-	
-; 	inc .histptr
-; 	bne ++
-; 	inc .histptr+1
-; ++
-; 	cmp #$00
 
-; 	bne -
+	lda #$00
+	sta (.bufptr)
+
 
 	; find begin of command word
 -	lda (cmdptr)	; skip non alphanumeric stuff	
