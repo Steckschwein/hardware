@@ -7,16 +7,16 @@ FD_file_size = $08
 
 
 !macro saveClusterNo .where {
- ;    ldy #DIR_FstClusHI +1
-	; lda (sd_blkptr),y
-	; sta .where +3
+	ldy #DIR_FstClusHI +1
+	lda (sd_blkptr),y
+	sta .where +3
 
-	; dey
-	; lda (sd_blkptr),y
-	; sta .where +2
+	dey
+	lda (sd_blkptr),y
+	sta .where +2
 
-	stz .where +3
-	stz .where +2
+	; stz .where +3
+	; stz .where +2
 	ldy #DIR_FstClusLO +1
 	lda (sd_blkptr),y
 	sta .where +1
@@ -33,15 +33,15 @@ FD_file_size = $08
 
 	jsr .calc_lba_addr
 
-	; ldy #DIR_FileSize + 3
-	; lda (sd_blkptr),y
-	; lsr
-	; ldy #DIR_FileSize + 2
-	; lda (sd_blkptr),y
-	; ror
-	; ldy #DIR_FileSize + 1
-	; lda (sd_blkptr),y
-	; ror 
+	ldy #DIR_FileSize + 3
+	lda (sd_blkptr),y
+	lsr
+	ldy #DIR_FileSize + 2
+	lda (sd_blkptr),y
+	ror
+	ldy #DIR_FileSize + 1
+	lda (sd_blkptr),y
+	ror 
 
 	; enough for files up to 65535 bytes
 
