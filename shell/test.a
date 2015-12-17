@@ -80,15 +80,9 @@ mainloop
 	rts
 
 .parse
-	+ShellPrintString .crlf
-	ldy #$00
--	lda (.bufptr),y
-	beq +
-	ora #$20
-	sta chrout
-	iny
-	bra -
-+
+	+copyPointer .bufptr, cmdptr
+
+	; advance bufptr by BUF_SIZE bytes
 	lda #BUF_SIZE
 	clc
 	adc .bufptr
@@ -97,16 +91,81 @@ mainloop
 	inc .bufptr+1
 +
 
-	lda #' '
-	sta chrout
-	lda #'O'
-	sta chrout
-	lda #'K'
-	sta chrout
+	; find begin of command word
+-	lda (cmdptr)	; skip non alphanumeric stuff	
+	beq mainloop
+	cmp #$20
+	bne +
+	inc cmdptr
+	bra -
++
+	+copyPointer cmdptr, paramptr
 
+	; find begin of parameter (everything behind the command word, separated by space)
+	; first, fast forward until space or abort if null (no parameters then)
+-	lda (paramptr)
+	beq ++
+	cmp #$20
+	beq +
+	inc paramptr
+	bra -
++	
+	; space found.. fast forward until non space or null
+-	lda (paramptr)
+	beq ++
+	cmp #$20
+	bne +
+	inc paramptr
+	bra -
++
+++
 
+	; compare 	
+	ldx #$00
+-	ldy #$00
+--	lda (cmdptr),y
+
+	; if not, there is a terminating null
+	; cmp #$00
+	beq .cmdfound
+
+	; command string in buffer is terminated with $20 if there are cmd line arguments
+	cmp #$20
+	beq .cmdfound
+
+	; make lowercase
+	ora #$20
+
+	cmp .cmdlist,x
+	bne +	; difference. this isnt the command were looking for
+
+	iny
+	inx
+
+	bra --
+
+	; next cmdlist entry
++
+--	inx
+	lda .cmdlist,x
+	bne --
+	inx
+	inx
+	inx
+
+	lda .cmdlist,x
+	cmp #$ff
+	beq .unknown
+	bra -
+
+.cmdfound
+
+	inx
+
+	jmp (.cmdlist,x) ; 65c02 FTW!!	
+.unknown
+	+ShellPrintString .txt_msg_unknown_cmd
 	jmp mainloop
-
 
 
 .ls
@@ -120,106 +179,15 @@ mainloop
 .load
 
 .type
-.dumpvec 		= tmp2
-.dumpvec_end   	= .dumpvec
-.dumpvec_start 	= .dumpvec+2
-
-.dump
-	; stz .dumpvec
-	stz .dumpvec+1
-	stz .dumpvec+2
-	stz .dumpvec+3
-
 	ldy #$00
-	ldx #$03
 -	lda (paramptr),y
 	beq +
-
-	jsr .atoi
-	asl
-	asl
-	asl
-	asl
-	sta .dumpvec,x
-
+	sta chrout
 	iny
-	lda (paramptr),y
-	beq +
-	jsr .atoi
-	ora .dumpvec,x
-	sta .dumpvec,x
-	dex
-	iny
-	cpy #$04
 	bne -
++
 
-	iny
-	bra -
-
-+	cpy #$00
-	bne ++
-
-	+ShellPrintString .txt_msg_param_error
-	bra +
-
-++	
-
--	
-	+ShellPrintString .crlf
-	lda .dumpvec_start+1
-	jsr hexout
-	lda .dumpvec_start
-	jsr hexout
-	lda #':'
-	jsr chrout
-	lda #' '
-	jsr chrout
-
-	ldy #$00
---	lda (.dumpvec_start),y
-	jsr hexout 
-	lda #' '
-	jsr chrout
-	iny
-	cpy #$08
-	bne --
-
-	lda #' '
-	jsr chrout
-	
-	ldy #$00
---	lda (.dumpvec_start),y
-	cmp #$20
-	bcs ++
-	lda #'.'
-++	jsr chrout
-	iny
-	cpy #$08
-	bne --
-
-	lda .dumpvec_start+1
-	cmp .dumpvec_end+1
-	bne ++
-	lda .dumpvec_start
-	cmp .dumpvec_end
-	beq +
-	bcs +
-
-++
-	jsr getkey
-	cmp #$03
-	beq +
-	clc
-	lda .dumpvec_start
-
-	adc #$08
-	sta .dumpvec_start
-	lda .dumpvec_start+1
-	adc #$00
-	sta .dumpvec_start+1
-	bra -
-
-+	jmp mainloop
+	jmp mainloop
 
 	
 
@@ -231,9 +199,9 @@ mainloop
 
 .help
 	+ShellPrintString .crlf
-	; +ShellPrintString .hellotxt
+	
 	+ShellPrintString .helptxt1
-	+ShellPrintString .helptxt2
+	
 	jmp mainloop
 
 
@@ -263,9 +231,6 @@ mainloop
 	!byte $00	
 	!word .help
 
-	!text "dump"
-	!byte $00	
-	!word .dump
 	
 	; End of list
 	!byte $ff
@@ -274,16 +239,10 @@ mainloop
 
 .hellotxt		!text "SteckShell 0.10 ",$00
 .helptxt1		
-				!text $0a,$0d,"ll/ls       - directory (long/short)"
 				!text $0a,$0d,"cd <name>   - change directory"
-				!text $0a,$0d,"load <name> - load file"
 				; !text $0a,$0d,"run <name>  - run program"		
-				!text $0a,$0d,"type <name> - display text file"
-				!text $0a,$0d,"view <name> - display gfx file"
-				!text $0a,$0d,"dump <addr> <addr> - dump memory"
 				!byte $00
-.helptxt2				
-				!text $0a,$0d,"date        - show time and date"
+
 .crlf			!byte $0a,$0d,$00
 .prompt			!text $0a,$0d,">",$00
 .txt_msg_unknown_cmd	!text $0a,$0d,"unknown command (try 'help')",$00
