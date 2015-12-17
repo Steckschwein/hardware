@@ -168,41 +168,6 @@ mainloop
 	jmp mainloop
 
 
-.ls
-.dir
-
-.cd
-
-.run
-
-
-.load
-
-.type
-	ldy #$00
--	lda (paramptr),y
-	beq +
-	sta chrout
-	iny
-	bne -
-+
-
-	jmp mainloop
-
-	
-
-.hello
-	+ShellPrintString .crlf
-	+ShellPrintString .hellotxt
-	; +ShellPrintString .helptxt
-	jmp mainloop
-
-.help
-	+ShellPrintString .crlf
-	
-	+ShellPrintString .helptxt1
-	
-	jmp mainloop
 
 
 
@@ -231,6 +196,10 @@ mainloop
 	!byte $00	
 	!word .help
 
+	!text "hello"
+	!byte $00	
+	!word .hello
+
 	
 	; End of list
 	!byte $ff
@@ -246,24 +215,24 @@ mainloop
 .crlf			!byte $0a,$0d,$00
 .prompt			!text $0a,$0d,">",$00
 .txt_msg_unknown_cmd	!text $0a,$0d,"unknown command (try 'help')",$00
-.txt_msg_param_error	!text $0a,$0d,"parameter error",$0a,$0d,$00
-
-.filename !text "            ",$00
-.atoi
-	cmp #"9"+1
-	bcc + 	; 0-9?
-	; must be hex digit
-	adc #$08
-	and #$0f
-	rts
-
-+	sec
-	sbc #$30
-	rts
+; .txt_msg_param_error	!text $0a,$0d,"parameter error",$0a,$0d,$00
 
 
+; .atoi
+; 	cmp #"9"+1
+; 	bcc + 	; 0-9?
+; 	; must be hex digit
+; 	adc #$08
+; 	and #$0f
+; 	rts
 
-!src <util.a>
+; +	sec
+; 	sbc #$30
+; 	rts
+
+
+
+; !src <util.a>
 
 strout:
 	pha
@@ -290,30 +259,35 @@ keyin:
 	beq -
 	rts
 
-hexout:
-        pha
-        phx
 
-        tax
-        lsr
-        lsr
-        lsr
-        lsr
-        and     #%00001111      ;mask lsd for hex print
-        ora     #"0"            ;add "0"
-        cmp     #"9"+1          ;is it a decimal digit?
-        bcc     +                   ;yes! output it
-        adc     #6              ;add offset for letter a-f
-+       sta     chrout
 
-        txa
-        and     #%00001111      ;mask lsd for hex print
-        ora     #"0"            ;add "0"
-        cmp     #"9"+1          ;is it a decimal digit?
-        bcc     +                   ;yes! output it
-        adc     #6              ;add offset for letter a-f
-+       sta     chrout
+.ls
+.dir
+.cd
+.run
+.load
+.type
+	ldy #$00
+-	lda (paramptr),y
+	beq +
+	sta chrout
+	iny
+	bne -
++
 
-        plx
-        pla
-        rts
+	jmp mainloop
+
+	
+
+.hello
+	+ShellPrintString .crlf
+	+ShellPrintString .hellotxt
+	; +ShellPrintString .helptxt
+	jmp mainloop
+
+.help
+	+ShellPrintString .crlf
+	
+	+ShellPrintString .helptxt1
+	
+	jmp mainloop
