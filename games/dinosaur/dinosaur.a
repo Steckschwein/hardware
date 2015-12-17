@@ -4,7 +4,6 @@
 !src <defs.h.a>
 !src <bios.h.a>
 !src <macro.h.a>
-!src <kernel.h.a>
 !src <via.h.a>
 !src <joystick.h.a>
 !src <t99xx.lib.a>
@@ -244,7 +243,6 @@ main:
 	rts
 +	lda	#.DINOSAUR_DEAD
 	sta .dinosaur_state
-	bra	.game_over
 	
 .game_over
 	lda	#.STATUS_GAME_OVER
@@ -424,16 +422,18 @@ main:
 	jsr	.action_handler
 	jsr	.detect_collision
 	jsr	.animate_dinosaur
-	bra	++
+	bra	+++
 	
 +	lda	#PORT_SEL_2		;port 2
 	sta	via1porta
 	lda	via1porta
 	and #JOY_FIRE
-	bne	++
-	jsr .new_game	
-++	
-	jsr	.update_vram
+	beq	++
+    jsr .getkey
+    cmp #' '
+    bne +++
+++	jsr .new_game
++++	jsr	.update_vram
 	inc	.frame_cnt
 
 	lda	#Black
@@ -529,17 +529,17 @@ main:
 	stx via1portb	
 	rts
 
-	
+.getkey
+	jsr .kbd_enable	
+	jsr spi_r_byte
+	jmp .kbd_disable 
+    
 .action_handler
     ;TODO FIXME just for testing
-	jsr .kbd_enable	
-	jsr spi_r_byte
-	jsr .kbd_disable 
+    jsr .getkey
 	cmp #$1b
     bne +
-	jsr .kbd_enable	
-	jsr spi_r_byte
-	jsr .kbd_disable
+    jsr .getkey
 	cmp #'A'
     beq .up
        
