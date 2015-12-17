@@ -1,0 +1,360 @@
+!initmem $ea
+*=0
+	nop
+*= $1000
+
+!src <defs.h.a>
+!src <shell.h.a>
+
+KEY_RETURN 		= $0d
+;KEY_BACKSPACE 		= $08
+KEY_BACKSPACE 		= $7f
+KEY_ESCAPE		= $1b
+BUF_SIZE		= 32
+
+!address {
+.bufstart			= $2000
+.bufptr				= $00
+chrout				= $f001
+chrin				= $f004
+}
+
+
+
+.init	
+	lda #<.bufstart
+	sta .bufptr
+	lda #>.bufstart
+	sta .bufptr+1
+
+	jmp	.hello
+	
+	
+mainloop
+	; output prompt character
+	+ShellPrintString .prompt
+
+	; reset input buffer
+	lda #$00
+	tay
+	sta (.bufptr)
+
+	; put input into buffer until return is pressed
+.inputloop	
+	jsr keyin
+
+	cmp #KEY_RETURN ; return?
+	beq .parse
+
+	cmp #KEY_BACKSPACE
+	beq .backspace
+
+	sta (.bufptr),y
+	iny
+
+	jsr .terminate
+	
+
+-	sta chrout
+	bra .inputloop
+
+
+	; prevent overflow of input buffer 
+	cpy #BUF_SIZE
+	beq mainloop
+
+	
+	bra .inputloop
+
+.backspace
+	jsr .terminate
+	dey
+	lda #$08
+	bra -
+
+.terminate
+	tax
+	lda #$00
+	sta (.bufptr),y
+	txa
+	rts
+
+.parse
+	+ShellPrintString .crlf
+	ldy #$00
+-	lda (.bufptr),y
+	beq +
+	ora #$20
+	sta chrout
+	iny
+	bra -
++
+	lda #BUF_SIZE
+	clc
+	adc .bufptr
+	sta .bufptr
+	bcc +
+	inc .bufptr+1
++
+
+	lda #' '
+	sta chrout
+	lda #'O'
+	sta chrout
+	lda #'K'
+	sta chrout
+
+
+	jmp mainloop
+
+
+
+.ls
+.dir
+
+.cd
+
+.run
+
+
+.load
+
+.type
+.dumpvec 		= tmp2
+.dumpvec_end   	= .dumpvec
+.dumpvec_start 	= .dumpvec+2
+
+.dump
+	; stz .dumpvec
+	stz .dumpvec+1
+	stz .dumpvec+2
+	stz .dumpvec+3
+
+	ldy #$00
+	ldx #$03
+-	lda (paramptr),y
+	beq +
+
+	jsr .atoi
+	asl
+	asl
+	asl
+	asl
+	sta .dumpvec,x
+
+	iny
+	lda (paramptr),y
+	beq +
+	jsr .atoi
+	ora .dumpvec,x
+	sta .dumpvec,x
+	dex
+	iny
+	cpy #$04
+	bne -
+
+	iny
+	bra -
+
++	cpy #$00
+	bne ++
+
+	+ShellPrintString .txt_msg_param_error
+	bra +
+
+++	
+
+-	
+	+ShellPrintString .crlf
+	lda .dumpvec_start+1
+	jsr hexout
+	lda .dumpvec_start
+	jsr hexout
+	lda #':'
+	jsr chrout
+	lda #' '
+	jsr chrout
+
+	ldy #$00
+--	lda (.dumpvec_start),y
+	jsr hexout 
+	lda #' '
+	jsr chrout
+	iny
+	cpy #$08
+	bne --
+
+	lda #' '
+	jsr chrout
+	
+	ldy #$00
+--	lda (.dumpvec_start),y
+	cmp #$20
+	bcs ++
+	lda #'.'
+++	jsr chrout
+	iny
+	cpy #$08
+	bne --
+
+	lda .dumpvec_start+1
+	cmp .dumpvec_end+1
+	bne ++
+	lda .dumpvec_start
+	cmp .dumpvec_end
+	beq +
+	bcs +
+
+++
+	jsr getkey
+	cmp #$03
+	beq +
+	clc
+	lda .dumpvec_start
+
+	adc #$08
+	sta .dumpvec_start
+	lda .dumpvec_start+1
+	adc #$00
+	sta .dumpvec_start+1
+	bra -
+
++	jmp mainloop
+
+	
+
+.hello
+	+ShellPrintString .crlf
+	+ShellPrintString .hellotxt
+	; +ShellPrintString .helptxt
+	jmp mainloop
+
+.help
+	+ShellPrintString .crlf
+	; +ShellPrintString .hellotxt
+	+ShellPrintString .helptxt1
+	+ShellPrintString .helptxt2
+	jmp mainloop
+
+
+
+.cmdlist
+	!text "dir"
+	!byte $00
+	!word .dir
+
+	!text "ll"
+	!byte $00
+	!word .dir
+
+	!text "ls"
+	!byte $00
+	!word .ls
+
+	!text "type"
+	!byte $00
+	!word .type
+
+	!text "cd"
+	!byte $00	
+	!word .cd
+	
+	!text "help"
+	!byte $00	
+	!word .help
+
+	!text "dump"
+	!byte $00	
+	!word .dump
+	
+	; End of list
+	!byte $ff
+
+
+
+.hellotxt		!text "SteckShell 0.10 ",$00
+.helptxt1		
+				!text $0a,$0d,"ll/ls       - directory (long/short)"
+				!text $0a,$0d,"cd <name>   - change directory"
+				!text $0a,$0d,"load <name> - load file"
+				; !text $0a,$0d,"run <name>  - run program"		
+				!text $0a,$0d,"type <name> - display text file"
+				!text $0a,$0d,"view <name> - display gfx file"
+				!text $0a,$0d,"dump <addr> <addr> - dump memory"
+				!byte $00
+.helptxt2				
+				!text $0a,$0d,"date        - show time and date"
+.crlf			!byte $0a,$0d,$00
+.prompt			!text $0a,$0d,">",$00
+.txt_msg_unknown_cmd	!text $0a,$0d,"unknown command (try 'help')",$00
+.txt_msg_param_error	!text $0a,$0d,"parameter error",$0a,$0d,$00
+
+.filename !text "            ",$00
+.atoi
+	cmp #"9"+1
+	bcc + 	; 0-9?
+	; must be hex digit
+	adc #$08
+	and #$0f
+	rts
+
++	sec
+	sbc #$30
+	rts
+
+
+
+!src <util.a>
+
+strout:
+	pha
+	phy
+
+	ldy #$00
+-	lda (msgptr),y
+	beq +	
+	sta chrout
+	iny
+	bne -
++
+	ply
+	pla
+	rts
+
+getkey:
+	lda chrin
+	rts
+
+keyin:
+-	jsr getkey
+	cmp #$00
+	beq -
+	rts
+
+hexout:
+        pha
+        phx
+
+        tax
+        lsr
+        lsr
+        lsr
+        lsr
+        and     #%00001111      ;mask lsd for hex print
+        ora     #"0"            ;add "0"
+        cmp     #"9"+1          ;is it a decimal digit?
+        bcc     +                   ;yes! output it
+        adc     #6              ;add offset for letter a-f
++       sta     chrout
+
+        txa
+        and     #%00001111      ;mask lsd for hex print
+        ora     #"0"            ;add "0"
+        cmp     #"9"+1          ;is it a decimal digit?
+        bcc     +                   ;yes! output it
+        adc     #6              ;add offset for letter a-f
++       sta     chrout
+
+        plx
+        pla
+        rts
