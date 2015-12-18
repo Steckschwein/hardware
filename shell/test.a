@@ -56,8 +56,6 @@ mainloop
 	
 
 -	sta chrout
-	bra .inputloop
-
 
 	; prevent overflow of input buffer 
 	cpy #BUF_SIZE
@@ -82,15 +80,6 @@ mainloop
 .parse
 	+copyPointer .bufptr, cmdptr
 
-	; advance bufptr by BUF_SIZE bytes
-	lda #BUF_SIZE
-	clc
-	adc .bufptr
-	sta .bufptr
-	bcc +
-	inc .bufptr+1
-+
-
 	; find begin of command word
 -	lda (cmdptr)	; skip non alphanumeric stuff	
 	beq mainloop
@@ -100,6 +89,7 @@ mainloop
 	bra -
 +
 	+copyPointer cmdptr, paramptr
+
 
 	; find begin of parameter (everything behind the command word, separated by space)
 	; first, fast forward until space or abort if null (no parameters then)
@@ -119,6 +109,15 @@ mainloop
 	bra -
 +
 ++
+
+	; advance bufptr by BUF_SIZE bytes
+	lda #BUF_SIZE
+	clc
+	adc .bufptr
+	sta .bufptr
+	bcc +
+	inc .bufptr+1
++
 
 	; compare 	
 	ldx #$00

@@ -81,68 +81,49 @@ BUF_SIZE		= 32
 
 	jmp	.hello
 
-	
-	
 mainloop
-	lda .bufptr+1
-	jsr hexout
-	lda .bufptr
-	jsr hexout
-
 	; output prompt character
 	+ShellPrintString .prompt
 
-
-
+	; reset input buffer
 	lda #$00
 	tay
-	sta (.bufptr),y
-
+	sta (.bufptr)
 
 	; put input into buffer until return is pressed
 .inputloop	
-	
 	jsr keyin
 
 	cmp #KEY_RETURN ; return?
 	beq .parse
 
-	cmp #KEY_BACKSPACE ; backspace?
+	cmp #KEY_BACKSPACE
 	beq .backspace
 
 	cmp #KEY_ESCAPE
 	beq .escape
 
 
-	sta (.bufptr),y ; put byte into buffer
+	sta (.bufptr),y
 	iny
+
+	jsr .terminate
 	
--	tax
-	lda #$00
-	sta (.bufptr),y ; null termination
-	txa
+
+-	jsr chrout
 
 	; prevent overflow of input buffer 
 	cpy #BUF_SIZE
 	beq mainloop
 
-	jsr chrout
 	
 	bra .inputloop
 
 .backspace
-	cpy #$00
-	bne +
-
-	tax
-	lda #$00
-	sta (.bufptr),y
-	txa
-
-	bra .inputloop	
-+	dey
+	jsr .terminate
+	dey
+	lda #$08
 	bra -
-
 
 .escape 
 	jsr getkey
@@ -176,35 +157,27 @@ mainloop
 ++
 +   ;handle any other esc bytes here
 	bra .inputloop
-	
+
+.terminate
+	tax
+	lda #$00
+	sta (.bufptr),y
+	txa
+	rts
 
 .parse
-	; +SetVector .buf, cmdptr
 	+copyPointer .bufptr, cmdptr
-
-	lda (.bufptr)
-	beq +
-	clc
-	lda #BUF_SIZE
-	adc .bufptr
-	sta .bufptr
-	bcc ++
-	inc .bufptr+1
-++  
-+
-
-	lda #$00
-	sta (.bufptr)
-
 
 	; find begin of command word
 -	lda (cmdptr)	; skip non alphanumeric stuff	
+	beq mainloop
 	cmp #$20
 	bne +
 	inc cmdptr
 	bra -
 +
 	+copyPointer cmdptr, paramptr
+
 
 	; find begin of parameter (everything behind the command word, separated by space)
 	; first, fast forward until space or abort if null (no parameters then)
@@ -225,22 +198,32 @@ mainloop
 +
 ++
 
+	; advance bufptr by BUF_SIZE bytes
+	lda #BUF_SIZE
+	clc
+	adc .bufptr
+	sta .bufptr
+	bcc +
+	inc .bufptr+1
++
+
 	; compare 	
 	ldx #$00
 -	ldy #$00
---	lda .cmdlist,x
-	cmp #$ff
-	beq .unknown
+--	lda (cmdptr),y
+
+	; if not, there is a terminating null
+	; cmp #$00
+	beq .cmdfound
 
 	; command string in buffer is terminated with $20 if there are cmd line arguments
 	cmp #$20
 	beq .cmdfound
-	; if not, there is a terminating null
-	cmp #$00
-	beq .cmdfound
 
-	; cmp .buf,y
-	cmp (cmdptr),y
+	; make lowercase
+	ora #$20
+
+	cmp .cmdlist,x
 	bne +	; difference. this isnt the command were looking for
 
 	iny
@@ -256,6 +239,10 @@ mainloop
 	inx
 	inx
 	inx
+
+	lda .cmdlist,x
+	cmp #$ff
+	beq .unknown
 	bra -
 
 .cmdfound
@@ -263,17 +250,12 @@ mainloop
 	inx
 
 	jmp (.cmdlist,x) ; 65c02 FTW!!	
-
 .unknown
-	lda .buf
-	beq +
+	+ShellPrintString .txt_msg_unknown_cmd
+	jmp mainloop
 
-	; +SetVector .buf, paramptr
-	+ShellPrintString .crlf
-	bra .run
 
-+	jmp mainloop
-
+	
 
 
 .ls
