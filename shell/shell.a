@@ -122,7 +122,6 @@ mainloop
 .backspace
 	jsr .terminate
 	dey
-	lda #$08
 	bra -
 
 .escape 
