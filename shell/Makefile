@@ -1,5 +1,4 @@
-all: shell.bin test.bin
-sprites: sanduhr.raw sanduhr_135.raw sanduhr_180.raw	sanduhr_225.raw	sanduhr_270.raw	sanduhr_315.raw	sanduhr_45.raw	sanduhr_90.raw
+all: shell.bin repl.bin
 clean:
 	rm -f *.bin 
 
@@ -10,4 +9,4 @@ clean:
 transfer: shell.bin
 	../transfer.py shell.bin 0xd000
 test: test.bin
-	py65mon -m 65c02  -l test.bin
+	py65mon -m 65c02  -l repl.bin
