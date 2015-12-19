@@ -733,7 +733,7 @@ mainloop
 		rts
 
 
-.hellotxt		!text "SteckShell 0.10 ",$00
+.hellotxt		!text "SteckShell 0.11 ",$00
 .helptxt1		
 				!text $0a,$0d,"ll/ls       - directory (long/short)"
 				!text $0a,$0d,"cd <name>   - change directory"
