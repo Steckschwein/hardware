@@ -298,16 +298,17 @@
 	lda	crs_x
 	beq	++
 	dec	crs_x
-	jsr	.textui_update_crs_ptr
-	lda	#' '			;blank the saved char
-	sta	.saved_char
-    rts
+    bra ++++    
 ++	lda	crs_y			; cursor y=0, no dec
 	beq	+++
 	dec	crs_y
 	lda	#(.COLS-1)			; set x to end of line above
 	sta	crs_x
-	jmp	.textui_update_crs_ptr
+++++
+	jsr	.textui_update_crs_ptr
+	lda	#' '			;blank the saved char
+	sta	.saved_char
+    rts
 +	sta	.saved_char         ; the trick, simple set saved value to plot as saved char, will be print by textui_update_crs_ptr
 	lda	crs_x
 	cmp	#(.COLS-1)
