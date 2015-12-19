@@ -294,13 +294,14 @@
 	bne	+
     jmp	.inc_cursor_y
 +	cmp	#.KEY_BACKSPACE
-	bne	+	
+	bne	+
 	lda	crs_x
 	beq	++
 	dec	crs_x
+	jsr	.textui_update_crs_ptr
 	lda	#' '			;blank the saved char
-	sta	.saved_char		
-	jmp	.textui_update_crs_ptr
+	sta	.saved_char
+    rts
 ++	lda	crs_y			; cursor y=0, no dec
 	beq	+++
 	dec	crs_y
