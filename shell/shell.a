@@ -27,9 +27,7 @@ BUF_SIZE		= 32
 !address {
 ; .buf 				= $0350 ; Input buffer 80 bytes. end: $03a1
 .buf 				= $d800 ; Input buffer 80 bytes. end: $d800
-.histbuf			= $d800
-.histptr			= $d0
-.histptr2			= $d2
+.endbuf				= .buf + BUF_SIZE*16
 .bufptr				= $d4
 }
 
@@ -66,18 +64,6 @@ BUF_SIZE		= 32
 	sta .bufptr
 	lda #>.buf
 	sta .bufptr+1
-
-	
-	lda #<.histbuf
-	sta .histptr
-	lda #>.histbuf
-	sta .histptr+1
-
-	lda #<.histbuf
-	sta .histptr2
-	lda #>.histbuf
-	sta .histptr2+1
-
 
 	jmp	.hello
 
@@ -128,30 +114,18 @@ mainloop
 	jsr getkey
 	cmp #'A'
 	bne +
-	
-	ldy #$00
--	lda (.histptr2),y
-	beq ++
-	sta .buf,y
-	jsr chrout
-	iny
-	bra -
-++	
-	iny
-	tya
-	clc
-	adc .histptr2
-	sta .histptr2
-	bcc +++
-	inc .histptr2+1
-+++
+
+	jsr decbuf
+	jsr .printbuf
+
 	bra .inputloop
 
 +	cmp #'B'
 	bne +
 
-	lda #'D'
-	jsr chrout
+	jsr incbuf
+	jsr .printbuf
+
 	bra .inputloop
 ++
 +   ;handle any other esc bytes here
@@ -167,9 +141,17 @@ mainloop
 .parse
 	+copyPointer .bufptr, cmdptr
 
+	lda .bufptr+1
+	jsr hexout
+	lda .bufptr
+	jsr hexout
+
+
 	; find begin of command word
 -	lda (cmdptr)	; skip non alphanumeric stuff	
-	beq mainloop
+	bne +
+	jmp mainloop
++
 	cmp #$20
 	bne +
 	inc cmdptr
@@ -197,14 +179,8 @@ mainloop
 +
 ++
 
-	; advance bufptr by BUF_SIZE bytes
-	lda #BUF_SIZE
-	clc
-	adc .bufptr
-	sta .bufptr
-	bcc +
-	inc .bufptr+1
-+
+	jsr incbuf
+	jsr .terminate
 
 	; compare 	
 	ldx #$00
@@ -253,6 +229,69 @@ mainloop
 	+ShellPrintString .txt_msg_unknown_cmd
 	jmp mainloop
 
+.printbuf:
+	ldy #$00
+-	lda (.bufptr),y
+	beq ++
+	sta .buf,y
+	jsr chrout
+	iny
+	bra -
+++	rts
+
+incbuf:
+	; advance bufptr by BUF_SIZE bytes
+	lda #BUF_SIZE
+	clc
+	adc .bufptr
+	sta .bufptr
+	bcc +
+	inc .bufptr+1
++
+	; last buffer slot? start from beginning
+	lda .bufptr+1
+	cmp #>.endbuf
+	bne +
+	lda .bufptr
+	cmp #<.endbuf
+	bne +
+
+	lda #<.buf
+	sta .bufptr
+	lda #>.buf
+	sta .bufptr+1
++
+	rts
+
+decbuf:
+
+	; first buffer slot? jump to end
+	lda .bufptr+1
+	cmp #>.buf
+	bne +
+	lda .bufptr
+	cmp #<.buf
+	bne +
+
+
+	lda #<.endbuf
+	sta .bufptr
+	lda #>.endbuf
+	sta .bufptr+1
+	rts
++
+	; decrease bufptr by BUF_SIZE bytes
+	lda .bufptr
+	sec
+	sbc #BUF_SIZE
+	sta .bufptr
+
+	lda .bufptr+1
+	sbc #$00	
+	sta .bufptr+1
+
+	
+	rts
 
 	
 

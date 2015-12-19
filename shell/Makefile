@@ -3,7 +3,7 @@ clean:
 	rm -f *.bin 
 
 %.bin: %.a
-	acme -v -f plain --cpu 65c02 -o $@ $<
+	acme -v -Wtype-mismatch -f plain --cpu 65c02 -o $@ $<
 %.raw: %.xpm
 	sh xpm2acme.sh $< > $@
 transfer: shell.bin

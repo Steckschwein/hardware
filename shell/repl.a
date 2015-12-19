@@ -13,12 +13,11 @@ KEY_ESCAPE		= $1b
 BUF_SIZE		= 32
 
 !address {
-.bufstart			= $2000
-.bufptr				= $00
-chrout				= $f001
-chrin				= $f004
+	.bufstart			= $2000
+	.bufptr				= $00
+	.port_chrout		= $f001
+	.port_chrin			= $f004
 }
-
 
 
 .init	
@@ -55,13 +54,12 @@ mainloop
 	jsr .terminate
 	
 
--	sta chrout
+-	jsr chrout
 
 	; prevent overflow of input buffer 
 	cpy #BUF_SIZE
 	beq mainloop
 
-	
 	bra .inputloop
 
 .backspace
@@ -78,9 +76,10 @@ mainloop
 	rts
 
 .parse
+	; set cmdptr to the position of the buffer ptr
 	+copyPointer .bufptr, cmdptr
 
-	; find begin of command word
+	; increase cmdptr until we find begin of command word
 -	lda (cmdptr)	; skip non alphanumeric stuff	
 	beq mainloop
 	cmp #$20
@@ -88,8 +87,8 @@ mainloop
 	inc cmdptr
 	bra -
 +
+	; set paramptr to the position of cmdptr
 	+copyPointer cmdptr, paramptr
-
 
 	; find begin of parameter (everything behind the command word, separated by space)
 	; first, fast forward until space or abort if null (no parameters then)
@@ -119,13 +118,14 @@ mainloop
 	inc .bufptr+1
 +
 
+	; TODO: initialize newly allocated buffer slot
+
 	; compare 	
 	ldx #$00
 -	ldy #$00
 --	lda (cmdptr),y
 
 	; if not, there is a terminating null
-	; cmp #$00
 	beq .cmdfound
 
 	; command string in buffer is terminated with $20 if there are cmd line arguments
@@ -158,10 +158,9 @@ mainloop
 	bra -
 
 .cmdfound
-
 	inx
-
 	jmp (.cmdlist,x) ; 65c02 FTW!!	
+
 .unknown
 	+ShellPrintString .txt_msg_unknown_cmd
 	jmp mainloop
@@ -240,7 +239,7 @@ strout:
 	ldy #$00
 -	lda (msgptr),y
 	beq +	
-	sta chrout
+	jsr chrout
 	iny
 	bne -
 +
@@ -249,7 +248,7 @@ strout:
 	rts
 
 getkey:
-	lda chrin
+	lda .port_chrin
 	rts
 
 keyin:
@@ -258,6 +257,9 @@ keyin:
 	beq -
 	rts
 
+chrout
+	sta .port_chrout
+	rts
 
 
 .ls
@@ -269,7 +271,7 @@ keyin:
 	ldy #$00
 -	lda (paramptr),y
 	beq +
-	sta chrout
+	jsr chrout
 	iny
 	bne -
 +
