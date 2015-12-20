@@ -494,7 +494,7 @@ mainloop
 	
 	ldy #$00
 --	lda (.dumpvec_start),y
-	cmp #$20
+	cmp #$19
 	bcs ++
 	lda #'.'
 ++	jsr chrout
