@@ -105,8 +105,9 @@ mainloop
 	bra .inputloop
 
 .backspace
-	jsr .terminate
+	
 	dey
+	jsr .terminate
 	bra -
 
 .escape 
@@ -131,10 +132,10 @@ mainloop
 	bra .inputloop
 
 .terminate
-	tax
+	pha
 	lda #$00
 	sta (.bufptr),y
-	txa
+	pla
 	rts
 
 .parse
