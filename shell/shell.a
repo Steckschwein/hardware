@@ -7,7 +7,6 @@ num_ls_entries 	= $03
 !src <bios.h.a>
 !src <kernel.h.a>
 !src <shell.h.a>
-!src <via.h.a>
 !src <fat32.h.a>
 !src <errors.h.a>
 
@@ -48,9 +47,7 @@ BUF_SIZE	= 32
 	+ShellPrintString .txt_msg_sd_init_error
 	jmp .hello
 
-+	lda #%01111110
-	sta via1portb
-	
++	
 	jsr mount
 	
 
@@ -174,7 +171,7 @@ mainloop
 	bcc +
 	inc .bufptr+1
 +
-	; last buffer slot? start from beginning
+	; last buffer slot? no increasing
 	lda .bufptr+1
 	cmp #>.endbuf
 	bne +
@@ -269,7 +266,7 @@ mainloop
 	bne +
 
 	rts
-
++
 
 	; advance bufptr by BUF_SIZE bytes
 	lda #BUF_SIZE
