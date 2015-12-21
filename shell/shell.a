@@ -112,20 +112,15 @@ mainloop
 	bne +
 
 	jsr .decbufptr
-	jsr .printbuf
-
-	bra .inputloop
+	bra ++
 
 +	cmp #KEY_ESCAPE_CRSR_DOWN
 	bne +
 
 	jsr .incbufptr
-	jsr .printbuf
+++	jsr .printbuf
 
-	bra .inputloop
-++
-+   ;handle any other esc bytes here
-	bra .inputloop
++	bra .inputloop
 
 .terminate
 	pha
