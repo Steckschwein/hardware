@@ -9,15 +9,13 @@ num_ls_entries 	= $03
 !src <shell.h.a>
 !src <via.h.a>
 !src <fat32.h.a>
-!src <params.h.a>
 !src <errors.h.a>
-!src <t9929.h.a>
 
 
-KEY_RETURN 		= $0d
+KEY_RETURN 	= $0d
 KEY_BACKSPACE 	= $08
-KEY_ESCAPE		= $1b
-BUF_SIZE		= 32
+KEY_ESCAPE	= $1b
+BUF_SIZE	= 32
 
 
 
@@ -92,10 +90,8 @@ mainloop
 	sta (.bufptr),y
 	iny
 
-	jsr .terminate
-	
-
--	jsr chrout
+-	jsr .terminate
+	jsr chrout
 
 	; prevent overflow of input buffer 
 	cpy #BUF_SIZE
@@ -105,9 +101,7 @@ mainloop
 	bra .inputloop
 
 .backspace
-	
 	dey
-	jsr .terminate
 	bra -
 
 .escape 
