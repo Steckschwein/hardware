@@ -15,6 +15,8 @@ num_ls_entries 	= $03
 KEY_RETURN 	= $0d
 KEY_BACKSPACE 	= $08
 KEY_ESCAPE	= $1b
+KEY_ESCAPE_CRSR_UP	= 'A'
+KEY_ESCAPE_CRSR_DOWN	= 'B'
 BUF_SIZE	= 32
 
 
@@ -106,7 +108,7 @@ mainloop
 
 .escape 
 	jsr getkey
-	cmp #'A'
+	cmp #KEY_ESCAPE_CRSR_UP
 	bne +
 
 	jsr .decbufptr
@@ -114,7 +116,7 @@ mainloop
 
 	bra .inputloop
 
-+	cmp #'B'
++	cmp #KEY_ESCAPE_CRSR_DOWN
 	bne +
 
 	jsr .incbufptr
