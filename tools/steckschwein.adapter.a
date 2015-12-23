@@ -11,17 +11,21 @@
    
 .chrout
     pha
+    and #$7f
     jsr vdp_chrout
     pla
     rts 
 	
 .getkey
 	phx
-	lda #%01111010
+-	lda #%01111010
 	sta via1portb
 	jsr .spi_r_byte
+;    cmp #$00; restore zero flag
 	ldx #%11111110
 	stx via1portb
+    cmp #$00
+    beq -
 	plx
-    cmp #$00; restore zero flag
+    ora #$80; apple specific, bit 7 key pressed
     rts 
