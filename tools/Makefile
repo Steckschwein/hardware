@@ -1,9 +1,9 @@
-all: wozmon.bin
+all: wozmon.bin appleiimonitor.bin
 
 clean:
 	rm -f *.bin
 	
-%.bin: %.a
+%.bin: %.a steckschwein.adapter.a
 	acme -v -f plain -l $<.labels --cpu 65c02 -o $@ $<
 
 transfer: all

@@ -1,0 +1,27 @@
+!src <defs.h.a>
+!src <via.h.a>
+!src <spi.a>
+
+; same as bios, get rid of unused code
+.COLS=32
+!set bios_stuff=1
+!src <t99xx.lib.a>
+
+.chrout
+    pha
+    phx
+    jsr vdp_chrout
+    plx
+    pla
+    rts 
+	
+.keyin
+	phx
+	lda #%01111010
+	sta via1portb
+	jsr .spi_r_byte
+	ldx #%11111110
+	stx via1portb
+	plx
+    cmp #$00; restore zero flag
+    rts 
