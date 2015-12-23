@@ -1,4 +1,4 @@
-!source <defs.h.a>
+!source <macro.h.a>
 !source <t9929.h.a>
 
 ;
@@ -96,6 +96,8 @@ vdp_mode_gfx1_blank		; 3 x 256 bytes
 	lda	#<ADDRESS_GFX1_SCREEN
 	ldy	#.WRITE_ADDRESS + >ADDRESS_GFX1_SCREEN
 	bra	vdp_fill
+
+!ifndef bios_stuff {
 ;
 ; blank gfx mode 2 with 
 ; .adrl - color to fill
@@ -111,6 +113,7 @@ vdp_mode_gfx2_blank:		; 2 x 6K
 	ldy #.WRITE_ADDRESS + >ADDRESS_GFX2_PATTERN
 	ldx	#$18
 	bra	vdp_fill
+}
 
 vdp_mode_gfx1_sprites_off
 vdp_mode_sprites_off
