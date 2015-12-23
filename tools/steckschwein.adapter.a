@@ -2,7 +2,6 @@
 !src <via.h.a>
 !src <spi.a>
 
-.io_init
 !src "../bios/vdp.a"
    
 .chrout
