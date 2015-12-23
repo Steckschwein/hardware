@@ -11,8 +11,14 @@
    
 .chrout
     pha
+    phx
     and #$7f
     jsr vdp_chrout
+    cmp #$0d
+    bne +
+    lda #$0a            ;mac specific, newline with CR is just a $0d, the vdp_chrout is "windows/dos" conform therefore we explicitly send a $0a
+    jsr vdp_chrout
++   plx
     pla
     rts 
 	

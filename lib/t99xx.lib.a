@@ -1,6 +1,7 @@
 !source <macro.h.a>
 !source <t9929.h.a>
 
+.ROWS=23
 ;
 ;	TODO	
 ;		improve some functions,  avoid nop for vdp write delay 2µs by opcode reordering
@@ -341,14 +342,17 @@ vdp_bgcolor
 
 .inc_cursor_y
 	lda crs_y
-	cmp	#23		;last line ?
+	cmp	#.ROWS		;last line ?
 	bne	+
 	bra	.vdp_scroll_up	; scroll up, dont inc y, exit
 +	inc crs_y
 	rts
 	
-.KEY_CR=$0a
-.KEY_LF=$0d
+;
+; vdp direct char out, no backbuffer is used. vdp vram is accessed directly
+;
+.KEY_CR=$0d
+.KEY_LF=$0a
 .KEY_BACKSPACE=$08
 vdp_chrout
 	cmp	#.KEY_CR			;cariage return ?
