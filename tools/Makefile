@@ -8,3 +8,6 @@ clean:
 
 transfer: all
 	../transfer.py wozmon.bin 0x1000
+
+mon: appleiimonitor.bin
+	../transfer.py appleiimonitor.bin 0x1000

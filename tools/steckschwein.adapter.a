@@ -3,12 +3,15 @@
 !src <spi.a>
 
 !src "../bios/vdp.a"
+
+.init_io
+    +SetVector .chrout, CSWL
+    +SetVector .getkey, KSWL
+    bra init_vdp
    
 .chrout
     pha
-    phx
     jsr vdp_chrout
-    plx
     pla
     rts 
 	

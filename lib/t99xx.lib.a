@@ -32,7 +32,7 @@ vdp_fills:
 	lda   .adrl     ;3
 -  	+vnops          ;2
 	dex             ;2
-	sta   a_vram    ;2
+	sta   a_vram    ;4
 	bne	-           ;3
 	rts
 	
@@ -143,8 +143,8 @@ vdp_mode_gfx1
 	lda	#<ADDRESS_GFX1_COLOR
 	ldy	#.WRITE_ADDRESS + >ADDRESS_GFX1_COLOR	;color vram
 	jsr	vdp_fills
-	
 	+SetVector .vdp_init_bytes_gfx1, .adrl
+    ;go on below
 	
 ; setup video registers upon given table
 ;	input:
