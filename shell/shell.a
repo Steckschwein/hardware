@@ -161,7 +161,6 @@ mainloop
 +
 ++
 
-	+copyPointer .bufptr, .bufhwm
 	
 	; jsr .incbufptr
 	lda #BUF_SIZE
@@ -171,6 +170,9 @@ mainloop
 	bcc +
 	inc .bufptr+1
 +
+
+	+copyPointer .bufptr, .bufhwm
+	
 	; last buffer slot? no increasing
 	lda .bufptr+1
 	cmp #>.endbuf
@@ -357,10 +359,15 @@ mainloop
 
 .run
 
-
+	lda #<.filename
+	sta filenameptr
+	lda #>.filename
+	sta filenameptr+1
+	
 	ldy #$00
 -	lda (cmdptr),y
 	beq ++
+	sta .filename,y
 	cmp #' '
 	beq ++
 	
@@ -372,7 +379,7 @@ mainloop
 ++	
 	ldx #$00
 -	lda .exec_extension,x
-	sta (cmdptr),y
+	sta .filename,y
 	iny
 	inx
 	cpx #$05
@@ -380,7 +387,8 @@ mainloop
 
 	
 
-+	+copyPointer cmdptr, filenameptr
++	
+	; +copyPointer cmdptr, filenameptr
 	jsr .readfile		
 	
 	lda errno
@@ -391,7 +399,7 @@ mainloop
 	; ldx #$ff
 	; txs
 
-	sei
+	; sei
 	; jmp  .steckos_start
 
 	jmp .steckos_start
