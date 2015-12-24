@@ -1,4 +1,4 @@
-all: shell.bin repl.bin
+all: shell.bin client.bin repl.bin
 clean:
 	rm -f *.bin 
 

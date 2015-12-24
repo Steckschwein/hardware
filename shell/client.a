@@ -1,0 +1,17 @@
+* = $1000
+!src <defs.h.a>
+!src <bios.h.a>
+!src <shell.h.a>
+
+
+main:
+	
+
+	ldy #$00
+-	lda (paramptr),y
+	beq +
+	jsr chrout
+	iny
+	bra -
++
+	jmp (retvec)
