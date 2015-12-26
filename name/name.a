@@ -1,155 +1,69 @@
 *=$1000
-jmp init
+	jmp main 
 !src <defs.h.a>
 !src <bios.h.a>
-!src <via.h.a>
-!src "../shell/shell.textui.a"
+!src <kernel.h.a>
+!src <shell.h.a>
 
 
 !address {
 	.key 	= $10
-	txtbuf	= $0300	
+	.txtbuf	= .buf	
 }
 
-!macro ShellPrintString .word {
-	+SetVector .word,	msgptr
-	jsr _textui_print
-}
-
-
-init
-	sei
-
-	stz .key
-
-	+SetVector _textui_chrout, outvec
-	lda #<count
-	sta via1t1cl            ; set low byte of count
-	lda #>count
-	sta via1t1ch            ; set high byte of count
-
-	lda #%11000000
-	sta via1ier             ; enable VIA1 T1 interrupts
-
-	lda #%01000000
-	sta via1acr             ; T1 continuous, PB7 disabled
-
-	+SetVector .irq, irqvec
-
-	jsr	.textui_init
-
-
-	lda #%01111110
-	sta via1portb
-
-	cli
-
-main
-	stz txtbuf
+main:
+	stz .txtbuf
 
 	+ShellPrintString text1
 	
 
 	ldx #$00
 	
--	jsr .keyin
+-	jsr keyin
 	cmp #$0d ; return gedrueckt?
-	beq out
+	beq +
+
+	cmp #$08 ; backspace?
+	beq .backspace
 
 	cmp #$1f ; Ignore everything below "-"
     bcc -
 	
-	; cmp #$0c
-	; beq +
-
-
-	; pha
-	jsr chrout
-	; pla
-
-	sta txtbuf,x
+	
+	
+	sta .txtbuf,x
 	inx
-	stz txtbuf,x
+	stz .txtbuf,x
+
+--	jsr chrout
 
 	cpx #$0f
-	beq out
-
-
+	beq +
 	
-+	jmp -
+	bra -
 
-out 
-	lda txtbuf
+.backspace
+	dex
+	bra --
++
+	lda .txtbuf
 	beq +
 	cmp #'X'
 	beq .end
 
 	+ShellPrintString  text2
-	+ShellPrintString  txtbuf
+	+ShellPrintString  .txtbuf
 	
 	+ShellPrintString .crlf2
-	jmp main
+	bra main
 +
 	+ShellPrintString name
 	
 	+ShellPrintString .crlf
-	jmp main
+	bra main
 
 .end
-	sei
-	rts
-
-.irq
-	+save
-
-	;via
-	bit via1ifr		; Interrupt from VIA?
-	bpl +			; no? get out
-
-	bit via1t1cl	; Acknowledge timer interrupt
-
-	lda .key		; already char in buffer? do nothing
-	bne +
-
-	lda via1portb
-	and #%01111110
-	cmp #$7e
-	bne +
-
-	lda #%01111010
-	sta via1portb
-
-	TAX             ; aufheben
-    ORA #$01
-    !for .i,0,7 {
-		STA via1portb ; Takt An 1
-		STX via1portb ; Takt aus  
-    }
-       
-	ldx #%11111110
-	stx via1portb
-
-	lda via1sr
-	cmp #$00
-	beq +
-	sta .key
-
-+
-	;	gfx	expensive screen copy handling, placed at the end
-	bit	a_vreg
-	bpl +	   ; VDP IRQ flag set? 
-	jsr	.textui_update_screen
-	
-+	
-	+restore
-	rti
-
-.keyin
--	lda .key 		; wait for .key to become != 00
-	beq -
-
-	stz .key 		; reset .key to signal isr to fetch next key
-	rts
+	jmp (retvec)
 
 
 
@@ -159,6 +73,4 @@ name	!text "Bitte Namen eingeben.", $0a,$0d,$00
 .crlf2	!text $0a,$0d
 .crlf	!text $0a,$0d
 .null	!text $00
-.assets
-.sprite_sanduhr
-	!byte	$ff,	$f0,	0,	Gray
+.buf
