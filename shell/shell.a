@@ -38,6 +38,11 @@ BUF_SIZE	= 32
 ;---------------------------------------------------------------------------------------------------------
 
 .init	
+
+	jsr	display_off			;restore textui
+	jsr	textui_init
+	jsr	textui_enable
+
 	sei
 	jsr init_sdcard
 	cli
@@ -51,9 +56,9 @@ BUF_SIZE	= 32
 	jsr mount
 	
 
-	lda #<mainloop
+	lda #<.init
 	sta retvec
-	lda #>mainloop
+	lda #>.init
 	sta retvec+1
 
 	lda #<.buf
@@ -313,6 +318,308 @@ mainloop
 	
 
 
+
+; .date 
+
+;     ; Select SPI SS for RTC
+; 	lda #%01110110
+; 	; and via1portb
+; 	sta via1portb
+
+;     lda #$00
+;     jsr spi_rw_byte
+
+;     jsr spi_r_byte
+;     sta tmp6
+	
+; 	jsr spi_r_byte
+;     sta tmp7
+	
+; 	jsr spi_r_byte
+;     jsr hexout
+; 	+PrintChar ':'
+
+; 	lda tmp7
+;     jsr hexout
+; 	+PrintChar ':'
+	
+; 	lda tmp6	
+; 	jsr hexout
+
+
+;     jsr spi_r_byte
+; 	+PrintChar ' '
+
+;     jsr spi_r_byte
+;     jsr hexout
+;     +PrintChar '.'
+	
+; 	jsr spi_r_byte
+;     jsr hexout
+;     +PrintChar '.'
+	
+; 	jsr spi_r_byte
+;     jsr hexout
+
+;     lda #$7e
+;     sta via1portb
+
+;     jmp mainloop
+
+
+.cmdlist
+	!text "dir"
+	!byte $00
+	!word .dir
+
+	!text "ll"
+	!byte $00
+	!word .dir
+
+	!text "ls"
+	!byte $00
+	!word .ls
+
+	; !text "load"
+	; !byte $00
+	; !word .load
+
+	; !text "run"
+	; !byte $00
+	; !word .run
+
+	!text "type"
+	!byte $00
+	!word .type
+
+	!text "view"
+	!byte $00	
+	!word .gfxview
+
+	!text "cd"
+	!byte $00	
+	!word .cd
+	
+	; !text "date"
+	; !byte $00	
+	; !word .date
+
+	!text "upload"
+	!byte $00	
+	!word .upload
+
+	!text "init"
+	!byte $00	
+	!word .init
+
+	!text "help"
+	!byte $00	
+	!word .help
+
+	!text "dump"
+	!byte $00	
+	!word .dump
+	
+	; End of list
+	!byte $ff
+
+
+
+.atoi
+	cmp #"9"+1
+	bcc + 	; 0-9?
+	; must be hex digit
+	adc #$08
+	and #$0f
+	rts
+
++	sec
+	sbc #$30
+	rts
+
+.param2fileptr
+ 	+copyPointer paramptr, filenameptr
+ 	rts
+
+
+.dir_show_entry_short
+	pha
+	jsr .print_filename
+	+PrintChar ' '
+	+PrintChar ' '
+	dec .entries
+	bne +	
+	+ShellPrintString .crlf
+	lda #$03
+	sta .entries
++
+	pla
+	rts
+
+.dir_show_entry
+	pha
+	jsr .print_filename
+	+PrintChar ' '
+
+	ldy #DIR_Attr
+	lda (dirptr),y
+
+	ror
+	ror
+	ror
+	bcc +
+	lda #'V'
+	bra ++
++
+	ror
+	bcc +
+    lda #'S'
+    bra ++
++	
+	ror
+	bcc +
+	lda #'D'
+	bra ++
++
+	lda #'F'	
+
+++	+ShellPrint
+
+	+PrintChar ' '
+	ldy #DIR_FileSize + 1 +1
+-	dey
+	lda (dirptr),y
+	+ShellPrintHex
+	cpy #DIR_FileSize
+	bne -	
+
+	+PrintChar ' '
+
+	; day
+	ldy #DIR_WrtDate 
+	lda (dirptr),y
+	and #%00011111
+	jsr .decoutz
+	
+	; +PrintChar '.'
+	; month
+	iny
+	lda (dirptr),y
+	lsr
+	tax
+	dey
+	lda (dirptr),y
+	ror
+	lsr
+	lsr
+	lsr
+	lsr
+	
+	jsr .decoutz
+	
+	; +PrintChar '.'
+	; year
+	txa
+	clc 
+	adc #80   	; add begin of msdos epoch (1980)
+	cmp #100	
+	bcc +		; greater than 100 (post-2000)
+	sec 		; yes, substract 100
+	sbc #100
++	jsr .decoutz ; there we go
+
+	
+
+	+PrintChar ' '
+
+	ldy #DIR_WrtTime +1
+	lda (dirptr),y
+	tax
+	lsr
+	lsr
+	lsr
+	
+	jsr .decoutz
+
+	+PrintChar ':'
+
+	txa
+	and #%00000111
+	sta tmp1
+	dey
+	lda (dirptr),y
+	
+	!for .i,0,4 {
+		lsr tmp1
+		ror 
+	}	
+
+
+	jsr .decoutz
+
+
+	; Bits 11–15: Hours, valid value range 0–23 inclusive.
+	
+	+ShellPrintString .crlf
+	pla
+	rts	
+
+.print_filename
+	ldy #DIR_Name
+-	lda (dirptr),y
+	+ShellPrint	
+	iny
+	cpy #$0b
+	bne -
+	rts
+
+
+!src <util.a>
+.errmsg
+		; jsr hexout
+
+		+errMsgEntry fat_bad_block_signature, .fat_err_signature
+		+errMsgEntry fat_invalid_partition_type, .fat_err_partition
+		+errMsgEntry fat_invalid_sector_size, .fat_err_bad_sect_size
+		+errMsgEntry fat_invalid_num_fats, .fat_err_bad_sect_size		
+		+errMsgEntry fat_open_error, .fat_err_open
+		+errMsgEntry fat_too_many_files, .fat_err_too_many_open
+		+errMsgEntry fat_file_not_found, .fat_err_no_such_file
+		+errMsgEntry fat_file_not_open, .fat_err_file_not_open
+
+		jsr strout
+		
+		rts
+
+
+.hellotxt		!text "SteckShell 0.11 ",$00
+.helptxt1		
+				!text $0a,$0d,"ll/ls       - directory (long/short)"
+				!text $0a,$0d,"cd <name>   - change directory"
+				; !text $0a,$0d,"run <name>  - run program"		
+				!text $0a,$0d,"type <name> - display text file"
+				!text $0a,$0d,"view <name> - display gfx file"
+				!text $0a,$0d,"dump <addr> <addr> - dump memory"
+				!byte $00
+
+.crlf			!byte $0a,$0d,$00
+.prompt			!text $0a,$0d,">",$00
+
+.txt_msg_param_error	!text $0a,$0d,"parameter error",$0a,$0d,$00
+.txt_msg_sd_init_error	!text $0a,$0d,"sdcard init error",$0a,$0d,$00
+.txt_cd 				!text "cd ok",$00
+
+.fat_err_signature 		!text "bad block signature", $00
+.fat_err_partition 		!text "invalid partition type", $00
+.fat_err_bad_sect_size 	!text "sector size unsupported", $00
+.fat_err_open			!text "open error",$00
+.fat_err_no_such_file	!text "no such file or directory",$00
+.fat_err_file_not_open	!text "file not open error",$00
+.fat_err_too_many_open	!text "too many open files",$00
+.exec_extension			!text ".bin",$00
+
+.filename !text "            ",$00
+
 .ls
 	+SetVector .dir_show_entry_short, fat_dir_display_hook
 	lda #num_ls_entries
@@ -404,11 +711,11 @@ mainloop
 
 	jmp .steckos_start
 
-.load
-	jsr .param2fileptr
-	jsr .readfile		
+; .load
+; 	jsr .param2fileptr
+; 	jsr .readfile		
 	
-	jmp mainloop
+; 	jmp mainloop
 
 .type
 	jsr .param2fileptr
@@ -607,304 +914,3 @@ mainloop
 	+ShellPrintString .helptxt1
 	jmp mainloop
 
-
-; .date 
-
-;     ; Select SPI SS for RTC
-; 	lda #%01110110
-; 	; and via1portb
-; 	sta via1portb
-
-;     lda #$00
-;     jsr spi_rw_byte
-
-;     jsr spi_r_byte
-;     sta tmp6
-	
-; 	jsr spi_r_byte
-;     sta tmp7
-	
-; 	jsr spi_r_byte
-;     jsr hexout
-; 	+PrintChar ':'
-
-; 	lda tmp7
-;     jsr hexout
-; 	+PrintChar ':'
-	
-; 	lda tmp6	
-; 	jsr hexout
-
-
-;     jsr spi_r_byte
-; 	+PrintChar ' '
-
-;     jsr spi_r_byte
-;     jsr hexout
-;     +PrintChar '.'
-	
-; 	jsr spi_r_byte
-;     jsr hexout
-;     +PrintChar '.'
-	
-; 	jsr spi_r_byte
-;     jsr hexout
-
-;     lda #$7e
-;     sta via1portb
-
-;     jmp mainloop
-
-
-.cmdlist
-	!text "dir"
-	!byte $00
-	!word .dir
-
-	!text "ll"
-	!byte $00
-	!word .dir
-
-	!text "ls"
-	!byte $00
-	!word .ls
-
-	!text "load"
-	!byte $00
-	!word .load
-
-	; !text "run"
-	; !byte $00
-	; !word .run
-
-	!text "type"
-	!byte $00
-	!word .type
-
-	!text "view"
-	!byte $00	
-	!word .gfxview
-
-	!text "cd"
-	!byte $00	
-	!word .cd
-	
-	; !text "date"
-	; !byte $00	
-	; !word .date
-
-	!text "upload"
-	!byte $00	
-	!word .upload
-
-	!text "init"
-	!byte $00	
-	!word .init
-
-	!text "help"
-	!byte $00	
-	!word .help
-
-	!text "dump"
-	!byte $00	
-	!word .dump
-	
-	; End of list
-	!byte $ff
-
-
-.errmsg
-		; jsr hexout
-
-		+errMsgEntry fat_bad_block_signature, .fat_err_signature
-		+errMsgEntry fat_invalid_partition_type, .fat_err_partition
-		+errMsgEntry fat_invalid_sector_size, .fat_err_bad_sect_size
-		+errMsgEntry fat_invalid_num_fats, .fat_err_bad_sect_size		
-		+errMsgEntry fat_open_error, .fat_err_open
-		+errMsgEntry fat_too_many_files, .fat_err_too_many_open
-		+errMsgEntry fat_file_not_found, .fat_err_no_such_file
-		+errMsgEntry fat_file_not_open, .fat_err_file_not_open
-
-		jsr strout
-		
-		rts
-
-
-.hellotxt		!text "SteckShell 0.11 ",$00
-.helptxt1		
-				!text $0a,$0d,"ll/ls       - directory (long/short)"
-				!text $0a,$0d,"cd <name>   - change directory"
-				!text $0a,$0d,"load <name> - load file"
-				; !text $0a,$0d,"run <name>  - run program"		
-				!text $0a,$0d,"type <name> - display text file"
-				!text $0a,$0d,"view <name> - display gfx file"
-				!text $0a,$0d,"dump <addr> <addr> - dump memory"
-				!byte $00
-
-.crlf			!byte $0a,$0d,$00
-.prompt			!text $0a,$0d,">",$00
-
-.txt_msg_param_error	!text $0a,$0d,"parameter error",$0a,$0d,$00
-.txt_msg_sd_init_error	!text $0a,$0d,"sdcard init error",$0a,$0d,$00
-.txt_cd 				!text "cd ok",$00
-
-.fat_err_signature 		!text "bad block signature", $00
-.fat_err_partition 		!text "invalid partition type", $00
-.fat_err_bad_sect_size 	!text "sector size unsupported", $00
-.fat_err_open			!text "open error",$00
-.fat_err_no_such_file	!text "no such file or directory",$00
-.fat_err_file_not_open	!text "file not open error",$00
-.fat_err_too_many_open	!text "too many open files",$00
-.exec_extension			!text ".bin",$00
-
-.filename !text "            ",$00
-.atoi
-	cmp #"9"+1
-	bcc + 	; 0-9?
-	; must be hex digit
-	adc #$08
-	and #$0f
-	rts
-
-+	sec
-	sbc #$30
-	rts
-
-.param2fileptr
- 	+copyPointer paramptr, filenameptr
- 	rts
-
-
-.dir_show_entry_short
-	pha
-	jsr .print_filename
-	+PrintChar ' '
-	+PrintChar ' '
-	dec .entries
-	bne +	
-	+ShellPrintString .crlf
-	lda #$03
-	sta .entries
-+
-	pla
-	rts
-
-.dir_show_entry
-	pha
-	jsr .print_filename
-	+PrintChar ' '
-
-	ldy #DIR_Attr
-	lda (dirptr),y
-
-	ror
-	ror
-	ror
-	bcc +
-	lda #'V'
-	bra ++
-+
-	ror
-	bcc +
-    lda #'S'
-    bra ++
-+	
-	ror
-	bcc +
-	lda #'D'
-	bra ++
-+
-	lda #'F'	
-
-++	+ShellPrint
-
-	+PrintChar ' '
-	ldy #DIR_FileSize + 1 +1
--	dey
-	lda (dirptr),y
-	+ShellPrintHex
-	cpy #DIR_FileSize
-	bne -	
-
-	+PrintChar ' '
-
-	; day
-	ldy #DIR_WrtDate 
-	lda (dirptr),y
-	and #%00011111
-	jsr .decoutz
-	
-	; +PrintChar '.'
-	; month
-	iny
-	lda (dirptr),y
-	lsr
-	tax
-	dey
-	lda (dirptr),y
-	ror
-	lsr
-	lsr
-	lsr
-	lsr
-	
-	jsr .decoutz
-	
-	; +PrintChar '.'
-	; year
-	txa
-	clc 
-	adc #80   	; add begin of msdos epoch (1980)
-	cmp #100	
-	bcc +		; greater than 100 (post-2000)
-	sec 		; yes, substract 100
-	sbc #100
-+	jsr .decoutz ; there we go
-
-	
-
-	+PrintChar ' '
-
-	ldy #DIR_WrtTime +1
-	lda (dirptr),y
-	tax
-	lsr
-	lsr
-	lsr
-	
-	jsr .decoutz
-
-	+PrintChar ':'
-
-	txa
-	and #%00000111
-	sta tmp1
-	dey
-	lda (dirptr),y
-	
-	!for .i,0,4 {
-		lsr tmp1
-		ror 
-	}	
-
-
-	jsr .decoutz
-
-
-	; Bits 11–15: Hours, valid value range 0–23 inclusive.
-	
-	+ShellPrintString .crlf
-	pla
-	rts	
-
-.print_filename
-	ldy #DIR_Name
--	lda (dirptr),y
-	+ShellPrint	
-	iny
-	cpy #$0b
-	bne -
-	rts
-
-
-!src <util.a>
