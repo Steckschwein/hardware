@@ -1,0 +1,53 @@
+*=$1000
+!src <defs.h.a>
+!src <bios.h.a>
+!src <kernel.h.a>
+!src <shell.h.a>
+!src <via.h.a>
+
+	; Select SPI SS for RTC
+	lda #%01110110
+	; and via1portb
+	sta via1portb
+
+	lda #$00
+	jsr spi_rw_byte
+
+	jsr spi_r_byte
+	sta tmp6
+
+	jsr spi_r_byte
+	sta tmp7
+
+	jsr spi_r_byte
+	jsr hexout
+	+PrintChar ':'
+
+	lda tmp7
+	jsr hexout
+	+PrintChar ':'
+
+	lda tmp6	
+	jsr hexout
+
+
+	jsr spi_r_byte
+	+PrintChar ' '
+
+	jsr spi_r_byte
+	jsr hexout
+	+PrintChar '.'
+
+	jsr spi_r_byte
+	jsr hexout
+	+PrintChar '.'
+
+	jsr spi_r_byte
+	jsr hexout
+
+	lda #$7e
+	sta via1portb
+
+	jmp (retvec)
+
+
