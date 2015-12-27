@@ -26,6 +26,9 @@ main:
 	cmp #$08 ; backspace?
 	beq .backspace
 
+	cmp #$03
+	beq .end
+
 	cmp #$1f ; Ignore everything below "-"
     bcc -
 	
@@ -43,6 +46,8 @@ main:
 	bra -
 
 .backspace
+	cpx #$00
+	beq -
 	dex
 	bra --
 +
