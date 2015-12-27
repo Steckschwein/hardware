@@ -33,11 +33,11 @@ main:
 	
 	sta .txtbuf,x
 	inx
-	stz .txtbuf,x
+--	stz .txtbuf,x
 
---	jsr chrout
+	jsr chrout
 
-	cpx #$0f
+	cpx #$20
 	beq +
 	
 	bra -
