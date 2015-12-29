@@ -38,7 +38,7 @@ BUF_SIZE	= 32
 
 .init	
 	jsr init_textui
-
+	
 	sei
 	jsr init_sdcard
 	cli
@@ -837,8 +837,8 @@ mainloop
 init_textui:
 	jsr	display_off			;restore textui
 	jsr	textui_init
-	jmp	textui_enable
-	; rts
+	jsr	textui_enable
+	rts
 
 .return
 	jsr init_textui
