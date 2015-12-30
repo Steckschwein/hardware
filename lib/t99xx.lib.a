@@ -19,7 +19,7 @@ vdp_display_off:
 	lda		#v_reg1_16k	;enable 16K ram, disable screen
 	sta 	a_vreg
     +vnops
-	lda	  	#v_reg1
+    lda	  	#v_reg1
 	sta   	a_vreg
 	rts
 
@@ -293,7 +293,7 @@ vdp_bgcolor
 ;direct vram access - used i.e. in bios
 ;
 !ifdef bios_stuff {
-
+    .COLS=32
 .vdp_scroll_up
 	+SetVector	ADDRESS_GFX1_SCREEN+.COLS, .ptr1		        ; +.COLS - offset second row
 	+SetVector	ADDRESS_GFX1_SCREEN+(.WRITE_ADDRESS<<8), .ptr2	; offset first row

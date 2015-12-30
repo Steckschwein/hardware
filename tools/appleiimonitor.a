@@ -1,5 +1,3 @@
-!src <defs.h.a>
-
 ; Port of Apple II monitor to Apple 1
 ;
 ; Original port by Winston Gayler with additional adaptations by
@@ -67,9 +65,10 @@ IN =     $300
 
 ;  .org $B500
 ;  .org $F400
-  *=$1000
-   JMP   RESET
-   ; JMP     SW16
+ *=$f000
+ ;*=$1000
+  jmp RESET
+  
   ;.export MON
   ;.export REL
   
@@ -243,9 +242,8 @@ GETNSP: LDA IN,Y
 !byte $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
 !byte $FF
 !byte $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-
+;*=$f666
 MINIASM:  JMP   RESETZ
-
 ; Add filler bytes up to documented SWEET16 entry point at
 ; address $X689
 !byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
@@ -779,7 +777,7 @@ PRNTYX: TYA
 PRNTAX: JSR PRBYTE ; OUTPUT TARGET ADR
 PRNTX: TXA ; OF BRANCH AND RETURN
   JMP PRBYTE
-PRBLNK: LDX #$03 ; BLANK COUNT
+PRBLNK: LDX #$02 ; BLANK COUNT - /MLA
 PRBL2: LDA #$A0 ; LOAD A SPACE
 PRBL3: JSR COUT ; OUTPUT A BLANK
   DEX
@@ -1086,18 +1084,19 @@ BSCLC2: STA BASL
   ORA BASL
   STA BASL
   RTS
-BELL1: CMP #$87 ; BELL CHAR? (CNTRL-G)
-  BNE RTS2B ; NO, RETURN
-  LDA #$40 ; DELAY .01 SECONDS
-  JSR WAIT
-  LDY #$C0
+BELL1: ;CMP #$87 ; BELL CHAR? (CNTRL-G)
+; BNE RTS2B ; NO, RETURN
+;  LDA #$40 ; DELAY .01 SECONDS
+;  JSR WAIT
+;  LDY #$C0
 ;BELL2: LDA #$0C ; TOGGLE SPEAKER AT
 ;  JSR WAIT ; 1 KHZ FOR .1 SEC.
 ;  LDA SPKR
 ;  DEY
 ;  BNE BELL2
 RTS2B: RTS
-STOADV: LDY CH ; CURSOR H INDEX TO Y-REG
+STOADV: jsr .chrout2
+  LDY CH ; CURSOR H INDEX TO Y-REG
   STA (BASL),Y ; STORE CHAR IN LINE
 ADVANCE: INC CH ; INCREMENT CURSOR H INDEX
   LDA CH ; (MOVE RIGHT)
@@ -1162,7 +1161,11 @@ LF: INC CV ; INCR CURSOR V(DOWN 1 LINE)
   CMP WNDBTM ; OFF SCREEN?
   BCC VTABZ ; NO, SET BASE ADDR
   DEC CV ; DECR CURSOR V (BACK TO BOTTOM)
-SCROLL: LDA WNDTOP ; START AT TOP OF SCRL WNDW
+SCROLL:
+  phx 
+  jsr .vdp_scroll_up
+  plx
+  LDA WNDTOP ; START AT TOP OF SCRL WNDW
   PHA
   JSR VTABZ ; GENERATE BASE ADR
 SCRL1: LDA BASL ; COPY BASL,H
@@ -1265,11 +1268,11 @@ KEYIN2:
   jsr .getkey
 ;  BIT KBD ; KEY DOWN?
 ;  BPL KEYIN ; LOOP
-  beq  KEYIN
+  cmp #$80
+  beq KEYIN
   STA (BASL),Y ; REPLACE FLASHING SCREEN
 ;  LDA KBD
 ;  BIT KBDSTRB ; CLR KEY STROBE
-  
   RTS
 ESC: JSR RDKEY ; GET KEYCODE
   JSR ESC1 ; HANDLE ESC FUNC.
@@ -1545,7 +1548,7 @@ SAV1: STX XREG
   CLD
   RTS
 RESET:
-;  JSR SETNORM ; SET SCREEN MODE
+   JSR SETNORM ; SET SCREEN MODE
    JSR .init_io
    JSR INIT ; AND INIT KBD/SCREEN
 ;   JSR SETVID ; AS I/O DEV'S
@@ -1553,7 +1556,7 @@ RESET:
 MON: 
   CLD ; MUST SET HEX MODE!
   JSR BELL
-MONZ: LDA #$2A ; '*' PROMPT FOR MON
+MONZ: LDA #$AA ; '*' PROMPT FOR MON
   STA PROMPT
   JSR GETLNZ ; READ A LINE
   JSR ZMODE ; CLEAR MON MODE, SCAN IDX
@@ -1828,3 +1831,16 @@ ECHO:           BIT DSP         ; bit (B7) cleared yet?
 }
 
 !src "steckschwein.adapter.a"
+
+;----------------------------------------------------------------------------------------------
+; Interrupt vectors
+;----------------------------------------------------------------------------------------------
+; $FFFA/$FFFB NMI Vector
+*= $fffa
+!word RESET
+; $FFFC/$FFFD reset vector
+;*= $fffc
+!word RESET
+; $FFFE/$FFFF IRQ vector
+;*= $fffe
+!word RESET
