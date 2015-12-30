@@ -267,9 +267,7 @@
 .textui_chrout
 	beq	+	; \0 char
 	pha		; safe char
- ;   sei
 	inc .screen_status	;write on
-;    cli
 	jsr .textui_dispatch_char
 	dec	.screen_status	;write off
 	jsr	.textui_screen_dirty
