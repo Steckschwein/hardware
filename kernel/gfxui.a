@@ -1,5 +1,5 @@
 !src <t9929.h.a>
-
+!address .gfxbuf = $2000
 .safeirq !word 0
 .gfxui_on
     sei
@@ -9,8 +9,8 @@
     lda #Black<<4|Black
     jsr vdp_mode_gfx2_blank
     
-    ;TODO FIXME .steckos_start may vary
-    +SetVector  .steckos_start, .addr    ; where the image data are loaded
+    ;TODO FIXME .gfxbuf may vary
+    +SetVector  .gfxbuf, .addr    ; where the image data are loaded
 	lda	#<ADDRESS_GFX2_PATTERN
 	ldy	#.WRITE_ADDRESS + >ADDRESS_GFX2_PATTERN
 	ldx	#$18	;6k bitmap - $1800
@@ -41,7 +41,7 @@
 
     
 .collor_offs=$1800    
-.color=.steckos_start+.collor_offs
+.color=.gfxbuf+.collor_offs
 .gfxui_simple_blend_off
     lda #$80
     bra +
@@ -63,7 +63,7 @@
     ldy .ptr1h
 	+vdp_sreg
  	ldy tmp0
-.sc lda .steckos_start+.collor_offs,y
+.sc lda .gfxbuf+.collor_offs,y
     bit tmp2
     bpl +
     lda #Black<<4|Black
@@ -78,7 +78,7 @@
     
     lda #(.WRITE_ADDRESS)+>ADDRESS_GFX2_COLOR
     sta .ptr1h
-    lda #>(.steckos_start+.collor_offs)
+    lda #>(.gfxbuf+.collor_offs)
     sta .sc+2
 
     lda tmp1

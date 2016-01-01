@@ -312,10 +312,6 @@ mainloop
 	!byte $00
 	!word .ls
 
-	!text "view"
-	!byte $00	
-	!word .gfxview
-
 	!text "cd"
 	!byte $00	
 	!word .cd
@@ -513,8 +509,6 @@ mainloop
 				!text $0a,$0d,"ll/ls       - directory (long/short)"
 				!text $0a,$0d,"cd <name>   - change directory"
 				; !text $0a,$0d,"run <name>  - run program"		
-				!text $0a,$0d,"type <name> - display text file"
-				!text $0a,$0d,"view <name> - display gfx file"
 				!text $0a,$0d,"dump <addr> <addr> - dump memory"
 				!byte $00
 
@@ -736,29 +730,6 @@ mainloop
 +	jmp mainloop
 
 	
-.gfxview
-	
-	jsr .param2fileptr
-
-	jsr .readfile	; read data to .steckos_start ($1000)
-	lda errno
-	bne +
-	jsr	textui_disable			;disable textui
-	
-    jsr	gfxui_on
-    jsr	gfxui_blend_on
--	jsr keyin
-	beq -
-	jsr	gfxui_blend_off
-	jsr	gfxui_off
-    
-	jsr	display_off			;restore textui
-	jsr	textui_init
-	jsr	textui_enable
-    cli
-    
-+	jmp mainloop
-
 .readfile
 
 	jsr open

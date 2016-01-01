@@ -1,0 +1,53 @@
+* = $1000
+!src <defs.h.a>
+!src <bios.h.a>
+!src <kernel.h.a>
+
+!src <shell.h.a>
+
+!src <fat32.h.a>
+
+!address {
+.content = $2000	
+}
+
+main:
+	
+	+copyPointer paramptr, filenameptr
+
+	
+	jsr open
+ 	phx
+ 
+	lda errno
+	bne .err
+
+	+SetVector .content, sd_blkptr
+	jsr read	
+
+	plx
+	jsr close
+	lda errno
+	bne .err	
+
+	jsr	textui_disable			;disable textui
+	+SetVector .content, .addr
+    jsr	gfxui_on
+    jsr	gfxui_blend_on
+-	jsr keyin
+	beq -
+	jsr	gfxui_blend_off
+	jsr	gfxui_off
+    
+	jsr	display_off			;restore textui
+	jsr	textui_init
+	jsr	textui_enable
+    cli
+    bra +
+.err
+	+PrintString .errtxt
+
++	jmp (retvec)
+
+.errtxt		!text "load error", $00
+
