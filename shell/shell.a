@@ -312,10 +312,6 @@ mainloop
 	!byte $00
 	!word .ls
 
-	!text "type"
-	!byte $00
-	!word .type
-
 	!text "view"
 	!byte $00	
 	!word .gfxview
@@ -636,16 +632,6 @@ mainloop
 ; 	jsr .readfile		
 	
 ; 	jmp mainloop
-
-.type
-	jsr .param2fileptr
-	jsr .readfile
-	lda errno
-	bne +
-	+ShellPrintString .crlf
-	+ShellPrintString .steckos_start	
-
-+	jmp mainloop
 
 
 .dumpvec 		= tmp2
