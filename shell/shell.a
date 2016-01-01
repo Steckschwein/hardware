@@ -52,7 +52,7 @@ BUF_SIZE	= 32
 	jsr mount
 	
 
-	+SetVector .return, retvec
+	+SetVector mainloop, retvec
 	+SetVector .buf, .bufptr
 
 	jmp	.hello
@@ -797,6 +797,6 @@ init_textui:
 	jsr	textui_enable
 	rts
 
-.return
-	jsr init_textui
-	jmp mainloop
+; .return
+; 	jsr init_textui
+; 	jmp mainloop
