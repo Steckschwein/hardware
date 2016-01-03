@@ -1,9 +1,16 @@
-all: hello.bin
+all: hello.bin hello.o
 clean:
-	rm -f *.bin 
+	rm -f *.bin *.o
 
-%.bin: %.a
-	acme -v -f plain --cpu 65c02 -o $@ $<
+%.o: %.c
+	cc65 -t none --cpu 65c02 -O $<
+	ca65 --cpu 65c02 hello.s
+	
+     
+%.bin: %.o
+#	acme -v -f plain --cpu 65c02 -o $@ $<
+	ld65 -C ../cc65/steckschwein.cfg -v $< ../cc65/stecki.lib -o $@
 
-transfer: all
+
+transfer: hello.bin
 	../transfer.py hello.bin 0x1000
