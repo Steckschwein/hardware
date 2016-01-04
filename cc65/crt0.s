@@ -79,13 +79,5 @@ _exit:
 ;_open           := $FFF2
 ;_close          := $FFF3
 ;_read           := $FFF4
-_write          := $ff00 ; chrout vector
+;_write          := $ff00 ; chrout vector
 
-.export         _cputc
-_cputc:
-    jmp $ff00
-
-;.export         _cputcxy
-;_cputcxy:
-    jmp $ff00
-    
