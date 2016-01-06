@@ -1,4 +1,4 @@
-all: date.bin type.bin view.bin
+all: date.bin type.bin view.bin more.bin
 clean:
 	rm -f *.bin 
 %.bin: %.a

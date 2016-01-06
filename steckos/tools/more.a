@@ -1,0 +1,103 @@
+*=$1000
+!src <defs.h.a>
+!src <bios.h.a>
+!src <kernel.h.a>
+!src <shell.h.a>
+!address {
+.content = $1100	
+.ptr 	 = $c0
+.endptr	 = $c2 
+.rows    = $c4
+}
+display_cols = 40
+display_rows = 24
+
+	stz .rows
+
+ 	ldy #$00
+-	lda (paramptr),y 
+	beq +
+	sta .filename,y
+	iny
+	bra -
++
+
+	+copyPointer paramptr, filenameptr
+
+	jsr open
+ 	phx
+
+	lda errno
+	bne .error
+
+	
+	+SetVector .content, sd_blkptr
+	+SetVector .content, .ptr
+	jsr read
+	lda errno
+	bne .error
+
+	plx
+
+	lda fd_area + FD_file_size + 0, x
+
+	clc
+	adc #<.content 
+	sta .endptr
+
+	lda fd_area + FD_file_size + 1, x
+	
+	adc #>.content
+	sta .endptr+1
+
+	jsr close
+	ldy #$01
+	lda #$00
+	sta (.endptr),y
+
+	
+	
+	ldx #$00
+	ldy #$00
+-	lda (.ptr),y
+	beq .end
+	
+	jsr chrout
+
+	inx
+
+	cmp #$0a
+	bne +
+	jsr .countrow
+	ldx #$00
++
+	
+	cpx #display_cols-1
+	bne +
+	jsr .countrow
++	
+	iny
+	bne +
+	inc .ptr+1
++
+
+	bra -
+
+.countrow
+	inc .rows
+	lda .rows
+	cmp #display_rows-2
+	bne +
+	; +PrintString .more
+	jsr keyin
+	stz .rows
++
+	rts
+.error
+	+PrintString .errtxt
+
+.end	
+	jmp (retvec)
+.errtxt		!text "load error", $00
+.filename 	!text "            ",$00
+; .more 		!text $0d,$0a,"--- more ---",$00
