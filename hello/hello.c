@@ -37,7 +37,7 @@ int main (void)
     
     for(;;){
         NEWLINE;
-        cprintf("Fibanncci Folge?");
+        cprintf("Fibonacci Folge?");
         i = cgetc();
         fib = (i-'0');
         NEWLINE;
