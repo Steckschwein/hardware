@@ -101,7 +101,7 @@ b2	sta .bios
 
 !align 255,0
 .charset
-!src "../charsets/char.ascii.vc20.6x8.h.a"
+!src "../../charsets/char.ascii.vc20.6x8.h.a"
 .charset_end
 
 ; !src "../lib/t99xx.lib.a"
