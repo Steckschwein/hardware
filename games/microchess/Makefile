@@ -1,4 +1,4 @@
-all: microchess.bin
+all: microchess.bin mchess_serial.bin
 clean:
 	rm -f *.bin 
 
@@ -6,4 +6,4 @@ clean:
 	acme -v -f plain --cpu 65c02 -o $@ $<
 
 transfer: all
-	../transfer.py microchess.bin 0x1000
+	../../transfer.py mchess_serial.bin 0x1000
