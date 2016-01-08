@@ -139,37 +139,9 @@ temp    =   $6C
 ; temp    =   $FC
 		
 		*=$1000			; load into RAM @ $1000-$15FF
-		; jmp .init
 
-; !src "../shell/util.h.a"
-; !src "../kernel/textui.a"
-
-.init
-		; stz .key
-		; jsr	.textui_init0
-
-		; +SetVector _textui_chrout, outvec
-
-		; +SetVector uart_tx, outvec	
-
-		; lda #<count
-		; sta via1t1cl            ; set low byte of count
-		; lda #>count
-		; sta via1t1ch            ; set high byte of count
-
-		; lda #%11000000
-		; sta via1ier             ; enable VIA1 T1 interrupts
-
-		; lda #%01000000
-		; sta via1acr             ; T1 continuous, PB7 disabled
-
-		; +SetVector .irq, irqvec
-
-		; lda #%01111110
-		; sta via1portb
-
-
-		; cli
+		+SetVector uart_rx, invec
+		+SetVector uart_tx, outvec
 
 		LDA     #$00		; REVERSE TOGGLE
 		STA     REV
