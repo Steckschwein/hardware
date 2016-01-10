@@ -768,16 +768,10 @@ mainloop
 
 .upload
 	sei
-
 	jsr upload
-
-	ldx #$ff
-	txs
+    cli
 	; jump to new code
-	jmp (.startaddr)
-
-
-	
+	jmp (.startaddr)	
 
 .hello
 	+ShellPrintString .crlf

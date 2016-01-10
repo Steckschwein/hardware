@@ -273,3 +273,4 @@ krn_gfxui_blend_off	    jmp	.gfxui_blend_off
 krn_gfxui_blend_on	    jmp	.gfxui_blend_on
 krn_textui_crsxy				jmp .textui_crsxy
 krn_textui_update_crs_ptr		jmp .textui_update_crs_ptr
+krn_textui_clrscr_ptr		    jmp .textui_blank

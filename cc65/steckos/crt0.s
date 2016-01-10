@@ -48,16 +48,15 @@ _init:
 ; Initialize memory storage
 ;          JSR     zerobss              ; Clear BSS segment
  ;         JSR     copydata             ; Initialize DATA segment
-  ;        JSR     initlib              ; Run constructors
+          JSR     initlib              ; Run constructors
 
 ; ---------------------------------------------------------------------------
 ; Call main()
-          cli     
           jsr     callmain 
 
 ; ---------------------------------------------------------------------------
 ; Back from main (this is also the _exit entry):  force a software break
 
 _exit:    
-          ;JSR     donelib              ; Run destructors
+          JSR     donelib              ; Run destructors
           jmp     ($0290)              ; defs.h.a the retvec

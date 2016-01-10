@@ -15,14 +15,12 @@ int main (void)
     
     const char *text = "Hallo World!";
     unsigned int i;
-    
-    for(i=0;i<2048;i++){
-//        setBgColor(i);
-        cprintf("%s %d\n\r", text, i);
+
+    clrscr();
+    for(i=0;i<1024;i++){
+        gotoxy(0,0);
+        cprintf("%s %d", text, i);
     }        
-    
-    //setBgColor(2);
-    cprintf("%s %d", text, i);
     
     return EXIT_SUCCESS;
 }

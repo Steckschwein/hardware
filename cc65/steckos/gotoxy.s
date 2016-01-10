@@ -10,6 +10,6 @@ crs_y	= $e7
 
 _gotoxy:
         sta     crs_y
-        jsr     popa            ; Get X 
+        jsr     popa    ; Get X 
         sta     crs_x   ; Set X
-        rts
+        jmp     $ef33
