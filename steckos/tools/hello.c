@@ -14,13 +14,20 @@ int main (void)
     typedef unsigned word;
     
     const char *text = "Hallo World!";
+    unsigned char buffer[32];
+    
     unsigned int i;
 
     clrscr();
-    for(i=0;i<1024;i++){
+    for(i=0;i<256;i++){
         gotoxy(0,0);
         cprintf("%s %d", text, i);
-    }        
+    }   
+
+    cprintf("\n\rYour Name:");
+    cscanf("%s", &buffer);
+    
+    cprintf("\n\rinput was %s", &buffer);
     
     return EXIT_SUCCESS;
 }

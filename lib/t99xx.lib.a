@@ -374,8 +374,8 @@ vdp_chrout
 	lda	#(.COLS-1)		; set x to end of line above
 	sta	crs_x
 +++ lda #' '
-    bra	.vdp_write_char
-+	jsr	.vdp_write_char
+    bra	vdp_putchar
++	jsr	vdp_putchar
 	lda	crs_x
 	cmp	#(.COLS-1)
 	beq +
@@ -384,7 +384,7 @@ vdp_chrout
 +	stz	crs_x
 	bra	.inc_cursor_y
     
-.vdp_write_char
+vdp_putchar
 	pha
 	jsr .vdp_set_addr
 	pla
