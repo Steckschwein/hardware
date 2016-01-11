@@ -93,11 +93,10 @@ kern_init
 	; Card could not be mounted, contains no shell.bin, whatever
 	; serial upload it is
 	
+
 	jsr .upload
-	ldx #$ff 
-	txs 
 	
-	sei
+	; sei
 	jmp (.startaddr)
 
 .keyin
