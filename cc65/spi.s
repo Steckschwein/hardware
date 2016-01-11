@@ -10,5 +10,7 @@ _spi_read:
 		ldx #$00
 		rts
 		
-_spi_write: 
+_spi_write:
         jsr $ff09
+		ldx #$00
+		rts		
