@@ -2,8 +2,8 @@ all: lib
 clean:
 	rm -f *.o
 
-lib: crt0.o cputc.o cgetc.o gotoxy.o
-	ar65 a stecki.lib crt0.o cputc.o cgetc.o gotoxy.o
+lib: crt0.o cputc.o cgetc.o gotoxy.o spi.o
+	ar65 a stecki.lib crt0.o cputc.o cgetc.o gotoxy.o spi.o
     
     
 %.o: %.s
