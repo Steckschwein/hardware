@@ -10,10 +10,11 @@ int main ()
 	{
 		*(unsigned char*) 0x210 = 0x7a;
 		c = spi_read();
-		c = spi_write(0xa7);	
+	//	c = spi_write(0xa7);	
 		*(unsigned char*) 0x210 = 0x7e;
-
-		cprintf("%x\n", c);
+		if(c==0)
+			continue;
+		cprintf("\n0x%x", c);
 	}
 	
 	return 0;
