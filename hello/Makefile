@@ -1,4 +1,4 @@
-all: hello.bin hello.o
+all: hello.bin hello.o spi.o
 clean:
 	rm -f *.bin *.o
 
