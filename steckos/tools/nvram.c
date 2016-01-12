@@ -36,7 +36,7 @@ void write_nvram()
 
 	for(i = 0; i<=sizeof(n); i++)
 	{
-		spi_write(*p);
+		spi_write(*p++);
 	}
 
 	*(unsigned char*) 0x210 = 0x7e;
@@ -130,6 +130,15 @@ int main ()
 	cprintf("UART LSR   : $%02x\r\n", n.uart_lsr);
 
 	write_nvram();
+	read_nvram();
+
+	cprintf("\r\n");
+	cprintf("Signature  : $%02x\r\n", n.signature);
+	cprintf("Version    : $%02x\r\n", n.version);
+	cprintf("OS filename: %s\r\n", n.filename);
+	cprintf("Baud rate  : %lu\r\n", baudrates[n.uart_baudrate % 20]);
+	cprintf("UART LSR   : $%02x\r\n", n.uart_lsr);
+
 
 	return 0;
 }
