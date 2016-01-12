@@ -1,5 +1,6 @@
 #include <conio.h>  
 #include <stdlib.h>  
+#include <string.h>  
 #include "../../cc65/spi.h"
 
 /*
@@ -19,13 +20,53 @@ struct nvram
 	unsigned char uart_baudrate;
 	unsigned char uart_lsr;
 };
-int main ()
+
+unsigned char c,i;
+struct nvram n;
+unsigned char * p;
+
+
+
+void write_nvram()
 {
-	unsigned char c,i;
-	struct nvram n;
+	p = (unsigned char *)&n;
+	*(unsigned char*) 0x210 = 0x76; // select NVRAM
+
+	spi_write(0xA0);
+
+	for(i = 0; i<=sizeof(n); i++)
+	{
+		spi_write(*p);
+	}
+
+	*(unsigned char*) 0x210 = 0x7e;
+}
+
+void read_nvram()
+{	
+	p = (unsigned char *)&n;
+	*(unsigned char*) 0x210 = 0x76; // select NVRAM
+
+	spi_write(0x20);
 	
 
-	unsigned long baudrates[20] = {
+	for(i = 0; i<=sizeof(n); i++)
+	{
+		*p++ = spi_read();
+	}
+	
+	*(unsigned char*) 0x210 = 0x7e;
+
+}
+
+
+int main ()
+{
+	
+	unsigned char * fname = "loader.bin";
+	unsigned char * baud  = "115200";
+
+	unsigned long baudrates[] = {
 	-1,
 	50,	
 	75,
@@ -48,44 +89,39 @@ int main ()
 	115200
 	};
 
-	unsigned char *x = "115200";
-	unsigned char * p;
+	// unsigned char *x = "115200";
+	
 
 	unsigned long l;
+	read_nvram();
 
-	l = atol(x);
+
+	l = atol(baud);
+
 	for (i = 1;i<=19;i++)
 	{
-		if (l == baudrates[i])
-			break;
+		if (l == baudrates[i]) break;
 	}
 
-	cprintf("\r\n%d\r\n", i);
-
-	
-	while(1) {}
-	p = (unsigned char *)&n;
-
-
-
-
-	// *(unsigned char*) 0x210 = 0x76; // select NVRAM
-	// c = spi_write(0xA0);
-	// c = spi_write(0x42);
-
-	// *(unsigned char*) 0x210 = 0x7e;
-
-	*(unsigned char*) 0x210 = 0x76; // select NVRAM
-
-	c = spi_write(0x20);
-	
-
-	for(i = 0; i<=sizeof(n); i++)
+	if (i > 19)
 	{
-		*p++ = spi_read();
+		cprintf("\r\nInvalid baudrate\r\n");
+		return 1;
 	}
+
+
+	n.signature 	= 0x42;
+	n.version 		= 0;
+	strcpy(n.filename, fname);
 	
-	*(unsigned char*) 0x210 = 0x7e;
+	n.uart_baudrate = i;
+	n.uart_lsr		= 0x03;
+	
+
+
+
+	
+
 	cprintf("\r\n");
 	cprintf("Signature  : $%02x\r\n", n.signature);
 	cprintf("Version    : $%02x\r\n", n.version);
@@ -93,11 +129,7 @@ int main ()
 	cprintf("Baud rate  : %lu\r\n", baudrates[n.uart_baudrate % 20]);
 	cprintf("UART LSR   : $%02x\r\n", n.uart_lsr);
 
+	write_nvram();
 
-	
-
-
-	
-	
 	return 0;
 }
