@@ -15,10 +15,10 @@ text_color_ix !byte 0
 seconds !byte 0
 
 .line1:
-!text	"      -+- VCFe 16 - 2015 -+-    ",1
-!text	"  -+- www.steckschwein.de -+-   ",1
-!text	"      -+- CPU 65c02 4MHz -+-    ",1
-!text	"  -+- www.steckschwein.de -+-   ",1
+!text	"    -+- Make Munich 2016 -+-    ",1
+!text	"      -+- Steckschwein-+-       ",1
+!text	" -+- 8bit Homebrew Computer -+- ",1
+!text	"    -+- CPU 65c02 / 4MHz -+-    ",1
 !text	"     -+- Video TMS9929 -+-      ",1
 !text	"  -+- www.steckschwein.de -+-   ",1
 !fill	255, $20
