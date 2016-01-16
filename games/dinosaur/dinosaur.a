@@ -9,9 +9,10 @@
 !src <t99xx.lib.a>
 	
 .JOY_PORT=PORT_SEL_2		;port 2
-.frame_cnt=tmp0
+.frame_cnt	!byte 0
+.enemy_state=tmp0
 .seed=tmp1
-.game_status=tmp2
+.game_state=tmp2
 .dinosaur_state=tmp3
 .score_board_cnt=tmp4
 .sin_tab_offs=tmp5
@@ -35,7 +36,8 @@
 .dinosaur_color=Dark_Green
 .DINOSAUR_X=20
 .DINOSAUR_Y=125
-.PD_X=100
+.PD_X=$ef	;100
+;.PD_Y=120
 .PD_Y=32
 .PD_SPEED=5
 .DINOSAUR_HEIGHT=30
@@ -61,7 +63,7 @@ main:
 
 	jsr	.new_game
 	lda #.STATUS_GAME_OVER
-	sta	.game_status
+	sta	.game_state
 
 	jsr	.update_vram
 
@@ -175,11 +177,10 @@ main:
 	txa
 	beq	++				;0 - background desert/hills
     bit #1              ;1 - cacti
-    bne +
+    bne +				;2 - otherwise, pterodactyl
     
-    ;TODO implement me
-                        ;enable pterodactyl
-                        
+	;enable pterodactyl
+	;TODO 
     bra ++              ;bg desert/hills
     
 +	jsr .rnd			;otherwise choose cacti randomly
@@ -212,8 +213,8 @@ main:
     ; 0 - background
     ; 1 - cacti
     ; 2 - pterodactyl with background
-	!byte 0,0,0,0,0,0,1,0,0,0,1,0,0,0,1,0,0,1,0,0,0,1,0,0,1,0,0,0,0,1,$80
-	!byte 0,0,0,0,0,0,1,0,0,0,1,0,2,0,0,0,0,1,0,2,0,0,1,0,2,0,1,0,0,1,0,0,0,1,$80
+;	!byte 0,0,0,0,0,0,1,0,0,0,1,0,0,0,1,0,0,1,0,0,0,1,0,0,1,0,0,0,0,1,$80
+	!byte 0,0,0,0,0,0,1,0,0,0,1,0,2,0,0,0,0,1,0,2,0,0,1,0,2,0,1,0,0,1,0,0,0,1,0,0,1,0,0,2,0,0,0,0,2,0,1,0,2,0,1,0,0,1,$80
 	
 ;	detection algorithm - dinosaur is 32*32px, we check only char positions and sprites as follows - cause this best matches the dinosaur shape
 ;	 ##		-> ##
@@ -252,7 +253,7 @@ main:
 	bne	+
 	lda	#.STATUS_JOY_PRESSED
 +	ora	#.STATUS_GAME_OVER
-	sta .game_status
+	sta .game_state
 	
 	+SetVector .text_game_over, .addr
 	lda	#<(.A_GX_SCR + (.Y_OFS_GAME_OVER*32))
@@ -341,7 +342,11 @@ main:
 	rts
 	
 .animate_enemy
-    ldx #$0
+	lda	.enemy_state
+	bne	+
+	rts
+	
++	ldx #$0
 -	lda	.sprite_tab_enemy+1,x
 	sec
 	sbc	#.PD_SPEED
@@ -353,11 +358,11 @@ main:
 +   tay
     lda .sprite_tab_enemy+3,x
     eor #Sprite_EC
-    sta .sprite_tab_enemy+3,x
-    sta .sprite_tab_enemy+3+1*4,x
+    sta .sprite_tab_enemy+3+4*0,x
+    sta .sprite_tab_enemy+3+4*1,x
     tya
-++  sta	.sprite_tab_enemy+1,x
-	sta	.sprite_tab_enemy+1+1*4,x
+++  sta	.sprite_tab_enemy+1+4*0,x
+	sta	.sprite_tab_enemy+1+4*1,x
     cpx #$08
     beq +
     ldx #$08
@@ -422,7 +427,7 @@ main:
 	; lda	#Dark_Yellow
 	; jsr	vdp_bgcolor
 	
-	lda	.game_status
+	lda	.game_state
 	and	#.STATUS_PLAY
 	beq	+
 	
@@ -439,14 +444,14 @@ main:
 	jsr .get_joy_status
 	and	#JOY_FIRE
 	beq	++
-	lda	.game_status
+	lda	.game_state
 	and #!.STATUS_JOY_PRESSED
-	sta .game_status
+	sta .game_state
     jsr .getkey
     cmp #' '
     bne +++
 	
-++	lda	.game_status
+++	lda	.game_state
 	and	#.STATUS_JOY_PRESSED
 	bne	+++
 
@@ -461,6 +466,16 @@ main:
 	+restore
 .game_isr_exit	
 	rti
+
+.enable_pd
+	inc	.enemy_state
+	ldx	#0
+-	lda	.sprite_tab_enemy_init, x
+	sta .sprite_tab_enemy,x
+	inx
+	cpx	#4*4
+	bne	-
+	rts
 
 .new_game
 	jsr	.init_screen
@@ -480,13 +495,18 @@ main:
 	jsr vdp_fills
 	
 	stz	.dinosaur_state	; run initialy
-	stz .score_board_cnt
+	stz	.enemy_state
+	
+	lda	#$05
+	sta .score_board_cnt
 	stz	.sin_tab_offs
 	stz	.level_script_ptr
 	stz .frame_cnt
 	stz .level_bg_cnt
 	+SetVector .level_bg_3, .level_bg_ptr
-
+	
+	jsr	.enable_pd
+	
 	;set new highscore
 	lda	.score_value
 	cmp	.score_value_high
@@ -511,17 +531,15 @@ main:
 	stz	.score_value+2
 	
 +	lda	#.STATUS_PLAY
-	sta .game_status	
+	sta .game_state
 	rts
 	
 .score_board
-	lda	.score_board_cnt	;every 5 frames update score, which means 10 digits per second
-	inc
-	cmp #$05
+	dec	.score_board_cnt	;every 5 frames update score, which means 10 digits per second
 	beq	+
-	sta	.score_board_cnt
 	rts
-+	stz	.score_board_cnt
++	lda	#$05
+	sta	.score_board_cnt
 
 	sed						;add in decimal mode
 	lda .score_value+2
@@ -573,7 +591,7 @@ main:
 	+SetVector .sin_tab, .sin_tab_ptr	;long jump
 	rts
 +	lda	.sin_tab_offs	;no joy/key pressed after 5 frames, switch to short jump
-	cmp	#6
+	cmp	#8
 	bne	+
 	+SetVector .sin_tab_short, .sin_tab_ptr
 +	lda	.dinosaur_state
@@ -707,19 +725,21 @@ main:
 	sta .seed
 	rts
 
-.sprite_init_tab
-	!byte	.DINOSAUR_Y		,.DINOSAUR_X+16	,0	,.dinosaur_color
-	!byte	.DINOSAUR_Y+16	,.DINOSAUR_X+16	,4	,.dinosaur_color
-	!byte	.DINOSAUR_Y		,.DINOSAUR_X	,8	,.dinosaur_color
-	!byte	.DINOSAUR_Y+16	,.DINOSAUR_X	,28	,.dinosaur_color 	
-.sprite_tab
-	!fill	4*4
-.sprite_tab_enemy
+.sprite_tab_enemy_init:
 	!byte	.PD_Y		,.PD_X,	56, Dark_Red
 	!byte	.PD_Y+16	,.PD_X,	60, Dark_Red
 	!byte	.PD_Y		,.PD_X+16,64, Dark_Red
 	!byte	.PD_Y+16	,.PD_X+16,68, Dark_Red
-.sprite_tab_sky
+.sprite_init_tab:
+	!byte	.DINOSAUR_Y		,.DINOSAUR_X+16	,0	,.dinosaur_color
+	!byte	.DINOSAUR_Y+16	,.DINOSAUR_X+16	,4	,.dinosaur_color
+	!byte	.DINOSAUR_Y		,.DINOSAUR_X	,8	,.dinosaur_color
+	!byte	.DINOSAUR_Y+16	,.DINOSAUR_X	,28	,.dinosaur_color 	
+.sprite_tab:
+	!fill	4*4, 0
+.sprite_tab_enemy:
+	!fill	4*4, 0
+.sprite_tab_sky:
 	!byte	40,100,48, White
 	!byte	40,116,52, White
 	!byte	56,30,48, White
