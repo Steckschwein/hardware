@@ -14,14 +14,14 @@ main
     
 	jsr	vdp_display_off			;display off
 
-	;+SetVector	charset,	.adrl	
+	;+SetVector	charset,	adrl	
 	;jsr	.mirror_charset				;inverse the charset
 	;jsr	.rotate_charset
 
     jsr vdp_mode_sprites_off
     jsr vdp_mode_text_blank
     
-	+SetVector	.charset_6x8,	.addr
+	+SetVector	.charset_6x8,	addr
     lda #<ADDRESS_GFX1_PATTERN
     ldy #.WRITE_ADDRESS + >ADDRESS_GFX1_PATTERN
 	ldx	#$08
@@ -54,19 +54,19 @@ tmp9=$f9
 tmp10=$fa
 	
 .rotate_charset
-	+SetVector .charset_6x8, .adrl	;setup vram with charset
+	+SetVector .charset_6x8, adrl	;setup vram with charset
 	+SetVector .charset, tmp8	;setup vram with charset
 	ldx	#$08
 	ldy	#$00
--	lda	(.adrl),y
+-	lda	(adrl),y
 	sta (tmp8),y
 	iny
 	bne	-
-	inc	.adrh
+	inc	adrh
 	inc	tmp9
 	dex
 	bne	-
-	+SetVector .charset, .adrl
+	+SetVector .charset, adrl
 
 	lda	#$08
 	sta	tmp10
@@ -84,7 +84,7 @@ tmp10=$fa
 --	lda	#$01
 	sta	tmp8
 	ldx	#$00
--	lda	(.adrl),y
+-	lda	(adrl),y
 	and	tmp8
 	beq	+
 	lda	tmp0,x
@@ -105,7 +105,7 @@ tmp10=$fa
 	tay	
 	ldx	#$00
 -	lda	tmp0,x
-	sta	(.adrl),y
+	sta	(adrl),y
 	stz	tmp0,x
 	iny
 	inx
@@ -114,7 +114,7 @@ tmp10=$fa
 	ply
 +	iny
 	bne	--
-	inc	.adrh
+	inc	adrh
 	dec	tmp10
 	bne	--
 	rts
@@ -124,7 +124,7 @@ tmp10=$fa
 	ldx	#$08
 	ldy	#$00
 -	stz	tmp0
-	lda	(.adrl),y	;bit inverse
+	lda	(adrl),y	;bit inverse
 	asl
 	ror	tmp0
 	asl
@@ -138,10 +138,10 @@ tmp10=$fa
 	asl
 	ror	tmp0	
 	lda	tmp0
-	sta	(.adrl),y
+	sta	(adrl),y
 	iny
 	bne	-
-	inc	.adrh
+	inc	adrh
 	dex
 	bne	-
 	rts

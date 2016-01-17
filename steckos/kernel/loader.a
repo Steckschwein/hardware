@@ -63,7 +63,7 @@ b2	sta .bios
 
 	; copy rom charset to vdp ram 
 	; left shift every character to make it fit into the vdp's 6x8 text mode 
-	+SetVector	.charset, .adrl	;load charset
+	+SetVector	.charset, adrl	;load charset
 	lda	#<ADDRESS_GFX1_PATTERN
 	
 	ldy	#.WRITE_ADDRESS + >ADDRESS_GFX1_PATTERN
@@ -72,13 +72,13 @@ b2	sta .bios
 	+vdp_sreg
 	
 	ldy   #$00
--  	lda   (.adrl),y
+-  	lda   (adrl),y
 	; asl
 	+vnops
 	iny
 	sta   a_vram
 	bne   -
-	inc   .adrh
+	inc   adrh
 	dex
 	bne   -
 	

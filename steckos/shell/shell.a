@@ -18,16 +18,14 @@ KEY_ESCAPE_CRSR_UP	= 'A'
 KEY_ESCAPE_CRSR_DOWN	= 'B'
 BUF_SIZE	= 32
 
-
-
-
 !address {
 .buf 				= $d800 ; Input buffer 80 bytes. end: $d800
 .endbuf				= .buf + BUF_SIZE*16
 .bufptr				= $d0
 .bufhwm				= $d2
+; Address pointers for serial upload
+.startaddr	= ptr1
 }
-
 
 ;---------------------------------------------------------------------------------------------------------
 ; init shell
@@ -617,9 +615,9 @@ mainloop
 	; txs
 
 	; sei
-	; jmp  .steckos_start
+	; jmp  steckos_start
 
-	jmp .steckos_start
+	jmp steckos_start
 
 ; .load
 ; 	jsr .param2fileptr
@@ -739,7 +737,7 @@ mainloop
 	bne +
 
 	
-	+SetVector .steckos_start, sd_blkptr
+	+SetVector steckos_start, sd_blkptr
 	jsr read
 
 	ldx tmp5

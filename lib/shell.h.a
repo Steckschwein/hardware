@@ -1,6 +1,6 @@
 !ifdef shell_h_a !eof
 shell_h_a = 1
 !address {
-cmdptr				= .ptr1
-paramptr			= .ptr2
+cmdptr				= ptr1
+paramptr			= ptr2
 }

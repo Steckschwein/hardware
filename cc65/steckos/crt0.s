@@ -41,7 +41,7 @@ _init:
 ;    lda     #<(__MAIN_START__ + __MAIN_SIZE__ + __STACKSIZE__)
 ;    ldx     #>(__MAIN_START__ + __MAIN_SIZE__ + __STACKSIZE__)
 ;    sta     sp
- ;   stx     sp+1            ; Set argument stack ptr
+;	stx     sp+1            ; Set argument stack ptr
  
  
 ; ---------------------------------------------------------------------------

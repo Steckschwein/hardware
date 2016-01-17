@@ -121,7 +121,7 @@
 	jsr .textui_update_crs_ptr		;init cursor pointer
 
 .textui_init
-	+SetVector	.charset, .adrl	;load charset
+	+SetVector	.charset, adrl	;load charset
 	; lda	#<(ADDRESS_GFX1_SPRITE_PATTERN)
 	; ldy	#>(ADDRESS_GFX1_SPRITE_PATTERN+(.WRITE_ADDRESS<<8))
 
@@ -188,7 +188,7 @@
 	and	#.DIRTY
 	beq	+		;exit if not dirty
 	
-	+SetVector	.screen, .adrl
+	+SetVector	.screen, adrl
 	lda	#<ADDRESS_GFX1_SCREEN
 	ldy	#.WRITE_ADDRESS + >ADDRESS_GFX1_SCREEN
 	ldx	#$04

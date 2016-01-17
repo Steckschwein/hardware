@@ -12,11 +12,13 @@
 !address	.target = $00
 !address	.nvram  = $0800
 !address 	.start_check = $0280
-
+; Address pointers for serial upload
+.startaddr	= ptr1
+.endaddr	= ptr2
+.length		= tmp0
 *= $e000			; ROM Start
 charset_8x8
 !src "../charsets/char.ascii.vc20.h.a"
-; !src "../charsets/char.ascii.6x8.big.h.a"
 biosversion	!text "BIOS    : V151213", $00	; Version String
 *=$f050
 .upload
@@ -73,24 +75,24 @@ biosversion	!text "BIOS    : V151213", $00	; Version String
 			jsr chrout
 
 			lda .startaddr
-			sta .addr
+			sta addr
 			lda .startaddr+1
-			sta .addr+1	
+			sta addr+1	
 
 			jsr .upload_ok
 
 			ldy #$00
 -			jsr .uart_rx
-			sta (.addr),y
+			sta (addr),y
 
 			iny	
 			cpy #$00
 			bne +
-			inc .addr+1
+			inc addr+1
 +		
 
 			; msb of current address equals msb of end address?
-			lda .addr+1
+			lda addr+1
 			cmp .endaddr+1
 			bne - ; no? read next byte
 
@@ -166,14 +168,14 @@ biosversion	!text "BIOS    : V151213", $00	; Version String
 			; Check Memory
 .check_memory
 			lda #>.start_check
-			sta .ptr1h
+			sta ptr1h
 			ldy #<.start_check
-			stz .ptr1l
+			stz ptr1l
 
 -		    ldx #.num_patterns  ; 2 cycles
 --			lda .pattern,x      ; 4 cycles
-	  		sta (.ptr1l),y   ; 6 cycles
-			cmp (.ptr1l),y   ; 5 cycles
+	  		sta (ptr1l),y   ; 6 cycles
+			cmp (ptr1l),y   ; 5 cycles
 			bne +				  ; 2 cycles, 3 if taken
 
 			dex  				  ; 2 cycles
@@ -183,20 +185,20 @@ biosversion	!text "BIOS    : V151213", $00	; Version String
 			bne -				  ; 2 cycles, 3 if taken
 
 			; Stop at $e000 to prevent overwriting BIOS Code when ROMOFF
-			ldx .ptr1h		  ; 3 cycles
+			ldx ptr1h		  ; 3 cycles
 			inx				  ; 2 cycles
-			stx .ptr1h		  ; 3 cycles
+			stx ptr1h		  ; 3 cycles
 			cpx #$e0			  ; 2 cycles
 
 			bne - 			  ; 2 cycles, 3 if taken
-+	  		sty .ptr1l		  ; 3 cycles
++	  		sty ptr1l		  ; 3 cycles
 		
 	  					  ; 42 cycles
 
 	  		; save end address
-	  		lda .ptr1l
+	  		lda ptr1l
 	  		sta ram_end_l
-	  		lda .ptr1h
+	  		lda ptr1h
 	  		sta ram_end_h
 	  		
 	  	    bra .mem_ok
@@ -331,7 +333,7 @@ biosversion	!text "BIOS    : V151213", $00	; Version String
 			sta filenameptr
 
 			; +SetVector .filename, filenameptr
-			+SetVector .steckos_start, .startaddr
+			+SetVector steckos_start, .startaddr
 			jsr .fat_open
 			lda errno 
 			bne .fat_end
@@ -346,7 +348,7 @@ biosversion	!text "BIOS    : V151213", $00	; Version String
 
 
 			
-			+SetVector .steckos_start, sd_blkptr
+			+SetVector steckos_start, sd_blkptr
 			jsr .fat_read
 			lda errno 
 			bne .fat_end

@@ -16,6 +16,7 @@ bios.h.a: bios.bin
 	cat bios.h.a.stub bios.h.a.tmp > ../lib/bios.h.a
 	rm bios.h.a.tmp
 	grep sys_ bios.a.labels | sed -e"s/sys_/bios_/g" | awk -F' '  '{print "#define " $$2 " " $$4}' | sed -e 's/\$$/0x/g' > bios_jumptable.h
+	grep sys_ bios.a.labels | sed -e"s/sys_/bios_/g" | awk -F' '  '{print $$2 " = " $$4}' > bios.inc
 	
 %.bin: %.a ${ACME}/t9929.h.a ${ACME}/t99xx.lib.a vdp.a 
 	acme -vv -Dexperimental=1 -Wtype-mismatch -l $<.labels $(ACME_OPTS) -o $@ $<

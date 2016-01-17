@@ -5,6 +5,3 @@
         .export         _clrscr
 
 _clrscr = $ef36
-
-
-

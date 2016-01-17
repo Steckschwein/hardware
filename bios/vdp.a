@@ -9,7 +9,7 @@ init_vdp
     stz crs_x
     stz crs_y
     
-    +SetVector    charset, .addr
+    +SetVector    charset, addr
 
     ; we always copy the charset from rom
     ; save state of memctl register

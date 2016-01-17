@@ -17,7 +17,7 @@ main:
 ;	+SetVector color,	gfx2_mode_ptr_bitmap_color_address
 ;	jsr	vdp_mode_gfx2_load_bitmap
 
-	+SetVector .charset,	.adrl
+	+SetVector .charset,	adrl
 	lda	#$00
 	ldy	#$40+$00
 	ldx	#$08

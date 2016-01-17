@@ -7,8 +7,8 @@
 !source <t99xx.lib.a>
 !source <defs.h.a>
 
-adr_h_w=.ptr1
-adr_h_r=.ptr2
+adr_h_w=ptr1
+adr_h_r=ptr2
 
 main:		
 

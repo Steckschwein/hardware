@@ -6,8 +6,6 @@
 
 txtptr   =$f2
 crs_c	 =$f3
-adrl=	tmp0
-adrh=	tmp1
 
 ; c64 program studio - endurion
 ; cbm studio

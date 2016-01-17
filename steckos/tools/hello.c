@@ -7,8 +7,18 @@ typedef unsigned char byte;
 void setBgColor(unsigned char color){
     *(byte*) 0x0221 = color;  /* color */
     *(byte*) 0x0221 = 0x87;  /* reg 7 */
-}    
-int main (void)
+}  
+
+unsigned int fibonacci(unsigned int fib){
+    if(fib == 0)
+        return 0;
+    if(fib <= 2)
+        return 1;
+    return fibonacci(fib-2) + fibonacci(fib -1);
+}
+
+//int main (void)
+int main (int argc, const char* argv[])
 {
     typedef unsigned char byte;
     typedef unsigned word;

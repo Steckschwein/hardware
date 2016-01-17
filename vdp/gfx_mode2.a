@@ -12,15 +12,15 @@ main
 	jsr	vdp_display_off			;display off
 	jsr vdp_mode_sprites_off	;sprites off
 
-	+SetVector .pattern,	.ptr1
-	+SetVector .color,		.ptr2
+	+SetVector .pattern,	ptr1
+	+SetVector .color,		ptr2
     
     lda #Black<<4|Black
     jsr vdp_mode_gfx2_blank
     
 	;jsr	vdp_mode_gfx2_load_bitmap
     
-    +SetVector .pattern, .addr
+    +SetVector .pattern, addr
 	lda	#<ADDRESS_GFX2_PATTERN
 	ldy	#.WRITE_ADDRESS + >ADDRESS_GFX2_PATTERN
 	ldx	#$18	;6k bitmap - $1800
@@ -59,8 +59,8 @@ vdp_gfx2_blend_off
 vdp_gfx2_blend_on
     lda #$ff
 +   sta tmp2
-    +SetVector  (.WRITE_ADDRESS<<8)+ADDRESS_GFX2_COLOR+0,          .ptr1
-    +SetVector  (.WRITE_ADDRESS<<8)+ADDRESS_GFX2_COLOR+.row+$f8,   .ptr2; +1 row and $f8 end of line
+    +SetVector  (.WRITE_ADDRESS<<8)+ADDRESS_GFX2_COLOR+0,          ptr1
+    +SetVector  (.WRITE_ADDRESS<<8)+ADDRESS_GFX2_COLOR+.row+$f8,   ptr2; +1 row and $f8 end of line
 
     stz tmp0
     lda #8
@@ -75,8 +75,8 @@ vdp_gfx2_blend_on
     stz tmp5
     
     ldx	#12
--   lda .ptr1l
-    ldy .ptr1h
+-   lda ptr1l
+    ldy ptr1h
 	+vdp_sreg
  	ldy tmp0
 .c  lda .color,y
@@ -87,26 +87,26 @@ vdp_gfx2_blend_on
 	bne   .c
 	inc   .c+2
 	inc   .c+2
-    inc   .ptr1h
-    inc   .ptr1h
+    inc   ptr1h
+    inc   ptr1h
 	dex
 	bne  -
 
     sty tmp0    ;new offset
-    sty .ptr1l
+    sty ptr1l
     tya
     clc
     adc #08
     sta tmp1
     
     lda #(.WRITE_ADDRESS)+>ADDRESS_GFX2_COLOR
-    sta .ptr1h
+    sta ptr1h
     lda #>.color
     sta .c+2
     
     ldx	#12
--   lda .ptr2l
-    ldy .ptr2h
+-   lda ptr2l
+    ldy ptr2h
 	+vdp_sreg
     ldy tmp3
 .c2 lda .color+.row,y
@@ -117,8 +117,8 @@ vdp_gfx2_blend_on
 	bne   .c2
 	inc   .c2+2
 	inc   .c2+2
-    inc   .ptr2h
-    inc   .ptr2h
+    inc   ptr2h
+    inc   ptr2h
 	dex
 	bne  -
     
@@ -127,10 +127,10 @@ vdp_gfx2_blend_on
     sec
     sbc #08
     sta tmp3
-    sta .ptr2l
+    sta ptr2l
     
     lda #(.WRITE_ADDRESS)+>ADDRESS_GFX2_COLOR+.row+$f8
-    sta .ptr2h
+    sta ptr2h
     lda #>.color+.row
     sta .c2+2
     lda tmp0

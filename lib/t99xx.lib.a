@@ -30,7 +30,7 @@ vdp_display_off:
 ;	adrl - pattern
 vdp_fills:
 	+vdp_sreg
-	lda   .adrl     ;3
+	lda   adrl     ;3
 -  	+vnops          ;2
 	dex             ;2
 	sta   a_vram    ;4
@@ -46,7 +46,7 @@ vdp_fill:
 ;	adrl - pattern
 	+vdp_sreg
 	ldy   #$00      ;2
-	lda   .adrl     ;3
+	lda   adrl     ;3
 -  	+vnops          ;2
 	iny             ;2
 	sta   a_vram    ;
@@ -63,11 +63,11 @@ vdp_fill:
 vdp_memcpy
 	+vdp_sreg
 	ldy   #$00      ;2
--  	lda   (.addr),y ;5
+-  	lda   (addr),y ;5
 	iny             ;2
 	sta   a_vram    ;1 opcode fetch
 	bne   -         ;3
-	inc   .adrh
+	inc   adrh
 	dex
 	bne   -
 	rts
@@ -80,7 +80,7 @@ vdp_memcpy
 vdp_memcpys:
 	+vdp_sreg
 	ldy   #$00
--  	lda   (.adrl),y ;5
+-  	lda   (adrl),y ;5
 	iny             ;2
 	dex             ;2
 	sta   a_vram    ;4
@@ -93,7 +93,7 @@ vdp_mode_text_blank
 vdp_mode_gfx1_blank		; 3 x 256 bytes
 	ldx	#$03
 +	lda	#' '					;fill vram screen with blank
-	sta	.adrl
+	sta	adrl
 	lda	#<ADDRESS_GFX1_SCREEN
 	ldy	#.WRITE_ADDRESS + >ADDRESS_GFX1_SCREEN
 	bra	vdp_fill
@@ -101,15 +101,15 @@ vdp_mode_gfx1_blank		; 3 x 256 bytes
 !ifndef bios_stuff {
 ;
 ; blank gfx mode 2 with 
-; .adrl - color to fill
+; adrl - color to fill
 ;    
 vdp_mode_gfx2_blank:		; 2 x 6K
-	sta .adrl
+	sta adrl
 	lda #<ADDRESS_GFX2_COLOR
 	ldy #.WRITE_ADDRESS + >ADDRESS_GFX2_COLOR
 	ldx	#$18
 	jsr	vdp_fill
-	stz .adrl
+	stz adrl
 	lda #<ADDRESS_GFX2_PATTERN
 	ldy #.WRITE_ADDRESS + >ADDRESS_GFX2_PATTERN
 	ldx	#$18
@@ -119,7 +119,7 @@ vdp_mode_gfx2_blank:		; 2 x 6K
 vdp_mode_gfx1_sprites_off
 vdp_mode_sprites_off
 	lda	#$d0					;sprites off, at least y=$d0 will disable the sprite subsystem
-	sta	.adrl
+	sta	adrl
 	ldx	#32*4
 	lda	#<ADDRESS_GFX_SPRITE
 	ldy	#.WRITE_ADDRESS + >ADDRESS_GFX_SPRITE
@@ -139,12 +139,12 @@ vdp_mode_sprites_off
 ;	gfx mode 1 - 32x24 character mode, 16 colors with same color for 8 characters in a block
 ;
 vdp_mode_gfx1
-	sta	.adrl		;set character color
+	sta	adrl		;set character color
 	ldx	#$20
 	lda	#<ADDRESS_GFX1_COLOR
 	ldy	#.WRITE_ADDRESS + >ADDRESS_GFX1_COLOR	;color vram
 	jsr	vdp_fills
-	+SetVector .vdp_init_bytes_gfx1, .adrl
+	+SetVector .vdp_init_bytes_gfx1, adrl
     ;go on below
 	
 ; setup video registers upon given table
@@ -153,7 +153,7 @@ vdp_mode_gfx1
 vdp_init_reg
 	ldy	#$00
 	ldx	#v_reg0
--  	lda (.adrl),y
+-  	lda (adrl),y
 	sta a_vreg
 	iny				;iny first, burn cycle to avoid vdp nop
 	stx a_vreg
@@ -170,7 +170,7 @@ vdp_init_reg
 ;	
 vdp_mode_gfx2:
 	jsr	.vdp_fill_name_table
-	+SetVector	vdp_init_bytes_gfx2, .adrl
+	+SetVector	vdp_init_bytes_gfx2, adrl
 	bra	vdp_init_reg
 
 ;
@@ -178,14 +178,14 @@ vdp_mode_gfx2:
 ;	
 vdp_mode_gfx3
 	jsr	.vdp_fill_name_table
-	+SetVector	vdp_init_bytes_gfx3, .adrl
+	+SetVector	vdp_init_bytes_gfx3, adrl
 	bra	vdp_init_reg
 
 ;
 ;	text mode - 40x24 character mode, 16 colors with same color for 8 characters in a block
 ;
 vdp_mode_text
-	+SetVector .vdp_init_bytes_text, .adrl
+	+SetVector .vdp_init_bytes_text, adrl
 	bra	vdp_init_reg
 
 .vdp_wait_blank
@@ -205,18 +205,18 @@ gfx2_mode_ptr_bitmap_address 		!word ADDRESS_GFX2_PATTERN	;default data adress $
 gfx2_mode_ptr_bitmap_color_address	!word ADDRESS_GFX2_COLOR	;default data adress $2800
 vdp_mode_gfx2_load_bitmap
 	lda	gfx2_mode_ptr_bitmap_address
-	sta	.adrl
+	sta	adrl
 	lda	gfx2_mode_ptr_bitmap_address+1
-	sta	.adrh
+	sta	adrh
 	lda	#<ADDRESS_GFX2_PATTERN
 	ldy	#.WRITE_ADDRESS + >ADDRESS_GFX2_PATTERN
 	ldx	#$18	;6k bitmap - $1800
 	jsr	vdp_memcpy					;load the pic data --> pattern table at vram $0000
 	; load color
 	lda	gfx2_mode_ptr_bitmap_color_address
-	sta	.adrl
+	sta	adrl
 	lda	gfx2_mode_ptr_bitmap_color_address+1
-	sta	.adrh
+	sta	adrh
 	lda	#<ADDRESS_GFX2_COLOR
 	ldy	#.WRITE_ADDRESS+ >ADDRESS_GFX2_COLOR
 	ldx	#$18	;6k color map - $1800
@@ -225,9 +225,9 @@ vdp_mode_gfx2_load_bitmap
 gfx3_mode_bitmap_address		!word	$1800
 vdp_mode_gfx3_load_bitmap
 	lda	gfx3_mode_bitmap_address
-	sta	.adrl
+	sta	adrl
 	lda	gfx3_mode_bitmap_address+1
-	sta	.adrh
+	sta	adrh
 	lda	#$00
 	ldy	#.WRITE_ADDRESS+$00
 	ldx	#$03	;768 byte
@@ -295,14 +295,14 @@ vdp_bgcolor
 !ifdef bios_stuff {
     .COLS=32
 .vdp_scroll_up
-	+SetVector	ADDRESS_GFX1_SCREEN+.COLS, .ptr1		        ; +.COLS - offset second row
-	+SetVector	ADDRESS_GFX1_SCREEN+(.WRITE_ADDRESS<<8), .ptr2	; offset first row
+	+SetVector	ADDRESS_GFX1_SCREEN+.COLS, ptr1		        ; +.COLS - offset second row
+	+SetVector	ADDRESS_GFX1_SCREEN+(.WRITE_ADDRESS<<8), ptr2	; offset first row
 	lda	a_vreg  ; clear v-blank bit, we dont know where we are...
 --	bit	a_vreg  ; sync with next v-blank, so that we have the full 4,3µs
 	bpl	--
--	lda	.ptr1l	; 3cl
+-	lda	ptr1l	; 3cl
 	sta	a_vreg
-	lda	.ptr1h	; 3cl
+	lda	ptr1h	; 3cl
 	sta	a_vreg
 	nop			; wait 2µs, 4Mhz = 8cl => 4 nop
 	nop			; 2cl
@@ -313,24 +313,24 @@ vdp_bgcolor
 	nop			; 2cl
 	nop			; 2cl
 	nop			; 2cl
-	lda	.ptr2l	; 3cl
+	lda	ptr2l	; 3cl
 	sta	a_vreg
-	lda	.ptr2h	; 3cl
+	lda	ptr2h	; 3cl
 	sta a_vreg
 	nop			; 2cl
 	nop			; 2cl
 	nop			; 2cl
 	nop			; 2cl
     stx	a_vram
-	inc	.ptr1l	; 5cl
+	inc	ptr1l	; 5cl
 	bne	+		; 3cl
-	inc	.ptr1h
-	lda	.ptr1h
+	inc	ptr1h
+	lda	ptr1h
 	cmp	#>(ADDRESS_GFX1_SCREEN+(.COLS * 24))	;screen ram $1800 - $1b00
 	beq	++
-+	inc	.ptr2l  ; 5cl
++	inc	ptr2l  ; 5cl
 	bne	-		; 3cl
-	inc	.ptr2h
+	inc	ptr2h
 	bra	--
 ++	ldx	#.COLS	; write address is already setup from loop
 	lda	#' '
