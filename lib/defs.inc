@@ -24,7 +24,7 @@ tmp5		= $ef
 tmp6		= $f0
 tmp7		= $f1
 
-.entries 	= $f2   ; TODO FIXME shell cleanup... use temp instead
+entries 	= $f2   ; TODO FIXME shell cleanup... use temp instead
 
 dirptr 		= $f4 ; 2 byte
 paramvec	= $f8

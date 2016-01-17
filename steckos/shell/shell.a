@@ -357,11 +357,11 @@ mainloop
 	jsr .print_filename
 	+PrintChar ' '
 	+PrintChar ' '
-	dec .entries
+	dec entries
 	bne +	
 	+ShellPrintString .crlf
 	lda #$03
-	sta .entries
+	sta entries
 +
 	pla
 	rts
@@ -531,7 +531,7 @@ mainloop
 .ls
 	+SetVector .dir_show_entry_short, fat_dir_display_hook
 	lda #num_ls_entries
-	sta .entries
+	sta entries
 	bra +
 .dir
 	+SetVector .dir_show_entry, fat_dir_display_hook
