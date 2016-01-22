@@ -3,5 +3,7 @@
 ;
 
         .export         _clrscr
+        
+		.include		"../../steckos/kernel/kernel.inc"
 
-_clrscr = $ef36
+_clrscr = krn_textui_clrscr_ptr

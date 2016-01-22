@@ -5,7 +5,7 @@
         .export         _cgetc
         .import         cursor
 		
-		;.include	"defs.inc"
+.include                "../../lib/defs.inc"
 
 _cgetc: 
         jmp     (invec)

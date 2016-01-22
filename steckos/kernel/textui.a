@@ -153,6 +153,9 @@
 	inx
 	cpx	#.COLS
 	bne	-
+    stz crs_x
+    stz crs_y
+    bra	.textui_update_crs_ptr
 	jmp	.textui_screen_dirty
 	
 .textui_cursor

@@ -16,8 +16,11 @@
 .import    moveinit, callmain 
 ;.import         __MAIN_START__, __MAIN_SIZE__   ; Linker generated
 .import         __STACKSIZE__                   ; from configure file
-.importzp       ST         
+.importzp       ST
+
 .include  "zeropage.inc"
+
+.include		"../../lib/defs.inc"
 
 ; ---------------------------------------------------------------------------
 ; Place the startup code in a special segment
@@ -59,4 +62,4 @@ _init:
 
 _exit:    
           JSR     donelib              ; Run destructors
-          jmp     ($0290)              ; defs.h.a the retvec
+          jmp     (retvec)            ; defs.h.a the retvec

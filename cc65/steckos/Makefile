@@ -7,4 +7,3 @@ lib: crt0.o mainargs.o cputc.o cgetc.o gotoxy.o clrscr.o spi.o
     
 %.o: %.s
 	ca65 -t none --cpu 65c02 -o $@ $(@:.o=.s)
-

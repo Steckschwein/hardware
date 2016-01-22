@@ -29,7 +29,7 @@ int main (int argc, const char* argv[])
     unsigned long i;
 
     clrscr();
-    for(i=0;i<256;i++){
+    for(i=0;i<20;i++){
         cprintf("%lu: %lu\n\r", i, fibonacci(i));
     }   
     

@@ -7,6 +7,8 @@
         .export         newline, plot
         .import         popa, _gotoxy
 
+        .include                "../../lib/defs.inc"
+        
 _cputcxy:
         pha                     ; Save C
         jsr     popa            ; Get Y
@@ -16,7 +18,7 @@ _cputcxy:
 ; Plot a character - also used as internal function
 
 _cputc:
-        jmp     ($0284)
+        jmp     (outvec)
         
 cputdirect:
         jsr     putchar         ; Write the character to the screen
@@ -36,5 +38,5 @@ plot:   rts                     ;set by vdp chrout
 ; position in Y
 
 putchar:
-        jmp     ($0284)         ; outvec TODO FIXME use acme label files
+        jmp     (outvec)         ; outvec TODO FIXME use acme label files
         
