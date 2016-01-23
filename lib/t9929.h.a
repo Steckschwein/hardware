@@ -6,6 +6,9 @@ t9929_h_a = 1
 ; 	4Mhz 1 nop is sufficent, due to opcode fetch cycles - if i/o will be placed on zp one more nop must be added
 !macro	vnops{
 	nop
+	nop
+	nop
+	nop
 }
 
 !macro	SyncBlank{
