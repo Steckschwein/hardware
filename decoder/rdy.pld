@@ -10,25 +10,26 @@ Clock LORAM  HIRAM  VIA  VDP  NC  NC  CLK  Clear GND
 
 ; TODO: simplify decoding
 
-W1 		= LORAM * HIRAM * VIA *  VDP 
 W2		= LORAM * HIRAM * VIA * /VDP 
+W1 		= W2 
+		+ LORAM * HIRAM * VIA *  VDP 
 
-;Q0.R 	= Clear * /Q0  
-;Q1.R 	= Clear * /Q1 * Q0
-;       	+ Clear *  Q1 * /Q0
-
-;RDY = W1 * /W2 * Q0 
-;	+ /W1 * W2 * Q1 
-;	+ /W1 * /W2
+; Q0.R 	= Clear * /Q0  
+; Q1.R 	= Clear * /Q1 * Q0
+       	; + Clear *  Q1 * /Q0
+; 
+; RDY = W1 * /W2 * Q0 
+	; + /W1 * W2 * Q1 
+	; + /W1 * /W2
 
 
 Q0.R 	= W1 * /Q0 * /Q1 * Clear
-		+ W2 * /Q0 * /Q1 * Clear
+	+ W2 * /Q0 * /Q1 * Clear
 
 Q1.R 	= W2 * /Q1 * Q0 * Clear   		
 
 
-RDY =	/Q0 * /Q1
+RDY 	= /Q0 * /Q1
 
 
 DESCRIPTION:
