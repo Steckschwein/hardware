@@ -65,7 +65,9 @@ vdp_memcpy
 	ldy   #$00      ;2
 -  	lda   (addr),y ;5
 	iny             ;2
+	+vnops
 	sta   a_vram    ;1 opcode fetch
+	
 	bne   -         ;3
 	inc   adrh
 	dex
@@ -83,6 +85,7 @@ vdp_memcpys:
 -  	lda   (adrl),y ;5
 	iny             ;2
 	dex             ;2
+	+vnops
 	sta   a_vram    ;4
 	bne	-
 	rts
@@ -156,6 +159,7 @@ vdp_init_reg
 -  	lda (adrl),y
 	sta a_vreg
 	iny				;iny first, burn cycle to avoid vdp nop
+	+vnops
 	stx a_vreg
 	inx
 	cpy	#$08
@@ -185,6 +189,7 @@ vdp_mode_gfx3
 ;	text mode - 40x24 character mode, 16 colors with same color for 8 characters in a block
 ;
 vdp_mode_text
+
 	+SetVector .vdp_init_bytes_text, adrl
 	bra	vdp_init_reg
 
@@ -285,6 +290,7 @@ vdp_init_bytes_gfx3
 vdp_bgcolor
 	sta   a_vreg
 	lda   #v_reg7
+	+vnops
 	sta   a_vreg
 	rts
 }
