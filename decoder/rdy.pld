@@ -3,17 +3,17 @@ RDYGEN
 
 ; PIN assignment
 ;
-Clock LORAM  HIRAM  VIA  UART VDP SND NC   Clear GND
+Clock ROM  NC  VIA  UART VDP SND NC   Clear GND
 /OE   W1     W2     NC   NC   RDY NC  Q1   Q0    VCC
 ;
 ;  boolean expressions
 
 ; TODO: simplify decoding
 
-W2		= LORAM * HIRAM * VIA * UART * SND * /VDP 
-		+ LORAM * HIRAM * VIA * UART * /SND * VDP 
+W2		= ROM * VIA * UART * SND * /VDP 
+		+ ROM * VIA * UART * /SND * VDP 
 W1 		= W2 
-		+ LORAM * HIRAM * VIA * UART * VDP 
+		+ /ROM * VIA * UART * VDP 
 
 ; Q0.R 	= Clear * /Q0  
 ; Q1.R 	= Clear * /Q1 * Q0
