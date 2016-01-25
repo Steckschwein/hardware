@@ -18,8 +18,8 @@
 .sin_tab_offs=tmp5
 .level_bg_cnt=tmp6
 .level_script_ptr=tmp7
-.level_bg_ptr=.ptr2
-.sin_tab_ptr=.ptr1
+.level_bg_ptr=ptr2
+.sin_tab_ptr=ptr1
 
 .CHAR_BLANK=210
 .CHAR_LAST_FG=198		; last character of foreground (cacti), range 128-198
@@ -70,13 +70,13 @@ main:
 	+SetVector	.game_isr, irqvec
 	
 	lda	#Light_Blue
-	sta	.adrl		;set character color
+	sta	adrl		;set character color
 	ldx	#$20
 	lda	#<.A_GX_COL
 	ldy	#.WRITE_ADDRESS + >.A_GX_COL	;color vram
 	jsr	vdp_fills
 	
-	+SetVector .vdp_init_gfx, .addr
+	+SetVector .vdp_init_gfx, addr
 	jsr	vdp_init_reg
 	
 	cli
@@ -255,7 +255,7 @@ main:
 +	ora	#.STATUS_GAME_OVER
 	sta .game_state
 	
-	+SetVector .text_game_over, .addr
+	+SetVector .text_game_over, addr
 	lda	#<(.A_GX_SCR + (.Y_OFS_GAME_OVER*32))
 	ldy	#.WRITE_ADDRESS + >(.A_GX_SCR+(.Y_OFS_GAME_OVER*32))
 	jsr .vdp_print
@@ -264,7 +264,7 @@ main:
 .vdp_print
 	+vdp_sreg
 	ldy	#$00
--	lda	(.addr), y
+-	lda	(addr), y
 	beq	+
 	sta	a_vram
 	iny
@@ -281,7 +281,7 @@ main:
 	lda	.dinosaur_state
 	bit	#.DINOSAUR_JUMP
 	beq	++
-	+SetVector	.dino_jump, .addr
+	+SetVector	.dino_jump, addr
 	jsr	.set_sprite_pointer
 	ldy .sin_tab_offs
 	lda	#.DINOSAUR_Y
@@ -303,7 +303,7 @@ main:
 -	rts
 ++	bit #.DINOSAUR_DEAD
 	beq	+
-	+SetVector	.dino_dead, .addr
+	+SetVector	.dino_dead, addr
 	bra	.set_sprite_pointer
 +	lda	.frame_cnt
 	bit	#03
@@ -314,30 +314,30 @@ main:
 	lda	.frame_cnt
 	and	#04
 	beq	+
-	+SetVector	.dino_duck_1, .addr
+	+SetVector	.dino_duck_1, addr
 	bra .set_sprite_pointer
-+	+SetVector	.dino_duck_2, .addr
++	+SetVector	.dino_duck_2, addr
 	bra .set_sprite_pointer
 ++	lda	.frame_cnt
 	and	#04
 	beq	+
-	+SetVector	.dino_run_1, .addr
+	+SetVector	.dino_run_1, addr
 	bra .set_sprite_pointer
-+	+SetVector	.dino_run_2, .addr
++	+SetVector	.dino_run_2, addr
 	bra .set_sprite_pointer
 
 .set_sprite_pointer	
 	ldy	#$00
-	lda	(.addr),y
+	lda	(addr),y
 	sta	.sprite_tab+2
 	iny
-	lda	(.addr),y
+	lda	(addr),y
 	sta	.sprite_tab+2+1*4
 	iny
-	lda	(.addr),y
+	lda	(addr),y
 	sta	.sprite_tab+2+2*4
 	iny
-	lda	(.addr),y
+	lda	(addr),y
 	sta	.sprite_tab+2+3*4
 	rts
 	
@@ -488,7 +488,7 @@ main:
 	bne	-
 	
 	lda	#.CHAR_BLANK
-	sta .adrl
+	sta adrl
 	lda	#<(.A_GX_SCR + (.Y_OFS_GAME_OVER*32))
 	ldy	#.WRITE_ADDRESS + >(.A_GX_SCR+(.Y_OFS_GAME_OVER*32))
 	ldx #32
@@ -610,7 +610,7 @@ main:
 .init_vram
 	ldx	#$03
 	lda	#.CHAR_BLANK					;fill vram screen with blank
-	sta	.adrl
+	sta	adrl
 	lda	#<.A_GX_SCR
 	ldy	#.WRITE_ADDRESS + >.A_GX_SCR
 	jsr	vdp_fill
@@ -619,12 +619,12 @@ main:
 	pha
 	stz memctl
 
-	+SetVector charset, .addr			; init 2 game charset with character set
+	+SetVector charset, addr			; init 2 game charset with character set
 	lda #<.A_GX_PAT_1
 	ldy #.WRITE_ADDRESS + >.A_GX_PAT_1
 	ldx	#$08
 	jsr	vdp_memcpy
-	+SetVector charset, .addr			; 
+	+SetVector charset, addr			; 
 	lda #<.A_GX_PAT_2
 	ldy #.WRITE_ADDRESS + >.A_GX_PAT_2
 	ldx	#$08
@@ -633,25 +633,25 @@ main:
 	pla 
 	sta memctl
 
-	+SetVector .game_chars, .addr		; first game charset
+	+SetVector .game_chars, addr		; first game charset
 	lda #<(.A_GX_PAT_1+.GAME_CHAR_OFFS)
 	ldy #.WRITE_ADDRESS + >(.A_GX_PAT_1+.GAME_CHAR_OFFS)
 	ldx	#$03
 	jsr	vdp_memcpy
 	
-	+SetVector .game_chars_4px, .addr	; 2nd game charset with 4px offset
+	+SetVector .game_chars_4px, addr	; 2nd game charset with 4px offset
 	lda #<(.A_GX_PAT_2+.GAME_CHAR_OFFS)
 	ldy #.WRITE_ADDRESS + >(.A_GX_PAT_2+.GAME_CHAR_OFFS)
 	ldx	#$03
 	jsr	vdp_memcpy
 	
-	+SetVector .sprites, .addr
+	+SetVector .sprites, addr
 	lda	#<.A_SP_PAT
 	ldy	#.WRITE_ADDRESS + >.A_SP_PAT
 	ldx	#$03			; 3 pages, 768 sprite bytes
 	jsr	vdp_memcpy
 
-	+SetVector .text_game_label, .addr
+	+SetVector .text_game_label, addr
 	lda	#<(.A_GX_SCR + (22*32))
 	ldy	#.WRITE_ADDRESS + >(.A_GX_SCR+(22*32))
 	jsr .vdp_print
@@ -659,7 +659,7 @@ main:
 	
 .update_vram
 	;update sprite tab
-	+SetVector .sprite_tab, .addr		
+	+SetVector .sprite_tab, addr		
 	lda	#<.A_SP_ATR
 	ldy	#.WRITE_ADDRESS + >.A_SP_ATR
 	ldx	#17*4
@@ -690,7 +690,7 @@ main:
 	lda	.score_value+2
 	jsr .digits_out
 	
-	+SetVector .screen, .addr			;copy screen
+	+SetVector .screen, addr			;copy screen
 	lda	#<(.A_GX_SCR + (16*32))
 	ldy	#.WRITE_ADDRESS + >(.A_GX_SCR+(16*32))
 	ldx	#32*4
