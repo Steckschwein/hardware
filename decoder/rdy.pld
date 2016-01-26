@@ -1,9 +1,9 @@
-GAL16V8    
+GAL16V8   
 RDYGEN
 
 ; PIN assignment
 ;
-Clock ROM  NC  VIA  UART VDP SND NC   Clear GND
+Clock ROM  NC  VIA  UART VDP SND X   Clear GND
 /OE   W1     W2     NC   NC   RDY NC  Q1   Q0    VCC
 ;
 ;  boolean expressions
@@ -30,7 +30,8 @@ Q0.R 	= W1 * /Q0 * /Q1 * Clear
 Q1.R 	= W2 * /Q1 * Q0 * Clear   		
 
 
-RDY 	= /Q0 * /Q1
+RDY.T 	= /Q0 * /Q1
+RDY.E	= W2
 
 
 DESCRIPTION:
