@@ -59,12 +59,13 @@ void read_nvram()
 
 }
 
-
-int main ()
+void usage()
 {
-	
-	unsigned char * fname = "loader.bin";
-	unsigned char * baud  = "115200";
+	cprintf("USAGE\r\n");
+}
+
+int main (int argc, const char* argv[])
+{
 
 	unsigned long baudrates[] = {
 	-1,
@@ -93,51 +94,101 @@ int main ()
 	
 
 	unsigned long l;
-	read_nvram();
 
 
-	l = atol(baud);
-
-	for (i = 1;i<=19;i++)
+	if (argc == 1) 
 	{
-		if (l == baudrates[i]) break;
-	}
-
-	if (i > 19)
-	{
-		cprintf("\r\nInvalid baudrate\r\n");
-		return 1;
+		usage();
+		return 0;
 	}
 
 
-	n.signature 	= 0x42;
-	n.version 		= 0;
-	strcpy(n.filename, fname);
-	
-	n.uart_baudrate = i;
-	n.uart_lsr		= 0x03;
-	
-
-
-
-	
-
-	cprintf("\r\n");
-	cprintf("Signature  : $%02x\r\n", n.signature);
-	cprintf("Version    : $%02x\r\n", n.version);
-	cprintf("OS filename: %s\r\n", n.filename);
-	cprintf("Baud rate  : %lu\r\n", baudrates[n.uart_baudrate % 20]);
-	cprintf("UART LSR   : $%02x\r\n", n.uart_lsr);
-
-	write_nvram();
 	read_nvram();
 
-	cprintf("\r\n");
-	cprintf("Signature  : $%02x\r\n", n.signature);
-	cprintf("Version    : $%02x\r\n", n.version);
-	cprintf("OS filename: %s\r\n", n.filename);
-	cprintf("Baud rate  : %lu\r\n", baudrates[n.uart_baudrate % 20]);
-	cprintf("UART LSR   : $%02x\r\n", n.uart_lsr);
+	if (n.signature != 0x42)
+	{
+		cprintf("NVRAM signature invalid.\r\nSetting to default values ... ");
+		n.signature 	= 0x42;
+		n.version 		= 0;
+		strcpy(n.filename, "loader.bin");
+	
+		n.uart_baudrate = 0x13; // 115200 baud
+		n.uart_lsr		= 0x03; // 8N1
+
+		write_nvram();
+		cprintf("done.\r\n");
+	}
+
+
+
+	if (strcmp(argv[1], "get") == 0)
+	{
+		if (argc < 2) 
+		{
+			usage();
+			return 0;
+		}
+
+		if (strcmp(argv[2], "filename") == 0)
+		{
+			cprintf("%s\r\n", n.filename);
+		}
+		else if (strcmp(argv[2], "baudrate") == 0)
+		{
+			cprintf("%lu\r\n", baudrates[n.uart_baudrate % 20]);
+		}
+		else if (strcmp(argv[2], "all") == 0) 
+		{
+			cprintf("\r\n");
+			cprintf("Signature  : $%02x\r\n", n.signature);
+			cprintf("Version    : $%02x\r\n", n.version);
+			cprintf("OS filename: %s\r\n", n.filename);
+			cprintf("Baud rate  : %lu\r\n", baudrates[n.uart_baudrate % 20]);
+			cprintf("UART LSR   : $%02x\r\n", n.uart_lsr);
+		}
+
+	}
+
+	if (strcmp(argv[1], "set") == 0)
+	{
+		if (argc < 3)
+		{
+			usage();
+			return 0;			
+		}	
+
+		else if (strcmp(argv[2], "baudrate") == 0)
+		{
+			l = atol(argv[3]);
+
+			for (i = 1;i<=19;i++)
+			{
+				if (l == baudrates[i]) break;
+			}
+
+			if (i > 19)
+			{
+				cprintf("\r\nInvalid baudrate\r\n");
+				return 1;
+			}
+
+			n.uart_baudrate = i;
+		}
+		else if (strcmp(argv[2], "filename") == 0)
+		{
+			if (strlen(argv[3]) > 11)
+			{
+				cprintf("\r\nInvalid filename\r\n");
+				return 1;				
+			}
+
+			strncpy(n.filename, argv[3], 11);
+		}
+
+		write_nvram();
+	}
+
+
 
 
 	return 0;
