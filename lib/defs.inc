@@ -1,28 +1,7 @@
-; general purpose pointer
-addr 		= $e0
-adrl     	= addr
-adrh     	= addr+1
-ptr1		= $e2
-ptr1l		= ptr1
-ptr1h		= ptr1+1
-ptr2		= $e4
-ptr2l		= ptr2
-ptr2h		= ptr2+1
-
 ; Cursor Position and buffer
 crs_x	= $e6
 crs_y	= $e7
 crs_ptr	= $e8 	; 2 byte ram address pointer
-
-; general purpose temp variables
-tmp0		= $ea
-tmp1		= $eb
-tmp2		= $ec
-tmp3		= $ed
-tmp4		= $ee
-tmp5		= $ef
-tmp6		= $f0
-tmp7		= $f1
 
 entries 	= $f2   ; TODO FIXME shell cleanup... use temp instead
 

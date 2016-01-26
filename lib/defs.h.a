@@ -14,6 +14,27 @@ count		= clockspeed * jiffies
 
 !address {
 
+; general purpose pointer
+addr 		= $e0
+adrl     	= addr
+adrh     	= addr+1
+ptr1		= $e2
+ptr1l		= ptr1
+ptr1h		= ptr1+1
+ptr2		= $e4
+ptr2l		= ptr2
+ptr2h		= ptr2+1
+
+; general purpose temp variables
+tmp0		= $ea
+tmp1		= $eb
+tmp2		= $ec
+tmp3		= $ed
+tmp4		= $ee
+tmp5		= $ef
+tmp6		= $f0
+tmp7		= $f1
+
 !src <defs.inc>
 
 }
