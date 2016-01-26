@@ -68,7 +68,7 @@ main:
 	jsr	.update_vram
 
 	+SetVector	.game_isr, irqvec
-	
+	+vnops
 	lda	#Light_Blue
 	sta	adrl		;set character color
 	ldx	#$20
@@ -266,6 +266,7 @@ main:
 	ldy	#$00
 -	lda	(addr), y
 	beq	+
+	+vnops
 	sta	a_vram
 	iny
 	bne	-
@@ -672,6 +673,7 @@ main:
 	ldx	#$00
 -	lda	.text_score_board,x
 	beq	+
+	+vnops
 	sta	a_vram
 	inx
 	bne	-
@@ -705,11 +707,13 @@ main:
 	lsr
 	lsr
 	ora	#'0'
+	+vnops
 	sta a_vram
 	pla
 .digit_out
 	and #$0f
 	ora	#'0'
+	+vnops
 	sta a_vram
 	rts
 	
