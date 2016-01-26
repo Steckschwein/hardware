@@ -61,7 +61,9 @@ void read_nvram()
 
 void usage()
 {
-	cprintf("USAGE\r\n");
+	cprintf(
+		"set/get nvram values\r\nusage:\r\nnvram get filename|baudrate\r\nnvram set filename|baudrate <value>\r\nnvram list\r\n",
+	);
 }
 
 int main (int argc, const char* argv[])
@@ -137,19 +139,8 @@ int main (int argc, const char* argv[])
 		{
 			cprintf("%lu\r\n", baudrates[n.uart_baudrate % 20]);
 		}
-		else if (strcmp(argv[2], "all") == 0) 
-		{
-			cprintf("\r\n");
-			cprintf("Signature  : $%02x\r\n", n.signature);
-			cprintf("Version    : $%02x\r\n", n.version);
-			cprintf("OS filename: %s\r\n", n.filename);
-			cprintf("Baud rate  : %lu\r\n", baudrates[n.uart_baudrate % 20]);
-			cprintf("UART LSR   : $%02x\r\n", n.uart_lsr);
-		}
-
 	}
-
-	if (strcmp(argv[1], "set") == 0)
+	else if (strcmp(argv[1], "set") == 0)
 	{
 		if (argc < 3)
 		{
@@ -186,6 +177,18 @@ int main (int argc, const char* argv[])
 		}
 
 		write_nvram();
+	}
+	else if (strcmp(argv[1], "list") == 0) 
+	{
+		cprintf("\r\n");
+		// cprintf("Signature  : $%02x\r\n", n.signature);
+		// cprintf("Version    : $%02x\r\n", n.version);
+		cprintf("OS filename: %s\r\nBaud rate  : %lu\r\nUART LSR   : $%02x\r\n", n.filename, baudrates[n.uart_baudrate % 20], n.uart_lsr);
+		/*
+		cprintf("OS filename: %s\r\n", n.filename);
+		cprintf("Baud rate  : %lu\r\n", baudrates[n.uart_baudrate % 20]);
+		cprintf("UART LSR   : $%02x\r\n", n.uart_lsr);
+		*/
 	}
 
 
