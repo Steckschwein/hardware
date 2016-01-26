@@ -22,6 +22,12 @@ hello.bin: hello.o
 	
 hello: hello.bin
 	../../transfer.py hello.bin 0x1000
+    
+sieve.bin: sieve.o
+	ld65 -C ../../cc65/steckos/steckschwein-kernel.cfg -v $< ../../cc65/steckos/steckschwein-kernel.lib -o $@
+
+sieve: sieve.bin
+	../../transfer.py sieve.bin 0x1000
 	
 %.bin: %.a
 	acme -v -Wtype-mismatch -f plain --cpu 65c02 -o $@ $<

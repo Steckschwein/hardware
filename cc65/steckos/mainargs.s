@@ -1,29 +1,13 @@
 ; mainargs.s
-;
-; Scan a group of arguments that are in BASIC's input-buffer.
-; Build an array that points to the beginning of each argument.
-; Send, to main(), that array and the count of the arguments.
-;
-; Command-lines look like these lines:
-;
-; run
-; run : rem
-; run:rem arg1 " arg 2 is quoted "  arg3 "" arg5
-;
-; "run" and "rem" are entokenned; the args. are not.  Leading and trailing
-; spaces outside of quotes are ignored.
-;
-; TO-DO:
-; - The "file-name" might be a path-name; don't copy the directory-components.
-; - Add a control-character quoting mechanism.
 
         .constructor    initmainargs, 24
-        .import         __argc, __argv
-
+        .import         __argc, __argv        
 
 MAXARGS  = 10                   ; Maximum number of arguments allowed
 REM      = $8f                  ; BASIC token-code
 NAME_LEN = 16                   ; Maximum length of command-name
+
+CMD_PTR  = $e2  ; ptr1 from shell
 
 ; Get possible command-line arguments. Goes into the special INIT segment,
 ; which may be reused after the startup code is run
@@ -31,99 +15,64 @@ NAME_LEN = 16                   ; Maximum length of command-name
 .segment        "INIT"
 
 initmainargs:
-; Assume that the program was loaded, a moment ago, by the traditional LOAD
-; statement.  Save the "most-recent filename" as argument #0.
+;        for testing purpose
+;        lda     #<INPUT_BUF
+;        sta     CMD_PTR
+;        lda     #>INPUT_BUF
+;        sta     CMD_PTR+1        
 
-		inc		__argc
-		bra 	done
-
-		ldx		#$00
-LL0:	lda		TEST_PARAM, x
-		beq		LL1
-		sta 	BASIC_BUF,x
-		inx	
-		bne		LL0
-LL1:
-		lda		BASIC_BUF
-		sta		$e2
-		lda		BASIC_BUF+1
-		sta		$e3
-		
-		inc		__argc
-		rts
-		
-		lda		$e2
-		sta		BASIC_BUF
-		lda		$e3
-		sta		BASIC_BUF+1
-		
-;        lda     #0              ; The terminating NUL character
-;        ldy     #8;FNAM_LEN
-;        cpy     #NAME_LEN + 1
-;        bcc     L1
-;        ldy     #NAME_LEN       ; Limit the length
-;        bne     L1	            ; Branch always
-;L0:     lda     (FNAM),y
-;L1:     sta     name,y
-;        dey
-;        bpl     L0
-        inc     __argc          ; argc always is equal to, at least, 1
-
-; Find the "rem" token.
-
+        ldy     #0              ;defense copy to not corrupt shell history
         ldx     #0
-L2:     lda     BASIC_BUF,x
-        beq     done            ; No "rem," no args.
+L0:     lda     (CMD_PTR),y
+        sta     INPUT_BUF,y
+        beq     L1
+        iny
+        bne     L0
+        dey                     ; null-term if overflow
+        lda     #0
+        sta     INPUT_BUF,y
+L1:		
+        lda     INPUT_BUF,x
+        sta     name,x
+        beq     L2
+        cmp     #' '
+        beq     L3
         inx
-        cmp     #REM
-        bne     L2
-        ldy     #1 * 2
-
+        bne     L1              ;overflow is handled above
+L2:     inc     __argc
+        bra     done
+        
+L3:     lda     #0              ; null term string program name
+        sta     name,x
+        inc     __argc          ; argc always is equal to, at least, 1
+        
 ; Find the next argument
-
-next:   lda     BASIC_BUF,x
+        ldy     #2              ;args from argv[1..n]
+next:   inx
+        lda     INPUT_BUF,x
         beq     done            ; End of line reached
-        inx
-        cmp     #' '            ; Skip leading spaces
-        beq     next
-
-; Found start of next argument. We've incremented the pointer in X already, so
-; it points to the second character of the argument. This is useful since we
-; will check now for a quoted argument, in which case we will have to skip this
-; first character.
-
-found:  cmp     #'"'            ; Is the argument quoted?
-        beq     setterm         ; Jump if so
-        dex                     ; Reset pointer to first argument character
-        lda     #' '            ; A space ends the argument
-setterm:sta     term            ; Set end of argument marker
-
-; Now store a pointer to the argument into the next slot. Since the BASIC
-; input buffer is located at the start of a RAM page, no calculations are
-; necessary.
+        cmp     #' '            ; skip read...
+        beq     next            
 
         txa                     ; Get low byte
-        sta     argv,y          ; argv[y]= &arg
+        clc
+        adc     #<INPUT_BUF
+        sta     argv,y          ; argv[y]= &arg   ; cmd ptr is page aligned from shell
         iny
-        lda     #>BASIC_BUF
+        lda     #>INPUT_BUF     ; high byte
         sta     argv,y
         iny
         inc     __argc          ; Found another arg
 
 ; Search for the end of the argument
-
-argloop:lda     BASIC_BUF,x
-        beq     done
+argloop:
         inx
-        cmp     term
+        lda     INPUT_BUF,x
+        beq     done
+        cmp     #' '            ; read until ' ' or \0
         bne     argloop
-
-; We've found the end of the argument. X points one character behind it, and
-; A contains the terminating character. To make the argument a valid C string,
-; replace the terminating character by a zero.
-
-        lda     #0
-        sta     BASIC_BUF-1,x
+        lda     #0              ; 0 terminate the arg
+        sta     INPUT_BUF,x
 
 ; Check if the maximum number of command line arguments is reached. If not,
 ; parse the next one.
@@ -140,20 +89,16 @@ done:   lda     #<argv
         stx     __argv + 1
         rts
 
-BASIC_BUF:
-	.word $0000
-FNAM:
-	.word $0000
-
 .segment        "INITBSS"
 
-term:   .res    1
 name:   .res    NAME_LEN + 1
 
 .data
-
-TEST_PARAM:	.byte "test foo bar baz", 0
-
 ; char* argv[MAXARGS+1]={name};
 argv:   .addr   name
         .res    MAXARGS * 2
+
+INPUT_BUF:
+    .res    255
+;   .byte "test", 0
+;   .byte "test 1 2 3 +baz blub -bla", 0
