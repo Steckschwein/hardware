@@ -37,9 +37,10 @@
 .DINOSAUR_X=20
 .DINOSAUR_Y=125
 .PD_X=$ef	;100
-;.PD_Y=120
-.PD_Y=32
+.PD_Y=120
+.PD_Y_OFF=$bf
 .PD_SPEED=5
+.EC_MAX_LEFT_POS=32
 .DINOSAUR_HEIGHT=30
 .DINOSAUR_RUN=1<<0
 .DINOSAUR_JUMP=1<<1
@@ -180,7 +181,8 @@ main:
     bne +				;2 - otherwise, pterodactyl
     
 	;enable pterodactyl
-	;TODO 
+	jsr	.enable_pd
+	
     bra ++              ;bg desert/hills
     
 +	jsr .rnd			;otherwise choose cacti randomly
@@ -214,7 +216,7 @@ main:
     ; 1 - cacti
     ; 2 - pterodactyl with background
 ;	!byte 0,0,0,0,0,0,1,0,0,0,1,0,0,0,1,0,0,1,0,0,0,1,0,0,1,0,0,0,0,1,$80
-	!byte 0,0,0,0,0,0,1,0,0,0,1,0,2,0,0,0,0,1,0,2,0,0,1,0,2,0,1,0,0,1,0,0,0,1,0,0,1,0,0,2,0,0,0,0,2,0,1,0,2,0,1,0,0,1,$80
+	!byte 0,0,0,0,0,0,1,0,0,0,1,0,2,0,0,0,0,1,0,0,0,2,0,0,1,0,0,0,1,0,0,1,0,0,0,1,0,0,1,2,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,2,0,1,0,0,0,0,2,0,1,0,0,1,$80
 	
 ;	detection algorithm - dinosaur is 32*32px, we check only char positions and sprites as follows - cause this best matches the dinosaur shape
 ;	 ##		-> ##
@@ -351,18 +353,23 @@ main:
 -	lda	.sprite_tab_enemy+1,x
 	sec
 	sbc	#.PD_SPEED
-    bcs ++
+    bcs +++	; no underrun, go on
    	bit	.sprite_tab_enemy+3,x ;Sprite_EC => bit 7
-    bmi +
+    bmi ++	; ec set, do not add 32 px
     clc
-    adc #32 ; offset and EC enabled
-+   tay
+    adc #.EC_MAX_LEFT_POS ; offset and EC enabled
+	bra	+
+	
+++  jsr	.disabled_pd
+	rts
+	
++	tay
     lda .sprite_tab_enemy+3,x
     eor #Sprite_EC
     sta .sprite_tab_enemy+3+4*0,x
     sta .sprite_tab_enemy+3+4*1,x
     tya
-++  sta	.sprite_tab_enemy+1+4*0,x
++++ sta	.sprite_tab_enemy+1+4*0,x
 	sta	.sprite_tab_enemy+1+4*1,x
     cpx #$08
     beq +
@@ -411,11 +418,12 @@ main:
 	sta	.sprite_tab_sky+3,x
 	lda	#$ff
 	sta .sprite_tab_sky+1,x
+	
 ++	inx
 	inx
 	inx
 	inx
-	cpx	#4*4*2; 4 clouds, 2 sprites each shifted?
+	cpx	#4*2*4; 4 clouds, 2 sprites each shifted?
 	bne	-
 	rts
 	
@@ -437,7 +445,7 @@ main:
 	jsr	.animate_sky
 	jsr	.score_board
 	jsr	.action_handler
-	jsr	.detect_collision
+	;jsr	.detect_collision
 	jsr	.animate_dinosaur
 	bra	+++
 
@@ -468,6 +476,15 @@ main:
 .game_isr_exit	
 	rti
 
+.disabled_pd
+	stz	.enemy_state
+	lda	#.PD_Y_OFF
+	sta .sprite_tab_enemy+4*0,x
+	sta .sprite_tab_enemy+4*1,x
+	sta .sprite_tab_enemy+4*2,x
+	sta .sprite_tab_enemy+4*3,x
+	rts
+	
 .enable_pd
 	inc	.enemy_state
 	ldx	#0
@@ -505,8 +522,14 @@ main:
 	stz .frame_cnt
 	stz .level_bg_cnt
 	+SetVector .level_bg_3, .level_bg_ptr
-	
-	jsr	.enable_pd
+
+	ldx	#0
+-	jsr	.rnd
+	sta	.sprite_tab_sky_trigger,x
+	inx
+	cpx	#4
+	bne	-
+
 	
 	;set new highscore
 	lda	.score_value
@@ -754,6 +777,9 @@ main:
 	!byte	98,216,52, White
 	; end of sprites
 	!byte	$d0
+	
+.sprite_tab_sky_trigger:
+	!fill	4, 0
 
 .dino_run_1
 	!byte 0,4,8,12
