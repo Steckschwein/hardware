@@ -1,4 +1,5 @@
 ;
+; 01/2016 MLA
 ; Ullrich von Bassewitz, 2003-08-12
 ;
 ; unsigned char __fastcall__ _sysuname (struct utsname* buf);
@@ -33,7 +34,7 @@ utsdata:
         .byte           $00
 
         ; machine
-        .asciiz         "Commodore 64"
+        .asciiz         "Steckschwein"
 
 
          
