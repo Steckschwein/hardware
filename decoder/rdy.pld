@@ -1,8 +1,6 @@
 GAL16V8   
 RDYGEN
 
-; PIN assignment
-;
 Clock ROM  NC  VIA  UART VDP SND NC   Clear GND
 /OE   W1     W2     NC   NC   RDY NC  Q1   Q0    VCC
 
@@ -22,5 +20,5 @@ RDY.E	= W1
 
 
 DESCRIPTION:
-Generation of /RDY line using modeled after http://sbc.rictor.org/parts/wsgen.html
+Generation of /RDY line modeled after http://sbc.rictor.org/parts/wsgen.html
 and adapted to galasm syntax
