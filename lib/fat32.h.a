@@ -47,7 +47,8 @@ BS_FilSysType	= 54	; One of the strings “FAT12 ”, “FAT16 ”, or “FAT �
 ;--------------------------------------------------------------------------------------
 ; FAT32 Directory Entry
 ;--------------------------------------------------------------------------------------
-DIR_Name		= $00	;11 Bytes
+DIR_Name		= $00	;Filename, 8 Bytes
+DIR_Ext			= $08 	;Extension, 3 Bytes
 DIR_Attr		= $0B	;8 Bits
 DIR_FstClusHI	= $14	;16 Bits
 DIR_WrtTime		= $16   ; File write time, 16 bits
