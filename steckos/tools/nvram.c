@@ -21,10 +21,34 @@ struct nvram
 	unsigned char uart_lsr;
 };
 
-unsigned char c,i;
+	unsigned long baudrates[] = {
+	-1,
+	50,	
+	75,
+	110,	
+	134,
+	150,
+	300,
+	600,
+	1200,
+	1800,	
+	2000,	
+	2400,	
+	3600,
+	4800,
+	7200,	
+	9600,	
+	19200,
+	38400,	
+	56000,	
+	115200
+	};
+
+
+unsigned char i;
 struct nvram n;
 unsigned char * p;
-
+unsigned long l;
 
 
 void write_nvram()
@@ -56,7 +80,6 @@ void read_nvram()
 	}
 	
 	*(unsigned char*) 0x210 = 0x7e;
-
 }
 
 void usage()
@@ -68,36 +91,6 @@ void usage()
 
 int main (int argc, const char* argv[])
 {
-
-	unsigned long baudrates[] = {
-	-1,
-	50,	
-	75,
-	110,	
-	134,
-	150,
-	300,
-	600,
-	1200,
-	1800,	
-	2000,	
-	2400,	
-	3600,
-	4800,
-	7200,	
-	9600,	
-	19200,
-	38400,	
-	56000,	
-	115200
-	};
-
-	// unsigned char *x = "115200";
-	
-
-	unsigned long l;
-
-
 	if (argc == 1) 
 	{
 		usage();
@@ -180,10 +173,9 @@ int main (int argc, const char* argv[])
 	}
 	else if (strcmp(argv[1], "list") == 0) 
 	{
-		cprintf("\r\n");
 		// cprintf("Signature  : $%02x\r\n", n.signature);
 		// cprintf("Version    : $%02x\r\n", n.version);
-		cprintf("OS filename: %s\r\nBaud rate  : %lu\r\nUART LSR   : $%02x\r\n", n.filename, baudrates[n.uart_baudrate % 20], n.uart_lsr);
+		cprintf("\r\nOS filename: %s\r\nBaud rate  : %lu\r\nUART LSR   : $%02x\r\n", n.filename, baudrates[n.uart_baudrate % 20], n.uart_lsr);
 		/*
 		cprintf("OS filename: %s\r\n", n.filename);
 		cprintf("Baud rate  : %lu\r\n", baudrates[n.uart_baudrate % 20]);
