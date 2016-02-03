@@ -1,23 +1,32 @@
 #!/usr/bin/python
 
+import argparse
 import serial
 import sys
+import os
 import struct
 
-baudrate=115200
+devicerequired=False
+
+device=None
+try:
+	device = os.environ['TRANSFER_DEVICE']
+except KeyError:
+	devicerequired=True
+
+parser = argparse.ArgumentParser(description='transfer binary via serial interface')
+parser.add_argument('-d', '--device', help="serial device. can also be set with environment variable TRANSFER_DEVICE.", required=devicerequired)
+parser.add_argument('-b', '--baudrate', type=int, help="baud rate. default 115200", required=False, default=115200)
+parser.add_argument('-s', '--startaddr', help="start address. default 0x1000", required=False, type=int, default=0x1000)
+parser.add_argument('filename', help="file to transfer")
+
+args = parser.parse_args()
+
+print args
 
 try:
-	filename 	= sys.argv[1]
-	try:
-		startaddr   = int(sys.argv[2], 16)
-	except IndexError:
-		startaddr = 0x1000
 
-
-
-
-
-	with open(filename, 'r') as content_file:
+	with open(args.filename, 'r') as content_file:
 		content = content_file.read()
 
 	length = len(content)
@@ -25,8 +34,9 @@ try:
 
 	ser = serial.Serial(
 		#port='/dev/tty.usbserial-FTGXH8UA',
-		port='/dev/cu.usbserial-FTAJMAUJ', 
-		baudrate=baudrate,
+		#port='/dev/cu.usbserial-FTAJMAUJ', 
+		port=args.device,
+		baudrate=args.baudrate,
 		bytesize=8, 
 		parity=serial.PARITY_NONE, 
 		stopbits=1,
@@ -60,5 +70,8 @@ except IndexError:
 	print "%s <filename>" % (sys.argv[0],)
 	sys.exit(1)
 except IOError:	
-	print "%s: file '%s' not found" % (sys.argv[0], filename, )
+	print "%s: file '%s' not found" % (sys.argv[0], args.filename, )
 	sys.exit(1)
+
+
+
