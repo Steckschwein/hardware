@@ -17,7 +17,7 @@ except KeyError:
 parser = argparse.ArgumentParser(description='transfer binary via serial interface')
 parser.add_argument('-d', '--device', help="serial device. can also be set with environment variable TRANSFER_DEVICE.", required=devicerequired, default=device)
 parser.add_argument('-b', '--baudrate', type=int, help="baud rate. default 115200", required=False, default=115200)
-parser.add_argument('-s', '--startaddr', help="start address. default 0x1000", required=False, default=0x1000)
+parser.add_argument('-s', '--startaddr', help="start address. default 0x1000", required=False, default="0x1000")
 parser.add_argument('filename', help="file to transfer")
 
 args = parser.parse_args()
