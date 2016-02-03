@@ -15,14 +15,13 @@ except KeyError:
 	devicerequired=True
 
 parser = argparse.ArgumentParser(description='transfer binary via serial interface')
-parser.add_argument('-d', '--device', help="serial device. can also be set with environment variable TRANSFER_DEVICE.", required=devicerequired)
+parser.add_argument('-d', '--device', help="serial device. can also be set with environment variable TRANSFER_DEVICE.", required=devicerequired, default=device)
 parser.add_argument('-b', '--baudrate', type=int, help="baud rate. default 115200", required=False, default=115200)
-parser.add_argument('-s', '--startaddr', help="start address. default 0x1000", required=False, type=int, default=0x1000)
+parser.add_argument('-s', '--startaddr', help="start address. default 0x1000", required=False, default=0x1000)
 parser.add_argument('filename', help="file to transfer")
 
 args = parser.parse_args()
 
-print args
 
 try:
 
@@ -45,6 +44,8 @@ try:
 		timeout=5
 	)
 	
+
+	startaddr=int(args.startaddr, 16)
 
 	print "Startaddress : 0x%04x (%d)" % (startaddr, startaddr)
 	print "Length    	: %d bytes" % (length)
