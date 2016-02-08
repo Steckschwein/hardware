@@ -1,13 +1,13 @@
 GAL16V8   
 RDYGEN
 
-Clock ROM VIA  UART  VDP SND NC NC Clear GND
-/OE   RDY  W1    W2   NC  NC NC Q1 Q0    VCC
+Clock VDP UART  ROM  SND IO01 IO02 IO03 Clear GND
+/OE   RDY   W1   W2   NC   NC   NC   Q1    Q0 VCC
 
-W2	= ROM * VIA * UART * SND * /VDP 
-	+ ROM * VIA * UART * /SND * VDP 
+W2	= ROM * UART * SND * /VDP 
+	+ ROM * UART * /SND * VDP 
 W1 	= W2 
-	+ /ROM * VIA * UART * VDP 
+	+ /ROM * UART * VDP 
 
 Q0.R 	= W1 * /Q0 * /Q1 * Clear
 	+ W2 * /Q0 * /Q1 * Clear
