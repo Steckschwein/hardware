@@ -1,4 +1,4 @@
-Cmp-Mod V01 Created by Cvpcb (2015-03-04 BZR 5473)-product   date = Dienstag, 02. Februar 2016 'u54' 18:54:19
+Cmp-Mod V01 Created by Cvpcb (2015-03-04 BZR 5473)-product   date = Mittwoch, 10. Februar 2016 'u48' 18:48:32
 
 BeginCmp
 TimeStamp = /541367DD;
@@ -106,13 +106,6 @@ IdModule  = Capacitors_Elko_ThroughHole:Elko_vert_11.2x7.5mm_RM2.5;
 EndCmp
 
 BeginCmp
-TimeStamp = /56B0E071;
-Reference = CON1;
-ValeurCmp = USB-MICRO-B;
-IdModule  = Connect:USB_Micro-B;
-EndCmp
-
-BeginCmp
 TimeStamp = /54C38B5D;
 Reference = D1;
 ValeurCmp = LED;
@@ -187,6 +180,13 @@ TimeStamp = /544D4EDE/54C39263;
 Reference = D11;
 ValeurCmp = LED;
 IdModule  = LEDs:LED-3MM;
+EndCmp
+
+BeginCmp
+TimeStamp = /56BB81D0;
+Reference = J1;
+ValeurCmp = USB;
+IdModule  = Connect:USB_B;
 EndCmp
 
 BeginCmp
@@ -360,7 +360,7 @@ EndCmp
 BeginCmp
 TimeStamp = /5413569B;
 Reference = U1;
-ValeurCmp = W65C02SP;
+ValeurCmp = 65C02;
 IdModule  = Sockets_DIP:DIP-40__600_ELL;
 EndCmp
 
