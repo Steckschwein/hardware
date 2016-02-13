@@ -1,4 +1,4 @@
-Cmp-Mod V01 Created by Cvpcb (2015-03-04 BZR 5473)-product   date = Mittwoch, 10. Februar 2016 'u48' 18:48:32
+Cmp-Mod V01 Created by Cvpcb (2015-03-04 BZR 5473)-product   date = Samstag, 13. Februar 2016 'u05' 11:05:03
 
 BeginCmp
 TimeStamp = /541367DD;
@@ -103,6 +103,13 @@ TimeStamp = /546AA0E1;
 Reference = C16;
 ValeurCmp = CP2;
 IdModule  = Capacitors_Elko_ThroughHole:Elko_vert_11.2x7.5mm_RM2.5;
+EndCmp
+
+BeginCmp
+TimeStamp = /56BF23C2;
+Reference = CON1;
+ValeurCmp = BARREL_JACK;
+IdModule  = Connect:BARREL_JACK;
 EndCmp
 
 BeginCmp
