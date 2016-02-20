@@ -49,8 +49,8 @@ _init:
  
 ; ---------------------------------------------------------------------------
 ; Initialize memory storage
-;          JSR     zerobss              ; Clear BSS segment
- ;         JSR     copydata             ; Initialize DATA segment
+          JSR     zerobss              ; Clear BSS segment
+          JSR     copydata             ; Initialize DATA segment
           JSR     initlib              ; Run constructors
 
 ; ---------------------------------------------------------------------------

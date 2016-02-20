@@ -18,23 +18,22 @@
 
 utsdata:
         ; sysname
-        .asciiz         "cc65"
+        .asciiz         "SteckOS"
 
         ; nodename
         .asciiz         ""
 
         ; release
-        .byte           ((.VERSION >> 8) & $0F) + '0'
-        .byte           '.'
-        .byte           ((.VERSION >> 4) & $0F) + '0'
-        .byte           $00
+        .asciiz         "0.2"
+;        .byte           ((.VERSION >> 8) & $0F) + '0'
+ ;       .byte           '.'
+  ;      .byte           ((.VERSION >> 4) & $0F) + '0'
+   ;     .byte           $00
 
         ; version
-        .byte           (.VERSION & $0F) + '0'
-        .byte           $00
+        .asciiz         "b"
+;        .byte           (.VERSION & $0F) + '0'
+;        .byte           $00
 
         ; machine
-        .asciiz         "Steckschwein"
-
-
-         
+        .asciiz         "65c02 Steckschwein"
