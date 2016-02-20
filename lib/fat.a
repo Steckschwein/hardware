@@ -213,11 +213,11 @@ FD_file_size = $08
 
 
 .fat_check_signature
-	lda sd_blktarget + BS_Signature
-	cmp #$55
+	lda #$55
+	cmp sd_blktarget + BS_Signature
 	bne ++
-	lda sd_blktarget + BS_Signature+1
-	cmp #$aa
+	asl ; $aa
+	cmp sd_blktarget + BS_Signature+1
 	beq +
 ++	lda #fat_bad_block_signature
 	sta errno
