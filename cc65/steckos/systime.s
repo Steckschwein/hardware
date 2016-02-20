@@ -10,36 +10,77 @@
 ;
 
         .include        "time.inc"
-        .include        "c64.inc"
-        .include        "get_tv.inc"
-
+        .include        "../../lib/defs.inc"
+        .include        "../../bios/bios.inc"
+        .include        "../../lib/spi.inc"
+        .include        "../../lib/rtc.inc"
+       
         .constructor    initsystime
         .importzp       tmp1, tmp2
-        .import         _get_tv, _get_ostype
-
-
+;        .import         spiread
+        
 ;----------------------------------------------------------------------------
 .code
 
 .proc   __systime
 
-        lda     CIA1_TODHR
-        bpl     AM
-        and     #%01111111
-        sed
-        clc
-        adc     #$12
-        cld
-AM:     jsr     BCD2dec
-        sta     TM + tm::tm_hour
-        lda     CIA1_TODMIN
-        jsr     BCD2dec
-        sta     TM + tm::tm_min
-        lda     CIA1_TODSEC
-        jsr     BCD2dec
-        sta     TM + tm::tm_sec
-        lda     CIA1_TOD10              ; Dummy read to unfreeze
-        lda     #<TM
+    lda #spi_select_rtc
+	sta via1portb
+    
+	lda #$00
+	jsr bios_spi_rw_byte
+
+	jsr bios_spi_r_byte
+;	sta tmp6
+
+	jsr bios_spi_r_byte
+;	sta tmp7
+
+	jsr bios_spi_r_byte
+;	jsr hexout
+;	+PrintChar ':'
+
+;	lda tmp7
+;	jsr hexout
+;	+PrintChar ':'
+
+;	lda tmp6	
+;	jsr hexout
+
+	jsr bios_spi_r_byte
+;	+PrintChar ' '
+
+	jsr bios_spi_r_byte
+;	jsr hexout
+;	+PrintChar '.'
+
+	jsr bios_spi_r_byte
+;	jsr hexout
+;	+PrintChar '.'
+
+	jsr bios_spi_r_byte
+;	jsr hexout
+
+    jsr spi_deselect
+
+;        lda     CIA1_TODHR
+    ;    bpl     AM
+   ;     and     #%01111111
+  ;      sed
+ ;       clc
+      ;  adc     #$12
+     ;   cld
+;AM:     jsr     BCD2dec
+    ;    sta     TM + tm::tm_hour
+ ;       lda     CIA1_TODMIN
+   ;     jsr     BCD2dec
+  ;      sta     TM + tm::tm_min
+  ;      lda     CIA1_TODSEC
+ ;       jsr     BCD2dec
+;        sta     TM + tm::tm_sec
+   ;     lda     CIA1_TOD10              ; Dummy read to unfreeze
+        
+        lda     #<TM                    ; pointer to TM struct
         ldx     #>TM
         jmp     _mktime
 
@@ -67,18 +108,7 @@ BCD2dec:tax
 
 .proc   initsystime
 
-        lda     CIA1_TOD10
-        sta     CIA1_TOD10
-        jsr     _get_tv
-        cmp     #TV::PAL
-        bne     @60Hz
-        jsr     _get_ostype
-        cmp     #$43
-        beq     @60Hz
-        lda     CIA1_CRA
-        ora     #$80
-        sta     CIA1_CRA
-@60Hz:  rts
+        rts
 
 .endproc
 

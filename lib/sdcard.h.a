@@ -28,3 +28,5 @@ sd_card_present		= 1<<7
 		cmp #$ff
 		bne -
 }   
+
+spi_select_sdc=%01111100

@@ -2,21 +2,356 @@
 !src <t9929.h.a>
 
 !macro setPixel .x, .y, .color{
-	ldx	#.x
+;	ldx	#.x
+;	ldy	#.y
+;	lda	#.color
+;	jsr	set_pixel
+	lda	#.x
 	ldy	#.y
-	lda	#.color
-	jsr	set_pixel
+	jsr	set_pixel_n0
 }
 
-!macro drawLine .x1, .y1, x2, y2, .color{
-	lda	#.x2
-    sta tmp0
-	lda	#.y2
-    sta tmp1
+!macro drawLine .x0, .y0, .x1, .y1, .color{
+	lda	#.x0
+    sta x0
+	lda	#.y0
+    sta y0
     ldx #.x1
     ldy #.y1
 	jsr	draw_line
 }
+
+!macro drawVS {
+        phx
+        phy
+        ldy x0
+-       tya 
+        ldy y0
+        and	#$f8
+        ora	ytablelow,y
+        sta	a_vreg
+        ldx	ytablehigh,y
+        stx	a_vreg
+        ldx ytablehigh_write,y;4cl - burn cycles useful, before v_ram read cause of the vdp timing issue - 2µs
+        nop
+        ldy a_vram		;the v_ram read - 1cl opcode fetch		
+        nop
+        nop
+        nop
+;>=7cl required between last v_ram access and new adress setup
+        sta	a_vreg		;set low byte vdp adress
+        tya				;set bit value
+        stx a_vreg		;set high byte vdp adress
+        ldy	x0			;3cl - burn cycles useful
+        ora	bitmask_tab,y;4cl
+        sta	a_vram
+		dec y0
+        dec c
+		bne -
+        ply
+        plx
+}
+
+!macro drawHS {
+        phx
+        phy
+-       lda x0
+        ldy y0
+        and	#$f8
+        ora	ytablelow,y
+        sta	a_vreg
+        ldx	ytablehigh,y
+        stx	a_vreg
+        ldx ytablehigh_write,y;4cl - burn cycles useful, before v_ram read cause of the vdp timing issue - 2µs
+        nop
+        ldy a_vram		;the v_ram read - 1cl opcode fetch		
+        nop
+        nop
+        nop
+;>=7cl required between last v_ram access and new adress setup
+        sta	a_vreg		;set low byte vdp adress
+        tya				;set bit value
+        stx a_vreg		;set high byte vdp adress
+        ldy	x0			;3cl - burn cycles useful
+        ora	bitmask_tab,y;4cl
+        sta	a_vram
+		inc x0
+        dec c
+		bne -
+        ply
+        plx
+}
+
+
+
+x0=tmp0
+y0=tmp1
+dx=tmp2
+dy=tmp3
+t=tmp4
+c=tmp5
+dxy=tmp6
+op_inc_zp=$e6
+op_inc_a=$1a
+op_dec_zp=$c6
+op_dec_a=$3a
+
+
+bitmask_tab=$b000
+ytablehigh=bitmask_tab+$100
+ytablelow=ytablehigh+$100
+ytablehigh_write=ytablelow+$100
+
+init_draw
+        clc
+        ldx #$00
+        lda #$80
+id1     sta bitmask_tab,x
+id2     ror
+        bcs id2
+        inx
+        bne id1
+        
+        clc
+        ldy #$00
+id3     tya
+	sta ytablehigh,x
+	sta ytablehigh+1,x
+	sta ytablehigh+2,x
+	sta ytablehigh+3,x
+	sta ytablehigh+4,x
+	sta ytablehigh+5,x
+	sta ytablehigh+6,x
+	sta ytablehigh+7,x
+	inc
+	tay
+	txa
+	
+	adc #$08	
+	tax
+	bne id3
+        clc
+        ldy #$40
+id4     tya
+	sta ytablehigh_write,x
+	sta ytablehigh_write+1,x
+	sta ytablehigh_write+2,x
+	sta ytablehigh_write+3,x
+	sta ytablehigh_write+4,x
+	sta ytablehigh_write+5,x
+	sta ytablehigh_write+6,x
+	sta ytablehigh_write+7,x
+    inc    
+    tay
+	txa
+	adc #$08
+	tax
+	bne id4
+	lda #$00
+id5	sta ytablelow,x
+	inc
+	and #$07
+	inx
+	bne id5
+	rts
+        
+;    
+draw_line
+		cpx x0		;x1<x0
+		bcs l1		;no, go l1
+		lda x0		;swap x0/x1 and y0/y1
+		stx x0
+		tax
+		lda y0
+		sty y0
+		tay
+		
+l1		cpy y0		;y1<y0 ?
+		bcs l2		;no, go l2
+		
+		lda #op_dec_zp 	;s=-1 
+		sta ll4_c 	;self mode code
+        sty t       ;y1 -> t
+        lda y0		;dy=y0-y1; we have to swap the arguments
+		sec		    ;set carry, must be clear here
+		sbc t
+		bra l3
+l2   	lda #op_inc_zp	;s=+1 
+		sta ll4_c 	;self mode code
+		tya		;carry is set from branch above
+		sbc y0		;dy=y1-y0
+l3  	sta dy
+
+		lda #$01
+        sta c		; c=1
+
+		txa		;dx=x1-x0;
+		;sec		;TODO FIXME proof if we have to set
+		sbc x0
+		sta dx
+        
+		cmp dy		;dx<dy ? flat or steep slope
+		bcs flat_slope_o 		;no, go l4 (flat slope)
+        jmp steep_slope        
+
+;flat slope	(dx <= dy)
+flat_slope_unrolled;	(dx <= dy)
+        tax         ;init loop
+        sbc dy		;dxy = dx-dy; accu has dx and carry is set already
+		sta dxy
+		
+        ldx #$ff
+		lda	dx
+		lsr			; t=dx>>1
+
+        sbc dy          ; t=t-dy 
+pixel0        
+        bcc fs_step0    ; < 0 ?
+        sbc dy          ; t=t-dy 
+pixel1
+        bcc fs_step1    ; < 0 ?
+        sbc dy          ; t=t-dy 
+pixel2
+        bcc fs_step2    ; < 0 ?
+        sbc dy          ; t=t-dy 
+pixel3        
+        bcc fs_step3    ; < 0 ?
+        sbc dy          ; t=t-dy 
+pixel4        
+        bcc fs_step4    ; < 0 ?
+        sbc dy          ; t=t-dy 
+pixel5        
+        bcc fs_step5    ; < 0 ?
+        sbc dy          ; t=t-dy 
+pixel6        
+        bcc fs_step6    ; < 0 ?
+        sbc dy          ; t=t-dy 
+pixel7        
+        bcc fs_step7    ; < 0 ?
+        lda #$ff
+        sta a_vram      ;FIXME
+       
+fs_step0
+         tax
+         lda #$80      ;mask out pixels that need to be written
+         ora a_vram    ;fetch and ora
+;         sta (dst),y
+         dey           ;take y step
+         txa           ;restore err
+         ldx #$7f
+         sbc dxdy
+         bcs pixel1
+fs_step1
+         tax
+         lda #$c0      ;mask out pixels that need to be written
+         ora a_vram
+;         sta (dst),y
+         dey           ;take y step
+         txa
+         ldx #$3f
+         sbc dxdy
+         bcs pixel2
+        
+
+flat_slope_o	;(dx <= dy)
+        tax         ;init loop
+        sbc dy		;dxy = dx-dy; accu has dx and carry is set already
+		sta dxy
+		
+		lda	dx
+		lsr			; t=dx>>1
+		tay
+		
+ll41	cpy dy		; t<dy ?, no ll42
+		bcs ll42
+		
+		+drawHS     ;x0=drawHS(x0, y0, c, color)
+        
+ll4_c  	inc y0		;y++ or y-- depends on init
+
+		lda #$01
+        sta c		;reset c
+		
+		tya 		;t=t-dy+dx -> t=t+dxy
+		adc dxy
+		tay 
+		
+		dex
+		bne ll41
+		rts	
+ll42	inc c		;c++
+		tya
+		sbc dy		;t=t-dy;
+		tay
+		dex
+		bne ll41
+		
+		+drawHS	;drawHS(x0, y0, c, color)
+		rts
+
+steep_slope ; (dy > dx)
+		lda dy		;dxy = dy-dx;
+		tax         ;init loop
+        sec		    ;set carry, cause it is clear, the branch was not taken
+		sbc dx
+		sta dxy
+		
+		lda dy		
+		lsr		    ; t=dy>>1
+		tay
+        
+ll1 	cpy dx		;t<dx ?
+		bcs ll2		
+		
+        +drawVS	;y0=drawVS(x0, y0, c, s, color);
+		
+		inc	x0		;x0++
+
+		lda #$01
+        sta c		;reset c
+		
+		tya			;t=t+dy-dx -> t=t+dxy
+		adc dxy
+		tay
+		
+		dex
+		bne	ll1
+		rts
+ll2 	inc	c		;
+		tya
+		sbc	dx
+		tay
+ll3 	dex
+		bne	ll1
+        +drawVS	;drawVS(x0, y0, c, s, color);
+        rts
+
+        
+set_pixel_n
+        lda x0
+        ldy	y0
+set_pixel_n0
+        sta x0
+.set_pixel
+        and	#$f8
+        ora	ytablelow,y
+        sta	a_vreg
+        ldx	ytablehigh,y
+        stx	a_vreg
+        ldx ytablehigh_write,y;4cl - burn cycles useful, before v_ram read cause of the vdp timing issue - 2µs
+        nop
+        ldy a_vram		;the v_ram read - 1cl opcode fetch		
+        nop
+        nop
+        nop
+;>=7cl required between last v_ram access and new adress setup
+        sta	a_vreg		;set low byte vdp adress
+        tya				;set bit value
+        stx a_vreg		;set high byte vdp adress
+        ldy	x0			;3cl - burn cycles useful
+        ora	bitmask_tab,y;4cl
+        sta	a_vram		
+        rts
 
 ;
 ; x - x-value
@@ -62,16 +397,3 @@ set_pixel
 
 .bitmask
 	!byte $80,$40,$20,$10,$08,$04,$02,$01
-	
-draw_line
-       
-    jsr set_pixel
-    cpx tmp0
-;    bmi +
-    
-    
-    txa
-    clc
-    sbc tmp0
-    
-	rts
