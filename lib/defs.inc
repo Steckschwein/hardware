@@ -18,6 +18,9 @@ sd_blkptr 	= $fc
 msgptr 		= $fe
 ; zeropage end
 
+; MEMCTL Register
+memctl    			= $0230
+
 ; 
 ; vector addresses
 ;
@@ -38,13 +41,11 @@ fat_dir_filter_hook		= $0294
 
 ; irq vector safe point
 irqsafe				= $0296
-sd_card_status 		= $0298
-; MEMCTL Register
-memctl    			= $0230
+sd_card_status 		= $0298  
 ; SD CArd command parameter/result buffer
-sd_cmd_param 		= $0300
+sd_cmd_param 		= $02a0
 sd_cmd_chksum		= sd_cmd_param+4
-sd_cmd_result 		= $031f
+sd_cmd_result 		= $02a5
 
 ; SD Card error
 ; $ff - No Card
