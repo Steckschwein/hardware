@@ -1,0 +1,32 @@
+* = $1000
+bios = 1
+!src <defs.h.a>
+!src <bios.h.a>
+!src <via.h.a>
+!src <fat32.h.a>
+
+	jsr init_sdcard
+	; check errno. if != 00, sd card init failed.
+	; do not attempt to mount card, jump to upload instead
+	lda errno
+	bne .error
+
+	lda #%01111110
+	sta via1portb
+
+	jsr .fat_mount 
+	lda errno
+	bne .error 
+
+	lda #'X'
+	jsr chrout
+-	jmp -
+
+.error
+
+	lda errno
+	jsr hexout
+-	jmp -
+
+
+!src <fat.a>

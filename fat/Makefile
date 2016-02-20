@@ -6,4 +6,4 @@ clean:
 	acme -v -f plain  --cpu 65c02 -o $@ $<
 
 transfer: all
-	../transfer.py fat.bin 0xc000
+	../transfer.py fat.bin
