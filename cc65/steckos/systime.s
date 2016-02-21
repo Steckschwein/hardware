@@ -27,62 +27,46 @@
     lda #spi_select_rtc
 	sta via1portb
     
-	lda #$00
+	lda #rtc_read
 	jsr bios_spi_rw_byte
 
-	jsr bios_spi_r_byte
-;	sta tmp6
+	jsr bios_spi_r_byte     ;seconds
+    jsr BCD2dec
+	sta TM+tm::tm_sec
 
-	jsr bios_spi_r_byte
-;	sta tmp7
+	jsr bios_spi_r_byte     ;minute
+    jsr BCD2dec
+	sta TM+tm::tm_min
 
-	jsr bios_spi_r_byte
-;	jsr hexout
-;	+PrintChar ':'
+	jsr bios_spi_r_byte     ;hour
+    jsr BCD2dec
+	sta TM+tm::tm_hour
 
-;	lda tmp7
-;	jsr hexout
-;	+PrintChar ':'
+	jsr bios_spi_r_byte     ;week day
+    sta TM+tm::tm_wday
+    
+	jsr bios_spi_r_byte     ;day of month
+    jsr BCD2dec
+    sta TM+tm::tm_mday
 
-;	lda tmp6	
-;	jsr hexout
+	jsr bios_spi_r_byte     ;month
+    dec                     ;dc1306 gives 1-12, but 0-11 expected
+    jsr BCD2dec
+    sta TM+tm::tm_mon
 
-	jsr bios_spi_r_byte
-;	+PrintChar ' '
+	jsr bios_spi_r_byte     ;year value - rtc yeat 2000+year register
+    jsr BCD2dec
+    clc
+    adc #100                ;TM starts from 1900, so add the difference
+    sta TM+tm::tm_year
 
-	jsr bios_spi_r_byte
-;	jsr hexout
-;	+PrintChar '.'
-
-	jsr bios_spi_r_byte
-;	jsr hexout
-;	+PrintChar '.'
-
-	jsr bios_spi_r_byte
-;	jsr hexout
+;	jsr bios_spi_r_byte     
 
     jsr spi_deselect
-
-;        lda     CIA1_TODHR
-    ;    bpl     AM
-   ;     and     #%01111111
-  ;      sed
- ;       clc
-      ;  adc     #$12
-     ;   cld
-;AM:     jsr     BCD2dec
-    ;    sta     TM + tm::tm_hour
- ;       lda     CIA1_TODMIN
-   ;     jsr     BCD2dec
-  ;      sta     TM + tm::tm_min
-  ;      lda     CIA1_TODSEC
- ;       jsr     BCD2dec
-;        sta     TM + tm::tm_sec
-   ;     lda     CIA1_TOD10              ; Dummy read to unfreeze
-        
-        lda     #<TM                    ; pointer to TM struct
-        ldx     #>TM
-        jmp     _mktime
+    
+    lda     #<TM                    ; pointer to TM struct
+    ldx     #>TM
+    jmp     _mktime
 
 ; dec = (((BCD>>4)*10) + (BCD&0xf))
 BCD2dec:tax
@@ -116,11 +100,11 @@ BCD2dec:tax
 ; TM struct with date set to 1970-01-01
 .data
 
-TM:     .word           0       ; tm_sec
-        .word           0       ; tm_min
-        .word           0       ; tm_hour
-        .word           1       ; tm_mday
-        .word           0       ; tm_mon
+TM:     .word           0       ; tm_sec    ;0-59
+        .word           0       ; tm_min    ;0-59
+        .word           0       ; tm_hour   ;1-23
+        .word           1       ; tm_mday   ;1-31
+        .word           0       ; tm_mon    ;0-11 0-jan, 11-dec
         .word           70      ; tm_year
         .word           0       ; tm_wday
         .word           0       ; tm_yday

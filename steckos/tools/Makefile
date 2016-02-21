@@ -30,7 +30,7 @@ date: date.bin
 	../../transfer.py date.bin -s 0x1000
 
 time-test: time-test.bin
-	../../transfer.py date.bin -s 0x1000
+	../../transfer.py time-test.bin -s 0x1000
 	
 %.bin: %.a
 	acme -v -Wtype-mismatch -f plain --cpu 65c02 -o $@ $<
