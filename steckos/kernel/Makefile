@@ -15,7 +15,7 @@ kernel.h.a: kernel.bin
 	acme -Dexperimental=1 -f plain -Wtype-mismatch -l $<.labels --cpu 65c02 -o $@ $<
 	
 transfer: loader.bin
-	../../transfer.py loader.bin 0x1000
+	../../transfer.py loader.bin -s 0x1000
 
 test: test.bin
 	../../transfer.py test.bin 0x1000
