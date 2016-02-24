@@ -1,9 +1,13 @@
 * = $1000
 bios = 1
 !src <defs.h.a>
+!src <macro.h.a>
 !src <bios.h.a>
 !src <via.h.a>
 !src <fat32.h.a>
+
+
+
 
 	jsr init_sdcard
 	; check errno. if != 00, sd card init failed.
@@ -18,8 +22,34 @@ bios = 1
 	lda errno
 	bne .error 
 
-	lda #'X'
+	; lda #'X'
+	; jsr chrout
+
+	lda #$0a
 	jsr chrout
+	lda #$0d
+	jsr chrout
+
+	+SetVector .cluster,ptr1
+
+
+	lda #$0a
+	jsr chrout
+	lda #$0d
+	jsr chrout
+
+	lda #$01
+	sta .blocks
+	jsr .fat_read_cluster_blocks
+
+	ldx #$00
+-	lda sd_blktarget,x 
+	; jsr hexout
+	; lda #' '
+	jsr chrout
+	inx
+	cpx #$09
+	bne -
 -	jmp -
 
 .error
@@ -30,3 +60,6 @@ bios = 1
 
 
 !src <fat.a>
+.cluster 
+	; !byte $01, $02, $03, $04
+	!32 $0000165e

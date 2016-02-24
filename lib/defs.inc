@@ -61,6 +61,7 @@ root_dir_first_clus = $0308 ; first cluster of root dir, 4 bytes
 filename_buf		= $030c ; file name buffer, 11 bytes
 
 fd_area				= $0320 ; File descriptor area, 6x8byte until $0350 
+open_file_cluster	= $0320
 
 xxx					= $0350 ;
 fat_first_block		= $0350
