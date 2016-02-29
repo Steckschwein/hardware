@@ -29,48 +29,6 @@ FD_file_size = $08
 
 .blocks = tmp7
 
-; pointer to cluster no to read in ptr1
-; num blocks in .blocks
-.fat_read_cluster_blocks
-	+save
-
-	ldy #$00
-	
-	lda (ptr1),y 
-	sec
-	sbc #$02
-	sta tmp0 
-
-	rol
--	iny
-	ror
-	lda (ptr1),y 
-	sbc #$00
-	sta tmp0,y
-	rol
-	cpy #$03
-	bne -
-
-	+Copy cluster_begin_lba, lba_addr, 3
-	
-	ldx sectors_per_cluster
--	clc
-	!for .i,0,3 {
-		lda tmp0 + .i
-		adc lba_addr + .i
-		sta lba_addr + .i	
-	}
-	dex
-	bne -
-
-	+SetVector sd_blktarget, sd_blkptr
-
-	jsr sd_read_multiblock
-
-	+restore
-	rts
-
-
 .fat_read
 
 	jsr .calc_lba_addr
