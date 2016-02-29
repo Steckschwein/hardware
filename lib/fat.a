@@ -33,27 +33,29 @@ FD_file_size = $08
 
 	jsr .calc_lba_addr
 
-	ldy #DIR_FileSize + 3
-	lda (sd_blkptr),y
-	lsr
-	ldy #DIR_FileSize + 2
-	lda (sd_blkptr),y
-	ror
-	ldy #DIR_FileSize + 1
-	lda (sd_blkptr),y
-	ror 
+	; ldy #DIR_FileSize + 3
+	; lda (sd_blkptr),y
+	; lsr
+	; ldy #DIR_FileSize + 2
+	; lda (sd_blkptr),y
+	; ror
+	; ldy #DIR_FileSize + 1
+	; lda (sd_blkptr),y
+	; ror 
 
 	; enough for files up to 65535 bytes
 
-
-	lda fd_area + FD_file_size+1,x
-	lsr
-	sta .blocks
-	bcs +
 	lda fd_area + FD_file_size+0,x
-	beq ++
-+	inc .blocks
-++  
+	sta .blocks
+
+; 	lda fd_area + FD_file_size+1,x
+; 	lsr
+; 	sta .blocks
+; 	bcs +
+; 	lda fd_area + FD_file_size+0,x
+; 	beq ++
+; +	inc .blocks
+; ++  
 !ifdef experimental {
 	jsr sd_read_multiblock
 }
@@ -158,12 +160,26 @@ FD_file_size = $08
 	lda root_dir_first_clus +0
 	sta fd_area + FD_start_cluster +0, x
 
-+	!for .i,3,0 {
-		ldy #DIR_FileSize + .i
-		lda (dirptr),y
-		sta fd_area + FD_file_size + .i, x
-	}
++	
+	; !for .i,3,0 {
+	; 	ldy #DIR_FileSize + .i
+	; 	lda (dirptr),y
+	; 	sta fd_area + FD_file_size + .i, x
+	; }
 
+	ldy #DIR_FileSize + 1
+	lda (dirptr),y
+	lsr 
+	sta tmp0
+	bcs +
+	ldy #DIR_FileSize + 0
+	lda (dirptr),y
+
+	beq ++
++	inc tmp0
+++  
+	lda tmp0
+	sta fd_area + FD_file_size+0,x
 
 .end_open
 	ply
