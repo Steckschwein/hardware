@@ -33,29 +33,18 @@ FD_file_size = $08
 
 	jsr .calc_lba_addr
 
-	; ldy #DIR_FileSize + 3
-	; lda (sd_blkptr),y
-	; lsr
-	; ldy #DIR_FileSize + 2
-	; lda (sd_blkptr),y
-	; ror
-	; ldy #DIR_FileSize + 1
-	; lda (sd_blkptr),y
-	; ror 
-
-	; enough for files up to 65535 bytes
-
-	lda fd_area + FD_file_size+0,x
+	lda fd_area + FD_file_size+3,x
+	lsr
+	lda fd_area + FD_file_size+2,x
+	ror
+	lda fd_area + FD_file_size+1,x
+	ror
 	sta .blocks
-
-; 	lda fd_area + FD_file_size+1,x
-; 	lsr
-; 	sta .blocks
-; 	bcs +
-; 	lda fd_area + FD_file_size+0,x
-; 	beq ++
-; +	inc .blocks
-; ++  
+	bcs +
+	lda fd_area + FD_file_size+0,x
+	beq ++
++	inc .blocks
+++  
 !ifdef experimental {
 	jsr sd_read_multiblock
 }
@@ -138,8 +127,15 @@ FD_file_size = $08
 	beq .fat_open_error
 	
 
-++	stz fd_area + FD_start_cluster +3, x
-	stz fd_area + FD_start_cluster +2, x
+++	
+
+	ldy #DIR_FstClusHI +1
+	lda (dirptr),y
+	sta fd_area + FD_start_cluster +3, x
+
+	dey	
+	lda (dirptr),y
+	sta fd_area + FD_start_cluster +2, x
 	
 	ldy #DIR_FstClusLO +1
 	lda (dirptr),y
@@ -150,10 +146,10 @@ FD_file_size = $08
 	sta fd_area + FD_start_cluster +0, x
 
 	; Cluster no = 0? assume its root dir and add 2
-	lda fd_area + FD_start_cluster +1, x
-	bne +
-	lda fd_area + FD_start_cluster +0, x
-	bne +
+	!for .i,3,0 {
+		lda fd_area + FD_start_cluster + .i, x
+		bne +
+	}
 
 	lda root_dir_first_clus +1
 	sta fd_area + FD_start_cluster +1, x
@@ -161,25 +157,11 @@ FD_file_size = $08
 	sta fd_area + FD_start_cluster +0, x
 
 +	
-	; !for .i,3,0 {
-	; 	ldy #DIR_FileSize + .i
-	; 	lda (dirptr),y
-	; 	sta fd_area + FD_file_size + .i, x
-	; }
-
-	ldy #DIR_FileSize + 1
-	lda (dirptr),y
-	lsr 
-	sta tmp0
-	bcs +
-	ldy #DIR_FileSize + 0
-	lda (dirptr),y
-
-	beq ++
-+	inc tmp0
-++  
-	lda tmp0
-	sta fd_area + FD_file_size+0,x
+	!for .i,3,0 {
+		ldy #DIR_FileSize + .i
+		lda (dirptr),y
+		sta fd_area + FD_file_size + .i, x
+	}
 
 .end_open
 	ply
