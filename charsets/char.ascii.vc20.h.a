@@ -255,4 +255,3 @@ charset_vc20:
 !byte $c3,$fb,$fb,$fb,$fb,$fb,$c3,$ff
 !byte $ff,$f7,$e3,$d5,$f7,$f7,$f7,$f7
 !byte $ff,$ff,$ef,$df,$80,$df,$ef,$ff
--n !byte 
