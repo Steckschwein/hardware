@@ -368,11 +368,18 @@ mainloop
 
 .dir_show_entry
 	pha
+	lda (dirptr)
+	cmp #$e5
+	bne +
+	pla
+	rts
++
 	jsr .print_filename
 	+PrintChar ' '
 
 	ldy #DIR_Attr
 	lda (dirptr),y
+
 
 	ror
 	ror
@@ -404,6 +411,20 @@ mainloop
 	bne -	
 
 	+PrintChar ' '
+
+	; ldy #DIR_FstClusHI+1
+	; lda (dirptr),y
+	; jsr hexout
+	; ldy #DIR_FstClusHI+0
+	; lda (dirptr),y
+	; jsr hexout
+
+	; ldy #DIR_FstClusLO+1
+	; lda (dirptr),y
+	; jsr hexout
+	; ldy #DIR_FstClusLO+0
+	; lda (dirptr),y
+	; jsr hexout
 
 	; day
 	ldy #DIR_WrtDate 
@@ -471,7 +492,7 @@ mainloop
 	; Bits 11–15: Hours, valid value range 0–23 inclusive.
 	
 	+ShellPrintString .crlf
-	pla
++++	pla
 	rts	
 
 .print_filename
@@ -529,15 +550,28 @@ mainloop
 .filename !text "            ",$00
 
 .ls
-	+SetVector .dir_show_entry_short, fat_dir_display_hook
 	lda #num_ls_entries
 	sta entries
 	bra +
 .dir
-	+SetVector .dir_show_entry, fat_dir_display_hook
 +	+ShellPrintString .crlf
+	+SetVector .pattern, filenameptr
 
-	jsr read_dir
+	lda (paramptr)
+	beq +
+	+copyPointer paramptr, filenameptr
++
+
+	jsr find_first
+	bcc +
+	bra ++
+	; jsr .dir_show_entry
+-
+	jsr find_next
+	bcc +
+++	jsr .dir_show_entry
+	bra -
++
 	jmp mainloop
 
 
@@ -789,6 +823,7 @@ init_textui:
 	jsr	textui_enable
 	rts
 
+.pattern	!text "*.*",$00
 ; .return
 ; 	jsr init_textui
 ; 	jmp mainloop
