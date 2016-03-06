@@ -607,7 +607,7 @@ FD_file_size = $08
 	beq ++
 	inx
 	cmp #"."
-	bne -
+	bra -
 
 	bra .match
 
@@ -619,8 +619,13 @@ FD_file_size = $08
 	lda filename_buf,x
 	beq ++
 	
+	; a dot is ok if it
 	cmp #'.'
+	bne +
+	cpx #$03 
+	bcc +
 	beq ++
++
 	
 	cmp #'*'
 	beq ++
@@ -630,7 +635,10 @@ FD_file_size = $08
 	cmp #'_'
 	beq +
 
+	cmp #$61
+	bcc ++++
 	and #!$20     ; make uppercase
+++++	
 	cmp (dirptr),y 
 	bne +++
 
