@@ -53,6 +53,10 @@ BUF_SIZE	= 32
 	+SetVector mainloop, retvec
 	+SetVector .buf, .bufptr
 
+	; set attrib mask. hide volume label and hidden files
+	lda #$0a
+	sta dir_attrib_mask
+
 	jmp	.hello
 
 mainloop
@@ -368,12 +372,6 @@ mainloop
 
 .dir_show_entry
 	pha
-	lda (dirptr)
-	cmp #$e5
-	bne +
-	pla
-	rts
-+
 	jsr .print_filename
 	+PrintChar ' '
 
@@ -563,13 +561,25 @@ mainloop
 +
 
 	jsr find_first
-	bcc +
-	bra ++
+	bcs ++
+	bra +
 	; jsr .dir_show_entry
 -
 	jsr find_next
 	bcc +
-++	jsr .dir_show_entry
+++	
+	lda (dirptr)
+	cmp #$e5
+	beq -
+
+	ldy #DIR_Attr
+	lda (dirptr),y
+
+	bit dir_attrib_mask ; Hidden attribute set, skip
+	bne -
+
+
+	jsr .dir_show_entry
 	bra -
 +
 	jmp mainloop
@@ -823,7 +833,7 @@ init_textui:
 	jsr	textui_enable
 	rts
 
-.pattern	!text "*.*",$00
+.pattern	!text "*.bin",$00
 ; .return
 ; 	jsr init_textui
 ; 	jmp mainloop

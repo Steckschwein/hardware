@@ -54,12 +54,12 @@ sd_cmd_result 		= $02a5
 
 errno	 			= $0300
 lba_addr = $20
-; fat_reserved_sect 	= $0301 ; number of reserved sectors, 2 bytes
+current_dir_first_clus 	= $0301 ; first cluster of current dir
 cluster_begin_lba 	= $0303 ; begin of cluster area, 4 bytes
 sectors_per_cluster = $0307 ; sectors per cluster, 1 byte
 root_dir_first_clus = $0308 ; first cluster of root dir, 4 bytes
 filename_buf		= $030c ; file name buffer, 11 bytes
-
+dir_attrib_mask		= $0319 ;
 fd_area				= $0320 ; File descriptor area, 6x8byte until $0350 
 open_file_cluster	= $0320
 
