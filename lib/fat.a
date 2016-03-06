@@ -96,7 +96,8 @@ FD_file_size = $08
 
 	jsr .fat_find_first
 	bcs .fat_open_found
-	
+
+
 .fat_no_such_file
 	lda #fat_file_not_found
 	sta errno
@@ -497,63 +498,67 @@ FD_file_size = $08
 	sta fd_area + FD_start_cluster +3 , x
 	rts
 
-.convert_filename	
-	ldx #$00
-	ldy #$00
--	lda (filenameptr),y
-	beq +
-	cmp #'.' ; is it a dot
-	bne ++   ; not a dot
-	cpy #$02 ; is it at pos 0 or 1?
-	bcc ++	 ; a dot at pos 0 or 1 is not the dot we are looking for
+; .convert_filename	
+; 	ldx #$00
+; 	ldy #$00
+; -	lda (filenameptr),y
+; 	beq +
+; 	cmp #'.' ; is it a dot
+; 	bne ++   ; not a dot
+; 	cpy #$02 ; is it at pos 0 or 1?
+; 	bcc ++	 ; a dot at pos 0 or 1 is not the dot we are looking for
 	
-	; the dot we are looking for denotes the end of the filename and the begin of the filename extension
-	; fill buffer with spaces until position $08 to continue writing to buffer at that pos.
-	; then, read next char from input
+; 	; the dot we are looking for denotes the end of the filename and the begin of the filename extension
+; 	; fill buffer with spaces until position $08 to continue writing to buffer at that pos.
+; 	; then, read next char from input
 
-	lda #' '
---	cpx #$08
-	bcc .fill
+; 	lda #' '
+; --	cpx #$08
+; 	bcc .fill
 
-	iny
-	bne - ; replace with bra
+; 	iny
+; 	bne - ; replace with bra
 
-++	
-	+toUpper
-	sta filename_buf,x
-	inx
-	iny
-	bne - ; replace with bra
-+	
-	; are we at the end of the buffer? 
-	; fill with spaces if not
-	lda #' '
-	cpx #$0b
-	bcc .fill2
-	rts
-.fill
-	sta filename_buf,x
-	inx
-	bne -- ; replace with bra
+; ++	
+; 	+toUpper
+; 	sta filename_buf,x
+; 	inx
+; 	iny
+; 	bne - ; replace with bra
+; +	
+; 	; are we at the end of the buffer? 
+; 	; fill with spaces if not
+; 	lda #' '
+; 	cpx #$0b
+; 	bcc .fill2
+; 	rts
+; .fill
+; 	sta filename_buf,x
+; 	inx
+; 	bne -- ; replace with bra
 	
-.fill2
--	sta filename_buf,x
-  	inx
-  	cpx #$0b
-  	bne -
-	rts
+; .fill2
+; -	sta filename_buf,x
+;   	inx
+;   	cpx #$0b
+;   	bne -
+; 	rts
 
 
 .fat_find_first
 
 	ldy #$00
 -	lda (filenameptr),y
-	sta filename_buf,y
 	beq +
+	sta filename_buf,y
+	
 	iny
 	cpy #12
 	bne -	
-+
++	lda #$00
+	sta filename_buf,y
+
+
 
 	+SetVector sd_blktarget, sd_blkptr
 	ldx #$00
@@ -608,24 +613,30 @@ FD_file_size = $08
 	inx
 	cmp #"."
 	bra -
-
+++
 	bra .match
 
 .match_name:
 	ldy #DIR_Name
 	ldx #$00
 .match
+
+; 	ldx #$00
+; -	lda filename_buf,x
+; 	beq +
+; 	jsr chrout
+; 	inx
+; 	cpx #12
+; 	bne -
+; +
+; -	jmp -
+
 -	
 	lda filename_buf,x
 	beq ++
 	
-	; a dot is ok if it
 	cmp #'.'
-	bne +
-	cpx #$03 
-	bcc +
 	beq ++
-+
 	
 	cmp #'*'
 	beq ++
@@ -635,10 +646,9 @@ FD_file_size = $08
 	cmp #'_'
 	beq +
 
-	cmp #$61
-	bcc ++++
-	and #!$20     ; make uppercase
-++++	
+	+toUpper
+	; and #!$20     ; make uppercase
+
 	cmp (dirptr),y 
 	bne +++
 
