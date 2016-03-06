@@ -580,6 +580,10 @@ mainloop
 
 
 	jsr .dir_show_entry
+
+	jsr getkey
+	cmp #$03 ; CTRL-C?
+	beq +
 	bra -
 +
 	jmp mainloop
