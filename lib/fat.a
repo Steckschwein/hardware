@@ -180,37 +180,6 @@ FD_file_size = $08
 	inc sd_blkptr+1	
 +	rts
 
-; .fat_dir_filter
-; 	jmp (fat_dir_filter_hook)
-
-; .fat_dir_display
-; 	jmp (fat_dir_display_hook)
-
-; .fat_dir_action
-; 	jmp (fat_dir_action_hook)
-; default filter hook, skips long filenames and hidden files
-; carry flag is set on match
-; .fat_dir_filter_default
-; 	cmp #$0f ; Long filename, skip this one
-; 	beq +
-; 	bit #$02 ; Hidden attribute set, skip
-; 	bne +
-; 	clc
-; 	rts
-; +	sec
-; 	rts
-; ; filter for open routine, skips long filenames and volume id
-; .fat_dir_filter_open
-; 	cmp #$0f ; Long filename, skip this one
-; 	beq +
-; 	bit #$08 ; is volume id, we cant open this. skip, too
-; 	bne +
-; 	clc
-; 	rts
-; +	sec
-; 	rts
-
-
 .fat_check_signature
 	lda #$55
 	cmp sd_blktarget + BS_Signature
@@ -498,52 +467,6 @@ FD_file_size = $08
 	sta fd_area + FD_start_cluster +3 , x
 	rts
 
-; .convert_filename	
-; 	ldx #$00
-; 	ldy #$00
-; -	lda (filenameptr),y
-; 	beq +
-; 	cmp #'.' ; is it a dot
-; 	bne ++   ; not a dot
-; 	cpy #$02 ; is it at pos 0 or 1?
-; 	bcc ++	 ; a dot at pos 0 or 1 is not the dot we are looking for
-	
-; 	; the dot we are looking for denotes the end of the filename and the begin of the filename extension
-; 	; fill buffer with spaces until position $08 to continue writing to buffer at that pos.
-; 	; then, read next char from input
-
-; 	lda #' '
-; --	cpx #$08
-; 	bcc .fill
-
-; 	iny
-; 	bne - ; replace with bra
-
-; ++	
-; 	+toUpper
-; 	sta filename_buf,x
-; 	inx
-; 	iny
-; 	bne - ; replace with bra
-; +	
-; 	; are we at the end of the buffer? 
-; 	; fill with spaces if not
-; 	lda #' '
-; 	cpx #$0b
-; 	bcc .fill2
-; 	rts
-; .fill
-; 	sta filename_buf,x
-; 	inx
-; 	bne -- ; replace with bra
-	
-; .fill2
-; -	sta filename_buf,x
-;   	inx
-;   	cpx #$0b
-;   	bne -
-; 	rts
-
 
 .fat_find_first
 
@@ -557,8 +480,6 @@ FD_file_size = $08
 	bne -	
 +	lda #$00
 	sta filename_buf,y
-
-
 
 	+SetVector sd_blktarget, sd_blkptr
 	ldx #$00
@@ -581,7 +502,7 @@ FD_file_size = $08
 
 	jsr .match_ext
 	bcc .fat_find_next
-
+	
 	jsr .match_name
 	bcs +
 
@@ -607,14 +528,15 @@ FD_file_size = $08
 .match_ext:
 
 	ldy #DIR_Ext
-	ldx #$00
+	ldx #$ff
 -	lda filename_buf,x
-	beq ++
+	beq .match
 	inx
 	cmp #"."
-	bra -
-++
+	bne -
+
 	bra .match
+
 
 .match_name:
 	ldy #DIR_Name
@@ -643,11 +565,8 @@ FD_file_size = $08
 
 	cmp #'?'
 	beq +
-	cmp #'_'
-	beq +
 
 	+toUpper
-	; and #!$20     ; make uppercase
 
 	cmp (dirptr),y 
 	bne +++
@@ -661,75 +580,3 @@ FD_file_size = $08
 
 +++	clc
 	rts 
-
-
-; .fat_dir_scan
-; 	; +save
-
-; 	+SetVector sd_blktarget, sd_blkptr
-; 	ldx #$00
-; 	jsr .calc_lba_addr
-
-	
-; -	+SetVector sd_blktarget, dirptr	
-; 	jsr sd_read_block
-; 	dec sd_blkptr+1
-
-; --	
-; !ifndef bios {
-; 	jsr .getkey
-; 	cmp #$03 ; CTRL-C?
-; 	beq +
-; }
-
-; 	lda #DIR_Name
-; 	lda (dirptr)
-; 	beq +
-
-; 	cmp #$e5
-; 	beq ++
-
-; 	ldy #DIR_Attr
-; 	lda (dirptr),y
-
-; 	cmp #$0f 		; Long filename?
-; 	beq ++			; skip
-
-; 	ror 			; skip read only bit
-
-; 	ror 			; Hidden attribute set?
-; 	bcs ++			; skip
-
-; 	ror 			; system attribute set?
-; 	bcs ++			; skip
-
-; 	ror 			; volume id?
-; 	bcs ++			; skip
-
-
-; 	jsr .fat_dir_action
-; 	bcs +
-; ++	
-; ---	
-; 	lda dirptr
-; 	clc
-; 	adc #$20
-; 	sta dirptr
-; 	bcc ++
-; 	inc dirptr+1
-; ++	
-
-; 	lda dirptr+1 	; end of block?
-; 	cmp #$06
-; 	bcc --			; no, show entr
-
-
-
-
-
-; 	; increment lba address to read next block 
-; 	jsr .inc_lba_address	
-; 	bra -
-; +	
-; 	; +restore
-; 	rts
