@@ -32,83 +32,83 @@ FD_file_size = $08
 .fat_read
 
 	jsr .calc_lba_addr
+	jsr .calc_blocks
 
-	lda fd_area + FD_file_size+3,x
-	lsr
-	lda fd_area + FD_file_size+2,x
-	ror
-	lda fd_area + FD_file_size+1,x
-	ror
-	sta .blocks
-	bcs +
-	lda fd_area + FD_file_size+0,x
-	beq ++
-+	inc .blocks
-++  
+
 !ifdef experimental {
 	jsr sd_read_multiblock
 }
 !ifndef experimental {
+
 -	jsr sd_read_block
 
 	inc sd_blkptr+1 ; 3 bytes, 6 cycles
-	; inc sd_blkptr+1 ; 3 bytes, 6 cycles
 
 	jsr .inc_lba_address
+	
 	dec .blocks
 	bne -
+
 }
+	
 	rts
 
-.fat_dir_find_entry
-	ldy #DIR_Name
--
-	lda (dirptr),y
-	cmp filename_buf,y
-	bne +
-	iny
-	cpy #$0b 
-	bne -
+; .fat_dir_find_entry
+; 	ldy #DIR_Name
+; -
+; 	lda (dirptr),y
+; 	cmp filename_buf,y
+; 	bne +
+; 	iny
+; 	cpy #$0b 
+; 	bne -
 
-	; bra .fat_open_found
-	sec
-	rts
-+	clc
-	rts
+; 	; bra .fat_open_found
+; 	sec
+; 	rts
+; +	clc
+; 	rts
 
 
 .fat_open
 	pha
 	phy
 
+
+
 	stz errno
 
-	+SetVector .fat_dir_filter_open, 	fat_dir_filter_hook
+	; +SetVector .fat_dir_filter_open, 	fat_dir_filter_hook
+
 
 	ldx #$00
 	jsr .calc_lba_addr
 
 
-	jsr .convert_filename
+	; jsr .convert_filename
 
-	+SetVector .fat_dir_find_entry, fat_dir_action_hook
+	; +SetVector .fat_dir_find_entry, fat_dir_action_hook
 
-	jsr .fat_dir_scan
+	; jsr .fat_dir_scan
+
+
+
+
+	jsr .fat_find_first
 	bcs .fat_open_found
 	
 .fat_no_such_file
 	lda #fat_file_not_found
 	sta errno
-	bra .end_open
+	jmp .end_open
 
 .fat_open_error
 	lda #fat_open_error
 	sta errno
-	bra .end_open
+	jmp .end_open
 
 ; found
 .fat_open_found
-
 	ldy #DIR_Attr
 	lda (dirptr),y
 	bit #$10 ; Is a directory
@@ -179,35 +179,35 @@ FD_file_size = $08
 	inc sd_blkptr+1	
 +	rts
 
-.fat_dir_filter
-	jmp (fat_dir_filter_hook)
+; .fat_dir_filter
+; 	jmp (fat_dir_filter_hook)
 
-.fat_dir_display
-	jmp (fat_dir_display_hook)
+; .fat_dir_display
+; 	jmp (fat_dir_display_hook)
 
-.fat_dir_action
-	jmp (fat_dir_action_hook)
+; .fat_dir_action
+; 	jmp (fat_dir_action_hook)
 ; default filter hook, skips long filenames and hidden files
 ; carry flag is set on match
-.fat_dir_filter_default
-	cmp #$0f ; Long filename, skip this one
-	beq +
-	bit #$02 ; Hidden attribute set, skip
-	bne +
-	clc
-	rts
-+	sec
-	rts
-; filter for open routine, skips long filenames and volume id
-.fat_dir_filter_open
-	cmp #$0f ; Long filename, skip this one
-	beq +
-	bit #$08 ; is volume id, we cant open this. skip, too
-	bne +
-	clc
-	rts
-+	sec
-	rts
+; .fat_dir_filter_default
+; 	cmp #$0f ; Long filename, skip this one
+; 	beq +
+; 	bit #$02 ; Hidden attribute set, skip
+; 	bne +
+; 	clc
+; 	rts
+; +	sec
+; 	rts
+; ; filter for open routine, skips long filenames and volume id
+; .fat_dir_filter_open
+; 	cmp #$0f ; Long filename, skip this one
+; 	beq +
+; 	bit #$08 ; is volume id, we cant open this. skip, too
+; 	bne +
+; 	clc
+; 	rts
+; +	sec
+; 	rts
 
 
 .fat_check_signature
@@ -221,6 +221,22 @@ FD_file_size = $08
 	sta errno
 +	rts
 
+
+.calc_blocks
+	pha
+	lda fd_area + FD_file_size+3,x
+	lsr
+	lda fd_area + FD_file_size+2,x
+	ror
+	lda fd_area + FD_file_size+1,x
+	ror
+	sta .blocks
+	bcs +
+	lda fd_area + FD_file_size+0,x
+	beq ++
++	inc .blocks
+++  pla
+	rts
 
 
 ; calculate LBA address of first block from cluster number found in file descriptor entry
@@ -528,54 +544,43 @@ FD_file_size = $08
 	rts
 
 
-.fat_dir_scan
-	; +save
+.fat_find_first
+
+	ldy #$00
+-	lda (filenameptr),y
+	sta filename_buf,y
+	beq +
+	iny
+	cpy #12
+	bne -	
++
 
 	+SetVector sd_blktarget, sd_blkptr
 	ldx #$00
 	jsr .calc_lba_addr
-
 	
 -	+SetVector sd_blktarget, dirptr	
 	jsr sd_read_block
 	dec sd_blkptr+1
 
 --	
-!ifndef bios {
-	jsr .getkey
-	cmp #$03 ; CTRL-C?
-	beq +
-}
-
-	lda #DIR_Name
 	lda (dirptr)
-	beq +
+	bne +
+	clc 				; first byte of dir entry is $00?
+	rts   				; we are at the end, clear carry and return
++	
+	ldy #DIR_Attr		; else check if long filename entry
+	lda (dirptr),y 		; we are only going to filter those here (or maybe not?)
+	cmp #$0f
+	beq .fat_find_next
 
-	cmp #$e5
-	beq ++
+	jsr .match_ext
+	bcc .fat_find_next
 
-	ldy #DIR_Attr
-	lda (dirptr),y
-
-	cmp #$0f 		; Long filename?
-	beq ++			; skip
-
-	ror 			; skip read only bit
-
-	ror 			; Hidden attribute set?
-	bcs ++			; skip
-
-	ror 			; system attribute set?
-	bcs ++			; skip
-
-	ror 			; volume id?
-	bcs ++			; skip
-
-
-	jsr .fat_dir_action
+	jsr .match_name
 	bcs +
-++	
----	
+
+.fat_find_next
 	lda dirptr
 	clc
 	adc #$20
@@ -587,14 +592,126 @@ FD_file_size = $08
 	lda dirptr+1 	; end of block?
 	cmp #$06
 	bcc --			; no, show entr
-
-
-
-
-
 	; increment lba address to read next block 
 	jsr .inc_lba_address	
 	bra -
+
 +	
-	; +restore
 	rts
+
+.match_ext:
+
+	ldy #DIR_Ext
+	ldx #$00
+-	lda filename_buf,x
+	beq ++
+	inx
+	cmp #"."
+	bne -
+
+	bra .match
+
+.match_name:
+	ldy #DIR_Name
+	ldx #$00
+.match
+-	
+	lda filename_buf,x
+	beq ++
+	
+	cmp #'.'
+	beq ++
+	
+	cmp #'*'
+	beq ++
+
+	cmp #'?'
+	beq +
+	cmp #'_'
+	beq +
+
+	and #!$20     ; make uppercase
+	cmp (dirptr),y 
+	bne +++
+
++	iny
+	inx 
+	bra -
+
+++	sec
+	rts
+
++++	clc
+	rts 
+
+
+; .fat_dir_scan
+; 	; +save
+
+; 	+SetVector sd_blktarget, sd_blkptr
+; 	ldx #$00
+; 	jsr .calc_lba_addr
+
+	
+; -	+SetVector sd_blktarget, dirptr	
+; 	jsr sd_read_block
+; 	dec sd_blkptr+1
+
+; --	
+; !ifndef bios {
+; 	jsr .getkey
+; 	cmp #$03 ; CTRL-C?
+; 	beq +
+; }
+
+; 	lda #DIR_Name
+; 	lda (dirptr)
+; 	beq +
+
+; 	cmp #$e5
+; 	beq ++
+
+; 	ldy #DIR_Attr
+; 	lda (dirptr),y
+
+; 	cmp #$0f 		; Long filename?
+; 	beq ++			; skip
+
+; 	ror 			; skip read only bit
+
+; 	ror 			; Hidden attribute set?
+; 	bcs ++			; skip
+
+; 	ror 			; system attribute set?
+; 	bcs ++			; skip
+
+; 	ror 			; volume id?
+; 	bcs ++			; skip
+
+
+; 	jsr .fat_dir_action
+; 	bcs +
+; ++	
+; ---	
+; 	lda dirptr
+; 	clc
+; 	adc #$20
+; 	sta dirptr
+; 	bcc ++
+; 	inc dirptr+1
+; ++	
+
+; 	lda dirptr+1 	; end of block?
+; 	cmp #$06
+; 	bcc --			; no, show entr
+
+
+
+
+
+; 	; increment lba address to read next block 
+; 	jsr .inc_lba_address	
+; 	bra -
+; +	
+; 	; +restore
+; 	rts
