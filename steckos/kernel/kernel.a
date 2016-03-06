@@ -245,7 +245,7 @@ kern_init
 .kbd_div					!byte $00
 
 ; strings
-.kernel_version 			!text "SteckOS Kernel 0.2b",$0d,$0a,$00
+.kernel_version 			!text "SteckOS Kernel 0.3",$0d,$0a,$00
 .crlf						!byte $0a,$0d,$00
 .txt_msg_loading 			!text "Loading ",$00
 .serial_upload				!text "Serial Upload ",$00
@@ -255,11 +255,11 @@ kern_init
 krn_keyin			jmp .keyin
 krn_mount 			jmp .fat_mount 
 krn_open 			jmp .fat_open
-krn_read_dir		jmp .fat_dir_scan
 krn_close 			jmp .fat_close
 krn_read 			jmp .fat_read 
 krn_open_rootdir 	jmp .fat_open_rootdir
-
+krn_find_first		jmp .fat_find_first
+krn_find_next		jmp .fat_find_next
 krn_textui_init 		jmp	.textui_init
 krn_textui_enable		jmp	.textui_enable
 krn_textui_disable		jmp .textui_disable			;disable textui
