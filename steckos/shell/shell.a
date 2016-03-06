@@ -833,7 +833,7 @@ init_textui:
 	jsr	textui_enable
 	rts
 
-.pattern	!text "*.bin",$00
+.pattern	!text "*.*",$00
 ; .return
 ; 	jsr init_textui
 ; 	jmp mainloop
