@@ -19,7 +19,7 @@
 *= $e000			; ROM Start
 charset_8x8
 ;!src "../charsets/char.ascii.vc20.h.a"
-!src "../charsets/8x8.h.a"
+!src "../charsets/ati_8x8.h.a"
 biosversion	!text "BIOS    : V160309", $00	; Version String
 *=$f050
 .upload
