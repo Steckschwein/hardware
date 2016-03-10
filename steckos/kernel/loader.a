@@ -61,8 +61,7 @@ b2	sta .bios
 	sta   	a_vreg
 	
 
-	; copy rom charset to vdp ram 
-	; left shift every character to make it fit into the vdp's 6x8 text mode 
+	; copy 6x8 charset to vdp ram 
 	+SetVector	.charset, adrl	;load charset
 	lda	#<ADDRESS_GFX1_PATTERN
 	
@@ -73,8 +72,9 @@ b2	sta .bios
 	
 	ldy   #$00
 -  	lda   (adrl),y
-	; asl
+
 	+vnops
+
 	iny
 	sta   a_vram
 	bne   -
@@ -101,7 +101,8 @@ b2	sta .bios
 
 !align 255,0
 .charset
-!src "../../charsets/char.ascii.vc20.6x8.h.a"
+;!src "../../charsets/char.ascii.vc20.6x8.h.a"
+!src "../../charsets/ati_smallw_6x8.h.a"
 .charset_end
 
 ; !src "../lib/t99xx.lib.a"
