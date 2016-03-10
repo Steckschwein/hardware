@@ -60,7 +60,7 @@
 !ifdef text_mode_40 {
 .charset=charset_6x8	; loaded after shell code, see shell.a
 .COLS=40
-.CURSOR_CHAR=160	
+.CURSOR_CHAR=$db
 	stz	   tmp1
 	lda    crs_y
     asl
@@ -86,7 +86,7 @@
 !ifndef text_mode_40 {
 .charset=charset	; the one from ROM
 .COLS=32
-.CURSOR_CHAR=160
+.CURSOR_CHAR=$db
 	lda	crs_y
 	asl	
 	asl
