@@ -1,0 +1,107 @@
+;The MIT License
+;
+;Copyright (c) 2013 Johan Kotlinski
+;
+;Permission is hereby granted, free of charge, to any person obtaining a copy
+;of this software and associated documentation files (the "Software"), to deal
+;in the Software without restriction, including without limitation the rights
+;to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+;copies of the Software, and to permit persons to whom the Software is
+;furnished to do so, subject to the following conditions:
+;
+;The above copyright notice and this permission notice shall be included in
+;all copies or substantial portions of the Software.
+;
+;THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+;IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+;FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+;AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+;LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+;OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+;THE SOFTWARE.
+
+; Methods for number parsing
+
+    +BACKLINK
+    !byte 4
+    !text "base"
+BASE
+_BASE = * + 1
+    +VALUE	16
+
+; Z = success, NZ = fail
+; success: ( string ptr -- number )
+; fail: ( string ptr -- string ptr )
+READ_NUMBER
+    lda MSB, x
+    sta TMP3 + 1
+    lda LSB, x
+    sta TMP3
+    ; TMP3 now points to string length
+    ; followed by string. (Using TMP3
+    ; because DMUL trashes TMP, TMP2)
+
+    dex
+    dex
+
+    ldy #0
+    sty LSB,x ; build number at top of stack
+    sty MSB,x
+    sty MSB+1,x
+    lda (TMP3), y
+    sta .chars_to_process
+    jmp .read_digit
+
+.next_digit
+    ; number *= _BASE
+    lda _BASE
+    sta LSB+1,x
+    jsr DMUL
+    lda LSB+1,x
+    bne .parse_failed ; overflow!
+
+.read_digit
+    ; add *(++TMP3)
+    inc TMP3
+    bne +
+    inc TMP3+1
++   lda (TMP3), y
+    clc
+    adc #-$30 ; petscii 0-9 -> 0-9
+
+    cmp	#10 ; within 0-9?
+    bcc	+
+
+    clc
+    adc	#-$7 ; a-f..?
+
+    cmp	#10
+    bcc	.parse_failed
+
++   cmp _BASE
+    bcs .parse_failed
+
+    adc LSB,x
+    sta LSB,x
+    bcc +
+    inc MSB,x
+    beq .parse_failed
++   dec .chars_to_process
+    bne .next_digit
+
+    lda LSB,x
+    sta LSB+2,x
+    lda MSB,x
+    sta MSB+2,x
+    inx
+    inx
+    tya ; clear Z flag
+    rts
+
+.parse_failed
+    inx
+    inx ; Z flag set
+    rts
+
+.chars_to_process
+    !byte 0
