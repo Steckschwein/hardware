@@ -473,6 +473,7 @@ FD_file_size = $08
 	ldy #$00
 -	lda (filenameptr),y
 	beq +
+	+toUpper
 	sta filename_buf,y
 	
 	iny
@@ -543,6 +544,8 @@ FD_file_size = $08
 	ldx #$00
 .match
 
+; 	phx 
+
 ; 	ldx #$00
 ; -	lda filename_buf,x
 ; 	beq +
@@ -550,7 +553,9 @@ FD_file_size = $08
 ; 	inx
 ; 	cpx #12
 ; 	bne -
-; +
+; +	
+; 	plx
+
 ; -	jmp -
 
 -	
@@ -566,8 +571,8 @@ FD_file_size = $08
 	cmp #'?'
 	beq +
 
-	+toUpper
-
+	; +toUpper
++++
 	cmp (dirptr),y 
 	bne +++
 

@@ -6,8 +6,10 @@ bios = 1
 !src <via.h.a>
 !src <fat32.h.a>
 
-
-
+!address {
+STR             = $f6
+; buf				= $2000
+}
 
 	jsr init_sdcard
 	; check errno. if != 00, sd card init failed.
@@ -22,44 +24,81 @@ bios = 1
 	lda errno
 	bne .error 
 
-	; lda #'X'
-	; jsr chrout
 
-	lda #$0a
+; 	+SetVector filename, filenameptr
+; 	jsr .fat_open
+; 	lda errno
+; 	bne .error 
+
+; 	+SetVector sd_blktarget, sd_blkptr
+; 	jsr .fat_read
+; 	lda errno
+; 	bne .error 
+
+; 	ldx #$00
+; -	lda sd_blktarget,x 
+; 	jsr chrout
+; 	inx
+; 	cpx #$0f
+; 	bne -
+
+; 	lda #'X'
+; 	jsr chrout
+
+
+; -	jmp -
+	
+	+SetVector filename, filenameptr
+
+	jsr .crlf
+	jsr .fat_find_first
+	bcc +
+	jsr .print_entry_name
+
+-
+	jsr .crlf
+	jsr .fat_find_next
+	bcc +
+	jsr .print_entry_name
+	bra -
++
+	jsr .crlf	
+	lda #'X'
 	jsr chrout
-	lda #$0d
-	jsr chrout
 
-	+SetVector .cluster,ptr1
-
-
-	lda #$0a
-	jsr chrout
-	lda #$0d
-	jsr chrout
-
-	lda #$01
-	sta .blocks
-	jsr .fat_read_cluster_blocks
-
-	ldx #$00
--	lda sd_blktarget,x 
-	; jsr hexout
-	; lda #' '
-	jsr chrout
-	inx
-	cpx #$09
-	bne -
 -	jmp -
 
 .error
-
-	lda errno
 	jsr hexout
 -	jmp -
 
+.print_entry_name
+
+	ldy #DIR_Name
+---	lda (dirptr),y
+	jsr chrout
+	iny
+	cpy #$0b
+	bne ---
+
+	rts
+
+
+
+
+
+
+
+
+.crlf
+	lda #$0a
+	jsr chrout
+	lda #$0d
+	jsr chrout
+	rts
+
 
 !src <fat.a>
-.cluster 
-	; !byte $01, $02, $03, $04
-	!32 $0000165e
+
+filename !text "t.bin",$00
+

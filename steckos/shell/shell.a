@@ -200,12 +200,13 @@ mainloop
 	beq .cmdfound
 
 	; command string in buffer is terminated with $20 if there are cmd line arguments
+	
++	
 	cmp #$20
 	bne +
 	; beq .cmdfound
 	cmp .cmdlist,x
 	bne .cmdfound
-
 +
 	; make lowercase
 	ora #$20
