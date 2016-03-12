@@ -194,12 +194,19 @@ mainloop
 
 	; if not, there is a terminating null
 	; cmp #$00
+	bne +
+
+	cmp .cmdlist,x
 	beq .cmdfound
 
 	; command string in buffer is terminated with $20 if there are cmd line arguments
 	cmp #$20
-	beq .cmdfound
+	bne +
+	; beq .cmdfound
+	cmp .cmdlist,x
+	bne .cmdfound
 
++
 	; make lowercase
 	ora #$20
 
@@ -226,7 +233,8 @@ mainloop
 	bra -
 
 .cmdfound
-
+	
+	+debug 'X'
 	inx
 
 	jmp (.cmdlist,x) ; 65c02 FTW!!	
