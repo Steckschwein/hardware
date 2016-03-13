@@ -15,33 +15,51 @@ main
     
     lda #%11000000
 	sta via1ier             ; enable VIA1 T1 interrupts
+    
+    lda #03
+    sta tmp1
+    
     cli
--   bra -
+-   
+    bra -
 
 .raster_irq
     pha
     
     bit a_vreg
     bpl +
-    jsr .via_timer_blank
-    lda #60
-    sta tmp0        ;30 raster lines
+    jsr .via_timer_blank    ;bottom border, start first via timeout until start of active display area
+    lda #00                 ;32 bars
+    sta tmp0        
     lda #Gray
     bra +++
     
 +	bit via1ifr		; Interrupt from VIA?
 	bpl ++
 	bit via1t1cl	; Acknowledge timer interrupt
-    dec tmp0
+    lda tmp1
     beq ++
-    lda #<(32*1000 / 250)
+
+rmWaitTweak=11
+rmWait=rmWaitTweak+(47*1000/250)
+    lda #<rmWait   ; 63,695µs per line -> 63000
 	sta via1t1cl            ; set low byte of count
-	lda #>(32*1000 / 250)
+	lda #>rmWait
 	sta via1t1ch            ; set high byte of count
-    lda tmp0
+    ldx tmp0
+    lda .raster_bar_colors,x
+    inx
+    cpx #12
+    bne +
+    dec tmp1
+    ldx #0
++   stx tmp0
     bra +++
     
-++   lda #Light_Blue
+++ 
+    lda #07
+    sta tmp1  
+    lda #Light_Blue
 +++
     jsr vdp_bgcolor
     
@@ -51,11 +69,27 @@ main
     pla
     rti
     
+tweak=80
+
 .via_timer_blank
-    ; 4300µs --> 4Mhz/250ns --> 4.300.000ns / 250ns =  17200
-    blank_counter=2*(4300 * 1000) / 250
+    ; 4300µs --> 4Mhz/250ns --> 4.300.000ns / 250ns =  17200cl
+    blank_counter=tweak+(2*4300 * 1000) / 250 ;250ns/4Mhz
 	lda #<blank_counter
 	sta via1t1cl            ; set low byte of count
 	lda #>blank_counter
 	sta via1t1ch            ; set high byte of count
     rts
+    
+.raster_bar_colors
+	!byte Magenta
+	!byte Dark_Red
+	!byte	Medium_Red
+	!byte	Light_Red
+	!byte	Dark_Yellow
+	!byte	Light_Yellow
+	!byte	Dark_Yellow
+	!byte	Light_Red
+	!byte	Medium_Red
+	!byte Dark_Red
+	!byte Magenta
+.raster_bar_colors_e
