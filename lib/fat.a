@@ -536,34 +536,11 @@ FD_file_size = $08
 	cmp #"."
 	bne -
 
-	bra .match
-
-
-.match_name:
-	ldy #DIR_Name
-	ldx #$00
-.match
-
-; 	phx 
-
-; 	ldx #$00
-; -	lda filename_buf,x
-; 	beq +
-; 	jsr chrout
-; 	inx
-; 	cpx #12
-; 	bne -
-; +	
-; 	plx
-
-; -	jmp -
-
--	
-	lda filename_buf,x
+-	lda filename_buf,x
 	beq ++
-	
-	cmp #'.'
-	beq ++
+
+	; cmp #'.'
+	; beq ++
 	
 	cmp #'*'
 	beq ++
@@ -571,14 +548,53 @@ FD_file_size = $08
 	cmp #'?'
 	beq +
 
-	; +toUpper
-+++
 	cmp (dirptr),y 
 	bne +++
 
 +	iny
 	inx 
 	bra -
+
+
+++	
+	sec
+	rts
+
++++	clc
+	rts 
+
+
+
+.match_name:
+	ldy #DIR_Name
+	ldx #$00
+.match
+
+
+-	lda filename_buf,x
+
+	cmp #'.'
+	bne +
+	lda #$20
+	cmp (dirptr),y
+	beq ++
+	cpy #DIR_Name+11
+	beq ++
++
+	
+	cmp #'*'
+	beq ++
+
+	cmp #'?'
+	beq +
+
+	cmp (dirptr),y 
+	bne +++
+
++	iny
+	inx 
+	bra -
+
 
 ++	sec
 	rts
