@@ -3,9 +3,9 @@ AS=acme
 
 # generic rules
 
-all:	durexforth.d64
+all:	durexforth.bin
 
-durexforth.prg: durexforth.a number.a ummod.a ${ACME}/bios.h.a
+durexforth.bin: durexforth.a number.a ummod.a ${ACME}/bios.h.a
 	@$(AS) -v -f plain -l $<.labels --cpu 65c02 -o $@ $<
 
 FORTHLIST=base debug vi asm gfx gfxdemo rnd sin ls turtle fractal purge-hidden sprite doloop sys float labels mml mmldemo sid spritedemo
@@ -26,4 +26,4 @@ clean:
 	rm -rf build
 
 transfer: all
-	../transfer.py durexforth.prg 0x0300
+	../transfer.py -s 0x0400 durexforth.bin
