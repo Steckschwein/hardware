@@ -572,7 +572,8 @@ FD_file_size = $08
 
 
 -	lda filename_buf,x
-
+	cmp #$00
+	bne +
 	cmp #'.'
 	bne +
 	lda #$20

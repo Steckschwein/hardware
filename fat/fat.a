@@ -100,5 +100,5 @@ STR             = $f6
 
 !src <fat.a>
 
-filename !text "t.bin",$00
+filename !text "t*",$00
 
