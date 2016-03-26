@@ -7,16 +7,38 @@ dirptr=$0
 dir_entry_size=11
 
 test_input=input_6
-test_dir_entry=dir_4
+
+test_dir_tab
+	.dw dir_1
+	.dw dir_2
+	.dw dir_3
+	.dw dir_4
+	.dw dir_5
+
+test_input_tab
+	.dw input_1
+	.dw input_2
+	.dw input_3
+	.dw input_4
+	.dw input_5
+	.dw input_6
+	
 
 main
-
-	lda #<test_dir_entry
+	ldx #0
+l1:
+	lda test_dir_tab,x
 	sta $0
-	lda #>test_dir_entry
+	lda test_dir_tab+1,x
 	sta $1
-	
+	phx
 	jsr match	; check <name>.<ext> against 11 byte dir entry <name> <ext>
+	plx	
+		
+	inx
+	inx
+	cpx	#10
+	bne	l1
 	
 	rts
 
