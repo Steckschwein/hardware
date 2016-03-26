@@ -5,46 +5,49 @@
 dirptr=$0
 
 dir_entry_size=11
-input=input_2
+
+test_input=input_6
+test_dir_entry=dir_4
 
 main
 
-	lda #<dir_3
+	lda #<test_dir_entry
 	sta $0
-	lda #>dir_3
+	lda #>test_dir_entry
 	sta $1
 	
-	ldx #0
-	ldy #0
-	
 	jsr match	; check <name>.<ext> against 11 byte dir entry <name> <ext>
+	
 	rts
 
 match:
-	lda input,x
+	ldx #0
+	ldy #0	
+match_0
+	lda test_input,x
 	beq m_found	;eos?
 	cmp #'*'
 	beq m_n
 	cmp #'?'
-	beq m_1			; ? - skip compare, matches anything
+	beq m_1			; ? - skip compare, matches anything - note: multiple ? will end up in consuming the input string and at least and after 11 bytes
 	cmp #'.'		;
 	bne m_r
-	lda #' '		; replace '.' with ' ' for cmp	
-m_r	cmp (dirptr),y		; regular char, compare
+	lda #' '		; replace '.' with ' ' for cmp
+m_r	cmp (dirptr),y	; regular char, compare
 	bne m_not_found
 m_1	inx
 	iny
 	cpy #dir_entry_size
-	bne match
+	bne match_0
 	bra m_found	
 	
 m_n	inx
-	cmp input,x	; skip read multiple '*'
+	cmp test_input,x	; skip read multiple '*'
 	beq m_n
 m_n1	
 	lda (dirptr),y	; read 
 	cmp #' '	; until ' '
-	beq match	; go on, try match extension
+	beq match_0	; go on, try match extension
 m_n2	iny		
 	cpy #dir_entry_size
 	bne m_n1
@@ -65,3 +68,5 @@ input_1 .ascii "ls.bin",0
 input_2 .ascii "l*.bin",0
 input_3 .ascii "l?.bin",0
 input_4 .ascii "l**.bin",0
+input_5 .ascii "l??.bin",0
+input_6 .ascii "l??????.bin",0
