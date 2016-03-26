@@ -1,0 +1,67 @@
+ *=1000
+
+	jmp main
+
+dirptr=$0
+
+dir_entry_size=11
+input=input_2
+
+main
+
+	lda #<dir_3
+	sta $0
+	lda #>dir_3
+	sta $1
+	
+	ldx #0
+	ldy #0
+	
+	jsr match	; check <name>.<ext> against 11 byte dir entry <name> <ext>
+	rts
+
+match:
+	lda input,x
+	beq m_found	;eos?
+	cmp #'*'
+	beq m_n
+	cmp #'?'
+	beq m_1			; ? - skip compare, matches anything
+	cmp #'.'		;
+	bne m_r
+	lda #' '		; replace '.' with ' ' for cmp	
+m_r	cmp (dirptr),y		; regular char, compare
+	bne m_not_found
+m_1	inx
+	iny
+	cpy #dir_entry_size
+	bne match
+	bra m_found	
+	
+m_n	inx
+	cmp input,x	; skip read multiple '*'
+	beq m_n
+m_n1	
+	lda (dirptr),y	; read 
+	cmp #' '	; until ' '
+	beq match	; go on, try match extension
+m_n2	iny		
+	cpy #dir_entry_size
+	bne m_n1
+m_found
+	sec
+ 	rts
+m_not_found
+	clc
+ 	rts
+
+dir_1	     .ascii "file00 txt"
+dir_2	     .ascii "ll bin"
+dir_3	     .ascii "ls bin"
+dir_4	     .ascii "loader bin"
+dir_5	     .ascii "file04 txt"
+
+input_1 .ascii "ls.bin",0
+input_2 .ascii "l*.bin",0
+input_3 .ascii "l?.bin",0
+input_4 .ascii "l**.bin",0
