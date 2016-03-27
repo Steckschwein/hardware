@@ -410,7 +410,7 @@ chk_kbd:  ; if I am correct, it's about 14 cycles normally
 ;	LDA $DC01	; 4 cycles
 
 ;	AND #%10000000	; 2 cycles
-	!for .i,0,56 {
+	!for .i,0,84 {
 		nop
 	} 
 	
