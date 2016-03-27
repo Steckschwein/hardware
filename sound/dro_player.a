@@ -69,8 +69,8 @@
 ZP=$80			;	.RES 2 ; general purpose zeropage locations we use (two bytes)
 song_p=$82		;	.RES 2 ; byte pointer inside the DRO stream (two bytes)
 
-.nops_addr = 7
-.nops_data = 48
+.nops_addr = 14
+.nops_data = 96
 
 screen_reg_addrs:
 !fill	512,32
@@ -410,7 +410,7 @@ chk_kbd:  ; if I am correct, it's about 14 cycles normally
 ;	LDA $DC01	; 4 cycles
 
 ;	AND #%10000000	; 2 cycles
-	!for .i,0,28 {
+	!for .i,0,56 {
 		nop
 	} 
 	
