@@ -236,40 +236,40 @@ main:
 	; STA ZP
 	; LDA #>(screen_reg_addrs)
 	; STA ZP+1
-; 	LDY #0 ; AdLib register counter
-; 	LDX #13 ; number of bytes to display within a C64 text line
-; scraddrtabfillloop: ; we all love self-modifying code, right?
-; 	; write out low byte of the screen address
-; 	scraddrtablo = * + 1
-; 	LDA #<(REGDUMP_START_POS)
-; 	STA (ZP),Y
-; 	STA dot
-; 	; write out high byte of the screen address
-; 	INC ZP+1
-; 	scraddrtabhi = * + 1
-; 	LDA #>(REGDUMP_START_POS)
-; 	STA (ZP),Y
-; 	STA dot+1
-; 	DEC ZP+1
-; 	; display a dot
-; 	LDA #46
-; 	dot = * + 1
-; 	STA $FFFF
-; 	; see, if we have to move to next line instead
-; 	LDA #3 ; the increment needed
-; 	DEX
-; 	CLC
-; 	BNE +
-; 	ADC #1
-; 	LDX #13
-; +
-; 	ADC scraddrtablo
-; 	STA scraddrtablo
-; 	BCC +
-; 	INC scraddrtabhi
-; +
-; 	INY
-; 	BNE scraddrtabfillloop
+	LDY #0 ; AdLib register counter
+	LDX #13 ; number of bytes to display within a C64 text line
+scraddrtabfillloop: ; we all love self-modifying code, right?
+	; write out low byte of the screen address
+	scraddrtablo = * + 1
+	LDA #<(REGDUMP_START_POS)
+	STA (ZP),Y
+	STA dot
+	; write out high byte of the screen address
+	INC ZP+1
+	scraddrtabhi = * + 1
+	LDA #>(REGDUMP_START_POS)
+	STA (ZP),Y
+	STA dot+1
+	DEC ZP+1
+	; display a dot
+	LDA #46
+	dot = * + 1
+	STA $FFFF
+	; see, if we have to move to next line instead
+	LDA #3 ; the increment needed
+	DEX
+	CLC
+	BNE +
+	ADC #1
+	LDX #13
++
+	ADC scraddrtablo
+	STA scraddrtablo
+	BCC +
+	INC scraddrtabhi
++
+	INY
+	BNE scraddrtabfillloop
 
 main_player:
 	; We must find the (C64 memory) address of the first byte
@@ -295,14 +295,14 @@ main_player:
 	; JSR show_hex_byte  ; song_p high byte is already in A, print it
 	; LDA song_p
 	; JSR show_hex_byte  ; also print the low byte then
-	LDA #'/'
-	STA (ZP),Y
+	; LDA #'/'
+	; STA (ZP),Y
 	INY
 	INY
 	INY
 	INY
 	INY
-	STA (ZP),Y
+	; STA (ZP),Y
 	INY
 	; LDA #>(song_end)
 	; JSR show_hex_byte
@@ -314,11 +314,11 @@ main_player:
 	; Start playing actually ...
 play_loop:
 	; show current position of playback (C64 memory address)
-	LDA #<(SONG_POSITION_POS+5)
-	STA ZP
-	LDA #>(SONG_POSITION_POS+5)
-	STA ZP+1
-	LDY #0
+	; LDA #<(SONG_POSITION_POS+5)
+	; STA ZP
+	; LDA #>(SONG_POSITION_POS+5)
+	; STA ZP+1
+	; LDY #0
 	; LDA song_p+1
 	; JSR show_hex_byte
 	; LDA song_p
