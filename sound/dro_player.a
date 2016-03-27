@@ -168,32 +168,32 @@ hextab: !text "0123456789ABCDEF"
 ;	.BYTE 'L'+128
 ;msg_size = * - msg
 
-show_reg:
-	LDX ZP+1 ; X:=value (since we will reuse it)
-	LDY ZP
-	LDA screen_reg_addrs,Y
-	STA ZP
-	LDA screen_reg_addrs+256,Y
-	STA ZP+1
-	TXA
-	LDY #0
-show_hex_byte:  ; A=byte, ZP: screen address base, Y = offset (from ZP)
-	PHA
-	LSR 
-	LSR 
-	LSR 
-	LSR 
-	TAX
-	LDA hextab,X
-	STA (ZP),Y
-	PLA
-	AND #15
-	TAX
-	LDA hextab,X
-	INY
-	STA (ZP),Y
-	INY
-	RTS
+; show_reg:
+; 	LDX ZP+1 ; X:=value (since we will reuse it)
+; 	LDY ZP
+; 	LDA screen_reg_addrs,Y
+; 	STA ZP
+; 	LDA screen_reg_addrs+256,Y
+; 	STA ZP+1
+; 	TXA
+; 	LDY #0
+; show_hex_byte:  ; A=byte, ZP: screen address base, Y = offset (from ZP)
+	; PHA
+	; LSR 
+	; LSR 
+	; LSR 
+	; LSR 
+	; TAX
+	; LDA hextab,X
+	; STA (ZP),Y
+	; PLA
+	; AND #15
+	; TAX
+	; LDA hextab,X
+	; INY
+	; STA (ZP),Y
+	; INY
+	; RTS
 	
 reset_sfx:
 	LDA #0
@@ -232,44 +232,44 @@ main:
 	; Generate our table for displaying YM registers
 	; It's the direct C64 addresses in the video RAM for
 	; 0...255 values (AdLib registers).
-	LDA #<(screen_reg_addrs)
-	STA ZP
-	LDA #>(screen_reg_addrs)
-	STA ZP+1
-	LDY #0 ; AdLib register counter
-	LDX #13 ; number of bytes to display within a C64 text line
-scraddrtabfillloop: ; we all love self-modifying code, right?
-	; write out low byte of the screen address
-	scraddrtablo = * + 1
-	LDA #<(REGDUMP_START_POS)
-	STA (ZP),Y
-	STA dot
-	; write out high byte of the screen address
-	INC ZP+1
-	scraddrtabhi = * + 1
-	LDA #>(REGDUMP_START_POS)
-	STA (ZP),Y
-	STA dot+1
-	DEC ZP+1
-	; display a dot
-	LDA #46
-	dot = * + 1
-	STA $FFFF
-	; see, if we have to move to next line instead
-	LDA #3 ; the increment needed
-	DEX
-	CLC
-	BNE +
-	ADC #1
-	LDX #13
-+
-	ADC scraddrtablo
-	STA scraddrtablo
-	BCC +
-	INC scraddrtabhi
-+
-	INY
-	BNE scraddrtabfillloop
+	; LDA #<(screen_reg_addrs)
+	; STA ZP
+	; LDA #>(screen_reg_addrs)
+	; STA ZP+1
+; 	LDY #0 ; AdLib register counter
+; 	LDX #13 ; number of bytes to display within a C64 text line
+; scraddrtabfillloop: ; we all love self-modifying code, right?
+; 	; write out low byte of the screen address
+; 	scraddrtablo = * + 1
+; 	LDA #<(REGDUMP_START_POS)
+; 	STA (ZP),Y
+; 	STA dot
+; 	; write out high byte of the screen address
+; 	INC ZP+1
+; 	scraddrtabhi = * + 1
+; 	LDA #>(REGDUMP_START_POS)
+; 	STA (ZP),Y
+; 	STA dot+1
+; 	DEC ZP+1
+; 	; display a dot
+; 	LDA #46
+; 	dot = * + 1
+; 	STA $FFFF
+; 	; see, if we have to move to next line instead
+; 	LDA #3 ; the increment needed
+; 	DEX
+; 	CLC
+; 	BNE +
+; 	ADC #1
+; 	LDX #13
+; +
+; 	ADC scraddrtablo
+; 	STA scraddrtablo
+; 	BCC +
+; 	INC scraddrtabhi
+; +
+; 	INY
+; 	BNE scraddrtabfillloop
 
 main_player:
 	; We must find the (C64 memory) address of the first byte
@@ -368,7 +368,7 @@ play_loop:
 	jsr .wait_data
 
 	; show it!
-	JSR show_reg
+	; JSR show_reg
 	; check looping
 	LDA song_p+1
 	CMP #>(song_end)
