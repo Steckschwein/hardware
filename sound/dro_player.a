@@ -304,10 +304,10 @@ main_player:
 	INY
 	STA (ZP),Y
 	INY
-	LDA #>(song_end)
-	JSR show_hex_byte
-	LDA #<(song_end)
-	JSR show_hex_byte
+	; LDA #>(song_end)
+	; JSR show_hex_byte
+	; LDA #<(song_end)
+	; JSR show_hex_byte
 
 	; Clear SFX registers ...
 	JSR reset_sfx
@@ -319,10 +319,10 @@ play_loop:
 	LDA #>(SONG_POSITION_POS+5)
 	STA ZP+1
 	LDY #0
-	LDA song_p+1
-	JSR show_hex_byte
-	LDA song_p
-	JSR show_hex_byte
+	; LDA song_p+1
+	; JSR show_hex_byte
+	; LDA song_p
+	; JSR show_hex_byte
 	; check keyboard
 	JSR chk_kbd
 	; fetch two bytes from the DRO stream, store those in zeropage vars ZP and ZP+1
