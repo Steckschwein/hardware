@@ -75,21 +75,6 @@ song_p=$82		;	.RES 2 ; byte pointer inside the DRO stream (two bytes)
 screen_reg_addrs:
 !fill	512,32
 
-; Character remapping for screen codes:
-; We manipulate screen directly, and I don't want to convert texts
-; in the asm file, so let's just leave it for the assembler:
-; CA65 can make custom charset conversion configred by .CHARMAP
-; constructs: conversion from ASCII (the assembly file's charset)
-; to C64 screen codes (can be poked directly into the video RAM).
-; Not remapped characters left as-is (by c64 target) hopefully
-; most of them at least are OK :)
-
-;.REPEAT 26,l
-;.CHARMAP l+97,l+1 ; lower case
-;.CHARMAP l+65,l+65 ; upper case
-;.ENDREP
-;.CHARMAP 64,0  ; @
-;.CHARMAP 95,100   ; _
 
 ;song_length		= song + 12  ; we don't use length currently, but the label after the included DRO to match against the position counter
 cmd_short_delay		= song + 23
@@ -107,14 +92,6 @@ REGDUMP_START_POS	= SCREEN_ADDRESS + 41
 SONG_POSITION_POS	= SCREEN_ADDRESS + 24*40
 MSG_POS			= SCREEN_ADDRESS + 22*40
 SONG_NAME_POS		= SONG_POSITION_POS + 15
-;DELAY_POS_COLRAM	= MSG_POS + 37 + COLOR_RAM_OFFSET
-MSG_COLOR		= 7
-HEADER_COLOR		= 13
-COMMON_COLOR		= 1
-NAME_COLOR		= 14
-DELAY_ACTIVE_COLOR	= 1
-DELAY_INACTIVE_COLOR	= 11
-LINE_COLOR		= 3
 
 ; You need a version 2 DRO file here
 ; DOSBOX 0.74 (maybe 0.73 too, but note: older versions
@@ -160,40 +137,7 @@ song_end:
 ;dro_file_name: .BYTE DRO_FILE
 ;dro_file_name_size = * - dro_file_name
 
-hextab: !text "0123456789ABCDEF"
 
-;msg: .BYTE    "Hold key 'x' to reset C64.     Delay:"
-;	.BYTE '-'+128
-;	.BYTE 'S'+128
-;	.BYTE 'L'+128
-;msg_size = * - msg
-
-; show_reg:
-; 	LDX ZP+1 ; X:=value (since we will reuse it)
-; 	LDY ZP
-; 	LDA screen_reg_addrs,Y
-; 	STA ZP
-; 	LDA screen_reg_addrs+256,Y
-; 	STA ZP+1
-; 	TXA
-; 	LDY #0
-; show_hex_byte:  ; A=byte, ZP: screen address base, Y = offset (from ZP)
-	; PHA
-	; LSR 
-	; LSR 
-	; LSR 
-	; LSR 
-	; TAX
-	; LDA hextab,X
-	; STA (ZP),Y
-	; PLA
-	; AND #15
-	; TAX
-	; LDA hextab,X
-	; INY
-	; STA (ZP),Y
-	; INY
-	; RTS
 	
 reset_sfx:
 	LDA #0
@@ -229,47 +173,9 @@ main:
 	; This is only a quick TEST, do not except advanced
 	; features now.
 	SEI
-	; Generate our table for displaying YM registers
-	; It's the direct C64 addresses in the video RAM for
-	; 0...255 values (AdLib registers).
-	; LDA #<(screen_reg_addrs)
-	; STA ZP
-	; LDA #>(screen_reg_addrs)
-	; STA ZP+1
 	LDY #0 ; AdLib register counter
 	LDX #13 ; number of bytes to display within a C64 text line
-; scraddrtabfillloop: ; we all love self-modifying code, right?
-; 	; write out low byte of the screen address
-; 	scraddrtablo = * + 1
-; 	LDA #<(REGDUMP_START_POS)
-; 	STA (ZP),Y
-; 	STA dot
-; 	; write out high byte of the screen address
-; 	INC ZP+1
-; 	scraddrtabhi = * + 1
-; 	LDA #>(REGDUMP_START_POS)
-; 	STA (ZP),Y
-; 	STA dot+1
-; 	DEC ZP+1
-; 	; display a dot
-; 	LDA #46
-; 	dot = * + 1
-; 	STA $FFFF
-; 	; see, if we have to move to next line instead
-; 	LDA #3 ; the increment needed
-; 	DEX
-; 	CLC
-; 	BNE +
-; 	ADC #1
-; 	LDX #13
-; +
-; 	ADC scraddrtablo
-; 	STA scraddrtablo
-; 	BCC +
-; 	INC scraddrtabhi
-; +
-; 	INY
-; 	BNE scraddrtabfillloop
+
 
 main_player:
 	; We must find the (C64 memory) address of the first byte
@@ -286,44 +192,11 @@ main_player:
 	LDA #>(codemap)
 	ADC #0 ; use carry too!
 	STA song_p+1
-	; show pos info ...
-	; LDX #<(SONG_POSITION_POS)
-	; STX ZP
-	; LDX #>(SONG_POSITION_POS)
-	; STX ZP+1
-	; LDY #0
-	; JSR show_hex_byte  ; song_p high byte is already in A, print it
-	; LDA song_p
-	; JSR show_hex_byte  ; also print the low byte then
-	; LDA #'/'
-	; STA (ZP),Y
-	; INY
-	; INY
-	; INY
-	; INY
-	; INY
-	; STA (ZP),Y
-	; INY
-	; LDA #>(song_end)
-	; JSR show_hex_byte
-	; LDA #<(song_end)
-	; JSR show_hex_byte
-
+	
 	; Clear SFX registers ...
 	JSR reset_sfx
 	; Start playing actually ...
 play_loop:
-	; show current position of playback (C64 memory address)
-	; LDA #<(SONG_POSITION_POS+5)
-	; STA ZP
-	; LDA #>(SONG_POSITION_POS+5)
-	; STA ZP+1
-	; LDY #0
-	; LDA song_p+1
-	; JSR show_hex_byte
-	; LDA song_p
-	; JSR show_hex_byte
-	; check keyboard
 	JSR chk_kbd
 	; fetch two bytes from the DRO stream, store those in zeropage vars ZP and ZP+1
 	; we can't increment pointer in "once" (with Y being 0 then 1, then
@@ -367,9 +240,6 @@ play_loop:
 	STA SFX_YM_DATA_REGISTER
 	jsr .wait_data
 
-	; show it!
-	; JSR show_reg
-	; check looping
 	LDA song_p+1
 	CMP #>(song_end)
 	BCC play_loop
