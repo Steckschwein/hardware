@@ -292,9 +292,9 @@ main_player:
 	LDX #>(SONG_POSITION_POS)
 	STX ZP+1
 	LDY #0
-	JSR show_hex_byte  ; song_p high byte is already in A, print it
-	LDA song_p
-	JSR show_hex_byte  ; also print the low byte then
+	; JSR show_hex_byte  ; song_p high byte is already in A, print it
+	; LDA song_p
+	; JSR show_hex_byte  ; also print the low byte then
 	LDA #'/'
 	STA (ZP),Y
 	INY
