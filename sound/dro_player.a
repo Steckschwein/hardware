@@ -125,12 +125,6 @@ song:
 !ifdef prowla {
 !bin "prowla.dro"
 }
-!ifdef setup {
-!bin "setup_000.dro"
-}
-!ifdef imfplay {
-!bin "imfplay_001.dro"
-}
 
 song_end:
 
