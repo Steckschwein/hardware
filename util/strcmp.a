@@ -1,4 +1,4 @@
- *=$1000
+ 	*=$1000
 
 	jmp main
 
@@ -6,7 +6,7 @@ dirptr=$0
 
 dir_entry_size=11
 
-test_input=input_4
+test_input=input_11
 
 test_dir_tab
 	!word dir_1
@@ -14,6 +14,8 @@ test_dir_tab
 	!word dir_3
 	!word dir_4
 	!word dir_5
+	!word dir_6
+test_dir_tab_e
 
 test_input_tab
 	!word input_1
@@ -37,7 +39,7 @@ l1:
 		
 	inx
 	inx
-	cpx	#10
+	cpx	#test_dir_tab_e-test_dir_tab
 	bne	l1
 	
 	rts
@@ -47,7 +49,7 @@ match:
 	ldy #0	
 match_0
 	lda test_input,x
-	beq m_found	;eos?
+	beq m_not_found	;end of input
 	cmp #'*'
 	beq m_n
 	cmp #'?'
@@ -55,11 +57,12 @@ match_0
 	cmp #'.'		;
 	bne m_r
 
-	inx	
-	lda #' '		; '.' found in input, seek to dir entry ext offset
+	inx
+	lda #' '		; '.' found in input, seek to dir entry extension offset
 match_ext	
 	cmp (dirptr),y
 	bne match_0
+match_ext_1
 	iny
 	cpy #dir_entry_size
 	beq	m_not_found
@@ -77,18 +80,23 @@ m_1	inx
 	iny
 	cpy #dir_entry_size
 	bne match_0
-	bra m_found	
+	
+	lda test_input,x	;input chars left?
+	beq m_found
+	bra m_not_found
 	
 m_n	inx
 	cmp test_input,x	; skip read multiple '*'
 	beq m_n
-m_n1	
-	lda (dirptr),y	; read 
-	cmp #' '	; until ' '
-	beq match_0	; go on, try match extension
-m_n2	iny		
+	
+	lda #' '
+m_n1
+	cmp (dirptr),y		; until ' '
+	beq match_ext_1		; then go on with skip until extension above
+m_n2
+	iny		
 	cpy #dir_entry_size
-	bne m_n1
+	bne m_n1	; end of dir entry? found...
 m_found
 	sec
  	rts
@@ -101,10 +109,16 @@ dir_2	     !text "LL      BIN"
 dir_3	     !text "LS      BIN"
 dir_4	     !text "LOADER  BIN"
 dir_5	     !text "FILE04  TXT"
+dir_6	     !text "TEST    TXT"
 
-input_1 !text "ls.bin",0
-input_2 !text "l*.bin",0
-input_3 !text "l?.bin",0
-input_4 !text "l**.bin",0
-input_5 !text "l??.bin",0
-input_6 !text "l??????.bin",0
+input_1 	!text "ls.bin",0
+input_2 	!text "l*.bin",0
+input_3 	!text "l?.bin",0
+input_4 	!text "l**.bin",0
+input_5 	!text "l??.bin",0
+input_6 	!text "l?????.bin",0
+input_7 	!text "Ls.bin",0
+input_8 	!text ".",0
+input_9 	!text "..",0
+input_10 	!text "test.txtfoobar",0
+input_11 	!text "test.txt",0

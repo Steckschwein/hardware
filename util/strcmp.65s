@@ -1,4 +1,4 @@
- *=$1000
+ 	*=$1000
 
 	jmp main
 
@@ -6,7 +6,7 @@ dirptr=$0
 
 dir_entry_size=11
 
-test_input=input_4
+test_input=input_10
 
 test_dir_tab
 	.dw dir_1
@@ -14,6 +14,8 @@ test_dir_tab
 	.dw dir_3
 	.dw dir_4
 	.dw dir_5
+	.dw dir_6
+test_dir_tab_e
 
 test_input_tab
 	.dw input_1
@@ -37,7 +39,7 @@ l1:
 		
 	inx
 	inx
-	cpx	#10
+	cpx	#test_dir_tab_e-test_dir_tab
 	bne	l1
 	
 	rts
@@ -47,7 +49,7 @@ match:
 	ldy #0	
 match_0
 	lda test_input,x
-	beq m_found	;eos?
+	beq m_not_found	;end of input
 	cmp #'*'
 	beq m_n
 	cmp #'?'
@@ -55,11 +57,12 @@ match_0
 	cmp #'.'		;
 	bne m_r
 
-	inx	
-	lda #' '		; '.' found in input, seek to dir entry ext offset
+	inx
+	lda #' '		; '.' found in input, seek to dir entry extension offset
 match_ext	
 	cmp (dirptr),y
 	bne match_0
+match_ext_1
 	iny
 	cpy #dir_entry_size
 	beq	m_not_found
@@ -77,18 +80,23 @@ m_1	inx
 	iny
 	cpy #dir_entry_size
 	bne match_0
-	bra m_found	
+	
+	lda test_input,x	;input chars left?
+	beq m_found
+	bra m_not_found
 	
 m_n	inx
 	cmp test_input,x	; skip read multiple '*'
 	beq m_n
-m_n1	
-	lda (dirptr),y	; read 
-	cmp #' '	; until ' '
-	beq match_0	; go on, try match extension
-m_n2	iny		
+	
+	lda #' '
+m_n1
+	cmp (dirptr),y		; until ' '
+	beq match_ext_1		; then go on with skip until extension above
+m_n2
+	iny		
 	cpy #dir_entry_size
-	bne m_n1
+	bne m_n1	; end of dir entry? found...
 m_found
 	sec
  	rts
@@ -101,10 +109,16 @@ dir_2	     .ascii "LL      BIN"
 dir_3	     .ascii "LS      BIN"
 dir_4	     .ascii "LOADER  BIN"
 dir_5	     .ascii "FILE04  TXT"
+dir_6	     .ascii "TEST    TXT"
 
-input_1 .ascii "ls.bin",0
-input_2 .ascii "l*.bin",0
-input_3 .ascii "l?.bin",0
-input_4 .ascii "l**.bin",0
-input_5 .ascii "l??.bin",0
-input_6 .ascii "l??????.bin",0
+input_1 	.ascii "ls.bin",0
+input_2 	.ascii "l*.bin",0
+input_3 	.ascii "l?.bin",0
+input_4 	.ascii "l**.bin",0
+input_5 	.ascii "l??.bin",0
+input_6 	.ascii "l?????.bin",0
+input_7 	.ascii "Ls.bin",0
+input_8 	.ascii ".",0
+input_9 	.ascii "..",0
+input_10 	.ascii "test.txtfoobar",0
+input_11 	.ascii "test.txt",0
