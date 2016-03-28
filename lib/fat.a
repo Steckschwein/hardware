@@ -500,11 +500,8 @@ FD_file_size = $08
 	lda (dirptr),y 		; we are only going to filter those here (or maybe not?)
 	cmp #$0f
 	beq .fat_find_next
-
-	jsr .match_ext
-	bcc .fat_find_next
 	
-	jsr .match_name
+	jsr .match
 	bcs +
 
 .fat_find_next
@@ -526,79 +523,57 @@ FD_file_size = $08
 +	
 	rts
 
-.match_ext:
-
-	ldy #DIR_Ext
-	ldx #$ff
--	lda filename_buf,x
-	beq .match
-	inx
-	cmp #"."
-	bne -
-
--	lda filename_buf,x
-	beq ++
-
-	; cmp #'.'
-	; beq ++
-	
+.dir_entry_size=11
+.match:
+	ldx #0
+	ldy #0	
+.match_0
+	lda filename_buf,x
+	beq .m_found	;eos?
 	cmp #'*'
-	beq ++
-
+	beq .m_n
 	cmp #'?'
-	beq +
+	beq .m_1			; ? - skip compare, matches anything - note: multiple ? will end up in consuming the input string and at least and after 11 bytes
+	cmp #'.'		;
+	bne .m_r
 
-	cmp (dirptr),y 
-	bne +++
-
-+	iny
-	inx 
-	bra -
-
-
-++	
-	sec
-	rts
-
-+++	clc
-	rts 
-
-
-
-.match_name:
-	ldy #DIR_Name
-	ldx #$00
-.match
-
-
--	lda filename_buf,x
-	cmp #$00
-	bne +
-	cmp #'.'
-	bne +
-	lda #$20
+	inx	
+	lda #' '		; '.' found in input, seek to dir entry ext offset
+.match_ext	
 	cmp (dirptr),y
-	beq ++
-	cpy #DIR_Name+11
-	beq ++
-+
+	bne .match_0
+	iny
+	cpy #.dir_entry_size
+	beq	.m_not_found
+	bra	.match_ext
 	
-	cmp #'*'
-	beq ++
-
-	cmp #'?'
-	beq +
-
-	cmp (dirptr),y 
-	bne +++
-
-+	iny
-	inx 
-	bra -
-
-
-++	sec
-	rts
-
-+++	clc
-	rts 
+.m_r	cmp	#'a'		; regular char, match uppercase
+	bcc .m_r_match
+	cmp #'z'
+	bcs .m_r_match
+	and #$df		; uppercase
+.m_r_match	
+	cmp (dirptr),y	; regular char, compare
+	bne .m_not_found
+.m_1	inx
+	iny
+	cpy #.dir_entry_size
+	bne .match_0
+	bra .m_found	
+	
+.m_n	inx
+	cmp filename_buf,x	; skip read multiple '*'
+	beq .m_n
+.m_n1	
+	lda (dirptr),y	; read 
+	cmp #' '	; until ' '
+	beq .match_0	; go on, try match extension
+.m_n2	iny		
+	cpy #.dir_entry_size
+	bne .m_n1
+.m_found
+	sec
+ 	rts
+.m_not_found
+	clc
+ 	rts
