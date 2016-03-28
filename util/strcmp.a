@@ -9,19 +9,19 @@ dir_entry_size=11
 test_input=input_4
 
 test_dir_tab
-	.dw dir_1
-	.dw dir_2
-	.dw dir_3
-	.dw dir_4
-	.dw dir_5
+	!word dir_1
+	!word dir_2
+	!word dir_3
+	!word dir_4
+	!word dir_5
 
 test_input_tab
-	.dw input_1
-	.dw input_2
-	.dw input_3
-	.dw input_4
-	.dw input_5
-	.dw input_6
+	!word input_1
+	!word input_2
+	!word input_3
+	!word input_4
+	!word input_5
+	!word input_6
 	
 
 main
@@ -96,15 +96,15 @@ m_not_found
 	clc
  	rts
 
-dir_1	     .ascii "FILE00  TXT"
-dir_2	     .ascii "LL      BIN"
-dir_3	     .ascii "LS      BIN"
-dir_4	     .ascii "LOADER  BIN"
-dir_5	     .ascii "FILE04  TXT"
+dir_1	     !text "FILE00  TXT"
+dir_2	     !text "LL      BIN"
+dir_3	     !text "LS      BIN"
+dir_4	     !text "LOADER  BIN"
+dir_5	     !text "FILE04  TXT"
 
-input_1 .ascii "ls.bin",0
-input_2 .ascii "l*.bin",0
-input_3 .ascii "l?.bin",0
-input_4 .ascii "l**.bin",0
-input_5 .ascii "l??.bin",0
-input_6 .ascii "l??????.bin",0
+input_1 !text "ls.bin",0
+input_2 !text "l*.bin",0
+input_3 !text "l?.bin",0
+input_4 !text "l**.bin",0
+input_5 !text "l??.bin",0
+input_6 !text "l??????.bin",0
