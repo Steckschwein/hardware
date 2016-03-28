@@ -15,6 +15,7 @@ test_dir_tab
 	.dw dir_4
 	.dw dir_5
 	.dw dir_6
+	.dw dir_7
 test_dir_tab_e
 
 test_input_tab
@@ -49,11 +50,11 @@ match:
 	ldy #0	
 match_0
 	lda test_input,x
-	beq m_not_found	;end of input
+	beq m_found		;end of input, found
 	cmp #'*'
 	beq m_n
 	cmp #'?'
-	beq m_1			; ? - skip compare, matches anything - note: multiple ? will end up in consuming the input string and at least and after 11 bytes
+	beq m_1			; ? - skip compare, matches anything - note: multiple ? will end up in consuming the input string char by char until ' '
 	cmp #'.'		;
 	bne m_r
 
@@ -76,7 +77,8 @@ m_r	cmp	#'a'		; regular char, match uppercase
 m_r_match	
 	cmp (dirptr),y	; regular char, compare
 	bne m_not_found
-m_1	inx
+m_1
+	inx
 	iny
 	cpy #dir_entry_size
 	bne match_0
@@ -110,6 +112,7 @@ dir_3	     .ascii "LS      BIN"
 dir_4	     .ascii "LOADER  BIN"
 dir_5	     .ascii "FILE04  TXT"
 dir_6	     .ascii "TEST    TXT"
+dir_7	     .ascii "PROGS      "
 
 input_1 	.ascii "ls.bin",0
 input_2 	.ascii "l*.bin",0
@@ -122,3 +125,4 @@ input_8 	.ascii ".",0
 input_9 	.ascii "..",0
 input_10 	.ascii "test.txtfoobar",0
 input_11 	.ascii "test.txt",0
+input_12 	.ascii "progs",0
