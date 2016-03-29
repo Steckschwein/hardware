@@ -1,72 +1,52 @@
- 	*=$1000
-
-	jmp main
+	;*=$1200
 
 dirptr=$0
-
 dir_entry_size=11
-
-test_input=input_10
-
-test_dir_tab
-	.dw dir_1
-	.dw dir_2
-	.dw dir_3
-	.dw dir_4
-	.dw dir_5
-	.dw dir_6
-	.dw dir_7
-test_dir_tab_e
-
-test_input_tab
-	.dw input_1
-	.dw input_2
-	.dw input_3
-	.dw input_4
-	.dw input_5
-	.dw input_6
-	
-
-main
-	ldx #0
-l1:
-	lda test_dir_tab,x
-	sta $0
-	lda test_dir_tab+1,x
-	sta $1
-	phx
-	jsr match	; check <name>.<ext> against 11 byte dir entry <name> <ext>
-	plx	
-		
-	inx
-	inx
-	cpx	#test_dir_tab_e-test_dir_tab
-	bne	l1
-	
-	rts
 
 match:
 	ldx #0
-	ldy #0	
+	ldy #0
+
+	; 0..1 in input may be "." or "..", so compare dir entry with .
+match_skip_dots	
+	lda	#'.'
+	cmp	test_input,x
+	bne	match_0
+
+	cmp (dirptr),y
+	bne m_not_found
+	inx					; 2nd "." ?
+	iny
+	lda	test_input,x
+	bne	match_skip_dots_1 ; end of input ?
+	lda	#' '
+	cmp (dirptr),y
+	bne m_not_found
+match_skip_dots_1
+	cpy #02
+	bne match_skip_dots
+	bra	match_ext_0	
+	
 match_0
 	lda test_input,x
 	beq m_found		;end of input, found
 	cmp #'*'
 	beq m_n
 	cmp #'?'
-	beq m_1			; ? - skip compare, matches anything - note: multiple ? will end up in consuming the input string char by char until ' '
-	cmp #'.'		;
+	beq m_1			; ? found - skip compare, matches anything - note: multiple ? will end up in consuming the input string char by char until ' '
+	cmp #'.'		; . found
 	bne m_r
 
 	inx
-	lda #' '		; '.' found in input, seek to dir entry extension offset
-match_ext	
+match_ext_0
+	lda #' '		; seek to dir entry extension offset	
+match_ext
 	cmp (dirptr),y
 	bne match_0
 match_ext_1
 	iny
 	cpy #dir_entry_size
-	beq	m_not_found
+	beq	m_found		; end of dir?
 	bra	match_ext
 	
 m_r	cmp	#'a'		; regular char, match uppercase
@@ -105,24 +85,3 @@ m_found
 m_not_found
 	clc
  	rts
-
-dir_1	     .ascii "FILE00  TXT"
-dir_2	     .ascii "LL      BIN"
-dir_3	     .ascii "LS      BIN"
-dir_4	     .ascii "LOADER  BIN"
-dir_5	     .ascii "FILE04  TXT"
-dir_6	     .ascii "TEST    TXT"
-dir_7	     .ascii "PROGS      "
-
-input_1 	.ascii "ls.bin",0
-input_2 	.ascii "l*.bin",0
-input_3 	.ascii "l?.bin",0
-input_4 	.ascii "l**.bin",0
-input_5 	.ascii "l??.bin",0
-input_6 	.ascii "l?????.bin",0
-input_7 	.ascii "Ls.bin",0
-input_8 	.ascii ".",0
-input_9 	.ascii "..",0
-input_10 	.ascii "test.txtfoobar",0
-input_11 	.ascii "test.txt",0
-input_12 	.ascii "progs",0

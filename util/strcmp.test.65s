@@ -1,0 +1,87 @@
+ 	*=$1000
+
+test_dirs=9
+test_input=test_dirs + input_5
+
+
+	jmp	test
+
+	.include "strcmp.65s"		
+	
+test
+	ldx #0
+	ldy #0
+	
+l1:
+	lda test_dir_tab,x
+	sta dirptr
+	lda test_dir_tab+1,x
+	sta dirptr+1
+		
+	phx
+	phy
+	jsr match	; check <name>.<ext> against 11 byte dir entry <name> <ext>
+	ply
+	plx		
+	lda	#0
+	rol			;result in carry to bit 0	
+	cmp	test_input-test_dirs, y
+	bne	test_failed	
+	
+	iny
+	inx
+	inx
+	cpx	#test_dir_tab_e-test_dir_tab
+	bne	l1	
+	rts
+
+test_failed
+	;failed with 'y'
+	rts
+		
+dir_1	     .ascii "FILE00  TXT"
+dir_2	     .ascii "LL      BIN"	;2
+dir_3	     .ascii "LS      BIN"	;4
+dir_4	     .ascii "LOADER  BIN"	;6
+dir_5	     .ascii "FILE04  TXT"	;8
+dir_6	     .ascii "TEST    TXT"	;10
+dir_7	     .ascii "PROGS      "	;12
+dir_8	     .ascii ".          "	;14
+dir_9	     .ascii "..         "	;16
+
+input_1 	.db 0,0,1,0,0,0,0,0,0
+			.ascii "ls.bin",0
+input_2 	.db 0,1,1,1,0,0,0,0,0
+			.ascii "l*.bin",0
+input_3 	.db 0,1,1,0,0,0,0,0,0
+			.ascii "l?.bin",0
+input_4 	.db 0,1,1,1,0,0,0,0,0
+			.ascii "l**.bin",0
+input_5 	.db 0,0,0,0,0,0,0,0,0
+			.ascii "l??.bin",0
+input_6 	.db 0,0,0,1,0,0,0,0,0
+			.ascii "l?????.bin",0
+input_7 	.db 0,0,1,0,0,0,0,0,0
+			.ascii "Ls.bin",0
+input_8 	.db 0,0,0,0,0,0,0,1,0
+			.ascii ".",0
+input_9 	.db 0,0,0,0,0,0,0,0,1
+			.ascii "..",0
+input_10 	.db 0,0,0,0,0,0,0,0,0
+			.ascii "test.txtfoobar",0
+input_11 	.db 0,0,0,0,0,1,0,0,0
+			.ascii "test.txt",0
+input_12 	.db 0,0,0,0,0,0,1,0,0
+			.ascii "progs",0
+
+test_dir_tab
+	.dw dir_1
+	.dw dir_2
+	.dw dir_3
+	.dw dir_4
+	.dw dir_5
+	.dw dir_6
+	.dw dir_7
+	.dw dir_8
+	.dw dir_9
+test_dir_tab_e

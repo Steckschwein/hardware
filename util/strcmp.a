@@ -1,72 +1,52 @@
- 	*=$1000
-
-	jmp main
+	;*=$1200
 
 dirptr=$0
-
 dir_entry_size=11
-
-test_input=input_10
-
-test_dir_tab
-	!word dir_1
-	!word dir_2
-	!word dir_3
-	!word dir_4
-	!word dir_5
-	!word dir_6
-	!word dir_7
-test_dir_tab_e
-
-test_input_tab
-	!word input_1
-	!word input_2
-	!word input_3
-	!word input_4
-	!word input_5
-	!word input_6
-	
-
-main
-	ldx #0
-l1:
-	lda test_dir_tab,x
-	sta $0
-	lda test_dir_tab+1,x
-	sta $1
-	phx
-	jsr match	; check <name>.<ext> against 11 byte dir entry <name> <ext>
-	plx	
-		
-	inx
-	inx
-	cpx	#test_dir_tab_e-test_dir_tab
-	bne	l1
-	
-	rts
 
 match:
 	ldx #0
-	ldy #0	
+	ldy #0
+
+	; 0..1 in input may be "." or "..", so compare dir entry with .
+match_skip_dots	
+	lda	#'.'
+	cmp	test_input,x
+	bne	match_0
+
+	cmp (dirptr),y
+	bne m_not_found
+	inx					; 2nd "." ?
+	iny
+	lda	test_input,x
+	bne	match_skip_dots_1 ; end of input ?
+	lda	#' '
+	cmp (dirptr),y
+	bne m_not_found
+match_skip_dots_1
+	cpy #02
+	bne match_skip_dots
+	bra	match_ext_0	
+	
 match_0
 	lda test_input,x
 	beq m_found		;end of input, found
 	cmp #'*'
 	beq m_n
 	cmp #'?'
-	beq m_1			; ? - skip compare, matches anything - note: multiple ? will end up in consuming the input string char by char until ' '
-	cmp #'.'		;
+	beq m_1			; ? found - skip compare, matches anything - note: multiple ? will end up in consuming the input string char by char until ' '
+	cmp #'.'		; . found
 	bne m_r
 
 	inx
-	lda #' '		; '.' found in input, seek to dir entry extension offset
-match_ext	
+match_ext_0
+	lda #' '		; seek to dir entry extension offset	
+match_ext
 	cmp (dirptr),y
 	bne match_0
 match_ext_1
 	iny
 	cpy #dir_entry_size
-	beq	m_not_found
+	beq	m_found		; end of dir?
 	bra	match_ext
 	
 m_r	cmp	#'a'		; regular char, match uppercase
@@ -105,24 +85,3 @@ m_found
 m_not_found
 	clc
  	rts
-
-dir_1	     !text "FILE00  TXT"
-dir_2	     !text "LL      BIN"
-dir_3	     !text "LS      BIN"
-dir_4	     !text "LOADER  BIN"
-dir_5	     !text "FILE04  TXT"
-dir_6	     !text "TEST    TXT"
-dir_7	     !text "PROGS      "
-
-input_1 	!text "ls.bin",0
-input_2 	!text "l*.bin",0
-input_3 	!text "l?.bin",0
-input_4 	!text "l**.bin",0
-input_5 	!text "l??.bin",0
-input_6 	!text "l?????.bin",0
-input_7 	!text "Ls.bin",0
-input_8 	!text ".",0
-input_9 	!text "..",0
-input_10 	!text "test.txtfoobar",0
-input_11 	!text "test.txt",0
-input_12 	!text "progs",0
