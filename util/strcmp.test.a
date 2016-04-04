@@ -1,23 +1,69 @@
- 	*=$1000
-
-test_dirs=9
-test_input=test_dirs + input_5
-
-
-	jmp	test
-
-	!src "strcmp.65s"		
+    *=$1000
+	jmp	test_suite
+!src <bios.h.a>
+!src <macro.h.a>
+!src "strcmp.a"
+!src "asm_unit.a"
 	
+test_dirs=9
+test_input=*;   input_X + test_dirs; address of input + size of results
+
+!macro SetTestInput .input {
+    lda #<.input+test_dirs
+    sta a0+1
+    sta a1+1
+    sta a2+1
+    sta a3+1
+    sta a4+1
+    lda #<.input
+    sta a5+1
+    lda #>.input+test_dirs
+    sta a0+2
+    sta a1+2
+    sta a2+2
+    sta a3+2
+    sta a4+2
+    lda #>.input
+    sta a5+2
+}
+
+test_suite
+    +SetTestInput input_1
+    jsr test
+    +SetTestInput input_2
+    jsr test
+    +SetTestInput input_3
+    jsr test
+    +SetTestInput input_4
+    jsr test
+    +SetTestInput input_5
+    jsr test
+    +SetTestInput input_6
+    jsr test
+    +SetTestInput input_7
+    jsr test
+    +SetTestInput input_8
+    jsr test
+    +SetTestInput input_9
+    jsr test
+    +SetTestInput input_10
+    jsr test
+    +SetTestInput input_11
+    jsr test
+    +SetTestInput input_12
+    jsr test
+    rts    
+    
 test
+    +Println
 	ldx #0
 	ldy #0
-	
-l1:
+l1
 	lda test_dir_tab,x
 	sta dirptr
 	lda test_dir_tab+1,x
 	sta dirptr+1
-		
+    
 	phx
 	phy
 	jsr match	; check <name>.<ext> against 11 byte dir entry <name> <ext>
@@ -25,18 +71,19 @@ l1:
 	plx		
 	lda	#0
 	rol			;result in carry to bit 0	
-	cmp	test_input-test_dirs, y
-	bne	test_failed	
-	
+a5	cmp	test_input, y
+	bne	_failed
+	jsr	_test_ok
+    bra _ok
+_failed
+	;failed with 'y'
+	jsr	_test_failed
+_ok	
 	iny
 	inx
 	inx
 	cpx	#test_dir_tab_e-test_dir_tab
 	bne	l1	
-	rts
-
-test_failed
-	;failed with 'y'
 	rts
 		
 dir_1	     !text "FILE00  TXT"

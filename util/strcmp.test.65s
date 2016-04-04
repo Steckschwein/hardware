@@ -1,13 +1,34 @@
  	*=$1000
 
 test_dirs=9
-test_input=test_dirs + input_5
+test_input=input_4 + test_dirs; address of input + size of results
+chrout=$ff00
 
 
-	jmp	test
+	jmp	test_suite
 
-	.include "strcmp.65s"		
+	.include "asm_unit.a"
+	.include "strcmp.a"
 	
+test_suite
+    lda #<input_1+test_dirs
+    sta a0+1
+    sta a1+1
+    sta a2+1
+    sta a3+1
+    sta a4+1
+    lda #<input_1
+    sta a5+1
+    lda #>input_1+test_dirs
+    sta a0+2
+    sta a1+2
+    sta a2+2
+    sta a3+2
+    sta a4+2
+    lda #>input_1
+    sta a5+2
+    jsr test
+
 test
 	ldx #0
 	ldy #0
@@ -25,8 +46,10 @@ l1:
 	plx		
 	lda	#0
 	rol			;result in carry to bit 0	
-	cmp	test_input-test_dirs, y
+a5	cmp	test_input, y
 	bne	test_failed	
+	
+	jsr	_test_ok
 	
 	iny
 	inx
@@ -37,6 +60,7 @@ l1:
 
 test_failed
 	;failed with 'y'
+	jsr	_test_failed
 	rts
 		
 dir_1	     .ascii "FILE00  TXT"
