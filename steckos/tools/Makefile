@@ -1,4 +1,4 @@
-all: date.bin type.bin view.bin more.bin nvram.bin
+all: date.bin type.bin view.bin more.bin nvram.bin uname.bin hello.bin time-test.bin mainarg.bin
 
 clean:
 	rm -f *.bin *.s *.o
