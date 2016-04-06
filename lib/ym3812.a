@@ -49,3 +49,17 @@ opl2_detect:
 	and	#$e0
 	cmp	#$c0
 +	rts
+
+
+; jsr here: 6 cycles
+; rts back: 6 cycles
+
+opl2_delay_data ; 23000ns / 0
+!for .i,0,opl2_data_delay {
+	nop
+}
+opl2_delay_register ; 3300 ns
+!for .i,0,opl2_reg_delay {
+	nop
+}
+	rts

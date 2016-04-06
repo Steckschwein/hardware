@@ -64,6 +64,10 @@
 ; ---------------------------------------------------------------------
 
 *=$1000
+!source <defs.h.a>
+!source <bios.h.a>
+!source <ym3812.h.a>
+
 	jmp main
 
 ZP=$80			;	.RES 2 ; general purpose zeropage locations we use (two bytes)
@@ -85,13 +89,13 @@ codemap			= song + 26
 SFX_YM_SELECT_REGISTER	= $250
 SFX_YM_DATA_REGISTER	= SFX_YM_SELECT_REGISTER + 1 
 
-SCREEN_ADDRESS		= $0400
+; SCREEN_ADDRESS		= $0400
 ;COLOR_ADDRESS		= $D800
 ;COLOR_RAM_OFFSET	= COLOR_ADDRESS - SCREEN_ADDRESS
-REGDUMP_START_POS	= SCREEN_ADDRESS + 41
-SONG_POSITION_POS	= SCREEN_ADDRESS + 24*40
-MSG_POS			= SCREEN_ADDRESS + 22*40
-SONG_NAME_POS		= SONG_POSITION_POS + 15
+; REGDUMP_START_POS	= SCREEN_ADDRESS + 41
+; SONG_POSITION_POS	= SCREEN_ADDRESS + 24*40
+; MSG_POS			= SCREEN_ADDRESS + 22*40
+; SONG_NAME_POS		= SONG_POSITION_POS + 15
 
 ; You need a version 2 DRO file here
 ; DOSBOX 0.74 (maybe 0.73 too, but note: older versions
@@ -140,12 +144,18 @@ reset_sfx:
 	STY SFX_YM_SELECT_REGISTER ; select YM register
 
 	; wait 12 cycles according to spec
-	!for .i,1,.nops_addr {
-		NOP
-	}
+	; !for .i,1,.nops_addr {
+	; 	NOP
+	; }
+
+	jsr opl2_delay_register
+
 
     STA SFX_YM_DATA_REGISTER ; write to selected YM register now
-    jsr .wait_data
+    ; jsr .wait_data
+
+	jsr opl2_delay_data	
+
     LDX #4 ; some more delay we need here ...
     INY
     BNE -
@@ -225,14 +235,18 @@ play_loop:
 	; so I simply don't need any additional delay (I hope so, at least)
 	STA SFX_YM_SELECT_REGISTER
 	; Wait 12 cycles according to spec
-	!for .i,1,.nops_addr {
-		NOP 
-	}
+	; !for .i,1,.nops_addr {
+	; 	NOP 
+	; }
+
+	jsr opl2_delay_register
+
 	STA ZP ; store YM register number in ZP
 
 	LDA ZP+1
 	STA SFX_YM_DATA_REGISTER
-	jsr .wait_data
+	; jsr .wait_data
+	jsr opl2_delay_data
 
 	LDA song_p+1
 	CMP #>(song_end)
@@ -284,9 +298,11 @@ chk_kbd:  ; if I am correct, it's about 14 cycles normally
 reset: ; It's now safe to turn off your computer. :)
 	JSR reset_sfx
 
-.wait_data
-	; .nops_data - 2*6 cycles (JSR/RTS)
-	!for .i,1,.nops_data - 12 {
-		NOP 
-	}
-	rts 
+; .wait_data
+; 	; .nops_data - 2*6 cycles (JSR/RTS)
+; 	!for .i,1,.nops_data - 12 {
+; 		NOP 
+; 	}
+; 	rts 
+
+!source <ym3812.a>

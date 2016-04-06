@@ -8,6 +8,15 @@ ym3812_h_a = 1
 	opl_data = opl_stat + 1 ; data register (write only)
 } 
 
+; opl2_data_delay_time = 23000 ; ns
+; opl2_reg_delay_time = 3300 ; ns
+
+opl2_data_delay_time = 25000
+opl2_reg_delay_time = 5000
+
+opl2_data_delay 	= ((opl2_data_delay_time - opl2_reg_delay_time) / (1000/clockspeed)) / 2 -12
+opl2_reg_delay 		= (opl2_reg_delay_time 							/ (1000/clockspeed)) / 2 -12
+
 ;--------------------------------------------------------------------------------------------------------------
 ; For some of the parameters, there is one register per output channel. For those
 ; parameters, channel number can be used as an offset into the map. For many
@@ -77,7 +86,7 @@ opl2_chan8_op2	= opl2_op18
 	; The AdLib manual gives the wait times in microseconds: three point three (3.3) microseconds for the address, and twenty-three (23) microseconds for the data.
 	; 3.300 ns / 0.25ns = 13.2 cycles / 2 = 6.6 NOPs
 
-	!for .i,1,7 {
+	!for .i,1,opl2_reg_delay {
 		nop
 	} 
 	lda #.val
@@ -86,7 +95,7 @@ opl2_chan8_op2	= opl2_op18
 	; !for .i,1,46 {
 	; 	nop
 	; } 
-	ldy #46
+	ldy #opl2_data_delay
 --	
 	dey
 	bne --
@@ -101,7 +110,7 @@ opl2_chan8_op2	= opl2_op18
 	; The AdLib manual gives the wait times in microseconds: three point three (3.3) microseconds for the address, and twenty-three (23) microseconds for the data.
 	; 3.300 ns / 0.25ns = 13.2 cycles / 2 = 6.6 NOPs
 
-	!for .i,1,7 {
+	!for .i,1,opl2_reg_delay {
 		nop
 	} 
 	pla
@@ -110,7 +119,7 @@ opl2_chan8_op2	= opl2_op18
 	; !for .i,1,46 {
 	; 	nop
 	; } 
-	ldy #46
+	ldy #opl2_data_delay
 --	
 	dey
 	bne --
