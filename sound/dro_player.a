@@ -66,6 +66,8 @@
 *=$1000
 !source <defs.h.a>
 !source <bios.h.a>
+!source <kernel.h.a>
+!source <via.h.a>
 !source <ym3812.h.a>
 
 	jmp main
@@ -76,8 +78,8 @@ song_p=$82		;	.RES 2 ; byte pointer inside the DRO stream (two bytes)
 .nops_addr = 14
 .nops_data = 96
 
-screen_reg_addrs:
-!fill	512,32
+; screen_reg_addrs:
+; !fill	512,32
 
 
 ;song_length		= song + 12  ; we don't use length currently, but the label after the included DRO to match against the position counter
@@ -129,6 +131,12 @@ song:
 !ifdef prowla {
 !bin "prowla.dro"
 }
+!ifdef alienate {
+!bin "alienate.dro"
+}
+!ifdef pacman {
+!bin "pacman.dro"
+}
 
 song_end:
 
@@ -178,8 +186,9 @@ main:
 	; features now.
 	SEI
 	LDY #0 ; AdLib register counter
-	LDX #13 ; number of bytes to display within a C64 text line
+	; LDX #13 ; number of bytes to display within a C64 text line
 
+	jsr .init_opl2
 
 main_player:
 	; We must find the (C64 memory) address of the first byte
@@ -245,7 +254,7 @@ play_loop:
 
 	LDA ZP+1
 	STA SFX_YM_DATA_REGISTER
-	; jsr .wait_data
+	
 	jsr opl2_delay_data
 
 	LDA song_p+1
@@ -261,7 +270,11 @@ short_delay: ; "short delay" in DRO files means waiting X+1 miliseconds
 	LDX ZP+1 ; after this, we should wait X+1 msecs
 	INX
 -	LDY #40  ;25*40=1000 cycles [25=20 - see below - plus 5], about one msec.
---	JSR chk_kbd ; 6 cycles for JSR, 14 for the subrutine: 20 cycles
+--	
+	;JSR chk_kbd ; 6 cycles for JSR, 14 for the subrutine: 20 cycles
+
+	jsr .dro_slide
+	
 	DEY   ; 2 cycles
 	BNE --  ; 3 cycles
 	DEX
@@ -274,7 +287,8 @@ long_delay: ; "long delay" in DRO files means waiting (X+1)*256 miliseconds
 	PHA
 	LDX #0
 --	LDY #40
---- JSR chk_kbd
+--- 
+	jsr .dro_slide
 	DEY
 	BNE ---
 	DEX
@@ -288,15 +302,22 @@ chk_kbd:  ; if I am correct, it's about 14 cycles normally
 ;	LDA $DC01	; 4 cycles
 
 ;	AND #%10000000	; 2 cycles
-	!for .i,0,84 {
-		nop
-	} 
 	
 
 ;	BEQ reset	; 2 cycles (branch is not taken)
+
+
+	jsr .getkey
+	cmp #'X'
+	beq reset
+
 	RTS		; 6 cycles
 reset: ; It's now safe to turn off your computer. :)
 	JSR reset_sfx
+	cli
+	jmp (retvec)
+; -	jmp -
+
 
 ; .wait_data
 ; 	; .nops_data - 2*6 cycles (JSR/RTS)
@@ -304,5 +325,26 @@ reset: ; It's now safe to turn off your computer. :)
 ; 		NOP 
 ; 	}
 ; 	rts 
+.dro_slide
+	!for .i,0,74 {
+		nop
+	} 
+	rts
+
+.getkey
+	phx
+
+	lda #%01111010
+	sta via1portb
+
+	; lda #$ff
+	jsr spi_r_byte
+
+	ldx #%11111110
+	stx via1portb
+
+	plx
+	rts
+
 
 !source <ym3812.a>
