@@ -1,4 +1,4 @@
-SONGS=dn2_1.bin	dn2_2.bin prowla.bin 
+SONGS=dn2_1.bin	dn2_2.bin prowla.bin alienate.bin pacman.bin
 
 %.bin: %.a
 	acme -v -f plain --cpu 65c02 -o $@ $<
@@ -6,6 +6,10 @@ SONGS=dn2_1.bin	dn2_2.bin prowla.bin
 all: soundtest.bin synth.bin $(SONGS)
 #all: $(SONGS)
 
+pacman.bin: dro_player.a
+	acme -v -f plain --cpu 65c02 -Dpacman=1 -o $@ $<
+alienate.bin: dro_player.a
+	acme -v -f plain --cpu 65c02 -Dalienate=1 -o $@ $<
 prowla.bin: dro_player.a
 	acme -v -f plain --cpu 65c02 -Dprowla=1 -o $@ $<
 dn2_1.bin: dro_player.a
