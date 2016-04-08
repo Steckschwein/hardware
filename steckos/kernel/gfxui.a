@@ -42,137 +42,137 @@
     
 .collor_offs=$1800    
 .color=.gfxbuf+.collor_offs
-.gfxui_simple_blend_off
-    lda #$80
-    bra +
-.gfxui_simple_blend_on
-    lda #$00
-+   sta tmp2
-    +SetVector  (.WRITE_ADDRESS<<8)+ADDRESS_GFX2_COLOR, ptr1
-    lda #0
-    sta tmp0
-    sta tmp5
-    lda #8
-    sta tmp1
---  bit tmp5    ;sync with isr
-    bpl --
-    stz tmp5
+; .gfxui_simple_blend_off
+;     lda #$80
+;     bra +
+; .gfxui_simple_blend_on
+;     lda #$00
+; +   sta tmp2
+;     +SetVector  (.WRITE_ADDRESS<<8)+ADDRESS_GFX2_COLOR, ptr1
+;     lda #0
+;     sta tmp0
+;     sta tmp5
+;     lda #8
+;     sta tmp1
+; --  bit tmp5    ;sync with isr
+;     bpl --
+;     stz tmp5
     
-    ldx	#24
--   lda ptr1l
-    ldy ptr1h
-	+vdp_sreg
- 	ldy tmp0
-.sc lda .gfxbuf+.collor_offs,y
-    bit tmp2
-    bpl +
-    lda #Black<<4|Black
-+	sta a_vram
-	iny
-    cpy tmp1
-	bne   .sc
-	inc   .sc+2
-    inc   ptr1h
-	dex
-	bne  -
+;     ldx	#24
+; -   lda ptr1l
+;     ldy ptr1h
+; 	+vdp_sreg
+;  	ldy tmp0
+; .sc lda .gfxbuf+.collor_offs,y
+;     bit tmp2
+;     bpl +
+;     lda #Black<<4|Black
+; +	sta a_vram
+; 	iny
+;     cpy tmp1
+; 	bne   .sc
+; 	inc   .sc+2
+;     inc   ptr1h
+; 	dex
+; 	bne  -
     
-    lda #(.WRITE_ADDRESS)+>ADDRESS_GFX2_COLOR
-    sta ptr1h
-    lda #>(.gfxbuf+.collor_offs)
-    sta .sc+2
+;     lda #(.WRITE_ADDRESS)+>ADDRESS_GFX2_COLOR
+;     sta ptr1h
+;     lda #>(.gfxbuf+.collor_offs)
+;     sta .sc+2
 
-    lda tmp1
-    clc
-    adc #08
-    sta tmp1
-    sty tmp0
-    sty ptr1l
-    tya ;update psr
-    bne --
-    rts
+;     lda tmp1
+;     clc
+;     adc #08
+;     sta tmp1
+;     sty tmp0
+;     sty ptr1l
+;     tya ;update psr
+;     bne --
+;     rts
 
-.row=$100
-.gfxui_blend_off
-    lda #Transparent<<4|Transparent
-    bra +
-.gfxui_blend_on
-    lda #$ff
-+   sta tmp2
-    +SetVector  (.WRITE_ADDRESS<<8)+ADDRESS_GFX2_COLOR+0,          ptr1
-    +SetVector  (.WRITE_ADDRESS<<8)+ADDRESS_GFX2_COLOR+.row+$f8,   ptr2; +1 row and $f8 end of line
+; .row=$100
+; .gfxui_blend_off
+;     lda #Transparent<<4|Transparent
+;     bra +
+; .gfxui_blend_on
+;     lda #$ff
+; +   sta tmp2
+;     +SetVector  (.WRITE_ADDRESS<<8)+ADDRESS_GFX2_COLOR+0,          ptr1
+;     +SetVector  (.WRITE_ADDRESS<<8)+ADDRESS_GFX2_COLOR+.row+$f8,   ptr2; +1 row and $f8 end of line
 
-    stz tmp0
-    lda #8
-    sta tmp1
-    lda #$f8
-    sta tmp3
-    stz tmp4
-    stz tmp5
+;     stz tmp0
+;     lda #8
+;     sta tmp1
+;     lda #$f8
+;     sta tmp3
+;     stz tmp4
+;     stz tmp5
     
---  bit tmp5    ;sync with isr
-    bpl --
-    stz tmp5
+; --  bit tmp5    ;sync with isr
+;     bpl --
+;     stz tmp5
     
-    ldx	#12
--   lda ptr1l
-    ldy ptr1h
-	+vdp_sreg
- 	ldy tmp0
-.c  lda .color,y
-    and tmp2
-	sta a_vram
-	iny
-    cpy tmp1
-	bne   .c
-	inc   .c+2
-	inc   .c+2
-    inc   ptr1h
-    inc   ptr1h
-	dex
-	bne  -
+;     ldx	#12
+; -   lda ptr1l
+;     ldy ptr1h
+; 	+vdp_sreg
+;  	ldy tmp0
+; .c  lda .color,y
+;     and tmp2
+; 	sta a_vram
+; 	iny
+;     cpy tmp1
+; 	bne   .c
+; 	inc   .c+2
+; 	inc   .c+2
+;     inc   ptr1h
+;     inc   ptr1h
+; 	dex
+; 	bne  -
 
-    sty tmp0    ;new offset
-    sty ptr1l
-    tya
-    clc
-    adc #08
-    sta tmp1
+;     sty tmp0    ;new offset
+;     sty ptr1l
+;     tya
+;     clc
+;     adc #08
+;     sta tmp1
     
-    lda #(.WRITE_ADDRESS)+>ADDRESS_GFX2_COLOR
-    sta ptr1h
-    lda #>.color
-    sta .c+2
+;     lda #(.WRITE_ADDRESS)+>ADDRESS_GFX2_COLOR
+;     sta ptr1h
+;     lda #>.color
+;     sta .c+2
     
-    ldx	#12
--   lda ptr2l
-    ldy ptr2h
-	+vdp_sreg
-    ldy tmp3
-.c2 lda .color+.row,y
-    and tmp2
-	sta a_vram
-	iny
-    cpy tmp4
-	bne   .c2
-	inc   .c2+2
-	inc   .c2+2
-    inc   ptr2h
-    inc   ptr2h
-	dex
-	bne  -
+;     ldx	#12
+; -   lda ptr2l
+;     ldy ptr2h
+; 	+vdp_sreg
+;     ldy tmp3
+; .c2 lda .color+.row,y
+;     and tmp2
+; 	sta a_vram
+; 	iny
+;     cpy tmp4
+; 	bne   .c2
+; 	inc   .c2+2
+; 	inc   .c2+2
+;     inc   ptr2h
+;     inc   ptr2h
+; 	dex
+; 	bne  -
     
-    lda tmp3
-    sta tmp4
-    sec
-    sbc #08
-    sta tmp3
-    sta ptr2l
+;     lda tmp3
+;     sta tmp4
+;     sec
+;     sbc #08
+;     sta tmp3
+;     sta ptr2l
     
-    lda #(.WRITE_ADDRESS)+>ADDRESS_GFX2_COLOR+.row+$f8
-    sta ptr2h
-    lda #>.color+.row
-    sta .c2+2
-    lda tmp0
-    beq +
-    jmp --
-+   rts
+;     lda #(.WRITE_ADDRESS)+>ADDRESS_GFX2_COLOR+.row+$f8
+;     sta ptr2h
+;     lda #>.color+.row
+;     sta .c2+2
+;     lda tmp0
+;     beq +
+;     jmp --
+; +   rts

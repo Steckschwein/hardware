@@ -6,10 +6,14 @@
 !src <shell.h.a>
 
 !src <fat32.h.a>
+!src <t9929.h.a>
 
 !address {
 .content = $2000	
+
 }
+.collor_offs=$1800    
+.color=.content+.collor_offs
 
 main:
 	
@@ -48,6 +52,92 @@ main:
 	+PrintString .errtxt
 
 +	jmp (retvec)
+
+.row=$100
+gfxui_blend_off
+    lda #Transparent<<4|Transparent
+    bra +
+gfxui_blend_on
+    lda #$ff
++   sta tmp2
+    +SetVector  (.WRITE_ADDRESS<<8)+ADDRESS_GFX2_COLOR+0,          ptr1
+    +SetVector  (.WRITE_ADDRESS<<8)+ADDRESS_GFX2_COLOR+.row+$f8,   ptr2; +1 row and $f8 end of line
+
+    stz tmp0
+    lda #8
+    sta tmp1
+    lda #$f8
+    sta tmp3
+    stz tmp4
+    stz tmp5
+    
+--  bit tmp5    ;sync with isr
+    bpl --
+    stz tmp5
+    
+    ldx	#12
+-   lda ptr1l
+    ldy ptr1h
+	+vdp_sreg
+ 	ldy tmp0
+.c  lda .color,y
+    and tmp2
+	sta a_vram
+	iny
+    cpy tmp1
+	bne   .c
+	inc   .c+2
+	inc   .c+2
+    inc   ptr1h
+    inc   ptr1h
+	dex
+	bne  -
+
+    sty tmp0    ;new offset
+    sty ptr1l
+    tya
+    clc
+    adc #08
+    sta tmp1
+    
+    lda #(.WRITE_ADDRESS)+>ADDRESS_GFX2_COLOR
+    sta ptr1h
+    lda #>.color
+    sta .c+2
+    
+    ldx	#12
+-   lda ptr2l
+    ldy ptr2h
+	+vdp_sreg
+    ldy tmp3
+.c2 lda .color+.row,y
+    and tmp2
+	sta a_vram
+	iny
+    cpy tmp4
+	bne   .c2
+	inc   .c2+2
+	inc   .c2+2
+    inc   ptr2h
+    inc   ptr2h
+	dex
+	bne  -
+    
+    lda tmp3
+    sta tmp4
+    sec
+    sbc #08
+    sta tmp3
+    sta ptr2l
+    
+    lda #(.WRITE_ADDRESS)+>ADDRESS_GFX2_COLOR+.row+$f8
+    sta ptr2h
+    lda #>.color+.row
+    sta .c2+2
+    lda tmp0
+    beq +
+    jmp --
++   rts
 
 .errtxt		!text "load error", $00
 
