@@ -47,24 +47,25 @@ sd_cmd_param 		= $02a0
 sd_cmd_chksum		= sd_cmd_param+4
 sd_cmd_result 		= $02a5
 
+current_dir_first_cluster 	= $02b0 ; first cluster of current dir
 ; SD Card error
 ; $ff - No Card
 ; $0f - Invalid Card
 ; $00 - No error
 
-errno	 			= $0300
 lba_addr = $20
-current_dir_first_clus 	= $0301 ; first cluster of current dir
-cluster_begin_lba 	= $0303 ; begin of cluster area, 4 bytes
-sectors_per_cluster = $0307 ; sectors per cluster, 1 byte
-root_dir_first_clus = $0308 ; first cluster of root dir, 4 bytes
-filename_buf		= $030c ; file name buffer, 11 bytes
-dir_attrib_mask		= $0319 ;
-fd_area				= $0320 ; File descriptor area, 6x8byte until $0350 
-open_file_cluster	= $0320
+errno	 				= $0300
 
-xxx					= $0350 ;
-fat_first_block		= $0350
+cluster_begin_lba 		= $0303 ; begin of cluster area, 4 bytes
+sectors_per_cluster 	= $0307 ; sectors per cluster, 1 byte
+root_dir_first_clus 	= $0308 ; first cluster of root dir, 4 bytes
+filename_buf			= $030c ; file name buffer, 11 bytes
+dir_attrib_mask			= $0319 ;
+fd_area					= $0320 ; File descriptor area, 6x8byte until $0350 
+open_file_cluster		= $0320
+
+xxx						= $0350 ;
+fat_first_block			= $0350
 sd_blktarget 		= $0400
 
 steckos_start		= $1000	

@@ -114,9 +114,10 @@ FD_file_size = $08
 	lda (dirptr),y
 	bit #$10 ; Is a directory
     beq +
+	
 
     ldx #$00 ; direcories always go to fd #0
-    ; +saveClusterNo curr_dir_cluster_no
+    +saveClusterNo current_dir_first_cluster
     ; bra .end_open 
     bra ++
 
@@ -408,6 +409,7 @@ FD_file_size = $08
 
 	+Copy sd_blktarget + BPB_RootClus, root_dir_first_clus, 3
 
+
 	; now we have the lba address of the first sector of the first cluster
 
 .end_mount
@@ -420,6 +422,7 @@ FD_file_size = $08
 .fat_open_rootdir
 	; Open root dir
 	+Copy root_dir_first_clus, fd_area + FD_start_cluster, 3
+	+Copy root_dir_first_clus, current_dir_first_cluster, 3
 	jmp .calc_lba_addr
 	rts
 
@@ -523,7 +526,6 @@ FD_file_size = $08
 +	
 	rts
 
-.dir_entry_size=11
 
 
 .match:
@@ -568,7 +570,7 @@ match_ext
 	bne match_0
 match_ext_1
 	iny
-	cpy #.dir_entry_size
+	cpy #DIR_Attr
 	beq	m_found		; end of dir?
 	bra	match_ext
 	
@@ -583,7 +585,7 @@ m_r_match
 m_1
 	inx
 	iny
-	cpy #.dir_entry_size
+	cpy #DIR_Attr
 	bne match_0
 	
 	lda filename_buf,x	;input chars left?
@@ -600,7 +602,7 @@ m_n1
 	beq match_ext_1		; then go on with skip until extension above
 m_n2
 	iny		
-	cpy #.dir_entry_size
+	cpy #DIR_Attr
 	bne m_n1	; end of dir entry? found...
 m_found
 	sec
