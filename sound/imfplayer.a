@@ -180,7 +180,7 @@ opl2_set_reg:
 	stx opl_stat
 	jsr opl2_delay_register
 	sta opl_data
-	jsr opl2_delay_data
+	; jsr opl2_delay_data
 
 	+restore
 	rts
