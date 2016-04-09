@@ -1,67 +1,79 @@
 !source <defs.h.a>
 !source <bios.h.a>
-!source <lcd.h.a>
+!source <ym3812.h.a>
 !source <via.h.a>
 
-CPU_CLOCK=4000000
+CPU_CLOCK=8000000
 .regsel=tmp0
 .regval=tmp1
 .delayh=tmp2
 .delayl=tmp3
 
+imfptr 	= tmp4
 *=$1000
 	jmp	main
 
-!source "ym3812.lib.a"
-!source <t99xx.lib.a>
+
+
+; !source <t99xx.lib.a>
 
 main	
-    +Println
+	+Println
+	+SetVector	imf_data, adrl
+
+	jsr .init_timer
+
+
+-	jmp -
+
+
+;     +Println
     
-	jsr	snd_detect
-	bcs	+
-;	bra	+			;FIXME - for testing purpose only
-	lda	#'N'
-	jsr	chrout
-	rts
-+	
-	lda	#'O'
-	jsr	chrout
+; 	jsr	snd_detect
+; 	bcs	+
+; ;	bra	+			;FIXME - for testing purpose only
+; 	lda	#'N'
+; 	jsr	chrout
+; 	rts
+; +	
+; 	lda	#'O'
+; 	jsr	chrout
 	
-	jsr	snd_reset
-	lda	#'P'
-	jsr	chrout
+; 	jsr	snd_reset
+; 	lda	#'P'
+; 	jsr	chrout
 	
-	jsr	.load_imf
-	bcs	+
-	lda	#'x'
-	jsr	chrout
-	rts
-+
-	lda	#'L'
-	jsr	chrout
+; 	jsr	.load_imf
+; 	bcs	+
+; 	lda	#'x'
+; 	jsr	chrout
+; 	rts
+; +
+; 	lda	#'L'
+; 	jsr	chrout
 	
-	jsr	.init_timer
+; 	jsr	.init_timer
 	
-	lda	#'2'
-	jsr	chrout
+; 	lda	#'2'
+; 	jsr	chrout
 	
-	jsr	.play_imf
+; 	jsr	.play_imf
 	
-	lda	#'e'
-	jsr	chrout
+; 	lda	#'e'
+; 	jsr	chrout
 	
--	jmp	-
-	
+; -	jmp	-
+
+tempo = 700
 .init_timer
 	sei
 							; tempo is one of 280Hz (DN2), 560Hz (imf), 700Hz (.wlf) -> 4Mhz
 							; 280 Hz --> 14280
 							; 560 Hz -->  7140
 							; 700 Hz -->  5714
-	lda #<(CPU_CLOCK/560)
+	lda #<(CPU_CLOCK/tempo)
 	sta via1t1cl            ; set low byte of count
-	lda #>(CPU_CLOCK/560)
+	lda #>(CPU_CLOCK/tempo)
 	sta via1t1ch            ; set high byte of count
  
 	lda #%11000000
@@ -74,131 +86,213 @@ main
 
 .irq
 	+save
+
+	lda .delayh
+	bne +
+	lda .delayl
+	bne +
+
+	bra ++
++
+	dec .delayl
+	bne +
+	dec .delayh
++
+	bra +++
+
+++
 	
 	bit via1ifr		; Interrupt from VIA?
-	bpl ++
+	bpl +++
 	
 	bit via1t2cl	; Acknowledge timer interrupt by reading channel low
 	
-	lda	.imf_update_wait	;clear, means currently within play loop
-	beq	++					;skip delay countdown
-	dec	.delayl
-	bne	++
-	lda .delayh				;delay low = 0, check delay high also = 0
-	bne	+					
-	stz	.imf_update_wait	; if so, trigger imf update, clear the wait flag
-	bra	++
-+	dec
-	sta	.delayh
-++
+	; lda adrh
+	; jsr hexout
+	; lda adrl
+	; jsr hexout
+
+	; lda #':'
+	; jsr chrout
+	; lda #' '
+	; jsr chrout
+	
+	ldy #$00
+	lda (adrl),y
+	tax
+	; jsr hexout
+
+	; lda #' '
+	; jsr chrout
+
+	ldy #$01
+	lda (adrl),y
+	; jsr hexout
+
+	jsr opl2_set_reg
+
+	; lda #' '
+	; jsr chrout
+
+	ldy #$03
+	lda (adrl),y
+	sta .delayl
+	; jsr hexout
+	ldy #$02
+	lda (adrl),y
+	sta .delayh
+	; jsr hexout
+
+
+
+	clc
+	lda #$04
+	adc adrl
+	sta adrl
+	bcc +
+	inc adrh
++	
+
+
+	; +Println
+
+
+
+
+
+; 	lda	.imf_update_wait	;clear, means currently within play loop
+; 	beq	++					;skip delay countdown
+; 	dec	.delayl
+; 	bne	++
+; 	lda .delayh				;delay low = 0, check delay high also = 0
+; 	bne	+					
+; 	stz	.imf_update_wait	; if so, trigger imf update, clear the wait flag
+; 	bra	++
+; +	dec
+; 	sta	.delayh
++++
 	+restore
 	rti
-	
-.play_imf
-	+SetVector	imf_data, .adrl
-	jsr	.song_length
-	
-	ldy	#$00
---	lda	.imf_update_wait	;wait until flag cleared
-	bne	--
 
-	inc	tmp4
-	lda	tmp4
-	jsr	vdp_bgcolor
-	
-	jsr	.next_data			;next data block
-	jsr .is_songend			;song end ? indicated by carry=1
-	bcs	++
-	
-	lda	.regsel		;reg select
-	sta	a_sound_rs
-	+snd_nops
-	lda	.regval		;reg data
-	sta	a_sound_rw
-	
-	lda	.delayl		;delay > 0, wait until next update
-	bne	+
-	lda	.delayh
-	bne	+
--	tya				;y overflow?
-	bne	--
-	inc	.adrh
-	lda	#'.'
-	jsr	chrout
-	jmp	--
-+	inc	.imf_update_wait	; trigger delay countdown
-	bra	-
-++	rts
+opl2_set_reg:
+	+save
 
-.song_length
-	clc
-	lda	#<.songend
-	sbc	.adrl
-	sta	.length_l
-	lda	#>.songend
-	sbc	.adrh
-	sta	.length_h
+	stx opl_stat
+	jsr opl2_delay_register
+	sta opl_data
+	jsr opl2_delay_data
+
+	+restore
 	rts
+	
+; .play_imf
+; 	+SetVector	imf_data, .adrl
+; 	jsr	.song_length
+	
+; 	ldy	#$00
+; --	lda	.imf_update_wait	;wait until flag cleared
+; 	bne	--
 
-.is_songend
-	phy
-	ldy	#$00
--	lda	(.adrl),y
-	cmp	.songend,y
-	bne	+
-	iny	
-	cpy	#$04
-	bne	-
-	sec
-	bra	++
-+	clc
-++	ply
-	rts
+; 	inc	tmp4
+; 	lda	tmp4
+; 	jsr	vdp_bgcolor
+	
+; 	jsr	.next_data			;next data block
+; 	jsr .is_songend			;song end ? indicated by carry=1
+; 	bcs	++
+	
+; 	lda	.regsel		;reg select
+; 	sta	a_sound_rs
+; 	+snd_nops
+; 	lda	.regval		;reg data
+; 	sta	a_sound_rw
+	
+; 	lda	.delayl		;delay > 0, wait until next update
+; 	bne	+
+; 	lda	.delayh
+; 	bne	+
+; -	tya				;y overflow?
+; 	bne	--
+; 	inc	.adrh
+; 	lda	#'.'
+; 	jsr	chrout
+; 	jmp	--
+; +	inc	.imf_update_wait	; trigger delay countdown
+; 	bra	-
+; ++	rts
 
-.next_data
-	lda	(.adrl),y			
-	sta	.regsel
-	iny
-	lda	(.adrl),y
-	sta	.regval
-	iny
-	lda	(.adrl),y
-	sta	.delayh
-	iny
-	lda	(.adrl),y
-	sta	.delayl
-	iny
-	rts
+; .song_length
+; 	clc
+; 	lda	#<.songend
+; 	sbc	.adrl
+; 	sta	.length_l
+; 	lda	#>.songend
+; 	sbc	.adrh
+; 	sta	.length_h
+; 	rts
+
+; .is_songend
+; 	phy
+; 	ldy	#$00
+; -	lda	(.adrl),y
+; 	cmp	.songend,y
+; 	bne	+
+; 	iny	
+; 	cpy	#$04
+; 	bne	-
+; 	sec
+; 	bra	++
+; +	clc
+; ++	ply
+; 	rts
+
+; .next_data
+; 	lda	(.adrl),y			
+; 	sta	.regsel
+; 	iny
+; 	lda	(.adrl),y
+; 	sta	.regval
+; 	iny
+; 	lda	(.adrl),y
+; 	sta	.delayh
+; 	iny
+; 	lda	(.adrl),y
+; 	sta	.delayl
+; 	iny
+; 	rts
 		
-.load_imf
-	ldx	#$00
--	lda	adlib_id,x	;check ADLIB signature
-	cmp	.imf_file,x
-	bne	+
-	inx
-	cpx	#$05
-	bne	-
-	bra	.load_imf_normal
-+	lda	adlib_id+5	;check version != 1
-	cmp	#$01
-	bne	.load_imf_normal
-	bra	.load_imf_with_header
-	;TODO			;check file name
+; .load_imf
+; 	ldx	#$00
+; -	lda	adlib_id,x	;check ADLIB signature
+; 	cmp	.imf_file,x
+; 	bne	+
+; 	inx
+; 	cpx	#$05
+; 	bne	-
+; 	bra	.load_imf_normal
+; +	lda	adlib_id+5	;check version != 1
+; 	cmp	#$01
+; 	bne	.load_imf_normal
+; 	bra	.load_imf_with_header
+; 	;TODO			;check file name
 					
-+	clc				;no imf - clear carry
-	rts
-.load_imf_normal
-.load_imf_with_header	
-	sec
-	rts
+; +	clc				;no imf - clear carry
+; 	rts
+; .load_imf_normal
+; .load_imf_with_header	
+; 	sec
+; 	rts
 
-.length_h 	!byte 0
-.length_l	!byte 0
-.imf_update_wait !byte 0
-adlib_id !text "ADLIB"
+; .length_h 	!byte 0
+; .length_l	!byte 0
+; .imf_update_wait !byte 0
+; adlib_id !text "ADLIB"
 
+!align 255,0
 imf_data
 .imf_file
 !bin "test/test.wlf"
 .songend
 !byte $55, $aa, $55, $aa
+
+!source <ym3812.a>
