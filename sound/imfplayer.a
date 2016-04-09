@@ -11,7 +11,6 @@ CPU_CLOCK=8000000
 
 imfptr 	= tmp4
 *=$1000
-	jmp	main
 
 
 
@@ -20,49 +19,14 @@ imfptr 	= tmp4
 main	
 	+Println
 	+SetVector	imf_data, adrl
-
+	jsr .init_opl2
 	jsr .init_timer
 
 
--	jmp -
+-	
+	jmp -
 
 
-;     +Println
-    
-; 	jsr	snd_detect
-; 	bcs	+
-; ;	bra	+			;FIXME - for testing purpose only
-; 	lda	#'N'
-; 	jsr	chrout
-; 	rts
-; +	
-; 	lda	#'O'
-; 	jsr	chrout
-	
-; 	jsr	snd_reset
-; 	lda	#'P'
-; 	jsr	chrout
-	
-; 	jsr	.load_imf
-; 	bcs	+
-; 	lda	#'x'
-; 	jsr	chrout
-; 	rts
-; +
-; 	lda	#'L'
-; 	jsr	chrout
-	
-; 	jsr	.init_timer
-	
-; 	lda	#'2'
-; 	jsr	chrout
-	
-; 	jsr	.play_imf
-	
-; 	lda	#'e'
-; 	jsr	chrout
-	
-; -	jmp	-
 
 tempo = 700
 .init_timer
@@ -85,15 +49,25 @@ tempo = 700
 	rts
 
 .irq
-	+save
+	; +save
 
+	
+	bit via1ifr		; Interrupt from VIA?
+	bpl +++
+	
+	bit via1t2cl	; Acknowledge timer interrupt by reading channel low
+
+
+	; delay counter zero? 
 	lda .delayh
 	bne +
 	lda .delayl
 	bne +
 
+	; if yes, jump to register setting
 	bra ++
-+
++	
+	; if no, 16bit decrement
 	dec .delayl
 	bne +
 	dec .delayh
@@ -101,16 +75,19 @@ tempo = 700
 	bra +++
 
 ++
+	; song data end reached? then dont do anything anymore
+	lda adrh
+	cmp #>.songend
+	bne +
+	lda adrl
+	cmp #<.songend
+	beq +++
++
+
 	
-	bit via1ifr		; Interrupt from VIA?
-	bpl +++
 	
-	bit via1t2cl	; Acknowledge timer interrupt by reading channel low
-	
-	; lda adrh
-	; jsr hexout
-	; lda adrl
-	; jsr hexout
+
+	; +Println
 
 	; lda #':'
 	; jsr chrout
@@ -160,22 +137,8 @@ tempo = 700
 
 	; +Println
 
-
-
-
-
-; 	lda	.imf_update_wait	;clear, means currently within play loop
-; 	beq	++					;skip delay countdown
-; 	dec	.delayl
-; 	bne	++
-; 	lda .delayh				;delay low = 0, check delay high also = 0
-; 	bne	+					
-; 	stz	.imf_update_wait	; if so, trigger imf update, clear the wait flag
-; 	bra	++
-; +	dec
-; 	sta	.delayh
 +++
-	+restore
+	; +restore
 	rti
 
 	
