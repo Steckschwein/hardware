@@ -129,7 +129,11 @@ tempo = 700
 	lda (adrl),y
 	; jsr hexout
 
-	jsr opl2_set_reg
+	stx opl_stat
+	jsr opl2_delay_register
+	sta opl_data
+	jsr opl2_delay_data
+
 
 	; lda #' '
 	; jsr chrout
@@ -174,16 +178,6 @@ tempo = 700
 	+restore
 	rti
 
-opl2_set_reg:
-	+save
-
-	stx opl_stat
-	jsr opl2_delay_register
-	sta opl_data
-	; jsr opl2_delay_data
-
-	+restore
-	rts
 	
 ; .play_imf
 ; 	+SetVector	imf_data, .adrl
@@ -291,7 +285,7 @@ opl2_set_reg:
 !align 255,0
 imf_data
 .imf_file
-!bin "test/test.wlf"
+!bin "test/pacman.wlf"
 .songend
 !byte $55, $aa, $55, $aa
 
