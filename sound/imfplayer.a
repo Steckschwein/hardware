@@ -3,7 +3,7 @@
 !source <ym3812.h.a>
 !source <via.h.a>
 
-CPU_CLOCK=8000000
+CPU_CLOCK=clockspeed * 1000000
 .regsel=tmp0
 .regval=tmp1
 .delayh=tmp2
@@ -17,18 +17,16 @@ imfptr 	= tmp4
 ; !source <t99xx.lib.a>
 
 main	
-	+Println
+	; +Println
 	+SetVector	imf_data, adrl
 	jsr .init_opl2
 	jsr .init_timer
 
 
--	
-	jmp -
+-	jmp -
 
 
-
-tempo = 700
+tempo = 560
 .init_timer
 	sei
 							; tempo is one of 280Hz (DN2), 560Hz (imf), 700Hz (.wlf) -> 4Mhz
@@ -74,58 +72,36 @@ tempo = 700
 +
 	bra +++
 
-++
-	; song data end reached? then dont do anything anymore
+++	
+	; song data end reached? then jump back to the beginning
 	lda adrh
 	cmp #>.songend
 	bne +
 	lda adrl
 	cmp #<.songend
-	beq +++
-+
+	bne +
+	+SetVector	imf_data, adrl
 
-	
-	
-
-	; +Println
-
-	; lda #':'
-	; jsr chrout
-	; lda #' '
-	; jsr chrout
-	
++	
 	ldy #$00
 	lda (adrl),y
-	tax
-	; jsr hexout
-
-	; lda #' '
-	; jsr chrout
-
-	ldy #$01
-	lda (adrl),y
-	; jsr hexout
-
-	stx opl_stat
+	sta opl_stat
 	jsr opl2_delay_register
+
+	iny
+	lda (adrl),y
 	sta opl_data
 	jsr opl2_delay_data
 
-
-	; lda #' '
-	; jsr chrout
-
-	ldy #$03
-	lda (adrl),y
-	sta .delayl
-	; jsr hexout
-	ldy #$02
+	iny
 	lda (adrl),y
 	sta .delayh
-	; jsr hexout
 
+	iny
+	lda (adrl),y
+	sta .delayl
 
-
+	;advance pointer by 4 bytes
 	clc
 	lda #$04
 	adc adrl
@@ -135,7 +111,6 @@ tempo = 700
 +	
 
 
-	; +Println
 
 +++
 	; +restore
@@ -248,8 +223,9 @@ tempo = 700
 !align 255,0
 imf_data
 .imf_file
-!bin "test/pacman.wlf"
+!bin "test/oasis.imf"
 .songend
-!byte $55, $aa, $55, $aa
+; !byte $55, $aa, $55, $aa
 
 !source <ym3812.a>
+
