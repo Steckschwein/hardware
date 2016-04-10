@@ -1,6 +1,8 @@
 !source <defs.h.a>
 !source <bios.h.a>
 !source <ym3812.h.a>
+!source <t9929.h.a>
+
 !source <via.h.a>
 
 CPU_CLOCK=clockspeed * 1000000
@@ -16,11 +18,13 @@ imfptr 	= tmp4
 
 
 
-; !source <t99xx.lib.a>
+
 
 main	
 	; +Println
 	sei
+
+	; jsr vdp_irq_off
 	+SetVector	imf_data, adrl
 	stz .delayl
 	stz .delayh
@@ -95,9 +99,7 @@ main
 
 	iny
 	lda (adrl),y
-	!for .i,0,6 {
-		sta opl_data		
-	}
+	sta opl_data		
 
 
 	; jsr opl2_delay_data
@@ -247,3 +249,4 @@ imf_data
 
 
 !source <ym3812.a>
+; !source <t99xx.lib.a>
