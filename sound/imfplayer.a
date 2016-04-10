@@ -4,7 +4,7 @@
 !source <via.h.a>
 
 CPU_CLOCK=clockspeed * 1000000
-tempo = 560
+tempo = 700
 
 .regsel=tmp0
 .regval=tmp1
@@ -20,18 +20,107 @@ imfptr 	= tmp4
 
 main	
 	; +Println
+	sei
 	+SetVector	imf_data, adrl
 	stz .delayl
 	stz .delayh
 
 	jsr .init_opl2
-	jsr .init_timer
 
--	jmp -
+; .mainloop:
+; 	!for .i,0,20{
+; 		nop
+; 	} 
+
+; 	; delay counter zero? 
+; 	lda .delayh
+; 	bne ++
+; 	lda .delayl
+; 	beq +
+; ++
+; 	; if no, 16bit decrement and exit routine
+; 	dec .delayl
+; 	bne ++
+; 	lda .delayh
+; 	beq ++
+; 	dec .delayh
+; ++
+; 	bra .mainloop
 
 
-.init_timer
+
+; +
+; 	lda adrh
+; 	; jsr hexout
+; 	lda adrl
+; 	; jsr hexout
+
+; 	; lda #':'
+; 	; jsr chrout
+; 	; lda #' '
+; 	; jsr chrout
+
+; 	ldy #$00
+; 	lda (adrl),y
+; 	sta opl_stat
+; 	; jsr hexout
+; 	jsr opl2_delay_register
+
+; 	; lda #' '
+; 	; jsr chrout
+
+
+; 	iny
+; 	lda (adrl),y
+; 	!for .i,0,12 {
+; 		sta opl_data	
+; 	}
+	
+; 	; jsr hexout
+
+; 	; lda #' '
+; 	; jsr chrout
+	
+
+; 	iny
+; 	lda (adrl),y
+; 	sta .delayh
+; 	; jsr hexout
+
+; 	iny
+; 	lda (adrl),y
+; 	sta .delayl
+; 	; jsr hexout
+
+; 	; +Println
+
+; 	lda adrh
+; 	cmp #>.songend
+; 	bne +
+; 	lda adrl
+; 	cmp #<.songend
+; 	beq .end
+; +
+
+; 	;advance pointer by 4 bytes
+; 	clc
+; 	lda #$04
+; 	adc adrl
+; 	sta adrl
+; 	bcc +
+; 	inc adrh
+; +	
+
+; 	jmp .mainloop
+
+; .end:
+; 	lda #'E'
+; 	jsr chrout
+; -	jmp -
+
 	sei
+
+
 							; tempo is one of 280Hz (DN2), 560Hz (imf), 700Hz (.wlf) -> 4Mhz
 							; 280 Hz --> 14280
 							; 560 Hz -->  7140
@@ -45,57 +134,56 @@ main
 	sta via1ier             ; enable VIA1 T1 interrupts
 	lda #%01000000
 	sta via1acr             ; T1 continuous, PB7 disabled  
+	
 	+SetVector .irq, irqvec
 	cli
-	rts
+
+
+-	jmp -
+
 
 .irq
-	; +save
+	+save
 	
 	bit via1ifr		; Interrupt from VIA?
 	bpl +++
-	
+
 	bit via1t1cl	; Acknowledge timer interrupt by reading channel low
 	
 
-
 	; delay counter zero? 
 	lda .delayh
-	bne +
-	lda .delayl
-	beq ++			; if yes, jump to register setting
+	clc
+	adc .delayl
+	beq ++ 
+
 	
 +	
 	; if no, 16bit decrement and exit routine
-	dec .delayl
+	lda .delayh
 	bne +
-	dec .delayh
-+
-	rti
-	; bra +++
+	dec .delayl
++	dec .delayh
+
+
+
+	bra +++
 
 ++	
-	; song data end reached? then jump back to the beginning
-	lda adrh
-	cmp #>.songend
-	bne +
-	lda adrl
-	cmp #<.songend
-	bne +
-	+SetVector	imf_data, adrl
-+	
 
 	ldy #$00
 	lda (adrl),y
 	sta opl_stat
+	tax
 	jsr opl2_delay_register
 
 	iny
 	lda (adrl),y
-	!for .i,0,12 {
-		sta opl_data
+	!for .i,0,6 {
+		sta opl_data		
 	}
-	+Println
+
+
 	; jsr opl2_delay_data
 
 	iny
@@ -105,6 +193,18 @@ main
 	iny
 	lda (adrl),y
 	sta .delayl
+
+	; song data end reached? then jump back to the beginning
+	lda adrh
+	cmp #>.songend
+	bne +
+	lda adrl
+	cmp #<.songend
+	bne +
+	+SetVector	imf_data, adrl
+	bra +++
++	
+
 
 	;advance pointer by 4 bytes
 	clc
@@ -116,7 +216,7 @@ main
 +	
 
 +++
-	; +restore
+	+restore
 	rti
 
 	
@@ -226,9 +326,9 @@ main
 ; !align 255,0
 imf_data
 .imf_file
-!bin "test/test.wlf"
+!bin "test/introcw3.wlf"
 .songend
-; !byte $55, $aa, $55, $aa
+
 
 !source <ym3812.a>
 

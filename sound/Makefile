@@ -1,7 +1,7 @@
 #SONGS=dn2_1.bin	dn2_2.bin prowla.bin alienate.bin pacman.bin
 
 %.bin: %.a
-	acme -v -f plain --cpu 65c02 -o $@ $<
+	acme -vv -f plain --cpu 65c02 -o $@ $<
 
 all: soundtest.bin synth.bin imfplayer.bin 
 #all: $(SONGS)
