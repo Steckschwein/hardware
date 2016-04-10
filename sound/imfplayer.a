@@ -4,6 +4,8 @@
 !source <via.h.a>
 
 CPU_CLOCK=clockspeed * 1000000
+tempo = 560
+
 .regsel=tmp0
 .regval=tmp1
 .delayh=tmp2
@@ -19,14 +21,15 @@ imfptr 	= tmp4
 main	
 	; +Println
 	+SetVector	imf_data, adrl
+	stz .delayl
+	stz .delayh
+
 	jsr .init_opl2
 	jsr .init_timer
-
 
 -	jmp -
 
 
-tempo = 560
 .init_timer
 	sei
 							; tempo is one of 280Hz (DN2), 560Hz (imf), 700Hz (.wlf) -> 4Mhz
@@ -48,29 +51,28 @@ tempo = 560
 
 .irq
 	; +save
-
 	
 	bit via1ifr		; Interrupt from VIA?
 	bpl +++
 	
-	bit via1t2cl	; Acknowledge timer interrupt by reading channel low
+	bit via1t1cl	; Acknowledge timer interrupt by reading channel low
+	
 
 
 	; delay counter zero? 
 	lda .delayh
 	bne +
 	lda .delayl
-	bne +
-
-	; if yes, jump to register setting
-	bra ++
+	beq ++			; if yes, jump to register setting
+	
 +	
-	; if no, 16bit decrement
+	; if no, 16bit decrement and exit routine
 	dec .delayl
 	bne +
 	dec .delayh
 +
-	bra +++
+	rti
+	; bra +++
 
 ++	
 	; song data end reached? then jump back to the beginning
@@ -81,8 +83,8 @@ tempo = 560
 	cmp #<.songend
 	bne +
 	+SetVector	imf_data, adrl
-
 +	
+
 	ldy #$00
 	lda (adrl),y
 	sta opl_stat
@@ -90,8 +92,11 @@ tempo = 560
 
 	iny
 	lda (adrl),y
-	sta opl_data
-	jsr opl2_delay_data
+	!for .i,0,12 {
+		sta opl_data
+	}
+	+Println
+	; jsr opl2_delay_data
 
 	iny
 	lda (adrl),y
@@ -109,8 +114,6 @@ tempo = 560
 	bcc +
 	inc adrh
 +	
-
-
 
 +++
 	; +restore
@@ -220,10 +223,10 @@ tempo = 560
 ; .imf_update_wait !byte 0
 ; adlib_id !text "ADLIB"
 
-!align 255,0
+; !align 255,0
 imf_data
 .imf_file
-!bin "test/oasis.imf"
+!bin "test/test.wlf"
 .songend
 ; !byte $55, $aa, $55, $aa
 
