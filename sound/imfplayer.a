@@ -4,7 +4,7 @@
 !source <via.h.a>
 
 CPU_CLOCK=clockspeed * 1000000
-tempo = 700
+tempo = 560
 
 .regsel=tmp0
 .regval=tmp1
@@ -27,97 +27,6 @@ main
 
 	jsr .init_opl2
 
-; .mainloop:
-; 	!for .i,0,20{
-; 		nop
-; 	} 
-
-; 	; delay counter zero? 
-; 	lda .delayh
-; 	bne ++
-; 	lda .delayl
-; 	beq +
-; ++
-; 	; if no, 16bit decrement and exit routine
-; 	dec .delayl
-; 	bne ++
-; 	lda .delayh
-; 	beq ++
-; 	dec .delayh
-; ++
-; 	bra .mainloop
-
-
-
-; +
-; 	lda adrh
-; 	; jsr hexout
-; 	lda adrl
-; 	; jsr hexout
-
-; 	; lda #':'
-; 	; jsr chrout
-; 	; lda #' '
-; 	; jsr chrout
-
-; 	ldy #$00
-; 	lda (adrl),y
-; 	sta opl_stat
-; 	; jsr hexout
-; 	jsr opl2_delay_register
-
-; 	; lda #' '
-; 	; jsr chrout
-
-
-; 	iny
-; 	lda (adrl),y
-; 	!for .i,0,12 {
-; 		sta opl_data	
-; 	}
-	
-; 	; jsr hexout
-
-; 	; lda #' '
-; 	; jsr chrout
-	
-
-; 	iny
-; 	lda (adrl),y
-; 	sta .delayh
-; 	; jsr hexout
-
-; 	iny
-; 	lda (adrl),y
-; 	sta .delayl
-; 	; jsr hexout
-
-; 	; +Println
-
-; 	lda adrh
-; 	cmp #>.songend
-; 	bne +
-; 	lda adrl
-; 	cmp #<.songend
-; 	beq .end
-; +
-
-; 	;advance pointer by 4 bytes
-; 	clc
-; 	lda #$04
-; 	adc adrl
-; 	sta adrl
-; 	bcc +
-; 	inc adrh
-; +	
-
-; 	jmp .mainloop
-
-; .end:
-; 	lda #'E'
-; 	jsr chrout
-; -	jmp -
-
 	sei
 
 
@@ -139,11 +48,18 @@ main
 	cli
 
 
+; -	
+; 	jsr .getkey
+; 	cmp #'x'
+; 	beq +
+; 	jmp -
+
+; +
+; 	jsr .init_opl2
 -	jmp -
 
-
 .irq
-	+save
+	; +save
 	
 	bit via1ifr		; Interrupt from VIA?
 	bpl +++
@@ -216,7 +132,7 @@ main
 +	
 
 +++
-	+restore
+	; +restore
 	rti
 
 	
@@ -326,9 +242,8 @@ main
 ; !align 255,0
 imf_data
 .imf_file
-!bin "test/introcw3.wlf"
+!bin "test/oasis.imf"
 .songend
 
 
 !source <ym3812.a>
-
