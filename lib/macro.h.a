@@ -78,17 +78,20 @@ macro_h_a = 1
 	ora #$20
 }
 
+!macro inc16 .word {
+	inc .word
+	bne +
+	inc .word+1
++
+}
 
-; !macro SDBlockAddr .src {
-; 	ldx #$03
-; 	ldy #$00
+!macro dec16 .word {
+	lda .word
+	bne +
+	dec .word+1
++	dec .word
+}
 
-; -	lda .src,x
-; 	sta sd_cmd_param,y	
-; 	iny
-; 	dex
-; 	bpl -
-; }
 !macro debug .x {
 	lda #.x
 	jsr chrout

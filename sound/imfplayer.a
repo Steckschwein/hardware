@@ -23,8 +23,9 @@ imfptr 	= tmp4
 main	
 	; +Println
 	sei
+	bit	a_vreg
 
-	; jsr vdp_irq_off
+	jsr vdp_irq_off
 	+SetVector	imf_data, adrl
 	stz .delayl
 	stz .delayh
@@ -80,10 +81,11 @@ main
 	
 +	
 	; if no, 16bit decrement and exit routine
-	lda .delayh
-	bne +
-	dec .delayl
-+	dec .delayh
+	+dec16 .delayh
+; 	lda .delayh
+; 	bne +
+; 	dec .delayl
+; +	dec .delayh
 
 
 
@@ -249,4 +251,4 @@ imf_data
 
 
 !source <ym3812.a>
-; !source <t99xx.lib.a>
+!source <t99xx.lib.a>
