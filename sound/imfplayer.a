@@ -82,10 +82,6 @@ main
 +	
 	; if no, 16bit decrement and exit routine
 	+dec16 .delayh
-; 	lda .delayh
-; 	bne +
-; 	dec .delayl
-; +	dec .delayh
 
 
 
@@ -96,11 +92,13 @@ main
 	ldy #$00
 	lda (adrl),y
 	sta opl_stat
-	tax
-	jsr opl2_delay_register
-
+	
+	
 	iny
 	lda (adrl),y
+
+	jsr opl2_delay_register
+
 	sta opl_data		
 
 
@@ -246,7 +244,7 @@ main
 ; !align 255,0
 imf_data
 .imf_file
-!bin "test/oasis.imf"
+!bin "test/toohot.imf"
 .songend
 
 
