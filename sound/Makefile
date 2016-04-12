@@ -9,6 +9,15 @@ all: soundtest.bin synth.bin imfplayer.bin
 
 clean:
 	rm -f *.bin
+soundtest: soundtest.bin
+	../transfer.py soundtest.bin
+
+synth: synth.bin
+	../transfer.py synth.bin    
+    
+imfplayer: imfplayer.bin
+	../transfer.py imfplayer.bin    
+    
 transfer: all
 #	../transfer.py synth.bin
 #	../transfer.py soundtest.bin
