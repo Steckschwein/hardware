@@ -15,10 +15,10 @@ text_color_ix !byte 0
 seconds !byte 0
 
 .line1:
-!text	"    -+- Make Munich 2016 -+-    ",1
-!text	"      -+- Steckschwein-+-       ",1
+!text	"       -+-  VCFe 17.0 -+-       ",1
+!text	"      -+- Steckschwein -+-      ",1
 !text	" -+- 8bit Homebrew Computer -+- ",1
-!text	"    -+- CPU 65c02 / 4MHz -+-    ",1
+!text	"    -+- CPU 65c02 / 8 MHz -+-   ",1
 !text	"     -+- Video TMS9929 -+-      ",1
 !text	"  -+- www.steckschwein.de -+-   ",1
 !fill	255, $20
@@ -36,7 +36,7 @@ main:
 	pha
 	stz memctl
 
-	+SetVector charset, .adrl
+	+SetVector charset, adrl
 	lda #$00
 	ldy #$00+$40
 	ldx	#$08
@@ -45,21 +45,21 @@ main:
 	pla
 	sta memctl
 
-	+SetVector	chars, .adrl
+	+SetVector	chars, adrl
 	lda	#$00		;setup pattern
 	ldy	#$00+$40
 	ldx	#$10		;
 	jsr	vdp_memcpys
 
 	lda	#Cyan<<4|Black		;setup screen color gfx1
-	sta	.adrl
+	sta	adrl
 	lda	#$00
 	ldy	#$20+$40
 	ldx	#$20		; $20 possible colors
 	jsr	vdp_fills
 	
 	lda	#$20		;clear screen gfx1
-	sta	.adrl
+	sta	adrl
 	lda	#$00
 	ldy	#$18+$40
 	ldx	#$03		; $300 chars
@@ -71,7 +71,7 @@ main:
 	
 	+SetVector	stars_irq,	irqvec
 
-	+SetVector	starfield_tab, .adrl
+	+SetVector	starfield_tab, adrl
 	jsr	vdp_init_reg
 	
 	lda	#v_reg1_16k|v_reg1_display_on|v_reg1_int
@@ -82,7 +82,7 @@ main:
 	sta		crs_x
 	lda		#12
 	sta		crs_y
-	+SetVector	.line1, .adrl
+	+SetVector	.line1, adrl
 	
 	cli
 	
@@ -153,14 +153,14 @@ stars_irq:
 
 	
 	;update sprite tab
-	+SetVector	starfield_spritetab, .adrl
+	+SetVector	starfield_spritetab, adrl
 	lda	#$00
 	ldy	#$3c+$40
 	ldx	#$20*4
 	jsr vdp_memcpys
 	
 	;update text
-	+SetVector	text_scroll_buf, .adrl
+	+SetVector	text_scroll_buf, adrl
 	lda	#$80
 	ldy	#$19+$40
 	ldx	#$20
@@ -168,7 +168,7 @@ stars_irq:
 
 	ldx	text_color_ix
 	lda	intro_label_color,x
-	sta	.adrl
+	sta	adrl
 	lda	#$01	;skip first 8 chars
 	ldy #$20+$40
 	ldx	#$1f

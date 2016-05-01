@@ -1,4 +1,4 @@
-all: demo.bin sprites.bin
+all: demo.bin 
 clean:
 	rm -f *.bin *.labels
 	
@@ -6,5 +6,5 @@ clean:
 	acme -v -f plain --cpu 65c02 -o $@ $<
 
 transfer: all
-	../transfer.py demo.bin	0x1000
+	../transfer.py demo.bin	
 #	../transfer.py sprites.bin	0x1000
