@@ -245,7 +245,11 @@ main:
 	cmp	.sprite_tab+3*4					
 	bcc	+
 	beq	+
-	rts
+	
+                                     ;detect collision - pterodactyl
+    
+    rts
+    
 +	lda	#.DINOSAUR_DEAD
 	sta .dinosaur_state
 	
@@ -433,8 +437,8 @@ main:
 
 	+save
 	
-	; lda	#Dark_Yellow
-	; jsr	vdp_bgcolor
+    ; lda   #Dark_Yellow
+    ; jsr   vdp_bgcolor
 	
 	lda	.game_state
 	and	#.STATUS_PLAY
@@ -445,10 +449,10 @@ main:
 	jsr	.animate_sky
 	jsr	.score_board
 	jsr	.action_handler
-	;jsr	.detect_collision
+	jsr	.detect_collision
 	jsr	.animate_dinosaur
 	bra	+++
-
+    
 +
 	jsr .get_joy_status
 	and	#JOY_FIRE
@@ -686,9 +690,9 @@ main:
 	+SetVector .sprite_tab, addr		
 	lda	#<.A_SP_ATR
 	ldy	#.WRITE_ADDRESS + >.A_SP_ATR
-	ldx	#17*4
+	ldx	#.sprite_tab_end-.sprite_tab
 	jsr	vdp_memcpys
-	
+
 	;score_board
 	lda	#<(.A_GX_SCR + (1*32))+17
 	ldy	#.WRITE_ADDRESS + >(.A_GX_SCR+(1*32)+17)
@@ -706,6 +710,7 @@ main:
 	jsr .digits_out
 	lda	.score_value_high+2
 	jsr .digits_out
+    +vnops                      ; flicker fix - .digits_out rts (6cl), lda #' ' (2l) gives 8cl => 1µs/8Mhz, but 2µs delay betwenn to writes are required!
 	lda	#' '
 	sta a_vram
 	lda	.score_value
@@ -775,8 +780,8 @@ main:
 	!byte	72,86,52, White
 	!byte	98,200,48, White
 	!byte	98,216,52, White
-	; end of sprites
-	!byte	$d0
+.sprite_tab_end
+	!byte	$d0	; end of sprite table
 	
 .sprite_tab_sky_trigger:
 	!fill	4, 0
