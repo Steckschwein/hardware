@@ -88,9 +88,11 @@ U32 alphabet_table;
 U32 static_start;
 U32 global_table;
 
-U8 memory[0x200000];
+//TODO FIXME U8 memory[0x200000];
+U8 memory[0x2000];
 #define version (*memory)
-U8 undomem[0x40000];
+//TODO FIXME U8 undomem[0x40000];
+U8 undomem[0x4000];
 U32 program_counter;
 StackFrame frames[256];
 U16 stack[1024];
@@ -194,11 +196,13 @@ void randomize(U16 seed) {
   get_random(4);
 }
 
-inline U16 read16(U32 address) {
+//TODO FIXME inline
+U16 read16(U32 address) {
   return (memory[address]<<8)|memory[address+1];
 }
 
-inline void write16(U32 address,U16 value) {
+//TODO FIXME inline
+void write16(U32 address,U16 value) {
   memory[address]=value>>8;
   memory[address+1]=value&255;
 }
@@ -227,7 +231,8 @@ void text_flush(void) {
   textptr=0;
 }
 
-inline void char_print(U8 zscii) {
+//TODO FIXME inline
+void char_print(U8 zscii) {
   if(!zscii) return;
   if(stream3ptr!=-1) {
     U16 w=read16(stream3addr[stream3ptr]);
@@ -276,7 +281,8 @@ boolean verify_checksum(void) {
 
 U32 text_print(U32 address);
 
-inline void zch_print(int z) {
+//TODO FIXME inline
+void zch_print(int z) {
   int zsl;
   if(zch_shift==3) {
     zch_code=z<<5;
@@ -337,7 +343,8 @@ U32 text_print(U32 address) {
   }
 }
 
-inline void make_rectangle(U32 addr,int width,int height,int skip) {
+//TODO FIXME inline
+void make_rectangle(U32 addr,int width,int height,int skip) {
   int old_column=cur_column;
   int w,h;
   for(h=0;h<height;h++) {
@@ -351,7 +358,8 @@ inline void make_rectangle(U32 addr,int width,int height,int skip) {
   text_flush();
 }
 
-inline U16 fetch(U8 var) {
+//TODO FIXME inline
+U16 fetch(U8 var) {
   if(var&0xF0) {
     return read16(global_table+((var-16)<<1));
   } else if(var) {
@@ -371,7 +379,8 @@ void store(U8 var,U16 value) {
   }
 }
 
-inline void storei(U16 value) {
+//TODO FIXME inline
+void storei(U16 value) {
   store(memory[program_counter++],value);
 }
 
@@ -411,7 +420,8 @@ void branch(U32 cond) {
   }
 }
 
-inline void obj_tree_put(U16 obj,int f,U16 v) {
+//TODO FIXME inline
+void obj_tree_put(U16 obj,int f,U16 v) {
   if(version>3) write16(object_table+118+obj*14+f*2,v);
   else memory[object_table+57+obj*9+f]=v;
 }
@@ -426,7 +436,8 @@ inline void obj_tree_put(U16 obj,int f,U16 v) {
 #define attribute(x) (version>3?object_table+112+(x)*14:object_table+53+(x)*9)
 #define obj_prop_addr(o) (read16(version>3?(object_table+124+(o)*14):(object_table+60+(o)*9))<<address_shift)
 
-inline void insert_object(U16 obj,U16 dest) {
+//TODO FIXME inline
+void insert_object(U16 obj,U16 dest) {
   U16 p=parent(obj);
   U16 s=sibling(obj);
   U16 x;
@@ -457,7 +468,8 @@ inline void insert_object(U16 obj,U16 dest) {
   set_parent(obj,dest);
 }
 
-inline U32 property_address(U16 obj,U8 p) {
+//TODO FIXME inline
+U32 property_address(U16 obj,U8 p) {
   U32 a=obj_prop_addr(obj);
   U8 n=1;
   a+=(memory[a]<<1)+1;
@@ -468,7 +480,7 @@ inline U32 property_address(U16 obj,U8 p) {
       cur_prop_size=(memory[a]>>5)+1;
     } else if(memory[a]&0x80) {
       n=memory[a]&(version>8?127:63);
-      cur_prop_size=memory[++a]&63?:64;
+      cur_prop_size=memory[++a]&63?0:64;
     } else {
       n=memory[a]&63;
       cur_prop_size=(memory[a]>>6)+1;
@@ -501,7 +513,15 @@ input_again:
         text_buffer[1]=escape_code;
         *out=text_buffer+1;
         break;
-      case '1' ... '9':
+      case '1':
+	  case '2':
+	  case '3':
+	  case '4':
+	  case '5':
+	  case '6':
+	  case '7':
+	  case '8':
+	  case '9':
         return text_buffer[1]+133-'1';
       case ';':
         if(transcript) {
@@ -595,7 +615,8 @@ input_again:
   return 13;
 }
 
-inline U64 dictionary_get(U32 addr) {
+//TODO FIXME inline
+U64 dictionary_get(U32 addr) {
   U64 v=0;
   int c=version>3?6:4;
   while(c--) v=(v<<8)|memory[addr++];
