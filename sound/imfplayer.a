@@ -1,26 +1,67 @@
 !source <defs.h.a>
+!src <kernel.h.a>
+
+!source <shell.h.a>
 !source <bios.h.a>
 !source <ym3812.h.a>
-!source <t9929.h.a>
+;!source <t9929.h.a>
 
 !source <via.h.a>
 
+
 CPU_CLOCK=clockspeed * 1000000
-tempo = 560
 
-.regsel=tmp0
-.regval=tmp1
-.delayh=tmp2
-.delayl=tmp3
 
-imfptr 	= tmp4
+.delayh=tmp0
+.delayl=tmp1
+imfptr =tmp2
+
 *=$1000
 
-
-
-
-
 main	
+
+	ldy #$00
+-	lda (paramptr),y 
+	beq +
+	sta .filename,y
+	iny
+	bra -
++
+
+	+copyPointer paramptr, filenameptr
+
+	jsr open
+ 	phx
+
+	lda errno
+	beq +
+	jmp .error
++
+
+	+SetVector imf_data, sd_blkptr
+
+	jsr read
+	lda errno
+	beq +
+	jmp .error
++
+
+	plx
+
+	lda fd_area + FD_file_size + 0, x
+
+	clc
+	adc #<imf_data 
+	sta imf_end
+
+	lda fd_area + FD_file_size + 1, x
+	
+	adc #>imf_data
+	sta imf_end+1
+
+	jsr close
+
+
 	; +Println
 	sei
 	bit	a_vreg
@@ -33,12 +74,15 @@ main
 	jsr .init_opl2
 
 	sei
+	; TODO - set clockspeed according to filename extension
+	; 560 for imf
+	; 700 for wlf
 
-
-							; tempo is one of 280Hz (DN2), 560Hz (imf), 700Hz (.wlf) -> 4Mhz
-							; 280 Hz --> 14280
-							; 560 Hz -->  7140
-							; 700 Hz -->  5714
+	; tempo is one of 280Hz (DN2), 560Hz (imf), 700Hz (.wlf) -> 4Mhz
+	; 280 Hz --> 14280
+	; 560 Hz -->  7140
+	; 700 Hz -->  5714
+	tempo = 560	
 	lda #<(CPU_CLOCK/tempo)
 	sta via1t1cl            ; set low byte of count
 	lda #>(CPU_CLOCK/tempo)
@@ -114,10 +158,10 @@ main
 
 	; song data end reached? then jump back to the beginning
 	lda adrh
-	cmp #>.songend
+	cmp >imf_end
 	bne +
 	lda adrl
-	cmp #<.songend
+	cmp <imf_end
 	bne +
 	+SetVector	imf_data, adrl
 	bra +++
@@ -242,11 +286,18 @@ main
 ; adlib_id !text "ADLIB"
 
 ; !align 255,0
-imf_data
-.imf_file
-!bin "test/toohot.imf"
-.songend
+
+.error
+	+PrintString .errtxt
+
+.end	
+	jmp (retvec)
+.errtxt		!text "load error", $00
+.filename 	!text "            ",$00
+
 
 
 !source <ym3812.a>
 !source <t99xx.lib.a>
+imf_end	!16 $ffff
+imf_data
