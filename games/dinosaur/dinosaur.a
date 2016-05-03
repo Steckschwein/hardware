@@ -780,9 +780,9 @@ main:
 	!byte	72,86,52, White
 	!byte	98,200,48, White
 	!byte	98,216,52, White
-.sprite_tab_end
 	!byte	$d0	; end of sprite table
-	
+.sprite_tab_end	
+
 .sprite_tab_sky_trigger:
 	!fill	4, 0
 
