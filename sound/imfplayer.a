@@ -19,16 +19,9 @@ imfptr =tmp2
 *=$1000
 
 main	
-
-	ldy #$00
--	lda (paramptr),y 
-	beq +
-	sta .filename,y
-	iny
-	bra -
-+
-
+	
 	+copyPointer paramptr, filenameptr
+
 
 	jsr open
  	phx
@@ -49,13 +42,11 @@ main
 	plx
 
 	lda fd_area + FD_file_size + 0, x
-
 	clc
 	adc #<imf_data 
 	sta imf_end
 
 	lda fd_area + FD_file_size + 1, x
-	
 	adc #>imf_data
 	sta imf_end+1
 
@@ -82,10 +73,14 @@ main
 	; 280 Hz --> 14280
 	; 560 Hz -->  7140
 	; 700 Hz -->  5714
-	tempo = 560	
-	lda #<(CPU_CLOCK/tempo)
-	sta via1t1cl            ; set low byte of count
-	lda #>(CPU_CLOCK/tempo)
+	; tempo = 560	
+	ldx #$02 ; select 560 Hz from table below
+	lda .tempo+0,x
+	; lda #<(CPU_CLOCK/tempo)
+	sta via1t1cl  
+	lda .tempo+1,x
+	          ; set low byte of count
+	; lda #>(CPU_CLOCK/tempo)
 	sta via1t1ch            ; set high byte of count
  
 	lda #%11000000
@@ -293,9 +288,10 @@ main
 .end	
 	jmp (retvec)
 .errtxt		!text "load error", $00
-.filename 	!text "            ",$00
-
-
+.tempo
+	!16 (CPU_CLOCK/240)
+	!16 (CPU_CLOCK/560)
+	!16 (CPU_CLOCK/700)
 
 !source <ym3812.a>
 !source <t99xx.lib.a>
