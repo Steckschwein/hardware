@@ -19,9 +19,42 @@ imfptr =tmp2
 *=$1000
 
 main	
-	
+	; lda #$02
+	; sta .temponr
 	+copyPointer paramptr, filenameptr
+	; +SetVector .filename, filenameptr
 
+
+	ldy #$00
+-	lda (filenameptr),y
+	beq +
+	
+	iny
+	bra -
++
+	dey 
+	lda (filenameptr),y
+	and #!$20
+	cmp #'F'
+	beq +
+	jmp .error
++
+
+	dey 
+	lda (filenameptr),y
+	and #!$20
+	cmp #'L'
+	bne +
+
+	dey 
+	lda (filenameptr),y
+	and #!$20
+	cmp #'W'
+	bne +
+
+	lda #$04
+	sta .temponr
++
 
 	jsr open
  	phx
@@ -73,8 +106,9 @@ main
 	; 280 Hz --> 14280
 	; 560 Hz -->  7140
 	; 700 Hz -->  5714
-	; tempo = 560	
-	ldx #$02 ; select 560 Hz from table below
+	; tempo = 560
+	ldx .temponr
+	; ldx #$02
 	lda .tempo+0,x
 	; lda #<(CPU_CLOCK/tempo)
 	sta via1t1cl  
@@ -176,111 +210,6 @@ main
 	; +restore
 	rti
 
-	
-; .play_imf
-; 	+SetVector	imf_data, .adrl
-; 	jsr	.song_length
-	
-; 	ldy	#$00
-; --	lda	.imf_update_wait	;wait until flag cleared
-; 	bne	--
-
-; 	inc	tmp4
-; 	lda	tmp4
-; 	jsr	vdp_bgcolor
-	
-; 	jsr	.next_data			;next data block
-; 	jsr .is_songend			;song end ? indicated by carry=1
-; 	bcs	++
-	
-; 	lda	.regsel		;reg select
-; 	sta	a_sound_rs
-; 	+snd_nops
-; 	lda	.regval		;reg data
-; 	sta	a_sound_rw
-	
-; 	lda	.delayl		;delay > 0, wait until next update
-; 	bne	+
-; 	lda	.delayh
-; 	bne	+
-; -	tya				;y overflow?
-; 	bne	--
-; 	inc	.adrh
-; 	lda	#'.'
-; 	jsr	chrout
-; 	jmp	--
-; +	inc	.imf_update_wait	; trigger delay countdown
-; 	bra	-
-; ++	rts
-
-; .song_length
-; 	clc
-; 	lda	#<.songend
-; 	sbc	.adrl
-; 	sta	.length_l
-; 	lda	#>.songend
-; 	sbc	.adrh
-; 	sta	.length_h
-; 	rts
-
-; .is_songend
-; 	phy
-; 	ldy	#$00
-; -	lda	(.adrl),y
-; 	cmp	.songend,y
-; 	bne	+
-; 	iny	
-; 	cpy	#$04
-; 	bne	-
-; 	sec
-; 	bra	++
-; +	clc
-; ++	ply
-; 	rts
-
-; .next_data
-; 	lda	(.adrl),y			
-; 	sta	.regsel
-; 	iny
-; 	lda	(.adrl),y
-; 	sta	.regval
-; 	iny
-; 	lda	(.adrl),y
-; 	sta	.delayh
-; 	iny
-; 	lda	(.adrl),y
-; 	sta	.delayl
-; 	iny
-; 	rts
-		
-; .load_imf
-; 	ldx	#$00
-; -	lda	adlib_id,x	;check ADLIB signature
-; 	cmp	.imf_file,x
-; 	bne	+
-; 	inx
-; 	cpx	#$05
-; 	bne	-
-; 	bra	.load_imf_normal
-; +	lda	adlib_id+5	;check version != 1
-; 	cmp	#$01
-; 	bne	.load_imf_normal
-; 	bra	.load_imf_with_header
-; 	;TODO			;check file name
-					
-; +	clc				;no imf - clear carry
-; 	rts
-; .load_imf_normal
-; .load_imf_with_header	
-; 	sec
-; 	rts
-
-; .length_h 	!byte 0
-; .length_l	!byte 0
-; .imf_update_wait !byte 0
-; adlib_id !text "ADLIB"
-
-; !align 255,0
 
 .error
 	+PrintString .errtxt
@@ -288,10 +217,13 @@ main
 .end	
 	jmp (retvec)
 .errtxt		!text "load error", $00
+; .filename 	!text "foo.imf",$00
 .tempo
 	!16 (CPU_CLOCK/240)
 	!16 (CPU_CLOCK/560)
 	!16 (CPU_CLOCK/700)
+.temponr
+	!byte $02
 
 !source <ym3812.a>
 !source <t99xx.lib.a>
