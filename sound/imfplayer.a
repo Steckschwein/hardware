@@ -87,10 +87,10 @@ main
 
 
 	; +Println
-	sei
-	bit	a_vreg
+	; sei
+	; bit	a_vreg
 
-	jsr vdp_irq_off
+	; jsr vdp_irq_off
 	+SetVector	imf_data, adrl
 	stz .delayl
 	stz .delayh
