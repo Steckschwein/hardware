@@ -19,10 +19,8 @@ imfptr =tmp2
 *=$1000
 
 main	
-	; lda #$02
-	; sta .temponr
+	
 	+copyPointer paramptr, filenameptr
-	; +SetVector .filename, filenameptr
 
 
 	ldy #$00
@@ -86,6 +84,7 @@ main
 	jsr close
 
 
+
 	; +Println
 	; sei
 	; bit	a_vreg
@@ -122,6 +121,7 @@ main
 	lda #%01000000
 	sta via1acr             ; T1 continuous, PB7 disabled  
 	
+	+copyPointer irqvec, oldirq
 	+SetVector .irq, irqvec
 	cli
 
@@ -133,12 +133,23 @@ main
 ; 	jmp -
 
 ; +
+	
+; 	sei
+; 	lda #$00
+; 	sta via1ier             ; disable VIA1 interrupts
+
+; 	+copyPointer oldirq, irqvec
+; 	cli
 ; 	jsr .init_opl2
+; 	jmp (retvec)
 -	jmp -
 
 .irq
 	; +save
-	
+
+; 	bpl +	   ; VDP IRQ flag set?
+
+; +	
 	bit via1ifr		; Interrupt from VIA?
 	bpl +++
 
@@ -207,6 +218,7 @@ main
 +	
 
 +++
+	bit a_vreg
 	; +restore
 	rti
 
@@ -227,5 +239,6 @@ main
 
 !source <ym3812.a>
 !source <t99xx.lib.a>
+oldirq	!16 $ffff
 imf_end	!16 $ffff
 imf_data
