@@ -127,7 +127,7 @@ main
 
 
 ; -	
-; 	jsr .getkey
+; 	jsr keyin
 ; 	cmp #'x'
 ; 	beq +
 ; 	jmp -
@@ -187,10 +187,10 @@ main
 
 	; song data end reached? then jump back to the beginning
 	lda adrh
-	cmp >imf_end
+	cmp imf_end+1
 	bne +
 	lda adrl
-	cmp <imf_end
+	cmp imf_end+0
 	bne +
 	+SetVector	imf_data, adrl
 	bra +++
