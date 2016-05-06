@@ -145,6 +145,8 @@ main
 -	jmp -
 
 .irq
+	pha
+	phy
 	; +save
 
 ; 	bpl +	   ; VDP IRQ flag set?
@@ -220,6 +222,8 @@ main
 +++
 	bit a_vreg
 	; +restore
+	ply
+	pla
 	rti
 
 
