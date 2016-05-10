@@ -33,6 +33,8 @@ ram_end 			= $0288
 ram_end_l   		= ram_end
 ram_end_h   		= ram_end+1
 
+user_isr 	        = $028a
+
 retvec				= $0290
 
 fat_dir_action_hook		= $0292

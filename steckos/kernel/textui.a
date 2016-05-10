@@ -207,6 +207,7 @@
     rts	
 
 .textui_scroll_up
+    phx
 	ldx	#$00
 -	lda	.screen+.COLS,x
 	sta	.screen,x
@@ -224,6 +225,7 @@
 	sta	.screen+$300,x
 	inx
 	bne	-
+    plx
 	rts
 	
 .inc_cursor_y

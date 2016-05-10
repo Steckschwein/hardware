@@ -24,7 +24,6 @@ num_ls_entries = $03
 
 kern_init
 	sei
-	
 
 	; disable RTC interrupts
 	; Select SPI SS for RTC
@@ -51,10 +50,10 @@ kern_init
 	bne -
 
 	jsr	.textui_init0
-
 	
 	+SetVector .textui_chrout, outvec
-
+    +SetVector .user_isr_default, user_isr
+    
 	cli
 	
 	+SetVector .kernel_version, msgptr
@@ -131,10 +130,17 @@ kern_init
 
 	jsr	.textui_update_screen
 
+    jsr .call_user_isr
+    
 ++
 	+restore
 	rti
 
+.call_user_isr
+    jmp (user_isr)
+.user_isr_default
+    rts
+    
 !src "textui.a"
 !src "gfxui.a"
 !src <fat.a>

@@ -3,9 +3,8 @@
 %.bin: %.a
 	acme -vv -f plain --cpu 65c02 -o $@ $<
 
-all: soundtest.bin synth.bin imfplayer.bin 
+all: soundtest.bin synth.bin imfplayer.bin dro_player.bin
 #all: $(SONGS)
-
 
 clean:
 	rm -f *.bin
@@ -17,6 +16,9 @@ synth: synth.bin
     
 imfplayer: imfplayer.bin
 	../transfer.py imfplayer.bin    
+
+dro_player: dro_player.bin
+	../transfer.py dro_player.bin
     
 transfer: all
 #	../transfer.py synth.bin

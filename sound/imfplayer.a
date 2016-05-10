@@ -16,12 +16,13 @@ CPU_CLOCK=clockspeed * 1000000
 .delayl=tmp1
 imfptr =tmp2
 
-*=$1000
+*=steckos_start
 
-main	
-	
+.test_filename  !text "test.wlf",0
+
+main
+;    +SetVector .test_filename, filenameptr
 	+copyPointer paramptr, filenameptr
-
 
 	ldy #$00
 -	lda (filenameptr),y
@@ -53,25 +54,21 @@ main
 	lda #$04
 	sta .temponr
 +
-
 	jsr open
- 	phx
+    phx         ;save fd offset
 
 	lda errno
 	beq +
 	jmp .error
 +
-
 	+SetVector imf_data, sd_blkptr
 
-	jsr read
+	jsr read    
 	lda errno
 	beq +
 	jmp .error
-+
-
++   
 	plx
-
 	lda fd_area + FD_file_size + 0, x
 	clc
 	adc #<imf_data 
@@ -80,16 +77,9 @@ main
 	lda fd_area + FD_file_size + 1, x
 	adc #>imf_data
 	sta imf_end+1
-
+    
 	jsr close
 
-
-
-	; +Println
-	; sei
-	; bit	a_vreg
-
-	; jsr vdp_irq_off
 	+SetVector	imf_data, adrl
 	stz .delayl
 	stz .delayh
@@ -115,70 +105,56 @@ main
 	          ; set low byte of count
 	; lda #>(CPU_CLOCK/tempo)
 	sta via1t1ch            ; set high byte of count
- 
-	lda #%11000000
-	sta via1ier             ; enable VIA1 T1 interrupts
-	lda #%01000000
-	sta via1acr             ; T1 continuous, PB7 disabled  
-	
-	+copyPointer irqvec, oldirq
-	+SetVector .irq, irqvec
-	cli
 
+    lda via1ier
+	ora #%11000000
+	sta via1ier             ; enable VIA1 T1 interrupt
+	lda #%01000000          ; T1 continuous, PB7 disabled  
+	sta via1acr 
 
-; -	
-; 	jsr keyin
-; 	cmp #'x'
-; 	beq +
-; 	jmp -
+	+copyPointer user_isr, old_isr
+	+SetVector .player_isr, user_isr
 
-; +
-	
-; 	sei
-; 	lda #$00
-; 	sta via1ier             ; disable VIA1 interrupts
+	cli    
+-	
+ 	jsr keyin
+ 	cmp #'x'
+ 	beq +
+ 	jmp -
++	
+ 	sei
+    
+ 	lda #%01111111          ; disable T1 interrupt
+    sta via1ier             
+; SR shift in, External clock on CB1
+    lda #%00001100
+    sta via1acr
 
-; 	+copyPointer oldirq, irqvec
-; 	cli
-; 	jsr .init_opl2
-; 	jmp (retvec)
--	jmp -
+ 	+copyPointer old_isr, user_isr
+ 	jsr .init_opl2
+ 	cli
+ 	jmp (retvec)
 
-.irq
-	pha
-	phy
-	; +save
-
-; 	bpl +	   ; VDP IRQ flag set?
-
-; +	
+.player_isr
 	bit via1ifr		; Interrupt from VIA?
 	bpl +++
 
-	bit via1t1cl	; Acknowledge timer interrupt by reading channel low
-	
+	bit via1t1cl	; Acknowledge timer interrupt by reading channel low	
 
 	; delay counter zero? 
-	lda .delayh
+	lda .delayh    
 	clc
 	adc .delayl
-	beq ++ 
-
-	
+	beq ++	
 +	
 	; if no, 16bit decrement and exit routine
 	+dec16 .delayh
 
-
-
 	bra +++
-
 ++	
-
 	ldy #$00
 	lda (adrl),y
 	sta opl_stat
-	
 	
 	iny
 	lda (adrl),y
@@ -186,7 +162,6 @@ main
 	jsr opl2_delay_register
 
 	sta opl_data		
-
 
 	; jsr opl2_delay_data
 
@@ -209,7 +184,6 @@ main
 	bra +++
 +	
 
-
 	;advance pointer by 4 bytes
 	clc
 	lda #$04
@@ -218,18 +192,18 @@ main
 	bcc +
 	inc adrh
 +	
+    +Println
+	lda adrh
+    jsr hexout
+	lda adrl
+    jsr hexout
 
 +++
-	bit a_vreg
-	; +restore
-	ply
-	pla
-	rti
+    rts
 
 
 .error
 	+PrintString .errtxt
-
 .end	
 	jmp (retvec)
 .errtxt		!text "load error", $00
@@ -243,6 +217,6 @@ main
 
 !source <ym3812.a>
 !source <t99xx.lib.a>
-oldirq	!16 $ffff
+old_isr	!16 $ffff
 imf_end	!16 $ffff
 imf_data
