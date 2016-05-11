@@ -8,14 +8,12 @@
 
 !source <via.h.a>
 
-
 CPU_CLOCK=clockspeed * 1000000
 
-
-.delayh=tmp0
-.delayl=tmp1
 .imf_ptr=tmp2
 .imf_ptr_h=tmp3
+.delayh=tmp4
+.delayl=tmp5
 
 *=steckos_start
 
@@ -105,8 +103,7 @@ main
 	; lda #>(CPU_CLOCK/tempo)
 	sta via1t1ch            ; set high byte of count
 
-    lda via1ier
-	ora #%11000000
+    lda #%11000000
 	sta via1ier             ; enable VIA1 T1 interrupt
 	lda #%01000000          ; T1 continuous, PB7 disabled  
 	sta via1acr 
