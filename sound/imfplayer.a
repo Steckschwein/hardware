@@ -60,11 +60,19 @@ main
 +
 	+SetVector imf_data, sd_blkptr
 
+    +Println
+	+PrintString .loading
+	lda #>imf_data
+	jsr hexout
+	lda #<imf_data
+	jsr hexout
+	
 	jsr read    
 	lda errno
 	beq +
 	jmp .error
-+   
++
+	jsr close   
 	plx
 	lda fd_area + FD_file_size + 0, x
 	clc
@@ -75,7 +83,15 @@ main
 	adc #>imf_data
 	sta imf_end+1
     
-	jsr close
+    +PrintString .loading_to
+    lda imf_end+1
+    jsr hexout
+    lda imf_end
+    jsr hexout
+
+
+
+	+Println
 
 	+SetVector	imf_data, .imf_ptr
 	stz .delayl
@@ -220,7 +236,8 @@ main
 .temponr
 	!byte $02
 .test_filename  !text "test.wlf",0
-
+.loading 		!text "Loading from $",$00
+.loading_to		!text " to $",$00
 !source <ym3812.a>
 !source <t99xx.lib.a>
 old_isr	!16 $ffff
