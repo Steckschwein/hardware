@@ -129,10 +129,10 @@ kern_init
 	bpl ++	   ; VDP IRQ flag set?
 
 	jsr	.textui_update_screen
-
-    jsr .call_user_isr
     
 ++
+    jsr .call_user_isr
+
 	+restore
 	rti
 
