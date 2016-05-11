@@ -111,7 +111,9 @@ main
 	+copyPointer user_isr, old_isr
 	+SetVector .player_isr, user_isr
 
-	cli    
+	cli
+    
+    +Println
 -	
  	jsr keyin
  	cmp #'x'
@@ -188,7 +190,8 @@ main
 	bcc +
 	inc .imf_ptr_h
 +	
-    +Println
+    lda #10
+    jsr chrout
     lda .imf_ptr_h
     jsr hexout
     lda .imf_ptr
