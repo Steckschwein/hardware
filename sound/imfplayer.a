@@ -112,16 +112,18 @@ main
 	+SetVector .player_isr, user_isr
 
 	cli
-    
+
     +Println
--	
- 	jsr keyin
+	+copyPointer filenameptr, msgptr
+	jsr strout
+    +Println
+    
+-	jsr keyin
  	cmp #'x'
  	beq +
- 	jmp -
-+	
- 	sei
+ 	bra -
     
++   sei
  	lda #%01111111          ; disable T1 interrupt
     sta via1ier             
 ; SR shift in, External clock on CB1

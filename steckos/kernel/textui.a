@@ -9,7 +9,8 @@
     .screen=$c000	
 }
 
-.screen_status !byte .TEXTUI_ENABLED
+.screen_status !byte .STATUS_TEXTUI_ENABLED
+.screen_write_lock !byte 0
 .screen_frames !byte 0
 .saved_char	!byte ' '
 
@@ -17,10 +18,12 @@
 .KEY_BACKSPACE=$08
 .KEY_CARIAGE_RETURN=$0a
 .KEY_RETURN=$0d
-.WRITE=1<<0
-.DIRTY=1<<1
-.CURSOR=1<<2
-.TEXTUI_ENABLED=1<<4
+
+.LOCK_WRITE=1<<0
+
+.STATUS_BUFFER_DIRTY=1<<1
+.STATUS_CURSOR=1<<2
+.STATUS_TEXTUI_ENABLED=1<<4
 
 .textui_incy
 	jmp	.inc_cursor_y
@@ -54,7 +57,7 @@
     
     lda .saved_char     ;restore saved char
     sta (crs_ptr)
-    lda #.CURSOR
+    lda #.STATUS_CURSOR
     trb .screen_status  ;reset cursor state
     
 !ifdef text_mode_40 {
@@ -125,7 +128,6 @@
 	; lda	#<(ADDRESS_GFX1_SPRITE_PATTERN)
 	; ldy	#>(ADDRESS_GFX1_SPRITE_PATTERN+(.WRITE_ADDRESS<<8))
 
-
 !ifndef text_mode_40 {
 	lda	#<ADDRESS_GFX1_PATTERN
 	ldy	#.WRITE_ADDRESS + >ADDRESS_GFX1_PATTERN
@@ -159,13 +161,12 @@
 	jmp	.textui_screen_dirty
 	
 .textui_cursor
-	lda .screen_status
-	and	#.WRITE
+	lda .screen_write_lock
 	bne	+++
 	lda .screen_frames
 	and	#$0f
 	bne	+++
-	lda	#.CURSOR
+	lda	#.STATUS_CURSOR
 	tsb	.screen_status
 	beq	+
 	trb	.screen_status
@@ -180,7 +181,7 @@
 	;jsr	vdp_bgcolor	
     
 	lda	.screen_status
-	and	#.TEXTUI_ENABLED
+	and	#.STATUS_TEXTUI_ENABLED
 	beq	+
 	
 	inc	.screen_frames
@@ -188,7 +189,7 @@
 	jsr	.textui_cursor
 	
 	lda	.screen_status
-	and	#.DIRTY
+	and	#.STATUS_BUFFER_DIRTY
 	beq	+		;exit if not dirty
 	
 	+SetVector	.screen, adrl
@@ -198,7 +199,7 @@
 	jsr	vdp_memcpy
 	
 	lda	.screen_status		;clean dirty
-	and	#!.DIRTY
+	and	#!.STATUS_BUFFER_DIRTY
 	sta	.screen_status
 
 +   
@@ -237,20 +238,20 @@
     sta (crs_ptr)
     lda #' '
     sta .saved_char     ;reset .saved_char to blank, cause we scrolled up
-    lda #.CURSOR
+    lda #.STATUS_CURSOR
     trb .screen_status  ;reset cursor state
 	jsr	.textui_scroll_up	; scroll and exit
-    jmp .textui_update_crs_ptr    
+    jmp .textui_update_crs_ptr
 +	inc crs_y
     jmp .textui_update_crs_ptr
 
 .textui_enable
 	lda	.screen_status
-	ora	#.TEXTUI_ENABLED
+	ora	#.STATUS_TEXTUI_ENABLED
 	bra	+
 .textui_disable
 	lda	.screen_status
-	and	#!.TEXTUI_ENABLED
+	and	#!.STATUS_TEXTUI_ENABLED
 +	sta	.screen_status
 	rts
 
@@ -259,22 +260,22 @@
 	bra	.textui_screen_dirty
     
 .textui_print
-	inc .screen_status	;write on
+	inc .screen_write_lock	;write on
 	ldy	#$00
 -	lda	(msgptr),y
 	beq	+
 	jsr .textui_dispatch_char
 	iny
 	bne	-
-+	dec	.screen_status	;write off
++	dec	.screen_write_lock	;write off
 	bra	.textui_screen_dirty
 
 .textui_chrout
 	beq	+	; \0 char
 	pha		; safe char
-	inc .screen_status	;write on
+	inc .screen_write_lock	;write on
 	jsr .textui_dispatch_char
-	dec	.screen_status	;write off
+	stz	.screen_write_lock	;write off
 	jsr	.textui_screen_dirty
 	pla								; restore char
 +	rts
@@ -323,6 +324,6 @@
 	
 .textui_screen_dirty
 	lda	.screen_status		;set dirty
-	ora	#.DIRTY
+	ora	#.STATUS_BUFFER_DIRTY
 	sta	.screen_status
 	rts

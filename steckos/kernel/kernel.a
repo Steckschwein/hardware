@@ -127,7 +127,6 @@ kern_init
 
 	bit	a_vreg
 	bpl ++	   ; VDP IRQ flag set?
-
 	jsr	.textui_update_screen
     
 ++
