@@ -111,14 +111,19 @@ main
 	+copyPointer user_isr, old_isr
 	+SetVector .player_isr, user_isr
 
-	cli
+	
 
     +Println
 	+copyPointer filenameptr, msgptr
 	jsr strout
     +Println
     
+    cli
+
 -	jsr keyin
+ 	cmp #$03
+ 	beq +
+
  	cmp #'x'
  	beq +
  	bra -
