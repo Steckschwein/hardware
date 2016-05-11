@@ -14,11 +14,10 @@ CPU_CLOCK=clockspeed * 1000000
 
 .delayh=tmp0
 .delayl=tmp1
-imfptr =tmp2
+.imf_ptr=tmp2
+.imf_ptr_h=tmp3
 
 *=steckos_start
-
-.test_filename  !text "test.wlf",0
 
 main
 ;    +SetVector .test_filename, filenameptr
@@ -80,7 +79,7 @@ main
     
 	jsr close
 
-	+SetVector	imf_data, adrl
+	+SetVector	imf_data, .imf_ptr
 	stz .delayl
 	stz .delayh
 
@@ -146,18 +145,18 @@ main
 	clc
 	adc .delayl
 	beq ++	
-+	
+	
 	; if no, 16bit decrement and exit routine
 	+dec16 .delayh
 
 	bra +++
 ++	
 	ldy #$00
-	lda (adrl),y
+	lda (.imf_ptr),y
 	sta opl_stat
 	
 	iny
-	lda (adrl),y
+	lda (.imf_ptr),y
 
 	jsr opl2_delay_register
 
@@ -166,36 +165,36 @@ main
 	; jsr opl2_delay_data
 
 	iny
-	lda (adrl),y
+	lda (.imf_ptr),y
 	sta .delayh
 
 	iny
-	lda (adrl),y
+	lda (.imf_ptr),y
 	sta .delayl
 
 	; song data end reached? then jump back to the beginning
-	lda adrh
+	lda .imf_ptr_h
 	cmp imf_end+1
 	bne +
-	lda adrl
+	lda .imf_ptr
 	cmp imf_end+0
 	bne +
-	+SetVector	imf_data, adrl
+	+SetVector	imf_data, .imf_ptr
 	bra +++
 +	
 
 	;advance pointer by 4 bytes
 	clc
 	lda #$04
-	adc adrl
-	sta adrl
+	adc .imf_ptr
+	sta .imf_ptr
 	bcc +
-	inc adrh
+	inc .imf_ptr_h
 +	
     +Println
-	lda adrh
+    lda .imf_ptr_h
     jsr hexout
-	lda adrl
+    lda .imf_ptr
     jsr hexout
 
 +++
@@ -207,13 +206,13 @@ main
 .end	
 	jmp (retvec)
 .errtxt		!text "load error", $00
-; .filename 	!text "foo.imf",$00
 .tempo
 	!16 (CPU_CLOCK/240)
 	!16 (CPU_CLOCK/560)
 	!16 (CPU_CLOCK/700)
 .temponr
 	!byte $02
+.test_filename  !text "test.wlf",0
 
 !source <ym3812.a>
 !source <t99xx.lib.a>
