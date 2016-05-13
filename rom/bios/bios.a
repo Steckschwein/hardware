@@ -154,16 +154,16 @@ do_reset:
 
 	ldy #DIR_FstClusHI + 1
 	lda (dirptr),y
-	sta current_dir_first_cluster + 3
+	sta root_dir_first_clus + 3
 	ldy #DIR_FstClusHI 
 	lda (dirptr),y
-	sta current_dir_first_cluster + 2
+	sta root_dir_first_clus + 2
 	ldy #DIR_FstClusLO + 1
 	lda (dirptr),y
-	sta current_dir_first_cluster + 1
+	sta root_dir_first_clus + 1
 	ldy #DIR_FstClusLO 
 	lda (dirptr),y
-	sta current_dir_first_cluster 
+	sta root_dir_first_clus
 	jsr .calc_lba_addr
 
 	!for .i,3,0 {
@@ -180,10 +180,6 @@ do_reset:
 	ldx #$ff
 	txs
 	jmp steckos_start
-
-
-
--	jmp -
 
 
 .upload
@@ -292,7 +288,7 @@ do_reset:
     ;display off
     lda		#v_reg1_16k	;enable 16K ram, disable screen
 	sta 	a_vreg
- ;   +vnops
+    ; +vnops
     lda	  	#v_reg1
 	sta   	a_vreg
 
@@ -312,7 +308,8 @@ do_reset:
 	+vdp_sreg
 	ldy   #$00      ;2
 	lda   adrl     ;3
--  	+vnops          ;2
+-  
+	+vnops          ;2
 	iny             ;2
 	sta   a_vram    ;
 	bne   -         ;3
@@ -510,7 +507,7 @@ PSICHO  ora     #0              ; Set flags according to contents of
                                 ;    Accumulator
         beq     PSIX1           ; don't print the final NULL
         jsr     vdp_chrout         ; write it out
-        jmp     PSINB           ; back around
+        bra     PSINB           ; back around
 PSIX1   inc     DPL             ;
         bne     PSIX2           ;
         inc     DPH             ; account for page crossing
@@ -552,11 +549,9 @@ PSIX2   jmp     (DPL)           ; return to byte following final NULL
 	lda #%10000000
 	sta uart1lcr
 	
-	asl 
-	tax
+	; 115200 baud
 	lda #$01
 	sta uart1dll	
-
 	stz uart1dlh
 
 
@@ -570,7 +565,6 @@ PSIX2   jmp     (DPL)           ; return to byte following final NULL
 
 	and #%00001100			; keep OUT1, OUT2 values
 	sta uart1mcr		; reset DTR, RTS
-	clc
 
 	rts
 
@@ -891,10 +885,18 @@ PSIX2   jmp     (DPL)           ; return to byte following final NULL
 	jsr .spi_rw_byte
 
 	; Send lba_addr in reverse order
-	!for .i, 3, 0 {
-		lda lba_addr + .i
-		jsr .spi_rw_byte      
-	}
+
+	ldx #$03
+-	lda lba_addr,x
+	phx
+	jsr .spi_rw_byte
+	plx
+	dex
+	bpl -
+	; !for .i, 3, 0 {
+	; 	lda lba_addr + .i
+	; 	jsr .spi_rw_byte      
+	; }
 
 	; Send stopbit
 	lda #$01
@@ -942,10 +944,13 @@ PSIX2   jmp     (DPL)           ; return to byte following final NULL
 	; dec sd_blkptr+1
 
 	; Read CRC bytes     
-	!for .i,0,15 {
+	ldy #$01
+-	!for .i,0,7 {
 		STA via1portb ; Takt An 
 		STX via1portb ; Takt aus
 	}
+	dey
+	bpl -
 
 	jmp .sd_deselect_card
 	; rts
@@ -1026,17 +1031,18 @@ PSIX2   jmp     (DPL)           ; return to byte following final NULL
 
 	; add number of reserved sectors to fat_begin_lba. store in cluster_begin_lba
 	clc
+
 !for .i,0,1 {
 	lda lba_addr + .i
 	adc sd_blktarget + BPB_RsvdSecCnt + .i
 	sta cluster_begin_lba + .i	
-	sta fat_first_block + .i	
+	; sta fat_first_block + .i	
 }
 !for .i,2,3 {
 	lda lba_addr + .i
 	adc #$00
 	sta cluster_begin_lba + .i
-	sta fat_first_block + .i	
+	; sta fat_first_block + .i	m
 }
 
 	ldy #$02
@@ -1070,7 +1076,7 @@ PSIX2   jmp     (DPL)           ; return to byte following final NULL
 	
 .fat_open_rootdir
 	; Open root dir
-	+Copy root_dir_first_clus, current_dir_first_cluster, 3
+	; +Copy root_dir_first_clus, current_dir_first_cluster, 3
 	jmp .calc_lba_addr
 
 
@@ -1101,12 +1107,12 @@ PSIX2   jmp     (DPL)           ; return to byte following final NULL
 	
 	; lba_addr = cluster_begin_lba + (cluster_number - 2) * sectors_per_cluster;
 	sec
-	lda current_dir_first_cluster
+	lda root_dir_first_clus
 	sbc #$02
 	sta tmp0 
 
 	!for .i,1,3 {
-		lda current_dir_first_cluster + .i 
+		lda root_dir_first_clus + .i 
 		sbc #$00
 		sta tmp0 + .i
 	}
