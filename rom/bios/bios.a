@@ -303,9 +303,7 @@ do_reset:
     +vnops
     sta a_vram
     
-;	jsr vdp_fills
-
-	ldx	#$03
+	ldx	#$03                    ;3 pages - 3x256 byte
 +	lda	#' '					;fill vram screen with blank
 	sta	adrl
 	lda	#<ADDRESS_GFX1_SCREEN
@@ -325,7 +323,6 @@ do_reset:
     stz crs_y
     
     +SetVector    charset, addr
-
     lda #<ADDRESS_GFX1_PATTERN
     ldy #.WRITE_ADDRESS + >ADDRESS_GFX1_PATTERN
 
