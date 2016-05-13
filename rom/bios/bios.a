@@ -292,18 +292,18 @@ do_reset:
     ;display off
     lda		#v_reg1_16k	;enable 16K ram, disable screen
 	sta 	a_vreg
-    +vnops
+ ;   +vnops
     lda	  	#v_reg1
 	sta   	a_vreg
 
-
-	lda	#$d0					;sprites off, at least y=$d0 will disable the sprite subsystem
-	sta	adrl
-	ldx	#32*4
 	lda	#<ADDRESS_GFX_SPRITE
 	ldy	#.WRITE_ADDRESS + >ADDRESS_GFX_SPRITE
-
-	jsr vdp_fills
+	+vdp_sreg
+	lda	#$d0					;sprites off, at least y=$d0 will disable the sprite subsystem
+    +vnops
+    sta a_vram
+    
+;	jsr vdp_fills
 
 	ldx	#$03
 +	lda	#' '					;fill vram screen with blank
@@ -332,21 +332,17 @@ do_reset:
     ldx #$08                    ;load charset
     jsr vdp_memcpy
     
-    lda #Gray<<4|Black          ;enable gfx 1 with cyan on black background
-  
-
-   	sta	adrl		;set character color
-	ldx	#$20
 	lda	#<ADDRESS_GFX1_COLOR
 	ldy	#.WRITE_ADDRESS + >ADDRESS_GFX1_COLOR	;color vram
-	jsr	vdp_fills
-	+SetVector .vdp_init_bytes_gfx1, adrl
-    jsr vdp_init_reg
-
+    +vdp_sreg
+    lda #Gray<<4|Black          ;enable gfx 1 with cyan on black background
+	ldx	#$20
+-   +vnops
+    sta a_vram
+    dex
+    bne -
     
-    rts
-
-vdp_init_reg
+	+SetVector .vdp_init_bytes_gfx1, adrl
 	ldy	#$00
 	ldx	#v_reg0
 -  	lda (adrl),y
@@ -357,14 +353,6 @@ vdp_init_reg
 	inx
 	cpy	#$08
 	bne   -
-	rts
-vdp_fills:
-	+vdp_sreg
-	lda   adrl     ;3
--  	+vnops          ;2
-	dex             ;2
-	sta   a_vram    ;4
-	bne	-           ;3
 	rts
 
 vdp_memcpy
