@@ -919,8 +919,6 @@ init_via1
 	; Send stopbit
 	lda #$01
 	jsr .spi_rw_byte
-	lda #'X'
-	jsr vdp_chrout
 
 	; wait for sd card data token
 -	
@@ -928,8 +926,6 @@ init_via1
 	jsr .spi_rw_byte                         
 	cmp #sd_data_token
 	bne -
-	lda #'R'
-	jsr vdp_chrout
 
 	ldy #$00
 	lda via1portb   ; Port laden
