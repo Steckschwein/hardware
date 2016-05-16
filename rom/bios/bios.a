@@ -278,38 +278,30 @@ do_reset:
 
 
 
-
-
-
-
-
-
 .init_vdp
     ;display off
     lda		#v_reg1_16k	;enable 16K ram, disable screen
-	sta 	a_vreg
-    ; +vnops
-    lda	  	#v_reg1
-	sta   	a_vreg
+    ldy	  	#v_reg1
+	+vdp_sreg
+    +SyncBlank
 
 	lda	#<ADDRESS_GFX_SPRITE
 	ldy	#.WRITE_ADDRESS + >ADDRESS_GFX_SPRITE
 	+vdp_sreg
 	lda	#$d0					;sprites off, at least y=$d0 will disable the sprite subsystem
     +vnops
+    +vnops
     sta a_vram
     
-	ldx	#$03                    ;3 pages - 3x256 byte
-+	lda	#' '					;fill vram screen with blank
-	sta	adrl
 	lda	#<ADDRESS_GFX1_SCREEN
 	ldy	#.WRITE_ADDRESS + >ADDRESS_GFX1_SCREEN
-
 	+vdp_sreg
 	ldy   #$00      ;2
-	lda   adrl     ;3
--  
-	+vnops          ;2
+	ldx	#$03                    ;3 pages - 3x256 byte
+	lda	#' '					;fill vram screen with blank
+-   +vnops          ;8
+    nop             
+    nop
 	iny             ;2
 	sta   a_vram    ;
 	bne   -         ;3
@@ -319,47 +311,40 @@ do_reset:
     stz crs_x
     stz crs_y
     
-    +SetVector    charset, addr
     lda #<ADDRESS_GFX1_PATTERN
     ldy #.WRITE_ADDRESS + >ADDRESS_GFX1_PATTERN
-
+	+vdp_sreg
     ldx #$08                    ;load charset
-    jsr vdp_memcpy
+	ldy   #$00     ;2
+    +SetVector    charset, addr
+-  	lda   (addr),y ;5
+	iny            ;2
+    +vnops         ;8
+	sta   a_vram   ;1 opcode fetch	
+	bne   -        ;3
+	inc   adrh
+	dex
+	bne   -
     
 	lda	#<ADDRESS_GFX1_COLOR
 	ldy	#.WRITE_ADDRESS + >ADDRESS_GFX1_COLOR	;color vram
     +vdp_sreg
     lda #Gray<<4|Black          ;enable gfx 1 with cyan on black background
 	ldx	#$20
--   +vnops
-    sta a_vram
-    dex
-    bne -
+-   +vnops      ;8
+    nop
+    nop
+    dex         ;2
+    sta a_vram  ;
+    bne -       ;3
     
-	+SetVector .vdp_init_bytes_gfx1, adrl
-	ldy	#$00
-	ldx	#v_reg0
--  	lda (adrl),y
-	sta a_vreg
-	iny				;iny first, burn cycle to avoid vdp nop
-	+vnops
-	stx a_vreg
+	ldx	#$00
+	ldy	#v_reg0
+-  	lda .vdp_init_bytes_gfx1,x
+    +vdp_sreg
+    iny
 	inx
-	cpy	#$08
-	bne   -
-	rts
-
-vdp_memcpy
-	+vdp_sreg
-	ldy   #$00      ;2
--  	lda   (addr),y ;5
-	iny             ;2
-	+vnops
-	sta   a_vram    ;1 opcode fetch
-	
-	bne   -         ;3
-	inc   adrh
-	dex
+	cpx	#$08
 	bne   -
 	rts
 
