@@ -114,6 +114,8 @@ do_reset:
 
 .mem_ok
 
+	jsr init_via1
+
 	lda ptr1h
 	jsr .hexout
 	lda ptr1l
@@ -121,7 +123,7 @@ do_reset:
 
 	jsr .primm
 	!text " bytes OK",$0a,$0d
-	!text "SteckBIOS 20160513", $0a,$0d,$00
+	!text "SteckBIOS 20160516", $0a,$0d,$00
 
 	jsr .init_uart
 	jsr .primm
@@ -166,11 +168,13 @@ do_reset:
 	sta root_dir_first_clus
 	jsr .calc_lba_addr
 
+
 	!for .i,3,0 {
 		ldy #DIR_FileSize + .i
 		lda (dirptr),y
 		sta tmp0 + .i
 	}
+
 
 	+SetVector steckos_start, sd_blkptr
 
@@ -527,6 +531,35 @@ PSIX2   jmp     (DPL)           ; return to byte following final NULL
 	adc     #6              ;add offset for letter a-f
 +	jmp 	vdp_chrout
 
+
+
+;----------------------------------------------------------------------------------------------
+; init VIA1 - set all ports to input
+;----------------------------------------------------------------------------------------------
+init_via1
+			pha
+
+			lda #$00
+			sta via1ier             ; enable VIA1 T1 interrupts
+
+			; SR shift in, External clock on CB1
+			lda #%00001100
+			sta via1acr
+
+			; Port b all outputs
+			; lda #$ff
+			lda #%10011111
+			sta via1ddrb
+
+			; SPICLK low, MOSI low, SPI_SS HI
+			lda #%01111110
+			sta via1portb
+
+		 	pla
+		 	rts
+;----------------------------------------------------------------------------------------------
+
+
 ;----------------------------------------------------------------------------------------------
 ; init UART
 ;----------------------------------------------------------------------------------------------
@@ -617,6 +650,7 @@ PSIX2   jmp     (DPL)           ; return to byte following final NULL
 	lda via1sr	; Schieberegister auslesen
 
 	rts
+
 ;---------------------------------------------------------------------
 ; Init SD Card 
 ; Destructive: A, X, Y
@@ -789,73 +823,72 @@ PSIX2   jmp     (DPL)           ; return to byte following final NULL
 ;---------------------------------------------------------------------
 .sd_cmd
 
-       ; transfer command byte
-       jsr .spi_rw_byte
-       
-       ; transfer parameter buffer
-       ldx #$00
--      lda sd_cmd_param,x
-       phx
-       jsr .spi_rw_byte
-       plx
-       inx
-       cpx #$05
-       bne -
+	; transfer command byte
+	jsr .spi_rw_byte
 
-       ; send 8 clocks with DI 1
-       lda #$ff
-       jsr .spi_rw_byte             
+	; transfer parameter buffer
+	ldx #$00
+-	lda sd_cmd_param,x
+	phx
+	jsr .spi_rw_byte
+	plx
+	inx
+	cpx #$05
+	bne -
 
-       rts
+	; send 8 clocks with DI 1
+	lda #$ff
+	jsr .spi_rw_byte             
+
+	rts
 
 ;---------------------------------------------------------------------
 ; select sd card, pull CS line to low
 ;---------------------------------------------------------------------
 .sd_select_card
-       pha
-       lda #%01111100
-       sta via1portb
-       pla
+	pha
+	lda #%01111100
+	sta via1portb
+	pla
 
-       rts
+	rts
 
 ;---------------------------------------------------------------------
 ; deselect sd card, puSH CS line to HI and generate few clock cycles 
 ; to allow card to deinit
 ;---------------------------------------------------------------------
 .sd_deselect_card
-       pha
-       ; set CS line to HI
-       lda #%01111110
-       sta via1portb
+	pha
+	; set CS line to HI
+	lda #%01111110
+	sta via1portb
 
-       lda #$ff
-       jsr .spi_rw_byte
-       
-       pla
-       rts
+	lda #$ff
+	jsr .spi_rw_byte
+
+	pla
+	rts
+
 ;---------------------------------------------------------------------
 ; wait while sd card is busy
 ;---------------------------------------------------------------------
 .sd_busy_wait
--      lda #$ff
-       jsr .spi_rw_byte
-       cmp #$ff
-       bne -
-       rts
+-	lda #$ff
+	jsr .spi_rw_byte
+	cmp #$ff
+	bne -
+	rts
 ;---------------------------------------------------------------------
 ; clear sd card parameter buffer
 ;---------------------------------------------------------------------
 .sd_param_init
-       stz sd_cmd_param
-       stz sd_cmd_param+1
-       stz sd_cmd_param+2
-       stz sd_cmd_param+3
-       stz sd_cmd_chksum
-       inc sd_cmd_chksum
-       rts
-
-
+	stz sd_cmd_param
+	stz sd_cmd_param+1
+	stz sd_cmd_param+2
+	stz sd_cmd_param+3
+	stz sd_cmd_chksum
+	inc sd_cmd_chksum
+	rts
 
 
 ;---------------------------------------------------------------------
@@ -886,12 +919,17 @@ PSIX2   jmp     (DPL)           ; return to byte following final NULL
 	; Send stopbit
 	lda #$01
 	jsr .spi_rw_byte
+	lda #'X'
+	jsr vdp_chrout
 
 	; wait for sd card data token
--	lda #$ff
+-	
+	lda #$ff
 	jsr .spi_rw_byte                         
 	cmp #sd_data_token
 	bne -
+	lda #'R'
+	jsr vdp_chrout
 
 	ldy #$00
 	lda via1portb   ; Port laden
@@ -929,16 +967,97 @@ PSIX2   jmp     (DPL)           ; return to byte following final NULL
 	; dec sd_blkptr+1
 
 	; Read CRC bytes     
-	ldy #$01
--	!for .i,0,7 {
+	; ldy #$01
+-	!for .i,0,15 {
 		STA via1portb ; Takt An 
 		STX via1portb ; Takt aus
 	}
-	dey
-	bpl -
+	; dey
+	; bpl -
 
 	jmp .sd_deselect_card
 	; rts
+
+;---------------------------------------------------------------------
+; Read multiple blocks from SD Card
+;---------------------------------------------------------------------
+.sd_read_multiblock
+       +save
+
+       jsr .sd_select_card
+
+       ; Send CMD18 command byte
+       jsr .sd_busy_wait  
+
+       lda #cmd18
+       jsr .spi_rw_byte
+
+       ; Send lba_addr in reverse order
+       !for .i, 3, 0 {
+              lda lba_addr + .i
+              jsr .spi_rw_byte      
+       }
+
+       ; Send stopbit
+       lda #$01
+       jsr .spi_rw_byte
+
+       ; Wait for data token
+
+-      
+	   lda #$ff
+	   jsr .spi_rw_byte             
+       cmp #$fe
+       bne -
+
+       ldy #$00
+       lda via1portb   ; Port laden
+       AND #$fe        ; Takt ausschalten
+       TAX             ; aufheben
+       ORA #$01
+       sta tmp0
+ 
+       ; read 256 bytes twice, increase blkptr in between
+       !for .i,0,1 {            
+--            lda tmp0
+
+              !for .j,0,7 {
+                    STA via1portb ; Takt An 
+                    STX via1portb ; Takt aus
+              }
+              lda via1sr
+              sta (sd_blkptr),y
+              iny
+              bne --
+
+              inc sd_blkptr+1             
+       }
+              
+       lda tmp0
+       ; Read CRC bytes     
+       !for .i,0,15 {
+              sta via1portb 
+              stx via1portb 
+       }
+
+   
+       dec addr(<.blocks)
+       beq +
+       jmp -
++
+              
+       jsr .sd_busy_wait  
+
+       ; all blocks read, send cmd12 to end transmission
+       ; jsr sd_param_init
+       lda #cmd12
+       jsr .sd_cmd
+
+       jsr .sd_busy_wait  
+       
+       +restore
+       jmp .sd_deselect_card
+       ; rts
 
 
 ;---------------------------------------------------------------------
@@ -1213,27 +1332,22 @@ PSIX2   jmp     (DPL)           ; return to byte following final NULL
 	jsr .calc_lba_addr
 	jsr .calc_blocks
 
+; -	jsr .sd_read_block
+; 	inc sd_blkptr+1 ; 3 bytes, 6 cycles
 
-!ifndef experimental {
-
--	jsr .sd_read_block
-
-	inc sd_blkptr+1 ; 3 bytes, 6 cycles
-
-	jsr .inc_lba_address
+; 	jsr .inc_lba_address
 	
-	dec .blocks
-	bne -
+; 	dec .blocks
+; 	bne -
+	jmp .sd_read_multiblock	
+	; rts
 
-}
-	
-	rts
 .filename	!text "LOADER  BIN",$00
 ;----------------------------------------------------------------------------------------------
 ; Memcheck patterns
 ;----------------------------------------------------------------------------------------------
-.num_patterns = $01
-.pattern  !byte $aa,$55
+.num_patterns 	= $01
+.pattern  		!byte $aa,$55
 ;----------------------------------------------------------------------------------------------
 ; Interrupt vectors
 ;----------------------------------------------------------------------------------------------
