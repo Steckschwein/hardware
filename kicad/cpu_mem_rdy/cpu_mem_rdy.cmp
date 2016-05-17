@@ -1,4 +1,4 @@
-Cmp-Mod V01 Created by Cvpcb (2015-03-04 BZR 5473)-product   date = Samstag, 13. Februar 2016 'u05' 11:05:03
+Cmp-Mod V01 Created by Cvpcb (2015-03-04 BZR 5473)-product   date = Samstag, 02. April 2016 'u24' 22:24:25
 
 BeginCmp
 TimeStamp = /541367DD;
@@ -362,6 +362,13 @@ TimeStamp = /54147B44;
 Reference = SW1;
 ValeurCmp = SW_PUSH;
 IdModule  = Discret:PUSH_BUTT_SHAPE1;
+EndCmp
+
+BeginCmp
+TimeStamp = /56BF480C;
+Reference = SW2;
+ValeurCmp = SWITCH;
+IdModule  = Pin_Headers:Pin_Header_Straight_1x02;
 EndCmp
 
 BeginCmp
