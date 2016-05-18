@@ -44,8 +44,9 @@ FD_file_size = $08
 
 	inc sd_blkptr+1 ; 3 bytes, 6 cycles
 
+
 	jsr .inc_lba_address
-	
+
 	dec .blocks
 	bne -
 
@@ -257,22 +258,32 @@ FD_file_size = $08
 	sta errno
 	bra .calc_end
 
-.inc_lba_address
-	inc lba_addr + 0
-	bne +
-	sec
-	lda lba_addr + 1
-	adc #$00
-	sta lba_addr + 1
-	lda lba_addr + 2
-	adc #$00
-	sta lba_addr + 2
-	bcc +
-	inc lba_addr + 3
+; .inc_lba_address
+; 	inc lba_addr + 0
+; 	bne +
+; 	sec
+; 	lda lba_addr + 1
+; 	adc #$00
+; 	sta lba_addr + 1
+; 	lda lba_addr + 2
+; 	adc #$00
+; 	sta lba_addr + 2
+; 	bcc +
+; 	inc lba_addr + 3
+; +
+; 	rts
+
+
+.inc_lba_address:
+ inc lba_addr + 0
+ bne +
+ inc lba_addr + 1
+ bne +
+ inc lba_addr + 2
+ bne +
+ inc lba_addr + 3
 +
-	rts
-
-
+ rts
 
 
 
