@@ -20,8 +20,8 @@
 charset_8x8
 ;!src "../charsets/char.ascii.vc20.h.a"
 !src "../charsets/ati_8x8.h.a"
-biosversion	!text "BIOS    : V160309", $00	; Version String
-*=$f050
+biosversion	!text "BIOS    : V160527", $00	; Version String
+*=$f000
 .upload
 			+PrintString .crlf
 			+PrintString .serial_upload
@@ -428,25 +428,22 @@ default_irqhandler
 	lsr
 	lsr
 	lsr				
-	and     #%00001111      ;mask lsd for hex print
-	ora     #"0"            ;add "0"
-	cmp     #"9"+1          ;is it a decimal digit?
-	bcc     +	            ;yes! output it
-	adc     #6              ;add offset for letter a-f
-+	jsr		chrout
-
+	jsr .hexdigit
 	txa 
-	and     #%00001111      ;mask lsd for hex print
-	ora     #"0"            ;add "0"
-	cmp     #"9"+1          ;is it a decimal digit?
-	bcc     +	            ;yes! output it
-	adc     #6              ;add offset for letter a-f
-+	jsr		chrout
-
+	jsr .hexdigit
 	plx
 	pla
 	rts
 
+.hexdigit
+	and     #%00001111      ;mask lsd for hex print
+	ora     #"0"            ;add "0"
+	cmp     #"9"+1          ;is it a decimal digit?
+	bcc     +	            ;yes! output it
+	adc     #6              ;add offset for letter a-f
++	jsr		chrout
+
+	rts
 			
 
 
