@@ -212,8 +212,6 @@
 ;---------------------------------------------------------------------
 .sd_read_block 
        jsr .sd_select_card
-
-
        jsr .sd_busy_wait
        
        ; Send CMD17 command byte
@@ -254,7 +252,6 @@
        bne -
 
        inc sd_blkptr+1
-
 
 -      lda tmp0
 
@@ -356,7 +353,7 @@
        jsr .sd_busy_wait  
        
        +restore
-       jmp .sd_deselect_card
+       ; jmp .sd_deselect_card
        ; rts
 }
 !ifndef bios {
@@ -364,7 +361,7 @@
 ; Write block to SD Card
 ;---------------------------------------------------------------------
 .sd_write_block
-;      jsr sd_select_card
+       jsr sd_select_card
 
        jsr .sd_busy_wait
 
@@ -442,6 +439,12 @@
        lda #%01111110
        sta via1portb
 
+       lda #$ff
+       jsr spi_rw_byte
+       lda #$ff
+       jsr spi_rw_byte
+       lda #$ff
+       jsr spi_rw_byte
        lda #$ff
        jsr spi_rw_byte
        
