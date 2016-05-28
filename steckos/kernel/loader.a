@@ -88,7 +88,7 @@ b2	sta .bios
 	sta memctl
 
 
-	+vnops
+	; +vnops
 
 	
 	jmp .dest
@@ -99,7 +99,7 @@ b2	sta .bios
 !bin "kernel.bin"
 .payload_end
 
-!align 255,0
+; !align 255,0
 .charset
 ;!src "../../charsets/char.ascii.vc20.6x8.h.a"
 !src "../../charsets/ati_smallw_6x8.h.a"
