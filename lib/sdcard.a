@@ -41,7 +41,7 @@
 
        ; send CMD0 - init SD card to SPI mode
        lda #cmd0
-       jsr sd_cmd
+       jsr .sd_cmd
 
        ; get result
        lda #$ff
@@ -68,7 +68,7 @@
        jsr .sd_busy_wait
 
        lda #cmd8
-       jsr sd_cmd
+       jsr .sd_cmd
 
        ldx #$00
 -      
@@ -146,7 +146,7 @@
        jsr .sd_busy_wait
 
        lda #cmd58
-       jsr sd_cmd
+       jsr .sd_cmd
 
        ldx #$00
 -      
@@ -171,7 +171,7 @@
        jsr .sd_busy_wait
        
        lda #cmd16
-       jsr sd_cmd
+       jsr .sd_cmd
 
        lda #$ff
        jsr .spi_rw_byte
@@ -216,20 +216,20 @@
        
        ; Send CMD17 command byte
        lda #cmd17
-       jsr spi_rw_byte
+       jsr .spi_rw_byte
 
        ; Send lba_addr in reverse order
        !for .i, 3, 0 {
               lda lba_addr + .i
-              jsr spi_rw_byte      
+              jsr .spi_rw_byte      
        }
 
        ; Send stopbit
        lda #$01
-       jsr spi_rw_byte
+       jsr .spi_rw_byte
 
        ; wait for sd card data token
--      jsr spi_r_byte                         
+-      jsr .spi_r_byte                         
        cmp #sd_data_token
        bne -
 
@@ -290,17 +290,17 @@
        jsr .sd_busy_wait  
 
        lda #cmd18
-       jsr spi_rw_byte
+       jsr .spi_rw_byte
 
        ; Send lba_addr in reverse order
        !for .i, 3, 0 {
               lda lba_addr + .i
-              jsr spi_rw_byte      
+              jsr .spi_rw_byte      
        }
 
        ; Send stopbit
        lda #$01
-       jsr spi_rw_byte
+       jsr .spi_rw_byte
 
        ; Wait for data token
 -      jsr .spi_r_byte             
@@ -348,12 +348,12 @@
        ; all blocks read, send cmd12 to end transmission
        ; jsr sd_param_init
        lda #cmd12
-       jsr sd_cmd
+       jsr .sd_cmd
 
        jsr .sd_busy_wait  
        
        +restore
-       ; jmp .sd_deselect_card
+       jmp .sd_deselect_card
        ; rts
 }
 !ifndef bios {
@@ -361,12 +361,12 @@
 ; Write block to SD Card
 ;---------------------------------------------------------------------
 .sd_write_block
-       jsr sd_select_card
+       jsr .sd_select_card
 
        jsr .sd_busy_wait
 
        lda #cmd24
-       jsr sd_cmd
+       jsr .sd_cmd
        
 -      lda #$ff
        jsr .spi_rw_byte             
@@ -435,19 +435,20 @@
 ;---------------------------------------------------------------------
 .sd_deselect_card
        pha
+       phx
        ; set CS line to HI
        lda #%01111110
        sta via1portb
 
-       lda #$ff
-       jsr spi_rw_byte
-       lda #$ff
-       jsr spi_rw_byte
-       lda #$ff
-       jsr spi_rw_byte
-       lda #$ff
-       jsr spi_rw_byte
-       
+       ldx #$04
+-      
+       ; lda #$ff
+       phx
+       jsr .spi_rw_byte
+       plx
+       dex
+       bne -       
+       plx
        pla
        rts
 
