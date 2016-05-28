@@ -12,7 +12,7 @@ kernel.h.a: kernel.bin
 	grep krn_ kernel.a.labels | awk -F' '  '{print $$2 " = " $$4}' > kernel.inc
 	
 %.bin: %.a textui.a keyboard.textui.adapter.a
-	acme -Dexperimental=1 -f plain -Wtype-mismatch -l $<.labels --cpu 65c02 -o $@ $<
+	acme -v2 -Dexperimental=1 -f plain -Wtype-mismatch -l $<.labels --cpu 65c02 -o $@ $<
 	
 transfer: loader.bin
 	../../transfer.py loader.bin -s 0x1000
