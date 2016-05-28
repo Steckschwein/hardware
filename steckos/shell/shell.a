@@ -4,7 +4,7 @@ text_mode_40 	= 1
 num_ls_entries 	= $03
 
 !src <defs.h.a>
-!src <bios.h.a>
+; !src <bios.h.a>
 !src <kernel.h.a>
 !src <shell.h.a>
 !src <fat32.h.a>
