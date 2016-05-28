@@ -36,11 +36,11 @@ FD_file_size = $08
 
 
 !ifdef experimental {
-	jsr sd_read_multiblock
+	jsr .sd_read_multiblock
 }
 !ifndef experimental {
 
--	jsr sd_read_block
+-	jsr .sd_read_block
 
 	inc sd_blkptr+1 ; 3 bytes, 6 cycles
 
@@ -289,10 +289,6 @@ FD_file_size = $08
 
 
 
-
-
-
-
 ;---------------------------------------------------------------------
 ; Mount FAT32 on Partition 0
 ;---------------------------------------------------------------------
@@ -307,7 +303,7 @@ FD_file_size = $08
 
 	+SetVector sd_blktarget, sd_blkptr
 
-	jsr sd_read_block
+	jsr .sd_read_block
 	
 	jsr .fat_check_signature
 
@@ -343,7 +339,7 @@ FD_file_size = $08
 
 	+SetVector sd_blktarget, sd_blkptr	
 	; Read FAT Volume ID at LBABegin and Check signature
-	jsr sd_read_block
+	jsr .sd_read_block
 
 	jsr .fat_check_signature
 	lda errno
@@ -501,7 +497,7 @@ FD_file_size = $08
 	jsr .calc_lba_addr
 	
 -	+SetVector sd_blktarget, dirptr	
-	jsr sd_read_block
+	jsr .sd_read_block
 	dec sd_blkptr+1
 
 --	
