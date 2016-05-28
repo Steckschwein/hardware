@@ -11,7 +11,7 @@ num_ls_entries = $03
 .kbd_frame_div  = $01
 
 !src <defs.h.a>
-!src <bios.h.a>
+; !src <bios.h.a>
 !src <via.h.a>
 !src <fat32.h.a>
 ; !src <params.h.a>
@@ -32,9 +32,9 @@ kern_init
 	sta via1portb
 
     lda #$8f
-    jsr spi_rw_byte
+    jsr .spi_rw_byte
 	lda #$00
-    jsr spi_rw_byte
+    jsr .spi_rw_byte
 
 	; Select SPI SS for RTC
 	lda #%01111110
@@ -42,6 +42,8 @@ kern_init
 	sta via1portb
 
 	+SetVector .kern_irq, irqvec
+	; Set NMI Vector
+	; +SetVector default_nmihandler, nmivec
 
 	; read from keyboard buffer until empty to filter crap from kbd init
 	; select keyboard controller
@@ -60,7 +62,7 @@ kern_init
 	jsr strout
 
 
-	jsr init_sdcard
+	jsr .init_sdcard
 
 	; check errno. if != 00, sd card init failed.
 	; do not attempt to mount card, jump to upload instead
@@ -111,7 +113,7 @@ kern_init
 	sta via1portb
 
 	; lda #$ff
-	jsr spi_r_byte
+	jsr .spi_r_byte
        
 	ldx #%11111110
 	stx via1portb
@@ -144,111 +146,165 @@ kern_init
 !src "gfxui.a"
 !src <fat.a>
 .upload
-	+PrintString .crlf
-	+PrintString .serial_upload
-	; ldy #param_baud
-	; lda (paramvec),y
+; 	+PrintString .crlf
+; 	+PrintString .serial_upload
+; 	; ldy #param_baud
+; 	; lda (paramvec),y
 
-	; jsr hexout
-	+PrintString .crlf
+; 	; jsr hexout
+; 	+PrintString .crlf
 
-	jsr .textui_screen_dirty
+; 	jsr .textui_screen_dirty
 
-	; load start address
-	jsr uart_rx
-	sta .startaddr
+; 	; load start address
+; 	jsr uart_rx
+; 	sta .startaddr
 	
-	jsr uart_rx
-	sta .startaddr+1
+; 	jsr uart_rx
+; 	sta .startaddr+1
 
-	lda .startaddr+1
-	jsr hexout
-	lda .startaddr
-	jsr hexout
+; 	lda .startaddr+1
+; 	jsr hexout
+; 	lda .startaddr
+; 	jsr hexout
 
-	lda #' '
-	jsr chrout
-	jsr .textui_screen_dirty
+; 	lda #' '
+; 	jsr chrout
+; 	jsr .textui_screen_dirty
 
-	jsr .upload_ok
+; 	jsr .upload_ok
 	
-	; load number of bytes to be uploaded
-	jsr uart_rx
-	sta .length
+; 	; load number of bytes to be uploaded
+; 	jsr uart_rx
+; 	sta .length
 		
-	jsr uart_rx
-	sta .length+1
+; 	jsr uart_rx
+; 	sta .length+1
 
-	; calculate end address
-	clc
-	lda .length
-	adc .startaddr
-	sta .endaddr
+; 	; calculate end address
+; 	clc
+; 	lda .length
+; 	adc .startaddr
+; 	sta .endaddr
 
-	lda .length+1
-	adc .startaddr+1
-	sta .endaddr+1
+; 	lda .length+1
+; 	adc .startaddr+1
+; 	sta .endaddr+1
 
-	lda .endaddr+1
-	jsr hexout
+; 	lda .endaddr+1
+; 	jsr hexout
 
-	lda .endaddr
-	jsr hexout
+; 	lda .endaddr
+; 	jsr hexout
 	
-	lda #' '
-	jsr chrout
+; 	lda #' '
+; 	jsr chrout
 
-	jsr .textui_screen_dirty
-	sei 
-	lda .startaddr
-	sta addr
-	lda .startaddr+1
-	sta addr+1	
+; 	jsr .textui_screen_dirty
+; 	sei 
+; 	lda .startaddr
+; 	sta addr
+; 	lda .startaddr+1
+; 	sta addr+1	
 
-	jsr .upload_ok
+; 	jsr .upload_ok
 	
 
-	ldy #$00
--	jsr uart_rx
-	sta (addr),y
+; 	ldy #$00
+; -	jsr uart_rx
+; 	sta (addr),y
 
-	iny	
-	cpy #$00
-	bne +
-	inc addr+1
-+		
+; 	iny	
+; 	cpy #$00
+; 	bne +
+; 	inc addr+1
+; +		
 
-	; msb of current address equals msb of end address?
-	lda addr+1
-	cmp .endaddr+1
-	bne - ; no? read next byte
+; 	; msb of current address equals msb of end address?
+; 	lda addr+1
+; 	cmp .endaddr+1
+; 	bne - ; no? read next byte
 
-	; yes? compare y to lsb of endaddr
-	cpy .endaddr
-	bne - ; no? read next byte
+; 	; yes? compare y to lsb of endaddr
+; 	cpy .endaddr
+; 	bne - ; no? read next byte
 
-	; yes? write OK and jump to start addr	
+; 	; yes? write OK and jump to start addr	
 
-	jsr .upload_ok
-	cli 
+; 	jsr .upload_ok
+; 	cli 
 
-	lda #'O'
-	jsr chrout
-	lda #'K'
-	jsr chrout
+; 	lda #'O'
+; 	jsr chrout
+; 	lda #'K'
+; 	jsr chrout
 
 	rts
 
-.upload_ok
-	lda #'O'
-	jsr uart_tx
-	lda #'K'
-	jsr uart_tx
-	rts
+; .upload_ok
+; 	lda #'O'
+; 	jsr uart_tx
+; 	lda #'K'
+; 	jsr uart_tx
+; 	rts
+
+;----------------------------------------------------------------------------------------------
+; Output string on active output device
+;----------------------------------------------------------------------------------------------
+strout
+			pha                 ;save a, y to stack
+			phy
+
+			ldy #$00
+-		  	lda (msgptr),y
+			beq +
+			jsr chrout
+			iny
+			bne -
+
++			ply                 ;restore a, y
+			pla
+			rts
+
+
+chrout		jmp (outvec)
+chrin		jmp (invec)
+
+; ;----------------------------------------------------------------------------------------------
+; ; IO_IRQ Routine. Handle IRQ
+; ;----------------------------------------------------------------------------------------------
+; .do_irq
+; 			jmp (irqvec)
+; default_irqhandler			
+; 			rti
+
+; ;----------------------------------------------------------------------------------------------
+; ; IO_NMI Routine. Handle NMI
+; ;----------------------------------------------------------------------------------------------
+; .do_nmi 
+; 			jmp (nmivec)
+			
+
+
+; default_nmihandler
+; .do_reset
+; 			; disable interrupt
+; 			sei
+
+; 			; clear decimal flag
+; 			cld
+
+; 			; init stack pointer
+; 			ldx #$ff
+; 			txs
+
+; 			jmp kern_init
 
 ; locations
 .kbd_div					!byte $00
 
+!src <spi.a>
+!src <sdcard.a>
 ; strings
 .kernel_version 			!text "SteckOS Kernel 0.3",$0d,$0a,$00
 .crlf						!byte $0a,$0d,$00
@@ -280,3 +336,17 @@ foo2 					jmp foo2
 krn_textui_crsxy				jmp .textui_crsxy
 krn_textui_update_crs_ptr		jmp .textui_update_crs_ptr
 krn_textui_clrscr_ptr		    jmp .textui_blank
+
+
+;----------------------------------------------------------------------------------------------
+; Interrupt vectors
+;----------------------------------------------------------------------------------------------
+; $FFFA/$FFFB NMI Vector
+; *= $fffa
+; !word .do_nmi
+; ; $FFFC/$FFFD reset vector
+; ;*= $fffc
+; !word .do_reset
+; ; $FFFE/$FFFF IRQ vector
+; ;*= $fffe
+; !word .do_irq
