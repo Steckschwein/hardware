@@ -20,7 +20,7 @@
 charset_8x8
 ;!src "../charsets/char.ascii.vc20.h.a"
 !src "../charsets/ati_8x8.h.a"
-biosversion	!text "BIOS    : V160527", $00	; Version String
+biosversion	!text "BIOS    : V160528", $00	; Version String
 *=$f000
 .upload
 			+PrintString .crlf
@@ -441,9 +441,9 @@ default_irqhandler
 	cmp     #"9"+1          ;is it a decimal digit?
 	bcc     +	            ;yes! output it
 	adc     #6              ;add offset for letter a-f
-+	jsr		chrout
++	jmp		chrout
 
-	rts
+	; rts
 			
 
 

@@ -1,4 +1,4 @@
-ACME_OPTS=-v1 -f plain --cpu 65c02
+ACME_OPTS=-v2 -f plain --cpu 65c02
 
 .PHONY: all
 all: bios.bin bios.h.a
@@ -19,7 +19,7 @@ bios.h.a: bios.bin
 	grep sys_ bios.a.labels | sed -e"s/sys_/bios_/g" | awk -F' '  '{print $$2 " = " $$4}' > bios.inc
 	
 %.bin: %.a ${ACME}/t9929.h.a ${ACME}/t99xx.lib.a vdp.a 
-	acme -vv -Dexperimental=1 -Wtype-mismatch -l $<.labels $(ACME_OPTS) -o $@ $<
+	acme -Wtype-mismatch -l $<.labels $(ACME_OPTS) -o $@ $<
 
 burn: bios.bin
 	mkfile 24k 24k.bin
