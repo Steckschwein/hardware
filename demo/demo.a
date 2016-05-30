@@ -1,7 +1,7 @@
 *=$1000
 	jmp	main
 !src <defs.h.a>
-!src <bios.h.a>
+;!src <bios.h.a>
 !src <via.h.a>
 !source <t99xx.lib.a>
 
