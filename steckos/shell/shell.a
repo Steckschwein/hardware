@@ -1,4 +1,4 @@
-*= $d000
+*= $e000
 
 text_mode_40 	= 1
 num_ls_entries 	= $03
@@ -19,7 +19,7 @@ KEY_ESCAPE_CRSR_DOWN	= 'B'
 BUF_SIZE	= 32
 
 !address {
-.buf 				= $d800 ; Input buffer 80 bytes. end: $d800
+.buf 				= $e800 ; Input buffer 80 bytes. end: $d800
 .endbuf				= .buf + BUF_SIZE*16
 .bufptr				= $d0
 .bufhwm				= $d2
