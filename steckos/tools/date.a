@@ -1,6 +1,6 @@
 *=$1000
 !src <defs.h.a>
-!src <bios.h.a>
+;!src <bios.h.a>
 !src <kernel.h.a>
 !src <shell.h.a>
 !src <via.h.a>
