@@ -1,6 +1,6 @@
 !address {
-	.shell_addr		= $d000
-	KERNEL_START = $e000
+	.shell_addr	 = $e000
+	KERNEL_START = $f000
 }
 
 
@@ -13,6 +13,7 @@ num_ls_entries = $03
 !src <defs.h.a>
 ; !src <bios.h.a>
 !src <via.h.a>
+!src <uart.h.a>
 !src <fat32.h.a>
 ; !src <params.h.a>
 ; !src <errors.h.a>
@@ -45,18 +46,21 @@ kern_init
 	; Set NMI Vector
 	; +SetVector default_nmihandler, nmivec
 
+	jsr	.textui_init0
+
 	; read from keyboard buffer until empty to filter crap from kbd init
 	; select keyboard controller
--	jsr .getkey
-	cmp #$00
-	bne -
 
-	jsr	.textui_init0
-	
+	; +SetVector .uart_tx, outvec
 	+SetVector .textui_chrout, outvec
     +SetVector .user_isr_default, user_isr
     
 	cli
+
+-	jsr .getkey
+	cmp #$00
+	bne -
+
 	
 	+SetVector .kernel_version, msgptr
 	jsr strout
@@ -121,7 +125,34 @@ kern_init
 	plx
 	rts
 
+;----------------------------------------------------------------------------------------------
+; send byte in A 
+;----------------------------------------------------------------------------------------------
+.uart_tx
+	pha
 
+
+-	lda uart1lsr
+	and #$20
+	beq -
+
+	pla 
+
+	sta uart1rxtx
+
+	rts
+;----------------------------------------------------------------------------------------------
+; receive byte, store in A 
+;----------------------------------------------------------------------------------------------
+.uart_rx
+-	lda uart1lsr 
+	and #$1f
+	cmp #$01
+	bne -
+	
+	lda uart1rxtx
+ 
+	rts
 ; system interrupt handler
 ; handle keyboard input and text screen refresh
 .kern_irq
@@ -146,107 +177,107 @@ kern_init
 !src "gfxui.a"
 !src <fat.a>
 .upload
-; 	+PrintString .crlf
-; 	+PrintString .serial_upload
-; 	; ldy #param_baud
-; 	; lda (paramvec),y
+	+PrintString .crlf
+	+PrintString .serial_upload
+	; ldy #param_baud
+	; lda (paramvec),y
 
-; 	; jsr hexout
-; 	+PrintString .crlf
+	; jsr hexout
+	+PrintString .crlf
 
-; 	jsr .textui_screen_dirty
+	jsr .textui_screen_dirty
 
-; 	; load start address
-; 	jsr uart_rx
-; 	sta .startaddr
+	; load start address
+	jsr .uart_rx
+	sta .startaddr
 	
-; 	jsr uart_rx
-; 	sta .startaddr+1
+	jsr .uart_rx
+	sta .startaddr+1
 
-; 	lda .startaddr+1
-; 	jsr hexout
-; 	lda .startaddr
-; 	jsr hexout
+	lda .startaddr+1
+	jsr .hexout
+	lda .startaddr
+	jsr .hexout
 
-; 	lda #' '
-; 	jsr chrout
-; 	jsr .textui_screen_dirty
+	lda #' '
+	jsr chrout
+	jsr .textui_screen_dirty
 
-; 	jsr .upload_ok
+	jsr .upload_ok
 	
-; 	; load number of bytes to be uploaded
-; 	jsr uart_rx
-; 	sta .length
+	; load number of bytes to be uploaded
+	jsr .uart_rx
+	sta .length
 		
-; 	jsr uart_rx
-; 	sta .length+1
+	jsr .uart_rx
+	sta .length+1
 
-; 	; calculate end address
-; 	clc
-; 	lda .length
-; 	adc .startaddr
-; 	sta .endaddr
+	; calculate end address
+	clc
+	lda .length
+	adc .startaddr
+	sta .endaddr
 
-; 	lda .length+1
-; 	adc .startaddr+1
-; 	sta .endaddr+1
+	lda .length+1
+	adc .startaddr+1
+	sta .endaddr+1
 
-; 	lda .endaddr+1
-; 	jsr hexout
+	lda .endaddr+1
+	jsr .hexout
 
-; 	lda .endaddr
-; 	jsr hexout
+	lda .endaddr
+	jsr .hexout
 	
-; 	lda #' '
-; 	jsr chrout
+	lda #' '
+	jsr chrout
 
-; 	jsr .textui_screen_dirty
-; 	sei 
-; 	lda .startaddr
-; 	sta addr
-; 	lda .startaddr+1
-; 	sta addr+1	
+	jsr .textui_screen_dirty
+	sei 
+	lda .startaddr
+	sta addr
+	lda .startaddr+1
+	sta addr+1	
 
-; 	jsr .upload_ok
+	jsr .upload_ok
 	
 
-; 	ldy #$00
-; -	jsr uart_rx
-; 	sta (addr),y
+	ldy #$00
+-	jsr .uart_rx
+	sta (addr),y
 
-; 	iny	
-; 	cpy #$00
-; 	bne +
-; 	inc addr+1
-; +		
+	iny	
+	cpy #$00
+	bne +
+	inc addr+1
++		
 
-; 	; msb of current address equals msb of end address?
-; 	lda addr+1
-; 	cmp .endaddr+1
-; 	bne - ; no? read next byte
+	; msb of current address equals msb of end address?
+	lda addr+1
+	cmp .endaddr+1
+	bne - ; no? read next byte
 
-; 	; yes? compare y to lsb of endaddr
-; 	cpy .endaddr
-; 	bne - ; no? read next byte
+	; yes? compare y to lsb of endaddr
+	cpy .endaddr
+	bne - ; no? read next byte
 
-; 	; yes? write OK and jump to start addr	
+	; yes? write OK and jump to start addr	
 
-; 	jsr .upload_ok
-; 	cli 
+	jsr .upload_ok
+	cli 
 
-; 	lda #'O'
-; 	jsr chrout
-; 	lda #'K'
-; 	jsr chrout
+	lda #'O'
+	jsr chrout
+	lda #'K'
+	jsr chrout
 
 	rts
 
-; .upload_ok
-; 	lda #'O'
-; 	jsr uart_tx
-; 	lda #'K'
-; 	jsr uart_tx
-; 	rts
+.upload_ok
+	lda #'O'
+	jsr .uart_tx
+	lda #'K'
+	jsr .uart_tx
+	rts
 
 ;----------------------------------------------------------------------------------------------
 ; Output string on active output device
@@ -298,35 +329,35 @@ strout
 chrout		jmp (outvec)
 chrin		jmp (invec)
 
-; ;----------------------------------------------------------------------------------------------
-; ; IO_IRQ Routine. Handle IRQ
-; ;----------------------------------------------------------------------------------------------
-; .do_irq
-; 			jmp (irqvec)
-; default_irqhandler			
-; 			rti
+;----------------------------------------------------------------------------------------------
+; IO_IRQ Routine. Handle IRQ
+;----------------------------------------------------------------------------------------------
+.do_irq
+			jmp (irqvec)
+default_irqhandler			
+			rti
 
-; ;----------------------------------------------------------------------------------------------
-; ; IO_NMI Routine. Handle NMI
-; ;----------------------------------------------------------------------------------------------
-; .do_nmi 
-; 			jmp (nmivec)
+;----------------------------------------------------------------------------------------------
+; IO_NMI Routine. Handle NMI
+;----------------------------------------------------------------------------------------------
+.do_nmi 
+			jmp (nmivec)
 			
 
 
-; default_nmihandler
-; .do_reset
-; 			; disable interrupt
-; 			sei
+default_nmihandler
+.do_reset
+			; disable interrupt
+			sei
 
-; 			; clear decimal flag
-; 			cld
+			; clear decimal flag
+			cld
 
-; 			; init stack pointer
-; 			ldx #$ff
-; 			txs
+			; init stack pointer
+			ldx #$ff
+			txs
 
-; 			jmp kern_init
+			jmp kern_init
 
 ; locations
 .kbd_div					!byte $00
@@ -366,15 +397,15 @@ krn_init_sdcard			jmp .init_sdcard
 krn_upload				jmp .upload
 krn_spi_rw_byte			jmp .spi_rw_byte
 krn_spi_r_byte			jmp .spi_r_byte
-;----------------------------------------------------------------------------------------------
+; ----------------------------------------------------------------------------------------------
 ; Interrupt vectors
-;----------------------------------------------------------------------------------------------
+; ----------------------------------------------------------------------------------------------
 ; $FFFA/$FFFB NMI Vector
-; *= $fffa
-; !word .do_nmi
-; ; $FFFC/$FFFD reset vector
-; ;*= $fffc
-; !word .do_reset
-; ; $FFFE/$FFFF IRQ vector
-; ;*= $fffe
-; !word .do_irq
+*= $fffa
+!word .do_nmi
+; $FFFC/$FFFD reset vector
+;*= $fffc
+!word .do_reset
+; $FFFE/$FFFF IRQ vector
+;*= $fffe
+!word .do_irq

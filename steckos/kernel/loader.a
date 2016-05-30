@@ -7,7 +7,7 @@
 ; 	system attribute has to be set on file system
 
 !address {
-	.dest = $e000
+	.dest = $f000
 	.bios = $f000	
 }
 
@@ -42,16 +42,16 @@ b	sta .dest
 
 ; copy bios to underlying ram
 -
-a2	lda .bios
-b2	sta .bios
+;a2	lda .bios
+;b2	sta .bios
 
-	inc a2+1
-	inc b2+1
-	bne -
+	;inc a2+1
+	;inc b2+1
+	;bne -
 
-	inc a2+2
-	inc b2+2
-	bne -
+	;inc a2+2
+	;inc b2+2
+	;bne -
 
 	;display off
 	lda		#v_reg1_16k	;enable 16K ram, disable screen
