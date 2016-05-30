@@ -2,7 +2,7 @@
 !src <kernel.h.a>
 
 !source <shell.h.a>
-!source <bios.h.a>
+; !source <bios.h.a>
 !source <ym3812.h.a>
 ;!source <t9929.h.a>
 
