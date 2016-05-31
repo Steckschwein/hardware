@@ -25,6 +25,7 @@ BUF_SIZE	= 32
 .bufhwm				= $d2
 ; Address pointers for serial upload
 .startaddr	= ptr1
+entryvec			= $d4
 }
 
 ;---------------------------------------------------------------------------------------------------------
@@ -371,7 +372,7 @@ mainloop
 	dec entries
 	bne +	
 	+ShellPrintString .crlf
-	lda #$03
+	lda #num_ls_entries
 	sta entries
 +
 	pla
@@ -553,12 +554,17 @@ mainloop
 .exec_extension			!text ".bin",$00
 
 .filename !text "            ",$00
+.dir_entry
+	jmp (entryvec)
 
 .ls
 	lda #num_ls_entries
 	sta entries
+	+SetVector .dir_show_entry_short, entryvec
+
 	bra +
 .dir
+	+SetVector .dir_show_entry, entryvec
 +	+ShellPrintString .crlf
 	+SetVector .pattern, filenameptr
 
@@ -586,7 +592,7 @@ mainloop
 	bne -
 
 
-	jsr .dir_show_entry
+	jsr .dir_entry
 
 	jsr getkey
 	cmp #$03 ; CTRL-C?
