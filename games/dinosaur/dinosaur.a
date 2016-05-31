@@ -2,7 +2,7 @@
 	jmp main
 	
 !src <defs.h.a>
-!src <bios.h.a>
+!src <kernel.h.a>
 !src <macro.h.a>
 !src <via.h.a>
 !src <joystick.h.a>
@@ -51,6 +51,7 @@
 .STATUS_JOY_PRESSED=1<<2
 
 main:
+	
 	sei
 	lda	a_vreg
 
