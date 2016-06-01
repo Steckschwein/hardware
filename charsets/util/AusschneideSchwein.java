@@ -75,7 +75,7 @@ public class AusschneideSchwein {
          System.out.print("$" + Integer.toHexString(v));
          row[x % 8] = v;
          if (x % 8 == 7) {
-            System.out.println(";");
+            System.out.println("; code 0x"+Integer.toHexString((x/8)));
             for (int l : row) {
                System.out.print(";");
                for (int b = 7; b >= 0; b--)
