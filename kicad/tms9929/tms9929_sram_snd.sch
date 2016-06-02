@@ -1484,8 +1484,6 @@ NoConn ~ 7800 2200
 NoConn ~ 7800 3600
 Text Label 1600 5950 0    60   ~ 0
 VCC
-Text Label 10050 3550 0    60   ~ 0
-12Vss
 NoConn ~ 4350 4050
 $Comp
 L C C3
