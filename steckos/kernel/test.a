@@ -1,6 +1,7 @@
 !src <defs.h.a>
 !src <bios.h.a>
 !src <via.h.a>
+!src <kernel.h.a>
 
 ;text_mode_40 = 1
 
@@ -47,17 +48,4 @@ main
 	rts 
     
 .getkey
-	phx
-
-	lda #%01111010
-	sta via1portb
-
-	; lda #$ff
-	jsr spi_r_byte
-       
-	ldx #%11111110
-	stx via1portb
-
-	plx
-	rts
- 
+	jmp getkey

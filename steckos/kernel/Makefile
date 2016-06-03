@@ -7,6 +7,7 @@ loader.bin: test.bin
 loader.bin: kernel.bin
 kernel.h.a: kernel.bin
 	grep krn_ kernel.a.labels | sed -e"s/krn_//g" | sort > kernel.h.a.tmp
+	grep krn_ kernel.a.labels | sort >> kernel.h.a.tmp
 	cat kernel.h.a.stub kernel.h.a.tmp > ../../lib/kernel.h.a
 	rm kernel.h.a.tmp
 	grep krn_ kernel.a.labels | awk -F' '  '{print $$2 " = " $$4}' > kernel.inc

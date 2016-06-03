@@ -51,8 +51,8 @@
 .STATUS_JOY_PRESSED=1<<2
 
 main:
-	
 	sei
+    
 	lda	a_vreg
 
 	jsr	.init_via
@@ -96,9 +96,8 @@ main:
 
 .init_via
 	;via port a
-	; lda #$00
-	stz via1ier             ; disable VIA1 T1 interrupts
-	stz via1acr
+	lda #$ff
+	sta via1ier             ; disable VIA1 T1 interrupts
 	lda #%11001100 			; set level
 	sta via1pcr
 	lda #%11000000 			; set PA6,7 to output (port select), PA1-5 to input (directions)
@@ -266,6 +265,10 @@ main:
 	lda	#<(.A_GX_SCR + (.Y_OFS_GAME_OVER*32))
 	ldy	#.WRITE_ADDRESS + >(.A_GX_SCR+(.Y_OFS_GAME_OVER*32))
 	jsr .vdp_print
+    
+    ;testing purpose
+    ;jmp (retvec)
+    
 	rts
 	
 .vdp_print
@@ -461,8 +464,11 @@ main:
 	lda	.game_state
 	and #!.STATUS_JOY_PRESSED
 	sta .game_state
-    jsr .getkey
-    cmp #' '
+    jsr getkey
+	cmp #$03
+    bne +
+    jmp (retvec)
++   cmp #$20    ; space ?
     bne +++
 	
 ++	lda	.game_state
@@ -595,21 +601,16 @@ main:
 	stx via1portb	
 	rts
 
-.getkey
-	jsr .kbd_enable	
-	jsr spi_r_byte
-	jmp .kbd_disable 
-    
 .action_handler
     ;TODO FIXME just for testing
-    jsr .getkey
+    jsr krn_getkey
 	cmp #$1b
     bne +
-    jsr .getkey
+    jsr krn_getkey
 	cmp #'A'
     beq .up
        
-+	jsr .get_joy_status
++   jsr .get_joy_status
 	and #JOY_UP
 	bne	+
 .up	lda	.dinosaur_state
