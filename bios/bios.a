@@ -6,6 +6,7 @@
 !src <sdcard.h.a>
 !src <uart.h.a>
 !src <fat32.h.a>
+!src <errors.h.a>
 !src <params.h.a>
 !src <ym3812.h.a>
 !src <t9929.h.a>
@@ -14,6 +15,8 @@
 	.target = $00
 	.nvram  = $0800
 	.start_check = $0280
+	.blocks = $a0
+	.filesize = $a1
 }
 ; Address pointers for serial upload
 .startaddr	= ptr1
@@ -337,11 +340,18 @@ charset_8x8
 			adc #param_filename
 			sta filenameptr
 
-			; +SetVector .filename, filenameptr
+			+SetVector .filename, filenameptr
 			+SetVector steckos_start, .startaddr
-			jsr .fat_open
-			lda errno 
-			bne .fat_end
+
+			jsr .fat_find_first
+			bcs +
+			
+		
+			jmp .upload
++
+			; jsr .fat_open
+			; lda errno 
+			; bne .fat_end
 
 			ldy #$00
 -			lda (filenameptr),y
@@ -351,6 +361,28 @@ charset_8x8
 			bne -
 +
 
+			ldy #DIR_FstClusHI + 1
+			lda (dirptr),y
+			sta root_dir_first_clus + 3
+			ldy #DIR_FstClusHI 
+			lda (dirptr),y
+			sta root_dir_first_clus + 2
+			ldy #DIR_FstClusLO + 1
+			lda (dirptr),y
+			sta root_dir_first_clus + 1
+			ldy #DIR_FstClusLO 
+			lda (dirptr),y
+			sta root_dir_first_clus
+			jsr .calc_lba_addr
+
+
+			!for .i,3,0 {
+				ldy #DIR_FileSize + .i
+				lda (dirptr),y
+				sta .filesize + .i
+			}
+
+
 
 			
 			+SetVector steckos_start, sd_blkptr
@@ -358,16 +390,16 @@ charset_8x8
 			lda errno 
 			bne .fat_end
 
-			jsr .fat_close
-			jsr .sd_deselect_card
+			; jsr .fat_close
+			; jsr .sd_deselect_card
 
 			jmp .startup
 			
 .fat_end	
-			jsr .sd_deselect_card
+			; jsr .sd_deselect_card
 			+PrintString .bootup_failed
 			lda errno 
-			jsr hexout
+			jsr .hexout
 			rts
 
 
@@ -405,6 +437,7 @@ default_irqhandler
 ; Output string on active output device
 ;----------------------------------------------------------------------------------------------
 .strout
+strout
 			pha                 ;save a, y to stack
 			phy
 
@@ -744,7 +777,7 @@ vdp_putchar
 
        ; send CMD0 - init SD card to SPI mode
        lda #cmd0
-       jsr sd_cmd
+       jsr .sd_cmd
 
        ; get result
        lda #$ff
@@ -771,7 +804,7 @@ vdp_putchar
        jsr .sd_busy_wait
 
        lda #cmd8
-       jsr sd_cmd
+       jsr .sd_cmd
 
        ldx #$00
 -      
@@ -847,7 +880,7 @@ vdp_putchar
        jsr .sd_busy_wait
 
        lda #cmd58
-       jsr sd_cmd
+       jsr .sd_cmd
 
        ldx #$00
 -      
@@ -872,7 +905,7 @@ vdp_putchar
        jsr .sd_busy_wait
        
        lda #cmd16
-       jsr sd_cmd
+       jsr .sd_cmd
 
        lda #$ff
        jsr .spi_rw_byte
@@ -923,7 +956,7 @@ vdp_putchar
        ldx #$03
 -      lda lba_addr,x
 	   phx
-       jsr spi_rw_byte
+       jsr .spi_rw_byte
        plx
        dex
        bpl -
@@ -1030,7 +1063,7 @@ vdp_putchar
 -      
        ; lda #$ff
        phx
-       jsr spi_rw_byte
+       jsr .spi_rw_byte
        plx
        dex
        bne -       
@@ -1054,7 +1087,290 @@ vdp_putchar
 ;---------------------------------------------------------------------
 ; FAT32 routines
 ;---------------------------------------------------------------------
-!src <fat.a>
+
+;---------------------------------------------------------------------
+; Mount FAT32 on Partition 0
+;---------------------------------------------------------------------
+.fat_mount
+	+save
+
+	; set lba_addr to $00000000 since we want to read the bootsector
+	!for .i,0,3 {
+		stz lba_addr + .i	
+	}
+	
+
+	+SetVector sd_blktarget, sd_blkptr
+
+	jsr .sd_read_block
+	
+	jsr .fat_check_signature
+
+	lda errno
+	beq +
+	jmp .end_mount
++
+	part0 = sd_blktarget + BS_Partition0
+
+	lda part0 + PE_TypeCode
+	cmp #$0b
+	beq +
+	cmp #$0c
+	beq +
+
+	; type code not $0b or $0c
+	lda #fat_invalid_partition_type
+	sta errno
+	jmp .end_mount
+
++
+	ldx #$00
+-	
+	lda part0 + PE_LBABegin,x
+	sta lba_addr,x
+	inx
+	cpx #$04
+	bne -
+
+
+	; Write LBA start address to sd param buffer
+	; +SDBlockAddr fat_begin_lba
+
+	+SetVector sd_blktarget, sd_blkptr	
+	; Read FAT Volume ID at LBABegin and Check signature
+	jsr .sd_read_block
+
+	jsr .fat_check_signature
+	lda errno
+	beq +
+	jmp .end_mount
++
+	; Bytes per Sector, must be 512 = $0200
+	lda sd_blktarget + BPB_BytsPerSec
+	bne +
+	lda sd_blktarget + BPB_BytsPerSec + 1
+	cmp #$02
+	beq ++
++	lda #fat_invalid_sector_size
+	sta errno
+	jmp .end_mount
+++
+	; Sectors per Cluster. Valid: 1,2,4,8,16,32,64,128
+	lda sd_blktarget + BPB_SecPerClus
+	sta sectors_per_cluster
+	
+	; cluster_begin_lba = Partition_LBA_Begin + Number_of_Reserved_Sectors + (Number_of_FATs * Sectors_Per_FAT);
+
+	; add number of reserved sectors to fat_begin_lba. store in cluster_begin_lba
+	clc
+
+!for .i,0,1 {
+	lda lba_addr + .i
+	adc sd_blktarget + BPB_RsvdSecCnt + .i
+	sta cluster_begin_lba + .i	
+	; sta fat_first_block + .i	
+}
+!for .i,2,3 {
+	lda lba_addr + .i
+	adc #$00
+	sta cluster_begin_lba + .i
+	; sta fat_first_block + .i	m
+}
+
+	ldy #$02
+-	clc
+	ldx #$00	
+--	ror ; get carry flag back
+	lda sd_blktarget + BPB_FATSz32,x ; sectors per fat
+	adc cluster_begin_lba,x
+	sta cluster_begin_lba,x
+	inx
+	rol ; save status register before cpx to save carry
+	cpx #$04	
+	bne --
+	dey
+	bne -
+
+	; init file descriptor area
+	; jsr .fat_init_fdarea
+
+	+Copy sd_blktarget + BPB_RootClus, root_dir_first_clus, 3
+
+
+	; now we have the lba address of the first sector of the first cluster
+
+.end_mount
+	; jsr .sd_deselect_card
+	+restore
+	; rts
+
+	; fall through to open_rootdir
+	
+.fat_open_rootdir
+	; Open root dir
+	; +Copy root_dir_first_clus, current_dir_first_cluster, 3
+	jmp .calc_lba_addr
+
+
+	; rts
+
+.fat_check_signature
+	lda #$55
+	cmp sd_blktarget + BS_Signature
+	bne ++
+	asl ; $aa
+	cmp sd_blktarget + BS_Signature+1
+	beq +
+++	lda #fat_bad_block_signature
+	sta errno
++	rts
+
+; calculate LBA address of first block from cluster number found in file descriptor entry
+; file descriptor index must be in x
+.calc_lba_addr
+	pha
+
+	
+	; lda fd_area + FD_start_cluster +3, x 
+
+	
+	; cmp #$ff
+	; beq .file_not_open
+	
+	; lba_addr = cluster_begin_lba + (cluster_number - 2) * sectors_per_cluster;
+	sec
+	lda root_dir_first_clus
+	sbc #$02
+	sta tmp0 
+
+	!for .i,1,3 {
+		lda root_dir_first_clus + .i 
+		sbc #$00
+		sta tmp0 + .i
+	}
+
+	+Copy cluster_begin_lba, lba_addr, 3
+	
+	ldx sectors_per_cluster
+-	clc
+	!for .i,0,3 {
+		lda tmp0 + .i
+		adc lba_addr + .i
+		sta lba_addr + .i	
+	}
+	dex
+	bne -
+
+.calc_end
+	pla
+
+	rts
+
+.inc_lba_address:
+	inc lba_addr + 0
+	bne +
+	inc lba_addr + 1
+	bne +
+	inc lba_addr + 2
+	bne +
+	inc lba_addr + 3
++
+	rts
+
+
+.fat_find_first
+
+	+SetVector sd_blktarget, sd_blkptr
+	ldx #$00
+	jsr .calc_lba_addr
+	
+-	+SetVector sd_blktarget, dirptr	
+	jsr .sd_read_block
+	dec sd_blkptr+1
+
+--	
+	lda (dirptr)
+	bne +
+	clc 				; first byte of dir entry is $00?
+	rts   				; we are at the end, clear carry and return
++	
+	ldy #DIR_Attr		; else check if long filename entry
+	lda (dirptr),y 		; we are only going to filter those here (or maybe not?)
+	cmp #$0f
+
+	beq .fat_find_next
+	
+	jsr .match
+	bcs +
+
+.fat_find_next
+	lda dirptr
+	clc
+	adc #$20
+	sta dirptr
+	bcc ++
+	inc dirptr+1
+++	
+
+	lda dirptr+1 	; end of block?
+	cmp #$06
+	bcc --			; no, show entr
+	; increment lba address to read next block 
+	jsr .inc_lba_address	
+	bra -
+
++	
+	rts
+.match
+	phy
+	ldy #$00
+-	lda (dirptr),y
+	cmp .filename,y
+	bne +
+	iny
+	cpy #$0b
+	bne -
+	sec
+	ply
+	rts
++	ply
+	clc
+	rts
+
+.calc_blocks
+	pha
+	lda .filesize+3,x
+	lsr
+	lda .filesize+2,x
+	ror
+	lda .filesize+1,x
+	ror
+	sta .blocks
+	bcs +
+	lda .filesize,x
+	beq ++
++	inc .blocks
+++  pla
+	rts
+
+.fat_read
+	jsr .calc_lba_addr
+	jsr .calc_blocks
+
+-	jsr .sd_read_block
+	inc sd_blkptr+1 ; 3 bytes, 6 cycles
+
+	jsr .inc_lba_address
+	
+	dec .blocks
+	bne -
+	; jmp .sd_read_multiblock	
+	rts
+
+
+
+
+
 
 ;---------------------------------------------------------------------
 ; read 96 bytes from RTC as parameter buffer
@@ -1129,6 +1445,8 @@ vdp_putchar
 ; +		EOR addr(<CRC)    ; apply unity term
 ;         STA addr(<CRC)    ; save result
 ;         RTS
+chrout		jmp (outvec)
+chrin		jmp (invec)
 
 
 ;----------------------------------------------------------------------------------------------
@@ -1146,40 +1464,41 @@ vdp_putchar
 .invalidcard			!text "Invalid SD Card!", $00
 .unsupportedcard		!text "Unsupp. SD Card!", $00
 .initfail				!text "SD Init failed!", $00
-.fat_err_signature 		!text "bad block signature", $00
-.fat_err_partition 		!text "invalid partition type", $00
-.fat_err_bad_sect_size 	!text "sector size unsupported", $00
-.fat_err_num_fats	  	!text "invalid number of FATs (!= 2)", $00
+; .fat_err_signature 		!text "bad block signature", $00
+; .fat_err_partition 		!text "invalid partition type", $00
+; .fat_err_bad_sect_size 	!text "sector size unsupported", $00
+; .fat_err_num_fats	  	!text "invalid number of FATs (!= 2)", $00
 .bootup_txt 			!text "Boot ", $00
 .bootup_failed 			!text "failed: ", $00
-.filename				!text "loader.bin",$00
-biosversion				!text "BIOS    : V160528s", $00	; Version String
-.ok 					!text "OK",$00
+; .filename				!text "loader.bin",$00
+.filename				!text "LOADER  BIN",$00
+biosversion				!text "BIOS    : V160603s", $00	; Version String
+; .ok 					!text "OK",$00
 
 ;----------------------------------------------------------------------------------------------
 ;	divisor values for 1.8432 MHz Crystal
 ;	value		; baud	; #
-.uart_divisor	
-	!word -1 	; dunno	; 0
-	!word 2304	; 50	; 1
-	!word 1536	; 75	; 2	
-	!word 1047	; 110	; 3
-	!word 857	; 134.5	; 4
-	!word 768	; 150	; 5
-	!word 384 	; 300	; 6
-	!word 192	; 600	; 7
-	!word 96	; 1200	; 8
-	!word 64	; 1800	; 9
-	!word 58	; 2000	; 10
-	!word 48	; 2400	; 11
-	!word 32	; 3600	; 12
-	!word 24	; 4800	; 13
-	!word 16	; 7200	; 14
-	!word 12	; 9600	; 15
-	!word 6		; 19200	; 16
-	!word 3		; 38400	; 17
-	!word 2		; 56000	; 18
-	!word 1 	; 115200; 19
+; .uart_divisor	
+; 	!word -1 	; dunno	; 0
+; 	!word 2304	; 50	; 1
+; 	!word 1536	; 75	; 2	
+; 	!word 1047	; 110	; 3
+; 	!word 857	; 134.5	; 4
+; 	!word 768	; 150	; 5
+; 	!word 384 	; 300	; 6
+; 	!word 192	; 600	; 7
+; 	!word 96	; 1200	; 8
+; 	!word 64	; 1800	; 9
+; 	!word 58	; 2000	; 10
+; 	!word 48	; 2400	; 11
+; 	!word 32	; 3600	; 12
+; 	!word 24	; 4800	; 13
+; 	!word 16	; 7200	; 14
+; 	!word 12	; 9600	; 15
+; 	!word 6		; 19200	; 16
+; 	!word 3		; 38400	; 17
+; 	!word 2		; 56000	; 18
+; 	!word 1 	; 115200; 19
 ;----------------------------------------------------------------------------------------------
 .default_params
 	!byte $42
@@ -1200,54 +1519,54 @@ biosversion				!text "BIOS    : V160528s", $00	; Version String
 ;----------------------------------------------------------------------------------------------
 ; Jump table
 ;----------------------------------------------------------------------------------------------
-*=$ff00
-sys_chrout
-chrout		jmp (outvec)
-sys_chrin
-chrin		jmp (invec)
+; *=$ff00
+; sys_chrout
+; chrout		jmp (outvec)
+; sys_chrin
+; chrin		jmp (invec)
 
-sys_irqhandler
-irqhandler  jmp default_irqhandler
-;nmihandler  jmp default_nmihandler
-sys_spi_rw_byte	
-spi_rw_byte	jmp .spi_rw_byte
+; sys_irqhandler
+; irqhandler  jmp default_irqhandler
+; ;nmihandler  jmp default_nmihandler
+; sys_spi_rw_byte	
+; spi_rw_byte	jmp .spi_rw_byte
 
-sys_spi_r_byte	
-spi_r_byte	jmp .spi_r_byte
+; sys_spi_r_byte	
+; spi_r_byte	jmp .spi_r_byte
 
-sys_upload	jmp .upload
+; sys_upload	jmp .upload
 
-sys_init_sdcard
-init_sdcard jmp .init_sdcard
+; sys_init_sdcard
+; init_sdcard jmp .init_sdcard
 
-sys_sd_read_block
-sd_read_block 	jmp .sd_read_block
+; sys_sd_read_block
+; sd_read_block 	jmp .sd_read_block
 
-sys_sd_param_init
-sd_param_init 	jmp .sd_param_init
+; sys_sd_param_init
+; sd_param_init 	jmp .sd_param_init
 
-sys_sd_deselect_card
-sd_deselect_card 	jmp .sd_deselect_card
-sys_sd_select_card
-sd_select_card 	jmp .sd_select_card
+; sys_sd_deselect_card
+; sd_deselect_card 	jmp .sd_deselect_card
+; sys_sd_select_card
+; sd_select_card 	jmp .sd_select_card
 
-sys_sd_cmd
-sd_cmd 		jmp .sd_cmd
+; sys_sd_cmd
+; sd_cmd 		jmp .sd_cmd
 
-sys_strout
-strout 		jmp .strout
-sys_hexout
-hexout 		jmp .hexout
-sys_uart_rx
-uart_rx     jmp .uart_rx
-sys_uart_tx
-uart_tx     jmp .uart_tx
-sys_fat_mount
-fat_mount   jmp .fat_mount
-!ifdef experimental {
-sys_sd_read_multiblock
-sd_read_multiblock 	jmp .sd_read_multiblock	
-}
+; sys_strout
+; strout 		jmp .strout
+; sys_hexout
+; hexout 		jmp .hexout
+; sys_uart_rx
+; uart_rx     jmp .uart_rx
+; sys_uart_tx
+; uart_tx     jmp .uart_tx
+; sys_fat_mount
+; fat_mount   jmp .fat_mount
+; !ifdef experimental {
+; sys_sd_read_multiblock
+; sd_read_multiblock 	jmp .sd_read_multiblock	
+; }
 
 
 ;----------------------------------------------------------------------------------------------
