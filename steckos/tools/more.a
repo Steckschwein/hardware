@@ -8,6 +8,8 @@
 .endptr	 = $c2 
 .rows    = $c4
 }
+
+
 display_cols = 40
 display_rows = 24
 
@@ -61,7 +63,7 @@ display_rows = 24
 -	lda (.ptr),y
 	beq .end
 	
-	jsr chrout
+	jsr krn_chrout
 
 	inx
 
