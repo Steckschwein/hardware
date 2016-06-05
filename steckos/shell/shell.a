@@ -87,7 +87,7 @@ mainloop
 	iny
 
 -	jsr .terminate
-	jsr chrout
+	jsr krn_chrout
 
 	; prevent overflow of input buffer 
 	cpy #BUF_SIZE
@@ -258,7 +258,7 @@ mainloop
 -	lda (.bufptr),y
 	beq ++
 	sta .buf,y
-	jsr chrout
+	jsr krn_chrout
 	iny
 	bra -
 ++	rts
@@ -738,28 +738,28 @@ mainloop
 	lda .dumpvec_start
 	jsr hexout
 	lda #':'
-	jsr chrout
+	jsr krn_chrout
 	lda #' '
-	jsr chrout
+	jsr krn_chrout
 
 	ldy #$00
 --	lda (.dumpvec_start),y
 	jsr hexout 
 	lda #' '
-	jsr chrout
+	jsr krn_chrout
 	iny
 	cpy #$08
 	bne --
 
 	lda #' '
-	jsr chrout
+	jsr krn_chrout
 	
 	ldy #$00
 --	lda (.dumpvec_start),y
 	cmp #$19
 	bcs ++
 	lda #'.'
-++	jsr chrout
+++	jsr krn_chrout
 	iny
 	cpy #$08
 	bne --
@@ -810,14 +810,14 @@ mainloop
 	ldy #$00
 -	lda (filenameptr),y
 	beq +
-	jsr chrout
+	jsr krn_chrout
 	iny
 	bra -
 +
 	lda #':'
-	jsr chrout	
+	jsr krn_chrout	
 	lda #' '
-	jsr chrout
+	jsr krn_chrout
 
 	lda errno
 	jsr .errmsg

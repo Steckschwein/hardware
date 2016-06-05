@@ -10,13 +10,13 @@ macro_h_a = 1
 
 !macro PrintChar char {
         lda #char
-        jsr chrout
+        jsr krn_chrout
 }
 !macro Println {
     lda #10
-    jsr chrout
+    jsr krn_chrout
     lda #13
-    jsr chrout
+    jsr krn_chrout
 }
 
 !macro PrintString .word {
@@ -104,7 +104,7 @@ macro_h_a = 1
 }
 
 !macro ShellPrint {
-	jsr chrout
+	jsr krn_chrout
 }
 
 !macro ShellPrintHex {
