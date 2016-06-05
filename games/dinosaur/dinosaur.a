@@ -55,7 +55,8 @@ main:
 	jsr	vdp_display_off
 	jsr	.init_vram
 	jsr	.init_screen
-	jsr	.init_via
+    +via_int_off
+	+init_joystick
 	
 	lda	#33
 	sta	.seed
@@ -91,10 +92,6 @@ main:
 	!byte 	(.A_SP_PAT / $800)  ; sprite pattern table - value * $800  		--> offset in VRAM
 	!byte	Light_Blue
 
-.init_via
-    +via_int_off
-	+init_joystick
-	rts
 	
 .init_screen				;draw desert 
 	ldx	#$00
