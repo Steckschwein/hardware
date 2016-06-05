@@ -2,7 +2,7 @@ all:  kernel.bin kernel.h.a loader.bin
 clean:
 	rm -f *.bin 
 
-kernel.bin: textui.a gfxui.a ../../lib/fat.a
+kernel.bin: textui.a gfxui.a fat.a sdcard.a spi.a
 loader.bin: kernel.bin
 kernel.h.a: kernel.bin kernel.h.a.stub
 	grep krn_ kernel.a.labels | sed -e"s/krn_//g" | sort > kernel.h.a.tmp
