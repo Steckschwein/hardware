@@ -721,32 +721,6 @@ vdp_putchar
 
 	rts
 
-.spi_r_byte
-       lda via1portb   ; Port laden
-       AND #$fe        ; Takt ausschalten
-       TAX             ; aufheben
-       ORA #$01
-
-       STA via1portb ; Takt An 1
-       STX via1portb ; Takt aus
-       STA via1portb ; Takt An 2
-       STX via1portb ; Takt aus
-       STA via1portb ; Takt An 3
-       STX via1portb ; Takt aus
-       STA via1portb ; Takt An 4
-       STX via1portb ; Takt aus
-       STA via1portb ; Takt An 5
-       STX via1portb ; Takt aus
-       STA via1portb ; Takt An 6
-       STX via1portb ; Takt aus
-       STA via1portb ; Takt An 7
-       STX via1portb ; Takt aus
-       STA via1portb ; Takt An 8
-       STX via1portb ; Takt aus
-
-       lda via1sr
-       rts
-
 ;---------------------------------------------------------------------
 ; Init SD Card 
 ; Destructive: A, X, Y
@@ -970,8 +944,8 @@ vdp_putchar
        jsr .spi_rw_byte
 
        ; wait for sd card data token
-       lda #$ff
--      jsr .spi_rw_byte                         
+-      lda #$ff
+       jsr .spi_rw_byte                         
        cmp #sd_data_token
        bne -
 
@@ -1472,7 +1446,7 @@ chrin		jmp (invec)
 .bootup_failed 			!text "failed: ", $00
 ; .filename				!text "loader.bin",$00
 .filename				!text "LOADER  BIN",$00
-biosversion				!text "BIOS    : V160603s", $00	; Version String
+biosversion				!text "BIOS    : V160605s", $00	; Version String
 ; .ok 					!text "OK",$00
 
 ;----------------------------------------------------------------------------------------------
