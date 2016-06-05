@@ -55,7 +55,7 @@
 	ldy #$00
 -	lda (.ptr),y
 	beq .end
-	jsr chrout
+	jsr krn_chrout
 	iny
 	bne +
 	inc .ptr+1
