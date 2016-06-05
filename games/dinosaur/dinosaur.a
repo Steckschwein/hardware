@@ -645,9 +645,10 @@ main:
 	ldy	#.WRITE_ADDRESS + >.A_GX_SCR
 	jsr	vdp_fill
 
-	lda memctl
-	pha
-	stz memctl
+    +krn_bank0_on
+;	lda memctl
+;	pha
+;	stz memctl
 
 	+SetVector charset, addr			; init 2 game charset with character set
 	lda #<.A_GX_PAT_1
@@ -660,8 +661,9 @@ main:
 	ldx	#$08
 	jsr	vdp_memcpy
 
-	pla 
-	sta memctl
+    +krn_restore_memctl
+;	pla 
+;	sta memctl
 
 	+SetVector .game_chars, addr		; first game charset
 	lda #<(.A_GX_PAT_1+.GAME_CHAR_OFFS)
