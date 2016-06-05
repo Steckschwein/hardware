@@ -11,7 +11,7 @@
 
         .include        "time.inc"
         .include        "../../lib/defs.inc"
-        .include        "../../bios/bios.inc"
+        .include        "../../steckos/kernel/kernel.inc"
         .include        "../../lib/spi.inc"
         .include        "../../lib/rtc.inc"
        
@@ -28,39 +28,39 @@
 	sta via1portb
     
 	lda #rtc_read
-	jsr bios_spi_rw_byte
+	jsr krn_spi_rw_byte
 
-	jsr bios_spi_r_byte     ;seconds
+	jsr krn_spi_r_byte     ;seconds
     jsr BCD2dec
 	sta TM+tm::tm_sec
 
-	jsr bios_spi_r_byte     ;minute
+	jsr krn_spi_r_byte     ;minute
     jsr BCD2dec
 	sta TM+tm::tm_min
 
-	jsr bios_spi_r_byte     ;hour
+	jsr krn_spi_r_byte     ;hour
     jsr BCD2dec
 	sta TM+tm::tm_hour
 
-	jsr bios_spi_r_byte     ;week day
+	jsr krn_spi_r_byte     ;week day
     sta TM+tm::tm_wday
     
-	jsr bios_spi_r_byte     ;day of month
+	jsr krn_spi_r_byte     ;day of month
     jsr BCD2dec
     sta TM+tm::tm_mday
 
-	jsr bios_spi_r_byte     ;month
+	jsr krn_spi_r_byte     ;month
     dec                     ;dc1306 gives 1-12, but 0-11 expected
     jsr BCD2dec
     sta TM+tm::tm_mon
 
-	jsr bios_spi_r_byte     ;year value - rtc yeat 2000+year register
+	jsr krn_spi_r_byte     ;year value - rtc yeat 2000+year register
     jsr BCD2dec
     clc
     adc #100                ;TM starts from 1900, so add the difference
     sta TM+tm::tm_year
 
-;	jsr bios_spi_r_byte     
+;	jsr krn_spi_r_byte     
 
     jsr spi_deselect
     

@@ -6,7 +6,6 @@ clean:
 %.o: %.c
 	cc65 -I ../../cc65 -t none --cpu 65c02 -O $<
 	ca65 -I ../../cc65 --cpu 65c02 $(@:.o=.s)
-	
      
 %.bin: %.o
 	ld65 -C ../../cc65/steckos/steckschwein-kernel.cfg -v $< ../../cc65/steckos/steckschwein-kernel.lib -o $@
@@ -28,6 +27,9 @@ nvram: nvram.bin
 
 date: date.bin
 	../../transfer.py date.bin -s 0x1000
+    
+stdio_test: stdio_test.bin
+	../../transfer.py stdio_test.bin -s 0x1000
 
 time-test: time-test.bin
 	../../transfer.py time-test.bin -s 0x1000
