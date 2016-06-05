@@ -218,12 +218,8 @@
        lda #cmd17
        jsr .spi_rw_byte
 
-       ; Send lba_addr in reverse order
-       !for .i, 3, 0 {
-              lda lba_addr + .i
-              jsr .spi_rw_byte      
-       }
-
+       jsr .sd_send_lba
+       
        ; Send stopbit
        lda #$01
        jsr .spi_rw_byte
@@ -277,7 +273,6 @@
        jmp .sd_deselect_card
        ; rts
 
-!ifdef experimental {
 ;---------------------------------------------------------------------
 ; Read multiple blocks from SD Card
 ;---------------------------------------------------------------------
@@ -292,11 +287,7 @@
        lda #cmd18
        jsr .spi_rw_byte
 
-       ; Send lba_addr in reverse order
-       !for .i, 3, 0 {
-              lda lba_addr + .i
-              jsr .spi_rw_byte      
-       }
+       jsr .sd_send_lba
 
        ; Send stopbit
        lda #$01
@@ -355,8 +346,7 @@
        +restore
        jmp .sd_deselect_card
        ; rts
-}
-!ifndef bios {
+
 ;---------------------------------------------------------------------
 ; Write block to SD Card
 ;---------------------------------------------------------------------
@@ -402,7 +392,7 @@
 
        jmp .spi_r_byte              
        ;rts   
-}
+
 ;---------------------------------------------------------------------
 ; wait while sd card is busy
 ;---------------------------------------------------------------------
@@ -462,4 +452,12 @@
        stz sd_cmd_param+3
        stz sd_cmd_chksum
        inc sd_cmd_chksum
+       rts
+
+.sd_send_lba
+       ; Send lba_addr in reverse order
+       !for .i, 3, 0 {
+              lda lba_addr + .i
+              jsr .spi_rw_byte      
+       }
        rts
