@@ -54,7 +54,7 @@
    beq ++
    stx tmp1
 +  eor #$30
-   jsr chrout
+   jsr krn_chrout
 ++ tya
    ldy #$10
    dex
