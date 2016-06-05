@@ -1,13 +1,11 @@
-*=$1000
-	jmp main
-	
 !src <defs.h.a>
 !src <kernel.h.a>
-!src <macro.h.a>
-!src <via.h.a>
 !src <joystick.h.a>
+
+*=steckos_start
+	jmp main
 !src <t99xx.lib.a>
-	
+		
 .JOY_PORT=PORT_SEL_2		;port 2
 .frame_cnt	!byte 0
 .enemy_state=tmp0
@@ -54,11 +52,10 @@ main:
 	sei
     
 	lda	a_vreg
-
-	jsr	.init_via
 	jsr	vdp_display_off
 	jsr	.init_vram
 	jsr	.init_screen
+	jsr	.init_via
 	
 	lda	#33
 	sta	.seed
@@ -95,13 +92,8 @@ main:
 	!byte	Light_Blue
 
 .init_via
-	;via port a
-	lda #$ff
-	sta via1ier             ; disable VIA1 T1 interrupts
-	lda #%11001100 			; set level
-	sta via1pcr
-	lda #%11000000 			; set PA6,7 to output (port select), PA1-5 to input (directions)
-	sta via1ddra
+    +via_int_off
+	+init_joystick
 	rts
 	
 .init_screen				;draw desert 
@@ -645,10 +637,7 @@ main:
 	ldy	#.WRITE_ADDRESS + >.A_GX_SCR
 	jsr	vdp_fill
 
-    +krn_bank0_on
-;	lda memctl
-;	pha
-;	stz memctl
+    +krn_bank0_on                       ; to access the charset in bank0
 
 	+SetVector charset, addr			; init 2 game charset with character set
 	lda #<.A_GX_PAT_1
@@ -662,8 +651,6 @@ main:
 	jsr	vdp_memcpy
 
     +krn_restore_memctl
-;	pla 
-;	sta memctl
 
 	+SetVector .game_chars, addr		; first game charset
 	lda #<(.A_GX_PAT_1+.GAME_CHAR_OFFS)

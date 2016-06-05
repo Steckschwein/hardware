@@ -7,3 +7,9 @@ via_h_a = 1
     !src <via.inc>
 }
 ;----------------------------------------------------------------------------------------------
+
+; disable all via interrupts
+!macro via_int_off{
+	lda #%01111111          ; bit 7 "0", to clear all int sources
+	sta via1ier             
+}

@@ -4,4 +4,11 @@ JOY_UP			= 1<<0
 JOY_DOWN		= 1<<1
 JOY_LEFT		= 1<<2
 JOY_RIGHT		= 1<<3
-JOY_FIRE		= 1<<4  
+JOY_FIRE		= 1<<4
+
+!src <via.h.a>
+
+!macro init_joystick{
+	lda #%11000000 			; via port A - set PA7,6 to output (joystick port select), PA1-5 to input (directions)
+	sta via1ddra
+}
