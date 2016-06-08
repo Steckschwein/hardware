@@ -234,10 +234,10 @@ void decode(uint8_t sc)
 				if (ch == sc)
 				{
                     ch = pgm_read_byte(&scancodes[i][offs]);
-                    if(ch & 0x80){ //escape sequence?
-                        put_kbbuff(0x1b);   // put 2 byte to buffer
-                        ch &= 0b01111111;
-                    }
+                    // if(ch & 0x80){ //escape sequence?
+                    //     put_kbbuff(0x1b);   // put 2 byte to buffer
+                    //     ch &= 0b01111111;
+                    // }
                     put_kbbuff(ch);
 				}
 			}								  

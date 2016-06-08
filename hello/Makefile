@@ -1,4 +1,4 @@
-all: hello.bin hello.o spi.o
+all: hello.bin 
 clean:
 	rm -f *.bin *.o
 
@@ -7,9 +7,8 @@ clean:
 	ca65 --cpu 65c02 $(@:.o=.s)
 	
      
-%.bin: %.o
-#	acme -v -f plain --cpu 65c02 -o $@ $<
-	ld65 -C ../cc65/steckschwein.cfg -v $< ../cc65/stecki.lib -o $@
+%.bin: %.a 
+	acme -vv -Wtype-mismatch -l $<.labels $(ACME_OPTS) -o $@ $<
 
 spi.bin: spi.o
 	ld65 -C ../cc65/steckschwein.cfg -v $< ../cc65/stecki.lib -o $@
@@ -18,4 +17,4 @@ spitest: spi.bin
 	../transfer.py spi.bin 0x1000
 	
 transfer: hello.bin
-	../transfer.py hello.bin 0x1000
+	../transfer.py hello.bin

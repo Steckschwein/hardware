@@ -1,64 +1,49 @@
 *= $1000
-; jmp main 
+; jmp main
+!cpu 65c02 
 !src <defs.h.a>
 !src <bios.h.a>
+!src <via.h.a>
+!src <sdcard.h.a>
+!src <fat32.h.a>
 
-; spi 	  = $260
-; spidata   = spi
-; spistatus = spi+1
-; spictrl   = spi+1
-; spidiv    = spi+2
-; spiss     = spi+3
+jsr init_sdcard
 
-; main 
-; 	lda #$01
-; 	sta spiss
+lda #$00
+; lda #$43
+sta lba_addr + 0
+lda #$65
+sta lba_addr + 1
+lda #$00
+sta lba_addr + 2
+lda #$00
+sta lba_addr + 3
 
-; 	lda #$00
-; 	sta spidiv
 
-; 	lda #$00
-; 	sta spictrl
-; 	; sta spidata
-; 	sta spistatus
++debug 'Y'
+jsr .sd_read_block
++debug 'Z'
+jsr .inc_lba_address
+	
++debug 'Y'
+jsr .sd_read_block
++debug 'Z'
+
+jsr .inc_lba_address
+
++debug 'Y'	
+jsr .sd_read_block
++debug 'Z'
+
+jsr .inc_lba_address
 
 	
-; 	bit spistatus
-; 	bpl +
-; 	lda spidata
-; +
++debug 'Y'	
+jsr .sd_read_block
++debug 'Z'
 
+-	jmp -
 
-;  	lda #$f0
-;  	sta spidata
-
-; --	bit spistatus
-; 	bpl --
-	; lda spidata
-
-	ldx #$00
--	lda .hello,x
-	beq +
-	jsr chrout
-	inx
-	bra -
-+
-	ldx #$00
--	lda $0350,x
-	beq +
-	jsr chrout
-	inx
-	bra -
-+
-	inx
--	lda $0350,x
-	beq +
-	jsr chrout
-	inx
-	bra -
-
-
-+		
-	rts
-.hello
-	!text "**Hello World!**", $00
+!src <spi.a>
+!src <sdcard.a>
+!src <fat.a>
