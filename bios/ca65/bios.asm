@@ -26,6 +26,33 @@ charset:
 			.asciiz text
 .endmacro
 
+.macro save
+	pha
+	phy
+	phx
+.endmacro
+.macro restore
+	plx
+	ply
+	pla
+.endmacro
+
+.macro Copy src, trgt, len 
+	ldx #len
+@l:	lda src,x
+	sta trgt,x
+	dex
+	bpl @l
+.endmacro
+
+.macro copyPointer fromptr, toptr 
+	.repeat 1, i
+		lda fromptr+i
+		sta toptr	+i	
+	.endrep
+.endmacro
+
+
 
 do_reset:
 			; disable interrupt
@@ -144,7 +171,17 @@ mem_ok:
 			lda errno
 			beq boot_from_card
 			; display sd card error message
-
+			jsr print_crlf
+			cmp #$0f
+			bne @l1
+			printstring "invalid sd card"
+@l1:		cmp #$1f
+			bne @l2
+			printstring "sd card init failed"
+@l2:		cmp #$ff
+			bne @l3
+			printstring "no sd card"
+@l3:
 			jsr upload
 			jmp startup
 
@@ -944,10 +981,176 @@ sd_param_init:
 		inc sd_cmd_chksum
 		rts
 
+;---------------------------------------------------------------------
+; Mount FAT32 on Partition 0
+;---------------------------------------------------------------------
+; fat_mount:
+; 	save
 
+; ; set lba_addr to $00000000 since we want to read the bootsector
+;   	.repeat 3,i
+;     	stz lba_addr + i	           
+;     .endrep
+		
+
+; 	SetVector sd_blktarget, sd_blkptr
+
+; 	jsr sd_read_block
+	
+; 	jsr fat_check_signature
+
+; 	lda errno
+; 	beq @l1
+; 	jmp @end_mount
+; @l1:
+; 	part0 = sd_blktarget + BS_Partition0
+
+; 	lda part0 + PE_TypeCode
+; 	cmp #$0b
+; 	beq @l2
+; 	cmp #$0c
+; 	beq @l2
+
+; 	; type code not $0b or $0c
+; 	lda #fat_invalid_partition_type
+; 	sta errno
+; 	jmp @end_mount
+
+; @l2:
+; 	ldx #$00
+
+; @l3:
+; 	lda part0 + PE_LBABegin,x
+; 	sta lba_addr,x
+; 	inx
+; 	cpx #$04
+; 	bne @l3
+
+
+; 	; Write LBA start address to sd param buffer
+; 	; +SDBlockAddr fat_begin_lba
+
+; 	SetVector sd_blktarget, sd_blkptr	
+; 	; Read FAT Volume ID at LBABegin and Check signature
+; 	jsr sd_read_block
+
+; 	jsr fat_check_signature
+; 	lda errno
+; 	beq @l4
+; 	jmp @end_mount
+; @l4:
+; 	; Bytes per Sector, must be 512 = $0200
+; 	lda sd_blktarget + BPB_BytsPerSec
+; 	bne @l5
+; 	lda sd_blktarget + BPB_BytsPerSec + 1
+; 	cmp #$02
+; 	beq @l6
+; @l5:
+; 	lda #fat_invalid_sector_size
+; 	sta errno
+; 	jmp @end_mount
+; @l6:
+; 	; Sectors per Cluster. Valid: 1,2,4,8,16,32,64,128
+; 	lda sd_blktarget + BPB_SecPerClus
+; 	sta sectors_per_cluster
+	
+; 	; cluster_begin_lba = Partition_LBA_Begin + Number_of_Reserved_Sectors + (Number_of_FATs * Sectors_Per_FAT);
+
+; 	; add number of reserved sectors to fat_begin_lba. store in cluster_begin_lba
+; 	clc
+
+; 	.repeat 1,i 
+; 		lda lba_addr + i
+; 		adc sd_blktarget + BPB_RsvdSecCnt + i
+; 		sta cluster_begin_lba + i	
+; 	.endrep
+
+; 	.repeat 1,i 
+; 		lda lba_addr + i + 2
+; 		adc #$00
+; 		sta cluster_begin_lba + i + 2
+; 	.endrep
+
+; 	ldy #$02
+; @l7:
+; 	clc
+; 	ldx #$00	
+; @l8:
+; 	ror ; get carry flag back
+; 	lda sd_blktarget + BPB_FATSz32,x ; sectors per fat
+; 	adc cluster_begin_lba,x
+; 	sta cluster_begin_lba,x
+; 	inx
+; 	rol ; save status register before cpx to save carry
+; 	cpx #$04	
+; 	bne @l8
+; 	dey
+; 	bne @l7
+
+; 	; init file descriptor area
+; 	; jsr .fat_init_fdarea
+
+; 	Copy sd_blktarget + BPB_RootClus, root_dir_first_clus, 3
+
+
+; 	; now we have the lba address of the first sector of the first cluster
+
+; @end_mount:
+; 	; jsr .sd_deselect_card
+; 	restore
+; 	; rts
+
+; 	; fall through to open_rootdir
+	
+; fat_open_rootdir:
+; 	; Open root dir
+; 	; +Copy root_dir_first_clus, current_dir_first_cluster, 3
+; 	jmp calc_lba_addr
+; 	; rts
+
+; ; calculate LBA address of first block from cluster number found in file descriptor entry
+; ; file descriptor index must be in x
+; calc_lba_addr:
+; 		pha
+
+; 		sec
+; 		lda root_dir_first_clus
+; 		sbc #$02
+; 		sta tmp0 
+
+
+; 		lda root_dir_first_clus + 1
+; 		sbc #$00
+; 		sta tmp0 + 1
+; 		lda root_dir_first_clus + 2
+; 		sbc #$00
+; 		sta tmp0 + 2
+; 		lda root_dir_first_clus + 3
+; 		sbc #$00
+; 		sta tmp0 + 3
+
+
+; 		Copy cluster_begin_lba, lba_addr, 3
+		
+; 		ldx sectors_per_cluster
+; @l1:	clc
+	
+; 		.repeat 3,i
+; 			lda tmp0 + i
+; 			adc lba_addr + i
+; 			sta lba_addr + i	
+; 		.endrep
+
+; 		dex
+; 		bne @l1
+
+; 		pla
+
+; 		rts
 
 dummy_irq:
 		rti
+
 
 num_patterns = $01	
 pattern:
@@ -958,7 +1161,7 @@ pattern:
 ; Interrupt vectors
 ;----------------------------------------------------------------------------------------------
 ; $FFFA/$FFFB NMI Vector
-.word dummy_irq
+.word mem_ok
 ; $FFFC/$FFFD reset vector
 ;*= $fffc
 .word do_reset
