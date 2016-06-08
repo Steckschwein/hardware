@@ -5,19 +5,12 @@ all: bios.bin bios.h.a
 
 .PHONY: clean
 clean:
-	-rm -f *.bin *.labels bios.h.a
+	rm -f *.bin *.labels bios.h.a
 
-loader: bios.h.a loader.bin
+loader: loader.bin
 loader.bin: bios.bin
 bios.bin: ${ACME}/defs.h.a
 
-bios.h.a: bios.bin
-	grep sys_ bios.a.labels | sed -e"s/sys_//g" | sort > bios.h.a.tmp
-	cat bios.h.a.stub bios.h.a.tmp > ../lib/bios.h.a
-	rm bios.h.a.tmp
-	grep sys_ bios.a.labels | sed -e"s/sys_/bios_/g" | awk -F' '  '{print "#define " $$2 " " $$4}' | sed -e 's/\$$/0x/g' > bios_jumptable.h
-	grep sys_ bios.a.labels | sed -e"s/sys_/bios_/g" | awk -F' '  '{print $$2 " = " $$4}' > bios.inc
-	
 %.bin: %.a ${ACME}/t9929.h.a ${ACME}/t99xx.lib.a vdp.a 
 	acme -Wtype-mismatch -l $<.labels $(ACME_OPTS) -o $@ $<
 
