@@ -1,5 +1,3 @@
-ACME_OPTS=-v2 -f plain --cpu 65c02
-
 .PHONY: all
 all: bios.bin loader.bin
 
