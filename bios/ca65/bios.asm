@@ -156,9 +156,9 @@ mem_ok:
 		
 			jsr init_vdp
 
-			printstring "bios     20160608"
+			printstring "BIOS     20160609"
 			jsr print_crlf
-			printstring "memcheck $"
+			printstring "Memcheck $"
 			lda ram_end_h
 			jsr hexout
 			lda ram_end_l
@@ -174,19 +174,23 @@ mem_ok:
 			jsr print_crlf
 			cmp #$0f
 			bne @l1
-			printstring "invalid sd card"
+			printstring "Invalid SD card"
 @l1:		cmp #$1f
 			bne @l2
-			printstring "sd card init failed"
+			printstring "SD card init failed"
 @l2:		cmp #$ff
 			bne @l3
-			printstring "no sd card"
+			printstring "No SD card"
 @l3:
 			jsr upload
 			jmp startup
 
 boot_from_card:
-			printstring "boot from card"
+			jsr print_crlf
+			printstring "Boot from SD card.."
+
+
+
 end:		jmp end			
 			; load fat and stuff
 		; re-init stack pointer
@@ -613,7 +617,7 @@ print_crlf:
 
 upload:
 		jsr print_crlf
-		printstring "serial upload "
+		printstring "Serial upload.."
 		; load start address
 		jsr uart_rx
 		sta startaddr
@@ -690,18 +694,15 @@ upload:
 
 		jsr upload_ok
 
-		lda #'o'
-		jsr vdp_chrout			
-
-		lda #'k'
-		jsr vdp_chrout
+		printstring "OK"
 		rts
+
 upload_ok:
-		lda #'o'
+		lda #'O'
 		jsr uart_tx
-		lda #'k'
+		lda #'K'
 		jmp uart_tx
-		;rts
+		; rts
 
 ;----------------------------------------------------------------------------------------------
 ; Transmit byte VIA SPI
@@ -980,6 +981,83 @@ sd_param_init:
 		stz sd_cmd_chksum
 		inc sd_cmd_chksum
 		rts
+
+;---------------------------------------------------------------------
+; Read block from SD Card
+;---------------------------------------------------------------------
+tmp0 = $f0
+sd_read_block:
+		jsr sd_select_card
+		jsr sd_busy_wait
+
+		; Send CMD17 command byte
+		lda #cmd17
+		jsr spi_rw_byte
+
+		; Send lba_addr in reverse order
+		ldx #$03
+@l1:	lda lba_addr,x
+		phx
+		jsr spi_rw_byte
+		plx
+		dex
+		bpl @l1
+
+		; Send stopbit
+		lda #$01
+		jsr spi_rw_byte
+
+       ; wait for sd card data token
+@l2:	lda #$ff
+		jsr spi_rw_byte
+		cmp #sd_data_token
+		bne @l2
+
+		ldy #$00
+		lda via1portb   ; Port laden
+		and #$fe        ; Takt ausschalten
+		tax             ; aufheben
+		ora #$01
+		sta tmp0
+
+@l3:	lda tmp0
+
+		.repeat 8
+			STA via1portb ; Takt An 
+			STX via1portb ; Takt aus
+		.endrep
+
+		lda via1sr
+	
+		sta (sd_blkptr),y
+		iny
+		bne @l3
+
+		inc sd_blkptr+1
+
+@l4:	lda tmp0
+
+		.repeat 8
+			STA via1portb ; Takt An 
+			STX via1portb ; Takt aus
+		.endrep
+
+		lda via1sr
+
+		sta (sd_blkptr),y
+		iny
+		bne @l4
+
+       ; dec sd_blkptr+1
+
+       ; Read CRC bytes
+       lda #$ff
+       jsr spi_rw_byte
+	   lda #$ff
+       jsr spi_rw_byte
+
+       jmp sd_deselect_card
+       ; rts
 
 ;---------------------------------------------------------------------
 ; Mount FAT32 on Partition 0

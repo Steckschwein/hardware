@@ -68,8 +68,18 @@ sd_cmd_param 		= $02a0
 sd_cmd_chksum		= sd_cmd_param+4
 sd_cmd_result 		= $02a5
 
+lba_addr = $20
 errno	 				= $0300
 
+
+; pointer for io block operations
+sd_blkptr 	= $fc
+
+; pointer for string output functions 
+msgptr 		= $fe
+sd_blktarget 		= $0400
+
+steckos_start		= $1000	
 
 a_vdp		= $0220
 a_vram		= a_vdp
