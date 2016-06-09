@@ -8,7 +8,7 @@ clean:
 
 	
 %.bin: %.asm bios.inc
-	cl65 --target none --config bios.cfg -o $@ $<
+	cl65 --target none --config $*.cfg -o $@ $<
 
 loader.bin: bios.bin
 transfer: loader.bin
