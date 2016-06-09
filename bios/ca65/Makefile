@@ -1,5 +1,5 @@
 .PHONY: all
-all: bios.bin loader.bin
+all: bios.bin 
 
 .PHONY: clean
 clean:
@@ -10,5 +10,6 @@ clean:
 %.bin: %.asm bios.inc
 	cl65 --target none --config bios.cfg -o $@ $<
 
-transfer: bios.bin loader.bin
+loader.bin: bios.bin
+transfer: loader.bin
 	../../transfer.py -s 0x0300 loader.bin
