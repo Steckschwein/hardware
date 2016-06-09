@@ -187,15 +187,31 @@ foo:		jsr upload
 
 boot_from_card:
 			jsr print_crlf
-			printstring "Boot from SD card.."
+			printstring "Boot from SD card.. "
 			jsr fat_mount
 
 			lda errno
-			bne foo
+			beq @findfile
+			jsr print_crlf
+			printstring "FAT32 mount error: "
+			jsr hexout
 
+@findfile:
 			jsr fat_find_first
-			bcc foo
+			bcs @loadfile
 
+			jsr print_crlf
+
+			ldx #$00
+@loop:		lda filename,x
+			jsr vdp_chrout
+			inx
+			cpx #$0b
+			bne @loop
+			printstring " not found."
+
+			bra foo
+@loadfile:
 			ldy #DIR_FstClusHI + 1
 			lda (dirptr),y
 			sta root_dir_first_clus + 3
@@ -209,9 +225,6 @@ boot_from_card:
 			lda (dirptr),y
 			sta root_dir_first_clus
 			jsr calc_lba_addr
-
-
-			
 			
 			.repeat 4, i
 				ldy #DIR_FileSize + i
@@ -221,14 +234,8 @@ boot_from_card:
 
 			SetVector steckos_start, startaddr
 			SetVector steckos_start, sd_blkptr
-			jsr fat_read
-			lda errno 
-			bne foo
-			jsr hexout
+			jsr fat_read			
 
-
-			
-			; load fat and stuff
 		; re-init stack pointer
 startup:
 			ldx #$ff
