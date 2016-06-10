@@ -1482,7 +1482,7 @@ read_nvram:
 	sta via1portb
 
 
-	lda #$41
+	lda #$42
 	cmp nvram + param_sig
 	bne @invalid_sig
 
