@@ -138,18 +138,17 @@ check_memory:
 
 mem_broken:
 			lda #$40
-			sta $0230
-@loop:		jmp @loop
+			bra stop
 
 zp_broken:
 			lda #$80
-			sta $0230
-@loop:		jmp @loop
+			bra stop
 
 stack_broken:
 			lda #$40
+stop:
 			sta $0230
-@loop:		jmp @loop
+@loop:		bra @loop
 
 
 mem_ok:
@@ -480,99 +479,99 @@ vdp_scroll_up:
 			bit	a_vreg  ; sync with next v-blank, so that we have the full 4,3µs
 			bpl	@l1
 @l2:
-		lda	ptr1l	; 3cl
-		sta	a_vreg
-		lda	ptr1h	; 3cl
-		sta	a_vreg
-		; nop			; wait 2µs, 4Mhz = 8cl => 4 nop
-		; nop			; 2cl
-		; nop			; 2cl
-		; nop			; 2cl
-		vnops
+			lda	ptr1l	; 3cl
+			sta	a_vreg
+			lda	ptr1h	; 3cl
+			sta	a_vreg
+			; nop			; wait 2µs, 4Mhz = 8cl => 4 nop
+			; nop			; 2cl
+			; nop			; 2cl
+			; nop			; 2cl
+			vnops
 
-		ldx	a_vram	;
-		; nop			; 2cl
-		; nop			; 2cl
-		; nop			; 2cl
-		; nop			; 2cl
-		vnops
-		lda	ptr2l	; 3cl
-		sta	a_vreg
-		lda	ptr2h	; 3cl
-		sta a_vreg
-		; nop			; 2cl
-		; nop			; 2cl
-		; nop			; 2cl
-		; nop			; 2cl
-		vnops
-		stx	a_vram
-		inc	ptr1l	; 5cl
-		bne	@l3		; 3cl
-		inc	ptr1h
-		lda	ptr1h
-		cmp	#>(ADDRESS_GFX1_SCREEN+(COLS * 24))	;screen ram $1800 - $1b00
-		beq	@l4
+			ldx	a_vram	;
+			; nop			; 2cl
+			; nop			; 2cl
+			; nop			; 2cl
+			; nop			; 2cl
+			vnops
+			lda	ptr2l	; 3cl
+			sta	a_vreg
+			lda	ptr2h	; 3cl
+			sta a_vreg
+			; nop			; 2cl
+			; nop			; 2cl
+			; nop			; 2cl
+			; nop			; 2cl
+			vnops
+			stx	a_vram
+			inc	ptr1l	; 5cl
+			bne	@l3		; 3cl
+			inc	ptr1h
+			lda	ptr1h
+			cmp	#>(ADDRESS_GFX1_SCREEN+(COLS * 24))	;screen ram $1800 - $1b00
+			beq	@l4
 @l3:
-		inc	ptr2l  ; 5cl
-		bne	@l2		; 3cl
-		inc	ptr2h
-		bra	@l1
+			inc	ptr2l  ; 5cl
+			bne	@l2		; 3cl
+			inc	ptr2h
+			bra	@l1
 @l4:
-		ldx	#COLS	; write address is already setup from loop
-		lda	#' '
+			ldx	#COLS	; write address is already setup from loop
+			lda	#' '
 @l5:
-		sta	a_vram
-		vnops
-		dex
-		bne	@l5
-		rts
+			sta	a_vram
+			vnops
+			dex
+			bne	@l5
+			rts
 inc_cursor_y:
-		lda crs_y
-		cmp	#ROWS		;last line ?
-		bne	@l1
-		bra	vdp_scroll_up	; scroll up, dont inc y, exit
+			lda crs_y
+			cmp	#ROWS		;last line ?
+			bne	@l1
+			bra	vdp_scroll_up	; scroll up, dont inc y, exit
 @l1:
-		inc crs_y
-		rts
+			inc crs_y
+			rts
 
 vdp_chrout:
-		cmp	#KEY_CR			;cariage return ?
-		bne	@l1
-		stz	crs_x
-		rts
+			cmp	#KEY_CR			;cariage return ?
+			bne	@l1
+			stz	crs_x
+			rts
 @l1:
-		cmp	#KEY_LF			;line feed
-		bne	@l2
-		bra	inc_cursor_y
+			cmp	#KEY_LF			;line feed
+			bne	@l2
+			bra	inc_cursor_y
 @l2:
-		cmp	#KEY_BACKSPACE
-		bne	@l3
-		lda	crs_x
-		beq	@l4
-		dec	crs_x
-		bra @l5
+			cmp	#KEY_BACKSPACE
+			bne	@l3
+			lda	crs_x
+			beq	@l4
+			dec	crs_x
+			bra @l5
 @l4:	
-		lda	crs_y			; cursor y=0, no dec
-		beq	@l6
-		dec	crs_y
-		lda	#(COLS-1)		; set x to end of line above
-		sta	crs_x
+			lda	crs_y			; cursor y=0, no dec
+			beq	@l6
+			dec	crs_y
+			lda	#(COLS-1)		; set x to end of line above
+			sta	crs_x
 @l5:
-		lda #' '
-		bra	vdp_putchar
+			lda #' '
+			bra	vdp_putchar
 
 @l3:
-		jsr	vdp_putchar
-		lda	crs_x
-		cmp	#(COLS-1)
-		beq @l7
-		inc	crs_x
+			jsr	vdp_putchar
+			lda	crs_x
+			cmp	#(COLS-1)
+			beq @l7
+			inc	crs_x
 @l6:	
-		rts
+			rts
 @l7:
-		stz	crs_x
-		bra	inc_cursor_y
-    
+			stz	crs_x
+			bra	inc_cursor_y
+
 vdp_putchar:
 		pha
 		jsr vdp_set_addr
@@ -609,14 +608,6 @@ vdp_init_bytes_gfx1:
 		.byte 	(ADDRESS_GFX1_SPRITE_PATTERN / $800)  ; sprite pattern table - value * $800  		--> offset in VRAM
 		.byte	Black
 vnopslide:
-		nop
-		nop
-		nop
-		nop
-		nop
-		nop
-		nop
-		nop
 		nop
 		nop
 		nop
@@ -701,7 +692,7 @@ upload:
 		sta startaddr+1
 
 
-		lda startaddr+1
+		; lda startaddr+1
 		jsr hexout
 		lda startaddr
 		jsr hexout
@@ -728,7 +719,7 @@ upload:
 		adc startaddr+1
 		sta endaddr+1
 
-		lda endaddr+1
+		; lda endaddr+1
 		jsr hexout
 
 		lda endaddr
@@ -1054,8 +1045,9 @@ sd_param_init:
 		stz sd_cmd_param+1
 		stz sd_cmd_param+2
 		stz sd_cmd_param+3
-		stz sd_cmd_chksum
-		inc sd_cmd_chksum
+		lda #$01
+		sta sd_cmd_chksum
+		; inc sd_cmd_chksum
 		rts
 
 ;---------------------------------------------------------------------
@@ -1090,39 +1082,41 @@ sd_read_block:
 		bne @l2
 
 		ldy #$00
-		lda via1portb   ; Port laden
-		and #$fe        ; Takt ausschalten
-		tax             ; aufheben
-		ora #$01
-		sta tmp0
+		; lda via1portb   ; Port laden
+		; and #$fe        ; Takt ausschalten
+		; tax             ; aufheben
+		; ora #$01
+		; sta tmp0
 
-@l3:	lda tmp0
+		jsr halfblock
+; @l3:	lda tmp0
 
-		.repeat 8
-			STA via1portb ; Takt An 
-			STX via1portb ; Takt aus
-		.endrep
+; 		.repeat 8
+; 			STA via1portb ; Takt An 
+; 			STX via1portb ; Takt aus
+; 		.endrep
 
-		lda via1sr
+; 		lda via1sr
 	
-		sta (sd_blkptr),y
-		iny
-		bne @l3
+; 		sta (sd_blkptr),y
+; 		iny
+; 		bne @l3
 
 		inc sd_blkptr+1
 
-@l4:	lda tmp0
+		jsr halfblock
+; @l4:	lda tmp0
 
-		.repeat 8
-			STA via1portb ; Takt An 
-			STX via1portb ; Takt aus
-		.endrep
+; 		.repeat 8
+; 			STA via1portb ; Takt An 
+; 			STX via1portb ; Takt aus
+; 		.endrep
 
-		lda via1sr
+; 		lda via1sr
 
-		sta (sd_blkptr),y
-		iny
-		bne @l4
+; 		sta (sd_blkptr),y
+; 		iny
+; 		bne @l4
 
 		; dec sd_blkptr+1
 
@@ -1135,6 +1129,27 @@ sd_read_block:
 		jmp sd_deselect_card
 		; rts
 
+halfblock:
+@l:		
+		; lda tmp0
+
+		; .repeat 8
+		; 	STA via1portb ; Takt An 
+		; 	STX via1portb ; Takt aus
+		; .endrep
+
+	
+		; lda via1sr
+
+		lda #$ff
+		phy
+		jsr spi_rw_byte
+		ply
+		sta (sd_blkptr),y
+		iny
+		bne @l
+		rts
+
 ;---------------------------------------------------------------------
 ; Mount FAT32 on Partition 0
 ;---------------------------------------------------------------------
@@ -1142,11 +1157,16 @@ fat_mount:
 		save
 
 		; set lba_addr to $00000000 since we want to read the bootsector
-		.repeat 4,i
-			stz lba_addr + i	           
-		.endrep
-			
+		; .repeat 4,i
+		; 	stz lba_addr + i	           
+		; .endrep
 
+		ldx #$03
+@l:		stz lba_addr,x
+		dex
+		bpl @l
+
+			
 		SetVector sd_blktarget, sd_blkptr
 
 		jsr sd_read_block
@@ -1231,6 +1251,7 @@ fat_mount:
 			adc #$00
 			sta cluster_begin_lba + i + 2
 		.endrep
+
 
 		ldy #$02
 @l7:
@@ -1461,7 +1482,7 @@ read_nvram:
 	sta via1portb
 
 
-	lda #$00
+	lda #$42
 	cmp nvram + param_sig
 	bne @invalid_sig
 
