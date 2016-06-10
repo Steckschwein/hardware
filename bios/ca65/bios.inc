@@ -80,8 +80,11 @@ sd_cmd_result 		= $02a5
 
 lba_addr = $20
 errno	 				= $0300
+nvram		= $1000
 
 dirptr 		= $f4 ; 2 byte
+paramvec	= $f8
+
 
 ; pointer for io block operations
 sd_blkptr 	= $fc
@@ -226,3 +229,11 @@ crs_y	= $e7
 KEY_CR=$0d
 KEY_LF=$0a
 KEY_BACKSPACE=$08
+
+
+param_sig		= $00 ; 1  byte  - parameter array signature byte. must be $42
+param_version	= $01 ; 1  byte  - version number. initially zero
+param_filename	= $02 ; 11 bytes - file to boot. example "LOADER  BIN"
+param_uart_div	= $0d ; 2  bytes  - baudrate divisor value
+param_lsr       = $0f ; 1  byte  - uart lcr value , default %00000011 (8N1)
+param_checksum  = $5f ; checksum

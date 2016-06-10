@@ -156,7 +156,7 @@ mem_ok:
 		
 			jsr init_vdp
 
-			printstring "BIOS     20160609"
+			printstring "BIOS     20160610"
 			jsr print_crlf
 			printstring "Memcheck $"
 			lda ram_end_h
@@ -165,6 +165,26 @@ mem_ok:
 			jsr hexout
 
 			jsr init_via1
+
+			SetVector param_defaults, paramvec
+
+			copyPointer paramvec, ptr1
+			clc
+			lda #param_filename
+			adc ptr1l
+			sta ptr1l
+			bcc @l4
+			inc ptr1h
+@l4:
+			ldy #$00
+@lll:		lda (ptr1),y
+			jsr vdp_chrout
+			iny
+			cpy #$0b
+			bne @lll
+
+			jsr read_nvram
+
 			jsr init_uart
 
 			jsr init_sdcard
@@ -197,16 +217,25 @@ boot_from_card:
 			jsr hexout
 
 @findfile:
+			; copyPointer paramvec, ptr1
+			; clc
+			; lda #param_filename
+			; adc ptr1l
+			; sta ptr1l
+			; bcc @l4
+			; inc ptr1h
+
+@l4: 
 			jsr fat_find_first
 			bcs @loadfile
 
 			jsr print_crlf
 
-			ldx #$00
-@loop:		lda filename,x
+			ldy #$00
+@loop:		lda (ptr1),y
 			jsr vdp_chrout
-			inx
-			cpx #$0b
+			iny
+			cpy #$0b
 			bne @loop
 			printstring " not found."
 
@@ -251,19 +280,28 @@ init_uart:
 			lda #%10000000
 			sta uart1lcr
 
-			; $0001 , 115200 baud
-			lda #$01
+
+			ldy #param_uart_div	
+			lda (paramvec),y
 			sta uart1dll	
-			stz uart1dlh
 
-			lda #%00000011	; 8N1
+			iny
+			lda (paramvec),y
+			sta uart1dlh	
 
+			; ; $0001 , 115200 baud
+			; lda #$01
+			; sta uart1dll	
+			; stz uart1dlh
+
+			ldy #param_lsr  
+			lda (paramvec),y
 			sta uart1lcr
 
-			lda #$00
-			sta uart1fcr	; FIFO off
-			sta uart1ier	; polled mode (so far) 
-			sta uart1mcr	; reset DTR, RTS
+			; lda #$00
+			stz uart1fcr	; FIFO off
+			stz uart1ier	; polled mode (so far) 
+			stz uart1mcr	; reset DTR, RTS
 
 			and #%00001100			; keep OUT1, OUT2 values
 			sta uart1mcr		; reset DTR, RTS
@@ -1357,7 +1395,7 @@ match:
 		ldy #$00
 @l1:	lda (dirptr),y
 		; jsr vdp_chrout
-		cmp filename,y
+		cmp (ptr1),y
 		bne @l2
 		iny
 		cpy #$0b
@@ -1400,8 +1438,55 @@ fat_read:
 		
 		rts
 
-filename:
-		.asciiz "LOADER  BIN"
+
+;---------------------------------------------------------------------
+; read 96 bytes from RTC as parameter buffer
+;---------------------------------------------------------------------
+read_nvram:
+	save
+	; select RTC
+	lda #%01110110
+	sta via1portb
+
+	lda #$20
+	jsr spi_rw_byte
+
+	ldx #$00
+@l1:	
+	phx
+	lda #$ff
+	jsr spi_rw_byte
+	plx
+	sta nvram,x
+	inx
+	cpx #96
+	bne @l1
+
+	; deselect all SPI devices
+	lda #%01111110
+	sta via1portb
+
+
+	lda #$00
+	cmp nvram + param_sig
+	bne @invalid_sig
+
+	SetVector nvram, paramvec
+
+@exit:
+	restore
+	rts
+
+@invalid_sig:
+	jsr print_crlf
+	printstring "NVRAM: Invalid signature."
+	jsr print_crlf
+	printstring "NVRAM: Using defaults."
+	bra @exit
+; .nvram_crc_error
+; 	+PrintString .txt_nvram_crc_error
+; 	bra -
+
 dummy_irq:
 		rti
 
@@ -1409,6 +1494,17 @@ dummy_irq:
 num_patterns = $01	
 pattern:
 	.byte $aa,$55
+
+param_defaults:
+	.byte $42
+	.byte $00
+	.byte "LOADER  BIN"
+	.word $0001
+	.byte %00000011
+	; !fill .default_params + param_checksum - *, $00
+	.res    param_defaults + param_checksum - * , $AA
+	.byte $00
+
 .SEGMENT "VECTORS"
 
 ;----------------------------------------------------------------------------------------------
