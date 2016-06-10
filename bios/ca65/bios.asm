@@ -1482,7 +1482,7 @@ read_nvram:
 	sta via1portb
 
 
-	lda #$42
+	lda #$41
 	cmp nvram + param_sig
 	bne @invalid_sig
 
@@ -1517,8 +1517,8 @@ param_defaults:
 	.word $0001
 	.byte %00000011
 	; !fill .default_params + param_checksum - *, $00
-	.res    param_defaults + param_checksum - * , $AA
-	.byte $00
+	; .res    param_defaults + param_checksum - * , $AA
+	; .byte $00
 
 .SEGMENT "VECTORS"
 
