@@ -176,12 +176,6 @@ mem_ok:
 			bcc @l4
 			inc ptr1h
 @l4:
-			ldy #$00
-@lll:		lda (ptr1),y
-			jsr vdp_chrout
-			iny
-			cpy #$0b
-			bne @lll
 
 			jsr read_nvram
 
