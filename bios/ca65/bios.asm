@@ -127,10 +127,10 @@ check_memory:
 	  					  ; 42 cycles
 
 	  		; save end address
-	  		lda ptr1l
-	  		sta ram_end_l
-	  		lda ptr1h
-	  		sta ram_end_h
+	  		; lda ptr1l
+	  		; sta ram_end_l
+	  		; lda ptr1h
+	  		; sta ram_end_h
 	  		
 	  	   
 
@@ -155,12 +155,13 @@ mem_ok:
 		
 			jsr init_vdp
 
-			printstring "BIOS     20160610"
+			printstring "BIOS 20160610"
 			jsr print_crlf
 			printstring "Memcheck $"
-			lda ram_end_h
+
+	  		lda ptr1h
 			jsr hexout
-			lda ram_end_l
+	  		lda ptr1l
 			jsr hexout
 
 			jsr init_via1
