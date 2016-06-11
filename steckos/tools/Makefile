@@ -8,7 +8,7 @@ clean:
 	ca65 -I ../../cc65 --cpu 65c02 $(@:.o=.s)
      
 %.bin: %.o
-	ld65 -C ../../cc65/steckos/steckschwein-kernel.cfg -v $< ../../cc65/steckos/steckschwein-kernel.lib -o $@
+	ld65 -C ../../cc65/steckos/steckschwein-kernel.cfg  $< ../../cc65/steckos/steckschwein-kernel.lib -o $@
 
 uname: uname.bin
 	../../transfer.py uname.bin -s 0x1000
