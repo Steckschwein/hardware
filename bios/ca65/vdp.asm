@@ -1,6 +1,6 @@
-.setcpu "65c02"
 .segment "BIOS"
 .export init_vdp, vdp_chrout
+.import charset
 .include "bios.inc"
 
 .macro	vnops

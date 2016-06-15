@@ -1,19 +1,18 @@
 .setcpu "65c02"
 .include "bios.inc"
 
+.import charset
+
+
+.segment "BIOS"
 .import init_uart, uart_rx, uart_tx, upload
 .import init_via1
 .import spi_rw_byte
 .import hexout, primm, print_crlf
-; .segment "CHAR"
-; charset:
-; .include "charset_ati_8x8.h.asm"
 .import init_vdp, vdp_chrout
 .import init_sdcard
 .import fat_mount, fat_read, fat_find_first, calc_lba_addr
 .import read_nvram
-
-.segment "BIOS"
 
 do_reset:
 			; disable interrupt

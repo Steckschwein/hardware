@@ -1,4 +1,3 @@
-.setcpu "65c02"
 .export read_nvram
 .import spi_rw_byte, print_crlf, primm
 .include "bios.inc"

@@ -1,4 +1,3 @@
-.setcpu "65c02"
 .export fat_mount, fat_read, fat_find_first, calc_lba_addr
 .import sd_read_block
 .include "bios.inc"

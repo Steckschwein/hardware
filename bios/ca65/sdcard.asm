@@ -1,4 +1,3 @@
-.setcpu "65c02"
 .export init_sdcard, sd_read_block
 .import spi_rw_byte
 .include "bios.inc"

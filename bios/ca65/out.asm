@@ -1,4 +1,4 @@
-.setcpu "65c02"
+
 .segment "BIOS"
 .export hexout, primm, print_crlf
 .import vdp_chrout
