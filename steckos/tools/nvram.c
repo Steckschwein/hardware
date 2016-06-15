@@ -130,14 +130,18 @@ int main (int argc, const char* argv[])
 		return 0;
 	}
 
+	cprintf("1");
+
 	read_nvram();
-	
+
+	cprintf("2");
+
 	if (n.signature != 0x42)
 	{
 		cprintf("NVRAM signature invalid.\r\nSetting to default values ... ");
 		n.signature 	= 0x42;
 		n.version 		= 0;
-		strncpy(n.filename, "LOADER  BIN", 11);
+		memcpy(n.filename, "LOADER  BIN", 11);
 	
 		n.uart_baudrate = 0x0001; // 115200 baud
 		n.uart_lsr		= 0x03; // 8N1
@@ -146,7 +150,7 @@ int main (int argc, const char* argv[])
 		cprintf("done.\r\n");
 	}
 
-
+	cprintf("3");
 
 	if (strcmp(argv[1], "get") == 0)
 	{
@@ -198,7 +202,7 @@ int main (int argc, const char* argv[])
 
 
 			x=0;
-			for (i=0;i<11;i++)
+			for (i=0;i<10;i++)
 			{
 				if (argv[3][i] == '.') 
 				{
