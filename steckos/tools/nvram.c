@@ -1,6 +1,7 @@
 #include <conio.h>  
 #include <stdlib.h>  
 #include <string.h>  
+#include <ctype.h>  
 #include "../../cc65/spi.h"
 
 /*
@@ -17,35 +18,35 @@ struct nvram
 	unsigned char signature;
 	unsigned char version;
 	unsigned char filename[11];
-	unsigned char uart_baudrate;
+	unsigned short uart_baudrate;
 	unsigned char uart_lsr;
 };
 
-	unsigned long baudrates[] = {
-	-1,
-	50,	
-	75,
-	110,	
-	134,
-	150,
-	300,
-	600,
-	1200,
-	1800,	
-	2000,	
-	2400,	
-	3600,
-	4800,
-	7200,	
-	9600,	
-	19200,
-	38400,	
-	56000,	
-	115200
-	};
+struct baudrate
+{
+	unsigned short divisor;
+	unsigned long int baudrate;
+};
 
+const struct baudrate baudrates[] = {
+	{2304,	50},
+	{1536,	75},
+	{1047,	110},
+	{768, 	150},
+	{384,	300},
+	{192,	600},
+	{96,	1200},
+	{48,	2400},
+	{32,	3600},
+	{12,	9600},
+	{6,		19200},
+	{3,		38400L},
+	{2,		56000L},
+	{1,		115200}
 
-unsigned char i;
+};
+
+unsigned char i,j,x;
 struct nvram n;
 unsigned char * p;
 unsigned long l;
@@ -89,25 +90,56 @@ void usage()
 	);
 }
 
+unsigned long int lookup_divisor(unsigned short div)
+{
+	static unsigned char i;
+
+	for (i=0; i<14; i++)
+	{
+		if (baudrates[i].divisor == div)
+		{
+			return baudrates[i].baudrate;	
+		}
+	}
+
+	return 0;
+}
+
+unsigned short lookup_baudrate(unsigned long int baud)
+{
+	static unsigned char i;
+
+	for (i=0; i<14; i++)
+	{
+		if (baudrates[i].baudrate == baud)
+		{
+			return baudrates[i].divisor;	
+		}
+	}
+
+	return 0;
+}
+
 int main (int argc, const char* argv[])
 {
+	// unsigned char i;
+
 	if (argc == 1) 
 	{
 		usage();
 		return 0;
 	}
 
-
 	read_nvram();
-
+	
 	if (n.signature != 0x42)
 	{
 		cprintf("NVRAM signature invalid.\r\nSetting to default values ... ");
 		n.signature 	= 0x42;
 		n.version 		= 0;
-		strcpy(n.filename, "loader.bin");
+		strncpy(n.filename, "LOADER  BIN", 11);
 	
-		n.uart_baudrate = 0x13; // 115200 baud
+		n.uart_baudrate = 0x0001; // 115200 baud
 		n.uart_lsr		= 0x03; // 8N1
 
 		write_nvram();
@@ -126,12 +158,14 @@ int main (int argc, const char* argv[])
 
 		if (strcmp(argv[2], "filename") == 0)
 		{
-			cprintf("%s\r\n", n.filename);
+			cprintf("%11s\r\n", n.filename);
 		}
+
 		else if (strcmp(argv[2], "baudrate") == 0)
 		{
-			cprintf("%lu\r\n", baudrates[n.uart_baudrate % 20]);
+			cprintf("%ld\r\n", lookup_divisor(n.uart_baudrate));
 		}
+
 	}
 	else if (strcmp(argv[1], "set") == 0)
 	{
@@ -143,20 +177,16 @@ int main (int argc, const char* argv[])
 
 		else if (strcmp(argv[2], "baudrate") == 0)
 		{
-			l = atol(argv[3]);
 
-			for (i = 1;i<=19;i++)
+			unsigned short divisor = lookup_baudrate(atol(argv[3]));
+			if (divisor == 0)
 			{
-				if (l == baudrates[i]) break;
-			}
-
-			if (i > 19)
-			{
-				cprintf("\r\nInvalid baudrate\r\n");
+				cprintf("Invalid baudrate\r\n");
 				return 1;
-			}
+			} 
+	
+			n.uart_baudrate = divisor;
 
-			n.uart_baudrate = i;
 		}
 		else if (strcmp(argv[2], "filename") == 0)
 		{
@@ -166,7 +196,25 @@ int main (int argc, const char* argv[])
 				return 1;				
 			}
 
-			strncpy(n.filename, argv[3], 11);
+
+			x=0;
+			for (i=0;i<11;i++)
+			{
+				if (argv[3][i] == '.') 
+				{
+					for (j=0;j<8-i;j++)
+					{
+						n.filename[x] = ' ';
+						x++;
+					}
+					continue;
+				}
+				n.filename[x] = toupper(argv[3][i]);  
+				x++;
+			}
+
+
+			// strncpy(n.filename, argv[3], 11);
 		}
 
 		write_nvram();
@@ -175,10 +223,18 @@ int main (int argc, const char* argv[])
 	{
 		// cprintf("Signature  : $%02x\r\n", n.signature);
 		// cprintf("Version    : $%02x\r\n", n.version);
-		cprintf("\r\nOS filename: %s\r\nBaud rate  : %lu\r\nUART LSR   : $%02x\r\n", n.filename, baudrates[n.uart_baudrate % 20], n.uart_lsr);
+		cprintf("\r\nOS filename: ");
+		for (i=0;i<11;i++)
+		{
+			cprintf("%c", n.filename[i]);
+		}
+		cprintf("\r\nBaud rate  : %ld\r\nUART LSR   : $%02x\r\n", 
+			lookup_divisor(n.uart_baudrate),
+			n.uart_lsr
+		);
 		/*
 		cprintf("OS filename: %s\r\n", n.filename);
-		cprintf("Baud rate  : %lu\r\n", baudrates[n.uart_baudrate % 20]);
+		cprintf("Baud rate  : %lu\r\n", n.uart_baudrate);
 		cprintf("UART LSR   : $%02x\r\n", n.uart_lsr);
 		*/
 	}
