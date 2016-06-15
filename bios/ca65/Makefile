@@ -1,4 +1,4 @@
-OBJS=bios.o charset_8x8.o uart.o via.o spi.o
+OBJS=bios.o charset_8x8.o uart.o via.o spi.o out.o vdp.o sdcard.o
 .PHONY: all clean
 all: bios.bin 
 

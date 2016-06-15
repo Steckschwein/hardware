@@ -16,6 +16,15 @@ ptr2		= $e4
 ptr2l		= ptr2
 ptr2h		= ptr2+1
 
+; Address pointers for serial upload
+startaddr	= ptr1
+endaddr		= ptr2
+length		= $e0
+
+DPL 		= $00
+DPH 		= $01
+
+
 ; UART address and registers
 uart1		= $0200
 uart1rxtx	= uart1+0
@@ -237,3 +246,42 @@ param_filename	= $02 ; 11 bytes - file to boot. example "LOADER  BIN"
 param_uart_div	= $0d ; 2  bytes  - baudrate divisor value
 param_lsr       = $0f ; 1  byte  - uart lcr value , default %00000011 (8N1)
 param_checksum  = $5f ; checksum
+
+
+.macro SetVector word, addr 
+			lda #<word
+			sta addr
+			lda #>word
+			sta addr+1
+.endmacro
+
+.macro	printstring text
+			jsr primm
+			.asciiz text
+.endmacro
+
+.macro save
+	pha
+	phy
+	phx
+.endmacro
+.macro restore
+	plx
+	ply
+	pla
+.endmacro
+
+.macro Copy src, trgt, len 
+	ldx #len
+@l:	lda src,x
+	sta trgt,x
+	dex
+	bpl @l
+.endmacro
+
+.macro copyPointer fromptr, toptr 
+	.repeat 2, i
+		lda fromptr+i
+		sta toptr	+i	
+	.endrep
+.endmacro
