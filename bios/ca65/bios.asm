@@ -2,13 +2,11 @@
 .include "bios.inc"
 .include "sdcard.inc"
 .include "fat32.inc"
-.import charset
 
 
 .segment "BIOS"
-.import init_uart, uart_rx, uart_tx, upload
+.import init_uart, upload
 .import init_via1
-.import spi_rw_byte
 .import hexout, primm, print_crlf
 .import init_vdp, vdp_chrout
 .import init_sdcard
