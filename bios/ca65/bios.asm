@@ -8,9 +8,9 @@ length		= $e0
 DPL 		= $00
 DPH 		= $01
 	
-.segment "CHAR"
-charset:
-.include "charset_ati_8x8.h.asm"
+; .segment "CHAR"
+; charset:
+; .include "charset_ati_8x8.h.asm"
 
 .segment "BIOS"
 

@@ -1,4 +1,4 @@
-
+.import charset
 ; start memcheck here
 start_check = $0300
 ram_end 			= $0288
