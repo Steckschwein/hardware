@@ -19,12 +19,12 @@
 			; nop
 .endmacro
 
-.macro	SyncBlank
-    		lda a_vreg
-@lada:	
-			bit	a_vreg
-			bpl @lada	   ; wait until blank - irq flag set?
-.endmacro
+; .macro	SyncBlank
+;     		lda a_vreg
+; @lada:	
+; 			bit	a_vreg
+; 			bpl @lada	   ; wait until blank - irq flag set?
+; .endmacro
 
 .macro vdp_sreg 
 			sta	a_vreg
@@ -40,13 +40,13 @@ init_vdp:
 			lda		#v_reg1_16k	;enable 16K ram, disable screen
 			ldy	  	#v_reg1
 			vdp_sreg
-			SyncBlank
+			; SyncBlank
 
 			lda	#<ADDRESS_GFX_SPRITE
 			ldy	#WRITE_ADDRESS + >ADDRESS_GFX_SPRITE
 			vdp_sreg
 			lda	#$d0					;sprites off, at least y=$d0 will disable the sprite subsystem
-			vnops
+			; vnops
 			vnops
 			sta a_vram
 
@@ -252,12 +252,12 @@ vdp_init_bytes_gfx1:
 vnopslide:
 		nop
 		nop
-		nop
-		nop
-		nop
-		nop
-		nop
-		nop
+		; nop
+		; nop
+		; nop
+		; nop
+		; nop
+		; nop
 
 		rts
 
