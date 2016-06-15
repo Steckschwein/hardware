@@ -2,6 +2,7 @@
 .segment "BIOS"
 .export init_via1
 .include "bios.inc"
+.include "via.inc"
 
 ;----------------------------------------------------------------------------------------------
 ; init VIA1 - set all ports to input

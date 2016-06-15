@@ -1,6 +1,7 @@
 .export init_uart, uart_tx, uart_rx, upload
 .import vdp_chrout, print_crlf, hexout, primm
 .include "bios.inc"
+.include "uart.inc"
 .segment "BIOS"
 
 ;----------------------------------------------------------------------------------------------

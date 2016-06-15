@@ -1,6 +1,8 @@
 .export init_sdcard, sd_read_block
 .import spi_rw_byte
 .include "bios.inc"
+.include "sdcard.inc"
+.include "via.inc"
 .segment "BIOS"
 
 ;---------------------------------------------------------------------

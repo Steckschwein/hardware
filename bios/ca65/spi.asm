@@ -2,6 +2,7 @@
 .segment "BIOS"
 .export spi_rw_byte
 .include "bios.inc"
+.include "via.inc"
 
 ;----------------------------------------------------------------------------------------------
 ; Transmit byte VIA SPI

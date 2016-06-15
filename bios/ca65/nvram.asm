@@ -1,6 +1,7 @@
 .export read_nvram
 .import spi_rw_byte, print_crlf, primm
 .include "bios.inc"
+.include "via.inc"
 .segment "BIOS"
 
 ;---------------------------------------------------------------------
