@@ -106,19 +106,21 @@ mainloop
 
 .escape 
 	jsr getkey
-	cmp #KEY_ESCAPE_CRSR_UP
-	bne +
+; 	cmp #KEY_ESCAPE_CRSR_UP
+; 	bne +
 
-	jsr .decbufptr
-	bra ++
+; 	jsr .decbufptr
+; 	bra ++
 
-+	cmp #KEY_ESCAPE_CRSR_DOWN
-	bne +
+; +	cmp #KEY_ESCAPE_CRSR_DOWN
+; 	bne +
 
-	jsr .incbufptr
-++	jsr .printbuf
+; 	jsr .incbufptr
+; ++
+	jsr .printbuf
 
-+	bra .inputloop
+; +	
+	bra .inputloop
 
 .terminate
 	pha
@@ -162,24 +164,24 @@ mainloop
 ++
 
 	
-	; jsr .incbufptr
-	lda #BUF_SIZE
-	clc
-	adc .bufptr
-	sta .bufptr
-	bcc +
-	inc .bufptr+1
-+
+; 	; jsr .incbufptr
+; 	lda #BUF_SIZE
+; 	clc
+; 	adc .bufptr
+; 	sta .bufptr
+; 	bcc +
+; 	inc .bufptr+1
+; +
 
-	+copyPointer .bufptr, .bufhwm
+; 	+copyPointer .bufptr, .bufhwm
 	
-	; last buffer slot? no increasing
-	lda .bufptr+1
-	cmp #>.endbuf
-	bne +
-	lda .bufptr
-	cmp #<.endbuf
-	bne +
+; 	; last buffer slot? no increasing
+; 	lda .bufptr+1
+; 	cmp #>.endbuf
+; 	bne +
+; 	lda .bufptr
+; 	cmp #<.endbuf
+; 	bne +
 
 	+SetVector .buf, .bufptr
 +
@@ -263,51 +265,51 @@ mainloop
 	bra -
 ++	rts
 
-.incbufptr:
-	lda .bufptr+1
-	cmp .bufhwm+1
-	bne +
-	lda .bufptr
-	cmp .bufhwm
-	bne +
+; .incbufptr:
+; 	lda .bufptr+1
+; 	cmp .bufhwm+1
+; 	bne +
+; 	lda .bufptr
+; 	cmp .bufhwm
+; 	bne +
 
-	rts
-+
+; 	rts
+; +
 
-	; advance bufptr by BUF_SIZE bytes
-	lda #BUF_SIZE
-	clc
-	adc .bufptr
-	sta .bufptr
-	bcc ++
-	inc .bufptr+1
-++
-	; last buffer slot? start from beginning
+; 	; advance bufptr by BUF_SIZE bytes
+; 	lda #BUF_SIZE
+; 	clc
+; 	adc .bufptr
+; 	sta .bufptr
+; 	bcc ++
+; 	inc .bufptr+1
+; ++
+; 	; last buffer slot? start from beginning
 
 	
-	rts
+; 	rts
 
-.decbufptr:
-	; first buffer slot? do not decrease
-	lda .bufptr+1
-	cmp #>.buf
-	bne +
-	lda .bufptr
-	cmp #<.buf
-	bne + 
+; .decbufptr:
+; 	; first buffer slot? do not decrease
+; 	lda .bufptr+1
+; 	cmp #>.buf
+; 	bne +
+; 	lda .bufptr
+; 	cmp #<.buf
+; 	bne + 
 
-	rts
-+
-	; decrease bufptr by BUF_SIZE bytes
-	lda .bufptr
-	sec
-	sbc #BUF_SIZE
-	sta .bufptr
+; 	rts
+; +
+; 	; decrease bufptr by BUF_SIZE bytes
+; 	lda .bufptr
+; 	sec
+; 	sbc #BUF_SIZE
+; 	sta .bufptr
 
-	bcs +
-	dec .bufptr+1
-+	
-	rts
+; 	bcs +
+; 	dec .bufptr+1
+; +	
+; 	rts
 
 .cmdlist
 	!text "dir"
