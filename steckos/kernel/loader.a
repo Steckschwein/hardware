@@ -1,6 +1,5 @@
 *=$1000
 !src <defs.h.a>
-!src <bios.h.a>
 !src <t9929.h.a>
 
 
