@@ -1,4 +1,4 @@
-OBJS=bios.o charset_8x8.o
+OBJS=bios.o charset_8x8.o uart.o via.o
 .PHONY: all
 all: bios.bin 
 
