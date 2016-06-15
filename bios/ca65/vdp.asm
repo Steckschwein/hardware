@@ -2,7 +2,7 @@
 .export init_vdp, vdp_chrout
 .import charset
 .include "bios.inc"
-
+.include "vdp.inc"
 .macro	vnops
 			jsr vnopslide
 			; nop

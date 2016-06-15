@@ -2,7 +2,7 @@
 .import sd_read_block
 .include "bios.inc"
 .include "sdcard.inc"
-
+.include "fat32.inc"
 .segment "BIOS"
 
 ;---------------------------------------------------------------------

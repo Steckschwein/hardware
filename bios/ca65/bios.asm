@@ -1,6 +1,7 @@
 .setcpu "65c02"
 .include "bios.inc"
 .include "sdcard.inc"
+.include "fat32.inc"
 .import charset
 
 
