@@ -1,5 +1,5 @@
-OBJS=bios.o charset_8x8.o uart.o via.o
-.PHONY: all
+OBJS=bios.o charset_8x8.o uart.o via.o spi.o
+.PHONY: all clean
 all: bios.bin 
 
 .PHONY: clean
