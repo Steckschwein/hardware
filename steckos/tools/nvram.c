@@ -29,10 +29,10 @@ struct baudrate
 };
 
 const struct baudrate baudrates[] = {
-	{2304,	50},
-	{1536,	75},
-	{1047,	110},
-	{768, 	150},
+	// {2304,	50},
+	// {1536,	75},
+	// {1047,	110},
+	// {768, 	150},
 	{384,	300},
 	{192,	600},
 	{96,	1200},
@@ -47,7 +47,6 @@ const struct baudrate baudrates[] = {
 };
 
 unsigned char i,j,x;
-unsigned char buf[12];
 struct nvram n;
 unsigned char * p;
 unsigned long l;
@@ -101,7 +100,7 @@ unsigned long int lookup_divisor(unsigned short div)
 	{
 		if (baudrates[i].divisor == div)
 		{
-			return baudrates[i].baudrate;	
+			return baudrates[i].baudrate ;	
 		}
 	}
 
@@ -114,7 +113,7 @@ unsigned short lookup_baudrate(unsigned long int baud)
 
 	for (i=0; i<14; ++i)
 	{
-		if (baudrates[i].baudrate == baud)
+		if (baudrates[i].baudrate == baud )
 		{
 			return baudrates[i].divisor;	
 		}
@@ -133,11 +132,11 @@ int main (int argc, const char* argv[])
 		return 0;
 	}
 
-	cprintf("1");
+	// cprintf("1");
 
 	read_nvram();
 
-	cprintf("2");
+	// cprintf("2");
 
 	// if (n.signature != 0x42)
 	// {
@@ -153,7 +152,7 @@ int main (int argc, const char* argv[])
 	// 	cprintf("done.\r\n");
 	// }
 
-	cprintf("3");
+	// cprintf("3");
 
 	if (strcmp(argv[1], "get") == 0)
 	{
@@ -197,7 +196,7 @@ int main (int argc, const char* argv[])
 		}
 		else if (strcmp(argv[2], "filename") == 0)
 		{
-			if (strlen(argv[3]) > 11)
+			if (strlen(argv[3]) > 12)
 			{
 				cprintf("\r\nInvalid filename\r\n");
 				return 1;				
@@ -205,24 +204,21 @@ int main (int argc, const char* argv[])
 
 
 			x=0;
-			for (i=0;i<10;++i)
+			for (i=0;i<10, argv[3][i] != '\0' ;++i)
 			{
 				if (argv[3][i] == '.') 
 				{
 					for (j=0;j<8-i;++j)
 					{
-						buf[x] = ' ';
+						n.filename[x] = ' ';
 						++x;
 					}
 					continue;
 				}
-				buf[x] = toupper(argv[3][i]);  
+		
+				n.filename[x] = toupper(argv[3][i]);   
 				++x;
 			}
-
-			cprintf("[%s]\r\n", buf);
-
-			memcpy(n.filename, buf, 11);
 		}
 
 		write_nvram();
@@ -236,19 +232,10 @@ int main (int argc, const char* argv[])
 		{
 			cprintf("%c", n.filename[i]);
 		}
-		cprintf("\r\nBaud rate  : %ld\r\nUART LSR   : $%02x\r\n", 
-			lookup_divisor(n.uart_baudrate),
-			n.uart_lsr
+		cprintf("\r\nBaud rate  : %ld\r\n", 
+			lookup_divisor(n.uart_baudrate)
 		);
-		/*
-		cprintf("OS filename: %s\r\n", n.filename);
-		cprintf("Baud rate  : %lu\r\n", n.uart_baudrate);
-		cprintf("UART LSR   : $%02x\r\n", n.uart_lsr);
-		*/
 	}
-
-
-
 
 	return 0;
 }
