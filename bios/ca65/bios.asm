@@ -3,7 +3,7 @@
 .include "sdcard.inc"
 .include "fat32.inc"
 
-
+.export set_filenameptr
 .segment "BIOS"
 .import init_uart, upload
 .import init_via1
@@ -114,7 +114,7 @@ mem_ok:
 		
 			jsr init_vdp
 
-			printstring "BIOS 20160615"
+			printstring "BIOS 20160616"
 			jsr print_crlf
 			printstring "Memcheck $"
 
@@ -127,14 +127,7 @@ mem_ok:
 
 			SetVector param_defaults, paramvec
 
-			copyPointer paramvec, ptr1
-			clc
-			lda #param_filename
-			adc ptr1l
-			sta ptr1l
-			bcc @l4
-			inc ptr1h
-@l4:
+			jsr set_filenameptr
 
 			jsr read_nvram
 
@@ -228,6 +221,16 @@ startup:
 
 
 
+set_filenameptr:
+			copyPointer paramvec, ptr1
+			clc
+			lda #param_filename
+			adc ptr1l
+			sta ptr1l
+			bcc @l4
+			inc ptr1h
+@l4:
+			rts
 
 
 

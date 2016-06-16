@@ -1,4 +1,5 @@
 OBJS=bios.o charset_8x8.o uart.o via.o spi.o out.o vdp.o sdcard.o fat32.o nvram.o
+LDFLAGS=--config bios.cfg -m map.txt
 .PHONY: all clean
 all: bios.bin 
 
@@ -10,7 +11,7 @@ clean:
 	ca65 --target none $<
 
 bios.bin: $(OBJS) bios.inc
-	ld65 --config bios.cfg $(OBJS) -o bios.bin
+	ld65 $(LDFLAGS) $(OBJS) -o bios.bin
 
 
 loader.bin: bios.bin

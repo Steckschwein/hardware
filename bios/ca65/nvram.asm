@@ -1,5 +1,5 @@
 .export read_nvram
-.import spi_rw_byte, print_crlf, primm
+.import spi_rw_byte, print_crlf, primm, set_filenameptr
 .include "bios.inc"
 .include "via.inc"
 .segment "BIOS"
@@ -37,6 +37,7 @@ read_nvram:
 	bne @invalid_sig
 
 	SetVector nvram, paramvec
+	jsr set_filenameptr
 
 @exit:
 	restore
