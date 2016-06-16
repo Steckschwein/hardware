@@ -4,6 +4,7 @@
 #include <ctype.h>  
 #include "../../cc65/spi.h"
 
+#define VIA_PORT 0x210
 /*
 param_sig	= $00 ; 1  byte  - parameter array signature byte. must be $42
 param_version	= $01 ; 1  byte  - version number. initially zero
@@ -57,7 +58,7 @@ void write_nvram()
 	n.signature = 0x42;
 	n.uart_lsr  = 0x03; // 8N1
 	p = (unsigned char *)&n;
-	*(unsigned char*) 0x210 = 0x76; // select NVRAM
+	*(unsigned char*) VIA_PORT = 0x76; // select NVRAM
 
 	spi_write(0xA0);
 
@@ -66,13 +67,13 @@ void write_nvram()
 		spi_write(*p++);
 	}
 
-	*(unsigned char*) 0x210 = 0x7e;
+	*(unsigned char*) VIA_PORT = 0x7e;
 }
 
 void read_nvram()
 {	
 	p = (unsigned char *)&n;
-	*(unsigned char*) 0x210 = 0x76; // select NVRAM
+	*(unsigned char*) VIA_PORT = 0x76; // select NVRAM
 
 	spi_write(0x20);
 	
@@ -82,7 +83,7 @@ void read_nvram()
 		*p++ = spi_read();
 	}
 	
-	*(unsigned char*) 0x210 = 0x7e;
+	*(unsigned char*) VIA_PORT = 0x7e;
 }
 
 void usage()
@@ -216,7 +217,7 @@ int main (int argc, const char* argv[])
 					continue;
 				}
 		
-				n.filename[x] = toupper(argv[3][i]);   
+				n.filename[x] = argv[3][i] & ~0x20;
 				++x;
 			}
 		}
@@ -225,14 +226,9 @@ int main (int argc, const char* argv[])
 	}
 	else if (strcmp(argv[1], "list") == 0) 
 	{
-		cprintf("Signature  : $%02x\r\n", n.signature);
-		// cprintf("Version    : $%02x\r\n", n.version);
-		cprintf("\r\nOS filename: ");
-		for (i=0;i<11;i++)
-		{
-			cprintf("%c", n.filename[i]);
-		}
-		cprintf("\r\nBaud rate  : %ld\r\n", 
+		cprintf("Signature  : $%02x\r\nOS filename: %.11s\r\nBaud rate  : %ld\r\n", 
+			n.signature, 
+			n.filename,
 			lookup_divisor(n.uart_baudrate)
 		);
 	}
