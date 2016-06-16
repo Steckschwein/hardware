@@ -47,13 +47,16 @@ const struct baudrate baudrates[] = {
 };
 
 unsigned char i,j,x;
+unsigned char buf[12];
 struct nvram n;
 unsigned char * p;
 unsigned long l;
 
 
 void write_nvram()
-{
+{		
+	n.signature = 0x42;
+	n.uart_lsr  = 0x03; // 8N1
 	p = (unsigned char *)&n;
 	*(unsigned char*) 0x210 = 0x76; // select NVRAM
 
@@ -94,7 +97,7 @@ unsigned long int lookup_divisor(unsigned short div)
 {
 	static unsigned char i;
 
-	for (i=0; i<14; i++)
+	for (i=0; i<14; ++i)
 	{
 		if (baudrates[i].divisor == div)
 		{
@@ -109,7 +112,7 @@ unsigned short lookup_baudrate(unsigned long int baud)
 {
 	static unsigned char i;
 
-	for (i=0; i<14; i++)
+	for (i=0; i<14; ++i)
 	{
 		if (baudrates[i].baudrate == baud)
 		{
@@ -136,19 +139,19 @@ int main (int argc, const char* argv[])
 
 	cprintf("2");
 
-	if (n.signature != 0x42)
-	{
-		cprintf("NVRAM signature invalid.\r\nSetting to default values ... ");
-		n.signature 	= 0x42;
-		n.version 		= 0;
-		memcpy(n.filename, "LOADER  BIN", 11);
+	// if (n.signature != 0x42)
+	// {
+	// 	cprintf("NVRAM signature invalid.\r\nSetting to default values ... ");
+	// 	n.signature 	= 0x42;
+	// 	n.version 		= 0;
+	// 	memcpy(n.filename, "LOADER  BIN", 11);
 	
-		n.uart_baudrate = 0x0001; // 115200 baud
-		n.uart_lsr		= 0x03; // 8N1
+	// 	n.uart_baudrate = 0x0001; // 115200 baud
+	// 	n.uart_lsr		= 0x03; // 8N1
 
-		write_nvram();
-		cprintf("done.\r\n");
-	}
+	// 	write_nvram();
+	// 	cprintf("done.\r\n");
+	// }
 
 	cprintf("3");
 
@@ -202,30 +205,31 @@ int main (int argc, const char* argv[])
 
 
 			x=0;
-			for (i=0;i<10;i++)
+			for (i=0;i<10;++i)
 			{
 				if (argv[3][i] == '.') 
 				{
-					for (j=0;j<8-i;j++)
+					for (j=0;j<8-i;++j)
 					{
-						n.filename[x] = ' ';
-						x++;
+						buf[x] = ' ';
+						++x;
 					}
 					continue;
 				}
-				n.filename[x] = toupper(argv[3][i]);  
-				x++;
+				buf[x] = toupper(argv[3][i]);  
+				++x;
 			}
 
+			cprintf("[%s]\r\n", buf);
 
-			// strncpy(n.filename, argv[3], 11);
+			memcpy(n.filename, buf, 11);
 		}
 
 		write_nvram();
 	}
 	else if (strcmp(argv[1], "list") == 0) 
 	{
-		// cprintf("Signature  : $%02x\r\n", n.signature);
+		cprintf("Signature  : $%02x\r\n", n.signature);
 		// cprintf("Version    : $%02x\r\n", n.version);
 		cprintf("\r\nOS filename: ");
 		for (i=0;i<11;i++)
