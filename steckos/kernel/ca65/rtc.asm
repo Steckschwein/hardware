@@ -2,7 +2,7 @@
 .include "via.inc"
 .import spi_rw_byte
 .export init_rtc
-
+.segment "KERNEL"
 init_rtc:
 	; disable RTC interrupts
 	; Select SPI SS for RTC
