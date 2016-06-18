@@ -1,0 +1,47 @@
+Modules list:
+-------------
+rtc.o:
+    CODE              Offs=000000  Size=000015  Align=00001  Fill=0000
+spi.o:
+    KERNEL            Offs=000000  Size=00005B  Align=00001  Fill=0000
+uart.o:
+    KERNEL            Offs=00005B  Size=00001A  Align=00001  Fill=0000
+via.o:
+    KERNEL            Offs=000075  Size=000015  Align=00001  Fill=0000
+kernel.o:
+    KERNEL            Offs=00008A  Size=000013  Align=00001  Fill=0000
+    JUMPTABLE         Offs=000000  Size=000003  Align=00001  Fill=0000
+    VECTORS           Offs=000000  Size=000006  Align=00001  Fill=0000
+
+
+Segment list:
+-------------
+Name                   Start     End    Size  Align
+----------------------------------------------------
+CODE                  001000  001014  000015  00001
+KERNEL                00F000  00F09C  00009D  00001
+JUMPTABLE             00FF00  00FF02  000003  00001
+VECTORS               00FFFA  00FFFF  000006  00001
+
+
+Exports list by name:
+---------------------
+init_rtc                  001000 RLA    init_via1                 00F075 RLA    
+spi_rw_byte               00F000 RLA    
+
+
+Exports list by value:
+----------------------
+init_rtc                  001000 RLA    spi_rw_byte               00F000 RLA    
+init_via1                 00F075 RLA    
+
+
+Imports list:
+-------------
+init_rtc (rtc.o):
+    kernel.o                  kernel.asm(8)
+init_via1 (via.o):
+    kernel.o                  kernel.asm(7)
+spi_rw_byte (spi.o):
+    rtc.o                     rtc.asm(3)
+
