@@ -15,7 +15,7 @@ kernel.bin: $(OBJS)
 
 
 loader.bin: kernel.bin
-	cl65 --target none --config loader.cfg loader.asm -o loader.bin
+	cl65 --target none -m loader.map --config steckos.cfg loader.asm -o loader.bin
 
 transfer: loader.bin
 	../transfer.py -s 0x1000 loader.bin

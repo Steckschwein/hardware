@@ -1,5 +1,5 @@
 .include "kernel.inc"
-.export  uart_tx, uart_rx
+.export  init_uart, uart_tx, uart_rx
 ; .import vdp_chrout, print_crlf, hexout, primm
 .include "uart.inc"
 .segment "KERNEL"
@@ -7,38 +7,39 @@
 ;----------------------------------------------------------------------------------------------
 ; init UART
 ;----------------------------------------------------------------------------------------------
-; init_uart:
-; 			lda #%10000000
-; 			sta uart1lcr
+init_uart:
+			lda #%10000000
+			sta uart1lcr
 
 
-; 			ldy #param_uart_div	
-; 			lda (paramvec),y
-; 			sta uart1dll	
+			; ldy #param_uart_div	
+			; lda (paramvec),y
+			; sta uart1dll	
 
-; 			iny
-; 			lda (paramvec),y
-; 			sta uart1dlh	
+			; iny
+			; lda (paramvec),y
+			; sta uart1dlh	
 
-; 			; ; $0001 , 115200 baud
-; 			; lda #$01
-; 			; sta uart1dll	
-; 			; stz uart1dlh
+			; ; $0001 , 115200 baud
+			lda #$01
+			sta uart1dll	
+			stz uart1dlh
 
-; 			ldy #param_lsr  
-; 			lda (paramvec),y
-; 			sta uart1lcr
+			; ldy #param_lsr  
+			; lda (paramvec),y
+			lda #%00000011
+			sta uart1lcr
 
-; 			; lda #$00
-; 			stz uart1fcr	; FIFO off
-; 			stz uart1ier	; polled mode (so far) 
-; 			stz uart1mcr	; reset DTR, RTS
+			; lda #$00
+			stz uart1fcr	; FIFO off
+			stz uart1ier	; polled mode (so far) 
+			stz uart1mcr	; reset DTR, RTS
 
-; 			and #%00001100			; keep OUT1, OUT2 values
-; 			sta uart1mcr		; reset DTR, RTS
-; 			; clc
+			and #%00001100			; keep OUT1, OUT2 values
+			sta uart1mcr		; reset DTR, RTS
+			; clc
 
-; 			rts
+			rts
 
 ;----------------------------------------------------------------------------------------------
 ; send byte in A 

@@ -7,6 +7,7 @@ kbd_frame_div  = $01
 .import init_via1
 .import init_rtc
 .import spi_r_byte, spi_rw_byte
+.import init_uart, uart_tx, uart_rx
 ; !src <defs.h.a>
 ; ; !src <bios.h.a>
 ; !src <via.h.a>
@@ -18,8 +19,8 @@ kbd_frame_div  = $01
 
 .segment "KERNEL"
 kern_init:
-	; jsr init_via1
-	; jsr init_rtc
+	jsr init_via1
+	jsr init_rtc
 
 @l:	jmp @l
 
@@ -88,8 +89,10 @@ do_reset:
 ; krn_hexout 				jmp .hexout
 ; krn_init_sdcard			jmp .init_sdcard
 ; krn_upload				jmp .upload
-krn_spi_rw_byte:			jmp spi_rw_byte
+krn_spi_rw_byte:		jmp spi_rw_byte
 krn_spi_r_byte:			jmp spi_r_byte
+krn_uart_tx:			jmp uart_tx
+krn_uart_rx:			jmp uart_rx
 
 .segment "VECTORS"
 ; ----------------------------------------------------------------------------------------------
