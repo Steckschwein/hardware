@@ -1,6 +1,6 @@
 .setcpu "65C02"
 .segment "CODE"
-
+.include "vdp.inc"
 ; 	system attribute has to be set on file system
 memctl = $0230
 dest = $f000
@@ -8,11 +8,16 @@ dest = $f000
 
 ; .pages = (.payload_end - .payload) / 256 + 1
 
-	stz memctl
+	lda #$80
+	sta memctl
 
 	; copy kernel code to $e000
 
+
+
+
 loop:
+
 @a:	lda payload
 @b:	sta dest
 
@@ -34,6 +39,7 @@ loop:
 	bne loop
 
 end:
+
 
 	;display off
 ; 	lda		#v_reg1_16k	;enable 16K ram, disable screen
@@ -73,17 +79,17 @@ end:
 	; +vnops
 
 	
-	jmp dest
+	jmp ($fffc)
 	
-.align 255
+.align 256
 ; *=$1100
 payload:
 .incbin "kernel.bin"
 payload_end:
 
-.align 255
-charset:
-.include "charset_6x8.asm"
-charset_end:
+; .align 255
+; charset:
+; .include "charset_6x8.asm"
+; charset_end:
 
 
