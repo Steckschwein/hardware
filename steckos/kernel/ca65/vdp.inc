@@ -58,3 +58,22 @@ crs_y	= $e7
 KEY_CR=$0d
 KEY_LF=$0a
 KEY_BACKSPACE=$08
+
+.macro	vnops
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+
+ .endmacro
+
+
+.macro vdp_sreg 
+			sta	a_vreg
+			vnops
+			sty	a_vreg	
+.endmacro
