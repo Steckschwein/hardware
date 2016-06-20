@@ -1,4 +1,11 @@
 .setcpu "65c02"
+addr 		= $e0
+adrl     	= addr
+adrh     	= addr+1
+
+; pointer for string output functions 
+msgptr 		= $fe
+
 .macro SetVector word, addr 
 			lda #<word
 			sta addr
