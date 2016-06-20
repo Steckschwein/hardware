@@ -1,3 +1,6 @@
+.include "kernel.inc"
+
+
 shell_addr	 = $e000
 
 text_mode_40 = 1
@@ -8,6 +11,7 @@ kbd_frame_div  = $01
 .import init_rtc
 .import spi_r_byte, spi_rw_byte
 .import init_uart, uart_tx, uart_rx
+; .import textui_init0
 ; !src <defs.h.a>
 ; ; !src <bios.h.a>
 ; !src <via.h.a>
@@ -19,12 +23,14 @@ kbd_frame_div  = $01
 
 .segment "KERNEL"
 kern_init:
+	lda #$03
+	sta $0230
 
 	jsr init_via1
 	jsr init_rtc
 
-	lda #$03
-	sta $0230
+	; jsr textui_init0
+
 
 
 @l:	jmp @l
