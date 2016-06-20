@@ -19,8 +19,13 @@ kbd_frame_div  = $01
 
 .segment "KERNEL"
 kern_init:
+
 	jsr init_via1
 	jsr init_rtc
+
+	lda #$03
+	sta $0230
+
 
 @l:	jmp @l
 
@@ -38,8 +43,6 @@ do_irq:
 do_nmi:
 			rti
 			
-
-
 
 do_reset:
 			; disable interrupt
