@@ -1,7 +1,8 @@
+#OBJS=textui.o t99xx.lib.o rtc.o spi.o uart.o via.o kernel.o
 OBJS=rtc.o spi.o uart.o via.o kernel.o
 LDFLAGS=--config steckos.cfg -m map.txt
 .PHONY: all clean
-all: kernel.bin 
+all: kernel.bin loader.bin
 
 .PHONY: clean
 clean:
@@ -18,4 +19,4 @@ loader.bin: kernel.bin
 	cl65 --target none -m loader.map --config steckos.cfg loader.asm -o loader.bin
 
 transfer: loader.bin
-	../transfer.py -s 0x1000 loader.bin
+	../../../transfer.py -s 0x1000 loader.bin
