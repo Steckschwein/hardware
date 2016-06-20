@@ -1,23 +1,21 @@
-ACME_OPTS=-v2 -f plain --cpu 65c02
-
-.PHONY: all
-all: bios.bin bios.h.a
+OBJS=bios.o charset_8x8.o uart.o via.o spi.o out.o vdp.o sdcard.o fat32.o nvram.o
+LDFLAGS=--config bios.cfg -m map.txt
+.PHONY: all clean
+all: bios.bin 
 
 .PHONY: clean
 clean:
-	rm -f *.bin *.labels bios.h.a
+	rm -f *.o *.bin 
 
-loader: loader.bin
+%.o: %.asm
+	ca65 --target none $<
+
+bios.bin: $(OBJS) bios.inc
+	ld65 $(LDFLAGS) $(OBJS) -o bios.bin
+
+
 loader.bin: bios.bin
-bios.bin: ${ACME}/defs.h.a
+	cl65 --target none --config loader.cfg loader.asm -o loader.bin
 
-%.bin: %.a ${ACME}/t9929.h.a ${ACME}/t99xx.lib.a vdp.a 
-	acme -Wtype-mismatch -l $<.labels $(ACME_OPTS) -o $@ $<
-
-burn: bios.bin
-	mkfile 24k 24k.bin
-	cat bios.bin 24k.bin > burn.bin
-	minipro -p AT28C256 -w burn.bin
-	rm 24k.bin burn.bin
-transfer: loader
-	../transfer.py -s 0x0400 loader.bin
+transfer: loader.bin
+	../transfer.py -s 0x0300 loader.bin
