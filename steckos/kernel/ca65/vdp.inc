@@ -48,6 +48,13 @@ ADDRESS_GFX1_COLOR		=$1b80
 ADDRESS_GFX1_SPRITE		=ADDRESS_GFX_SPRITE
 ADDRESS_GFX1_SPRITE_PATTERN=$1000;ADDRESS_GFX1_PATTERN
 
+ADDRESS_GFX2_SCREEN		=$1800
+ADDRESS_GFX2_PATTERN	=$0000
+ADDRESS_GFX2_COLOR		=$2000
+ADDRESS_GFX2_SPRITE		=ADDRESS_GFX1_SPRITE
+ADDRESS_GFX2_SPRITE_PATTERN=ADDRESS_GFX2_PATTERN
+
+
 ROWS=23
 COLS=40
 
@@ -69,11 +76,17 @@ KEY_BACKSPACE=$08
 		nop
 		nop
 
- .endmacro
+.endmacro
 
 
-.macro vdp_sreg 
+.macro vdp_sreg
 			sta	a_vreg
 			vnops
 			sty	a_vreg	
+.endmacro
+
+.macro	SyncBlank
+	lda a_vreg
+@l:	bit	a_vreg
+	bpl @l	   ; wait until blank - irq flag set?
 .endmacro

@@ -4,13 +4,13 @@
 .export textui_init0
 .import vdp_bgcolor, vdp_memcpy, vdp_mode_text, vdp_display_off
 .zeropage
-tmp0:	.byte $00
-tmp1:	.byte $01
+
 .segment "KERNEL"
-; .include "t99xx.lib.asm"
 
-
-screen=$c000	
+screen=$c000
+tmp0=$00
+tmp1=$01
+crs_ptr=$02
 
 screen_status: 		.byte STATUS_TEXTUI_ENABLED
 screen_write_lock: 	.byte 0

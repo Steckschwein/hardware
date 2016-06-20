@@ -1,5 +1,6 @@
 .include "kernel.inc"
 .include "vdp.inc"
+
 .export vdp_bgcolor, vdp_memcpy, vdp_mode_text, vdp_display_off
 
 ; ROWS=23
@@ -11,7 +12,6 @@
 vdp_irq_off:
 		lda #v_reg1_16k|v_reg1_display_on|v_reg1_spr_size	;switch interupt off
 		ldy	#v_reg1
-; vdp_sreg:
 		vdp_sreg
 		rts
 
