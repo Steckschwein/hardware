@@ -11,7 +11,7 @@ kbd_frame_div  = $01
 .import init_rtc
 .import spi_r_byte, spi_rw_byte
 .import init_uart, uart_tx, uart_rx
-; .import textui_init0
+.import textui_init0
 ; !src <defs.h.a>
 ; ; !src <bios.h.a>
 ; !src <via.h.a>
@@ -29,7 +29,7 @@ kern_init:
 	jsr init_via1
 	jsr init_rtc
 
-	; jsr textui_init0
+	jsr textui_init0
 
 
 

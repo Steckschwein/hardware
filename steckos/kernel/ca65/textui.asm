@@ -3,13 +3,14 @@
 .include "vdp.inc"
 .export textui_init0
 .import vdp_bgcolor, vdp_memcpy, vdp_mode_text, vdp_display_off
+
 .zeropage
+tmp0=$00
+tmp1=$01
 
 .segment "KERNEL"
 
 screen=$c000
-tmp0=$00
-tmp1=$01
 crs_ptr=$02
 
 screen_status: 		.byte STATUS_TEXTUI_ENABLED
@@ -128,9 +129,6 @@ textui_init0:
 
 textui_init:
 ; 	SetVector	charset, adrl	;load charset
-; 	; lda	#<(ADDRESS_GFX1_SPRITE_PATTERN)
-; 	; ldy	#>(ADDRESS_GFX1_SPRITE_PATTERN+(.WRITE_ADDRESS<<8))
-
 ; !ifndef text_mode_40 {
 ; 	lda	#<ADDRESS_GFX1_PATTERN
 ; 	ldy	#.WRITE_ADDRESS + >ADDRESS_GFX1_PATTERN
