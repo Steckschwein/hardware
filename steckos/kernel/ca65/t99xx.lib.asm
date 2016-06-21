@@ -103,23 +103,6 @@ lgfx1:	lda	#' '					;fill vram screen with blank
 		bra	vdp_fill
 
 
-;
-; blank gfx mode 2 with 
-; adrl - color to fill
-;    
-vdp_mode_gfx2_blank:		; 2 x 6K
-	sta adrl
-	lda #<ADDRESS_GFX2_COLOR
-	ldy #WRITE_ADDRESS + >ADDRESS_GFX2_COLOR
-	ldx	#$18
-	jsr	vdp_fill
-	stz adrl
-	lda #<ADDRESS_GFX2_PATTERN
-	ldy #WRITE_ADDRESS + >ADDRESS_GFX2_PATTERN
-	ldx	#$18
-	jmp	vdp_fill
-
-
 vdp_mode_gfx1_sprites_off:
 vdp_mode_sprites_off:
 	lda	#$d0					;sprites off, at least y=$d0 will disable the sprite subsystem
@@ -159,24 +142,6 @@ vdp_init_reg:
 	bne @l1
 	rts
 
-;	
-;
-;
-;	gfx 2 - each pixel can be addressed - e.g. for image
-;	
-vdp_mode_gfx2:
-	jsr	vdp_fill_name_table
-	SetVector	vdp_init_bytes_gfx2, adrl
-	bra	vdp_init_reg
-
-;
-;	gfx 3 - 4x4 color block - multicolor mode
-;	
-vdp_mode_gfx3:
-	jsr	vdp_fill_name_table
-	SetVector	vdp_init_bytes_gfx3, adrl
-	bra	vdp_init_reg
-
 ;
 ;	text mode - 40x24 character mode, 16 colors with same color for 8 characters in a block
 ;
@@ -204,57 +169,6 @@ vdp_init_bytes_gfx1:
 	.byte	(ADDRESS_GFX1_SPRITE / $80)	; sprite attribute table - value * $80 		--> offset in VRAM
 	.byte 	(ADDRESS_GFX1_SPRITE_PATTERN / $800)  ; sprite pattern table - value * $800  		--> offset in VRAM
 	.byte	Black
-
-;
-;	requires	gfx2_mode_bitmap_address and gfx2_mode_ptr_bitmap_color_address setup correctly with the adresses to image and color data
-;
-gfx2_mode_ptr_bitmap_address: 		.word ADDRESS_GFX2_PATTERN	;default data adress $1000
-gfx2_mode_ptr_bitmap_color_address:	.word ADDRESS_GFX2_COLOR	;default data adress $2800
-vdp_mode_gfx2_load_bitmap:
-	lda	gfx2_mode_ptr_bitmap_address
-	sta	adrl
-	lda	gfx2_mode_ptr_bitmap_address+1
-	sta	adrh
-	lda	#<ADDRESS_GFX2_PATTERN
-	ldy	#WRITE_ADDRESS + >ADDRESS_GFX2_PATTERN
-	ldx	#$18	;6k bitmap - $1800
-	jsr	vdp_memcpy					;load the pic data --> pattern table at vram $0000
-	; load color
-	lda	gfx2_mode_ptr_bitmap_color_address
-	sta	adrl
-	lda	gfx2_mode_ptr_bitmap_color_address+1
-	sta	adrh
-	lda	#<ADDRESS_GFX2_COLOR
-	ldy	#WRITE_ADDRESS+ >ADDRESS_GFX2_COLOR
-	ldx	#$18	;6k color map - $1800
-	jmp	vdp_memcpy					;load the pic data --> color table at vram $2000
-
-gfx3_mode_bitmap_address:			.word	$1800
-vdp_mode_gfx3_load_bitmap:
-		lda	gfx3_mode_bitmap_address
-		sta	adrl
-		lda	gfx3_mode_bitmap_address+1
-		sta	adrh
-		lda	#$00
-		ldy	#WRITE_ADDRESS+$00
-		ldx	#$03	;768 byte
-		jsr	vdp_memcpy					;load the pic data --> pattern table at vram $0000
-		rts
-	
-vdp_fill_name_table:
-		;set 768 different patterns --> name table
-		lda	#<ADDRESS_GFX2_SCREEN
-		ldy	#WRITE_ADDRESS+ >ADDRESS_GFX2_SCREEN
-		vdp_sreg
-		ldy	#$03
-		ldx	#$00
-@l1:	vnops
-		stx	a_vram  ;
-		inx         ;2
-		bne	@l1     ;3
-		dey
-		bne	@l1
-		rts
 	
 vdp_init_bytes_text:
 	.byte 0
@@ -266,26 +180,6 @@ vdp_init_bytes_text:
 	.byte 	0	; not used
 	.byte	Medium_Green<<4|Black
 
-vdp_init_bytes_gfx2:
-	.byte 	v_reg0_m3		; 
-	.byte 	v_reg1_16k|v_reg1_display_on|v_reg1_spr_size |v_reg1_int
-	.byte 	(ADDRESS_GFX2_SCREEN / $400)	; name table - value * $400
-	.byte	$ff				; color table setting for gfx mode 2 --> only Bit 7 is taken into account 0 => at vram $0000, 1 => at vram $2000, Bit 6-0 AND to character number
-	.byte	$03 			; pattern table - either at vram $0000 (Bit 2 = 0) or at vram $2000 (Bit 2=1), Bit 0,1 are AND to select the pattern array
-	.byte	(ADDRESS_GFX2_SPRITE / $80)	; sprite attribute table - value * $80 --> offset in VRAM
-	.byte	(ADDRESS_GFX2_SPRITE_PATTERN / $800)	; sprite pattern table - value * $800  --> offset in VRAM
-	.byte	Black
-
-vdp_init_bytes_gfx3:
-	.byte 	0		; 
-	.byte 	v_reg1_16k|v_reg1_display_on|v_reg1_m2|v_reg1_spr_size; |v_reg1_int
-	.byte 	($3800 / $400)	; name table - value * $400
-	.byte	$ff				; color table setting for gfx mode 2 --> only Bit 7 is taken into account 0 => at vram $0000, 1 => at vram $2000, Bit 6-0 AND to character number
-	.byte	$03 			; pattern table - either at vram $0000 (Bit 2 = 0) or at vram $2000 (Bit 2=1), Bit 0,1 are AND to select the pattern array
-	.byte	($3c00 / $80)	; sprite attribute table - value * $80 --> offset in VRAM
-	.byte	($1800 / $800)	; sprite pattern table - value * $800  --> offset in VRAM
-	.byte	Black
-	
 ;
 ;   input:	a - color
 ;
