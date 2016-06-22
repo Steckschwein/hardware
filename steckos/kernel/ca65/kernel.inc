@@ -5,6 +5,8 @@ adrh     	= addr+1
 
 ; pointer for string output functions 
 msgptr 		= $fe
+DPL			= msgptr
+DPH			= msgptr+1
 
 .macro SetVector word, addr 
 			lda #<word

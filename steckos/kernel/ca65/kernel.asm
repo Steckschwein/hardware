@@ -12,13 +12,7 @@ kbd_frame_div  = $01
 .import spi_r_byte, spi_rw_byte
 .import init_uart, uart_tx, uart_rx
 .import textui_init0, textui_update_screen, textui_chrout
-; !src <defs.h.a>
-; ; !src <bios.h.a>
-; !src <via.h.a>
-; !src <uart.h.a>
-; !src <fat32.h.a>
-; !src <params.h.a>
-; !src <errors.h.a>
+.import hexout, primm, print_crlf
 
 
 .segment "KERNEL"
@@ -31,9 +25,8 @@ kern_init:
 
 	cli
 
-	lda #'A'
-	jsr textui_chrout
-
+	jsr primm
+	.asciiz "SteckOS Kernel 0.2"
 
 @l:	jmp @l
 
@@ -105,8 +98,9 @@ do_reset:
 ; krn_gfxui_off			jmp	.gfxui_off
 ; krn_display_off			jmp vdp_display_off
 ; krn_getkey				jmp .getkey
-; krn_chrout 				jmp chrout
+krn_chrout:				jmp textui_chrout
 ; krn_strout 				jmp strout
+krn_primm: 				jmp primm
 ; krn_textui_crsxy			jmp .textui_crsxy
 ; krn_textui_update_crs_ptr	jmp .textui_update_crs_ptr
 ; krn_textui_clrscr_ptr		jmp .textui_blank

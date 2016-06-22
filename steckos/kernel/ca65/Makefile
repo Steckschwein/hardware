@@ -1,4 +1,4 @@
-OBJS=textui.o t99xx.lib.o rtc.o spi.o uart.o via.o kernel.o
+OBJS=textui.o t99xx.lib.o rtc.o spi.o uart.o via.o out.o kernel.o
 #OBJS=rtc.o spi.o uart.o via.o kernel.o
 LDFLAGS=--config steckos.cfg 
 .PHONY: all clean
