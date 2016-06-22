@@ -12,7 +12,7 @@ clean:
 	ca65 --target none $<
 
 kernel.bin: $(OBJS) 
-	ld65 $(LDFLAGS) $(OBJS) -m kernel.map -o kernel.bin 
+	ld65 $(LDFLAGS) $(OBJS) -o kernel.bin 
 
 
 loader.bin: kernel.bin
