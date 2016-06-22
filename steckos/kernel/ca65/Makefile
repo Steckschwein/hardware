@@ -12,7 +12,8 @@ clean:
 	ca65 --target none $<
 
 kernel.bin: $(OBJS) 
-	ld65 $(LDFLAGS) $(OBJS) -o kernel.bin 
+	ld65 $(LDFLAGS) $(OBJS) -m kernel.map -Ln symbols.txt -o kernel.bin 
+	grep krn symbols.txt | awk -F' ' '{print $$3" = $$"$$2}'| sed -e "s/^\.//g" > kernel_jumptable.inc
 
 
 loader.bin: kernel.bin

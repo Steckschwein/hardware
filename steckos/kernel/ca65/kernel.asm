@@ -82,6 +82,7 @@ do_reset:
 
 
 .segment "JUMPTABLE"
+.export krn_chrout, krn_primm, krn_spi_rw_byte, krn_spi_r_byte, krn_uart_tx, krn_uart_rx
 ; "kernel" jumptable
 ; krn_keyin				jmp .keyin
 ; krn_mount 				jmp .fat_mount 
