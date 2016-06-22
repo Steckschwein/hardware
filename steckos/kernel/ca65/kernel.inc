@@ -12,3 +12,13 @@ msgptr 		= $fe
 			lda #>word
 			sta addr+1
 .endmacro
+.macro save
+	pha
+	phy
+	phx
+.endmacro
+.macro restore
+	plx
+	ply
+	pla
+.endmacro

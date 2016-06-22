@@ -1,6 +1,6 @@
 OBJS=textui.o t99xx.lib.o rtc.o spi.o uart.o via.o kernel.o
 #OBJS=rtc.o spi.o uart.o via.o kernel.o
-LDFLAGS=--config steckos.cfg -m map.txt
+LDFLAGS=--config steckos.cfg 
 .PHONY: all clean
 all: kernel.bin loader.bin
 
@@ -12,7 +12,7 @@ clean:
 	ca65 --target none $<
 
 kernel.bin: $(OBJS) 
-	ld65 $(LDFLAGS) $(OBJS) -o kernel.bin 
+	ld65 $(LDFLAGS) $(OBJS) -m kernel.map -o kernel.bin 
 
 
 loader.bin: kernel.bin

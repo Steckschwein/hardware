@@ -1,7 +1,8 @@
 
 .include "kernel.inc"
 .include "vdp.inc"
-.export textui_init0
+
+.export textui_init0, textui_update_screen, textui_chrout
 .import vdp_bgcolor, vdp_memcpy, vdp_mode_text, vdp_display_off
 
 .zeropage
@@ -88,60 +89,23 @@ CURSOR_CHAR=$db
 		lda    #>screen
 		adc    tmp1
 		sta    crs_ptr+1
-; }
 
-; !ifndef text_mode_40 {
-; .charset=charset	; the one from ROM
-; .COLS=32
-; .CURSOR_CHAR=$db
-; 	lda	crs_y
-; 	asl	
-; 	asl
-; 	asl
-; 	asl			
-; 	asl			; offs= y*.COLS
-; 	ora	crs_x
-; 	sta	crs_ptr
-	
-; 	lda	crs_y	; * .COLS
-; 	lsr			; /8 -> page offset 0-2
-; 	lsr
-; 	lsr
-; 	clc
-; 	adc	#>.screen
-; 	sta	crs_ptr+1
-; }
-    lda (crs_ptr)
-    sta saved_char     ;save char
-	pla
-	rts
-;   
-;   
-;
+		lda (crs_ptr)
+		sta saved_char     ;save char
+		pla
+		rts
+
 textui_init0:
-	jsr	vdp_display_off			;display off
-	
-	jsr	textui_blank			;blank screen buffer
-	
-	stz	crs_x
-	stz	crs_y
-	jsr textui_update_crs_ptr		;init cursor pointer
+		jsr	vdp_display_off			;display off
+		
+		jsr	textui_blank			;blank screen buffer
+		
+		stz	crs_x
+		stz	crs_y
+		jsr textui_update_crs_ptr		;init cursor pointer
 
 textui_init:
-; 	SetVector	charset, adrl	;load charset
-; !ifndef text_mode_40 {
-; 	lda	#<ADDRESS_GFX1_PATTERN
-; 	ldy	#.WRITE_ADDRESS + >ADDRESS_GFX1_PATTERN
-; 	ldx	#$08					
-; 	jsr	vdp_memcpy
-
-; 	jsr	vdp_mode_gfx1_sprites_off	;clean sprite attribute table
-; 	lda	#Medium_Green<<4|Black		;enable gfx 1
-; 	jmp	vdp_mode_gfx1
-; }
-; !ifdef text_mode_40 {
-	jmp	vdp_mode_text
-; }
+		jmp	vdp_mode_text
 	
 textui_blank:
 		ldx	#$00
@@ -251,10 +215,11 @@ textui_enable:
 		ora	#STATUS_TEXTUI_ENABLED
 		bra	lsstatus
 textui_disable:
-			lda	screen_status
-			and	#!STATUS_TEXTUI_ENABLED
-lsstatus:	sta	screen_status
-			rts
+		lda	screen_status
+		and	#!STATUS_TEXTUI_ENABLED
+lsstatus:	
+		sta	screen_status
+		rts
 
 textui_put:
 		sta	(crs_ptr)

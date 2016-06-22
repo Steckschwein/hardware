@@ -1,5 +1,5 @@
 .include "kernel.inc"
-
+.include "vdp.inc"
 
 shell_addr	 = $e000
 
@@ -11,7 +11,7 @@ kbd_frame_div  = $01
 .import init_rtc
 .import spi_r_byte, spi_rw_byte
 .import init_uart, uart_tx, uart_rx
-.import textui_init0
+.import textui_init0, textui_update_screen, textui_chrout
 ; !src <defs.h.a>
 ; ; !src <bios.h.a>
 ; !src <via.h.a>
@@ -23,14 +23,16 @@ kbd_frame_div  = $01
 
 .segment "KERNEL"
 kern_init:
-	lda #$03
-	sta $0230
 
 	jsr init_via1
 	jsr init_rtc
 
 	jsr textui_init0
 
+	cli
+
+	lda #'A'
+	jsr textui_chrout
 
 
 @l:	jmp @l
@@ -41,8 +43,21 @@ kern_init:
 ; IO_IRQ Routine. Handle IRQ
 ;----------------------------------------------------------------------------------------------
 do_irq:
-			rti
+; system interrupt handler
+; handle keyboard input and text screen refresh
 
+	save
+
+	bit	a_vreg
+	bpl @exit	   ; VDP IRQ flag set?
+	jsr	textui_update_screen
+    
+@exit:
+    ; jsr .call_user_isr
+
+	restore
+	rti
+		
 ;----------------------------------------------------------------------------------------------
 ; IO_NMI Routine. Handle NMI
 ;----------------------------------------------------------------------------------------------
