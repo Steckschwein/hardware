@@ -8,6 +8,8 @@ msgptr 		= $fe
 DPL			= msgptr
 DPH			= msgptr+1
 
+user_isr 	        = $028a
+
 .macro SetVector word, addr 
 			lda #<word
 			sta addr

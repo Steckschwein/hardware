@@ -13,7 +13,7 @@ kbd_frame_div  = $01
 .import init_uart, uart_tx, uart_rx
 .import textui_init0, textui_update_screen, textui_chrout
 .import hexout, primm, print_crlf
-
+.import keyin, getkey
 
 .segment "KERNEL"
 kern_init:
@@ -23,12 +23,24 @@ kern_init:
 
 	jsr textui_init0
 
+	SetVector user_isr_default, user_isr
+
+
 	cli
 
 	jsr primm
 	.asciiz "SteckOS Kernel 0.2"
 
-@l:	jmp @l
+
+
+loop:
+	jsr getkey 
+	cmp #$00
+	beq loop
+
+
+	jsr textui_chrout
+	jmp loop
 
 
 
@@ -46,10 +58,15 @@ do_irq:
 	jsr	textui_update_screen
     
 @exit:
-    ; jsr .call_user_isr
+	jsr call_user_isr
 
 	restore
 	rti
+
+call_user_isr:
+	jmp (user_isr)
+user_isr_default:
+	rts
 		
 ;----------------------------------------------------------------------------------------------
 ; IO_NMI Routine. Handle NMI
@@ -82,9 +99,9 @@ do_reset:
 
 
 .segment "JUMPTABLE"
-.export krn_chrout, krn_primm, krn_spi_rw_byte, krn_spi_r_byte, krn_uart_tx, krn_uart_rx
 ; "kernel" jumptable
-; krn_keyin				jmp .keyin
+.export krn_keyin
+krn_keyin:				jmp keyin
 ; krn_mount 				jmp .fat_mount 
 ; krn_open 				jmp .fat_open
 ; krn_close 				jmp .fat_close
@@ -98,9 +115,12 @@ do_reset:
 ; krn_gfxui_on			jmp	.gfxui_on
 ; krn_gfxui_off			jmp	.gfxui_off
 ; krn_display_off			jmp vdp_display_off
-; krn_getkey				jmp .getkey
+.export krn_getkey
+krn_getkey:				jmp getkey
+.export krn_chrout
 krn_chrout:				jmp textui_chrout
 ; krn_strout 				jmp strout
+.export krn_primm
 krn_primm: 				jmp primm
 ; krn_textui_crsxy			jmp .textui_crsxy
 ; krn_textui_update_crs_ptr	jmp .textui_update_crs_ptr
@@ -108,9 +128,16 @@ krn_primm: 				jmp primm
 ; krn_hexout 				jmp .hexout
 ; krn_init_sdcard			jmp .init_sdcard
 ; krn_upload				jmp .upload
+.export krn_spi_rw_byte
 krn_spi_rw_byte:		jmp spi_rw_byte
+
+.export krn_spi_r_byte
 krn_spi_r_byte:			jmp spi_r_byte
+
+.export krn_uart_tx
 krn_uart_tx:			jmp uart_tx
+
+.export krn_uart_rx
 krn_uart_rx:			jmp uart_rx
 
 .segment "VECTORS"
