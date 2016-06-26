@@ -1,4 +1,3 @@
-
 .include "kernel.inc"
 .include "vdp.inc"
 
@@ -6,29 +5,32 @@
 .import vdp_bgcolor, vdp_memcpy, vdp_mode_text, vdp_display_off
 
 .zeropage
-tmp0=$00
-tmp1=$01
+tmp0=$0
+tmp1=$1
+; Cursor Position and buffer
+crs_x	= $e6
+crs_y	= $e7
+crs_ptr = $e8
 
 .segment "KERNEL"
 
 screen=$c000
-crs_ptr=$02
-
 screen_status: 		.byte STATUS_TEXTUI_ENABLED
 screen_write_lock: 	.byte 0
 screen_frames:		.byte 0
 saved_char:			.byte ' '
 
-; .ROWS=24
-; KEY_BACKSPACE=$08
+ROWS=24
+COLS=40
+KEY_CR=$0d
+KEY_LF=$0a
+KEY_BACKSPACE=$08
 KEY_CARIAGE_RETURN=$0a
 KEY_RETURN=$0d
 
-LOCK_WRITE=1<<0
-
-STATUS_BUFFER_DIRTY=1<<1
-STATUS_CURSOR=1<<2
-STATUS_TEXTUI_ENABLED=1<<4
+STATUS_BUFFER_DIRTY=1<<0
+STATUS_CURSOR=1<<1
+STATUS_TEXTUI_ENABLED=1<<2
 
 textui_incy:
 		jmp	inc_cursor_y
@@ -98,10 +100,13 @@ CURSOR_CHAR=$db
 textui_init0:
 		jsr	vdp_display_off			;display off
 		
-		jsr	textui_blank			;blank screen buffer
-		
+        lda #STATUS_TEXTUI_ENABLED
+        sta screen_status
+		jsr	textui_blank			    ;blank screen buffer
+        
 		stz	crs_x
 		stz	crs_y
+        SetVector   screen, crs_ptr
 		jsr textui_update_crs_ptr		;init cursor pointer
 
 textui_init:
@@ -142,15 +147,14 @@ textui_cursor:
 @l2:	rts
 
 textui_update_screen:
-		;lda	#Gray
-		;jsr	vdp_bgcolor	
+		;lda	#Dark_Green
+		;jsr	vdp_bgcolor
 
 		lda	screen_status
 		and	#STATUS_TEXTUI_ENABLED
 		beq	@l1
-		
-		inc	screen_frames
 
+		inc	screen_frames
 		jsr	textui_cursor
 		
 		lda	screen_status
@@ -164,7 +168,7 @@ textui_update_screen:
 		jsr	vdp_memcpy
 		
 		lda	screen_status		;clean dirty
-		and	#!STATUS_BUFFER_DIRTY
+		and	#<(~STATUS_BUFFER_DIRTY)
 		sta	screen_status
 
 @l1:
@@ -216,7 +220,7 @@ textui_enable:
 		bra	lsstatus
 textui_disable:
 		lda	screen_status
-		and	#!STATUS_TEXTUI_ENABLED
+		and	#<(~STATUS_TEXTUI_ENABLED)
 lsstatus:	
 		sta	screen_status
 		rts
@@ -233,7 +237,7 @@ textui_print:
 		jsr textui_dispatch_char
 		iny
 		bne	@l1
-@l2:	dec	screen_write_lock	;write off
+@l2:	stz	screen_write_lock	;write off
 		bra	textui_screen_dirty
 
 textui_chrout:

@@ -18,4 +18,4 @@ transfer: loader.bin
 	../../transfer.py loader.bin -s 0x1000
 
 test: test.bin
-	../../transfer.py test.bin 0x1000
+	../../transfer.py test.bin -s 0x1000

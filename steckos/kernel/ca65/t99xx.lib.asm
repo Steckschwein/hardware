@@ -5,7 +5,7 @@
 .export vdp_bgcolor, vdp_memcpy, vdp_mode_text, vdp_display_off
 
 vdp_display_off:
-;	jsr	.vdp_wait_blank
+;        SyncBlank
 		lda		#v_reg1_16k	;enable 16K ram, disable screen
 		sta 	a_vreg
 		vnops
@@ -68,7 +68,7 @@ vdp_wait_blank:
 
 vdp_init_bytes_text:
 	.byte 0
-	.byte v_reg1_16k|v_reg1_display_on|v_reg1_int|v_reg1_m1
+	.byte   v_reg1_16k|v_reg1_display_on|v_reg1_int|v_reg1_m1
 	.byte 	(ADDRESS_GFX1_SCREEN / $400)	; name table - value * $400					--> characters 
 	.byte 	0	; not used
 	.byte 	(ADDRESS_GFX1_PATTERN / $800) ; pattern table (charset) - value * $800  	--> offset in VRAM 

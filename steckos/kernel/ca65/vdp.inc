@@ -54,18 +54,6 @@ ADDRESS_GFX2_COLOR		=$2000
 ADDRESS_GFX2_SPRITE		=ADDRESS_GFX1_SPRITE
 ADDRESS_GFX2_SPRITE_PATTERN=ADDRESS_GFX2_PATTERN
 
-
-ROWS=23
-COLS=40
-
-; Cursor Position and buffer
-crs_x	= $e6
-crs_y	= $e7
-
-KEY_CR=$0d
-KEY_LF=$0a
-KEY_BACKSPACE=$08
-
 .macro	vnops
 		nop
 		nop

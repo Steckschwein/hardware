@@ -16,33 +16,27 @@ kbd_frame_div  = $01
 .import keyin, getkey
 
 .segment "KERNEL"
-kern_init:
 
+
+kern_init:
 	jsr init_via1
 	jsr init_rtc
 
 	jsr textui_init0
-
+    
 	SetVector user_isr_default, user_isr
-
 
 	cli
 
 	jsr primm
 	.asciiz "SteckOS Kernel 0.2"
-
-
-
+    
 loop:
 	jsr getkey 
 	cmp #$00
 	beq loop
-
-
 	jsr textui_chrout
-	jmp loop
-
-
+	bra loop
 
 ;----------------------------------------------------------------------------------------------
 ; IO_IRQ Routine. Handle IRQ
