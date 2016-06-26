@@ -15,6 +15,7 @@ crs_ptr = $e8
 .segment "KERNEL"
 
 screen=$c000
+; TODO FIXME write into kernel RAM instead of DATA area
 screen_status: 		.byte STATUS_TEXTUI_ENABLED
 screen_write_lock: 	.byte 0
 screen_frames:		.byte 0
@@ -22,6 +23,8 @@ saved_char:			.byte ' '
 
 ROWS=24
 COLS=40
+CURSOR_CHAR=$db ; invert blank char - @see charset_6x8.asm
+
 KEY_CR=$0d
 KEY_LF=$0a
 KEY_BACKSPACE=$08
@@ -67,10 +70,6 @@ textui_update_crs_ptr:
 		lda #STATUS_CURSOR
 		trb screen_status  ;reset cursor state
     
-; !ifdef text_mode_40 {
-; charset=charset_6x8	; loaded after shell code, see shell.a
-; COLS=40
-CURSOR_CHAR=$db
 		stz	   tmp1
 		lda    crs_y
 		asl
@@ -98,10 +97,7 @@ CURSOR_CHAR=$db
 		rts
 
 textui_init0:
-		jsr	vdp_display_off			;display off
-		
-        lda #STATUS_TEXTUI_ENABLED
-        sta screen_status
+		jsr	vdp_display_off			    ;display off
 		jsr	textui_blank			    ;blank screen buffer
         
 		stz	crs_x
@@ -155,13 +151,14 @@ textui_update_screen:
 		beq	@l1
 
 		inc	screen_frames
+        
 		jsr	textui_cursor
 		
 		lda	screen_status
 		and	#STATUS_BUFFER_DIRTY
 		beq	@l1	;exit if not dirty
 		
-		SetVector	screen, adrl
+		SetVector	screen, adrl    ; copy back buffer to video ram
 		lda	#<ADDRESS_GFX1_SCREEN
 		ldy	#WRITE_ADDRESS + >ADDRESS_GFX1_SCREEN
 		ldx	#$04
@@ -183,12 +180,12 @@ textui_scroll_up:
 		sta	screen,x
 		inx
 		bne	@l1
-@l2:	lda	screen+256+COLS,x
-		sta	screen+256,x
+@l2:	lda	screen+$100+COLS,x
+		sta	screen+$100,x
 		inx
 		bne	@l2
-@l3:	lda	screen+512+COLS,x
-		sta	screen+512,x
+@l3:	lda	screen+$200+COLS,x
+		sta	screen+$200,x
 		inx
 		bne	@l3
 @l4:	lda	screen+$300+COLS,x
@@ -296,7 +293,6 @@ lupdate:
 		jmp	textui_update_crs_ptr
 	
 textui_screen_dirty:
-		lda	screen_status		;set dirty
-		ora	#STATUS_BUFFER_DIRTY
-		sta	screen_status
+		lda #STATUS_BUFFER_DIRTY
+		tsb screen_status       ;set dirty
 		rts

@@ -32,8 +32,8 @@ kern_init:
 	.asciiz "SteckOS Kernel 0.2"
     
 loop:
-	jsr getkey 
-	cmp #$00
+	jsr getkey
+    cmp #$00
 	beq loop
 	jsr textui_chrout
 	bra loop
