@@ -22,6 +22,10 @@ msgptr 		= $fe
 DPL			= msgptr
 DPH			= msgptr+1
 
+lba_addr = $20
+blocks = $a0
+errno	 				= $0300
+
 user_isr 	        = $028a
 
 .macro SetVector word, addr 

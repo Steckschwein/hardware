@@ -16,7 +16,7 @@ text_mode_40 = 1
 .import keyin, getkey
 ;TODO FIXME testing purpose only
 .import textui_enable, textui_disable
-
+.import init_sdcard
 .segment "KERNEL"
 
 kern_init:
@@ -31,9 +31,10 @@ kern_init:
 
 	jsr primm
 	.asciiz "SteckOS Kernel 0.2"
-    
-	jsr primm
-	.byte 13,10,"Sorry Thomas! ;)",0
+	
+	jsr init_sdcard
+	lda errno
+	jsr hexout
     
 loop:
 	jsr getkey
@@ -124,7 +125,8 @@ krn_primm: 				jmp primm
 ; krn_textui_update_crs_ptr	jmp .textui_update_crs_ptr
 ; krn_textui_clrscr_ptr		jmp .textui_blank
 ; krn_hexout 				jmp .hexout
-; krn_init_sdcard			jmp .init_sdcard
+.export krn_init_sdcard
+krn_init_sdcard:		jmp init_sdcard
 ; krn_upload				jmp .upload
 .export krn_spi_rw_byte
 krn_spi_rw_byte:		jmp spi_rw_byte
