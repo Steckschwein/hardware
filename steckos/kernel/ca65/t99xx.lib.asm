@@ -5,7 +5,8 @@
 .export vdp_bgcolor, vdp_memcpy, vdp_mode_text, vdp_display_off
 
 vdp_display_off:
-;        SyncBlank
+        SyncBlank
+        vnops
 		lda		#v_reg1_16k	;enable 16K ram, disable screen
 		sta 	a_vreg
 		vnops
@@ -55,16 +56,6 @@ vdp_init_reg:
 vdp_mode_text:
 	SetVector vdp_init_bytes_text, adrl
 	bra	vdp_init_reg
-
-vdp_wait_blank:
-		php
-		sei
-		SyncBlank
-		pla
-		and	#$04	;check interupt was set?
-		bne	@l1
-		cli
-@l1:	rts
 
 vdp_init_bytes_text:
 	.byte 0

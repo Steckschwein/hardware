@@ -30,11 +30,13 @@ user_isr 	        = $028a
 			lda #>word
 			sta addr+1
 .endmacro
+
 .macro save
 	pha
 	phy
 	phx
 .endmacro
+
 .macro restore
 	plx
 	ply

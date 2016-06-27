@@ -5,7 +5,7 @@ shell_addr	 = $e000
 
 text_mode_40 = 1
 
-kbd_frame_div  = $01
+;kbd_frame_div  = $01
 
 .import init_via1
 .import init_rtc
@@ -14,9 +14,10 @@ kbd_frame_div  = $01
 .import textui_init0, textui_update_screen, textui_chrout
 .import hexout, primm, print_crlf
 .import keyin, getkey
+;TODO FIXME testing purpose only
+.import textui_enable, textui_disable
 
 .segment "KERNEL"
-
 
 kern_init:
 	jsr init_via1
@@ -30,6 +31,9 @@ kern_init:
 
 	jsr primm
 	.asciiz "SteckOS Kernel 0.2"
+    
+	jsr primm
+	.byte 13,10,"Sorry Thomas! ;)",0
     
 loop:
 	jsr getkey

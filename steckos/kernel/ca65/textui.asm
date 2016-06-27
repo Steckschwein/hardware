@@ -2,6 +2,8 @@
 .include "vdp.inc"
 
 .export textui_init0, textui_update_screen, textui_chrout
+.export textui_enable, textui_disable
+
 .import vdp_bgcolor, vdp_memcpy, vdp_mode_text, vdp_display_off
 
 .segment "KERNEL"
@@ -89,6 +91,8 @@ textui_init0:
 		stz	crs_y
         SetVector   SCREEN_BUFFER, crs_ptr
 		jsr textui_update_crs_ptr		;init cursor pointer
+        
+        jsr textui_enable
 
 textui_init:
 		jmp	vdp_mode_text
@@ -197,14 +201,12 @@ inc_cursor_y:
 	    jmp textui_update_crs_ptr
 
 textui_enable:
-		lda	screen_status
-		ora	#STATUS_TEXTUI_ENABLED
-		bra	lsstatus
+		lda	#STATUS_TEXTUI_ENABLED
+        tsb screen_status
+        rts
 textui_disable:
-		lda	screen_status
-		and	#<(~STATUS_TEXTUI_ENABLED)
-lsstatus:	
-		sta	screen_status
+		lda	STATUS_TEXTUI_ENABLED
+        trb screen_status
 		rts
 
 textui_put:
