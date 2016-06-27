@@ -4,23 +4,9 @@
 .export textui_init0, textui_update_screen, textui_chrout
 .import vdp_bgcolor, vdp_memcpy, vdp_mode_text, vdp_display_off
 
-.zeropage
-tmp0=$0
-tmp1=$1
-; Cursor Position and buffer
-crs_x	= $e6
-crs_y	= $e7
-crs_ptr = $e8
-
 .segment "KERNEL"
 
-screen=$c000
-; TODO FIXME write into kernel RAM instead of DATA area
-screen_status: 		.byte STATUS_TEXTUI_ENABLED
-screen_write_lock: 	.byte 0
-screen_frames:		.byte 0
-saved_char:			.byte ' '
-
+SCREEN_BUFFER=$c000
 ROWS=24
 COLS=40
 CURSOR_CHAR=$db ; invert blank char - @see charset_6x8.asm
@@ -75,21 +61,20 @@ textui_update_crs_ptr:
 		asl
 		asl
 		asl
-		sta    tmp0    ; result *8
-		asl
+		sta    tmp0    ; save crs y * 8
+		asl			   
 		rol    tmp1
 		asl
 		rol    tmp1
-		clc
-		adc    tmp0    ; y*32 + y*8 = y*40
+		adc    tmp0    ; crs y*32 + y*8 (tmp0) => y*40
 		bcc    @l1
 		inc    tmp1
-@l1:	clc
-		adc    crs_x
+		clc
+@l1:	adc    crs_x
 		sta    crs_ptr
-		lda    #>screen
+		lda    #>SCREEN_BUFFER
 		adc    tmp1
-		sta    crs_ptr+1
+		sta	   crs_ptr+1
 
 		lda (crs_ptr)
 		sta saved_char     ;save char
@@ -102,7 +87,7 @@ textui_init0:
         
 		stz	crs_x
 		stz	crs_y
-        SetVector   screen, crs_ptr
+        SetVector   SCREEN_BUFFER, crs_ptr
 		jsr textui_update_crs_ptr		;init cursor pointer
 
 textui_init:
@@ -111,13 +96,13 @@ textui_init:
 textui_blank:
 		ldx	#$00
 		lda	#' '
-@l1:	sta	screen,x
-		sta	screen+$100,x
-		sta screen+$200,x
-		sta	screen+$300,x
+@l1:	sta	SCREEN_BUFFER,x
+		sta	SCREEN_BUFFER+$100,x
+		sta SCREEN_BUFFER+$200,x
+		sta	SCREEN_BUFFER+$300,x
 		inx
 		bne	@l1
-@l2:	sta	screen+$400,x	;last line for scroll up
+@l2:	sta	SCREEN_BUFFER+$400,x	;last line for scroll up
 		inx
 		cpx	#COLS
 		bne	@l2
@@ -158,7 +143,7 @@ textui_update_screen:
 		and	#STATUS_BUFFER_DIRTY
 		beq	@l1	;exit if not dirty
 		
-		SetVector	screen, adrl    ; copy back buffer to video ram
+		SetVector	SCREEN_BUFFER, adrl    ; copy back buffer to video ram
 		lda	#<ADDRESS_GFX1_SCREEN
 		ldy	#WRITE_ADDRESS + >ADDRESS_GFX1_SCREEN
 		ldx	#$04
@@ -176,20 +161,20 @@ textui_update_screen:
 textui_scroll_up:
 		phx
 		ldx	#$00
-@l1:	lda	screen+COLS,x
-		sta	screen,x
+@l1:	lda	SCREEN_BUFFER+COLS,x
+		sta	SCREEN_BUFFER,x
 		inx
 		bne	@l1
-@l2:	lda	screen+$100+COLS,x
-		sta	screen+$100,x
+@l2:	lda	SCREEN_BUFFER+$100+COLS,x
+		sta	SCREEN_BUFFER+$100,x
 		inx
 		bne	@l2
-@l3:	lda	screen+$200+COLS,x
-		sta	screen+$200,x
+@l3:	lda	SCREEN_BUFFER+$200+COLS,x
+		sta	SCREEN_BUFFER+$200,x
 		inx
 		bne	@l3
-@l4:	lda	screen+$300+COLS,x
-		sta	screen+$300,x
+@l4:	lda	SCREEN_BUFFER+$300+COLS,x
+		sta	SCREEN_BUFFER+$300,x
 		inx
 		bne	@l4
 		plx
