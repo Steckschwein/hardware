@@ -202,11 +202,10 @@ inc_cursor_y:
 
 textui_enable:
 		lda	#STATUS_TEXTUI_ENABLED
-        tsb screen_status
+        sta screen_status
         rts
 textui_disable:
-		lda	STATUS_TEXTUI_ENABLED
-        trb screen_status
+        stz screen_status
 		rts
 
 textui_put:
