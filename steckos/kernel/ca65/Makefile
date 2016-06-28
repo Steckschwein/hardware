@@ -8,7 +8,7 @@ all: kernel.bin loader.bin
 clean:
 	rm -f *.o *.bin *.map *.txt kernel_jumptable.inc
 
-%.o: %.asm
+%.o: %.asm vdp.inc
 	ca65 --target none $<
 
 kernel.bin: $(OBJS) 

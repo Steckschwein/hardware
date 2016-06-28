@@ -52,34 +52,35 @@ textui_decx:
 ;    
 textui_update_crs_ptr:
 		pha
-
+		
 		lda saved_char     ;restore saved char
 		sta (crs_ptr)
 		lda #STATUS_CURSOR
 		trb screen_status  ;reset cursor state
     
-		stz	   tmp1
-		lda    crs_y
+		stz	tmp1
+		lda crs_y
 		asl
 		asl
 		asl
-		sta    tmp0    ; save crs y * 8
-		asl			   
-		rol    tmp1
+		sta tmp0    	; save crs_y * 8
+		asl		   
+		rol tmp1	   	; carry to tmp1
 		asl
-		rol    tmp1
-		adc    tmp0    ; crs y*32 + y*8 (tmp0) => y*40
-		bcc    @l1
-		inc    tmp1
-		clc
-@l1:	adc    crs_x
-		sta    crs_ptr
-		lda    #>SCREEN_BUFFER
-		adc    tmp1
-		sta	   crs_ptr+1
+		rol tmp1		; again, carry to tmp1
+		adc tmp0    	; crs_y*32 + crs_y*8 (tmp0) => y*40
+		bcc @l1
+		inc	tmp1		; overflow inc page count
+		clc				; 
+@l1:	adc crs_x
+		sta crs_ptr
+		lda #>SCREEN_BUFFER
+		adc	tmp1		; add carry and page to address high byte
+		sta	crs_ptr+1
 
-		lda (crs_ptr)
-		sta saved_char     ;save char
+		lda	(crs_ptr)
+		sta saved_char	;save char at new position
+		
 		pla
 		rts
 

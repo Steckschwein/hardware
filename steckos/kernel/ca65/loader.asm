@@ -6,7 +6,6 @@
 memctl = $0230
 dest = $f000
 
-
 ; .pages = (.payload_end - .payload) / 256 + 1
 
 		lda #$80
@@ -36,8 +35,6 @@ loop:
 		bne loop
 
 end:
-
-
 		;display off
 		lda		#v_reg1_16k	;enable 16K ram, disable screen
 		sta 	a_vreg
@@ -74,7 +71,12 @@ end:
 
 		; jump to reset vector
 		jmp ($fffc)
-	
+
+vdp_nopslide:
+		nop			;2cl
+		nop			;2cl
+		rts			;6cl
+		
 .align 256
 ; *=$1100
 payload:
@@ -85,5 +87,3 @@ payload_end:
 charset:
 .include "charset_6x8.asm"
 charset_end:
-
-

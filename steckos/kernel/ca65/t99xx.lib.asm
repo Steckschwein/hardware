@@ -1,8 +1,14 @@
 .include "kernel.inc"
 .include "vdp.inc"
-.segment "KERNEL"
 
 .export vdp_bgcolor, vdp_memcpy, vdp_mode_text, vdp_display_off
+
+.segment "KERNEL"
+
+vdp_nopslide:
+		nop			;2cl
+		nop			;2cl
+		rts			;6cl
 
 vdp_display_off:
         SyncBlank
