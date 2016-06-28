@@ -54,11 +54,6 @@ ADDRESS_GFX2_COLOR		=$2000
 ADDRESS_GFX2_SPRITE		=ADDRESS_GFX1_SPRITE
 ADDRESS_GFX2_SPRITE_PATTERN=ADDRESS_GFX2_PATTERN
 
-; vnops - 16cl -> 8Mhz -> 2µs, the min vdp wait
-.macro	vnops
-	jsr vdp_nopslide	;6cl	
-.endmacro
-
 .macro vdp_sreg
 			sta	a_vreg
 			vnops

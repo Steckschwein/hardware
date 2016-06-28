@@ -5,6 +5,11 @@
 
 .segment "KERNEL"
 
+; vnops - 16cl -> 8Mhz -> 2µs, the min vdp wait
+.macro	vnops
+	jsr vdp_nopslide	;6cl	
+.endmacro
+
 vdp_nopslide:
 		nop			;2cl
 		nop			;2cl

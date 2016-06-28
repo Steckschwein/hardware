@@ -6,6 +6,17 @@
 memctl = $0230
 dest = $f000
 
+.macro	vnops
+		nop			;2cl
+		nop			;2cl
+		nop
+		nop
+		nop
+		nop
+		nop
+		nop
+.endmacro
+
 ; .pages = (.payload_end - .payload) / 256 + 1
 
 		lda #$80
@@ -71,11 +82,6 @@ end:
 
 		; jump to reset vector
 		jmp ($fffc)
-
-vdp_nopslide:
-		nop			;2cl
-		nop			;2cl
-		rts			;6cl
 		
 .align 256
 ; *=$1100
