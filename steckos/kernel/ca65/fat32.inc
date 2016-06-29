@@ -2,7 +2,7 @@ cluster_begin_lba 		= $0303 ; begin of cluster area, 4 bytes
 sectors_per_cluster 	= $0307 ; sectors per cluster, 1 byte
 root_dir_first_clus 	= $0308 ; first cluster of root dir, 4 bytes
 filesize = $a1
-blocks = $a0
+;blocks = $a0 
 
 fat_bad_block_signature		= 	$01
 fat_invalid_partition_type	=	$02

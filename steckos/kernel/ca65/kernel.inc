@@ -8,14 +8,36 @@ crs_x	= $e2	;  cursor x
 crs_y	= $e3	;  cursor y
 crs_ptr = $e4	; 16 bit screen buffer pointer
 
+lba_tmp = $f0
 tmp0=$f6
 tmp1=$f7
+
+
+
+current_dir_first_cluster 	= $02b0 ; first cluster of current dir
+filename_buf				= $030c ; file name buffer, 11 bytes
+fd_area						= $0320 ; File descriptor area, 6x8byte until $0350 
+fat_first_block				= $0350
+sd_blktarget 				= $0400
+
+
+
 
 ; TODO FIXME free zp space if necessary by using DATA RAM instead of zp space here
 screen_status		=$f8	; 
 screen_write_lock  	=$f9	; 0
 screen_frames		=$fa	; 0
 saved_char			=$fb	; ' '
+
+dirptr 		= $f4 ; 2 byte
+
+
+; pointer to filename for fs operations (open...)
+filenameptr		= $fa
+
+; pointer for io block operations
+sd_blkptr 	= $fc
+
 
 ; pointer for string output functions 
 msgptr 		= $fe
@@ -24,7 +46,7 @@ DPH			= msgptr+1
 
 lba_addr = $20
 blocks = $a0
-errno	 				= $0300
+errno	 			= $0300
 
 user_isr 	        = $028a
 
@@ -46,3 +68,26 @@ user_isr 	        = $028a
 	ply
 	pla
 .endmacro
+
+.macro Copy src, trgt, len
+
+		ldx #len
+:
+		lda src,x
+		sta trgt,x
+		dex
+		bpl :-
+
+.endmacro
+
+.macro toupper
+	cmp #$60 ; Is lowercase?
+	bcc :+
+	and	#$DF
+:
+.endmacro
+
+.macro tolower
+	ora #$20
+.endmacro
+

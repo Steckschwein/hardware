@@ -17,6 +17,7 @@ text_mode_40 = 1
 ;TODO FIXME testing purpose only
 .import textui_enable, textui_disable
 .import init_sdcard
+.import fat_mount, fat_open
 .segment "KERNEL"
 
 kern_init:
@@ -30,12 +31,26 @@ kern_init:
 	cli
 
 	jsr primm
-	.asciiz "SteckOS Kernel 0.2"
+	.byte "SteckOS Kernel 0.5",$0a,$0d,$00
 	
 	jsr init_sdcard
 	lda errno
 	jsr hexout
-    
+
+
+	jsr fat_mount
+	lda errno
+	jsr hexout
+
+	SetVector filenameptr, filename
+
+	jsr fat_open
+	lda errno
+	jsr hexout
+
+
+
+
 loop:
 	jsr getkey
     cmp #$00
@@ -43,6 +58,7 @@ loop:
 	jsr textui_chrout
 	bra loop
 
+filename:	.asciiz "loader.bin"
 ;----------------------------------------------------------------------------------------------
 ; IO_IRQ Routine. Handle IRQ
 ;----------------------------------------------------------------------------------------------

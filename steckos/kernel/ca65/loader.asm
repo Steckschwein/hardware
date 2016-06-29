@@ -19,9 +19,6 @@ dest = $f000
 
 ; .pages = (.payload_end - .payload) / 256 + 1
 
-		lda #$80
-		sta memctl
-
 		; copy kernel code to $f000
 loop:
 

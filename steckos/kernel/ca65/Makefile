@@ -1,4 +1,4 @@
-OBJS=sdcard.o textui.o t99xx.lib.o rtc.o spi.o uart.o via.o out.o key.o kernel.o
+OBJS=fat32.o sdcard.o textui.o t99xx.lib.o rtc.o spi.o uart.o via.o out.o key.o kernel.o
 #OBJS=rtc.o spi.o uart.o via.o kernel.o
 LDFLAGS=--config steckos.cfg 
 .PHONY: all clean

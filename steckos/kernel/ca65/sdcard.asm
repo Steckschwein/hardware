@@ -1,10 +1,9 @@
 .include "kernel.inc"
 .include "sdcard.inc"
 .include "via.inc"
-tmp = $00
 .segment "KERNEL"
 .import spi_rw_byte, spi_r_byte
-.export init_sdcard, sd_read_block, sd_read_multiblock, sd_write_block
+.export init_sdcard, sd_read_block, sd_read_multiblock, sd_write_block, sd_select_card, sd_deselect_card
 
 ;---------------------------------------------------------------------
 ; check sd card presence and state of the read only switch
@@ -216,67 +215,54 @@ sd_cmd:
 ; Read block from SD Card
 ;---------------------------------------------------------------------
 sd_read_block:
-	jsr sd_select_card
-	jsr sd_busy_wait
-	
-	; Send CMD17 command byte
-	lda #cmd17
-	jsr spi_rw_byte
+		jsr sd_select_card
+		jsr sd_busy_wait
 
-	jsr sd_send_lba
-	
-	; Send stopbit
-	lda #$01
-	jsr spi_rw_byte
+		; Send CMD17 command byte
+		lda #cmd17
+		jsr spi_rw_byte
 
-	; wait for sd card data token
-@l1:   jsr spi_r_byte                         
-	cmp #sd_data_token
-	bne @l1
+		; Send lba_addr in reverse order
+		ldx #$03
+@l1:	lda lba_addr,x
+		phx
+		jsr spi_rw_byte
+		plx
+		dex
+		bpl @l1
 
-	ldy #$00
-	lda via1portb   ; Port laden
-	AND #$fe        ; Takt ausschalten
-	TAX             ; aufheben
-	ORA #$01
-	sta tmp0
+		; Send stopbit
+		lda #$01
+		jsr spi_rw_byte
 
-@l2:   lda tmp0
+		; wait for sd card data token
+@l2:	lda #$ff
+		jsr spi_rw_byte
+		cmp #sd_data_token
+		bne @l2
 
-	.repeat 8
-		STA via1portb ; Takt An 
-		STX via1portb ; Takt aus
-	.endrepeat
+		ldy #$00
 
-	lda via1sr
-	sta (sd_blkptr),y
-	iny
-	bne @l3
+		jsr halfblock
 
-	inc sd_blkptr+1
+		inc sd_blkptr+1
 
-@l3:   lda tmp0
+		jsr halfblock
 
-	.repeat 8
-		STA via1portb ; Takt An 
-		STX via1portb ; Takt aus
-	.endrepeat
-	lda via1sr
+		; Read CRC bytes
+		jsr spi_r_byte
+		jsr spi_r_byte
 
-	sta (sd_blkptr),y
-	iny
-	bne @l3
+		jmp sd_deselect_card
+		; rts
 
-	; dec sd_blkptr+1
-
-	; Read CRC bytes 
-	.repeat 16    
-		STA via1portb ; Takt An 
-		STX via1portb ; Takt aus
-	.endrepeat
-
-	jmp sd_deselect_card
-	; rts
+halfblock:
+@l:		
+		jsr spi_r_byte
+		sta (sd_blkptr),y
+		iny
+		bne @l
+		rts
 
 ;---------------------------------------------------------------------
 ; Read multiple blocks from SD Card
@@ -452,7 +438,7 @@ sd_deselect_card:
 @l1:      
 	; lda #$ff
 	phx
-	jsr spi_rw_byte
+	jsr spi_r_byte
 	plx
 	dex
 	bne @l1
