@@ -1,7 +1,9 @@
 .setcpu "65C02"
-.segment "CODE"
 .include "kernel.inc"
 .include "vdp.inc"
+
+.segment "CODE"
+
 ; 	system attribute has to be set on file system
 memctl = $0230
 dest = $f000
@@ -90,3 +92,7 @@ payload_end:
 charset:
 .include "charset_6x8.asm"
 charset_end:
+
+.segment "KERNEL"
+.segment "VECTORS"
+.segment "JUMPTABLE"

@@ -23,21 +23,18 @@ STATUS_BUFFER_DIRTY=1<<0
 STATUS_CURSOR=1<<1
 STATUS_TEXTUI_ENABLED=1<<2
 
-textui_incy:
-		jmp	inc_cursor_y
-	
 textui_decy:
 		lda	crs_y
 		bne	@l1
 		rts
-@l1:	dec	crs_y	; go on with textui_update_crs_ptr below
+@l1:	dec	crs_y			; go on with textui_update_crs_ptr below
 		bra	textui_update_crs_ptr
 	
 textui_incx:
 		lda	crs_x
 		cmp	#(COLS-1)
 		bne @l1
-		rts
+		rts					;TODO should we move to next row automatically ?!?
 @l1:	inc	crs_x
 		bra	textui_update_crs_ptr
 	
@@ -45,41 +42,37 @@ textui_decx:
 		lda	crs_x
 		bne	@l1
 		rts
-@l1:	dec	crs_x	; go on with textui_update_crs_ptr below
-	
-
-;   updates the 16 bit pointer crs_p upon crs_x, crs_y values
-;    
-textui_update_crs_ptr:
+@l1:	dec	crs_x			; go on with textui_update_crs_ptr below	
+textui_update_crs_ptr:		;   updates the 16 bit pointer crs_p upon crs_x, crs_y values
 		pha
 		
-		lda saved_char     ;restore saved char
+		lda saved_char     	;restore saved char
 		sta (crs_ptr)
 		lda #STATUS_CURSOR
-		trb screen_status  ;reset cursor state
+		trb screen_status  	;reset cursor state
     
 		stz	tmp1
 		lda crs_y
 		asl
 		asl
 		asl
-		sta tmp0    	; save crs_y * 8
+		sta tmp0			; save crs_y * 8
 		asl		   
-		rol tmp1	   	; carry to tmp1
+		rol tmp1	   		; carry to tmp1
 		asl
-		rol tmp1		; again, carry to tmp1
-		adc tmp0    	; crs_y*32 + crs_y*8 (tmp0) => y*40
+		rol tmp1			; again, carry to tmp1
+		adc tmp0    		; crs_y*32 + crs_y*8 (tmp0) => y*40
 		bcc @l1
-		inc	tmp1		; overflow inc page count
-		clc				; 
+		inc	tmp1			; overflow inc page count
+		clc					; 
 @l1:	adc crs_x
 		sta crs_ptr
 		lda #>SCREEN_BUFFER
-		adc	tmp1		; add carry and page to address high byte
+		adc	tmp1			; add carry and page to address high byte
 		sta	crs_ptr+1
 
 		lda	(crs_ptr)
-		sta saved_char	;save char at new position
+		sta saved_char		;save char at new position
 		
 		pla
 		rts
@@ -90,7 +83,7 @@ textui_init0:
         
 		stz	crs_x
 		stz	crs_y
-        SetVector   SCREEN_BUFFER, crs_ptr
+        SetVector	SCREEN_BUFFER, crs_ptr
 		jsr textui_update_crs_ptr		;init cursor pointer
         
         jsr textui_enable
@@ -101,7 +94,7 @@ textui_init:
 textui_blank:
 		ldx	#$00
 		lda	#' '
-@l1:	sta	SCREEN_BUFFER,x
+@l1:	sta	SCREEN_BUFFER+$000,x	;4 pages
 		sta	SCREEN_BUFFER+$100,x
 		sta SCREEN_BUFFER+$200,x
 		sta	SCREEN_BUFFER+$300,x
@@ -166,8 +159,8 @@ textui_update_screen:
 textui_scroll_up:
 		phx
 		ldx	#$00
-@l1:	lda	SCREEN_BUFFER+COLS,x
-		sta	SCREEN_BUFFER,x
+@l1:	lda	SCREEN_BUFFER+$000+COLS,x
+		sta	SCREEN_BUFFER+$000,x
 		inx
 		bne	@l1
 @l2:	lda	SCREEN_BUFFER+$100+COLS,x
@@ -184,16 +177,17 @@ textui_scroll_up:
 		bne	@l4
 		plx
 		rts
-	
+
+textui_incy:
 inc_cursor_y:
 		lda crs_y
-		cmp	#ROWS-1		;last line
+		cmp	#ROWS-1			;last line
 		bne	@l1
 
-		lda saved_char     ;restore saved char
+		lda saved_char		;restore saved char
 		sta (crs_ptr)
 		lda #' '
-		sta saved_char     ;reset .saved_char to blank, cause we scrolled up
+		sta saved_char     	;reset .saved_char to blank, cause we scrolled up
 		lda #STATUS_CURSOR
 		trb screen_status  ;reset cursor state
 		jsr	textui_scroll_up	; scroll and exit
