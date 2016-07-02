@@ -1,4 +1,5 @@
 .include "kernel.inc"
+
 .include "vdp.inc"
 
 .export textui_init0, textui_update_screen, textui_chrout
@@ -51,24 +52,24 @@ textui_update_crs_ptr:		;   updates the 16 bit pointer crs_p upon crs_x, crs_y v
 		lda #STATUS_CURSOR
 		trb screen_status  	;reset cursor state
     
-		stz	tmp1
+		stz	txtui_tmp1
 		lda crs_y
 		asl
 		asl
 		asl
-		sta tmp0			; save crs_y * 8
+		sta txtui_tmp0    	; save crs_y * 8
 		asl		   
-		rol tmp1	   		; carry to tmp1
+		rol txtui_tmp1	   	; carry to tmp1
 		asl
-		rol tmp1			; again, carry to tmp1
-		adc tmp0    		; crs_y*32 + crs_y*8 (tmp0) => y*40
+		rol txtui_tmp1		; again, carry to tmp1
+		adc txtui_tmp0    	; crs_y*32 + crs_y*8 (tmp0) => y*40
 		bcc @l1
-		inc	tmp1			; overflow inc page count
-		clc					; 
+		inc	txtui_tmp1		; overflow inc page count
+		clc				; 
 @l1:	adc crs_x
 		sta crs_ptr
 		lda #>SCREEN_BUFFER
-		adc	tmp1			; add carry and page to address high byte
+		adc	txtui_tmp1		; add carry and page to address high byte
 		sta	crs_ptr+1
 
 		lda	(crs_ptr)

@@ -294,13 +294,13 @@ sd_read_multiblock:
 	AND #$fe        ; Takt ausschalten
 	TAX             ; aufheben
 	ORA #$01
-	sta tmp0
+	sta sd_tmp
  
 	; read 256 bytes twice, increase blkptr in between
 
 	
 
-@l2a:	lda tmp0
+@l2a:	lda sd_tmp
 
 	.repeat 8
 		STA via1portb ; Takt An 
@@ -314,7 +314,7 @@ sd_read_multiblock:
 
 	inc sd_blkptr+1             
 
-@l2b:	lda tmp0
+@l2b:	lda sd_tmp
 
 	.repeat 8
 		STA via1portb ; Takt An 
@@ -330,7 +330,7 @@ sd_read_multiblock:
 
 
 		
-	lda tmp0
+	lda sd_tmp
 	; Read CRC bytes     
 	.repeat 16    
 		STA via1portb ; Takt An 
@@ -338,7 +338,7 @@ sd_read_multiblock:
 	.endrepeat
 
    
-	dec <blocks
+	dec blocks
 	beq @l3
 	jmp @l1
 @l3:

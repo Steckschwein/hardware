@@ -34,6 +34,9 @@ hexdigit:
 		jmp	 	textui_chrout
 
 ;Put the string following in-line until a NULL out to the console
+DPL			= msgptr
+DPH			= msgptr+1
+
 primm:
 PUTSTRI: 
 		pla			; Get the low part of "return" address
