@@ -7,7 +7,7 @@ adrh = addr+1
 crs_x	= $e2
 crs_y   = $e3
 crs_ptr = $e4
-
+; TODO FIXME free zp space if necessary by using DATA RAM instead of zp space here
 screen_status 		= $e6
 screen_write_lock 	= $e7
 screen_frames		= $e8
@@ -16,13 +16,13 @@ txtui_tmp0			= $ea
 txtui_tmp1			= $eb
 
 ; OUT
-msgptr  = $ec
+msgptr  = $ec		; 2 bytes
 
 ; SPI
-spitmp 	= $ed
+spitmp 	= $ee
 
 ; FAT32
-lba_addr = $ee
+lba_addr = $ef
 lba_tmp  = $f2
 blocks	 = $f3
 filenameptr = $f4
