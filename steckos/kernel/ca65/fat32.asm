@@ -2,7 +2,7 @@
 .include "fat32.inc"
 .segment "KERNEL"
 .import sd_read_block, sd_read_multiblock, sd_write_block, sd_select_card, sd_deselect_card
-.export fat_mount, fat_open, fat_close, fat_read, fat_find_first, fat_find_next
+.export fat_mount, fat_open, fat_open_rootdir, fat_close, fat_read, fat_find_first, fat_find_next
 
 FD_start_cluster = $00
 FD_file_size = $08
@@ -66,6 +66,16 @@ fat_open:
 
 		stz errno
 
+	; 	ldy #$00
+	; @l:	lda (filenameptr),y
+	; 	beq @l2
+	; 	jsr textui_chrout
+	; 	iny
+	; 	cpy #12
+	; 	bne @l
+	; @l2:
+
+
 
 		ldx #$00
 		jsr calc_lba_addr
@@ -90,7 +100,6 @@ lbl_fat_open_error:
 fat_open_found:
 		ldy #$00
 @loo:	lda (dirptr),y
-		jsr textui_chrout
 		iny
 		cpy #11
 		bne @loo 
@@ -477,6 +486,13 @@ fat_find_first:
 @l2:	lda #$00
 		sta filename_buf,y
 
+		ldx #$00
+@loop:	lda filename_buf,x
+		beq @out
+		jsr textui_chrout
+		inx
+		bra @loop
+@out:
 		SetVector sd_blktarget, sd_blkptr
 		ldx #$00
 		jsr calc_lba_addr

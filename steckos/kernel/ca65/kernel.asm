@@ -15,9 +15,9 @@ text_mode_40 = 1
 .import hexout, primm, print_crlf
 .import keyin, getkey
 ;TODO FIXME testing purpose only
-.import textui_enable, textui_disable
+.import textui_enable, textui_disable, vdp_display_off
 .import init_sdcard
-.import fat_mount, fat_open
+.import fat_mount, fat_open, fat_open_rootdir, fat_close, fat_read, fat_find_first, fat_find_next
 .segment "KERNEL"
 
 kern_init:
@@ -42,13 +42,25 @@ kern_init:
 	lda errno
 	jsr hexout
 
-	SetVector filenameptr, filename
+	SetVector filename, filenameptr
+
+	ldy #$00
+@l:	lda (filenameptr),y
+	beq @l2
+	jsr textui_chrout
+	iny
+	cpy #12
+	bne @l
+@l2:
 
 	jsr fat_open
 	lda errno
 	jsr hexout
 
 
+	; SetVector $1000, sd_blkptr
+
+	; jsr fat_read
 
 
 loop:
@@ -58,7 +70,7 @@ loop:
 	jsr textui_chrout
 	bra loop
 
-filename:	.asciiz "loader.bin"
+filename:	.asciiz "shell.bin"
 ;----------------------------------------------------------------------------------------------
 ; IO_IRQ Routine. Handle IRQ
 ;----------------------------------------------------------------------------------------------
@@ -117,19 +129,30 @@ do_reset:
 ; "kernel" jumptable
 .export krn_keyin
 krn_keyin:				jmp keyin
-; krn_mount 				jmp .fat_mount 
-; krn_open 				jmp .fat_open
-; krn_close 				jmp .fat_close
-; krn_read 				jmp .fat_read 
-; krn_open_rootdir 		jmp .fat_open_rootdir
-; krn_find_first			jmp .fat_find_first
-; krn_find_next			jmp .fat_find_next
-; krn_textui_init 		jmp	.textui_init
-; krn_textui_enable		jmp	.textui_enable
-; krn_textui_disable		jmp .textui_disable			;disable textui
+.export krn_mount		
+krn_mount: 				jmp fat_mount 
+.export krn_open
+krn_open: 				jmp fat_open
+.export krn_close
+krn_close: 				jmp fat_close
+.export krn_read
+krn_read: 				jmp fat_read 
+.export krn_open_rootdir
+krn_open_rootdir: 		jmp fat_open_rootdir
+.export krn_find_first
+krn_find_first:			jmp fat_find_first
+.export krn_find_next
+krn_find_next:			jmp fat_find_next
+.export krn_textui_init	
+krn_textui_init:		jmp	textui_init0
+.export krn_textui_enable
+krn_textui_enable:		jmp	textui_enable
+.export krn_textui_disable
+krn_textui_disable:		jmp textui_disable			;disable textui
 ; krn_gfxui_on			jmp	.gfxui_on
 ; krn_gfxui_off			jmp	.gfxui_off
-; krn_display_off			jmp vdp_display_off
+.export krn_display_off
+krn_display_off:		jmp vdp_display_off
 .export krn_getkey
 krn_getkey:				jmp getkey
 .export krn_chrout
