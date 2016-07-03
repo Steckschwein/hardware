@@ -57,11 +57,19 @@ kern_init:
 	lda errno
 	jsr hexout
 
+	SetVector $1000, sd_blkptr
 
-	; SetVector $1000, sd_blkptr
+	jsr fat_read
 
-	; jsr fat_read
-
+	
+	; jmp $1000
+	ldx #$00
+@x:
+	lda $1000,x
+	jsr hexout
+	inx
+	cpx #$09
+	bne @x
 
 loop:
 	jsr getkey
@@ -70,7 +78,7 @@ loop:
 	jsr textui_chrout
 	bra loop
 
-filename:	.asciiz "shell.bin"
+filename:	.asciiz "test.bin"
 ;----------------------------------------------------------------------------------------------
 ; IO_IRQ Routine. Handle IRQ
 ;----------------------------------------------------------------------------------------------
@@ -149,8 +157,10 @@ krn_textui_init:		jmp	textui_init0
 krn_textui_enable:		jmp	textui_enable
 .export krn_textui_disable
 krn_textui_disable:		jmp textui_disable			;disable textui
-; krn_gfxui_on			jmp	.gfxui_on
-; krn_gfxui_off			jmp	.gfxui_off
+
+krn_gfxui_on:			jmp	krn_gfxui_on
+krn_gfxui_off:			jmp	krn_gfxui_off
+
 .export krn_display_off
 krn_display_off:		jmp vdp_display_off
 .export krn_getkey
@@ -159,12 +169,12 @@ krn_getkey:				jmp getkey
 krn_chrout:				jmp textui_chrout
 .export krn_strout
 krn_strout:				jmp strout
-.export krn_primm
-krn_primm: 				jmp primm
 ; krn_textui_crsxy			jmp .textui_crsxy
 ; krn_textui_update_crs_ptr	jmp .textui_update_crs_ptr
 ; krn_textui_clrscr_ptr		jmp .textui_blank
-; krn_hexout 				jmp .hexout
+.export krn_hexout
+krn_hexout:				jmp hexout
+
 .export krn_init_sdcard
 krn_init_sdcard:		jmp init_sdcard
 ; krn_upload				jmp .upload
@@ -179,6 +189,8 @@ krn_uart_tx:			jmp uart_tx
 
 .export krn_uart_rx
 krn_uart_rx:			jmp uart_rx
+.export krn_primm
+krn_primm: 				jmp primm
 
 .segment "VECTORS"
 ; ----------------------------------------------------------------------------------------------
