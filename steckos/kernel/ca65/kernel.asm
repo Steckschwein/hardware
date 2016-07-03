@@ -12,7 +12,7 @@ text_mode_40 = 1
 .import spi_r_byte, spi_rw_byte
 .import init_uart, uart_tx, uart_rx
 .import textui_init0, textui_update_screen, textui_chrout
-.import hexout, primm, print_crlf
+.import strout, hexout, primm, print_crlf
 .import keyin, getkey
 ;TODO FIXME testing purpose only
 .import textui_enable, textui_disable, vdp_display_off
@@ -157,7 +157,8 @@ krn_display_off:		jmp vdp_display_off
 krn_getkey:				jmp getkey
 .export krn_chrout
 krn_chrout:				jmp textui_chrout
-; krn_strout 				jmp strout
+.export krn_strout
+krn_strout:				jmp strout
 .export krn_primm
 krn_primm: 				jmp primm
 ; krn_textui_crsxy			jmp .textui_crsxy
