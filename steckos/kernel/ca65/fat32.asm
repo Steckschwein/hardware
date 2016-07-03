@@ -96,7 +96,6 @@ lbl_fat_open_error:
 		jmp end_open
 
 ; found.
-.import textui_chrout
 fat_open_found:
 		ldy #$00
 @loo:	lda (dirptr),y
@@ -107,8 +106,6 @@ fat_open_found:
 		lda (dirptr),y
 		bit #$10 ; Is a directory
 		beq @l1
-
-
 
 		ldx #$00 ; direcories always go to fd #0
 		saveClusterNo current_dir_first_cluster
@@ -486,13 +483,6 @@ fat_find_first:
 @l2:	lda #$00
 		sta filename_buf,y
 
-		ldx #$00
-@loop:	lda filename_buf,x
-		beq @out
-		jsr textui_chrout
-		inx
-		bra @loop
-@out:
 		SetVector sd_blktarget, sd_blkptr
 		ldx #$00
 		jsr calc_lba_addr
