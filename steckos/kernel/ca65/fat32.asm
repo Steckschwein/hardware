@@ -69,17 +69,6 @@ fat_open:
 
 		stz errno
 
-	; 	ldy #$00
-	; @l:	lda (filenameptr),y
-	; 	beq @l2
-	; 	jsr textui_chrout
-	; 	iny
-	; 	cpy #12
-	; 	bne @l
-	; @l2:
-
-
-
 		ldx #$00
 		jsr calc_lba_addr
 
@@ -245,20 +234,27 @@ calc_lba_addr:
 		sbc #$00
 		sta lba_tmp + 3
 		
+        ;sectors_per_cluster -> is a power of 2 value, therefore cluster << n, where n ist the number of bit set in sectors_per_cluster
+        lda sectors_per_cluster
+@lm:    lsr
+        beq @lme    ; 1 sec/cluster nothing at all
+        tax
+        asl lba_tmp
+        rol lba_tmp +1
+        rol lba_tmp +2
+        rol lba_tmp +3
+        txa
+        bra @lm
+@lme:
+        ; add lba_tmp to cluster_begin_lba
 		Copy cluster_begin_lba, lba_addr, 3
-		
-		ldx sectors_per_cluster
-@l1:	
 		clc
 		.repeat 4, i
 			lda lba_tmp + i
 			adc lba_addr + i
 			sta lba_addr + i	
 		.endrepeat
-		dex
-		bne @l1
-
-
+        
 calc_end:
 		plx
 		pla

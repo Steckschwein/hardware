@@ -26,6 +26,8 @@ kern_init:
 
 	jsr textui_init0
     
+    cli
+	
 	SetVector user_isr_default, user_isr
 
 	jsr primm
@@ -44,7 +46,7 @@ kern_init:
 	beq @l2
 	jsr textui_chrout
 	iny
-	cpy #12
+	cpy #$10
 	bne @l
 @l2:
     debug_newline
@@ -54,11 +56,9 @@ kern_init:
 
 	SetVector $1000, sd_blkptr
     
-    cli
-	
     jsr fat_read
-	
-	; jmp $1000
+    debugHex errno
+    
 	ldx #$00
 @x:
 	lda $1000,x
@@ -67,6 +67,14 @@ kern_init:
 	cpx #$09
 	bne @x
 
+	jsr fat_close
+    debugHex errno
+
+	ldx #$ff 
+	txs 
+	
+;	jmp $1000
+    
 loop:
 	jsr getkey
     cmp #$00
@@ -74,7 +82,8 @@ loop:
     jsr textui_chrout
 	bra loop
 
-filename:	.asciiz "test.bin"
+;filename:	.asciiz "test.bin"
+filename:	.asciiz "shell.bin"
 ;----------------------------------------------------------------------------------------------
 ; IO_IRQ Routine. Handle IRQ
 ;----------------------------------------------------------------------------------------------
