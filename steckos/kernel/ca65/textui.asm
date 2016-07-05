@@ -11,6 +11,7 @@
 SCREEN_BUFFER=$c000
 ROWS=24
 COLS=40
+CURSOR_BLANK=' '
 CURSOR_CHAR=$db ; invert blank char - @see charset_6x8.asm
 
 KEY_CR=$0d
@@ -100,7 +101,7 @@ textui_init:
 	
 textui_blank:
 		ldx	#$00
-		lda	#' '
+		lda	#CURSOR_BLANK
 @l1:	sta	SCREEN_BUFFER,x
 		sta	SCREEN_BUFFER+$100,x
 		sta SCREEN_BUFFER+$200,x
@@ -192,7 +193,7 @@ inc_cursor_y:
 
 		lda saved_char     ;restore saved char
 		sta (crs_ptr)
-		lda #' '
+		lda #CURSOR_BLANK
 		sta saved_char     ;reset .saved_char to blank, cause we scrolled up
 		lda #STATUS_CURSOR
 		trb screen_status  ;reset cursor state
@@ -262,7 +263,7 @@ lfeed:
 		lda	#(COLS-1)			; set x to end of line above
 		sta	crs_x
 @l2:	jsr	textui_update_crs_ptr
-		lda	#' '			;blank the saved char
+		lda	#CURSOR_BLANK			;blank the saved char
 		sta	saved_char
     	rts
 @l3:	dec	crs_x
