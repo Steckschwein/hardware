@@ -12,11 +12,11 @@ errno	 			= $0300
 user_isr 	        = $028a
 
 .macro debugHex v
-    pla
+    pha
     lda v
     jsr hexout
     debug_newline
-    pha
+    pla
 .endmacro
 
 .macro debug_newline v32

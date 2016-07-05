@@ -60,13 +60,9 @@ fat_read:
         debug32 lba_addr
         debugHex blocks
 
-
 		jmp sd_read_multiblock
-		
-		; rts
-
-
-
+;		jmp sd_read_block
+ 
 fat_open:
 		pha
 		phy
@@ -91,7 +87,6 @@ fat_open:
 
 		jsr fat_find_first
 		bcs fat_open_found
-
 
 lbl_fat_no_such_file:
 		lda #fat_file_not_found
@@ -162,7 +157,6 @@ fat_open_found:
 		sta fd_area + FD_start_cluster +0, x
 
 @l3:
-
 		ldy #DIR_FileSize + 3
 		lda (dirptr),y
 		sta fd_area + FD_file_size + 3, x
@@ -175,7 +169,6 @@ fat_open_found:
 		ldy #DIR_FileSize + 0
 		lda (dirptr),y
 		sta fd_area + FD_file_size + 0, x
-
 
 end_open:
 		ply

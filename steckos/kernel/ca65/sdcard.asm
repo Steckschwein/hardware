@@ -272,10 +272,9 @@ sd_read_multiblock:
 
 	jsr sd_select_card
 
-	; Send CMD18 command byte
-	jsr sd_busy_wait  
-
-	lda #cmd18
+	jsr sd_busy_wait
+    
+	lda #cmd18	; Send CMD18 command byte
 	jsr spi_rw_byte
 
 	jsr sd_send_lba
@@ -284,8 +283,10 @@ sd_read_multiblock:
 	lda #$01
 	jsr spi_rw_byte
 
-	; Wait for data token
-@l1:   jsr spi_r_byte             
+	
+@l1:
+    ;lda #$ff
+    jsr spi_r_byte  ; Wait for data token
 	cmp #$fe
 	bne @l1
 
@@ -294,12 +295,9 @@ sd_read_multiblock:
 	AND #$fe        ; Takt ausschalten
 	TAX             ; aufheben
 	ORA #$01
-	sta sd_tmp
- 
+	sta sd_tmp 
+    
 	; read 256 bytes twice, increase blkptr in between
-
-	
-
 @l2a:	lda sd_tmp
 
 	.repeat 8
@@ -367,7 +365,8 @@ sd_write_block:
 	lda #cmd24
 	jsr sd_cmd
 	
-@l1:	lda #$ff
+@l1:	
+    lda #$ff
 	jsr spi_rw_byte             
 	bne @l1
 
@@ -460,14 +459,13 @@ sd_param_init:
 
 sd_send_lba:
 	; Send lba_addr in reverse order
-
-	lda lba_addr + 0
-	jsr spi_rw_byte
-	lda lba_addr + 1
+	lda lba_addr + 3
 	jsr spi_rw_byte
 	lda lba_addr + 2
 	jsr spi_rw_byte
-	lda lba_addr + 3
+	lda lba_addr + 1
+	jsr spi_rw_byte
+	lda lba_addr + 0
 	jsr spi_rw_byte
 	
 	rts

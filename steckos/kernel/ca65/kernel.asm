@@ -47,17 +47,16 @@ kern_init:
 	cpy #12
 	bne @l
 @l2:
-
     debug_newline
 
 	jsr fat_open
     debugHex errno
 
 	SetVector $1000, sd_blkptr
-
-    cli
     
-	jsr fat_read
+    cli
+	
+    jsr fat_read
 	
 	; jmp $1000
 	ldx #$00
@@ -72,7 +71,7 @@ loop:
 	jsr getkey
     cmp #$00
 	beq loop
-	jsr textui_chrout
+    jsr textui_chrout
 	bra loop
 
 filename:	.asciiz "test.bin"

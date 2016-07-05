@@ -432,9 +432,8 @@
 
        ldx #$04
 -      
-       ; lda #$ff
        phx
-       jsr .spi_rw_byte
+       jsr .spi_r_byte
        plx
        dex
        bne -       
