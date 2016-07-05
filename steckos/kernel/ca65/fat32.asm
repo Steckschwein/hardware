@@ -4,6 +4,10 @@
 .import sd_read_block, sd_read_multiblock, sd_write_block, sd_select_card, sd_deselect_card
 .export fat_mount, fat_open, fat_open_rootdir, fat_close, fat_read, fat_find_first, fat_find_next
 
+; DEBUG
+.import hexout, primm
+
+
 FD_start_cluster = $00
 FD_file_size = $08
 
@@ -53,6 +57,9 @@ fat_read:
 		jsr calc_lba_addr
 		jsr calc_blocks
 
+        debug32 lba_addr
+        debugHex blocks
+
 
 		jmp sd_read_multiblock
 		
@@ -80,6 +87,7 @@ fat_open:
 		ldx #$00
 		jsr calc_lba_addr
 
+        debug32 lba_addr
 
 		jsr fat_find_first
 		bcs fat_open_found

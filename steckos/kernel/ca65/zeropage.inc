@@ -22,13 +22,13 @@ msgptr  = $ec		; 2 bytes
 spitmp 	= $ee
 
 ; FAT32
-lba_addr = $ef		; 4 bytes
-lba_tmp  = $f2 		; 4 bytes
-blocks	 = $f5
-filenameptr = $f6
-dirptr 		= $f8 	; 2 byte
+lba_addr = $f0		; 4 bytes
+lba_tmp  = $f4 		; 4 bytes
+blocks	 = $f8
+filenameptr = $f9   ; 2 byte
+dirptr 		= $fb 	; 2 byte
 
 
 ; SDCARD 
-sd_blkptr = $fa
-sd_tmp	  = $fb
+sd_blkptr = $fd
+sd_tmp	  = $ff

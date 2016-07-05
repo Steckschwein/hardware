@@ -28,19 +28,14 @@ kern_init:
     
 	SetVector user_isr_default, user_isr
 
-	cli
-
 	jsr primm
 	.byte "SteckOS Kernel 0.5",$0a,$0d,$00
 	
 	jsr init_sdcard
-	lda errno
-	jsr hexout
-
+    debugHex errno
 
 	jsr fat_mount
-	lda errno
-	jsr hexout
+	debugHex errno
 
 	SetVector filename, filenameptr
 
@@ -53,14 +48,16 @@ kern_init:
 	bne @l
 @l2:
 
+    debug_newline
+
 	jsr fat_open
-	lda errno
-	jsr hexout
+    debugHex errno
 
 	SetVector $1000, sd_blkptr
 
+    cli
+    
 	jsr fat_read
-
 	
 	; jmp $1000
 	ldx #$00
