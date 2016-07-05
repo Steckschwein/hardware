@@ -1,6 +1,8 @@
 OBJS=fat32.o sdcard.o textui.o t99xx.lib.o rtc.o spi.o uart.o via.o out.o key.o kernel.o
 #OBJS=rtc.o spi.o uart.o via.o kernel.o
-LDFLAGS=--config steckos.cfg 
+LDFLAGS=--config steckos.cfg
+DEBUG=-D DEBUG
+
 .PHONY: all clean
 all: kernel.bin loader.bin
 
@@ -8,8 +10,8 @@ all: kernel.bin loader.bin
 clean:
 	rm -f *.o *.bin *.map *.txt kernel_jumptable.inc
 
-%.o: %.asm vdp.inc
-	ca65 --target none $<
+%.o: %.asm vdp.inc zeropage.inc
+	ca65 --target none $(DEBUG) $<
 
 kernel.bin: $(OBJS) 
 	ld65 $(LDFLAGS) $(OBJS) -m kernel.map -Ln symbols.txt -o kernel.bin 

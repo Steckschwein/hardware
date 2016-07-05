@@ -12,19 +12,24 @@ errno	 			= $0300
 user_isr 	        = $028a
 
 .macro debugHex v
+.ifdef DEBUG
     pha
     lda v
     jsr hexout
     debug_newline
     pla
+.endif
 .endmacro
 
 .macro debug_newline v32
+.ifdef DEBUG
     jsr primm
     .byte $0a,$0d,$00
+.endif
 .endmacro
 
 .macro debug32 v32
+.ifdef DEBUG
     pha
     lda v32
     jsr hexout
@@ -36,6 +41,7 @@ user_isr 	        = $028a
     jsr hexout
     debug_newline
     pla
+.endif
 .endmacro
 
 .macro SetVector word, addr 
