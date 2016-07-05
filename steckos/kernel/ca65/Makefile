@@ -1,4 +1,4 @@
-OBJS=sdcard.o textui.o t99xx.lib.o rtc.o spi.o uart.o via.o out.o key.o kernel.o
+OBJS=fat32.o sdcard.o textui.o t99xx.lib.o rtc.o spi.o uart.o via.o out.o key.o kernel.o
 #OBJS=rtc.o spi.o uart.o via.o kernel.o
 LDFLAGS=--config steckos.cfg 
 .PHONY: all clean
@@ -16,7 +16,7 @@ kernel.bin: $(OBJS)
 	grep krn symbols.txt | awk -F' ' '{print $$3" = $$"$$2}'| sed -e "s/^\.//g" > kernel_jumptable.inc
 
 
-loader.bin: kernel.bin
+loader.bin: kernel.bin loader.o
 	cl65 --target none -m loader.map --config steckos.cfg loader.asm -o loader.bin
 
 transfer: loader.bin

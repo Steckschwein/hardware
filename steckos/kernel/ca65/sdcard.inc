@@ -22,6 +22,6 @@ sd_cmd_result 		= $02a5
 
 
 ; pointer for io block operations
-sd_blkptr 	= $fc
+;sd_blkptr 	= $fc
 
 

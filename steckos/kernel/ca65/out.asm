@@ -1,8 +1,26 @@
 
 .segment "KERNEL"
-.export hexout, primm, print_crlf
+.export hexout, strout, primm, print_crlf
 .import textui_chrout
 .include "kernel.inc"
+
+;----------------------------------------------------------------------------------------------
+; Output string on active output device
+;----------------------------------------------------------------------------------------------
+strout:
+			pha                 ;save a, y to stack
+			phy
+
+			ldy #$00
+@l1:	  	lda (msgptr),y
+			beq @l2
+			jsr textui_chrout
+			iny
+			bne @l1
+
+@l2:		ply                 ;restore a, y
+			pla
+			rts
 
 ;----------------------------------------------------------------------------------------------
 ; Output byte as hex string on active output device
@@ -34,6 +52,9 @@ hexdigit:
 		jmp	 	textui_chrout
 
 ;Put the string following in-line until a NULL out to the console
+DPL			= msgptr
+DPH			= msgptr+1
+
 primm:
 PUTSTRI: 
 		pla			; Get the low part of "return" address
