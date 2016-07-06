@@ -23,11 +23,12 @@ spitmp 	= $ee
 
 ; FAT32
 lba_addr = $f0		; 4 bytes
-blocks	 = $f8
-filenameptr = $f9   ; 2 byte
-dirptr 		= $fb 	; 2 byte
+blocks	 = $f4
+filenameptr = $f5   ; 2 byte
+dirptr 		= $f7 	; 2 byte
 
 
 ; SDCARD 
-sd_blkptr = $fd
-sd_tmp	  = $ff
+sd_read_blkptr = $f9
+sd_write_blkptr = $fb
+sd_tmp	  = $fd

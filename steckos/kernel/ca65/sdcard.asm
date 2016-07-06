@@ -216,36 +216,35 @@ sd_cmd:
 ;---------------------------------------------------------------------
 sd_read_block:
 		jsr sd_select_card
-		jsr sd_busy_wait
+		; jsr sd_busy_wait
 
 		; Send CMD17 command byte
 		lda #cmd17
 		jsr spi_rw_byte
 
+	jsr sd_send_lba
+
 		; Send lba_addr in reverse order
-		ldx #$03
-@l1:	lda lba_addr,x
-		phx
-		jsr spi_rw_byte
-		plx
-		dex
-		bpl @l1
+; 		ldx #$03
+; @l1:	lda lba_addr,x
+; 		phx
+; 		jsr spi_rw_byte
+; 		plx
+; 		dex
+; 		bpl @l1
 
 		; Send stopbit
 		lda #$01
 		jsr spi_rw_byte
 
 		; wait for sd card data token
-@l2:	lda #$ff
-		jsr spi_rw_byte
-		cmp #sd_data_token
-		bne @l2
+		jsr sd_wait_data_token
 
 		ldy #$00
 
 		jsr halfblock
 
-		inc sd_blkptr+1
+		inc sd_read_blkptr+1
 
 		jsr halfblock
 
@@ -259,7 +258,7 @@ sd_read_block:
 halfblock:
 @l:		
 		jsr spi_r_byte
-		sta (sd_blkptr),y
+		sta (sd_read_blkptr),y
 		iny
 		bne @l
 		rts
@@ -272,7 +271,7 @@ sd_read_multiblock:
 
 	jsr sd_select_card
 
-	jsr sd_busy_wait
+	; jsr sd_busy_wait
     
 	lda #cmd18	; Send CMD18 command byte
 	jsr spi_rw_byte
@@ -283,12 +282,14 @@ sd_read_multiblock:
 	lda #$01
 	jsr spi_rw_byte
 
-	
-@l1:
-    ;lda #$ff
-    jsr spi_r_byte  ; Wait for data token
-	cmp #$fe
-	bne @l1
+
+@l1:	
+	jsr sd_wait_data_token
+; @l1:
+;     ;lda #$ff
+;     jsr spi_r_byte  ; Wait for data token
+; 	cmp #$fe
+; 	bne @l1
 
 	ldy #$00
 	lda via1portb   ; Port laden
@@ -306,11 +307,11 @@ sd_read_multiblock:
 	.endrepeat
 
 	lda via1sr
-	sta (sd_blkptr),y
+	sta (sd_read_blkptr),y
 	iny
 	bne @l2a
 
-	inc sd_blkptr+1             
+	inc sd_read_blkptr+1             
 
 @l2b:	lda sd_tmp
 
@@ -320,11 +321,11 @@ sd_read_multiblock:
 	.endrepeat
 
 	lda via1sr
-	sta (sd_blkptr),y
+	sta (sd_read_blkptr),y
 	iny
 	bne @l2b
 
-	inc sd_blkptr+1             
+	inc sd_read_blkptr+1             
 
 
 		
@@ -360,7 +361,7 @@ sd_read_multiblock:
 sd_write_block:
 	jsr sd_select_card
 
-	jsr sd_busy_wait
+	; jsr sd_busy_wait
 
 	lda #cmd24
 	jsr sd_cmd
@@ -374,23 +375,23 @@ sd_write_block:
 	jsr spi_rw_byte
 
 	ldy #$00
-@l2:	lda (sd_blkptr),y
+@l2:	lda (sd_write_blkptr),y
 	phy
 	jsr spi_rw_byte
 	ply
 	iny
 	bne @l2
 
-	inc sd_blkptr+1
+	inc sd_write_blkptr+1
 
 	ldy #$00
-@l3:	lda (sd_blkptr),y
+@l3:	lda (sd_write_blkptr),y
 	phy
 	jsr spi_rw_byte
 	ply
 	iny
 	bne @l3
-	dec sd_blkptr+1
+	dec sd_read_blkptr+1
 
 	; Send fake CRC bytes
 	lda #$00
@@ -412,6 +413,19 @@ sd_busy_wait:
 	rts
 
 ;---------------------------------------------------------------------
+; wait for sd card data token
+;---------------------------------------------------------------------
+sd_wait_data_token:
+		ldx #$ff
+@l1:	dex
+		beq @l2
+		; lda #$ff
+		jsr spi_r_byte
+		cmp #sd_data_token
+		bne @l1
+@l2:	rts
+
+;---------------------------------------------------------------------
 ; select sd card, pull CS line to low
 ;---------------------------------------------------------------------
 sd_select_card:
@@ -419,8 +433,8 @@ sd_select_card:
 	lda #%01111100
 	sta via1portb
 	pla
-
-	rts
+	jmp sd_busy_wait
+	; rts
 
 ;---------------------------------------------------------------------
 ; deselect sd card, puSH CS line to HI and generate few clock cycles 

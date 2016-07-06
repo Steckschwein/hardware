@@ -14,44 +14,22 @@ FD_file_size = $08
 
 .macro saveClusterNo where
 	ldy #DIR_FstClusHI +1
-	lda (sd_blkptr),y
+	lda (sd_read_blkptr),y
 	sta where +3
 
 	dey
-	lda (sd_blkptr),y
+	lda (sd_read_blkptr),y
 	sta where +2
 
 	ldy #DIR_FstClusLO +1
-	lda (sd_blkptr),y
+	lda (sd_read_blkptr),y
 	sta where +1
 	
 	dey
-	lda (sd_blkptr),y
+	lda (sd_read_blkptr),y
 	sta where
 .endmacro
 
-; !macro saveClusterNo .where {
-; 	ldy #DIR_FstClusHI +1
-; 	lda (sd_blkptr),y
-; 	sta .where +3
-
-; 	dey
-; 	lda (sd_blkptr),y
-; 	sta .where +2
-
-; 	; stz .where +3
-; 	; stz .where +2
-; 	ldy #DIR_FstClusLO +1
-; 	lda (sd_blkptr),y
-; 	sta .where +1
-	
-; 	dey
-; 	lda (sd_blkptr),y
-; 	sta .where
-
-; } 
-
-; blocks = tmp7
 
 fat_read:
 		jsr calc_lba_addr
@@ -168,11 +146,11 @@ end_open:
 inc_blkptr:
 		; Increment blkptr by 32 bytes, jump to next dir entry
 		clc
-		lda sd_blkptr
+		lda sd_read_blkptr
 		adc #32
-		sta sd_blkptr
+		sta sd_read_blkptr
 		bcc @l
-		inc sd_blkptr+1	
+		inc sd_read_blkptr+1	
 @l:
 		rts
 
@@ -292,7 +270,7 @@ fat_mount:
 		.endrepeat
 		
 
-		SetVector sd_blktarget, sd_blkptr
+		SetVector sd_blktarget, sd_read_blkptr
 
 		jsr sd_read_block
 		
@@ -328,7 +306,7 @@ fat_mount:
 		; Write LBA start address to sd param buffer
 		; +SDBlockAddr fat_begin_lba
 
-		SetVector sd_blktarget, sd_blkptr	
+		SetVector sd_blktarget, sd_read_blkptr	
 		; Read FAT Volume ID at LBABegin and Check signature
 		jsr sd_read_block
 
@@ -478,13 +456,13 @@ fat_find_first:
 @l2:	lda #$00
 		sta filename_buf,y
 
-		SetVector sd_blktarget, sd_blkptr
+		SetVector sd_blktarget, sd_read_blkptr
 		ldx #$00
 		jsr calc_lba_addr
 		
 ff_l3:	SetVector sd_blktarget, dirptr	
 		jsr sd_read_block
-		dec sd_blkptr+1
+		dec sd_read_blkptr+1
 
 
 ff_l4:
