@@ -25,7 +25,7 @@ transfer: loader.bin
 	../../../transfer.py -s 0x1000 loader.bin
 
 test.bin: test.o
-	cl65 --target none -m loader.map --config steckos.cfg loader.asm -o loader.bin
+	cl65 --target none --config steckos.cfg test.asm -o test.bin
 
 test: test.bin
 	../../transfer.py test.bin -s 0x1000
