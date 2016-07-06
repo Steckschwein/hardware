@@ -11,6 +11,12 @@ errno	 			= $0300
 
 user_isr 	        = $028a
 
+.macro	printstring text
+			jsr primm
+			.byte text
+			.byte $0a,$0d,$00
+.endmacro
+
 .macro debugHex v
 .ifdef DEBUG
     pha
