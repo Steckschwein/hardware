@@ -23,7 +23,6 @@ spitmp 	= $ee
 
 ; FAT32
 lba_addr = $f0		; 4 bytes
-lba_tmp  = $f4 		; 4 bytes
 blocks	 = $f8
 filenameptr = $f9   ; 2 byte
 dirptr 		= $fb 	; 2 byte
