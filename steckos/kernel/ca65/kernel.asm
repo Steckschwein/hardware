@@ -30,8 +30,8 @@ kern_init:
 	
 	SetVector user_isr_default, user_isr
 
-	jsr primm
-	.byte "SteckOS Kernel 0.5",$0a,$0d,$00
+	
+	printstring "SteckOS Kernel 0.5"
 	
 	jsr init_sdcard
     debugHex errno
@@ -54,7 +54,7 @@ kern_init:
 	jsr fat_open
     debugHex errno
 
-	SetVector $1000, sd_blkptr
+	SetVector $1000, sd_read_blkptr
     
     jsr fat_read
     debugHex errno
@@ -73,7 +73,7 @@ kern_init:
 	ldx #$ff 
 	txs 
 	
-;	jmp $1000
+	jmp $1000
     
 loop:
 	jsr getkey
@@ -82,8 +82,8 @@ loop:
     jsr textui_chrout
 	bra loop
 
-;filename:	.asciiz "test.bin"
-filename:	.asciiz "shell.bin"
+filename:	.asciiz "test.bin"
+; filename:	.asciiz "shell.bin"
 ;----------------------------------------------------------------------------------------------
 ; IO_IRQ Routine. Handle IRQ
 ;----------------------------------------------------------------------------------------------
