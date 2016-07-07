@@ -221,8 +221,7 @@ sd_read_block:
 		; Send CMD17 command byte
 		lda #cmd17
 		jsr spi_rw_byte
-
-	jsr sd_send_lba
+		jsr sd_send_lba
 
 		; Send lba_addr in reverse order
 ; 		ldx #$03
@@ -237,6 +236,16 @@ sd_read_block:
 		lda #$01
 		jsr spi_rw_byte
 
+		; wait for command response. 
+		; everything other than $00 is an error
+@lx:	jsr spi_r_byte
+		bit #$80
+		bne @lx
+		cmp #$00
+		beq @l1
+		sta errno
+		bra @exit
+@l1:
 		; wait for sd card data token
 		jsr sd_wait_data_token
 
@@ -252,6 +261,7 @@ sd_read_block:
 		jsr spi_r_byte
 		jsr spi_r_byte
 
+@exit:
 		jmp sd_deselect_card
 		; rts
 
@@ -267,21 +277,30 @@ halfblock:
 ; Read multiple blocks from SD Card
 ;---------------------------------------------------------------------
 sd_read_multiblock:
-	save
+		save
 
-	jsr sd_select_card
+		jsr sd_select_card
 
-	; jsr sd_busy_wait
-    
-	lda #cmd18	; Send CMD18 command byte
-	jsr spi_rw_byte
+		; jsr sd_busy_wait
+	    
+		lda #cmd18	; Send CMD18 command byte
+		jsr spi_rw_byte
 
-	jsr sd_send_lba
+		jsr sd_send_lba
 
-	; Send stopbit
-	lda #$01
-	jsr spi_rw_byte
+		; Send stopbit
+		lda #$01
+		jsr spi_rw_byte
 
+		; wait for command response. 
+		; everything other than $00 is an error
+@lx:	jsr spi_r_byte
+		bit #$80
+		bne @lx
+		cmp #$00
+		beq @l1
+		sta errno
+		jmp @exit
 
 @l1:	
 	jsr sd_wait_data_token
@@ -350,7 +369,7 @@ sd_read_multiblock:
 	jsr sd_cmd
 
 	jsr sd_busy_wait  
-	
+@exit:
 	restore
 	jmp sd_deselect_card
 	; rts
@@ -406,7 +425,8 @@ sd_write_block:
 ; wait while sd card is busy
 ;---------------------------------------------------------------------
 sd_busy_wait:
-@l1:	lda #$ff
+@l1:	
+	lda #$ff
 	jsr spi_rw_byte
 	cmp #$ff
 	bne @l1
@@ -415,6 +435,9 @@ sd_busy_wait:
 ;---------------------------------------------------------------------
 ; wait for sd card data token
 ;---------------------------------------------------------------------
+
+
+
 sd_wait_data_token:
 		ldx #$ff
 @l1:	dex

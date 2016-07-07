@@ -13,10 +13,20 @@ fat_too_many_files			=   $06
 fat_file_not_found			=   $07
 fat_file_not_open			=   $08
 fat_file_not_dir			=   $10
+
 ; SD card error codes
 sd_no_card					= 	$ff
 sd_invalid_card				=	$0f
 sd_init_failed				= 	$f1
+
+; these correspond exactly to sd card R1 response error codes
+sd_parameter_error			=	$40
+sd_address_error			=	$20
+sd_erase_sequence_error		=	$10
+sd_cmd_crc_error			=	$08
+sd_cmd_illegal_error		= 	$04
+sd_erase_reset_error		= 	$02
+sd_idle_state				= 	$01
 
 BS_Partition0	= 446
 BS_Signature	= 510   ; must be 0x55AA

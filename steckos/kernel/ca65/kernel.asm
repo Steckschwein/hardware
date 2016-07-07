@@ -41,14 +41,14 @@ kern_init:
 
 	SetVector filename, filenameptr
 
-	ldy #$00
-@l:	lda (filenameptr),y
-	beq @l2
-	jsr textui_chrout
-	iny
-	cpy #$10
-	bne @l
-@l2:
+; 	ldy #$00
+; @l:	lda (filenameptr),y
+; 	beq @l2
+; 	jsr textui_chrout
+; 	iny
+; 	cpy #$10
+; 	bne @l
+; @l2:
     debug_newline
 
 	jsr fat_open
@@ -76,10 +76,10 @@ kern_init:
 	jmp $1000
     
 loop:
-	jsr getkey
-    cmp #$00
-	beq loop
-    jsr textui_chrout
+	; jsr getkey
+ ;    cmp #$00
+	; beq loop
+ ;    jsr textui_chrout
 	bra loop
 
 filename:	.asciiz "test.bin"
