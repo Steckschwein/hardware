@@ -1,7 +1,7 @@
 .include "kernel.inc"
 .include "vdp.inc"
 
-shell_addr	 = $e000
+shell_addr	 = $1000
 
 text_mode_40 = 1
 
@@ -15,7 +15,7 @@ text_mode_40 = 1
 .import strout, hexout, primm, print_crlf
 .import keyin, getkey
 ;TODO FIXME testing purpose only
-.import textui_enable, textui_disable, vdp_display_off
+.import textui_enable, textui_disable, vdp_display_off,  textui_blank, textui_update_crs_ptr, textui_crsxy
 .import init_sdcard
 .import fat_mount, fat_open, fat_open_rootdir, fat_close, fat_read, fat_find_first, fat_find_next
 .segment "KERNEL"
@@ -54,26 +54,36 @@ kern_init:
 	jsr fat_open
     debugHex errno
 
-	SetVector $1000, sd_read_blkptr
+	SetVector shell_addr, sd_read_blkptr
     
     jsr fat_read
     debugHex errno
     
-	ldx #$00
-@x:
-	lda $1000,x
-	jsr hexout
-	inx
-	cpx #$09
-	bne @x
 
 	jsr fat_close
     debugHex errno
 
+
+; 	ldx #$00
+; :
+; 	lda shell_addr,x
+; 	jsr hexout
+; 	inx
+; 	bne :-
+
+; 	ldx #$00
+; :
+; 	lda shell_addr+$100,x
+; 	jsr hexout
+; 	inx
+; 	bne :-
+
+
+
 	ldx #$ff 
 	txs 
 	
-	jmp $1000
+	jmp shell_addr
     
 loop:
 	; jsr getkey
@@ -82,8 +92,8 @@ loop:
  ;    jsr textui_chrout
 	bra loop
 
-filename:	.asciiz "test.bin"
-; filename:	.asciiz "shell.bin"
+; filename:	.asciiz "test.bin"
+
 ;----------------------------------------------------------------------------------------------
 ; IO_IRQ Routine. Handle IRQ
 ;----------------------------------------------------------------------------------------------
@@ -129,14 +139,7 @@ do_reset:
 			jmp kern_init
 
 
-; strings
-; .kernel_version 			!text "SteckOS Kernel 0.4",$0d,$0a,$00
-; .crlf						!byte $0a,$0d,$00
-; .txt_msg_loading 			!text "Loading ",$00
-; .serial_upload				!text "Serial Upload ",$00
-; .filename					!text "shell.bin",$00
-
-
+filename:	.asciiz "shell.bin"
 
 .segment "JUMPTABLE"
 ; "kernel" jumptable
@@ -174,15 +177,22 @@ krn_getkey:				jmp getkey
 krn_chrout:				jmp textui_chrout
 .export krn_strout
 krn_strout:				jmp strout
-; krn_textui_crsxy			jmp .textui_crsxy
-; krn_textui_update_crs_ptr	jmp .textui_update_crs_ptr
-; krn_textui_clrscr_ptr		jmp .textui_blank
+
+.export krn_textui_crsxy
+krn_textui_crsxy:		jmp textui_crsxy
+.export krn_textui_update_crs_ptr
+krn_textui_update_crs_ptr:	jmp textui_update_crs_ptr
+.export krn_textui_clrscr_ptr
+krn_textui_clrscr_ptr:		jmp textui_blank
+
 .export krn_hexout
 krn_hexout:				jmp hexout
 
 .export krn_init_sdcard
 krn_init_sdcard:		jmp init_sdcard
-; krn_upload				jmp .upload
+
+krn_upload:				jmp krn_upload
+
 .export krn_spi_rw_byte
 krn_spi_rw_byte:		jmp spi_rw_byte
 

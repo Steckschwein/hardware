@@ -4,7 +4,7 @@ LDFLAGS=--config steckos.cfg
 DEBUG=-D DEBUG
 
 .PHONY: all clean
-all: kernel.bin loader.bin
+all: kernel.bin shell.bin loader.bin
 
 .PHONY: clean
 clean:
@@ -19,7 +19,10 @@ kernel.bin: $(OBJS)
 
 
 loader.bin: kernel.bin loader.o
-	cl65 --target none -m loader.map --config steckos.cfg loader.asm -o loader.bin
+	cl65 --target none --config steckos.cfg loader.asm -o loader.bin
+
+shell.bin: kernel.bin 
+	cl65 --target none -m shell.map --config steckos.cfg shell.asm -o shell.bin
 
 transfer: loader.bin
 	../../../transfer.py -s 0x1000 loader.bin
