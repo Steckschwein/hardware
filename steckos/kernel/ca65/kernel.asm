@@ -50,6 +50,8 @@ kern_init:
 
 	jsr fat_open
     debugHex errno
+	lda errno
+	bne do_upload
 	
 
 	SetVector shell_addr, sd_read_blkptr
@@ -131,12 +133,13 @@ do_reset:
 startaddr = $b0 ; FIXME - find better location for this
 endaddr   = $fd
 length	  = $ff
+
 upload:
 	save
 	crlf
 	printstring "Serial Upload"
 	
-	jsr textui_screen_dirty
+	; jsr textui_screen_dirty
 
 	; load start address
 	jsr uart_rx
@@ -152,7 +155,7 @@ upload:
 
 	lda #' '
 	jsr textui_chrout
-	jsr textui_screen_dirty
+	; jsr textui_screen_dirty
 
 	jsr upload_ok
 	
@@ -181,7 +184,7 @@ upload:
 	
 	lda #' '
 	jsr textui_chrout
-	jsr textui_screen_dirty
+	; jsr textui_screen_dirty
 
 	; sei 
 	lda startaddr
