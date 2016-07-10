@@ -3,7 +3,7 @@
 .include "vdp.inc"
 
 .export textui_init0, textui_update_screen, textui_chrout
-.export textui_enable, textui_disable, textui_blank, textui_update_crs_ptr, textui_crsxy
+.export textui_enable, textui_disable, textui_blank, textui_update_crs_ptr, textui_crsxy, textui_screen_dirty
 
 .import vdp_bgcolor, vdp_memcpy, vdp_mode_text, vdp_display_off
 
