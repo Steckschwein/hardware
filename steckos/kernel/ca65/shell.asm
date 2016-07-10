@@ -3,6 +3,13 @@
 text_mode_40 	= 1
 num_ls_entries 	= $03
 
+.zeropage
+tmp0:	.byte $00
+tmp1:	.byte $00
+tmp5:	.byte $00
+; tmp1=$c1	
+; tmp5=$c5
+
 .segment "OS"
 .include "kernel.inc"
 .include "kernel_jumptable.inc"
@@ -18,10 +25,8 @@ KEY_ESCAPE_CRSR_DOWN	= 'B'
 BUF_SIZE			= 32
 
 retvec = $01
-tmp1=$c1	
-tmp5=$c5
 entries = $00
-decoutz = krn_hexout
+
 cmdptr				= $d6
 paramptr			= $d8
 buf 				= $e800 ; Input buffer 80 bytes. end: $d800
@@ -31,7 +36,6 @@ bufhwm				= $d2
 ; Address pointers for serial upload
 startaddr	= $d9
 entryvec			= $d4
-
 
 ;---------------------------------------------------------------------------------------------------------
 ; init shell
@@ -789,6 +793,55 @@ init_textui:
 	jsr	krn_textui_enable
 	rts
 
+; ;----------------------------------------------------------------------------------------------
+; ; decout - output byte in A as decimal ASCII without leading zeros
+; ;----------------------------------------------------------------------------------------------
+decout:
+		phx
+		phy
+		ldx #1
+		stx tmp1
+		inx
+		ldy #$40
+@l1:
+		sty tmp0
+		lsr
+@l2:	rol
+		bcs @l3
+		cmp dec_tbl,x
+		bcc @l4
+@l3:	sbc dec_tbl,x
+		sec
+@l4:	rol tmp0
+		bcc @l2
+		tay
+		cpx tmp1
+		lda tmp0
+		bcc @l5
+		beq @l6
+		stx tmp1
+@l5:	eor #$30
+		jsr krn_chrout
+@l6:	tya
+		ldy #$10
+		dex
+		bpl @l1
+		ply
+		plx
+
+		rts
+decoutz:
+		cmp #10
+		bcs @l1
+		pha
+		lda #'0'
+		jsr krn_chrout
+		pla
+@l1:	
+		jmp decout
+ 
+; Lookup table for decimal to ASCII
+dec_tbl:			.byte 128,160,200
 exec_extension:		.byte ".bin",$00
 filename: 			.byte "            ",$00
 pattern:			.byte "*.*",$00
