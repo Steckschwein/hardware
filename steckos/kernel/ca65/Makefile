@@ -25,7 +25,7 @@ shell.bin: kernel.bin
 	cl65 --target none -m shell.map --config steckos.cfg shell.asm -o shell.bin
 
 transfer: loader.bin
-	../../../transfer.py -s 0x1000 loader.bin
+	../../../transfer.py -s 0xe000 shell.bin
 
 test.bin: test.o
 	cl65 --target none --config steckos.cfg test.asm -o test.bin
