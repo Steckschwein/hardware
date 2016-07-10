@@ -15,7 +15,7 @@ text_mode_40 = 1
 .import strout, hexout, primm, print_crlf
 .import keyin, getkey
 ;TODO FIXME testing purpose only
-.import textui_enable, textui_disable, vdp_display_off,  textui_blank, textui_update_crs_ptr, textui_crsxy
+.import textui_enable, textui_disable, vdp_display_off,  textui_blank, textui_update_crs_ptr, textui_crsxy, textui_screen_dirty
 .import init_sdcard
 .import fat_mount, fat_open, fat_open_rootdir, fat_close, fat_read, fat_find_first, fat_find_next
 .segment "KERNEL"
@@ -35,10 +35,12 @@ kern_init:
 	
 	jsr init_sdcard
     debugHex errno
+    bne do_upload
 
 	jsr fat_mount
 	debugHex errno
-
+	bne do_upload
+	
 	SetVector filename, filenameptr
 
 ; 	ldy #$00
@@ -53,12 +55,12 @@ kern_init:
 
 	jsr fat_open
     debugHex errno
+	
 
 	SetVector shell_addr, sd_read_blkptr
     
     jsr fat_read
     debugHex errno
-    
 
 	jsr fat_close
     debugHex errno
@@ -80,10 +82,21 @@ kern_init:
 
 
 
+
 	ldx #$ff 
 	txs 
 	
 	jmp shell_addr
+
+do_upload:
+	jsr init_uart
+	jsr upload
+
+	ldx #$ff 
+	txs 
+	
+	jmp (startaddr)
+
     
 loop:
 	; jsr getkey
@@ -137,6 +150,113 @@ do_reset:
 			txs
 
 			jmp kern_init
+
+startaddr = $b0 ; FIXME - find better location for this
+endaddr   = $fd
+length	  = $ff
+upload:
+	save
+	crlf
+	printstring "Serial Upload"
+	
+	jsr textui_screen_dirty
+
+	; load start address
+	jsr uart_rx
+	sta startaddr
+	
+	jsr uart_rx
+	sta startaddr+1
+
+	lda startaddr+1
+	jsr hexout
+	lda startaddr
+	jsr hexout
+
+	lda #' '
+	jsr textui_chrout
+	jsr textui_screen_dirty
+
+	jsr upload_ok
+	
+	; load number of bytes to be uploaded
+	jsr uart_rx
+	sta length
+		
+	jsr uart_rx
+	sta length+1
+
+	; calculate end address
+	clc
+	lda length
+	adc startaddr
+	sta endaddr
+
+	lda length+1
+	adc startaddr+1
+	sta endaddr+1
+
+	lda endaddr+1
+	jsr hexout
+
+	lda endaddr
+	jsr hexout
+	
+	lda #' '
+	jsr textui_chrout
+	jsr textui_screen_dirty
+
+	; sei 
+	lda startaddr
+	sta addr
+	lda startaddr+1
+	sta addr+1	
+
+	jsr upload_ok
+	
+
+	ldy #$00
+@l1:
+	sei
+	jsr uart_rx
+	sta (addr),y
+
+	iny	
+	cpy #$00
+	bne @l2
+	inc addr+1
+@l2:	
+
+	; msb of current address equals msb of end address?
+	lda addr+1
+	cmp endaddr+1
+	bne @l1 ; no? read next byte
+
+	; yes? compare y to lsb of endaddr
+	cpy endaddr
+	bne @l1 ; no? read next byte
+
+	cli
+	; yes? write OK and jump to start addr	
+
+	jsr upload_ok
+	; cli 
+
+	lda #'O'
+	jsr textui_chrout
+	lda #'K'
+	jsr textui_chrout
+
+	restore
+	rts
+
+upload_ok:
+	lda #'O'
+	jsr uart_tx
+	lda #'K'
+	jsr uart_tx
+	rts
+
 
 
 filename:	.asciiz "shell.bin"
