@@ -3,6 +3,7 @@
 text_mode_40 	= 1
 num_ls_entries 	= $03
 
+.segment "OS"
 ; !src <defs.h.a>
 ; !src <bios.h.a>
 .include "kernel.inc"
@@ -47,7 +48,7 @@ entryvec			= $d4
 ;---------------------------------------------------------------------------------------------------------
 
 init:
-	jsr init_textui
+	; jsr init_textui
 	
 	sei
 	jsr krn_init_sdcard
@@ -75,9 +76,8 @@ init:
 mainloop:
 	; output prompt character
 	
+	crlf
 	lda #'>'
-	jsr krn_chrout
-	lda #' '
 	jsr krn_chrout
 	
 	; reset input buffer
@@ -114,17 +114,17 @@ inputloop:
 	bra inputloop
 
 backspace:
-	cpy #$00
-	beq inputloop
+		cpy #$00
+		beq inputloop
 
-	dey
+		dey
 
-	bra foo
+		bra foo
 
 escape:
-	jsr krn_getkey
-; 	cmp #KEY_ESCAPE_CRSR_UP
-; 	bne +
+		jsr krn_getkey
+; 		cmp #KEY_ESCAPE_CRSR_UP
+; 		bne +
 
 ; 	jsr .decbufptr
 ; 	bra ++
@@ -134,10 +134,10 @@ escape:
 
 ; 	jsr .incbufptr
 ; ++
-	jsr printbuf
+		jsr printbuf
 
 ; +	
-	bra inputloop
+		bra inputloop
 
 terminate:
 		pha
@@ -149,7 +149,7 @@ terminate:
 parse:
 		copypointer bufptr, cmdptr
 
-	; find begin of command word
+		; find begin of command word
 foo:	lda (cmdptr)	; skip non alphanumeric stuff	
 		bne @l2
 		jmp mainloop
@@ -178,11 +178,10 @@ foo:	lda (cmdptr)	; skip non alphanumeric stuff
 		inc paramptr
 		bra @l6
 @l7:
-	
 
-	SetVector buf, bufptr
+		SetVector buf, bufptr
 
-	jsr terminate
+		jsr terminate
 	
 
 compare:
@@ -244,7 +243,7 @@ unknown:
 
 		; +SetVector .buf, paramptr
 		; +ShellPrintString .crlf
-		debug_newline
+		crlf
 		jmp run
 
 @l1:	jmp mainloop
@@ -329,7 +328,7 @@ dir_show_entry_short:
 
 		dec entries
 		bne @l1	
-		debug_newline
+		crlf
 		lda #num_ls_entries
 		sta entries
 @l1:
@@ -445,7 +444,7 @@ dir_show_entry:
 
 
 	; Bits 11–15: Hours, valid value range 0–23 inclusive.
-	debug_newline
+	crlf
 	
 		pla
 		rts	
@@ -500,9 +499,6 @@ helptxt1:
 ; .fat_err_no_such_file	!text "no such file or directory",$00
 ; .fat_err_file_not_open	!text "file not open error",$00
 ; .fat_err_too_many_open	!text "too many open files",$00
-exec_extension:			.byte ".bin",$00
-
-filename: .byte "            ",$00
 dir_entry:
 		jmp (entryvec)
 
@@ -515,7 +511,7 @@ ls:
 dir:
 		SetVector dir_show_entry, entryvec
 l1:
-		debug_newline
+		crlf
 		SetVector pattern, filenameptr
 
 		lda (paramptr)
@@ -557,10 +553,10 @@ cd:
 		ldy #$00
 		lda (paramptr),y
 		cmp #'/'
-		bne @l2
+		bne @l1
 		iny
 		lda (paramptr),y
-		bne @l2
+		bne @l1
 		
 		; its a slash, nothing else. cd to /
 		jsr krn_open_rootdir
@@ -570,7 +566,7 @@ cd:
 
 		jsr param2fileptr
 		
-		debug_newline
+		crlf
 		
 		jsr krn_open
 
@@ -581,7 +577,7 @@ cd:
 		jmp mainloop
 @l2:
 		jsr krn_primm
-		.asciiz "txt_cd"
+		.asciiz "cd ok"
 		jmp mainloop 
 
 
@@ -675,7 +671,7 @@ dump:
 		bra @l8
 @l3:
 
-		debug_newline
+		crlf
 		lda dumpvec_start+1
 		jsr krn_hexout
 		lda dumpvec_start
@@ -748,7 +744,7 @@ readfile:
 	rts
 
 @l1:
-		debug_newline
+		crlf
 		ldy #$00
 @l2:	lda (filenameptr),y
 		beq @l3
@@ -775,14 +771,14 @@ upload:
 	jmp (startaddr)	
 
 hello:
-	debug_newline
+	crlf
 	jsr krn_primm
-	.asciiz "hello"
-
+	.asciiz "SteckShell 0.12b"
+	crlf
 	jmp mainloop
 
 help:
-	debug_newline
+	crlf
 	; +ShellPrintString .hellotxt
 	SetVector helptxt1, msgptr
 	jsr krn_strout
@@ -794,4 +790,6 @@ init_textui:
 	jsr	krn_textui_enable
 	rts
 
-pattern:	.byte "*.*",$00
+exec_extension:		.byte ".bin",$00
+filename: 			.byte "            ",$00
+pattern:			.byte "*.*",$00
