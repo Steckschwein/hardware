@@ -4,25 +4,18 @@ text_mode_40 	= 1
 num_ls_entries 	= $03
 
 .segment "OS"
-; !src <defs.h.a>
-; !src <bios.h.a>
 .include "kernel.inc"
 .include "kernel_jumptable.inc"
-; !src <kernel.h.a>
-; .include "sdcard.inc"
 .include "fat32.inc"
-; !src <shell.h.a>
-; !src <fat32.h.a>
-; !src <errors.h.a>
 
-dir_attrib_mask			= $0319
-steckos_start = $1000
-KEY_RETURN 	= $0d
-KEY_BACKSPACE 	= $08
-KEY_ESCAPE	= $1b
+dir_attrib_mask		= $0319
+steckos_start 		= $1000
+KEY_RETURN 			= $0d
+KEY_BACKSPACE 		= $08
+KEY_ESCAPE			= $1b
 KEY_ESCAPE_CRSR_UP	= 'A'
 KEY_ESCAPE_CRSR_DOWN	= 'B'
-BUF_SIZE	= 32
+BUF_SIZE			= 32
 
 retvec = $01
 tmp1=$c1	
@@ -54,15 +47,21 @@ init:
 	jsr krn_init_sdcard
 	cli
 	lda errno
-	beq @l
+	beq @l1
 
-	jsr krn_primm 
-	.asciiz "txt_msg_sd_init_error"
+	printstring "SD card init error"
+
 	jmp hello
 
-@l:
+@l1:
 	jsr krn_mount
-	
+	lda errno
+	beq @l2
+
+	printstring "SD card mount error"
+	jmp hello
+
+@l2: 
 
 	SetVector mainloop, retvec
 	SetVector buf, bufptr
@@ -102,7 +101,7 @@ inputloop:
 	sta (bufptr),y
 	iny
 
-@l1:
+line_end:
 	jsr terminate
 	jsr krn_chrout
 
@@ -119,7 +118,7 @@ backspace:
 
 		dey
 
-		bra foo
+		bra line_end
 
 escape:
 		jsr krn_getkey
