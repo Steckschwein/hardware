@@ -37,6 +37,7 @@ bufhwm				= $d2
 startaddr	= $d9
 entryvec			= $d4
 
+
 ;---------------------------------------------------------------------------------------------------------
 ; init shell
 ;  - init sd card (again)
@@ -668,8 +669,7 @@ dump:
 @l2:	cpy #$00
 		bne @l3
 
-		jsr krn_primm
-		.asciiz "parameter error"
+		printstring "parameter error"
 		
 		bra @l8
 @l3:
@@ -792,10 +792,9 @@ init_textui:
 	jsr	krn_textui_init
 	jsr	krn_textui_enable
 	rts
-
-; ;----------------------------------------------------------------------------------------------
-; ; decout - output byte in A as decimal ASCII without leading zeros
-; ;----------------------------------------------------------------------------------------------
+;----------------------------------------------------------------------------------------------
+; decout - output byte in A as decimal ASCII without leading zeros
+;----------------------------------------------------------------------------------------------
 decout:
 		phx
 		phy
@@ -840,8 +839,10 @@ decoutz:
 @l1:	
 		jmp decout
  
-; Lookup table for decimal to ASCII
+ ; Lookup table for decimal to ASCII
 dec_tbl:			.byte 128,160,200
+
+
 exec_extension:		.byte ".bin",$00
 filename: 			.byte "            ",$00
 pattern:			.byte "*.*",$00
