@@ -27,6 +27,14 @@ user_isr 	        = $028a
 .endif
 .endmacro
 
+.macro crlf
+	lda #$0a
+	jsr krn_chrout
+	lda #$0d
+	jsr krn_chrout
+.endmacro
+
+
 .macro debug_newline v32
 .ifdef DEBUG
     jsr primm
