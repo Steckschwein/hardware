@@ -1,7 +1,7 @@
 .include "kernel.inc"
 .include "vdp.inc"
 
-shell_addr	 = $1000
+shell_addr	 = $e000
 
 text_mode_40 = 1
 
