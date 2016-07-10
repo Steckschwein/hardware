@@ -35,22 +35,17 @@ kern_init:
 	
 	jsr init_sdcard
     debugHex errno
-    bne do_upload
+	lda errno
+	bne do_upload
 
 	jsr fat_mount
 	debugHex errno
+	lda errno
 	bne do_upload
 	
 	SetVector filename, filenameptr
 
-; 	ldy #$00
-; @l:	lda (filenameptr),y
-; 	beq @l2
-; 	jsr textui_chrout
-; 	iny
-; 	cpy #$10
-; 	bne @l
-; @l2:
+
     debug_newline
 
 	jsr fat_open
@@ -64,24 +59,6 @@ kern_init:
 
 	jsr fat_close
     debugHex errno
-
-
-; 	ldx #$00
-; :
-; 	lda shell_addr,x
-; 	jsr hexout
-; 	inx
-; 	bne :-
-
-; 	ldx #$00
-; :
-; 	lda shell_addr+$100,x
-; 	jsr hexout
-; 	inx
-; 	bne :-
-
-
-
 
 	ldx #$ff 
 	txs 
