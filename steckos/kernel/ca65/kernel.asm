@@ -227,6 +227,7 @@ upload:
 	lda #'K'
 	jsr textui_chrout
 
+	crlf
 	restore
 	rts
 
