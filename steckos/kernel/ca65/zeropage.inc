@@ -22,8 +22,8 @@ msgptr  = $ec		; 2 bytes
 spitmp 	= $ee
 
 ; FAT32
-lba_addr = $f0		; 4 bytes
-blocks	 = $f4
+; lba_addr = $f0		; 4 bytes
+; blocks	 = $f4
 filenameptr = $f5   ; 2 byte
 dirptr 		= $f7 	; 2 byte
 
@@ -32,3 +32,7 @@ dirptr 		= $f7 	; 2 byte
 sd_read_blkptr = $f9
 sd_write_blkptr = $fb
 sd_tmp	  = $fd
+
+
+lba_addr = $0280		; 4 bytes
+blocks	 = $0285
