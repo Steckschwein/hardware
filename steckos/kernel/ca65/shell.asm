@@ -429,7 +429,7 @@ dir_show_entry:
 	
 		jsr decoutz
 
-		lda #' '
+		lda #':'
 		jsr krn_chrout
 
 
