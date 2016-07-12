@@ -53,24 +53,25 @@ textui_update_crs_ptr:		;   updates the 16 bit pointer crs_p upon crs_x, crs_y v
 		lda #STATUS_CURSOR
 		trb screen_status  	;reset cursor state
     
-		stz	txtui_tmp1
+		;use the crs_ptr as tmp variable
+		stz	crs_ptr+1
 		lda crs_y
 		asl
 		asl
 		asl
-		sta txtui_tmp0    	; save crs_y * 8
+		sta crs_ptr 	   	; save crs_y * 8
 		asl		   
-		rol txtui_tmp1	   	; carry to tmp1
+		rol crs_ptr+1	   	; carry to tmp1
 		asl
-		rol txtui_tmp1		; again, carry to tmp1
-		adc txtui_tmp0    	; crs_y*32 + crs_y*8 (tmp0) => y*40
+		rol crs_ptr+1		; again, carry to tmp1
+		adc crs_ptr	    	; crs_y*32 + crs_y*8 (tmp0) => y*40
 		bcc @l1
-		inc	txtui_tmp1		; overflow inc page count
+		inc	crs_ptr+1		; overflow inc page count
 		clc				; 
 @l1:	adc crs_x
 		sta crs_ptr
 		lda #>SCREEN_BUFFER
-		adc	txtui_tmp1		; add carry and page to address high byte
+		adc	crs_ptr+1		; add carry and page to address high byte
 		sta	crs_ptr+1
 
 		lda	(crs_ptr)
