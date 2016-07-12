@@ -19,14 +19,6 @@ msgptr  = $ec		; 2 bytes
 ; SPI
 spitmp 	= $ee
 
-param_8 = $f0
-param_8_1 = $f1
-param_8_2 = $f2
-param_8_3 = $f3
-param_16_1 = $f0
-param_16_2 = $f2
-param_32 = $f0
-
 ; FAT32
 filenameptr = $f5   ; 2 byte
 dirptr 		= $f7 	; 2 byte
