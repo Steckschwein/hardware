@@ -12,8 +12,6 @@ screen_status 		= $e6
 screen_write_lock 	= $e7
 screen_frames		= $e8
 saved_char			= $e9
-txtui_tmp0			= $ea
-txtui_tmp1			= $eb
 
 ; OUT
 msgptr  = $ec		; 2 bytes
@@ -21,9 +19,15 @@ msgptr  = $ec		; 2 bytes
 ; SPI
 spitmp 	= $ee
 
+param_8 = $f0
+param_8_1 = $f1
+param_8_2 = $f2
+param_8_3 = $f3
+param_16_1 = $f0
+param_16_2 = $f2
+param_32 = $f0
+
 ; FAT32
-; lba_addr = $f0		; 4 bytes
-; blocks	 = $f4
 filenameptr = $f5   ; 2 byte
 dirptr 		= $f7 	; 2 byte
 
@@ -35,4 +39,4 @@ sd_tmp	  = $fd
 
 
 lba_addr = $0280		; 4 bytes
-blocks	 = $0285
+blocks	 = $0284
