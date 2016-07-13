@@ -37,8 +37,8 @@ test_input=*;   input_X + test_dirs; address of input + size of results
 .endmacro
 
 test_suite:    
-    SetTestInput input_1
-    jsr test
+;    SetTestInput input_1
+ ;   jsr test
     SetTestInput input_2
     jsr test
     SetTestInput input_3
@@ -61,6 +61,10 @@ test_suite:
     jsr test
     SetTestInput input_12
     jsr test
+    SetTestInput input_13
+    jsr test
+    SetTestInput input_14
+    jsr test
     rts    
     
 test:
@@ -78,16 +82,16 @@ l1:
 	jsr match	; check <name>.<ext> against 11 byte dir entry <name> <ext>
 	ply
 	plx		
-	lda	#0
+	lda	#$0
 	rol			;result in carry to bit 0	
 a5:	cmp	test_input, y
 	bne	_failed
 	jsr	_test_ok
-    bra _ok
+    bra _next
 _failed:
 	;failed with 'y'
 	jsr	_test_failed
-_ok:
+_next:
 	iny
 	inx
 	inx
@@ -104,31 +108,37 @@ dir_6:	     .byte "TEST    TXT"	;10
 dir_7:	     .byte "PROGS      "	;12
 dir_8:	     .byte ".          "	;14
 dir_9:	     .byte "..         "	;16
+dir_10:	     .byte ".SSH       "	;18
+dir_11:	     .byte "..FOO      "	;20
 
-input_1: 	.byte 0,0,1,0,0,0,0,0,0 ;expected result - 0 - no match, 1 - match - eg. 0,0,1 mean matches "LS        BIN" from dir_3
+input_1: 	.byte 0,0,1,0,0,0,0,0,0,0,0 ;expected result - 0 - no match, 1 - match - eg. 0,0,1 mean matches "LS        BIN" from dir_3
 			.byte "ls.bin",0        ;user input
-input_2: 	.byte 0,1,1,1,0,0,0,0,0
+input_2: 	.byte 0,1,1,1,0,0,0,0,0,0,0
 			.byte "l*.bin",0
-input_3: 	.byte 0,1,1,0,0,0,0,0,0
+input_3: 	.byte 0,1,1,0,0,0,0,0,0,0,0
 			.byte "l?.bin",0
-input_4: 	.byte 0,1,1,1,0,0,0,0,0
+input_4: 	.byte 0,1,1,1,0,0,0,0,0,0,0
 			.byte "l**.bin",0
-input_5: 	.byte 0,0,0,0,0,0,0,0,0
+input_5: 	.byte 0,0,0,0,0,0,0,0,0,0,0
 			.byte "l??.bin",0
-input_6: 	.byte 0,0,0,1,0,0,0,0,0
+input_6: 	.byte 0,0,0,1,0,0,0,0,0,0,0
 			.byte "l?????.bin",0
-input_7: 	.byte 0,0,1,0,0,0,0,0,0
+input_7: 	.byte 0,0,1,0,0,0,0,0,0,0,0
 			.byte "Ls.bin",0
-input_8: 	.byte 0,0,0,0,0,0,0,1,0
+input_8: 	.byte 0,0,0,0,0,0,0,1,0,0,0
 			.byte ".",0
-input_9: 	.byte 0,0,0,0,0,0,0,0,1
+input_9: 	.byte 0,0,0,0,0,0,0,0,1,0,0
 			.byte "..",0
-input_10: 	.byte 0,0,0,0,0,0,0,0,0
+input_10: 	.byte 0,0,0,0,0,0,0,0,0,0,0
 			.byte "test.txtfoobar",0
-input_11: 	.byte 0,0,0,0,0,1,0,0,0
+input_11: 	.byte 0,0,0,0,0,1,0,0,0,0,0
 			.byte "test.txt",0
-input_12: 	.byte 0,0,0,0,0,0,1,0,0
+input_12: 	.byte 0,0,0,0,0,0,1,0,0,0,0
 			.byte "progs",0
+input_13: 	.byte 0,0,0,0,0,0,0,0,0,1,0
+			.byte ".ssh",0
+input_14: 	.byte 0,0,0,0,0,0,0,0,0,0,1
+			.byte "..foo",0
 
 test_dir_tab:
 	.word dir_1
@@ -140,4 +150,6 @@ test_dir_tab:
 	.word dir_7
 	.word dir_8
 	.word dir_9
+    .word dir_10
+    .word dir_11
 test_dir_tab_e:
