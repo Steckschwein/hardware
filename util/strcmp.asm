@@ -1,4 +1,3 @@
-dirptr=$0
 dir_entry_size=11
 
 .export match

@@ -1,13 +1,15 @@
 .setcpu "65c02"
 .org    $1000
-    nop
-	jmp	test_suite
+	jsr	test_suite
+main:
+    bra main
 
 .include "../bios/bios_call.inc"
 .include "strcmp.asm"
 .include "asm_unit.asm"
 
-test_dirs=9
+dirptr=$0
+test_dirs=11
 test_input=*;   input_X + test_dirs; address of input + size of results
 
 .macro Println
@@ -26,7 +28,8 @@ test_input=*;   input_X + test_dirs; address of input + size of results
     sta a4+1
     lda #<input
     sta a5+1
-    lda #>input+test_dirs
+    ;high bytes
+    lda #>(input+test_dirs)
     sta a0+2
     sta a1+2
     sta a2+2
@@ -36,7 +39,7 @@ test_input=*;   input_X + test_dirs; address of input + size of results
     sta a5+2
 .endmacro
 
-test_suite:    
+test_suite:
 ;    SetTestInput input_1
  ;   jsr test
     SetTestInput input_2
@@ -65,7 +68,7 @@ test_suite:
     jsr test
     SetTestInput input_14
     jsr test
-    rts    
+    rts
     
 test:
     Println
@@ -81,9 +84,10 @@ l1:
 	phy
 	jsr match	; check <name>.<ext> against 11 byte dir entry <name> <ext>
 	ply
-	plx		
-	lda	#$0
+	plx
+	lda	#0
 	rol			;result in carry to bit 0	
+    ;jsr hexout
 a5:	cmp	test_input, y
 	bne	_failed
 	jsr	_test_ok
@@ -119,9 +123,9 @@ input_3: 	.byte 0,1,1,0,0,0,0,0,0,0,0
 			.byte "l?.bin",0
 input_4: 	.byte 0,1,1,1,0,0,0,0,0,0,0
 			.byte "l**.bin",0
-input_5: 	.byte 0,0,0,0,0,0,0,0,0,0,0
+input_5: 	.byte 0,0,0,0,0,0,0,0,0,0,0; FIXME
 			.byte "l??.bin",0
-input_6: 	.byte 0,0,0,1,0,0,0,0,0,0,0
+input_6: 	.byte 0,0,0,1,0,0,0,0,0,0,0; FIXME
 			.byte "l?????.bin",0
 input_7: 	.byte 0,0,1,0,0,0,0,0,0,0,0
 			.byte "Ls.bin",0
