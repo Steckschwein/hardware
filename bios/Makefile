@@ -11,7 +11,8 @@ clean:
 	ca65 --target none $<
 
 bios.bin: $(OBJS) bios.inc
-	ld65 $(LDFLAGS) $(OBJS) -o bios.bin
+	ld65 $(LDFLAGS) $(OBJS) -Ln symbols.txt -o bios.bin
+	grep "vdp" symbols.txt | awk -F' ' '{print $$3" = $$"$$2}'| sed -e "s/^\.//g" > bios_call.inc
 
 
 loader.bin: bios.bin
