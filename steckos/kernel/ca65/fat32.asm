@@ -5,7 +5,7 @@
 .export fat_mount, fat_open, fat_open_rootdir, fat_close, fat_read, fat_find_first, fat_find_next
 
 ; DEBUG
-.import hexout, primm
+.import hexout, primm, krn_primm
 
 
 FD_start_cluster = $00
@@ -193,24 +193,35 @@ calc_lba_addr:
 		lda fd_area + FD_start_cluster +3, x 
 
 		cmp #$ff
-		beq file_not_open
-		
+		bne @l1
+        jmp file_not_open
+@l1:		
 		; lba_addr = cluster_begin_lba + (cluster_number - 2) * sectors_per_cluster;
-		sec
-		lda fd_area + FD_start_cluster, x 
-		sbc #$02
-		sta lba_addr
-
-		lda fd_area + FD_start_cluster + 1,x 
-		sbc #$00
-		sta lba_addr + 1
-		lda fd_area + FD_start_cluster + 2,x 
-		sbc #$00
-		sta lba_addr + 2
-		lda fd_area + FD_start_cluster + 3,x 
-		sbc #$00
-		sta lba_addr + 3
-		
+        ; lba_addr = cluster_begin_lba - (2 * sectors_per_cluster) + (cluster_number * sectors_per_cluster);
+        ; lba_addr = cluster_begin_lba_m2 + (cluster_number * sectors_per_cluster);        
+;		sec
+;		lda fd_area + FD_start_cluster, x 
+;		sbc #$02
+;		sta lba_addr
+;		lda fd_area + FD_start_cluster + 1,x 
+;		sbc #$00
+;		sta lba_addr + 1
+;		lda fd_area + FD_start_cluster + 2,x 
+;		sbc #$00
+;		sta lba_addr + 2
+;		lda fd_area + FD_start_cluster + 3,x 
+;		sbc #$00
+;		sta lba_addr + 3
+        
+        lda fd_area + FD_start_cluster  +0,x
+        sta lba_addr
+        lda fd_area + FD_start_cluster  +1,x
+        sta lba_addr +1
+        lda fd_area + FD_start_cluster  +2,x
+        sta lba_addr +2
+        lda fd_area + FD_start_cluster  +3,x
+        sta lba_addr +3
+        
         ;sectors_per_cluster -> is a power of 2 value, therefore cluster << n, where n ist the number of bit set in sectors_per_cluster
         lda sectors_per_cluster
 @lm:    lsr
@@ -232,6 +243,8 @@ calc_lba_addr:
 		.endrepeat
         
 calc_end:
+        debug32s "lba_e:", lba_addr
+
 		plx
 		pla
 
@@ -329,12 +342,12 @@ fat_mount:
 		jmp end_mount
 @l6:
 
-
 		; Sectors per Cluster. Valid: 1,2,4,8,16,32,64,128
 		lda sd_blktarget + BPB_SecPerClus
 		sta sectors_per_cluster
-		
+        
 		; cluster_begin_lba = Partition_LBA_Begin + Number_of_Reserved_Sectors + (Number_of_FATs * Sectors_Per_FAT);
+		; cluster_begin_lba = Partition_LBA_Begin + Number_of_Reserved_Sectors + (Number_of_FATs * Sectors_Per_FAT) -  (2 * sec/cluster);
 
 		; add number of reserved sectors to fat_begin_lba. store in cluster_begin_lba
 		clc
@@ -377,27 +390,50 @@ fat_mount:
 		dey
 		bne @l7
 
+        ; cluster_begin_lba_m2 -> cluster_begin_lba - (BPB_RootClus*sec/cluster)        
+        debug8s "sec/cl:", sectors_per_cluster
+        debug32s "clb1:", cluster_begin_lba
+        
+        ;TODO FIXME we assume 2 here for insteasd using the value in BPB_RootClus
+        ; cluster_begin_lba_m2 -> cluster_begin_lba - (2*sec/cluster) -> sec/cluster << 1
+        lda sectors_per_cluster ; max sec/cluster can be 128 and therefore wie subtract max 256
+        asl
+        sta lba_addr        ;   used as tmp
+        stz lba_addr +1     ;   safe carry
+        rol	lba_addr +1     
+        sec	                ;   subtract from cluster_begin_lba
+        lda cluster_begin_lba
+        sbc lba_addr
+        sta cluster_begin_lba
+        lda cluster_begin_lba +1
+        sbc lba_addr +1
+        sta cluster_begin_lba +1
+        lda cluster_begin_lba +2
+        sbc #0
+        sta cluster_begin_lba +2
+        lda cluster_begin_lba +3
+        sbc #0
+        sta cluster_begin_lba +3 
+        
+        debug32s "clb2:", cluster_begin_lba
+        
 		; init file descriptor area
 		jsr fat_init_fdarea
 
 
 		Copy sd_blktarget + BPB_RootClus, root_dir_first_clus, 3
-
 		; now we have the lba address of the first sector of the first cluster
 
 end_mount:
 		; jsr .sd_deselect_card
 		restore
-		; rts
-
+        
 		; fall through to open_rootdir
-	
 fat_open_rootdir:
 		; Open root dir
 		Copy root_dir_first_clus, fd_area + FD_start_cluster, 3
 		Copy root_dir_first_clus, current_dir_first_cluster, 3
 		jmp calc_lba_addr
-		; rts
 
 fat_init_fdarea:
 		ldx #$00

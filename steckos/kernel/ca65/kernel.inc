@@ -42,16 +42,38 @@ user_isr 	        = $028a
 .endif
 .endmacro
 
+.macro debug8s st, v8
+.ifdef DEBUG
+    pha
+    jsr primm
+    .byte st
+    .byte 0    
+    lda v8
+    jsr hexout
+    debug_newline
+    pla
+.endif
+.endmacro
+
+.macro debug32s st, v32
+.ifdef DEBUG
+    jsr primm
+    .byte st
+    .byte 0    
+    debug32 v32
+.endif
+.endmacro
+
 .macro debug32 v32
 .ifdef DEBUG
     pha
-    lda v32
-    jsr hexout
-    lda v32+1
+    lda v32+3
     jsr hexout
     lda v32+2
     jsr hexout
-    lda v32+3
+    lda v32+1
+    jsr hexout
+    lda v32+0
     jsr hexout
     debug_newline
     pla

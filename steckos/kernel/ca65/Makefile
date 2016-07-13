@@ -13,7 +13,7 @@ clean:
 %.o: %.asm vdp.inc zeropage.inc
 	ca65 --target none $(DEBUG) $<
 
-kernel.bin: $(OBJS) 
+kernel.bin: $(OBJS) kernel.inc
 	ld65 $(LDFLAGS) $(OBJS) -m kernel.map -Ln symbols.txt -o kernel.bin 
 	grep krn symbols.txt | awk -F' ' '{print $$3" = $$"$$2}'| sed -e "s/^\.//g" > kernel_jumptable.inc
 
@@ -24,8 +24,13 @@ loader.bin: kernel.bin loader.o
 shell.bin: kernel.bin 
 	cl65 --target none -m shell.map --config steckos.cfg shell.asm -o shell.bin
 
-transfer: loader.bin
+shell: shell.bin
 	../../../transfer.py -s 0xe000 shell.bin
+
+transfer: loader.bin
+	../../../transfer.py -s 0x1000 loader.bin
+
+
 
 test.bin: test.o
 	cl65 --target none --config steckos.cfg test.asm -o test.bin
