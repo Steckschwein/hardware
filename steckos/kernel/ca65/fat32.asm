@@ -191,28 +191,12 @@ calc_lba_addr:
 		phx
 		
 		lda fd_area + FD_start_cluster +3, x 
-
 		cmp #$ff
-		bne @l1
-        jmp file_not_open
-@l1:		
+		beq file_not_open
+
 		; lba_addr = cluster_begin_lba + (cluster_number - 2) * sectors_per_cluster;
         ; lba_addr = cluster_begin_lba - (2 * sectors_per_cluster) + (cluster_number * sectors_per_cluster);
         ; lba_addr = cluster_begin_lba_m2 + (cluster_number * sectors_per_cluster);        
-;		sec
-;		lda fd_area + FD_start_cluster, x 
-;		sbc #$02
-;		sta lba_addr
-;		lda fd_area + FD_start_cluster + 1,x 
-;		sbc #$00
-;		sta lba_addr + 1
-;		lda fd_area + FD_start_cluster + 2,x 
-;		sbc #$00
-;		sta lba_addr + 2
-;		lda fd_area + FD_start_cluster + 3,x 
-;		sbc #$00
-;		sta lba_addr + 3
-        
         lda fd_area + FD_start_cluster  +0,x
         sta lba_addr
         lda fd_area + FD_start_cluster  +1,x
@@ -243,8 +227,6 @@ calc_lba_addr:
 		.endrepeat
         
 calc_end:
-        debug32s "lba_e:", lba_addr
-
 		plx
 		pla
 
