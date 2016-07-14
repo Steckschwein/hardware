@@ -312,9 +312,9 @@ sd_read_multiblock:
 
 	ldy #$00
 	lda via1portb   ; Port laden
-	AND #$fe        ; Takt ausschalten
-	TAX             ; aufheben
-	ORA #$01
+	and #$fe        ; Takt ausschalten
+	tax             ; aufheben
+	ora #$01
 	sta sd_tmp 
     
 	; read 256 bytes twice, increase blkptr in between
