@@ -1,6 +1,6 @@
 # Homebrew 8bit computer based on 65c02 CPU #
 
-Description
+## Description ##
 We are developing a retro style 8bit computer based on the 65c02 CPU. 
 The goal is to design a machine that could have existed back in the home computer era, but with "modern" interfaces like PS/2, full fledged rs232, SPI, etc. 
 
@@ -16,3 +16,10 @@ avr-gcc
 The repository contains the assembler source for the system firmware, test and demo programs, galasm source for the address decoder and the KiCAD project files for schematics and layout.
 
 [Steckschwein Web Site](http://steckschwein.de/)
+
+## Features ##
+65c02 CPU @ 8MHz
+TMS9929 Video Display Controller
+Yamaha YM3812 (OPL2) Sound
+rs232 serial interface using UART 16550
+SD Card Interface
