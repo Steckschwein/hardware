@@ -1,12 +1,18 @@
-<script type="WaveDrom">
-{signal: [
-  {name: 'clk/16MHz',  wave: 'p...............'},
-  {name: 'clk0/8MHz',  wave: 'lhlhlhlhlhlhlhlh'},
-  {name: 'clk1/4MHz',  wave: 'l.h.l.h.l.h.l.h.'},
-  {name: 'PHI2/2MHz/250ns',  wave: 'l...h...l...h...'},
-  {name: 'clk3/1MHz',  wave: 'l.......h.......'},
-  {},
-  {name: 'vdpcsw/csr',  wave: '1...0.1.........'},
+# Homebrew 8bit computer based on 65c02 CPU #
 
-]}
-</script>
+Description
+We are developing a retro style 8bit computer based on the 65c02 CPU. 
+The goal is to design a machine that could have existed back in the home computer era, but with "modern" interfaces like PS/2, full fledged rs232, SPI, etc. 
+
+We use as much open source tools as possible, such as 
+ACME Cross Assembler
+cc65
+make
+Mercurial
+galasm
+KiCAD
+avr-gcc
+
+The repository contains the assembler source for the system firmware, test and demo programs, galasm source for the address decoder and the KiCAD project files for schematics and layout.
+
+[Steckschwein Web Site](http://steckschwein.de/)
