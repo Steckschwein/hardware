@@ -228,7 +228,7 @@ int isEnd(unsigned long int cla){
 }
 
 unsigned long int nextClusterNumber(char *block_fat, unsigned long int cla){
-	unsigned int offs = (cla << 2) - (cla >> 7 << 9);//offset within 512 byte block
+	unsigned int offs = (cla << 2 & (BLOCK_SIZE-1));//offset within 512 byte block, cluster nr * 4 (32 Bit) and Bit 8-0 gives the offset
 	unsigned long int nextCluster = _32(block_fat, offs);
 	printf("ncla: $%x\n", nextCluster);
 	return nextCluster;
@@ -245,12 +245,15 @@ int main(int argc, char* argv[]){
 
 //	char filename[12] = "32767   DAT\0";
 	//char filename[12] = "32K     DAT\0";
-	char filename[12] = "32769   DAT\0";
+	//char filename[12] = "32769   DAT\0";
 
 	//char filename[12] = "511BYTE DAT\0";
 //	char filename[12] = "512BYTE DAT\0";
 //	char filename[12] = "513BYTE DAT\0";
-/*	char filename[12] = "BIGFILE DAT\0";
+//	char filename[12] = "2048K   DAT\0";
+	char filename[12] = "1024K   DAT\0";
+	//char filename[12] = "96K     DAT\0";
+/*	char filename[12] = "8192K	 DAT\0";
 	char filename[12] = "TEST    BIN\0";
 	char filename[12] = "PIC1    CFG\0";
 */	
@@ -334,7 +337,7 @@ int main(int argc, char* argv[]){
 	
 	unsigned long int cla = fileFound.startCluster;
 	//printf("fat cla: $%x $%x bn: $%x\n", cla, (cla << 2) - (cla >> 7 << 9), (cla >> 7));	
-	printf("fat cla: $%x $%x bn: $%x\n", cla, (cla << 2) - (cla >> 7 << 9), (cla >> 7));	
+	printf("fat cla: $%x $%x bn: $%x\n", cla, (cla << 2 & (BLOCK_SIZE-1)), (cla >> 7));	
 	printf("data:\n");
 	unsigned long int blocks = fileFound.size >> 9; //(div BLOCK_SIZE);
 	if((fileFound.size & 0x1ff) != 0){
