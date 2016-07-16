@@ -564,11 +564,11 @@ match_ext_1:
 	beq	m_found		; end of dir?
 	bra	match_ext
 	
-m_r:	cmp	#'a'		; regular char, match uppercase
+m_r:	cmp	#'a'		; regular char a-z?
 		bcc m_r_match
 		cmp #'z'
-		bcs m_r_match
-		and #$df		; uppercase
+		bcs m_r_match		
+		and #$df		; otherwise, uppercase
 m_r_match:	
 		cmp (dirptr),y	; regular char, compare
 		bne m_not_found
@@ -589,7 +589,7 @@ m_n:	inx
 		lda #' '
 m_n1:
 		cmp (dirptr),y		; until ' '
-		beq match_ext_1		; then go on with skip until extension above
+		beq match_ext_1		; then go on and skip until extension above
 m_n2:
 		iny		
 		cpy #DIR_Attr
