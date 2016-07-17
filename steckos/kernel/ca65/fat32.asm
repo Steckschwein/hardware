@@ -195,8 +195,10 @@ calc_blocks: ;blocks = filesize / BLOCKSIZE -> filesize >> 9 (div 512) +1 if fil
 		pha
 		lda fd_area + FD_file_size+3,x
 		lsr
+		sta blocks + 2
 		lda fd_area + FD_file_size+2,x
 		ror
+		sta blocks + 1
 		lda fd_area + FD_file_size+1,x
 		ror
 		sta blocks
@@ -204,29 +206,12 @@ calc_blocks: ;blocks = filesize / BLOCKSIZE -> filesize >> 9 (div 512) +1 if fil
 		lda fd_area + FD_file_size+0,x
 		beq @l2
 @l1:	inc blocks
-@l2:	pla
-		rts
-
-calc_blocks32: ;blocks = filesize / BLOCKSIZE -> filesize >> 9 (div 512) +1 if filesize LSB is not 0
-		pha
-		lda fd_area+FD_file_size+3,x
-		lsr
-		sta blocks +2
-		lda fd_area+FD_file_size+2,x
-		ror
-		sta blocks +1
-		lda fd_area+FD_file_size+1,x
-		ror
-		sta blocks
-		bcs @l1
-		lda fd_area+FD_file_size+0,x
-		beq @l2
-@l1:	inc blocks
 		bne @l2
 		inc blocks+1
 		bne @l2
 		inc blocks+2
 @l2:	pla
+        debug24s "blocks:", blocks
 		rts
 
 ; calculate LBA address of first block from cluster number found in file descriptor entry
@@ -294,7 +279,7 @@ inc_lba_address:
 
 ;vol->LbaFat + (cluster_nr>>7);// div 128 -> 4 (32bit) * 128 cluster numbers per block (512 bytes)
 calc_fat_lba_addr2:
-		;instead of shift right 7 times in a loop, we simple go counter clockwise once
+		;instead of shift right 7 times in a loop, we copy other the hole byte and simple shift left once
 		lda fd_area + FD_start_cluster  +0,x
 		asl
 		lda fd_area + FD_start_cluster  +1,x

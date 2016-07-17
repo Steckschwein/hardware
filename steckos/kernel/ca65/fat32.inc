@@ -1,5 +1,5 @@
 current_dir_first_cluster 	= $02b0 ; first cluster of current dir
-errno	 					= $0300
+
 cluster_begin_lba 			= $0303 ; begin of cluster area, 4 bytes
 fat_begin_lba				= $0307	; begin of fat area, 4 bytes
 sectors_per_cluster 		= $030b ; sectors per cluster, 1 byte
@@ -7,8 +7,6 @@ root_dir_first_clus 		= $030c ; first cluster of root dir, 4 bytes
 filename_buf				= $0310 ; file name buffer, 11 bytes
 fd_area						= $0320 ; File descriptor area, 6x8byte until $0350 
 sd_blktarget 				= $0400
-
-filesize = $a1
 
 fat_bad_block_signature		= 	$01
 fat_invalid_partition_type	=	$02

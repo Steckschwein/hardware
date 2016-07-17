@@ -7,11 +7,6 @@ adrh = addr+1
 crs_x	= $e2
 crs_y   = $e3
 crs_ptr = $e4
-; TODO FIXME free zp space if necessary by using DATA RAM instead of zp space here
-screen_status 		= $e6
-screen_write_lock 	= $e7
-screen_frames		= $e8
-saved_char			= $e9
 
 ; OUT
 msgptr  = $ec		; 2 bytes
@@ -20,13 +15,10 @@ msgptr  = $ec		; 2 bytes
 spitmp 	= $ee
 
 ; FAT32
-cluster_nr	= $f5   ; 2 byte
+filenameptr = $f0   ; 2 byte
+dirptr 		= $f2 	; 2 byte
 
-filenameptr = $f5   ; 2 byte
-dirptr 		= $f7 	; 2 byte
-
-
-; SDCARD 
+; SDCARD
 sd_read_blkptr = $f9
 sd_write_blkptr = $fb
 sd_tmp	  = $fd
@@ -35,5 +27,6 @@ sd_tmp	  = $fd
 lba_addr 		= $0280		; 4 bytes
 lba_addr_data	= lba_addr
 lba_addr_fat 	= $0284		; 4 bytes 
-
 blocks			= $0288		; 3 bytes - blocks to read, 4GB -> 4294967296 >> 9 = 8388608 ($800000) max blocks/file 
+
+errno	 	    = $0300

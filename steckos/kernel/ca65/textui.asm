@@ -8,7 +8,16 @@
 
 .segment "KERNEL"
 
-SCREEN_BUFFER=$dc00
+SCREEN_BUFFER       =   $c000
+screen_status 		=   SCREEN_BUFFER + (COLS*ROWS) + COLS
+screen_write_lock 	=   SCREEN_BUFFER + (COLS*ROWS) + COLS + 1
+screen_frames		=   SCREEN_BUFFER + (COLS*ROWS) + COLS + 2
+saved_char			=   SCREEN_BUFFER + (COLS*ROWS) + COLS + 3
+;screen_status 		=   $d000
+;screen_write_lock 	=   $d001
+;screen_frames		=   $d002
+;saved_char			=   $d003
+
 ROWS=24
 COLS=40
 CURSOR_BLANK=' '
@@ -176,6 +185,7 @@ textui_scroll_up:
 @l4:	lda	SCREEN_BUFFER+$300+COLS,x
 		sta	SCREEN_BUFFER+$300,x
 		inx
+        cpx #<(COLS * ROWS)
 		bne	@l4
 		plx
 		rts

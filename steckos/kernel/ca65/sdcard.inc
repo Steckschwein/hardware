@@ -21,7 +21,3 @@ sd_cmd_chksum		= sd_cmd_param+4
 sd_cmd_result 		= $02a5
 
 
-; pointer for io block operations
-;sd_blkptr 	= $fc
-
-

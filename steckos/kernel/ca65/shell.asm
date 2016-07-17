@@ -1,5 +1,3 @@
-
-
 text_mode_40 	= 1
 num_ls_entries 	= $03
 
@@ -7,8 +5,6 @@ num_ls_entries 	= $03
 tmp0:	.byte $00
 tmp1:	.byte $00
 tmp5:	.byte $00
-; tmp1=$c1	
-; tmp5=$c5
 
 .segment "OS"
 .include "kernel.inc"
