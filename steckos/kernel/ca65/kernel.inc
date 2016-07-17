@@ -1,14 +1,6 @@
 .setcpu "65c02"
 .include "zeropage.inc"
 
-current_dir_first_cluster 	= $02b0 ; first cluster of current dir
-filename_buf				= $030c ; file name buffer, 11 bytes
-fd_area						= $0320 ; File descriptor area, 6x8byte until $0350 
-fat_first_block				= $0350
-sd_blktarget 				= $0400
-
-errno	 			= $0300
-
 user_isr 	        = $028a
 
 .macro	printstring text

@@ -1,5 +1,4 @@
 .include "kernel.inc"
-
 .include "vdp.inc"
 
 .export textui_init0, textui_update_screen, textui_chrout
@@ -9,7 +8,7 @@
 
 .segment "KERNEL"
 
-SCREEN_BUFFER=$c000
+SCREEN_BUFFER=$dc00
 ROWS=24
 COLS=40
 CURSOR_BLANK=' '

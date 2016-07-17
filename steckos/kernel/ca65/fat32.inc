@@ -1,8 +1,14 @@
-cluster_begin_lba 		= $0303 ; begin of cluster area, 4 bytes
-sectors_per_cluster 	= $0307 ; sectors per cluster, 1 byte
-root_dir_first_clus 	= $0308 ; first cluster of root dir, 4 bytes
+current_dir_first_cluster 	= $02b0 ; first cluster of current dir
+errno	 					= $0300
+cluster_begin_lba 			= $0303 ; begin of cluster area, 4 bytes
+fat_begin_lba				= $0307	; begin of fat area, 4 bytes
+sectors_per_cluster 		= $030b ; sectors per cluster, 1 byte
+root_dir_first_clus 		= $030c ; first cluster of root dir, 4 bytes
+filename_buf				= $0310 ; file name buffer, 11 bytes
+fd_area						= $0320 ; File descriptor area, 6x8byte until $0350 
+sd_blktarget 				= $0400
+
 filesize = $a1
-;blocks = $a0 
 
 fat_bad_block_signature		= 	$01
 fat_invalid_partition_type	=	$02
@@ -78,3 +84,7 @@ DIR_WrtDate		= $18	; file write date, 16 bits
 						; Bits 9–15: Count of years from 1980, valid value range 0–127 inclusive (1980–2107).
 DIR_FstClusLO	= $1A	;16 Bits
 DIR_FileSize	= $1C	;32 Bits
+;
+;
+;
+FAT_EOC			= $0ffffff8

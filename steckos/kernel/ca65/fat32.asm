@@ -11,6 +11,30 @@
 FD_start_cluster = $00
 FD_file_size = $08
 
+.struct PartitionEntry
+.endstruct
+
+.struct F32Volume
+	BytsPerSec	.word
+	SecPerClus	.byte
+	RsvdSecCnt	.word
+	NumFATs		.byte
+	FATSz32		.word	2
+	RootClus	.word	2
+	LbaFat		.word	2
+	LbaCluster	.word	2
+.endstruct
+
+.struct F32_fd
+	Filename		.byte 12
+	Attr			.byte
+	StartCluster	.word 2
+	Size			.word 2
+	
+	CurrentCluster	.word 2
+	SeekPos			.word 2
+	;.res			11, 0 ;fill up to $20
+.endstruct
 
 .macro saveClusterNo where
 	ldy #DIR_FstClusHI +1
@@ -167,7 +191,7 @@ fat_check_signature:
 @l2:	rts
 
 
-calc_blocks:
+calc_blocks: ;blocks = filesize / BLOCKSIZE -> filesize >> 9 (div 512) +1 if filesize LSB is not 0
 		pha
 		lda fd_area + FD_file_size+3,x
 		lsr
@@ -183,9 +207,31 @@ calc_blocks:
 @l2:	pla
 		rts
 
+calc_blocks32: ;blocks = filesize / BLOCKSIZE -> filesize >> 9 (div 512) +1 if filesize LSB is not 0
+		pha
+		lda fd_area+FD_file_size+3,x
+		lsr
+		sta blocks +2
+		lda fd_area+FD_file_size+2,x
+		ror
+		sta blocks +1
+		lda fd_area+FD_file_size+1,x
+		ror
+		sta blocks
+		bcs @l1
+		lda fd_area+FD_file_size+0,x
+		beq @l2
+@l1:	inc blocks
+		bne @l2
+		inc blocks+1
+		bne @l2
+		inc blocks+2
+@l2:	pla
+		rts
 
 ; calculate LBA address of first block from cluster number found in file descriptor entry
 ; file descriptor index must be in x
+calc_data_lba_addr:
 calc_lba_addr:
 		pha
 		phx
@@ -193,9 +239,7 @@ calc_lba_addr:
 		lda fd_area + FD_start_cluster +3, x 
 		cmp #$ff
 		beq file_not_open
-
-		; lba_addr = cluster_begin_lba + (cluster_number - 2) * sectors_per_cluster;
-        ; lba_addr = cluster_begin_lba - (2 * sectors_per_cluster) + (cluster_number * sectors_per_cluster);
+		
         ; lba_addr = cluster_begin_lba_m2 + (cluster_number * sectors_per_cluster);        
         lda fd_area + FD_start_cluster  +0,x
         sta lba_addr
@@ -248,8 +292,44 @@ inc_lba_address:
 @l1:
 		rts
 
-
-
+;vol->LbaFat + (cluster_nr>>7);// div 128 -> 4 (32bit) * 128 cluster numbers per block (512 bytes)
+calc_fat_lba_addr2:
+		;instead of shift right 7 times in a loop, we simple go counter clockwise once
+		lda fd_area + FD_start_cluster  +0,x
+		asl
+		lda fd_area + FD_start_cluster  +1,x
+		rol
+		sta lba_addr_fat+0
+		lda fd_area + FD_start_cluster  +2,x
+		rol
+		sta lba_addr_fat+1
+		lda fd_area + FD_start_cluster  +3,x
+		rol
+		sta lba_addr_fat+2
+		lda fd_area + FD_start_cluster  +3,x
+		rol
+		rol		
+		and	#$01;only bit 0
+        sta lba_addr_fat+3
+        ; add fat_begin_lba and lba_addr_fat
+		clc
+		lda fat_begin_lba+0
+		adc lba_addr_fat +0
+		sta lba_addr_fat +0
+		lda fat_begin_lba+1
+		adc lba_addr_fat +1
+		sta lba_addr_fat +1
+		lda fat_begin_lba+2
+		adc lba_addr_fat +2
+		sta lba_addr_fat +2
+		lda fat_begin_lba+3
+		adc lba_addr_fat +3
+		sta lba_addr_fat +3
+		rts	
+	
+fat_next_cln:
+;		lda	fd_area + FD:
+		rts		
 
 
 ;---------------------------------------------------------------------
@@ -337,21 +417,21 @@ fat_mount:
 		lda lba_addr + 0
 		adc sd_blktarget + BPB_RsvdSecCnt + 0
 		sta cluster_begin_lba + 0
-		sta fat_first_block + 0	
+		sta fat_begin_lba + 0	
 		lda lba_addr + 1
 		adc sd_blktarget + BPB_RsvdSecCnt + 1
 		sta cluster_begin_lba + 1
-		sta fat_first_block + 1	
+		sta fat_begin_lba + 1	
 
 		lda lba_addr + 2
 		adc #$00
 		sta cluster_begin_lba + 2
-		sta fat_first_block + 2	
+		sta fat_begin_lba + 2	
 
 		lda lba_addr + 3
 		adc #$00
 		sta cluster_begin_lba + 3
-		sta fat_first_block + 3	
+		sta fat_begin_lba + 3	
 
 
 		; Number of FATs. Must be 2
@@ -367,7 +447,7 @@ fat_mount:
 		sta cluster_begin_lba,x
 		inx
 		rol ; save status register before cpx to save carry
-		cpx #$04	
+		cpx #$04 ; 32Bit
 		bne @l8
 		dey
 		bne @l7
@@ -375,7 +455,7 @@ fat_mount:
         ; cluster_begin_lba_m2 -> cluster_begin_lba - (BPB_RootClus*sec/cluster)        
         debug8s "sec/cl:", sectors_per_cluster
         debug32s "clb1:", cluster_begin_lba
-        
+        		
         ;TODO FIXME we assume 2 here for insteasd using the value in BPB_RootClus
         ; cluster_begin_lba_m2 -> cluster_begin_lba - (2*sec/cluster) -> sec/cluster << 1
         lda sectors_per_cluster ; max sec/cluster can be 128 and therefore wie subtract max 256
