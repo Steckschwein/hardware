@@ -4,6 +4,7 @@
 #define BLOCK_SIZE 512
 #define DIR_ENTRIES_PER_BLOCK BLOCK_SIZE / 32
 #define DIRENTRY_FILENAME 11
+#define EOC 0x0ffffff8 //end of cluster chain is everything greater or equal to 0x0ffffff8 - 24 Bit cluster number on fat32, the highest 4 bits are reserved and will be unmask
 
 //
 // od -Ax -t x1 --endian=little /dev/sdb|head -20
@@ -33,14 +34,14 @@
 unsigned char block_fat[BLOCK_SIZE];
 unsigned char block_data[BLOCK_SIZE];
 
-struct partition_entry{
+struct PartitionEntry{
 	unsigned char Bootflag;
 	unsigned int TypeCode;
 	unsigned long int NumSectors;
 	unsigned long int LBABegin;
 };
 
-struct f32_volume{
+struct F32_Volume{
 	unsigned int BytsPerSec;
 	unsigned char SecPerClus;
 	unsigned int RsvdSecCnt;
@@ -52,13 +53,13 @@ struct f32_volume{
 	unsigned long int LbaCluster;
 };
 
-struct f32_fd{
+struct F32_fd{
 	unsigned char filename[12];
 	unsigned char attr;
 	unsigned long int startCluster;
 	unsigned long int size;
 	
-	unsigned long int currentCluster;
+	unsigned long int dataCluster;
 	unsigned long int seekPos;
 };
 
@@ -108,7 +109,7 @@ int match(char *s, char *s2){
 	return 1;
 }
 
-unsigned int findDirEntry(char* block_data, char *filename, struct f32_fd *fileFound){
+unsigned int findDirEntry(char* block_data, char *filename, struct F32_fd *fileFound){
 	for(int n = 0;n<DIR_ENTRIES_PER_BLOCK;n++){
 		int offs = n*32;
 		if(block_data[offs] == 0)//end of dir
@@ -168,7 +169,7 @@ struct fat_page{
 	unsigned long int cluster_nr;
 };
 
-unsigned long int findFreeCluser(FILE *fd, struct f32_volume *vol){
+unsigned long int findFreeCluser(FILE *fd, struct F32_Volume *vol){
 	unsigned long int cluster = 0;
 	unsigned int fbnr = 0;
 	unsigned int i;
@@ -188,14 +189,14 @@ unsigned long int findFreeCluser(FILE *fd, struct f32_volume *vol){
 	return cluster;
 }
 
-void map(unsigned char *buf, struct partition_entry *p){
+void map(unsigned char *buf, struct PartitionEntry *p){
 	p->Bootflag = buf[BS_Partition0+PE_Bootflag];
 	p->TypeCode = buf[BS_Partition0+PE_TypeCode];
 	p->NumSectors = _32(buf, BS_Partition0+PE_NumSectors);
 	p->LBABegin = _32(buf, BS_Partition0+PE_LBABegin);
 }
 
-void buildVolumeData(unsigned char *buf, unsigned long int lba_begin, struct f32_volume *p){
+void buildVolumeData(unsigned char *buf, unsigned long int lba_begin, struct F32_Volume *p){
 	p->BytsPerSec = _16(buf, BPB_BytsPerSec);
 	p->SecPerClus = buf[BPB_SecPerClus];
 	p->RsvdSecCnt = _16(buf, BPB_RsvdSecCnt);
@@ -215,16 +216,16 @@ void inc32(unsigned long int *lba_addr){
 	(*lba_addr)++;
 }
 
-unsigned long int calcFatLbaAddress(struct f32_volume *vol, unsigned long int cluster_nr){
+unsigned long int calcFatLbaAddress(struct F32_Volume *vol, unsigned long int cluster_nr){
 	return vol->LbaFat + (cluster_nr>>7);// div 128 -> 4 (32bit) * 128 cluster numbers per block (512 bytes)
 }
 
-unsigned long int calcDataLbaAddress(struct f32_volume *vol, unsigned long int cluster_nr){
+unsigned long int calcDataLbaAddress(struct F32_Volume *vol, unsigned long int cluster_nr){
 	return vol->LbaCluster + (cluster_nr * vol->SecPerClus);
 }
 
 int isEnd(unsigned long int cla){
-	return ((cla & 0x0ffffff8) == 0x0ffffff8);
+	return ((cla & EOC) == EOC);
 }
 
 unsigned long int nextClusterNumber(char *block_fat, unsigned long int cla){
@@ -237,8 +238,8 @@ unsigned long int nextClusterNumber(char *block_fat, unsigned long int cla){
 int main(int argc, char* argv[]){
 	
 	FILE *fd,*fd_out;
-	struct partition_entry pe;
-	struct f32_volume vol;
+	struct PartitionEntry pe;
+	struct F32_Volume vol;
 	
 	unsigned long int data_lba_addr;
 	unsigned long int fat_lba_addr;
@@ -253,8 +254,9 @@ int main(int argc, char* argv[]){
 //	char filename[12] = "2048K   DAT\0";
 	char filename[12] = "1024K   DAT\0";
 	//char filename[12] = "96K     DAT\0";
-/*	char filename[12] = "8192K	 DAT\0";
-	char filename[12] = "TEST    BIN\0";
+	//char filename[12] = "8192K   DAT\0";
+//	char filename[12] = "65536K  DAT\0";
+/*	char filename[12] = "TEST    BIN\0";
 	char filename[12] = "PIC1    CFG\0";
 */	
 	fd = fopen("/dev/sdb", "r");
@@ -316,7 +318,7 @@ int main(int argc, char* argv[]){
 	printf("dir entries: %d\n", e);
 	
 	unsigned int r=-1;
-	struct f32_fd fileFound;
+	struct F32_fd fileFound;
 	data_lba_addr = calcDataLbaAddress(&vol, vol.RootClus);
 	for(int i=0;i<vol.SecPerClus;i++){//
 		n = readBlock(block_data, fd, data_lba_addr);
@@ -336,7 +338,6 @@ int main(int argc, char* argv[]){
 	printf("file '%s' found\n", fileFound.filename);
 	
 	unsigned long int cla = fileFound.startCluster;
-	//printf("fat cla: $%x $%x bn: $%x\n", cla, (cla << 2) - (cla >> 7 << 9), (cla >> 7));	
 	printf("fat cla: $%x $%x bn: $%x\n", cla, (cla << 2 & (BLOCK_SIZE-1)), (cla >> 7));	
 	printf("data:\n");
 	unsigned long int blocks = fileFound.size >> 9; //(div BLOCK_SIZE);
@@ -370,7 +371,7 @@ int main(int argc, char* argv[]){
 			printf("Error: %d\n",n);
 			return 1;
 		}
-//		dumpBuffer(block_fat);
+		//dumpBuffer(block_fat);
 		cla = nextClusterNumber(block_fat, cla);
 	}
 	
