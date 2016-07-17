@@ -8,6 +8,10 @@ filename_buf				= $0310 ; file name buffer, 11 bytes
 fd_area						= $0320 ; File descriptor area, 6x8byte until $0350 
 sd_blktarget 				= $0400
 
+;TODO FIXME needs clarification
+block_fat                   = $d800
+block_data                  = $da00
+
 fat_bad_block_signature		= 	$01
 fat_invalid_partition_type	=	$02
 fat_invalid_sector_size		=	$03

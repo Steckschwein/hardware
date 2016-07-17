@@ -223,15 +223,6 @@ sd_read_block:
 		jsr spi_rw_byte
 		jsr sd_send_lba
 
-		; Send lba_addr in reverse order
-; 		ldx #$03
-; @l1:	lda lba_addr,x
-; 		phx
-; 		jsr spi_rw_byte
-; 		plx
-; 		dex
-; 		bpl @l1
-
 		; Send stopbit
 		lda #$01
 		jsr spi_rw_byte

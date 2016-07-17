@@ -8,15 +8,11 @@
 
 .segment "KERNEL"
 
-SCREEN_BUFFER       =   $c000
+SCREEN_BUFFER       =   $dc00
 screen_status 		=   SCREEN_BUFFER + (COLS*ROWS) + COLS
 screen_write_lock 	=   SCREEN_BUFFER + (COLS*ROWS) + COLS + 1
 screen_frames		=   SCREEN_BUFFER + (COLS*ROWS) + COLS + 2
 saved_char			=   SCREEN_BUFFER + (COLS*ROWS) + COLS + 3
-;screen_status 		=   $d000
-;screen_write_lock 	=   $d001
-;screen_frames		=   $d002
-;saved_char			=   $d003
 
 ROWS=24
 COLS=40

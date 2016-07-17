@@ -23,7 +23,6 @@ sd_read_blkptr = $f9
 sd_write_blkptr = $fb
 sd_tmp	  = $fd
 
-
 lba_addr 		= $0280		; 4 bytes
 lba_addr_data	= lba_addr
 lba_addr_fat 	= $0284		; 4 bytes 
