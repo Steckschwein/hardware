@@ -312,7 +312,8 @@ fat_next_cln:
 		asl
 		asl
 		tay
-		and #$c0	; test bit 7,6 - if one is set, we have to use the "high" page of the block
+		lda fd_area + F32_fd::CurrentCluster  +0,x
+		and #$c0	; we dont <<2 the bit15-8 of the cluster number but test bit 7,6 - if one is set, we simply use the "high" page of the block + the bit7-0 <<2 offset in y
 		bne	fat_next_cln_hi
 		lda	block_fat+0, y
 		sta fd_area + F32_fd::CurrentCluster+0, x
