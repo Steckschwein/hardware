@@ -8,6 +8,31 @@ filename_buf				= $0310 ; file name buffer, 11 bytes
 fd_area						= $0320 ; File descriptor area, 6x8byte until $0350 
 sd_blktarget 				= $0400
 
+.struct PartitionEntry
+.endstruct
+
+.struct F32Volume
+	BytsPerSec	.word
+	SecPerClus	.byte
+	RsvdSecCnt	.word
+	NumFATs		.byte
+	FATSz32		.word	2
+	RootClus	.word	2
+	LbaFat		.word	2
+	LbaCluster	.word	2
+.endstruct
+
+.struct F32_fd
+	Filename		.byte 12
+	Attr			.byte
+	StartCluster	.word 2	; +4
+	Size			.word 2	; +4
+	
+	CurrentCluster	.word 2
+	SeekPos			.word 2
+	;.res			11, 0 ;fill up to $20
+.endstruct
+
 ;TODO FIXME needs clarification
 block_fat                   = $d800
 block_data                  = $da00
@@ -89,4 +114,4 @@ DIR_FileSize	= $1C	;32 Bits
 ;
 ;
 ;
-FAT_EOC			= $0ffffff8
+FAT_EOC			= $0ffffff8	; end of cluster chain marker

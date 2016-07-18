@@ -11,31 +11,6 @@
 FD_start_cluster = $00
 FD_file_size = $08
 
-.struct PartitionEntry
-.endstruct
-
-.struct F32Volume
-	BytsPerSec	.word
-	SecPerClus	.byte
-	RsvdSecCnt	.word
-	NumFATs		.byte
-	FATSz32		.word	2
-	RootClus	.word	2
-	LbaFat		.word	2
-	LbaCluster	.word	2
-.endstruct
-
-.struct F32_fd
-	Filename		.byte 12
-	Attr			.byte
-	StartCluster	.word 2
-	Size			.word 2
-	
-	CurrentCluster	.word 2
-	SeekPos			.word 2
-	;.res			11, 0 ;fill up to $20
-.endstruct
-
 .macro saveClusterNo where
 	ldy #DIR_FstClusHI +1
 	lda (sd_read_blkptr),y
@@ -278,20 +253,20 @@ inc_lba_address:
 		rts
 
 ;vol->LbaFat + (cluster_nr>>7);// div 128 -> 4 (32bit) * 128 cluster numbers per block (512 bytes)
-calc_fat_lba_addr2:
-		;instead of shift right 7 times in a loop, we copy other the hole byte and simple shift left once
-		lda fd_area + FD_start_cluster  +0,x
+calc_fat_lba_addr:
+		;instead of shift right 7 times in a loop, we copy over the hole byte (same as >>8) - and simple shift left once (<<1)
+		lda fd_area + F32_fd::CurrentCluster	+0,	x
 		asl
-		lda fd_area + FD_start_cluster  +1,x
+		lda fd_area + F32_fd::CurrentCluster	+1,x
 		rol
 		sta lba_addr_fat+0
-		lda fd_area + FD_start_cluster  +2,x
+		lda fd_area + F32_fd::CurrentCluster	+2,x
 		rol
 		sta lba_addr_fat+1
-		lda fd_area + FD_start_cluster  +3,x
+		lda fd_area + F32_fd::CurrentCluster	+3,x
 		rol
 		sta lba_addr_fat+2
-		lda fd_area + FD_start_cluster  +3,x
+		lda fd_area + F32_fd::CurrentCluster	+3,x
 		rol
 		rol		
 		and	#$01;only bit 0
@@ -311,11 +286,54 @@ calc_fat_lba_addr2:
 		adc lba_addr_fat +3
 		sta lba_addr_fat +3
 		rts	
-	
-fat_next_cln:
-;		lda	fd_area + FD:
-		rts		
 
+		; check whether the EOC (end of cluster chain) cluster number is reached
+		; @return Z = 1 if EOC detected
+fat_cln_end:
+		lda fd_area + F32_fd::CurrentCluster+3, x
+		and	#<(FAT_EOC>>24)
+		cmp	#<(FAT_EOC>>24)
+		bne	@e
+		lda fd_area + F32_fd::CurrentCluster+2, x
+		cmp	#<(FAT_EOC>>16)
+		bne	@e
+		lda fd_area + F32_fd::CurrentCluster+1, x
+		cmp	#<(FAT_EOC>>8)
+		bne	@e
+		lda fd_area + F32_fd::CurrentCluster+0, x
+		and #<FAT_EOC
+		cmp	#<FAT_EOC
+@e:		rts
+		
+		; extract next cluster number from the 512 fat block buffer
+		; unsigned int offs = (cla << 2 & (BLOCK_SIZE-1));//offset within 512 byte block, cluster nr * 4 (32 Bit) and Bit 8-0 gives the offset
+fat_next_cln:
+		lda fd_area + F32_fd::CurrentCluster  +0,x
+		asl
+		asl
+		tay
+		and #$c0	; test bit 7,6 - if one is set, we have to use the "high" page of the block
+		bne	fat_next_cln_hi
+		lda	block_fat+0, y
+		sta fd_area + F32_fd::CurrentCluster+0, x
+		lda	block_fat+1, y
+		sta fd_area + F32_fd::CurrentCluster+1, x
+		lda	block_fat+2, y
+		sta fd_area + F32_fd::CurrentCluster+2, x
+		lda	block_fat+3, y
+		sta fd_area + F32_fd::CurrentCluster+3, x
+		rts
+fat_next_cln_hi:
+		lda	block_fat+$100, y
+		sta fd_area + F32_fd::CurrentCluster+0, x
+		lda	block_fat+$100+1, y
+		sta fd_area + F32_fd::CurrentCluster+1, x
+		lda	block_fat+$100+2, y
+		sta fd_area + F32_fd::CurrentCluster+2, x
+		lda	block_fat+$100+3, y
+		sta fd_area + F32_fd::CurrentCluster+3, x		
+		rts
+		
 
 ;---------------------------------------------------------------------
 ; Mount FAT32 on Partition 0

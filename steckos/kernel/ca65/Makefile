@@ -10,7 +10,7 @@ all: kernel.bin shell.bin loader.bin
 clean:
 	rm -f *.o *.bin *.map *.txt kernel_jumptable.inc
 
-%.o: %.asm vdp.inc zeropage.inc
+%.o: %.asm vdp.inc zeropage.inc fat32.inc
 	ca65 --target none $(DEBUG) $<
 
 kernel.bin: $(OBJS) kernel.inc

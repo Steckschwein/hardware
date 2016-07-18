@@ -59,7 +59,7 @@ struct F32_fd{
 	unsigned long int startCluster;
 	unsigned long int size;
 	
-	unsigned long int dataCluster;
+	unsigned long int currentCluster;
 	unsigned long int seekPos;
 };
 
@@ -252,10 +252,10 @@ int main(int argc, char* argv[]){
 //	char filename[12] = "512BYTE DAT\0";
 //	char filename[12] = "513BYTE DAT\0";
 //	char filename[12] = "2048K   DAT\0";
-	char filename[12] = "1024K   DAT\0";
+//	char filename[12] = "1024K   DAT\0";
 	//char filename[12] = "96K     DAT\0";
 	//char filename[12] = "8192K   DAT\0";
-//	char filename[12] = "65536K  DAT\0";
+	char filename[12] = "65536K  DAT\0";
 /*	char filename[12] = "TEST    BIN\0";
 	char filename[12] = "PIC1    CFG\0";
 */	
