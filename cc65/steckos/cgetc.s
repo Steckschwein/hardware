@@ -5,7 +5,7 @@
         .export         _cgetc
         .import         cursor
 		
-.include                "../../lib/defs.inc"
+		.include        "../../steckos/kernel/ca65/kernel_jumptable.inc"
 
 _cgetc: 
-        jmp     (invec)
+        jmp     krn_getkey

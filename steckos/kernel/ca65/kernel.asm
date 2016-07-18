@@ -9,9 +9,9 @@ text_mode_40 = 1
 
 .import init_via1
 .import init_rtc
-.import spi_r_byte, spi_rw_byte
+.import spi_r_byte, spi_rw_byte, spi_deselect, spi_select_rtc
 .import init_uart, uart_tx, uart_rx
-.import textui_init0, textui_update_screen, textui_chrout
+.import textui_init0, textui_update_screen, textui_chrout, textui_put
 .import strout, hexout, primm, print_crlf
 .import keyin, getkey
 ;TODO FIXME testing purpose only
@@ -272,10 +272,15 @@ krn_gfxui_off:			jmp	krn_gfxui_off
 
 .export krn_display_off
 krn_display_off:		jmp vdp_display_off
+
 .export krn_getkey
 krn_getkey:				jmp getkey
+
 .export krn_chrout
 krn_chrout:				jmp textui_chrout
+.export krn_putchar
+krn_putchar				= textui_put
+
 .export krn_strout
 krn_strout:				jmp strout
 
@@ -293,6 +298,12 @@ krn_hexout:				jmp hexout
 krn_init_sdcard:		jmp init_sdcard
 
 krn_upload:				jmp krn_upload
+
+.export krn_spi_select_rtc
+krn_spi_select_rtc:		jmp spi_select_rtc
+
+.export krn_spi_deselect
+krn_spi_deselect:		jmp spi_deselect
 
 .export krn_spi_rw_byte
 krn_spi_rw_byte:		jmp spi_rw_byte

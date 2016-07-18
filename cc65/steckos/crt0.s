@@ -14,13 +14,15 @@
 
 .import    copydata, zerobss, initlib, donelib
 .import    moveinit, callmain 
-;.import         __MAIN_START__, __MAIN_SIZE__   ; Linker generated
+.import         __MAIN_START__, __MAIN_SIZE__   ; Linker generated
 .import         __STACKSIZE__                   ; from configure file
 .importzp       ST
 
-.include  "zeropage.inc"
-
-.include		"../../lib/defs.inc"
+		.include  	"zeropage.inc"	;cc65 default zp
+							
+		.include	"../../steckos/kernel/ca65/zeropage.inc"	; FIXME kernel vs default zp
+		
+		.include	"../../steckos/kernel/ca65/kernel_jumptable.inc"
 
 ; ---------------------------------------------------------------------------
 ; Place the startup code in a special segment
@@ -61,5 +63,5 @@ _init:
 ; Back from main (this is also the _exit entry):  force a software break
 
 _exit:    
-          JSR     donelib              ; Run destructors
-          jmp     (retvec)            ; defs.h.a the retvec
+          JSR     donelib				; Run destructors
+          jmp     (retvec)				;

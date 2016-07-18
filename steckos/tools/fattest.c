@@ -257,7 +257,7 @@ int main(int argc, char* argv[]){
 	
 	unsigned long int data_lba_addr;
 	unsigned long int fat_lba_addr=0;
-	unsigned long int fat_lba_addr_n;
+	unsigned long int fat_lba_addr_n=0;
 
 //	char filename[12] = "32767   DAT\0";
 	//char filename[12] = "32K     DAT\0";
@@ -266,10 +266,10 @@ int main(int argc, char* argv[]){
 	//char filename[12] = "511BYTE DAT\0";
 //	char filename[12] = "512BYTE DAT\0";
 //	char filename[12] = "513BYTE DAT\0";
-	//char filename[12] = "2048K   DAT\0";
+	char filename[12] = "2048K   DAT\0";
 //	char filename[12] = "1024K   DAT\0";
-	//char filename[12] = "96K     DAT\0";
-	char filename[12] = "8192K   DAT\0";
+//	char filename[12] = "96K     DAT\0";
+	//char filename[12] = "8192K   DAT\0";
 	//char filename[12] = "65536K  DAT\0";
 /*	char filename[12] = "TEST    BIN\0";
 	char filename[12] = "PIC1    CFG\0";
@@ -392,10 +392,8 @@ int main(int argc, char* argv[]){
 				return 1;
 			}
 			fat_lba_addr = fat_lba_addr_n;
+			//dumpBuffer(block_fat);
 		}
-//		else
-	//		printf("skip read fat block...\n");
-		//dumpBuffer(block_fat);
 		cla = nextClusterNumber(block_fat, cla);
 	}
 	

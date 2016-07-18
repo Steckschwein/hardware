@@ -10,22 +10,19 @@
 ;
 
         .include        "time.inc"
-        .include        "../../lib/defs.inc"
-        .include        "../../steckos/kernel/kernel.inc"
-        .include        "../../lib/spi.inc"
-        .include        "../../lib/rtc.inc"
-       
+		.include        "../../steckos/kernel/ca65/kernel_jumptable.inc"
+		
         .constructor    initsystime
         .importzp       tmp1, tmp2
-;        .import         spiread
-        
+		
+rtc_read=0
+
 ;----------------------------------------------------------------------------
 .code
 
 .proc   __systime
 
-    lda #spi_select_rtc
-	sta via1portb
+	jsr	krn_spi_select_rtc
     
 	lda #rtc_read
 	jsr krn_spi_rw_byte
@@ -62,7 +59,7 @@
 
 ;	jsr krn_spi_r_byte     
 
-    jsr spi_deselect
+    jsr krn_spi_deselect
     
     lda     #<TM                    ; pointer to TM struct
     ldx     #>TM

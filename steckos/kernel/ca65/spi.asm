@@ -1,17 +1,24 @@
 .include "kernel.inc"
+.include "via.inc"
 
 tmp = $00
 .segment "KERNEL"
-.export spi_rw_byte, spi_r_byte
+.export spi_rw_byte, spi_r_byte, spi_deselect
 
-.include "via.inc"
+spi_device_deselect=$7e		; deselect any device
+
+spi_deselect:
+    lda #spi_device_deselect
+spi_select:
+	sta via1portb
+    rts
+ 	
 
 ;----------------------------------------------------------------------------------------------
 ; Transmit byte VIA SPI
 ; Byte to transmit in A, received byte in A at exit
 ; Destructive: A,X,Y
 ;----------------------------------------------------------------------------------------------
-
 spi_rw_byte:
 		sta tmp	; zu transferierendes byte im akku nach tmp0 retten
 

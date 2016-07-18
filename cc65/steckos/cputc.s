@@ -7,7 +7,7 @@
         .export         newline, plot
         .import         popa, _gotoxy
 
-        .include                "../../lib/defs.inc"
+		.include        "../../steckos/kernel/ca65/kernel_jumptable.inc"
         
 _cputcxy:
         pha                     ; Save C
@@ -15,28 +15,22 @@ _cputcxy:
         jsr     _gotoxy         ; Set cursor, drop x
         pla                     ; Restore C
 
-; Plot a character - also used as internal function
-
-_cputc:
-        jmp     (outvec)
-        
 cputdirect:
         jsr     putchar         ; Write the character to the screen
 
 ; Advance cursor position
-
 newline:
         lda     #$0d
-        jsr     putchar
-
+        jmp		krn_putchar
 
 ; Set cursor position, calculate RAM pointers.
-plot:   rts                     ;set by vdp chrout
+plot:
 
+; Plot a character - also used as internal function
+_cputc:
 
 ; Write one character to the screen without doing anything else, return X
 ; position in Y
-
 putchar:
-        jmp     (outvec)         ; outvec TODO FIXME use acme label files
+        jmp     krn_putchar
         

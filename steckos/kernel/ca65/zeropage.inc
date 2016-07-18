@@ -9,10 +9,12 @@ crs_y   = $e3
 crs_ptr = $e4
 
 ; OUT
-msgptr  = $ec		; 2 bytes
+msgptr  = $e6		; 2 bytes
+
+retvec = $e8
 
 ; SPI
-spitmp 	= $ee
+spitmp 	= $ea
 
 ; FAT32
 filenameptr = $f0   ; 2 byte

@@ -20,7 +20,6 @@ KEY_ESCAPE_CRSR_UP	= 'A'
 KEY_ESCAPE_CRSR_DOWN	= 'B'
 BUF_SIZE			= 32
 
-retvec = $01
 entries = $00
 
 cmdptr				= $d6
