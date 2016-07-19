@@ -1,10 +1,13 @@
 text_mode_40 	= 1
 num_ls_entries 	= $03
 
-.zeropage
-tmp0:	.byte $00
-tmp1:	.byte $00
-tmp5:	.byte $00
+;.zeropage
+;tmp0:	.byte $00
+;tmp1:	.byte $00
+;tmp5:	.byte $00
+tmp0    = $a0
+tmp1    = $a1
+tmp5    = $a2
 
 .segment "OS"
 .include "kernel.inc"
@@ -279,10 +282,9 @@ cmdlist:
 	.byte $00	
 	.word cd
 	
-	; !text "upload"
-	; !byte $00	
-	; !word .upload
-
+	.byte "up",0
+	.word krn_upload
+    
 	; !text "init"
 	; !byte $00	
 	; !word .init

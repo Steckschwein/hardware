@@ -30,7 +30,6 @@ kern_init:
 	
 	SetVector user_isr_default, user_isr
 
-	
 	printstring "SteckOS Kernel 0.5"
 	
 	jsr init_sdcard
@@ -53,7 +52,6 @@ kern_init:
 	lda errno
 	bne do_upload
 	
-
 	SetVector shell_addr, sd_read_blkptr
     
     jsr fat_read
@@ -65,26 +63,18 @@ kern_init:
 	ldx #$ff 
 	txs 
 	
-	jmp shell_addr
+	jmp shell_addr    
 
 do_upload:
+    sei
 	jsr init_uart
 	jsr upload
+    cli
 
 	ldx #$ff 
 	txs 
 	
 	jmp (startaddr)
-
-    
-loop:
-	; jsr getkey
- ;    cmp #$00
-	; beq loop
- ;    jsr textui_chrout
-	bra loop
-
-; filename:	.asciiz "test.bin"
 
 ;----------------------------------------------------------------------------------------------
 ; IO_IRQ Routine. Handle IRQ
@@ -297,7 +287,8 @@ krn_hexout:				jmp hexout
 .export krn_init_sdcard
 krn_init_sdcard:		jmp init_sdcard
 
-krn_upload:				jmp krn_upload
+.export krn_upload
+krn_upload:				jmp do_upload
 
 .export krn_spi_select_rtc
 krn_spi_select_rtc:		jmp spi_select_rtc
@@ -316,6 +307,7 @@ krn_uart_tx:			jmp uart_tx
 
 .export krn_uart_rx
 krn_uart_rx:			jmp uart_rx
+
 .export krn_primm
 krn_primm: 				jmp primm
 

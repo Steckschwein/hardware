@@ -14,12 +14,11 @@
 
 .import    copydata, zerobss, initlib, donelib
 .import    moveinit, callmain 
-.import         __MAIN_START__, __MAIN_SIZE__   ; Linker generated
+;.import         __MAIN_START__, __MAIN_SIZE__   ; Linker generated
 .import         __STACKSIZE__                   ; from configure file
 .importzp       ST
 
 		.include  	"zeropage.inc"	;cc65 default zp
-							
 		.include	"../../steckos/kernel/ca65/zeropage.inc"	; FIXME kernel vs default zp
 		
 		.include	"../../steckos/kernel/ca65/kernel_jumptable.inc"
@@ -43,9 +42,9 @@ _init:
           STA     sp+1
 
 ; Set up the stack.
-;    lda     #<(__MAIN_START__ + __MAIN_SIZE__ + __STACKSIZE__)
-;    ldx     #>(__MAIN_START__ + __MAIN_SIZE__ + __STACKSIZE__)
-;    sta     sp
+;   lda     #<(__MAIN_START__ + __MAIN_SIZE__ + __STACKSIZE__)
+;   ldx     #>(__MAIN_START__ + __MAIN_SIZE__ + __STACKSIZE__)
+;   sta     sp
 ;	stx     sp+1            ; Set argument stack ptr
  
  
@@ -57,7 +56,11 @@ _init:
 
 ; ---------------------------------------------------------------------------
 ; Call main()
-          jsr     callmain 
+          lda   #'x'
+          jsr   krn_chrout
+          jsr     callmain
+          lda   #'y'
+          jsr   krn_chrout
 
 ; ---------------------------------------------------------------------------
 ; Back from main (this is also the _exit entry):  force a software break
