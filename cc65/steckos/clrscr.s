@@ -6,4 +6,6 @@
         
 		.include        "../../steckos/kernel/ca65/kernel_jumptable.inc"
 
-_clrscr = krn_textui_clrscr_ptr
+_clrscr:
+        jsr krn_textui_clrscr_ptr
+        rts

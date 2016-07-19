@@ -2,21 +2,20 @@
 #include <stdlib.h>
 #include <conio.h> 
 
-int main ()
-//int main (int argc, const char* argv[])
+int main (int argc, const char* argv[])
 {
-    cputc('3');
-
-/*
     unsigned char i;
-  
-    cputc('2');
-    cputc('3');
+
     cprintf("\n\r");
     cprintf("argc: %d\n\r", argc);
     
     for(i=0;i<argc;i++)
         cprintf("argv[%d]: %s\n\r", i, argv[i]);
-*/    
+
+    clrscr();
+    
+    gotoxy(0,0);
+    cprintf("Oben Links\n\r");
+    
     return EXIT_SUCCESS;
 }

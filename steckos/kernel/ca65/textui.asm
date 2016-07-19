@@ -8,11 +8,11 @@
 
 .segment "KERNEL"
 
-SCREEN_BUFFER       =   $dc00
-screen_status 		=   SCREEN_BUFFER + (COLS*ROWS) + COLS
-screen_write_lock 	=   SCREEN_BUFFER + (COLS*ROWS) + COLS + 1
-screen_frames		=   SCREEN_BUFFER + (COLS*ROWS) + COLS + 2
-saved_char			=   SCREEN_BUFFER + (COLS*ROWS) + COLS + 3
+screen_buffer       =   $dc00
+screen_status 		=   screen_buffer + (COLS*(ROWS+1)) + 1
+screen_write_lock 	=   screen_status + 1
+screen_frames		=   screen_status + 2
+saved_char			=   screen_status + 3
 
 ROWS=24
 COLS=40
@@ -74,7 +74,7 @@ textui_update_crs_ptr:		;   updates the 16 bit pointer crs_p upon crs_x, crs_y v
 		clc				; 
 @l1:	adc crs_x
 		sta crs_ptr
-		lda #>SCREEN_BUFFER
+		lda #>screen_buffer
 		adc	crs_ptr+1		; add carry and page to address high byte
 		sta	crs_ptr+1
 
@@ -90,7 +90,7 @@ textui_init0:
         
 		stz	crs_x
 		stz	crs_y
-        SetVector	SCREEN_BUFFER, crs_ptr
+        SetVector	screen_buffer, crs_ptr
 		jsr textui_update_crs_ptr		;init cursor pointer
         
         jsr textui_enable
@@ -101,20 +101,19 @@ textui_init:
 textui_blank:
 		ldx	#$00
 		lda	#CURSOR_BLANK
-@l1:	sta	SCREEN_BUFFER+$000,x	;4 pages
-		sta	SCREEN_BUFFER+$100,x
-		sta SCREEN_BUFFER+$200,x
-		sta	SCREEN_BUFFER+$300,x
+@l1:	sta	screen_buffer+$000,x	;4 pages
+		sta	screen_buffer+$100,x
+		sta screen_buffer+$200,x
 		inx
 		bne	@l1
-@l2:	sta	SCREEN_BUFFER+$400,x	;last line for scroll up
-		inx
-		cpx	#COLS
-		bne	@l2
+		ldx #<(COLS*(ROWS+1))
+@l2:    sta	screen_buffer+$300,x
+        dex
+        bne @l2
     	stz crs_x
     	stz crs_y
-		bra	textui_update_crs_ptr
-		jmp	textui_screen_dirty
+ 		bra	textui_update_crs_ptr
+;		jmp	textui_screen_dirty
 	
 textui_cursor:
 		lda screen_write_lock
@@ -133,8 +132,8 @@ textui_cursor:
 @l2:	rts
 
 textui_update_screen:
-		;lda	#Dark_Green
-		;jsr	vdp_bgcolor
+;		lda	#Dark_Green
+;		jsr	vdp_bgcolor
 
 		lda	screen_status
 		and	#STATUS_TEXTUI_ENABLED
@@ -148,7 +147,7 @@ textui_update_screen:
 		and	#STATUS_BUFFER_DIRTY
 		beq	@l1	;exit if not dirty
 		
-		SetVector	SCREEN_BUFFER, adrl    ; copy back buffer to video ram
+		SetVector	screen_buffer, adrl    ; copy back buffer to video ram
 		lda	#<ADDRESS_GFX1_SCREEN
 		ldy	#WRITE_ADDRESS + >ADDRESS_GFX1_SCREEN
 		ldx	#$04
@@ -166,20 +165,20 @@ textui_update_screen:
 textui_scroll_up:
 		phx
 		ldx	#$00
-@l1:	lda	SCREEN_BUFFER+$000+COLS,x
-		sta	SCREEN_BUFFER+$000,x
+@l1:	lda	screen_buffer+$000+COLS,x
+		sta	screen_buffer+$000,x
 		inx
 		bne	@l1
-@l2:	lda	SCREEN_BUFFER+$100+COLS,x
-		sta	SCREEN_BUFFER+$100,x
+@l2:	lda	screen_buffer+$100+COLS,x
+		sta	screen_buffer+$100,x
 		inx
 		bne	@l2
-@l3:	lda	SCREEN_BUFFER+$200+COLS,x
-		sta	SCREEN_BUFFER+$200,x
+@l3:	lda	screen_buffer+$200+COLS,x
+		sta	screen_buffer+$200,x
 		inx
 		bne	@l3
-@l4:	lda	SCREEN_BUFFER+$300+COLS,x
-		sta	SCREEN_BUFFER+$300,x
+@l4:	lda	screen_buffer+$300+COLS,x
+		sta	screen_buffer+$300,x
 		inx
         cpx #<(COLS * ROWS)
 		bne	@l4

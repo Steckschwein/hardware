@@ -56,11 +56,7 @@ _init:
 
 ; ---------------------------------------------------------------------------
 ; Call main()
-;          lda   #'x'
- ;         jsr   krn_chrout
           jsr   callmain
-          lda   #'y'
-          jsr   krn_chrout
 
 ; ---------------------------------------------------------------------------
 ; Back from main (this is also the _exit entry):  force a software break

@@ -16,7 +16,7 @@ _cputcxy:
         pla                     ; Restore C
 
 cputdirect:
-        jsr     putchar         ; Write the character to the screen
+        jmp     krn_chrout      ; Write the character to the screen
 
 ; Advance cursor position
 newline:
@@ -27,10 +27,9 @@ plot:
 
 ; Plot a character - also used as internal function
 _cputc:
-        lda     #'X'
-        jsr     krn_putchar
+
 ; Write one character to the screen without doing anything else, return X
 ; position in Y
 putchar:
-        jmp     krn_putchar
+        jmp     krn_chrout
         

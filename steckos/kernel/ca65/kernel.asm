@@ -82,7 +82,6 @@ do_upload:
 do_irq:
 ; system interrupt handler
 ; handle keyboard input and text screen refresh
-
 	save
 
 	bit	a_vreg
@@ -267,9 +266,9 @@ krn_display_off:		jmp vdp_display_off
 krn_getkey:				jmp getkey
 
 .export krn_chrout
-krn_chrout:				jmp textui_chrout
+krn_chrout				= textui_chrout
 .export krn_putchar
-krn_putchar				= textui_put
+krn_putchar 			= textui_put
 
 .export krn_strout
 krn_strout:				jmp strout
@@ -277,9 +276,10 @@ krn_strout:				jmp strout
 .export krn_textui_crsxy
 krn_textui_crsxy:		jmp textui_crsxy
 .export krn_textui_update_crs_ptr
-krn_textui_update_crs_ptr:	jmp textui_update_crs_ptr
+krn_textui_update_crs_ptr   = textui_update_crs_ptr
+
 .export krn_textui_clrscr_ptr
-krn_textui_clrscr_ptr:		jmp textui_blank
+krn_textui_clrscr_ptr   = textui_blank
 
 .export krn_hexout
 krn_hexout:				jmp hexout
