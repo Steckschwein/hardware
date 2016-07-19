@@ -18,10 +18,10 @@ cmdptr  = $d6  ; TODO FIXME use include
 
 initmainargs:
 ;        for testing purpose
-        lda     #<INPUT_BUF
-        sta     cmdptr
-        lda     #>INPUT_BUF
-        sta     cmdptr+1
+;        lda     #<INPUT_BUF
+;        sta     cmdptr
+;        lda     #>INPUT_BUF
+;        sta     cmdptr+1
 
         ldy     #0              ;defense copy to not corrupt shell history
         ldx     #0
@@ -102,6 +102,6 @@ argv:   .addr   name
         .res    MAXARGS * 2
 
 INPUT_BUF:
-;    .res    255
+    .res    255
 ;   .byte "test", 0
-    .byte "mainarg 1 2 3 +baz blub -bla", 0
+;    .byte "mainarg 1 2 3 +baz blub -bla", 0
