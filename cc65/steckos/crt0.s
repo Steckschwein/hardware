@@ -14,7 +14,7 @@
 
 .import    copydata, zerobss, initlib, donelib
 .import    moveinit, callmain 
-;.import         __MAIN_START__, __MAIN_SIZE__   ; Linker generated
+.import         __MAIN_START__, __MAIN_SIZE__   ; Linker generated
 .import         __STACKSIZE__                   ; from configure file
 .importzp       ST
 
@@ -42,10 +42,10 @@ _init:
           STA     sp+1
 
 ; Set up the stack.
-;   lda     #<(__MAIN_START__ + __MAIN_SIZE__ + __STACKSIZE__)
-;   ldx     #>(__MAIN_START__ + __MAIN_SIZE__ + __STACKSIZE__)
-;   sta     sp
-;	stx     sp+1            ; Set argument stack ptr
+   lda     #<(__MAIN_START__ + __MAIN_SIZE__ + __STACKSIZE__)
+   ldx     #>(__MAIN_START__ + __MAIN_SIZE__ + __STACKSIZE__)
+   sta     sp
+	stx     sp+1            ; Set argument stack ptr
  
  
 ; ---------------------------------------------------------------------------
@@ -56,9 +56,9 @@ _init:
 
 ; ---------------------------------------------------------------------------
 ; Call main()
-          lda   #'x'
-          jsr   krn_chrout
-          jsr     callmain
+;          lda   #'x'
+ ;         jsr   krn_chrout
+          jsr   callmain
           lda   #'y'
           jsr   krn_chrout
 

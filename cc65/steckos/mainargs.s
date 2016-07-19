@@ -7,7 +7,9 @@ MAXARGS  = 10                   ; Maximum number of arguments allowed
 REM      = $8f                  ; BASIC token-code
 NAME_LEN = 16                   ; Maximum length of command-name
 
-CMD_PTR  = $e2  ; ptr1 from shell
+		.include	"../../steckos/kernel/ca65/kernel_jumptable.inc"
+
+cmdptr  = $d6  ; TODO FIXME use include
 
 ; Get possible command-line arguments. Goes into the special INIT segment,
 ; which may be reused after the startup code is run
@@ -16,16 +18,17 @@ CMD_PTR  = $e2  ; ptr1 from shell
 
 initmainargs:
 ;        for testing purpose
-;        lda     #<INPUT_BUF
-;        sta     CMD_PTR
-;        lda     #>INPUT_BUF
-;        sta     CMD_PTR+1        
+        lda     #<INPUT_BUF
+        sta     cmdptr
+        lda     #>INPUT_BUF
+        sta     cmdptr+1
 
         ldy     #0              ;defense copy to not corrupt shell history
         ldx     #0
-L0:     lda     (CMD_PTR),y
+L0:     lda     (cmdptr),y
         sta     INPUT_BUF,y
         beq     L1
+        jsr     krn_chrout
         iny
         bne     L0
         dey                     ; null-term if overflow
@@ -99,6 +102,6 @@ argv:   .addr   name
         .res    MAXARGS * 2
 
 INPUT_BUF:
-    .res    255
+;    .res    255
 ;   .byte "test", 0
-;   .byte "test 1 2 3 +baz blub -bla", 0
+    .byte "mainarg 1 2 3 +baz blub -bla", 0
