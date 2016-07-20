@@ -1,10 +1,12 @@
 #include <conio.h>
 #include <time.h>
-#include "../../cc65/spi.h"
+#include "../../cc65/steckos/spi.h"
+#include "../../cc65/steckos/rtc.h"
 
 void set_clock()
 {
-	*(unsigned char*) 0x210 = 0x76; // select rtc
+    
+    spi_select_rtc();
 	spi_write(0x80);
     spi_write(0x00);
     spi_write(0x30);
@@ -13,7 +15,7 @@ void set_clock()
     spi_write(0x21);
     spi_write(0x2); //
     spi_write(0x16); // 
-	*(unsigned char*) 0x210 = 0x7e; // deselect spi
+    spi_deselect();
 } 
 int main (void)
 {
@@ -56,6 +58,3 @@ int main (void)
    
     return 0;
 }
-
-
-

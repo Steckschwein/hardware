@@ -1,4 +1,4 @@
-all: date.bin type.bin view.bin more.bin nvram.bin uname.bin hello.bin time-test.bin mainarg.bin
+all: date.bin type.bin view.bin more.bin nvram.bin uname.bin hello.bin time-test.bin mainarg.bin fibo.bin
 
 clean:
 	rm -f *.bin *.s *.o
@@ -34,8 +34,8 @@ stdio_test: stdio_test.bin
 time-test: time-test.bin
 	../../transfer.py time-test.bin -s 0x1000
     
-fibonacci: fibonacci.bin
-	../../transfer.py fibonacci.bin -s 0x1000
+fibo: fibo.bin
+	../../transfer.py fibo.bin -s 0x1000
 	
 %.bin: %.a
 	acme -v -Wtype-mismatch -f plain --cpu 65c02 -o $@ $<
