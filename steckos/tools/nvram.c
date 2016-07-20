@@ -2,9 +2,9 @@
 #include <stdlib.h>  
 #include <string.h>  
 #include <ctype.h>  
-#include "../../cc65/spi.h"
+#include "../../cc65/steckos/spi.h"
+#include "../../cc65/steckos/rtc.h"
 
-#define VIA_PORT 0x210
 /*
 param_sig	= $00 ; 1  byte  - parameter array signature byte. must be $42
 param_version	= $01 ; 1  byte  - version number. initially zero
@@ -58,7 +58,8 @@ void write_nvram()
 	n.signature = 0x42;
 	n.uart_lsr  = 0x03; // 8N1
 	p = (unsigned char *)&n;
-	*(unsigned char*) VIA_PORT = 0x76; // select NVRAM
+    
+    spi_select_rtc();
 
 	spi_write(0xA0);
 
@@ -67,23 +68,22 @@ void write_nvram()
 		spi_write(*p++);
 	}
 
-	*(unsigned char*) VIA_PORT = 0x7e;
+    spi_deselect();
 }
 
 void read_nvram()
 {	
+    unsigned char r;
 	p = (unsigned char *)&n;
-	*(unsigned char*) VIA_PORT = 0x76; // select NVRAM
-
-	spi_write(0x20);
-	
+    spi_select_rtc();
+    spi_write(0x20);
 
 	for(i = 0; i<=sizeof(n); i++)
 	{
-		*p++ = spi_read();
+        *p++ = spi_read();
 	}
-	
-	*(unsigned char*) VIA_PORT = 0x7e;
+    
+    spi_deselect();
 }
 
 void usage()
@@ -133,27 +133,21 @@ int main (int argc, const char* argv[])
 		return 0;
 	}
 
-	// cprintf("1");
-
 	read_nvram();
 
-	// cprintf("2");
-
-	// if (n.signature != 0x42)
-	// {
-	// 	cprintf("NVRAM signature invalid.\r\nSetting to default values ... ");
-	// 	n.signature 	= 0x42;
-	// 	n.version 		= 0;
-	// 	memcpy(n.filename, "LOADER  BIN", 11);
+	if (n.signature != 0x42)
+	{
+		cprintf("NVRAM signature invalid.\r\nSetting to default values ... ");
+	 	n.signature 	= 0x42;
+	 	n.version 		= 0;
+	 	memcpy(n.filename, "LOADER  BIN", 11);
 	
-	// 	n.uart_baudrate = 0x0001; // 115200 baud
-	// 	n.uart_lsr		= 0x03; // 8N1
+	 	n.uart_baudrate = 0x0001; // 115200 baud
+	 	n.uart_lsr		= 0x03; // 8N1
 
-	// 	write_nvram();
-	// 	cprintf("done.\r\n");
-	// }
-
-	// cprintf("3");
+	 	write_nvram();
+	 	cprintf("done.\r\n");
+	}
 
 	if (strcmp(argv[1], "get") == 0)
 	{
@@ -165,7 +159,7 @@ int main (int argc, const char* argv[])
 
 		if (strcmp(argv[2], "filename") == 0)
 		{
-			cprintf("%11s\r\n", n.filename);
+			cprintf("%.*s\r\n", 11, n.filename);
 		}
 
 		else if (strcmp(argv[2], "baudrate") == 0)
@@ -233,5 +227,5 @@ int main (int argc, const char* argv[])
 		);
 	}
 
-	return 0;
+	return EXIT_SUCCESS;
 }

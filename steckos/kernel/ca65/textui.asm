@@ -211,8 +211,11 @@ textui_disable:
 		rts
 
 textui_put:
+        pha
 		sta	(crs_ptr)
-		bra	textui_screen_dirty
+        jsr	textui_screen_dirty
+        pla
+        rts
     
 textui_print:
 		inc screen_write_lock	;write on

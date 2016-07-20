@@ -26,5 +26,4 @@ init_rtc:
 	jsr spi_rw_byte
 
 	; Deselect SPI SS for RTC
-	jsr	spi_deselect
-	rts
+	jmp	spi_deselect

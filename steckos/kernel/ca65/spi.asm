@@ -1,7 +1,6 @@
 .include "kernel.inc"
 .include "via.inc"
 
-tmp = $00
 .segment "KERNEL"
 .export spi_rw_byte, spi_r_byte, spi_deselect
 
@@ -20,7 +19,7 @@ spi_select:
 ; Destructive: A,X,Y
 ;----------------------------------------------------------------------------------------------
 spi_rw_byte:
-		sta tmp	; zu transferierendes byte im akku nach tmp0 retten
+		sta spitmp	; zu transferierendes byte im akku nach tmp0 retten
 
 		ldx #$08
 		
@@ -31,7 +30,7 @@ spi_rw_byte:
 		tay		 ; bunkern
 
 @l:
-		rol tmp
+		rol spitmp
 		tya		; portinhalt
 		ror		; datenbit reinschieben
 

@@ -274,7 +274,7 @@ krn_putchar 			= textui_put
 krn_strout:				jmp strout
 
 .export krn_textui_crsxy
-krn_textui_crsxy:		jmp textui_crsxy
+krn_textui_crsxy		= textui_crsxy
 .export krn_textui_update_crs_ptr
 krn_textui_update_crs_ptr   = textui_update_crs_ptr
 
@@ -291,10 +291,10 @@ krn_init_sdcard:		jmp init_sdcard
 krn_upload:				jmp do_upload
 
 .export krn_spi_select_rtc
-krn_spi_select_rtc:		jmp spi_select_rtc
+krn_spi_select_rtc		= spi_select_rtc
 
 .export krn_spi_deselect
-krn_spi_deselect:		jmp spi_deselect
+krn_spi_deselect		= spi_deselect
 
 .export krn_spi_rw_byte
 krn_spi_rw_byte:		jmp spi_rw_byte

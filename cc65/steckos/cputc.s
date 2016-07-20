@@ -21,15 +21,15 @@ cputdirect:
 ; Advance cursor position
 newline:
         lda     #$0d
+        jmp     krn_chrout
+
 
 ; Set cursor position, calculate RAM pointers.
 plot:
 
-; Plot a character - also used as internal function
-_cputc:
-
 ; Write one character to the screen without doing anything else, return X
 ; position in Y
-putchar:
-        jmp     krn_chrout
+putchar = krn_chrout
         
+; Plot a character - also used as internal function
+_cputc = krn_chrout
