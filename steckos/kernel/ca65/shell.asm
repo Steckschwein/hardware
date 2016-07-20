@@ -27,7 +27,7 @@ entries = $00
 
 cmdptr				= $d6
 paramptr			= $d8
-buf 				= $e800 ; Input buffer 80 bytes. end: $d800
+buf 				= $e600
 endbuf				= buf + BUF_SIZE*16
 bufptr				= $d0
 bufhwm				= $d2

@@ -6,9 +6,11 @@
 
 .import vdp_bgcolor, vdp_memcpy, vdp_mode_text, vdp_display_off
 
+.segment "OS_CACHE"
+screen_buffer:      ;@see steckos.cfg
+
 .segment "KERNEL"
 
-screen_buffer       =   $dc00
 screen_status 		=   screen_buffer + (COLS*(ROWS+1)) + 1
 screen_write_lock 	=   screen_status + 1
 screen_frames		=   screen_status + 2
