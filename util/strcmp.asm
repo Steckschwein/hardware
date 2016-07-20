@@ -11,6 +11,9 @@ match_skip_dots:
 	lda	#'.'
 a0:	cmp	test_input,x
 	bne	match_0
+;a0	lda	test_input,x
+;	cmp	#'.'
+;	bne	match_0_d
 
 	cmp (dirptr),y
 	bne m_not_found
@@ -29,6 +32,7 @@ match_skip_dots_1:
 match_0:
 a2:	lda test_input,x
 	beq m_found		;end of input, found
+match_0_d:
 	cmp #'*'
 	beq m_n
 	cmp #'?'

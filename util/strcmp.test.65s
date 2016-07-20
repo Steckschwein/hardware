@@ -1,34 +1,41 @@
  	*=$1000
 
-test_dirs=9
-test_input=input_4 + test_dirs; address of input + size of results
-chrout=$ff00
+dirptr=$0
+
+test_dirs=10
+test_in=input_10
+test_input=test_in + test_dirs; address of input + size of results
 
 
 	jmp	test_suite
 
 	.include "asm_unit.a"
 	.include "strcmp.a"
+
+chrout:
+	sta	$e001
+	rts
 	
 test_suite
-    lda #<input_1+test_dirs
+    lda #<test_input
     sta a0+1
     sta a1+1
     sta a2+1
     sta a3+1
     sta a4+1
-    lda #<input_1
+    lda #<test_in
     sta a5+1
-    lda #>input_1+test_dirs
+    lda #>test_input
     sta a0+2
     sta a1+2
     sta a2+2
     sta a3+2
     sta a4+2
-    lda #>input_1
+    lda #>test_in
     sta a5+2
     jsr test
-
+	rts
+	
 test
 	ldx #0
 	ldy #0
@@ -50,18 +57,17 @@ a5	cmp	test_input, y
 	bne	test_failed	
 	
 	jsr	_test_ok
-	
+next:	
 	iny
 	inx
 	inx
 	cpx	#test_dir_tab_e-test_dir_tab
 	bne	l1	
 	rts
-
 test_failed
 	;failed with 'y'
 	jsr	_test_failed
-	rts
+	bra	next
 		
 dir_1	     .ascii "FILE00  TXT"
 dir_2	     .ascii "LL      BIN"	;2
@@ -72,31 +78,34 @@ dir_6	     .ascii "TEST    TXT"	;10
 dir_7	     .ascii "PROGS      "	;12
 dir_8	     .ascii ".          "	;14
 dir_9	     .ascii "..         "	;16
+dir_10	     .ascii ".SSH       "	;18
 
-input_1 	.db 0,0,1,0,0,0,0,0,0
+input_1 	.db 0,0,1,0,0,0,0,0,0,0
 			.ascii "ls.bin",0
-input_2 	.db 0,1,1,1,0,0,0,0,0
+input_2 	.db 0,1,1,1,0,0,0,0,0,0
 			.ascii "l*.bin",0
-input_3 	.db 0,1,1,0,0,0,0,0,0
+input_3 	.db 0,1,1,0,0,0,0,0,0,0
 			.ascii "l?.bin",0
-input_4 	.db 0,1,1,1,0,0,0,0,0
+input_4 	.db 0,1,1,1,0,0,0,0,0,0
 			.ascii "l**.bin",0
-input_5 	.db 0,0,0,0,0,0,0,0,0
+input_5 	.db 0,1,1,0,0,0,0,0,0,0
 			.ascii "l??.bin",0
-input_6 	.db 0,0,0,1,0,0,0,0,0
+input_6 	.db 0,1,1,1,0,0,0,0,0,0
 			.ascii "l?????.bin",0
-input_7 	.db 0,0,1,0,0,0,0,0,0
+input_7 	.db 0,0,1,0,0,0,0,0,0,0
 			.ascii "Ls.bin",0
-input_8 	.db 0,0,0,0,0,0,0,1,0
+input_8 	.db 0,0,0,0,0,0,0,1,0,0
 			.ascii ".",0
-input_9 	.db 0,0,0,0,0,0,0,0,1
+input_9 	.db 0,0,0,0,0,0,0,0,1,0
 			.ascii "..",0
-input_10 	.db 0,0,0,0,0,0,0,0,0
+input_10 	.db 0,0,0,0,0,0,0,0,0,0
 			.ascii "test.txtfoobar",0
-input_11 	.db 0,0,0,0,0,1,0,0,0
+input_11 	.db 0,0,0,0,0,1,0,0,0,0
 			.ascii "test.txt",0
-input_12 	.db 0,0,0,0,0,0,1,0,0
+input_12 	.db 0,0,0,0,0,0,1,0,0,0
 			.ascii "progs",0
+input_13 	.db 0,0,0,0,0,0,0,0,0,1
+			.ascii ".ssh",0
 
 test_dir_tab
 	.dw dir_1
@@ -108,4 +117,5 @@ test_dir_tab
 	.dw dir_7
 	.dw dir_8
 	.dw dir_9
+	.dw dir_10
 test_dir_tab_e
