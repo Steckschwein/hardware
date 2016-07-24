@@ -1,21 +1,37 @@
-all:  kernel.bin kernel.h.a loader.bin 
-clean:
-	rm -f *.bin 
+OBJS=fat32.o sdcard.o textui.o t99xx.lib.o rtc.o spi.o uart.o via.o out.o key.o kernel.o
+#OBJS=rtc.o spi.o uart.o via.o kernel.o
+LDFLAGS=--config steckos.cfg
+DEBUG=-D DEBUG
 
-kernel.bin: textui.a gfxui.a fat.a sdcard.a spi.a
-loader.bin: kernel.bin
-kernel.h.a: kernel.bin kernel.h.a.stub
-	grep krn_ kernel.a.labels | sed -e"s/krn_//g" | sort > kernel.h.a.tmp
-	grep krn_ kernel.a.labels | sort >> kernel.h.a.tmp
-	cat kernel.h.a.stub kernel.h.a.tmp > ../../lib/kernel.h.a
-	rm kernel.h.a.tmp
-	grep krn_ kernel.a.labels | awk -F' '  '{print $$2 " = " $$4}' > kernel.inc
-	
-%.bin: %.a textui.a keyboard.textui.adapter.a
-	acme -v2 -Dexperimental=1 -f plain -Wtype-mismatch -l $<.labels --cpu 65c02 -o $@ $<
-	
+.PHONY: all clean
+all: kernel.bin shell.bin loader.bin
+
+.PHONY: clean
+clean:
+	rm -f *.o *.bin *.map *.txt kernel_jumptable.inc
+
+%.o: %.asm vdp.inc zeropage.inc fat32.inc
+	ca65 --target none $(DEBUG) $<
+
+kernel.bin: $(OBJS) kernel.inc
+	ld65 $(LDFLAGS) $(OBJS) -m kernel.map -Ln symbols.txt -o kernel.bin 
+	grep krn symbols.txt | awk -F' ' '{print $$3" = $$"$$2}'| sed -e "s/^\.//g" > kernel_jumptable.inc
+
+
+loader.bin: kernel.bin loader.o
+	cl65 --target none --config steckos.cfg loader.asm -o loader.bin
+
+shell.bin: shell.o kernel.bin
+	cl65 --target none -m shell.map --config steckos.cfg shell.asm -o shell.bin
+
+shell: shell.bin
+	../../../transfer.py -s 0xe000 shell.bin
+
 transfer: loader.bin
-	../../transfer.py loader.bin -s 0x1000
+	../../../transfer.py -s 0x1000 loader.bin
+
+test.bin: test.o
+	cl65 --target none --config steckos.cfg test.asm -o test.bin
 
 test: test.bin
 	../../transfer.py test.bin -s 0x1000
