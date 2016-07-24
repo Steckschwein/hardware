@@ -2,8 +2,8 @@
 #include <stdlib.h>  
 #include <string.h>  
 #include <ctype.h>  
-#include "../../cc65/steckos/spi.h"
-#include "../../cc65/steckos/rtc.h"
+#include "../include/spi.h"
+#include "../include/rtc.h"
 
 /*
 param_sig	= $00 ; 1  byte  - parameter array signature byte. must be $42

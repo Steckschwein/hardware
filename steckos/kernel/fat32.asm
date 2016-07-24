@@ -76,7 +76,7 @@ fat_open_found:
 		bit #$10 ; Is a directory
 		beq @l1
 
-		ldx #$00 ; direcories always go to fd #0
+		ldx #$00		; current dir always go to fd #0
 		saveClusterNo current_dir_first_cluster
 		; bra .end_open 
 		bra @l2

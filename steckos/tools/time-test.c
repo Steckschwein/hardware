@@ -1,7 +1,7 @@
 #include <conio.h>
 #include <time.h>
-#include "../../cc65/steckos/spi.h"
-#include "../../cc65/steckos/rtc.h"
+#include "../include/spi.h"
+#include "../include/rtc.h"
 
 void set_clock()
 {

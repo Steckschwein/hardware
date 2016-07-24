@@ -19,9 +19,8 @@
 .importzp       ST
 
 		.include  	"zeropage.inc"	;cc65 default zp
-		.include	"../../steckos/kernel/ca65/zeropage.inc"	; FIXME kernel vs default zp
-		
-		.include	"../../steckos/kernel/ca65/kernel_jumptable.inc"
+		.include	"../kernel/zeropage.inc"	; FIXME kernel vs default zp
+		.include	"../kernel/kernel_jumptable.inc"
 
 ; ---------------------------------------------------------------------------
 ; Place the startup code in a special segment

@@ -7,7 +7,7 @@
         .export         newline, plot
         .import         popa, _gotoxy
 
-		.include        "../../steckos/kernel/ca65/kernel_jumptable.inc"
+		.include		"../kernel/kernel_jumptable.inc"
         
 _cputcxy:
         pha                     ; Save C

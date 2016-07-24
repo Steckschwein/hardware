@@ -10,7 +10,7 @@
 ;
 
         .include        "time.inc"
-		.include        "../../steckos/kernel/ca65/kernel_jumptable.inc"
+		.include		"../kernel/kernel_jumptable.inc"
 		
         .constructor    initsystime
         .importzp       tmp1, tmp2

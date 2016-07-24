@@ -7,7 +7,7 @@ MAXARGS  = 10                   ; Maximum number of arguments allowed
 REM      = $8f                  ; BASIC token-code
 NAME_LEN = 16                   ; Maximum length of command-name
 
-		.include	"../../steckos/kernel/ca65/kernel_jumptable.inc"
+		.include		"../kernel/kernel_jumptable.inc"
 
 cmdptr  = $d6  ; TODO FIXME use include
 

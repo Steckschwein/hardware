@@ -10,8 +10,6 @@
         .include "atari.inc"
         .include "fcntl.inc"
         .include "errno.inc"
-        ;.include "fd.inc"
-        ;.include "../../lib/defs.inc"
 
         .export _open
         .destructor     closeallfiles, 5

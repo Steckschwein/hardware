@@ -1,5 +1,9 @@
-;GENERAL
+; INIT0/SHELL
+cmdptr				= $d6
+paramptr			= $d8
+retvec 				= $da
 
+; GENERAL
 addr = $e0
 adrl = addr
 adrh = addr+1
@@ -10,8 +14,6 @@ crs_ptr = $e4
 
 ; OUT
 msgptr  = $e6		; 2 bytes
-
-retvec = $e8
 
 ; SPI
 spitmp 	= $ea

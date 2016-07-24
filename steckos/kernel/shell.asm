@@ -25,14 +25,12 @@ BUF_SIZE			= 32
 
 entries = $00
 
-cmdptr				= $d6
-paramptr			= $d8
 buf 				= $e600
 endbuf				= buf + BUF_SIZE*16
 bufptr				= $d0
 bufhwm				= $d2
 ; Address pointers for serial upload
-startaddr	= $d9
+startaddr			= $d9
 entryvec			= $d4
 
 

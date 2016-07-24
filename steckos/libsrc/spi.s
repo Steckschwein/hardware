@@ -6,7 +6,7 @@
         .export         _spi_write
         .export         _spi_deselect
         
-		.include        "../../steckos/kernel/ca65/kernel_jumptable.inc"
+		.include		"../kernel/kernel_jumptable.inc"
 		
 _spi_read:
         jsr krn_spi_r_byte
