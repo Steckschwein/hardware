@@ -17,16 +17,25 @@ void init_kb(void)
 	kb_outptr = kb_buffer;
 	kb_buffcnt = 0;
 
+#ifdef USART
+	// USART init to 8 bit data, odd parity, 1 stopbit
+	UCSRB = 0x90;
+	UCSRC = 0xF7;
+	UBRRH = 0;
+	UBRRL = 0;
+#endif
 
+#ifndef USART
 	MCUCR 	= (1 << ISC01);					  // INT0 interrupt on falling edge
 	GIMSK	= (1 << INT0);					  // Enable INT0 interrupt
-
+#endif
 	PORTC  	= 3;
 	DDRC	= (1 << PC0) | (1 << PC1);
 
 //	send_kb(0xff);
 }
 
+/*
 void send_kb(uint8_t data)
 {
 	uint8_t loop, mask, parity;
@@ -125,10 +134,25 @@ void send_kb(uint8_t data)
    
     // SREG = tmp;
 }
+*/
 
+#ifdef USART
+ISR (USART_RXC_vect)
+{
+	if (scan_buffcnt < SCAN_BUFF_SIZE)			  // If buffer not full
+	{
+		*scan_inptr++ = UDR;   // Put character into buffer, Increment pointer
+		scan_buffcnt++;
 
+		// Pointer wrapping
+		if (scan_inptr >= scan_buffer + SCAN_BUFF_SIZE)
+			scan_inptr = scan_buffer;
+	}
 
+}
+#endif
 
+#ifndef USART
 ISR (INT0_vect)
 {
 	static uint8_t data = 0;				  // Holds the received scan code
@@ -156,7 +180,7 @@ ISR (INT0_vect)
 		}
 	}
 }
-
+#endif
 
 void decode(uint8_t sc)
 {
@@ -166,6 +190,7 @@ void decode(uint8_t sc)
 	static uint8_t alt   = 0;
 
 	uint8_t i, ch, offs;
+
 
 	offs = 1;
 
