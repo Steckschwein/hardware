@@ -46,7 +46,7 @@ fat_open:
 
 		stz errno
 
-		ldx #$00
+		ldx #FD_INDEX_CURRENT_DIR
 		jsr calc_lba_addr
 
         debug32 lba_addr
@@ -76,7 +76,7 @@ fat_open_found:
 		bit #$10 ; Is a directory
 		beq @l1
 
-		ldx #$00		; current dir always go to fd #0
+		ldx #FD_INDEX_CURRENT_DIR		; current dir always go to fd #0
 		saveClusterNo current_dir_first_cluster
 		; bra .end_open 
 		bra @l2
@@ -605,7 +605,6 @@ ff_end:
 match:
 	ldx #0
 	ldy #0
-
 	; 0..1 in input may be "." or "..", so compare dir entry with .
 match_skip_dots:
 	lda	#'.'

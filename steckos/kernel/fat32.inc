@@ -112,6 +112,5 @@ DIR_WrtDate		= $18	; file write date, 16 bits
 DIR_FstClusLO	= $1A	;16 Bits
 DIR_FileSize	= $1C	;32 Bits
 ;
-;
-;
+FD_INDEX_CURRENT_DIR = 0			; current dir always go to fd #0
 FAT_EOC			= $0ffffff8	; end of cluster chain marker
