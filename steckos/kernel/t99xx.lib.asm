@@ -43,7 +43,12 @@ vdp_memcpy:
 		dex
 		bne   @l1
 		rts
-	
+
+;
+;	text mode - 40x24 character mode, 16 colors with same color for 8 characters in a block
+;
+vdp_mode_text:
+	SetVector vdp_init_bytes_text, adrl
 ; setup video registers upon given table
 ;	input:
 ;	adrl/adrh vector set to vdp init table for al 8 vdp registers
@@ -60,13 +65,6 @@ vdp_init_reg:
 	cpy	#$08
 	bne @l1
 	rts
-
-;
-;	text mode - 40x24 character mode, 16 colors with same color for 8 characters in a block
-;
-vdp_mode_text:
-	SetVector vdp_init_bytes_text, adrl
-	bra	vdp_init_reg
 
 vdp_init_bytes_text:
 	.byte 0

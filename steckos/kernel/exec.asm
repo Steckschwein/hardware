@@ -1,5 +1,7 @@
 .include 	"kernel.inc"
 
+.segment "KERNEL"
+
 .import	krn_open_rootdir, krn_open
 
 ; debug stuff
@@ -53,6 +55,6 @@ execv:
 		rts
 @l_exec:
 		stz	execv_file, x	;\0 terminate the current path fragment
-		jsr	fat_read
+		;jsr	fat_read
 
 execv_file: .res 9,0

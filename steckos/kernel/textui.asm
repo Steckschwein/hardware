@@ -1,15 +1,14 @@
 .include "kernel.inc"
 .include "vdp.inc"
 
-.export textui_init0, textui_update_screen, textui_chrout, textui_put
-.export textui_enable, textui_disable, textui_blank, textui_update_crs_ptr, textui_crsxy, textui_screen_dirty
-
-.import vdp_bgcolor, vdp_memcpy, vdp_mode_text, vdp_display_off
-
 .segment "OS_CACHE"
-screen_buffer:      ;@see steckos.cfg
+;screen_buffer:      ;@see steckos.cfg
+screen_buffer=$8000
 
 .segment "KERNEL"
+.export textui_init0, textui_update_screen, textui_chrout, textui_put
+.export textui_enable, textui_disable, textui_blank, textui_update_crs_ptr, textui_crsxy, textui_screen_dirty
+.import vdp_bgcolor, vdp_memcpy, vdp_mode_text, vdp_display_off
 
 screen_status 		=   screen_buffer + (COLS*(ROWS+1)) + 1
 screen_write_lock 	=   screen_status + 1
@@ -87,36 +86,32 @@ textui_update_crs_ptr:		;   updates the 16 bit pointer crs_p upon crs_x, crs_y v
 		rts
 
 textui_init0:
-		jsr	vdp_display_off			    ;display off
-		jsr	textui_blank			    ;blank screen buffer
-        
-		stz	crs_x
-		stz	crs_y
-        SetVector	screen_buffer, crs_ptr
-		jsr textui_update_crs_ptr		;init cursor pointer
-        
+		jsr	vdp_display_off			        ;display off
+        SetVector screen_buffer, crs_ptr    ;set crs ptr initial to screen buffer
+		jsr	textui_blank			        ;blank screen buffer
+        stz screen_write_lock               ;reset write lock
         jsr textui_enable
-
 textui_init:
 		jmp	vdp_mode_text
 	
 textui_blank:
 		ldx	#$00
 		lda	#CURSOR_BLANK
+        sta saved_char
 @l1:	sta	screen_buffer+$000,x	;4 pages
 		sta	screen_buffer+$100,x
 		sta screen_buffer+$200,x
 		inx
 		bne	@l1
-		ldx #<(COLS*(ROWS+1))
 @l2:    sta	screen_buffer+$300,x
-        dex
+        inx
+        cpx #<(COLS*(ROWS+1))
         bne @l2
     	stz crs_x
     	stz crs_y
- 		bra	textui_update_crs_ptr
-;		jmp	textui_screen_dirty
-	
+        jsr	textui_update_crs_ptr
+        jmp textui_screen_dirty
+
 textui_cursor:
 		lda screen_write_lock
 		bne	@l2
@@ -206,7 +201,7 @@ inc_cursor_y:
 
 textui_enable:
 		lda	#STATUS_TEXTUI_ENABLED
-        sta screen_status
+		sta screen_status       ;set enable
         rts
 textui_disable:
         stz screen_status

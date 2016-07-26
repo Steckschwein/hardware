@@ -7,6 +7,8 @@ text_mode_40 = 1
 
 ;kbd_frame_div  = $01
 
+.segment "KERNEL"
+
 .import init_via1
 .import init_rtc
 .import spi_r_byte, spi_rw_byte, spi_deselect, spi_select_rtc
@@ -14,23 +16,26 @@ text_mode_40 = 1
 .import textui_init0, textui_update_screen, textui_chrout, textui_put
 .import strout, hexout, primm, print_crlf
 .import keyin, getkey
-;TODO FIXME testing purpose only
 .import textui_enable, textui_disable, vdp_display_off,  textui_blank, textui_update_crs_ptr, textui_crsxy, textui_screen_dirty
 .import init_sdcard
 .import fat_mount, fat_open, fat_open_rootdir, fat_close, fat_read, fat_find_first, fat_find_next
-.segment "KERNEL"
+
+;TODO FIXME testing purpose only
+.import vdp_bgcolor
 
 kern_init:
+    sei
+    
 	jsr init_via1
 	jsr init_rtc
 
-	jsr textui_init0
-    
-    cli
-	
 	SetVector user_isr_default, user_isr
+    
+	jsr textui_init0
 
-	printstring "SteckOS Kernel 0.5"
+    cli
+
+	printstring "SteckOS Kernel 0.5"    
 	
 	jsr init_sdcard
     debugHex errno
@@ -43,7 +48,6 @@ kern_init:
 	bne do_upload
 	
 	SetVector filename, filenameptr
-
 
     debug_newline
 
@@ -66,10 +70,8 @@ kern_init:
 	jmp shell_addr    
 
 do_upload:
-    sei
 	jsr init_uart
 	jsr upload
-    cli
 
 	ldx #$ff 
 	txs 
@@ -226,8 +228,6 @@ upload_ok:
 	lda #'K'
 	jsr uart_tx
 	rts
-
-
 
 filename:	.asciiz "shell.bin"
 
