@@ -2,8 +2,7 @@
 .include "vdp.inc"
 
 .segment "OS_CACHE"
-;screen_buffer:      ;@see steckos.cfg
-screen_buffer=$8000
+screen_buffer:      ;@see steckos.cfg
 
 .segment "KERNEL"
 .export textui_init0, textui_update_screen, textui_chrout, textui_put
