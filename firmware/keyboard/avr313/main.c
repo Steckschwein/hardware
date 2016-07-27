@@ -32,6 +32,7 @@ Design:
 	- Baud rate can be set under project configuration in Avr Studio.
 	- The clr screen routine is not implemented - did not see the
 	  point here.
+
 ---------------------------------------------------------------------
 	A few improvements could be made:
 
@@ -40,6 +41,14 @@ Design:
 	-Add support for sending commands to the keyboard
 	-Add support for extended keys
 
+---------------------------------------------------------------------
+Changes by Thomas Woinke <thomas@steckschwein.de>
+	- support ctrl, alt
+	- catch ctrl-alt-del, sysrq
+	- scan code table for german layout
+	- Moved the call to decode out of the ISR
+	- PS/2 communication including parity check using AVR USART
+	
 -------------------------------------------------------------------*/
 
 

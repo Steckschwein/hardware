@@ -17,13 +17,13 @@ void send_kb(uint8_t);
 void put_scanbuff(unsigned char c);
 int  get_scanchar(void);
 
-#define SCAN_BUFF_SIZE 32
+#define SCAN_BUFF_SIZE 12
  uint8_t scan_buffer[SCAN_BUFF_SIZE];
  uint8_t *scan_inptr;
  uint8_t *scan_outptr;
  uint8_t scan_buffcnt;
 
-#define KB_BUFF_SIZE 16
+#define KB_BUFF_SIZE 8
  uint8_t kb_buffer[KB_BUFF_SIZE];
  uint8_t *kb_inptr;
  uint8_t *kb_outptr;
