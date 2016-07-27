@@ -19,11 +19,11 @@ void init_kb(void)
 
 #ifdef USART
 	// USART init to 8 bit data, odd parity, 1 stopbit
-	// UCSRB = 0x90;
+	
 	UCSRB = (1 << RXCIE) // USART RX Complete Interrupt Enable
 		  | (1 << RXEN); // USART Receiver Enable
 
-	// UCSRC = 0xF7;
+	
 	UCSRC = (1 << URSEL) // Register select
 		  | (1 << UMSEL) // Select asynchronous mode
 		  | (1 << UPM0)  // Select odd parity
@@ -39,110 +39,9 @@ void init_kb(void)
 #endif
 	PORTC  	= 3;
 	DDRC	= (1 << PC0) | (1 << PC1);
-
-//	send_kb(0xff);
 }
 
-/*
-void send_kb(uint8_t data)
-{
-	uint8_t loop, mask, parity;
-	// uint8_t bitcount = 11;
 
-	// uint8_t tmp = SREG;
-	// cli();
-
-	// Request to send
-	// Pull CLOCK line low
-	PORTD	= ~(1 << CLOCK);
-	// Set CLOCK and DATA to output
-	DDRD	=  (1 << CLOCK) | (1 << DATAPIN);
-
-	// wait 100us for device to check that we a pulling CLOCK low
-	_delay_us(150);
-
-	// Pull DATA low
-	PORTD	= ~(1 << DATAPIN);
-	// make CLOCK input again to be able to receive clock from device
-	DDRD	= ~(1 << CLOCK);
-	// wait for device to pull CLOCK line
-	// loop_until_bit_is_clear(PIND, CLOCK);
-
-
-
-
-	// set startbit (always 0)
-	PORTD &= ~(1 << DATAPIN);
-	loop_until_bit_is_set(PIND, CLOCK);
-	loop_until_bit_is_clear(PIND, CLOCK);
-	
-	parity = 0;
-
-	// shift data byte out LSB first
-	for (loop=0,mask=0x01;loop<8;loop++, mask=mask<<1)   
-	{
-		// if (data & mask) 
-		if (data & mask) 
-		{
-			PORTD |= (1 << DATAPIN);
-			parity++;
-		}
-		else 
-		{
-			PORTD &= ~(1 << DATAPIN);
-		}
-
-		loop_until_bit_is_set(PIND, CLOCK);
-		loop_until_bit_is_clear(PIND, CLOCK);
-	}
-
-	// set parity bit
-	if ((++parity & 0x01) == 0)
-	{
-		PORTD &= ~(1 << DATAPIN);
-	}
-	else
-	{
-		PORTD |= (1 << DATAPIN);
-	}
-	loop_until_bit_is_set(PIND, CLOCK);
-	loop_until_bit_is_clear(PIND, CLOCK);
-
-	// set stopbit (always 1)
-	PORTD |= (1 << DATAPIN);
-	loop_until_bit_is_set(PIND, CLOCK);
-	loop_until_bit_is_clear(PIND, CLOCK);
-
-  
-
-	// Release data line
-	PORTD &= ~(1 << DATAPIN);
-	DDRD	= ~(1 << DATAPIN);
-	loop_until_bit_is_clear(PIND, CLOCK);
-	loop_until_bit_is_clear(PIND, DATAPIN);
-    
-    DDRD=0;
-	for (loop=0;loop<11;loop++)
-	{
-		loop_until_bit_is_set(PIND, CLOCK);
-		loop_until_bit_is_clear(PIND, DATAPIN);    	
-		// if(bitcount < 11 && bitcount > 2)		  // Bit 3 to 10 is data. Parity bit,
-		// {										  // start and stop bits are ignored.
-		// 	data = (data >> 1);
-		// 	if(PIND & (1 << DATAPIN))
-		// 		data = data | 0x80;				  // Store a '1'
-		// }
-
-		// if(--bitcount == 0)						  // All bits received
-		// {
-		// 	bitcount = 11;
-		// }
-
-	}
-   
-    // SREG = tmp;
-}
-*/
 
 #ifdef USART
 ISR (USART_RXC_vect)
