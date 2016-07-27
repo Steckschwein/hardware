@@ -60,9 +60,10 @@ int __attribute__((OS_main noreturn)) main(void)
 	init_kb();
 	spiInitSlave();
 	sei();
-
+	
 	while(1)
 	{		
+
 		tmp = get_scanchar();
 		if (tmp != 0)
 		{
