@@ -19,10 +19,18 @@ void init_kb(void)
 
 #ifdef USART
 	// USART init to 8 bit data, odd parity, 1 stopbit
-	UCSRB = 0x90;
-	UCSRC = 0xF7;
-	UBRRH = 0;
-	UBRRL = 0;
+	// UCSRB = 0x90;
+	UCSRB = (1 << RXCIE) // USART RX Complete Interrupt Enable
+		  | (1 << RXEN); // USART Receiver Enable
+
+	// UCSRC = 0xF7;
+	UCSRC = (1 << URSEL) // Register select
+		  | (1 << UMSEL) // Select asynchronous mode
+		  | (1 << UPM0)  // Select odd parity
+		  | (1 << UPM1)  // Select odd parity
+		  | (1 << UCSZ0) // Select number of data bits (8)
+		  | (1 << UCSZ1)  
+		  | (1 << UCPOL); // Clock polarity to falling edge 
 #endif
 
 #ifndef USART
