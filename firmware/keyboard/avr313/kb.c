@@ -3,7 +3,7 @@
 #include <util/delay.h>
 
 #include "kb.h"
-#include "scancodes_de.h"
+#include "scancodes_de_cp437.h"
 
 
 
@@ -98,6 +98,8 @@ void decode(uint8_t sc)
 
 	uint8_t i, ch, offs;
 
+	// put_kbbuff(sc);
+	// return;
 
 	offs = 1;
 
