@@ -1,7 +1,5 @@
 dir_entry_size=11
 
-.export match
-
 match:
 	ldx #0
 	ldy #0

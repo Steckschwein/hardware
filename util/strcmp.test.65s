@@ -3,18 +3,21 @@
 dirptr=$0
 
 test_dirs=10
-test_in=input_10
+test_in=input_14
 test_input=test_in + test_dirs; address of input + size of results
 
+	lda	#$e0
+	bit	#$30
+	cmp #$ff
+	jmp	test_suite	
 
-	jmp	test_suite
+	.include "asm_unit.asm"
+	.include "strcmp.asm"
 
-	.include "asm_unit.a"
-	.include "strcmp.a"
-
-chrout:
+vdp_chrout:
 	sta	$e001
 	rts
+
 	
 test_suite
     lda #<test_input
@@ -33,10 +36,13 @@ test_suite
     sta a4+2
     lda #>test_in
     sta a5+2
+    
     jsr test
+	
 	rts
 	
 test
+	
 	ldx #0
 	ldy #0
 	
@@ -106,6 +112,9 @@ input_12 	.db 0,0,0,0,0,0,1,0,0,0
 			.ascii "progs",0
 input_13 	.db 0,0,0,0,0,0,0,0,0,1
 			.ascii ".ssh",0
+input_14 	.db 0,0,0,0,0,0,0,0,0,0
+			.ascii 0
+
 
 test_dir_tab
 	.dw dir_1
