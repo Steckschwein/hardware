@@ -49,10 +49,6 @@ fat_open:
 
 		stz errno
 
-;		ldx #FD_INDEX_CURRENT_DIR
-;		jsr calc_lba_addr
-;       debug32 lba_addr
-
 		jsr fat_find_first
 		bcs fat_open_found
 
@@ -68,18 +64,12 @@ lbl_fat_open_error:
 
 ; found.
 fat_open_found:
-;		ldy #$00
-;@loo:	lda (dirptr),y
-;		iny
-;		cpy #11
-;		bne @loo 
 		ldy #DIR_Attr
 		lda (dirptr),y
 		bit #$10 ; Is a directory?
 		beq @l1
 
 		ldx #FD_INDEX_CURRENT_DIR	; current dir always go to fd #0
-		;saveClusterNo current_dir_first_cluster
 		bra @l2
 
 @l1:	bit #$20 ; Is file?
@@ -492,11 +482,7 @@ end_mount:
 fat_open_rootdir:
 		; Set root dir to FD_INDEX_CURRENT_DIR
 		Copy root_dir_first_clus, fd_area + FD_start_cluster, 3
-		
-		;Copy root_dir_first_clus, current_dir_first_cluster, 3
 		rts
-;		ldx	#FD_INDEX_CURRENT_DIR
-;		jmp calc_lba_addr			;will be calculated within open
 
 fat_init_fdarea:
 		ldx #$00
@@ -676,4 +662,3 @@ m_found:
 m_not_found:
 		clc
 	 	rts
-
