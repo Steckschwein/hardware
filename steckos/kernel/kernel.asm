@@ -250,11 +250,11 @@ krn_keyin:				jmp keyin
 .export krn_mount		
 krn_mount: 				jmp fat_mount 
 .export krn_open
-krn_open: 				jmp fat_open
+krn_open 				= fat_open
 .export krn_close
-krn_close: 				jmp fat_close
+krn_close 				= fat_close
 .export krn_read
-krn_read: 				jmp fat_read 
+krn_read 				= fat_read 
 .export krn_open_rootdir
 krn_open_rootdir: 		jmp fat_open_rootdir
 .export krn_find_first

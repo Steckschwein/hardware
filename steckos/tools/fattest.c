@@ -144,9 +144,9 @@ int dumpDirEntry(unsigned char *buf, unsigned int offs){
 	char deleted = (buf[offs] == 0xe5 ? '-' : ' ');
 	// files with size 0 - custer number in the directory should be zero. 
 	// >= 0x0ffffff8- end of cluster chain
-	unsigned long int cla = (_16(buf, offs+20) << 16) | _16(buf, offs+26);
+	unsigned long int cln = (_16(buf, offs+20) << 16) | _16(buf, offs+26);
 	unsigned long int size = _32(buf, offs+28);
-	printf("%c %c %11s $%x size: %ld, cla: $%x\n", deleted, fod, tmp, buf[offs+11], size, cla);
+	printf("%c %c %11s $%x size: %ld, cln: $%x\n", deleted, fod, tmp, buf[offs+11], size, cln);
 }
 
 int dumpDirEntries(unsigned char *buf, unsigned int *cnt){
@@ -225,8 +225,8 @@ unsigned long int calcDataLbaAddress(struct F32_Volume *vol, unsigned long int c
 	return vol->LbaCluster + (cluster_nr * vol->SecPerClus);
 }
 
-int isEnd(unsigned long int cla){
-	return ((cla & EOC) == EOC);
+int isEnd(unsigned long int cln){
+	return ((cln & EOC) == EOC);
 }
 
 unsigned long long currentTimeMillis(){
@@ -236,10 +236,10 @@ unsigned long long currentTimeMillis(){
     return milliseconds;
 }
 
-unsigned long int nextClusterNumber(char *block_fat, unsigned long int cla){
-	unsigned int offs = (cla << 2 & (BLOCK_SIZE-1));//offset within 512 byte block, cluster nr * 4 (32 Bit) and Bit 8-0 gives the offset
+unsigned long int nextClusterNumber(char *block_fat, unsigned long int cln){
+	unsigned int offs = (cln << 2 & (BLOCK_SIZE-1));//offset within 512 byte block, cluster nr * 4 (32 Bit) and Bit 8-0 gives the offset
 	unsigned long int nextCluster = _32(block_fat, offs);
-//	printf("ncla: $%x\n", nextCluster);
+//	printf("ncln: $%x\n", nextCluster);
 	return nextCluster;
 }
 
@@ -259,14 +259,16 @@ int main(int argc, char* argv[]){
 	unsigned long int fat_lba_addr=0;
 	unsigned long int fat_lba_addr_n=0;
 
-//	char filename[12] = "32767   DAT\0";
+	//dir entry
+	//char filename[12] = "TESTDIR    \0";
+	
+	char filename[12] = "32767   DAT\0";
 	//char filename[12] = "32K     DAT\0";
 	//char filename[12] = "32769   DAT\0";
-
 	//char filename[12] = "511BYTE DAT\0";
 //	char filename[12] = "512BYTE DAT\0";
 //	char filename[12] = "513BYTE DAT\0";
-	char filename[12] = "2048K   DAT\0";
+	//char filename[12] = "2048K   DAT\0";
 //	char filename[12] = "1024K   DAT\0";
 //	char filename[12] = "96K     DAT\0";
 	//char filename[12] = "8192K   DAT\0";
@@ -317,8 +319,9 @@ int main(int argc, char* argv[]){
 	
 	//FIXME works only cause we have 512 Bytes/Sektor and 512 byte per sd-card block otherwise we have to do more calculation
 	unsigned int e=0;
-	printf("Reading Root-Dir (cnr $%x)...\n", vol.RootClus);
-	data_lba_addr = calcDataLbaAddress(&vol, vol.RootClus);
+	unsigned long int dirCln = vol.RootClus;
+	printf("Reading Root-Dir (cnr $%x)...\n", dirCln);
+	data_lba_addr = calcDataLbaAddress(&vol, dirCln);
 	for(int i=0;i<vol.SecPerClus;i++){//
 		n = readBlock(block_data, fd, data_lba_addr);
 		if(n != BLOCK_SIZE){
@@ -334,7 +337,7 @@ int main(int argc, char* argv[]){
 	
 	unsigned int r=-1;
 	struct F32_fd fileFound;
-	data_lba_addr = calcDataLbaAddress(&vol, vol.RootClus);
+	data_lba_addr = calcDataLbaAddress(&vol, dirCln);
 	for(int i=0;i<vol.SecPerClus;i++){//
 		n = readBlock(block_data, fd, data_lba_addr);
 		if(n != BLOCK_SIZE){
@@ -355,17 +358,17 @@ int main(int argc, char* argv[]){
 	
 	unsigned long int ts = currentTimeMillis();
 	
-	unsigned long int cla = fileFound.startCluster;
-	printf("fat cla: $%x $%x bn: $%x\n", cla, (cla << 2 & (BLOCK_SIZE-1)), (cla >> 7));	
+	unsigned long int cln = fileFound.startCluster;
+	printf("fat cln: $%x $%x bn: $%x\n", cln, (cln << 2 & (BLOCK_SIZE-1)), (cln >> 7));	
 	printf("data:\n");
 	unsigned long int blocks = fileFound.size >> 9; //(div BLOCK_SIZE);
 	if((fileFound.size & 0x1ff) != 0){
 		blocks++;
 	}
 		
-	for(;!isEnd(cla);){
-		data_lba_addr = calcDataLbaAddress(&vol, cla);
-		printf("data cluster nr $%x, $%x blocks to read:\n", cla, blocks);
+	for(;!isEnd(cln);){
+		data_lba_addr = calcDataLbaAddress(&vol, cln);
+		printf("data cluster nr $%x, $%x blocks to read:\n", cln, blocks);
 		//vol.SecPerClus <=> BLOCK_SIZE :)
 		for(unsigned int i=0;blocks > 0 && i<vol.SecPerClus;i++,blocks--){
 			n = readBlock(block_data, fd, data_lba_addr);
@@ -383,7 +386,7 @@ int main(int argc, char* argv[]){
 			inc32(&data_lba_addr);
 		}
 		//
-		fat_lba_addr_n = calcFatLbaAddress(&vol, cla);
+		fat_lba_addr_n = calcFatLbaAddress(&vol, cln);
 		if(fat_lba_addr != fat_lba_addr_n){
 			printf("read fat block at fat lba: $%x\n", fat_lba_addr_n);
 			int n = readBlock(block_fat, fd, fat_lba_addr_n);
@@ -394,7 +397,7 @@ int main(int argc, char* argv[]){
 			fat_lba_addr = fat_lba_addr_n;
 			//dumpBuffer(block_fat);
 		}
-		cla = nextClusterNumber(block_fat, cla);
+		cln = nextClusterNumber(block_fat, cln);
 	}
 	
 	ts = currentTimeMillis() - ts;

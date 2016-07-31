@@ -272,8 +272,6 @@ sd_read_multiblock:
 
 		jsr sd_select_card
 
-		; jsr sd_busy_wait
-	    
 		lda #cmd18	; Send CMD18 command byte
 		jsr spi_rw_byte
 
@@ -284,75 +282,72 @@ sd_read_multiblock:
 		jsr spi_rw_byte
 
 		; wait for command response. 
-		; everything other than $00 is an error
 @lx:	jsr spi_r_byte
 		bit #$80
 		bne @lx
 		cmp #$00
-		beq @l1
+		beq @l1		; everything other than $00 is an error
+
 		sta errno
 		jmp @exit
 
 @l1:	
-	jsr sd_wait_data_token
+		jsr sd_wait_data_token
 ; @l1:
 ;     ;lda #$ff
 ;     jsr spi_r_byte  ; Wait for data token
 ; 	cmp #$fe
 ; 	bne @l1
 
-	ldy #$00
-	lda via1portb   ; Port laden
-	and #$fe        ; Takt ausschalten
-	tax             ; aufheben
-	ora #$01
-	sta sd_tmp 
+		ldy #$00
+		lda via1portb   ; Port laden
+		and #$fe        ; Takt ausschalten
+		tax             ; aufheben
+		ora #$01
+		sta sd_tmp 
     
-	; read 256 bytes twice, increase blkptr in between
-@l2a:	lda sd_tmp
+		; read 256 bytes twice, increase blkptr in between
+@l2a:
+		lda sd_tmp
 
 	.repeat 8
-		STA via1portb ; Takt An 
-		STX via1portb ; Takt aus
+		sta via1portb ; Takt An 
+		stx via1portb ; Takt aus
 	.endrepeat
 
-	lda via1sr
-	sta (sd_read_blkptr),y
-	iny
-	bne @l2a
+		lda via1sr
+		sta (sd_read_blkptr),y
+		iny
+		bne @l2a
 
-	inc sd_read_blkptr+1             
+		inc sd_read_blkptr+1             
 
 @l2b:	lda sd_tmp
 
 	.repeat 8
-		STA via1portb ; Takt An 
-		STX via1portb ; Takt aus
+		sta via1portb ; Takt An 
+		stx via1portb ; Takt aus
 	.endrepeat
 
-	lda via1sr
-	sta (sd_read_blkptr),y
-	iny
-	bne @l2b
+		lda via1sr
+		sta (sd_read_blkptr),y
+		iny
+		bne @l2b
 
-	inc sd_read_blkptr+1             
-
-
+		inc sd_read_blkptr+1             
 		
-	lda sd_tmp
+		lda sd_tmp
 	; Read CRC bytes     
 	.repeat 16    
 		STA via1portb ; Takt An 
 		STX via1portb ; Takt aus
 	.endrepeat
-
    
-	dec blocks
-	beq @l3
-	jmp @l1
+		dec blocks
+		beq @l3
+		jmp @l1
 @l3:
-		
-	jsr sd_busy_wait  
+		jsr sd_busy_wait  
 
 	; all blocks read, send cmd12 to end transmission
 	; jsr sd_param_init
@@ -363,7 +358,6 @@ sd_read_multiblock:
 @exit:
 	restore
 	jmp sd_deselect_card
-	; rts
 
 ;---------------------------------------------------------------------
 ; Write block to SD Card
@@ -410,7 +404,6 @@ sd_write_block:
 	jsr spi_rw_byte
 
 	jmp spi_r_byte              
-	;rts   
 
 ;---------------------------------------------------------------------
 ; wait while sd card is busy
@@ -430,13 +423,14 @@ sd_busy_wait:
 
 
 sd_wait_data_token:
-		ldx #$ff
-@l1:	dex
-		beq @l2
-		; lda #$ff
+		ldx #sd_data_token_retries
+@l1:
 		jsr spi_r_byte
 		cmp #sd_data_token
+		beq @l2
+		dex
 		bne @l1
+		;TODO FIXME check card state here, may be was removed
 @l2:	rts
 
 ;---------------------------------------------------------------------
@@ -447,8 +441,7 @@ sd_select_card:
 	lda #%01111100
 	sta via1portb
 	pla
-	jmp sd_busy_wait
-	; rts
+	bra sd_busy_wait
 
 ;---------------------------------------------------------------------
 ; deselect sd card, puSH CS line to HI and generate few clock cycles 
@@ -494,6 +487,4 @@ sd_send_lba:
 	lda lba_addr + 1
 	jsr spi_rw_byte
 	lda lba_addr + 0
-	jsr spi_rw_byte
-	
-	rts
+	jmp spi_rw_byte

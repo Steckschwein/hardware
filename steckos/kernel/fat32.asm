@@ -7,9 +7,11 @@
 ; DEBUG
 .import hexout, primm, krn_primm
 
+FD_Entries_Max = 16
+FD_Entry_Size = 8 ; 8 byte per fd entry
 
-FD_start_cluster = $00
-FD_file_size = $08
+FD_start_cluster = $00	; 32 Bit cluster nr
+FD_file_size = $04		; 32 Bit file size
 
 .macro saveClusterNo where
 	ldy #DIR_FstClusHI +1
@@ -29,13 +31,14 @@ FD_file_size = $08
 	sta where
 .endmacro
 
-
+		;in: 
+		;	x - offset into fd_area
 fat_read:
 		jsr calc_lba_addr
 		jsr calc_blocks
 
         debug32 lba_addr
-        debugHex blocks
+		debug24s "rd blocks:", blocks
 
 		jmp sd_read_multiblock
 ;		jmp sd_read_block
@@ -46,10 +49,9 @@ fat_open:
 
 		stz errno
 
-		ldx #FD_INDEX_CURRENT_DIR
-		jsr calc_lba_addr
-
-        debug32 lba_addr
+;		ldx #FD_INDEX_CURRENT_DIR
+;		jsr calc_lba_addr
+;       debug32 lba_addr
 
 		jsr fat_find_first
 		bcs fat_open_found
@@ -66,33 +68,31 @@ lbl_fat_open_error:
 
 ; found.
 fat_open_found:
-		ldy #$00
-@loo:	lda (dirptr),y
-		iny
-		cpy #11
-		bne @loo 
+;		ldy #$00
+;@loo:	lda (dirptr),y
+;		iny
+;		cpy #11
+;		bne @loo 
 		ldy #DIR_Attr
 		lda (dirptr),y
-		bit #$10 ; Is a directory
+		bit #$10 ; Is a directory?
 		beq @l1
 
-		ldx #FD_INDEX_CURRENT_DIR		; current dir always go to fd #0
-		saveClusterNo current_dir_first_cluster
-		; bra .end_open 
+		ldx #FD_INDEX_CURRENT_DIR	; current dir always go to fd #0
+		;saveClusterNo current_dir_first_cluster
 		bra @l2
 
-@l1:	bit #$20 ; Is file
+@l1:	bit #$20 ; Is file?
 		beq lbl_fat_open_error
 
 		jsr fat_alloc_fd
 		cpx #$ff
 		beq lbl_fat_open_error
 	
-@l2:
+@l2:	;save 32 bit cluster number from dir entry
 		ldy #DIR_FstClusHI +1
 		lda (dirptr),y
 		sta fd_area + FD_start_cluster +3, x
-
 		dey	
 		lda (dirptr),y
 		sta fd_area + FD_start_cluster +2, x
@@ -100,13 +100,11 @@ fat_open_found:
 		ldy #DIR_FstClusLO +1
 		lda (dirptr),y
 		sta fd_area + FD_start_cluster +1, x
-		
 		dey
 		lda (dirptr),y
 		sta fd_area + FD_start_cluster +0, x
 
-	; Cluster no = 0? assume its root dir and add 2
-
+		; cluster no = 0? - its root dir, set to root dir first cluster
 		lda fd_area + FD_start_cluster + 3, x
 		bne @l3
 		lda fd_area + FD_start_cluster + 2, x
@@ -115,8 +113,7 @@ fat_open_found:
 		bne @l3
 		lda fd_area + FD_start_cluster + 0, x
 		bne @l3
-
-
+		
 		lda root_dir_first_clus +1
 		sta fd_area + FD_start_cluster +1, x
 		lda root_dir_first_clus +0
@@ -186,7 +183,6 @@ calc_blocks: ;blocks = filesize / BLOCKSIZE -> filesize >> 9 (div 512) +1 if fil
 		bne @l2
 		inc blocks+2
 @l2:	pla
-        debug24s "blocks:", blocks
 		rts
 
 ; calculate LBA address of first block from cluster number found in file descriptor entry
@@ -412,7 +408,6 @@ fat_mount:
 		lda sd_blktarget + BPB_SecPerClus
 		sta sectors_per_cluster
         
-		; cluster_begin_lba = Partition_LBA_Begin + Number_of_Reserved_Sectors + (Number_of_FATs * Sectors_Per_FAT);
 		; cluster_begin_lba = Partition_LBA_Begin + Number_of_Reserved_Sectors + (Number_of_FATs * Sectors_Per_FAT) -  (2 * sec/cluster);
 
 		; add number of reserved sectors to fat_begin_lba. store in cluster_begin_lba
@@ -460,9 +455,9 @@ fat_mount:
         debug8s "sec/cl:", sectors_per_cluster
         debug32s "clb1:", cluster_begin_lba
         		
-        ;TODO FIXME we assume 2 here for insteasd using the value in BPB_RootClus
+        ;TODO FIXME we assume 2 here insteasd of using the value in BPB_RootClus
         ; cluster_begin_lba_m2 -> cluster_begin_lba - (2*sec/cluster) -> sec/cluster << 1
-        lda sectors_per_cluster ; max sec/cluster can be 128 and therefore wie subtract max 256
+        lda sectors_per_cluster ; max sec/cluster can be 128, with 2 (BPB_RootClus) * 128 wie may subtract max 256
         asl
         sta lba_addr        ;   used as tmp
         stz lba_addr +1     ;   safe carry
@@ -486,7 +481,6 @@ fat_mount:
 		; init file descriptor area
 		jsr fat_init_fdarea
 
-
 		Copy sd_blktarget + BPB_RootClus, root_dir_first_clus, 3
 		; now we have the lba address of the first sector of the first cluster
 
@@ -496,10 +490,13 @@ end_mount:
         
 		; fall through to open_rootdir
 fat_open_rootdir:
-		; Open root dir
+		; Set root dir to FD_INDEX_CURRENT_DIR
 		Copy root_dir_first_clus, fd_area + FD_start_cluster, 3
-		Copy root_dir_first_clus, current_dir_first_cluster, 3
-		jmp calc_lba_addr
+		
+		;Copy root_dir_first_clus, current_dir_first_cluster, 3
+		rts
+;		ldx	#FD_INDEX_CURRENT_DIR
+;		jmp calc_lba_addr			;will be calculated within open
 
 fat_init_fdarea:
 		ldx #$00
@@ -515,27 +512,25 @@ fat_init_fdarea:
 		bne @l1
 
 		rts
-
-fat_alloc_fd:
-		ldx #$08
 		
+		; return: x - with index to fd_area, otherwise errno is set
+fat_alloc_fd:
+		ldx #FD_Entry_Size	; skip first entry, its reserverd for current dir		
 @l1:	lda fd_area + FD_start_cluster +3, x
-		cmp #$ff
+		cmp #$ff	;is open?
 		beq @l2
 
 		txa ; 2 cycles
-		clc ; 2 cycles
+;		clc ; must be clear from cmp above
 		adc #$08 ; 2  cycles
 		tax ; 2 cycles
 
-		cpx #$80
+		cpx #(FD_Entry_Size*FD_Entries_Max)
 		bne @l1
 
 		; Too many open files, no free file descriptor found
 		lda #fat_too_many_files
-		sta errno
-		
-		
+		sta errno		
 @l2:
 		rts
 
@@ -559,13 +554,12 @@ fat_find_first:
 		sta filename_buf,y
 
 		SetVector sd_blktarget, sd_read_blkptr
-		ldx #$00
+		ldx #FD_INDEX_CURRENT_DIR
 		jsr calc_lba_addr
 		
 ff_l3:	SetVector sd_blktarget, dirptr	
 		jsr sd_read_block
 		dec sd_read_blkptr+1
-
 
 ff_l4:
 		lda (dirptr)
@@ -589,12 +583,11 @@ fat_find_next:
 		bcc @l6
 		inc dirptr+1
 @l6:
-
 		lda dirptr+1 	; end of block?
-		cmp #$06
+		cmp #>(sd_blktarget + sd_blocksize)
 		bcc ff_l4			; no, show entr
 		; increment lba address to read next block 
-		jsr inc_lba_address	
+		jsr inc_lba_address
 		bra ff_l3
 
 ff_end:
@@ -613,15 +606,15 @@ match_skip_dots:
 
 	cmp (dirptr),y
 	bne m_not_found
-	inx					; 2nd "." ?
+	inx						
 	iny
 	lda	filename_buf,x
-	bne	match_skip_dots_1 ; end of input ?
+	bne	match_skip_dots_1 	; end of input ?
 	lda	#' '
 	cmp (dirptr),y
 	bne m_not_found
 match_skip_dots_1:
-	cpy #02
+	cpy #02					; the 2 dots ..
 	bne match_skip_dots
 	bra	match_ext_0	
 	

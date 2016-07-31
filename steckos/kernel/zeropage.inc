@@ -1,4 +1,6 @@
 ; INIT0/SHELL
+
+appstart			= $1000
 cmdptr				= $d6
 paramptr			= $d8
 retvec 				= $da

@@ -8,6 +8,8 @@ filename_buf				= $0310 ; file name buffer, 11 bytes
 fd_area						= $0320 ; File descriptor area, 6x8byte until $0350 
 sd_blktarget 				= $0400
 
+sd_blocksize				= $200
+
 .struct PartitionEntry
 .endstruct
 
@@ -46,6 +48,7 @@ fat_too_many_files			=   $06
 fat_file_not_found			=   $07
 fat_file_not_open			=   $08
 fat_file_not_dir			=   $10
+fat_file_too_large			=   $11
 
 ; SD card error codes
 sd_no_card					= 	$ff

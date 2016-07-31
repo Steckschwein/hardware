@@ -14,8 +14,9 @@ tmp5    = $a2
 .include "kernel_jumptable.inc"
 .include "fat32.inc"
 
-dir_attrib_mask		= $0319
-steckos_start 		= $1000
+; set attrib mask. hide volume label and hidden files
+dir_attrib_mask		= $0a
+steckos_start 		= appstart
 KEY_RETURN 			= $0d
 KEY_BACKSPACE 		= $08
 KEY_ESCAPE			= $1b
@@ -66,10 +67,6 @@ init:
 
 	SetVector mainloop, retvec
 	SetVector buf, bufptr
-
-	; set attrib mask. hide volume label and hidden files
-	lda #$0a
-	sta dir_attrib_mask
 
 	jmp	hello
 
@@ -533,9 +530,8 @@ l1:
 		ldy #DIR_Attr
 		lda (dirptr),y
 
-		bit dir_attrib_mask ; Hidden attribute set, skip
+		bit #dir_attrib_mask ; Hidden attribute set, skip
 		bne @l3
-
 
 		jsr dir_entry
 

@@ -20,4 +20,4 @@ sd_cmd_param 		= $02a0
 sd_cmd_chksum		= sd_cmd_param+4
 sd_cmd_result 		= $02a5
 
-
+sd_data_token_retries = $20
