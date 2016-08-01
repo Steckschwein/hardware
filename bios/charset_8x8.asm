@@ -1,6 +1,6 @@
 .segment "CHAR"
-.export charset
-charset:
+.export charset_8x8
+charset_8x8:
 .byte $0, $0, $0, $0, $0, $0, $0, $0;
 ;........
 ;........

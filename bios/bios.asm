@@ -114,7 +114,7 @@ mem_ok:
 		
 			jsr init_vdp
 
-			printstring "BIOS 20160616"
+			printstring "BIOS 20160801"
 			jsr print_crlf
 			printstring "Memcheck $"
 

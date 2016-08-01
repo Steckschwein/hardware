@@ -1,6 +1,6 @@
 .segment "BIOS"
 .export init_vdp, vdp_chrout
-.import charset
+.import charset_8x8
 .include "bios.inc"
 .include "vdp.inc"
 .macro	vnops
@@ -74,7 +74,7 @@ init_vdp:
 			vdp_sreg
 			ldx #$08                    ;load charset
 			ldy   #$00     ;2
-			SetVector    charset, addr
+			SetVector    charset_8x8, addr
 @l2:
 			lda   (addr),y ;5
 			iny            ;2
