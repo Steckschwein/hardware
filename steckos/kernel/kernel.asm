@@ -61,17 +61,17 @@ kern_init:
 	
 	SetVector filename, filenameptr
 
-    debug_newline
+    ; debug_newline
 
 	jsr fat_open
-    debug8 errno
+    debug8s "open:", errno
 	lda errno
 	bne do_upload
 	
 	SetVector shell_addr, sd_read_blkptr
     
     jsr fat_read
-    debug8s "fat read e::", errno
+    debug8s "fat read e:", errno
 
 	jsr fat_close
 
