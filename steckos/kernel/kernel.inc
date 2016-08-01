@@ -1,5 +1,6 @@
 .setcpu "65c02"
 .include "zeropage.inc"
+.include "debug.inc"
 
 user_isr 	        = $028e
 
@@ -9,24 +10,6 @@ user_isr 	        = $028e
 			.byte $0a,$0d,$00
 .endmacro
 
-.macro debugs st
-.ifdef DEBUG
-    jsr primm
-    .byte st
-    .byte 0    
-.endif    
-.endmacro
-
-.macro debug8 v
-.ifdef DEBUG
-    pha
-    lda v
-    jsr hexout
-    debug_newline
-    pla
-.endif
-.endmacro
-
 .macro crlf
 	lda #$0a
 	jsr krn_chrout
@@ -34,78 +17,58 @@ user_isr 	        = $028e
 	jsr krn_chrout
 .endmacro
 
+ROM_OFF = 1<<0
+BANK_SEL0 = 1<<1
+BANK_SEL1 = 1<<2
+BANK0 = 0
+BANK1 = BANK_SEL0
+BANK2 = BANK_SEL1
+BANK3 = BANK_SEL1 | BANK_SEL0
 
-.macro debug_newline v32
-.ifdef DEBUG
-    jsr primm
-    .byte $0a,$0d,$00
-.endif
+.macro krn_ram_on
+    +krn_rom_off
 .endmacro
 
-.macro debug8s st, v8
-.ifdef DEBUG
+.macro krn_rom_off     ; disable ROM - enable RAM
+    +krn_save_memctl
+    lda #ROM_OFF
+    sta memctl
+.endmacro
+
+.macro krn_bank0_on       ; enable bank 0 - ROM $0000-$1fff to $e000-$ffff
+    +krn_save_memctl
+    stz memctl
+.endmacro
+
+.macro krn_bank1_on       ; enable bank 1 - ROM $2000-$3fff to $e000-$ffff
+    +krn_save_memctl
+    lda #BANK1
+    sta memctl
+.endmacro
+
+.macro krn_bank2_on       ; enable bank 2 - ROM $4000-$5fff to $e000-$ffff
+    +krn_save_memctl
+    lda #BANK2
+    sta memctl
+.endmacro
+
+.macro krn_bank3_on        ; enable bank 3 - ROM $6000-$7fff to $e000-$ffff
+    +krn_save_memctl
+    lda #BANK3
+    sta memctl
+.endmacro
+
+.macro krn_save_memctl    ; save memctl and a
     pha
-    jsr primm
-    .byte st
-    .byte 0    
-    lda v8
-    jsr hexout
-    debug_newline
-    pla
-.endif
+    lda memctl
+    pha
 .endmacro
 
-.macro debug24s st, v24
-.ifdef DEBUG
-    pha
-    jsr primm
-    .byte st
-    .byte 0    
-    lda v24+2
-    jsr hexout
-    lda v24+1
-    jsr hexout
-    lda v24+0
-    jsr hexout
-    debug_newline
+.macro krn_restore_memctl  ; restore memctl
     pla
-.endif
-.endmacro
-
-.macro debug32s st, v32
-.ifdef DEBUG
-    pha
-    jsr primm
-    .byte st
-    .byte 0    
-    lda v32+3
-    jsr hexout
-    lda v32+2
-    jsr hexout
-    lda v32+1
-    jsr hexout
-    lda v32+0
-    jsr hexout
-    debug_newline
+    sta memctl
     pla
-.endif
-.endmacro
-
-.macro debug32 v32
-.ifdef DEBUG
-    pha
-    lda v32+3
-    jsr hexout
-    lda v32+2
-    jsr hexout
-    lda v32+1
-    jsr hexout
-    lda v32+0
-    jsr hexout
-    debug_newline
-    pla
-.endif
-.endmacro
+.endmacro 
 
 .macro SetVector word, addr 
 			lda #<word

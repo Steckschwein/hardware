@@ -37,8 +37,8 @@ fat_read:
 		jsr calc_lba_addr
 		jsr calc_blocks
 
-        debug32 lba_addr
-		debug24s "rd blocks:", blocks
+        debug32s "fr lba: ", lba_addr
+		debug24s "rd blocks: ", blocks
 
 		jmp sd_read_multiblock
 ;		jmp sd_read_block

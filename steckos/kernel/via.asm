@@ -9,8 +9,13 @@
 init_via1:
 
 			; disable VIA1 interrupts
-			lda #$00
+;			lda #$00
+            lda #%01111111          ; bit 7 "0", to clear all int sources
 			sta via1ier             
+ 
+            ;Port A directions
+            lda #%11000000 			; via port A - set PA7,6 to output (joystick port select), PA1-5 to input (directions)
+            sta via1ddra 		 	
 
 			; init shift register and port b for SPI use
 			; SR shift in, External clock on CB1
@@ -24,6 +29,6 @@ init_via1:
 			; SPICLK low, MOSI low, SPI_SS HI
 			lda #%01111110
 			sta via1portb
-		 	
+
 		 	rts
 ;----------------------------------------------------------------------------------------------

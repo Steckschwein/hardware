@@ -1,23 +1,25 @@
-!src <defs.h.a>
-!src <kernel.h.a>
-!src <joystick.h.a>
+!src "../../steckos/kernel/zeropage.inc"
+!src "../../steckos/kernel/kernel_jumptable.inc"
 
-*=steckos_start
+!src "../../steckos/kernel/via.inc"
+!src "../../steckos/asminc/joystick.inc"
+
+*=appstart
 	jmp main
 !src <t99xx.lib.a>
 		
 .JOY_PORT=PORT_SEL_2		;port 2
 .frame_cnt	!byte 0
-.enemy_state=tmp0
-.seed=tmp1
-.game_state=tmp2
-.dinosaur_state=tmp3
-.score_board_cnt=tmp4
-.sin_tab_offs=tmp5
-.level_bg_cnt=tmp6
-.level_script_ptr=tmp7
-.level_bg_ptr=ptr2
-.sin_tab_ptr=ptr1
+.enemy_state=$0
+.seed=$1
+.game_state=$2
+.dinosaur_state=$3
+.score_board_cnt=$4
+.sin_tab_offs=$5
+.level_bg_cnt=$6
+.level_script_ptr=$7
+.level_bg_ptr=$8
+.sin_tab_ptr=$a
 
 .CHAR_BLANK=210
 .CHAR_LAST_FG=198		; last character of foreground (cacti), range 128-198
@@ -55,8 +57,8 @@ main:
 	jsr	vdp_display_off
 	jsr	.init_vram
 	jsr	.init_screen
-    +via_int_off
-	+init_joystick
+;    +jsr krn_via_int_off
+;	+init_joystick
 	
 	lda	#33
 	sta	.seed
@@ -67,7 +69,14 @@ main:
 
 	jsr	.update_vram
 
-	+SetVector	.game_isr, irqvec
+ROM_OFF = 1<<0
+; 	system attribute has to be set on file system
+memctl = $0230 
+    lda #ROM_OFF
+    sta memctl
+
+	+SetVector	.game_isr, $fffe
+    
 	+vnops
 	lda	#Light_Blue
 	sta	adrl		;set character color
@@ -430,8 +439,8 @@ main:
 
 	+save
 	
-    ; lda   #Dark_Yellow
-    ; jsr   vdp_bgcolor
+    lda   #Dark_Yellow
+    jsr   vdp_bgcolor
 	
 	lda	.game_state
 	and	#.STATUS_PLAY
@@ -453,12 +462,12 @@ main:
 	lda	.game_state
 	and #!.STATUS_JOY_PRESSED
 	sta .game_state
-    jsr getkey
-	cmp #$03
-    bne +
-    jmp (retvec)
-+   cmp #$20    ; space ?
-    bne +++
+;    jsr getkey
+;	cmp #$03
+;    bne +
+ ;   jmp (retvec)
+;+   cmp #$20    ; space ?
+ ;   bne +++
 	
 ++	lda	.game_state
 	and	#.STATUS_JOY_PRESSED
@@ -592,12 +601,12 @@ main:
 
 .action_handler
     ;TODO FIXME just for testing
-    jsr krn_getkey
-	cmp #$1b
-    bne +
-    jsr krn_getkey
-	cmp #'A'
-    beq .up
+;    jsr krn_getkey
+;	cmp #$1b
+ ;   bne +
+ ;   jsr krn_getkey
+	;cmp #'A'
+   ; beq .up
        
 +   jsr .get_joy_status
 	and #JOY_UP
@@ -634,7 +643,7 @@ main:
 	ldy	#.WRITE_ADDRESS + >.A_GX_SCR
 	jsr	vdp_fill
 
-    +krn_bank0_on                       ; to access the charset in bank0
+    ;+krn_bank0_on                       ; to access the charset in bank0
 
 	+SetVector charset, addr			; init 2 game charset with character set
 	lda #<.A_GX_PAT_1
@@ -647,7 +656,7 @@ main:
 	ldx	#$08
 	jsr	vdp_memcpy
 
-    +krn_restore_memctl
+    ;+krn_restore_memctl
 
 	+SetVector .game_chars, addr		; first game charset
 	lda #<(.A_GX_PAT_1+.GAME_CHAR_OFFS)
@@ -870,3 +879,7 @@ PI = 3.14159265358979323846
 !src "dinosaur.chars.4.4px.res"
 !src "dinosaur.chars.5.4px.res"
 !src "dinosaur.chars.6.4px.res"
+
+!align 255,0
+charset:
+!src "../../charsets/ati_8x8.h.a"
