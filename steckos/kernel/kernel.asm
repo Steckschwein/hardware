@@ -50,12 +50,12 @@ kern_init:
 ; 	bra loop
 	
 	jsr init_sdcard
-    debugHex errno
+    debug8s "init e:", errno
 	lda errno
 	bne do_upload
 
 	jsr fat_mount
-	debugHex errno
+    debug8s "fat mnt e:", errno
 	lda errno
 	bne do_upload
 	
@@ -64,17 +64,16 @@ kern_init:
     debug_newline
 
 	jsr fat_open
-    debugHex errno
+    debug8 errno
 	lda errno
 	bne do_upload
 	
 	SetVector shell_addr, sd_read_blkptr
     
     jsr fat_read
-    debugHex errno
+    debug8s "fat read e::", errno
 
 	jsr fat_close
-    debugHex errno
 
 	ldx #$ff 
 	txs 

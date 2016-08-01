@@ -545,6 +545,7 @@ fat_find_first:
 		
 ff_l3:	SetVector sd_blktarget, dirptr	
 		jsr sd_read_block
+        debug8s "rdb: ", errno
 		dec sd_read_blkptr+1
 
 ff_l4:

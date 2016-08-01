@@ -215,8 +215,8 @@ sd_cmd:
 ; Read block from SD Card
 ;---------------------------------------------------------------------
 sd_read_block:
+        stz errno
 		jsr sd_select_card
-		; jsr sd_busy_wait
 
 		; Send CMD17 command byte
 		lda #cmd17
@@ -229,11 +229,12 @@ sd_read_block:
 
 		; wait for command response. 
 		; everything other than $00 is an error
+        ldy #sd_cmd_retries
 @lx:	jsr spi_r_byte
-		bit #$80
+        beq @l1
+;		bit #$80    ;?!?
+        dey
 		bne @lx
-		cmp #$00
-		beq @l1
 		sta errno
 		bra @exit
 @l1:
@@ -254,7 +255,6 @@ sd_read_block:
 
 @exit:
 		jmp sd_deselect_card
-		; rts
 
 halfblock:
 @l:		
@@ -293,11 +293,6 @@ sd_read_multiblock:
 
 @l1:	
 		jsr sd_wait_data_token
-; @l1:
-;     ;lda #$ff
-;     jsr spi_r_byte  ; Wait for data token
-; 	cmp #$fe
-; 	bne @l1
 
 		ldy #$00
 		lda via1portb   ; Port laden
@@ -409,12 +404,20 @@ sd_write_block:
 ; wait while sd card is busy
 ;---------------------------------------------------------------------
 sd_busy_wait:
-@l1:	
-	lda #$ff
-	jsr spi_rw_byte
-	cmp #$ff
-	bne @l1
-	rts
+        ldx #sd_busy_retries
+@l1:    lda #$ff
+        phx
+        jsr spi_rw_byte
+        plx
+        cmp #$ff
+        beq @l2
+        dex
+        bne @l1
+        ;TODO FIXME
+        lda #$ff
+        sta errno
+@l2:    
+        rts
 
 ;---------------------------------------------------------------------
 ; wait for sd card data token
@@ -423,24 +426,23 @@ sd_busy_wait:
 
 
 sd_wait_data_token:
-		ldx #sd_data_token_retries
+		ldy #sd_data_token_retries
 @l1:
 		jsr spi_r_byte
 		cmp #sd_data_token
 		beq @l2
-		dex
+		dey
 		bne @l1
 		;TODO FIXME check card state here, may be was removed
+        sta errno
 @l2:	rts
 
 ;---------------------------------------------------------------------
 ; select sd card, pull CS line to low
 ;---------------------------------------------------------------------
 sd_select_card:
-	pha
-	lda #%01111100
+	lda #sd_card_sel
 	sta via1portb
-	pla
 	bra sd_busy_wait
 
 ;---------------------------------------------------------------------

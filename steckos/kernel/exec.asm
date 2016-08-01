@@ -56,7 +56,7 @@ execv:
 		;TODO FIXME handle overflow - <path argument> too large
 		lda	#$ff
 @l_err:	
-		debugHex	errno
+		debug8	errno
 @l_end:
 		rts
 		

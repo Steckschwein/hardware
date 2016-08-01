@@ -9,7 +9,15 @@ user_isr 	        = $028e
 			.byte $0a,$0d,$00
 .endmacro
 
-.macro debugHex v
+.macro debugs st
+.ifdef DEBUG
+    jsr primm
+    .byte st
+    .byte 0    
+.endif    
+.endmacro
+
+.macro debug8 v
 .ifdef DEBUG
     pha
     lda v

@@ -439,8 +439,8 @@ dir_show_entry:
 		jsr decoutz
 
 
-	; Bits 11–15: Hours, valid value range 0–23 inclusive.
-	crlf
+        ; Bits 11–15: Hours, valid value range 0–23 inclusive.
+        crlf
 	
 		pla
 		rts	
@@ -516,7 +516,12 @@ l1:
 
 @l2:
 		jsr krn_find_first
-		bcs @l4
+        lda errno
+        beq @l2_1
+        printstring "i/o error"
+        jmp mainloop
+        
+@l2_1:	bcs @l4
 		bra @l5
 		; jsr .dir_show_entry
 @l3:
