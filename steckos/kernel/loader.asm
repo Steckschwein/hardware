@@ -5,6 +5,7 @@
 .segment "CODE"
 
 ; 	system attribute has to be set on file system
+charset = $e800
 memctl = $0230
 dest = $f000
 
@@ -87,11 +88,6 @@ end:
 payload:
 .incbin "kernel.bin"
 payload_end:
-
-.align 256
-charset:
-.include "charset_6x8.asm"
-charset_end:
 
 .segment "KERNEL"
 .segment "VECTORS"
