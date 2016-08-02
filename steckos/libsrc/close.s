@@ -3,19 +3,19 @@
 ;
 ; int __fastcall__ close(int fd);
 ;
+		.include	"../kernel/kernel_jumptable.inc"
 
-        .include "atari.inc"
         .export _close
         .import __do_oserror,popax,__oserror
         .import fdtoiocb_down,__inviocb
 
 .proc   _close
-        jsr     fdtoiocb_down           ; get iocb index into X and decr. usage count
+;        jsr     fdtoiocb_down           ; get iocb index into X and decr. usage count
         bmi     inverr
         bne     ok                      ; not last one -> don't close yet
-        lda     #CLOSE
-        sta     ICCOM,x
-        jsr     CIOV
+ ;       lda     #CLOSE
+;        sta     ICCOM,x
+ ;       jsr     CIOV
         bmi     closerr
 ok:     ldx     #0
         stx     __oserror               ; clear system specific error code

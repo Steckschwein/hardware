@@ -6,10 +6,9 @@
 ;TODO FIXME tmpX stuff
         tmp3 = 19
         
-
-        .include "atari.inc"
-        .include "fcntl.inc"
+		.include "fcntl.inc"
         .include "errno.inc"
+		.include	"../kernel/kernel_jumptable.inc"
 
         .export _open
         .destructor     closeallfiles, 5
@@ -17,7 +16,6 @@
         .import _close
         .import clriocb
         .import fddecusage,newfd
-        .import findfreeiocb
         .import incsp4
         .import ldaxysp,addysp
         .import __oserror
@@ -35,9 +33,7 @@
         dey
         beq     parmok          ; parameter count ok
         jsr     addysp          ; fix stack, throw away unused parameters
-
-parmok: jsr     findfreeiocb
-        beq     iocbok          ; we found one
+		bra		parmok
 
         lda     #<EMFILE        ; "too many open files"
 seterr: jsr     __directerrno
@@ -47,9 +43,10 @@ seterr: jsr     __directerrno
         rts                     ; return -1
 
         ; process the mode argument
-
+parmok: ;jsr     krn_open
+        ;beq     iocbok          ; we found one
+		
 iocbok: stx     tmp4
-        jsr     clriocb         ; init with zero
         ldy     #1
         jsr     ldaxysp         ; get mode
         ldx     tmp4
@@ -62,67 +59,54 @@ iocbok: stx     tmp4
         beq     invret
         cmp     #O_RDWR
         beq     invret
-        lda     #OPNOT|APPEND
-        bne     set
+;        lda     #OPNOT|APPEND
+ ;       bne     set
 
-.ifndef UCASE_FILENAME
-invret: lda     #<EINVAL        ; file name is too long
-        jmp     seterr
-.endif
 
 no_app: pla
         and     #15
         cmp     #O_RDONLY
         bne     l1
-        lda     #OPNIN
-set:    sta     ICAX1,x
+        ;lda     #OPNIN
+set:    ;sta     ICAX1,x
         bne     cont
 
 l1:     cmp     #O_WRONLY
         bne     l2
-        lda     #OPNOT
-        bne     set
+;        lda     #OPNOT
+ ;       bne     set
 
 l2:     ; O_RDWR
-        lda     #OPNOT|OPNIN
-        bne     set
+  ;      lda     #OPNOT|OPNIN
+   ;     bne     set
 
         ; process the filename argument
 
 cont:   ldy     #3
         jsr     ldaxysp
 
-.ifdef  UCASE_FILENAME
-.ifdef  DEFAULT_DEVICE
         ldy     #$80
         sty     tmp2            ; set flag for ucase_fn
-.endif
-        jsr     ucase_fn
+;        jsr     ucase_fn
         bcc     ucok1
 invret: lda     #<EINVAL        ; file name is too long
         jmp     seterr
 ucok1:
 
-.endif  ; defined UCASE_FILENAME
-
         ldy     tmp4
 
         ;AX - points to filename
         ;Y  - iocb to use, if open needed
-        jsr     newfd           ; maybe we don't need to open and can reuse an iocb
+;        jsr     newfd           ; maybe we don't need to open and can reuse an iocb
                                 ; returns fd num to use in tmp2, all regs unchanged
         bcs     doopen          ; C set: open needed
         lda     #0              ; clears N flag
         beq     finish
 
-doopen: sta     ICBAL,y
-        txa
-        sta     ICBAH,y
+doopen: 
         ldx     tmp4
-        lda     #OPEN
-        sta     ICCOM,x
-        jsr     CIOV
-
+		jsr 	krn_open
+		
         ; clean up the stack
 
 finish: php
@@ -130,11 +114,6 @@ finish: php
         pha
         tya
         pha
-
-.ifdef  UCASE_FILENAME
-        ldy     tmp3            ; get size
-        jsr     addysp          ; free used space on the stack
-.endif  ; defined UCASE_FILENAME
 
         jsr     incsp4          ; clean up stack
 
@@ -146,10 +125,7 @@ finish: php
 
         bpl     ok
         sty     tmp3            ; remember error code
-        lda     #CLOSE
-        sta     ICCOM,x
-        jsr     CIOV            ; close IOCB again since open failed
-        jsr     fddecusage      ; and decrement usage counter of fd
+;		jsr 	krn_close
         lda     tmp3            ; put error code into A
         jmp     __mappederrno
 
