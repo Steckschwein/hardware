@@ -22,6 +22,6 @@ sd_cmd_param 		= $02a0
 sd_cmd_chksum		= sd_cmd_param+4
 sd_cmd_result 		= $02a5
 
-sd_cmd_retries = $10
-sd_busy_retries = $10
+sd_cmd_retries = $ff
+sd_busy_retries = $ff
 sd_data_token_retries = $ff ; increase, card specific and must be larger for "huge" cards
