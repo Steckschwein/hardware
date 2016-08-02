@@ -21,8 +21,6 @@
 
 ;		int execv(const char *path, char *const argv[]);
 execv:
-        stz errno
-        
 		ldy	#0
 		;	trimm first chars
 @l1:	lda (cmdptr), y
@@ -30,7 +28,7 @@ execv:
 		bne	@l2
 		iny 
 		bne @l1
-        lda #$ff
+        lda #$f0    ; TODO FIXME exec errors
         sta errno
         bra @l_err
 @l2:	;	starts with / ? - cd root
@@ -55,8 +53,8 @@ execv:
 		inx
 		cpx	#12	        ; 8.3 file support only
 		bne	@l_parse_1
-        lda #$ff
-        sta errno
+        lda #$f1
+        sta errno       ; TODO FIXME exec errors
         bra @l_err
 @l_open:
 		_open
@@ -84,7 +82,7 @@ execv:
 		inx					
         cpx #8              ; 8.3 file support only
 		bne	@l_ext_1
-        lda #$ff            ; filename too large
+        lda #$f2            ; filename too large
         sta errno
         bra @l_err        
 @l_ext_add:                 ; add extension

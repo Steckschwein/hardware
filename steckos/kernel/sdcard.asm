@@ -230,8 +230,6 @@ sd_read_block:
 @lx:	jsr spi_r_byte
         beq @l1         		; everything other than $00 is an error
 ;        bit #$80    ;?!?
-;		bne @lx        
-
         dey
 		bne @lx
 		sta errno
@@ -280,15 +278,15 @@ sd_read_multiblock:
 		jsr spi_rw_byte
 
 		; wait for command response. 
+        
+        ldy #sd_cmd_retries 	; wait for command response. 
 @lx:	jsr spi_r_byte
-		bit #$80
+        beq @l1         		; everything other than $00 is an error
+;        bit #$80    ;?!?
+        dey
 		bne @lx
-		cmp #$00
-		beq @l1		; everything other than $00 is an error
-
 		sta errno
 		jmp @exit
-
 @l1:	
 		jsr sd_wait_data_token
 
@@ -425,11 +423,12 @@ sd_wait_data_token:
 @l1:
 		jsr spi_r_byte
 		cmp #sd_data_token
-		beq @l2
-		dey
+;		beq @l2
+;		dey
 		bne @l1
 		;TODO FIXME check card state here, may be was removed
-        sta errno
+ ;       lda #$e0
+  ;      sta errno
 @l2:	rts
 
 ;---------------------------------------------------------------------
