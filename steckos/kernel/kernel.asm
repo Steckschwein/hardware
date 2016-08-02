@@ -56,7 +56,7 @@ kern_init:
 	bne do_upload
 
 	jsr fat_mount
-    debug8s "fat mnt e:", errno
+    debug8s "mnt e:", errno
 	lda errno
 	bne do_upload
 	
@@ -65,14 +65,14 @@ kern_init:
     ; debug_newline
 
 	jsr fat_open
-    debug8s "open:", errno
+    debug8s "open e:", errno
 	lda errno
 	bne do_upload
 	
 	SetVector shell_addr, sd_read_blkptr
     
     jsr fat_read
-    debug8s "fat read e:", errno
+    debug8s "read e:", errno
 
 	jsr fat_close
 
@@ -247,55 +247,56 @@ filename:	.asciiz "shell.bin"
 ; "kernel" jumptable
 
 .export krn_execv
-krn_execv               =   execv
+krn_execv:                  jmp execv
 
 .export krn_keyin
-krn_keyin:				jmp keyin
+krn_keyin:				    jmp keyin
 .export krn_mount		
-krn_mount: 				jmp fat_mount 
+krn_mount: 				    jmp fat_mount 
 .export krn_open
-krn_open 				= fat_open
+krn_open: 				    jmp fat_open
 .export krn_close
-krn_close 				= fat_close
+krn_close: 				    jmp fat_close
 .export krn_read
-krn_read 				= fat_read 
+krn_read:    				jmp fat_read 
 .export krn_open_rootdir
 krn_open_rootdir: 		jmp fat_open_rootdir
 .export krn_find_first
 krn_find_first:			jmp fat_find_first
 .export krn_find_next
-krn_find_next:			jmp fat_find_next
+krn_find_next:			    jmp fat_find_next
 .export krn_textui_init	
-krn_textui_init:		jmp	textui_init0
+krn_textui_init:		    jmp	textui_init0
 .export krn_textui_enable
-krn_textui_enable:		jmp	textui_enable
+krn_textui_enable:		    jmp	textui_enable
 .export krn_textui_disable
-krn_textui_disable:		jmp textui_disable			;disable textui
+krn_textui_disable:		    jmp textui_disable			;disable textui
 
-krn_gfxui_on:			jmp	krn_gfxui_on
-krn_gfxui_off:			jmp	krn_gfxui_off
+krn_gfxui_on:			    jmp	krn_gfxui_on
+krn_gfxui_off:			    jmp	krn_gfxui_off
 
 .export krn_display_off
-krn_display_off:		jmp vdp_display_off
+krn_display_off:		    jmp vdp_display_off
 
 .export krn_getkey
-krn_getkey:				jmp getkey
+krn_getkey:				    jmp getkey
 
 .export krn_chrout
-krn_chrout				= textui_chrout
+krn_chrout:                 jmp textui_chrout
 .export krn_putchar
-krn_putchar 			= textui_put
+krn_putchar:                jmp textui_put
 
 .export krn_strout
-krn_strout:				jmp strout
+krn_strout:				    jmp strout
 
 .export krn_textui_crsxy
-krn_textui_crsxy		= textui_crsxy
+krn_textui_crsxy:           jmp textui_crsxy
+
 .export krn_textui_update_crs_ptr
-krn_textui_update_crs_ptr   = textui_update_crs_ptr
+krn_textui_update_crs_ptr:  jmp textui_update_crs_ptr
 
 .export krn_textui_clrscr_ptr
-krn_textui_clrscr_ptr   = textui_blank
+krn_textui_clrscr_ptr:      jmp textui_blank
 
 .export krn_hexout
 krn_hexout:				jmp hexout
@@ -307,10 +308,10 @@ krn_init_sdcard:		jmp init_sdcard
 krn_upload:				jmp do_upload
 
 .export krn_spi_select_rtc
-krn_spi_select_rtc		= spi_select_rtc
+krn_spi_select_rtc:     jmp spi_select_rtc
 
 .export krn_spi_deselect
-krn_spi_deselect		= spi_deselect
+krn_spi_deselect:       jmp spi_deselect
 
 .export krn_spi_rw_byte
 krn_spi_rw_byte:		jmp spi_rw_byte

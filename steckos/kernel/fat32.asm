@@ -5,7 +5,7 @@
 .export fat_mount, fat_open, fat_open_rootdir, fat_close, fat_read, fat_find_first, fat_find_next
 
 ; DEBUG
-.import hexout, primm, krn_primm
+.import hexout, primm, chrout
 
 FD_Entries_Max = 16
 FD_Entry_Size = 8 ; 8 byte per fd entry
@@ -34,21 +34,25 @@ FD_file_size = $04		; 32 Bit file size
 		;in: 
 		;	x - offset into fd_area
 fat_read:
-		jsr calc_lba_addr
+        debugcpu
+        jsr calc_lba_addr
 		jsr calc_blocks
 
         debug32s "fr lba: ", lba_addr
-		debug24s "rd blocks: ", blocks
+		debug24s "fr bc: ", blocks
+        debug32s "fr fs: ", fd_area + FD_Entry_Size + FD_file_size ;1st entry
 
 		jmp sd_read_multiblock
 ;		jmp sd_read_block
  
         ;in:
-        ;   
+        ;   (filenameptr) - ptr to the filename
+        ;out: 
+        ;   x - index into fd_area of the opened file
+        ;   errno - set on errot
 fat_open:
 		pha
 		phy
-        phx
 
 		stz errno
 
@@ -127,7 +131,6 @@ fat_open_found:
 		sta fd_area + FD_file_size + 0, x
 
 end_open:
-        plx
 		ply
 		pla
 
@@ -158,7 +161,6 @@ fat_check_signature:
 
 
 calc_blocks: ;blocks = filesize / BLOCKSIZE -> filesize >> 9 (div 512) +1 if filesize LSB is not 0
-		pha
 		lda fd_area + FD_file_size+3,x
 		lsr
 		sta blocks + 2
@@ -176,8 +178,7 @@ calc_blocks: ;blocks = filesize / BLOCKSIZE -> filesize >> 9 (div 512) +1 if fil
 		inc blocks+1
 		bne @l2
 		inc blocks+2
-@l2:	pla
-		rts
+@l2:	rts
 
 ; calculate LBA address of first block from cluster number found in file descriptor entry
 ; file descriptor index must be in x
@@ -205,7 +206,7 @@ calc_lba_addr:
 @lm:    lsr
         beq @lme    ; 1 sec/cluster nothing at all
         tax
-        asl lba_addr
+        asl lba_addr +0
         rol lba_addr +1
         rol lba_addr +2
         rol lba_addr +3
@@ -512,7 +513,7 @@ fat_alloc_fd:
 
 		txa ; 2 cycles
 ;		clc ; must be clear from cmp above
-		adc #$08 ; 2  cycles
+		adc #FD_Entry_Size ; 2  cycles
 		tax ; 2 cycles
 
 		cpx #(FD_Entry_Size*FD_Entries_Max)

@@ -1,9 +1,15 @@
 
 .segment "KERNEL"
-.export hexout, strout, primm, print_crlf
+.export chrout, hexout, strout, primm, print_crlf
 .import textui_chrout
 .include "kernel.inc"
 
+;----------------------------------------------------------------------------------------------
+; Output char on active output device
+;----------------------------------------------------------------------------------------------
+chrout:     jmp textui_chrout
+            
+    
 ;----------------------------------------------------------------------------------------------
 ; Output string on active output device
 ;----------------------------------------------------------------------------------------------
@@ -50,7 +56,7 @@ hexdigit:
 		adc     #6              ;add offset for letter a-f
 @l:
 		jmp	 	textui_chrout
-
+        
 ;Put the string following in-line until a NULL out to the console
 DPL			= msgptr
 DPH			= msgptr+1

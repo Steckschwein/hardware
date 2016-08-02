@@ -15,8 +15,10 @@ int main (int argc, const char* argv[])
     unsigned long i;
     unsigned long n;
 
+    cprintf("\n\r");
+    
     if(argc < 2){
-        cprintf("%s <Zahl>\n\r", argv[0]);
+        cprintf("\n%s <Zahl>\n\r", argv[0]);
         return EXIT_FAILURE;
     }
     

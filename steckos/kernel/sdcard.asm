@@ -229,7 +229,9 @@ sd_read_block:
         ldy #sd_cmd_retries 	; wait for command response. 
 @lx:	jsr spi_r_byte
         beq @l1         		; everything other than $00 is an error
-;		bit #$80    ;?!?
+;        bit #$80    ;?!?
+;		bne @lx        
+
         dey
 		bne @lx
 		sta errno

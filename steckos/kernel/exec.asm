@@ -7,12 +7,11 @@
 .export execv
 
 .ifdef DEBUG    ; debug stuff
-	.import	primm, hexout, strout
+	.import	primm, hexout, chrout, strout
 .endif
 
 .macro _open
 		stz	execv_filename, x	;\0 terminate the current path fragment
-        debugstr execv_filename
 		jsr	krn_open
 		lda	errno
 		beq	:+
@@ -25,7 +24,7 @@ execv:
         stz errno
         
 		ldy	#0
-		;	trimm first chars 
+		;	trimm first chars
 @l1:	lda (cmdptr), y
 		cmp	#' '
 		bne	@l2
@@ -60,7 +59,6 @@ execv:
         sta errno
         bra @l_err
 @l_open:
-        debugs "exec open"
 		_open
 		iny	
 		bne	@l3
@@ -72,11 +70,13 @@ execv:
 		rts
 		
 @l_exec:
-        debugstr execv_filename
+        stz execv_filename, x   ;'\0' terminate
+        debugstr "efn: ", execv_filename
         
 		ldx #0
 @l_ext_1:
 		lda	execv_filename, x
+        beq @l_ext_add
         cmp #' '            ; prog arguments separator
         beq @l_ext_add 
         cmp #'.'			; has extension? also override with .bin, simplifies code
@@ -94,11 +94,11 @@ execv:
 		sta execv_filename,x
 		iny
 		inx
-		cpy #4 				; size of execv_fileext
+		cpy #5              ; size of execv_fileext
 		bne @l_ext_add_1
         
-        debugptr filenameptr
-		_open				; with x as offset to fd_area
+        debugptr "fptr:", filenameptr
+		_open				; with x as offset to fd_area        
 		SetVector appstart, sd_read_blkptr
 		jsr	krn_read
 		;TODO FIXME check excecutable - SOS65 header ;)
@@ -107,8 +107,8 @@ execv:
         beq @l_exec_run
         jmp @l_err
 @l_exec_run:
-        debugptr cmdptr
+        debugptr "cmdptr:", cmdptr
 		jmp	appstart
 		
-execv_fileext:	.byte ".bin"
-execv_filename: .res 8+3+1,0
+execv_fileext:	.byte ".bin",0
+execv_filename: .res 8+1+3+1    

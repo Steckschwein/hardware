@@ -1,8 +1,33 @@
 
-.macro debugptr p
+.macro debugcpu
+.ifdef DEBUG
+    pha
+    phx
+    phy
+    jsr primm
+    .asciiz "A X Y: "
+    jsr hexout
+    lda #' '
+    jsr chrout
+    txa
+    jsr hexout
+    lda #' '
+    jsr chrout
+    tya
+    jsr hexout
+    debug_newline
+    ply
+    plx
+    pla    
+.endif
+.endmacro
+
+.macro debugptr s, p
 .ifdef DEBUG
     pha
     phy
+    jsr primm
+    .byte s,0
     lda p
     sta msgptr
     lda p+1
@@ -15,10 +40,12 @@
 .endif
 .endmacro
 
-.macro debugstr p
+.macro debugstr s, p
 .ifdef DEBUG
     pha
     phy
+    jsr primm
+    .byte s,0
     lda #<p
     sta msgptr
     lda #>p
@@ -45,14 +72,16 @@
 .macro debug8 v
 .ifdef DEBUG
     pha
+    phy
     lda v
     jsr hexout
     debug_newline
+    ply
     pla
 .endif
 .endmacro
 
-.macro debug_newline v32
+.macro debug_newline
 .ifdef DEBUG
     jsr primm
     .byte $0a,$0d,$00
@@ -62,12 +91,14 @@
 .macro debug8s st, v8
 .ifdef DEBUG
     pha
+    phy
     jsr primm
     .byte st
     .byte 0    
     lda v8
     jsr hexout
     debug_newline
+    ply
     pla
 .endif
 .endmacro
@@ -75,9 +106,9 @@
 .macro debug24s st, v24
 .ifdef DEBUG
     pha
+    phy
     jsr primm
-    .byte st
-    .byte 0    
+    .byte st,0
     lda v24+2
     jsr hexout
     lda v24+1
@@ -85,6 +116,7 @@
     lda v24+0
     jsr hexout
     debug_newline
+    ply
     pla
 .endif
 .endmacro
@@ -92,6 +124,7 @@
 .macro debug32s st, v32
 .ifdef DEBUG
     pha
+    phy
     jsr primm
     .byte st
     .byte 0    
@@ -104,6 +137,7 @@
     lda v32+0
     jsr hexout
     debug_newline
+    ply
     pla
 .endif
 .endmacro
