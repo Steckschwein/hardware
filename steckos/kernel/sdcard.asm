@@ -226,12 +226,14 @@ sd_read_block:
 		lda #$01                ; send "crc" and stop bit
 		jsr spi_rw_byte
 
-        ldy #sd_cmd_retries 	; wait for command response. 
+ ;       ldy #sd_cmd_retries 	; wait for command response. 
 @lx:	jsr spi_r_byte
-        beq @l1         		; everything other than $00 is an error
-;        bit #$80    ;?!?
-        dey
+        bit #$80    ;?!?
 		bne @lx
+        beq @l1         		; everything other than $00 is an error
+        
+;       dey
+	;	bne @lx
 		sta errno
 		bra @exit
 @l1:
@@ -279,12 +281,15 @@ sd_read_multiblock:
 
 		; wait for command response. 
         
-        ldy #sd_cmd_retries 	; wait for command response. 
+;        ldy #sd_cmd_retries 	; wait for command response. 
 @lx:	jsr spi_r_byte
-        beq @l1         		; everything other than $00 is an error
-;        bit #$80    ;?!?
-        dey
+        bit #$80    ;?!?
 		bne @lx
+        beq @l1
+;        beq @l1         		; everything other than $00 is an error
+;        dey
+;		bne @lx
+
 		sta errno
 		jmp @exit
 @l1:	
