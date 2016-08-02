@@ -20,7 +20,7 @@ int main (int argc, const char* argv[])
         return EXIT_FAILURE;
     }
     
-    clrscr();
+    //clrscr();
     n = atol(argv[1]);
     for(i=0;i<n;i++){
         cprintf("%lu: %lu\n\r", i, fibonacci(i));

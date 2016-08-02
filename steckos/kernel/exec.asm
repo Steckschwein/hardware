@@ -2,43 +2,51 @@
 
 .segment "KERNEL"
 
-.import	krn_open_rootdir, krn_open
-.import	krn_read
+.import	krn_open_rootdir, krn_open, krn_read, krn_close
 
-; debug stuff
-.ifdef DEBUG
-	.import	primm, hexout
+.export execv
+
+.ifdef DEBUG    ; debug stuff
+	.import	primm, hexout, strout
 .endif
 
 .macro _open
 		stz	execv_filename, x	;\0 terminate the current path fragment
+        debugstr execv_filename
 		jsr	krn_open
 		lda	errno
-		bne	@l_err
+		beq	:+
+        jmp @l_err
+:
 .endmacro
 
 ;		int execv(const char *path, char *const argv[]);
 execv:
+        stz errno
+        
 		ldy	#0
 		;	trimm first chars 
-@l1:	lda (cmdptr), y	
+@l1:	lda (cmdptr), y
 		cmp	#' '
 		bne	@l2
 		iny 
 		bne @l1
-		
+        lda #$ff
+        sta errno
+        bra @l_err
 @l2:	;	starts with / ? - cd root
 		cmp	#'/'
-		bne	@l3
+		bne	@l31
 		phy
 		jsr krn_open_rootdir
 		ply
 		iny
-				
-		SetVector	execv_filename,	filenameptr	; filenameptr to execv filename buffer
+		
+@l31:   SetVector	execv_filename,	filenameptr	; filenameptr to execv filename buffer		
 @l3:	;	parse path fragments and change dirs accordingly
 		ldx #0
-@l4:	lda	(cmdptr), y
+@l_parse_1:
+        lda	(cmdptr), y
 		beq	@l_exec
 		cmp	#'/'
 		beq	@l_open
@@ -46,44 +54,61 @@ execv:
 		sta execv_filename, x
 		iny
 		inx
-		cpx	#8	; 8.3 file support only
-		bne	@l4	
-		; fall through - we have 8 chars, try to open directory
+		cpx	#12	        ; 8.3 file support only
+		bne	@l_parse_1
+        lda #$ff
+        sta errno
+        bra @l_err
 @l_open:
+        debugs "exec open"
 		_open
 		iny	
 		bne	@l3
 		;TODO FIXME handle overflow - <path argument> too large
 		lda	#$ff
 @l_err:	
-		debug8	errno
+		debug8s	"exec err: ", errno
 @l_end:
 		rts
 		
 @l_exec:
-		txa
-		tay					; x to y
-		lda	#'.'			; has extension?
+        debugstr execv_filename
+        
+		ldx #0
 @l_ext_1:
-		cmp	execv_filename, y
-		beq	@l_ext_skip
-		dey					; down till first char
+		lda	execv_filename, x
+        cmp #' '            ; prog arguments separator
+        beq @l_ext_add 
+        cmp #'.'			; has extension? also override with .bin, simplifies code
+		beq	@l_ext_add
+		inx					
+        cpx #8              ; 8.3 file support only
 		bne	@l_ext_1
-@l_ext_2:
-		lda execv_fileext,y
+        lda #$ff            ; filename too large
+        sta errno
+        bra @l_err        
+@l_ext_add:                 ; add extension
+        ldy #0
+@l_ext_add_1:        
+        lda execv_fileext,y
 		sta execv_filename,x
 		iny
 		inx
 		cpy #4 				; size of execv_fileext
-		bne @l_ext_2
-@l_ext_skip:
+		bne @l_ext_add_1
+        
+        debugptr filenameptr
 		_open				; with x as offset to fd_area
 		SetVector appstart, sd_read_blkptr
-		phx
 		jsr	krn_read
-		;TODO
-		;check excecute
-		jmp		appstart
-		rts
+		;TODO FIXME check excecutable - SOS65 header ;)
+		jsr	krn_close
+        lda errno
+        beq @l_exec_run
+        jmp @l_err
+@l_exec_run:
+        debugptr cmdptr
+		jmp	appstart
+		
 execv_fileext:	.byte ".bin"
 execv_filename: .res 8+3+1,0

@@ -218,20 +218,17 @@ sd_read_block:
         stz errno
 		jsr sd_select_card
 
-		; Send CMD17 command byte
 		lda #cmd17
-		jsr spi_rw_byte
-		jsr sd_send_lba
+		jsr spi_rw_byte         ; send CMD17 command byte
+		jsr sd_send_lba         ; send 32 Bit block address
 
 		; Send stopbit
-		lda #$01
+		lda #$01                ; send "crc" and stop bit
 		jsr spi_rw_byte
 
-		; wait for command response. 
-		; everything other than $00 is an error
-        ldy #sd_cmd_retries
+        ldy #sd_cmd_retries 	; wait for command response. 
 @lx:	jsr spi_r_byte
-        beq @l1
+        beq @l1         		; everything other than $00 is an error
 ;		bit #$80    ;?!?
         dey
 		bne @lx
@@ -249,8 +246,7 @@ sd_read_block:
 
 		jsr halfblock
 
-		; Read CRC bytes
-		jsr spi_r_byte
+		jsr spi_r_byte		; Read 2 CRC bytes
 		jsr spi_r_byte
 
 @exit:

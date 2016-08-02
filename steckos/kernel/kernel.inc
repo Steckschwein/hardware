@@ -1,6 +1,6 @@
-.setcpu "65c02"
-.include "zeropage.inc"
-.include "debug.inc"
+.setcpu     "65c02"
+.include    "zeropage.inc"
+.include    "debug.inc"
 
 user_isr 	        = $028e
 

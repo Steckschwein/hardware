@@ -19,6 +19,7 @@ text_mode_40 = 1
 .import textui_enable, textui_disable, vdp_display_off,  textui_blank, textui_update_crs_ptr, textui_crsxy, textui_screen_dirty
 .import init_sdcard
 .import fat_mount, fat_open, fat_open_rootdir, fat_close, fat_read, fat_find_first, fat_find_next
+.import execv
 
 ;TODO FIXME testing purpose only
 .import vdp_bgcolor
@@ -244,6 +245,10 @@ filename:	.asciiz "shell.bin"
 
 .segment "JUMPTABLE"
 ; "kernel" jumptable
+
+.export krn_execv
+krn_execv               =   execv
+
 .export krn_keyin
 krn_keyin:				jmp keyin
 .export krn_mount		

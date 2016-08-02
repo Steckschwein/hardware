@@ -23,7 +23,7 @@ loader.bin: kernel.bin loader.o
 shell.bin: shell.o kernel.bin
 	cl65 --target none -m shell.map --config steckos.cfg shell.asm -o shell.bin
 
-shell: shell.bin
+shell: shell.bin 
 	../../transfer.py -s 0xe000 shell.bin
 
 transfer: loader.bin

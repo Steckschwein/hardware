@@ -1,11 +1,45 @@
+
+.macro debugptr p
 .ifdef DEBUG
+    pha
+    phy
+    lda p
+    sta msgptr
+    lda p+1
+    sta msgptr+1
+    jsr strout
+    jsr primm
+    .byte $0a,$0d,0
+    ply
+    pla
+.endif
+.endmacro
+
+.macro debugstr p
+.ifdef DEBUG
+    pha
+    phy
+    lda #<p
+    sta msgptr
+    lda #>p
+    sta msgptr+1
+    jsr strout
+    jsr primm
+    .byte $0a,$0d,0
+    ply
+    pla
+.endif
+.endmacro
 
 .macro debugs st
 .ifdef DEBUG
+    pha
+    phy
     jsr primm
-    .byte st
-    .byte 0    
-.endif
+    .byte st,$0a,$0d,0
+    ply
+    pla
+.endif    
 .endmacro
 
 .macro debug8 v
@@ -73,4 +107,3 @@
     pla
 .endif
 .endmacro
-.endif

@@ -22,6 +22,6 @@ sd_cmd_param 		= $02a0
 sd_cmd_chksum		= sd_cmd_param+4
 sd_cmd_result 		= $02a5
 
-sd_cmd_retries = $20
-sd_busy_retries = $80
-sd_data_token_retries = $20
+sd_cmd_retries = $ff
+sd_busy_retries = $ff
+sd_data_token_retries = $ff

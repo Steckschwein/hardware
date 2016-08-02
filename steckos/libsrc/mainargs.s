@@ -28,7 +28,7 @@ initmainargs:
 L0:     lda     (cmdptr),y
         sta     INPUT_BUF,y
         beq     L1
-;        jsr     krn_chrout
+        jsr     krn_chrout
         iny
         bne     L0
         dey                     ; null-term if overflow

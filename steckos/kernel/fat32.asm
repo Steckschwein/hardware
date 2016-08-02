@@ -43,9 +43,12 @@ fat_read:
 		jmp sd_read_multiblock
 ;		jmp sd_read_block
  
+        ;in:
+        ;   
 fat_open:
 		pha
 		phy
+        phx
 
 		stz errno
 
@@ -124,6 +127,7 @@ fat_open_found:
 		sta fd_area + FD_file_size + 0, x
 
 end_open:
+        plx
 		ply
 		pla
 
@@ -186,7 +190,7 @@ calc_lba_addr:
 		cmp #$ff
 		beq file_not_open
 		
-        ; lba_addr = cluster_begin_lba_m2 + (cluster_number * sectors_per_cluster);        
+        ; lba_addr = cluster_begin_lba_m2 + (cluster_number * sectors_per_cluster);
         lda fd_area + FD_start_cluster  +0,x
         sta lba_addr
         lda fd_area + FD_start_cluster  +1,x
@@ -520,6 +524,8 @@ fat_alloc_fd:
 @l2:
 		rts
 
+        ; in:
+        ;   x - offset into fd_area
 fat_close:
 		lda #$ff
 		sta fd_area + FD_start_cluster +3 , x

@@ -582,47 +582,10 @@ cd:
 
 
 run:
-
-		lda #<filename
-		sta filenameptr
-		lda #>filename
-		sta filenameptr+1
-		
-		ldy #$00
-@l1:	lda (cmdptr),y
-		beq @l2
-		sta filename,y
-		cmp #' '
-		beq @l2
-		
-		cmp #'.'
-		beq @l4 ; has extension
-		iny
-		bra @l1
-
-@l2:
-		ldx #$00
-@l3:	lda exec_extension,x
-		sta filename,y
-		iny
-		inx
-		cpx #$05
-		bne @l3
-
-	
-
-@l4:
-		; +copyPointer cmdptr, filenameptr
-		jsr readfile		
-		
-		lda errno
-		beq @l5
-		jmp mainloop
-@l5:
-
-	
-		jmp steckos_start
-
+        jsr krn_execv
+        lda errno
+		jsr krn_hexout
+        jmp mainloop
 
 
 dumpvec 		= $c0
