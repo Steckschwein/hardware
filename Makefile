@@ -1,14 +1,11 @@
 MAKEFILE=Makefile
 all: build
 
-# include vdp/Makefile
-
-
 clean:
 	(cd bios; make clean)
 	(cd steckos; make clean)
-	(cd keyboard; make clean)
+	(cd firmware; make clean)
 build:
-	(cd bios; make )
-	(cd steckos; make )
-	(cd keyboard; make )
+	(cd bios; make)
+	(cd steckos; make)
+	(cd firmware; make)

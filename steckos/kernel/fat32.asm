@@ -34,6 +34,8 @@ FD_file_size = $04		; 32 Bit file size
 		;in: 
 		;	x - offset into fd_area
 fat_read:
+        stz errno
+        
         debugcpu
         jsr calc_lba_addr
 		jsr calc_blocks
@@ -43,6 +45,7 @@ fat_read:
         debug32s "fr fs: ", fd_area + FD_Entry_Size + FD_file_size ;1st entry
 
 		jmp sd_read_multiblock
+        debug8s "rdmb: ", errno
 ;		jmp sd_read_block
  
         ;in:

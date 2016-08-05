@@ -47,7 +47,7 @@ spi_rw_byte:
 
 ;----------------------------------------------------------------------------------------------
 ; Receive byte VIA SPI
-; Received byte in A at exit
+; Received byte in A at exit, Z, N flags set accordingly to A
 ; Destructive: A,X
 ;----------------------------------------------------------------------------------------------
 spi_r_byte:

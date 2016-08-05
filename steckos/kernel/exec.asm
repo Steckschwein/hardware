@@ -103,6 +103,7 @@ execv:
 		jsr	krn_close
         lda errno
         beq @l_exec_run
+        debug8s "exec rd:", errno
         jmp @l_err
 @l_exec_run:
         debugptr "cmdptr:", cmdptr

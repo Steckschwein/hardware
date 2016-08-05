@@ -226,16 +226,14 @@ sd_read_block:
 		lda #$01                ; send "crc" and stop bit
 		jsr spi_rw_byte
 
- ;       ldy #sd_cmd_retries 	; wait for command response. 
+        ldy #sd_cmd_retries 	; wait for command response.
 @lx:	jsr spi_r_byte
-        bit #$80    ;?!?
-		bne @lx
         beq @l1         		; everything other than $00 is an error
-        
-;       dey
-	;	bne @lx
-		sta errno
-		bra @exit
+        dey
+		bne @lx
+        ;TODO FIXME error sd error codes 
+        sta errno
+        bra @exit        
 @l1:
 		; wait for sd card data token
 		jsr sd_wait_data_token
@@ -267,7 +265,7 @@ halfblock:
 ;---------------------------------------------------------------------
 sd_read_multiblock:
 		save
-
+        
 		jsr sd_select_card
 
 		lda #cmd18	; Send CMD18 command byte
@@ -279,17 +277,13 @@ sd_read_multiblock:
 		lda #$01
 		jsr spi_rw_byte
 
-		; wait for command response. 
-        
-;        ldy #sd_cmd_retries 	; wait for command response. 
+		; wait for command response.         
+        ldy #sd_cmd_retries 	; wait for command response. 
 @lx:	jsr spi_r_byte
-        bit #$80    ;?!?
+        beq @l1         		; everything other than $00 is an error
+        dey
 		bne @lx
-        beq @l1
-;        beq @l1         		; everything other than $00 is an error
-;        dey
-;		bne @lx
-
+        ;TODO FIXME error sd error codes 
 		sta errno
 		jmp @exit
 @l1:	
@@ -335,25 +329,25 @@ sd_read_multiblock:
 		lda sd_tmp
 	; Read CRC bytes     
 	.repeat 16    
-		STA via1portb ; Takt An 
-		STX via1portb ; Takt aus
+		sta via1portb ; Takt An 
+		stx via1portb ; Takt aus
 	.endrepeat
    
 		dec blocks
 		beq @l3
 		jmp @l1
 @l3:
-		jsr sd_busy_wait  
+		jsr sd_busy_wait
 
-	; all blocks read, send cmd12 to end transmission
-	; jsr sd_param_init
-	lda #cmd12
-	jsr sd_cmd
+        ; all blocks read, send cmd12 to end transmission
+        ; jsr sd_param_init
+        lda #cmd12
+        jsr sd_cmd
 
-	jsr sd_busy_wait  
+        jsr sd_busy_wait
 @exit:
-	restore
-	jmp sd_deselect_card
+        restore
+        jmp sd_deselect_card
 
 ;---------------------------------------------------------------------
 ; Write block to SD Card
@@ -405,18 +399,13 @@ sd_write_block:
 ; wait while sd card is busy
 ;---------------------------------------------------------------------
 sd_busy_wait:
-        ldx #sd_busy_retries
 @l1:    lda #$ff
-        phx
         jsr spi_rw_byte
-        plx
         cmp #$ff
-        beq @l2
-        dex
         bne @l1
         ;TODO FIXME
-        lda #$ff
-        sta errno
+  ;      lda #$fa
+   ;     sta errno
 @l2:    
         rts
 
@@ -456,8 +445,7 @@ sd_deselect_card:
 	sta via1portb
 
 	ldx #$04
-@l1:      
-	; lda #$ff
+@l1:
 	phx
 	jsr spi_r_byte
 	plx
