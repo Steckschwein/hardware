@@ -9,7 +9,7 @@
     phx 
     pha
     jsr primm
-    .asciiz st, " A X Y "
+    .asciiz st, "AXY "
     pla
     jsr hexout
     lda #' '
@@ -39,8 +39,7 @@
     lda p+1
     sta msgptr+1
     jsr strout
-    jsr primm
-    .byte $0a,$0d,0
+    debug_newline
     ply
     pla
 .endif
@@ -57,8 +56,7 @@
     lda #>p
     sta msgptr+1
     jsr strout
-    jsr primm
-    .byte $0a,$0d,0
+    debug_newline
     ply
     pla
 .endif
@@ -68,8 +66,7 @@
 .ifdef DEBUG
     pha
     phy
-    jsr primm
-    .byte st,$0a,$0d,0
+    debug_newline
     ply
     pla
 .endif    
@@ -89,8 +86,7 @@
 
 .macro debug_newline
 .ifdef DEBUG
-    jsr primm
-    .byte $0a,$0d,$00
+    jsr print_crlf
 .endif
 .endmacro
 

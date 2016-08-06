@@ -1,5 +1,3 @@
-current_dir_first_cluster 	= $02b0 ; first cluster of current dir
-
 cluster_begin_lba 			= $0303 ; begin of cluster area, 4 bytes
 fat_begin_lba				= $0307	; begin of fat area, 4 bytes
 sectors_per_cluster 		= $030b ; sectors per cluster, 1 byte
@@ -34,6 +32,7 @@ sd_blocksize				= $200
 	SeekPos			.word 2
 	;.res			11, 0 ;fill up to $20
 .endstruct
+
 
 ;TODO FIXME needs clarification
 block_fat                   = $d800
@@ -119,6 +118,9 @@ DIR_FileSize	= $1C	;32 Bits
 
 DIR_Attr_Mask_Dir  = $10
 DIR_Attr_Mask_File  = $20
+DIR_Entry_Size      = $20   ; size of a dir entry - 32 Byte
+
+
 ;
 ; File Descriptor Stuff
 ;

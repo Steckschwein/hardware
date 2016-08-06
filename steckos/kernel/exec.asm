@@ -4,13 +4,12 @@
 
 ;.import	krn_open_rootdir, krn_open, krn_read, krn_close
 
-.import fat_open, fat_open_rootdir, fat_read, fat_close, fat_clone_cd_2_td
-
+.import fat_open, fat_open_rootdir, fat_read, fat_close, fat_clone_cd_2_td, fat_open2
 
 .export execv
 
 .ifdef DEBUG    ; debug stuff
-	.import	primm, hexout, chrout, strout
+	.import	primm, hexout, chrout, strout, print_crlf
 .endif
 
 .macro _open
@@ -25,6 +24,28 @@
 
 ;		int execv(const char *path, char *const argv[]);
 execv:
+        Copy    cmdptr, pPath, 2
+        sec
+        jsr fat_open2
+        lda errno
+        bne @l_err
+        
+		SetVector appstart, sd_read_blkptr
+		jsr	fat_read
+		jsr	fat_close
+        lda errno
+        bne @l_err
+@l_exec_run:
+        ;TODO FIXME check excecutable - SOS65 header ;)
+		jmp	appstart
+@l_err:	
+		debug8s	"exce:", errno
+		rts
+
+
+
+.ifdef DEPRECATED
+execv_o:
         jsr fat_clone_cd_2_td        ; clone cd 2 temp dir
         
 		ldy	#0
@@ -70,7 +91,7 @@ execv:
 		;TODO FIXME handle overflow - <path argument> too large
 		lda	#$ff
 @l_err:	
-		debug8s	"exec err: ", errno
+		debug8s	"exce:", errno
 @l_end:
 		rts
 		
@@ -117,4 +138,5 @@ execv:
 		jmp	appstart
 		
 execv_fileext:	.byte ".bin",0
-execv_filename: .res 8+1+3+1    
+execv_filename: .res 8+1+3+1
+.endif

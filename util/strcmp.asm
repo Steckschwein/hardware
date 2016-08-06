@@ -9,9 +9,6 @@ match_skip_dots:
 	lda	#'.'
 a0:	cmp	test_input,x
 	bne	match_0
-;a0	lda	test_input,x
-;	cmp	#'.'
-;	bne	match_0_d
 
 	cmp (dirptr),y
 	bne m_not_found

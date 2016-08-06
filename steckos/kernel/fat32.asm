@@ -2,10 +2,10 @@
 .include "fat32.inc"
 
 .import sd_read_block, sd_read_multiblock, sd_write_block, sd_select_card, sd_deselect_card
-.export fat_mount, fat_open, fat_open_rootdir, fat_close, fat_read, fat_find_first, fat_find_next, fat_clone_cd_2_td
+.export fat_mount, fat_open, fat_open2, fat_open_rootdir, fat_close, fat_read, fat_find_first, fat_find_next, fat_clone_cd_2_td
 
 ; DEBUG
-.import hexout, primm, chrout
+.import hexout, primm, chrout, strout, print_crlf
 
 .segment "KERNEL"
 
@@ -27,6 +27,16 @@
 	sta where
 .endmacro
 
+.macro _open
+		stz	pathFragment, x	;\0 terminate the current path fragment
+        sec
+		jsr	fat_open
+		lda	errno
+		beq	:+
+        bra @l_err
+:
+.endmacro
+
 		;in: 
 		;	x - offset into fd_area
 fat_read:
@@ -41,10 +51,74 @@ fat_read:
 ;        debug32s "fr fs: ", fd_area + (FD_Entry_Size*2) + FD_file_size ;1st file entry
 
 		jmp sd_read_multiblock
-        debug8s "rdmb: ", errno
 ;		jmp sd_read_block
  
- 
+        ;in:
+        ;   pPath - pointer to the file path
+        ;   C - (carry) if set the temp dir file descriptor - index 0+FD_Entry_Size - will be used for the opened directory, otherwise (clc) the current dir file descriptor - index 0 within fd_area - is used and overwritten
+        ;out: 
+        ;   x - index into fd_area of the opened file
+        ;   errno - set on errot
+fat_open2:
+        ;php
+        bcc @l0
+        jsr fat_clone_cd_2_td        ; clone cd 2 temp dir
+@l0:
+		ldy	#0
+		;	trimm first chars
+@l1:	lda (pPath), y
+		cmp	#' '
+		bne	@l2
+		iny 
+		bne @l1
+        lda #$f0    ; TODO FIXME open errors
+        sta errno
+        bra @l_err
+@l2:	;	starts with / ? - cd root
+		cmp	#'/'
+		bne	@l31
+		phy
+        sec ;FIXME
+		jsr fat_open_rootdir
+		ply
+		iny
+@l31:   SetVector   pathFragment, filenameptr	; filenameptr to 
+@l3:	;	parse path fragments and change dirs accordingly
+		ldx #0
+@l_parse_1:
+        lda	(pPath), y
+		beq	@l_openfile
+		cmp	#' '    ;TODO FIXME file/dir name with space?
+		beq	@l_openfile
+		cmp	#'/'
+		beq	@l_open
+		
+		sta pathFragment, x
+		iny
+		inx
+		cpx	#12	        ; 8.3 file support only
+		bne	@l_parse_1
+        lda #$f1
+        sta errno       ; TODO FIXME open errors
+        bra @l_err
+@l_open:
+		_open
+		iny	
+		bne	@l3
+		;TODO FIXME handle overflow - <path argument> too large
+		lda	#$ff
+@l_err:	
+		debug8s	"oe:", errno
+@l_end:
+		rts        
+@l_openfile:
+        stz pathFragment, x   ;'\0' terminate
+        debugstr "op:", pathFragment
+        debugptr "fp:", filenameptr
+		_open				; return with x as offset to fd_area
+        rts
+pathFragment: .res 8+1+3+1; 12 chars + \0 for path fragment
+
         ;in:
         ;   filenameptr - ptr to the filename
         ;   C - (carry) if set the temp dir file descriptor - index 0+FD_Entry_Size - will be used for the opened directory, otherwise (clc) the current dir file descriptor - index 0 within fd_area - is used and overwritten
@@ -55,11 +129,10 @@ fat_open:
 		pha
 		phy
 
-        bcs @l1
         ldx #FD_INDEX_CURRENT_DIR   ; 0 - use #FD_INDEX_CURRENT_DIR, the current dir always go to fd #0
-        bra @l11
-@l1:    ldx #FD_INDEX_TEMP_DIR      ; otherwise use #FD_INDEX_TEMP_DIR	; temp dir always go to fd #1
-@l11:
+        bcc @l1
+        ldx #FD_INDEX_TEMP_DIR      ; otherwise use #FD_INDEX_TEMP_DIR	; temp dir always go to fd #1
+@l1:
         phx ;safe for temp dir handling
 		jsr fat_find_first
         plx        
@@ -95,14 +168,14 @@ fat_open_found:
 		ldy #DIR_FstClusHI +1
 		lda (dirptr),y
 		sta fd_area + FD_start_cluster +3, x
-		ldy #DIR_FstClusHI +0
+		dey
 		lda (dirptr),y
 		sta fd_area + FD_start_cluster +2, x
 		
 		ldy #DIR_FstClusLO +1
 		lda (dirptr),y
 		sta fd_area + FD_start_cluster +1, x
-		ldy #DIR_FstClusLO +0
+		dey
 		lda (dirptr),y
 		sta fd_area + FD_start_cluster +0, x
 
@@ -500,6 +573,7 @@ fat_open_rootdir_temp:
         Copy root_dir_first_clus, fd_area + FD_INDEX_TEMP_DIR + FD_start_cluster, 3
 		rts
 
+        ; clone file descriptor of current dir to temp directory
 fat_clone_cd_2_td:
 		Copy fd_area + FD_INDEX_CURRENT_DIR + FD_start_cluster, fd_area + FD_INDEX_TEMP_DIR + FD_start_cluster, 3
         rts
@@ -507,17 +581,11 @@ fat_clone_cd_2_td:
 
 fat_init_fdarea:
 		ldx #$00
-@l1:	lda #$ff
-		sta fd_area + FD_start_cluster +3 , x
-
-		txa ; 2 cycles
-		clc ; 2 cycles
-		adc #$08 ; 2  cycles
-		tax ; 2 cycles
-
-		cpx #$80
+        lda #$ff
+@l1:	sta fd_area + FD_start_cluster +3 , x
+        inx
+		cpx #(FD_Entry_Size*FD_Entries_Max)
 		bne @l1
-
 		rts
 		
 		; return: x - with index to fd_area, otherwise errno is set
@@ -564,9 +632,9 @@ fat_find_first:
 
 		SetVector sd_blktarget, sd_read_blkptr
 ;		ldx #FD_INDEX_CURRENT_DIR
-        debugcpu "fst"
+;        debugcpu "fst"
 		jsr calc_lba_addr
-        debug32s "ff lba: ", lba_addr
+ ;       debug32s "ff lba: ", lba_addr
 		
 ff_l3:	SetVector sd_blktarget, dirptr	
 		jsr sd_read_block
@@ -589,7 +657,7 @@ ff_l4:
 fat_find_next:
 		lda dirptr
 		clc
-		adc #$20
+		adc #DIR_Entry_Size
 		sta dirptr
 		bcc @l6
 		inc dirptr+1
@@ -603,7 +671,6 @@ fat_find_next:
 
 ff_end:
 		rts
-
 
 
 match:

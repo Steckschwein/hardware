@@ -113,7 +113,7 @@ input_12 	.db 0,0,0,0,0,0,1,0,0,0
 input_13 	.db 0,0,0,0,0,0,0,0,0,1
 			.ascii ".ssh",0
 input_14 	.db 0,0,0,0,0,0,0,0,0,0
-			.ascii 0
+			.ascii "", 0
 
 
 test_dir_tab
