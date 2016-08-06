@@ -63,7 +63,7 @@ kern_init:
 	SetVector filename, filenameptr
 
     ; debug_newline
-
+    ldx #0
 	jsr fat_open
     debug8s "open e:", errno
 	lda errno

@@ -1,21 +1,27 @@
 
-.macro debugcpu
+.macro debugcpu st
 .ifdef DEBUG
     pha
     phx
     phy
+    
+    phy
+    phx 
+    pha
     jsr primm
-    .asciiz "A X Y: "
+    .asciiz st, " A X Y "
+    pla
     jsr hexout
     lda #' '
     jsr chrout
-    txa
+    pla
     jsr hexout
     lda #' '
     jsr chrout
-    tya
+    pla
     jsr hexout
     debug_newline
+    
     ply
     plx
     pla    

@@ -515,6 +515,7 @@ l1:
 		copypointer paramptr, filenameptr
 
 @l2:
+        ldx #0
 		jsr krn_find_first
         lda errno
         beq @l2_1
@@ -559,7 +560,8 @@ cd:
 		bne @l1
 		
 		; its a slash, nothing else. cd to /
-		jsr krn_open_rootdir
+		clc
+        jsr krn_open_rootdir
 		jmp mainloop
 
 @l1:	; not a slash. cd to whatever
@@ -567,7 +569,8 @@ cd:
 		jsr param2fileptr
 		
 		crlf
-		
+
+        clc
 		jsr krn_open
 
 		lda errno
@@ -688,42 +691,6 @@ dump:
 		bra @l3
 
 @l8:	jmp mainloop
-
-readfile:
-
-	jsr krn_open
-	stx tmp5
-
-	lda errno
-	bne @l1
-
-
-	SetVector steckos_start, sd_read_blkptr
-	jsr krn_read
-
-	ldx tmp5
-	jsr krn_close
-	rts
-
-@l1:
-		crlf
-		ldy #$00
-@l2:	lda (filenameptr),y
-		beq @l3
-		jsr krn_chrout
-		iny
-		bra @l2
-@l3:
-		lda #':'
-		jsr krn_chrout	
-		lda #' '
-		jsr krn_chrout
-
-		lda errno
-		jsr errmsg
-		; plp	
-		rts
-
 
 upload:
 	sei

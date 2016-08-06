@@ -1,17 +1,13 @@
 .include "kernel.inc"
 .include "fat32.inc"
-.segment "KERNEL"
+
 .import sd_read_block, sd_read_multiblock, sd_write_block, sd_select_card, sd_deselect_card
-.export fat_mount, fat_open, fat_open_rootdir, fat_close, fat_read, fat_find_first, fat_find_next
+.export fat_mount, fat_open, fat_open_rootdir, fat_close, fat_read, fat_find_first, fat_find_next, fat_clone_cd_2_td
 
 ; DEBUG
 .import hexout, primm, chrout
 
-FD_Entries_Max = 16
-FD_Entry_Size = 8 ; 8 byte per fd entry
-
-FD_start_cluster = $00	; 32 Bit cluster nr
-FD_file_size = $04		; 32 Bit file size
+.segment "KERNEL"
 
 .macro saveClusterNo where
 	ldy #DIR_FstClusHI +1
@@ -36,20 +32,22 @@ FD_file_size = $04		; 32 Bit file size
 fat_read:
         stz errno
         
-        debugcpu
+        debugcpu "fr"
         jsr calc_lba_addr
 		jsr calc_blocks
 
         debug32s "fr lba: ", lba_addr
 		debug24s "fr bc: ", blocks
-        debug32s "fr fs: ", fd_area + FD_Entry_Size + FD_file_size ;1st entry
+;        debug32s "fr fs: ", fd_area + (FD_Entry_Size*2) + FD_file_size ;1st file entry
 
 		jmp sd_read_multiblock
         debug8s "rdmb: ", errno
 ;		jmp sd_read_block
  
+ 
         ;in:
-        ;   (filenameptr) - ptr to the filename
+        ;   filenameptr - ptr to the filename
+        ;   C - (carry) if set the temp dir file descriptor - index 0+FD_Entry_Size - will be used for the opened directory, otherwise (clc) the current dir file descriptor - index 0 within fd_area - is used and overwritten
         ;out: 
         ;   x - index into fd_area of the opened file
         ;   errno - set on errot
@@ -57,11 +55,16 @@ fat_open:
 		pha
 		phy
 
-		stz errno
-
+        bcs @l1
+        ldx #FD_INDEX_CURRENT_DIR   ; 0 - use #FD_INDEX_CURRENT_DIR, the current dir always go to fd #0
+        bra @l11
+@l1:    ldx #FD_INDEX_TEMP_DIR      ; otherwise use #FD_INDEX_TEMP_DIR	; temp dir always go to fd #1
+@l11:
+        phx ;safe for temp dir handling
 		jsr fat_find_first
+        plx        
 		bcs fat_open_found
-
+        
 lbl_fat_no_such_file:
 		lda #fat_file_not_found
 		sta errno
@@ -77,10 +80,7 @@ fat_open_found:
 		ldy #DIR_Attr
 		lda (dirptr),y
 		bit #$10 ; Is a directory?
-		beq @l1
-
-		ldx #FD_INDEX_CURRENT_DIR	; current dir always go to fd #0
-		bra @l2
+		bne @l2
 
 @l1:	bit #$20 ; Is file?
 		beq lbl_fat_open_error
@@ -88,19 +88,21 @@ fat_open_found:
 		jsr fat_alloc_fd
 		cpx #$ff
 		beq lbl_fat_open_error
-	
-@l2:	;save 32 bit cluster number from dir entry
+
+@l2:	
+        debugcpu "fd"
+        ;save 32 bit cluster number from dir entry
 		ldy #DIR_FstClusHI +1
 		lda (dirptr),y
 		sta fd_area + FD_start_cluster +3, x
-		dey	
+		ldy #DIR_FstClusHI +0
 		lda (dirptr),y
 		sta fd_area + FD_start_cluster +2, x
 		
 		ldy #DIR_FstClusLO +1
 		lda (dirptr),y
 		sta fd_area + FD_start_cluster +1, x
-		dey
+		ldy #DIR_FstClusLO +0
 		lda (dirptr),y
 		sta fd_area + FD_start_cluster +0, x
 
@@ -132,6 +134,9 @@ fat_open_found:
 		ldy #DIR_FileSize + 0
 		lda (dirptr),y
 		sta fd_area + FD_file_size + 0, x
+        ldy #DIR_Attr
+        lda (dirptr),y
+		sta fd_area + FD_file_attr, x
 
 end_open:
 		ply
@@ -483,14 +488,22 @@ fat_mount:
 		; now we have the lba address of the first sector of the first cluster
 
 end_mount:
-		; jsr .sd_deselect_card
 		restore
-        
-		; fall through to open_rootdir
-fat_open_rootdir:
-		; Set root dir to FD_INDEX_CURRENT_DIR
-		Copy root_dir_first_clus, fd_area + FD_start_cluster, 3
+        ; go on, open_rootdir as current dir
+        clc
+fat_open_rootdir: 
+        bcs fat_open_rootdir_temp
+        ; Set root dir to FD_INDEX_TEMP_DIR
+		Copy root_dir_first_clus, fd_area + FD_INDEX_CURRENT_DIR + FD_start_cluster, 3
+        rts
+fat_open_rootdir_temp:
+        Copy root_dir_first_clus, fd_area + FD_INDEX_TEMP_DIR + FD_start_cluster, 3
 		rts
+
+fat_clone_cd_2_td:
+		Copy fd_area + FD_INDEX_CURRENT_DIR + FD_start_cluster, fd_area + FD_INDEX_TEMP_DIR + FD_start_cluster, 3
+        rts
+
 
 fat_init_fdarea:
 		ldx #$00
@@ -509,13 +522,13 @@ fat_init_fdarea:
 		
 		; return: x - with index to fd_area, otherwise errno is set
 fat_alloc_fd:
-		ldx #FD_Entry_Size	; skip first entry, its reserverd for current dir		
+		ldx #(2*FD_Entry_Size)	; skip 2 entries, they're reserverd for current and temp dir
 @l1:	lda fd_area + FD_start_cluster +3, x
 		cmp #$ff	;is open?
 		beq @l2
 
 		txa ; 2 cycles
-;		clc ; must be clear from cmp above
+;		clc ; must be clear from cmp #$ff above
 		adc #FD_Entry_Size ; 2  cycles
 		tax ; 2 cycles
 
@@ -550,12 +563,13 @@ fat_find_first:
 		sta filename_buf,y
 
 		SetVector sd_blktarget, sd_read_blkptr
-		ldx #FD_INDEX_CURRENT_DIR
+;		ldx #FD_INDEX_CURRENT_DIR
+        debugcpu "fst"
 		jsr calc_lba_addr
+        debug32s "ff lba: ", lba_addr
 		
 ff_l3:	SetVector sd_blktarget, dirptr	
 		jsr sd_read_block
-        debug8s "rdb: ", errno
 		dec sd_read_blkptr+1
 
 ff_l4:

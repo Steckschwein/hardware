@@ -2,9 +2,6 @@ MAKEFILE=Makefile
 DIST_TARGET=/Volumes/STCKSCHWN/
 all: build
 
-# include vdp/Makefile
-
-
 clean:
 	(cd tools; make clean)
 	(cd shell; make clean)

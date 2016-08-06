@@ -2,7 +2,10 @@
 
 .segment "KERNEL"
 
-.import	krn_open_rootdir, krn_open, krn_read, krn_close
+;.import	krn_open_rootdir, krn_open, krn_read, krn_close
+
+.import fat_open, fat_open_rootdir, fat_read, fat_close, fat_clone_cd_2_td
+
 
 .export execv
 
@@ -12,7 +15,8 @@
 
 .macro _open
 		stz	execv_filename, x	;\0 terminate the current path fragment
-		jsr	krn_open
+        sec
+		jsr	fat_open
 		lda	errno
 		beq	:+
         jmp @l_err
@@ -21,6 +25,8 @@
 
 ;		int execv(const char *path, char *const argv[]);
 execv:
+        jsr fat_clone_cd_2_td        ; clone cd 2 temp dir
+        
 		ldy	#0
 		;	trimm first chars
 @l1:	lda (cmdptr), y
@@ -35,7 +41,8 @@ execv:
 		cmp	#'/'
 		bne	@l31
 		phy
-		jsr krn_open_rootdir
+        sec
+		jsr fat_open_rootdir
 		ply
 		iny
 		
@@ -98,9 +105,9 @@ execv:
         debugptr "fptr:", filenameptr
 		_open				; with x as offset to fd_area        
 		SetVector appstart, sd_read_blkptr
-		jsr	krn_read
+		jsr	fat_read
 		;TODO FIXME check excecutable - SOS65 header ;)
-		jsr	krn_close
+		jsr	fat_close
         lda errno
         beq @l_exec_run
         debug8s "exec rd:", errno

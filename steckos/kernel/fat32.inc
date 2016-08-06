@@ -97,6 +97,8 @@ BS_VolID		= 39
 BS_VolLab		= 43
 BS_FilSysType	= 54	; One of the strings “FAT12 ”, “FAT16 ”, or “FAT ”.
 
+FAT_EOC			= $0ffffff8	; end of cluster chain marker
+
 ;--------------------------------------------------------------------------------------
 ; FAT32 Directory Entry
 ;--------------------------------------------------------------------------------------
@@ -114,6 +116,18 @@ DIR_WrtDate		= $18	; file write date, 16 bits
 						; Bits 9–15: Count of years from 1980, valid value range 0–127 inclusive (1980–2107).
 DIR_FstClusLO	= $1A	;16 Bits
 DIR_FileSize	= $1C	;32 Bits
+
+DIR_Attr_Mask_Dir  = $10
+DIR_Attr_Mask_File  = $20
 ;
-FD_INDEX_CURRENT_DIR = 0			; current dir always go to fd #0
-FAT_EOC			= $0ffffff8	; end of cluster chain marker
+; File Descriptor Stuff
+;
+FD_Entries_Max = 16
+FD_Entry_Size = 9 ; 9 byte per fd entry
+
+FD_start_cluster = $00	; 32 Bit cluster nr
+FD_file_size = $04		; 32 Bit file size
+FD_file_attr = $08		; 8 Bit fat32 Attributes
+
+FD_INDEX_CURRENT_DIR = 0			    ; current dir always go to fd #0
+FD_INDEX_TEMP_DIR    = FD_Entry_Size    ; temp dir always go to fd #1

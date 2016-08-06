@@ -226,7 +226,7 @@ sd_read_block:
 		lda #$01                ; send "crc" and stop bit
 		jsr spi_rw_byte
 
-        ldy #sd_cmd_retries 	; wait for command response.
+        ldy #sd_cmd_response_retries 	; wait for command response.
 @lx:	jsr spi_r_byte
         beq @l1         		; everything other than $00 is an error
         dey
@@ -278,7 +278,7 @@ sd_read_multiblock:
 		jsr spi_rw_byte
 
 		; wait for command response.         
-        ldy #sd_cmd_retries 	; wait for command response. 
+        ldy #sd_cmd_response_retries 	; wait for command response. 
 @lx:	jsr spi_r_byte
         beq @l1         		; everything other than $00 is an error
         dey
@@ -417,12 +417,12 @@ sd_wait_data_token:
 @l1:
 		jsr spi_r_byte
 		cmp #sd_data_token
-;		beq @l2
-;		dey
+		beq @l2
+		dey
 		bne @l1
 		;TODO FIXME check card state here, may be was removed
- ;       lda #$e0
-  ;      sta errno
+;       lda #$e0
+        sta errno
 @l2:	rts
 
 ;---------------------------------------------------------------------
