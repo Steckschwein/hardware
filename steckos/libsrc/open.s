@@ -81,7 +81,8 @@ seterrno:
         jmp     __directerrno
 
 ; Error entry: Set oserror and errno using error code in A and return -1
-oserror:jmp     __mappederrno
+oserror:    
+        jmp     __mappederrno
 
 ; Read bit is set. Add an 'r' to the name
 
