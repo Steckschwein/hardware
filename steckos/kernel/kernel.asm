@@ -18,7 +18,7 @@ text_mode_40 = 1
 .import keyin, getkey
 .import textui_enable, textui_disable, vdp_display_off,  textui_blank, textui_update_crs_ptr, textui_crsxy, textui_screen_dirty
 .import init_sdcard
-.import fat_mount, fat_open, fat_open_rootdir, fat_close, fat_read, fat_find_first, fat_find_next
+.import fat_mount, fat_open, fat_open2, fat_isOpen, fat_open_rootdir, fat_close, fat_close_all, fat_read, fat_find_first, fat_find_next
 .import execv
 
 ;TODO FIXME testing purpose only
@@ -62,8 +62,7 @@ kern_init:
 	
 	SetVector filename, filenameptr
 
-    ; debug_newline
-    ldx #0
+    clc
 	jsr fat_open
     debug8s "open e:", errno
 	lda errno
@@ -253,10 +252,20 @@ krn_execv:                  jmp execv
 krn_keyin:				    jmp keyin
 .export krn_mount		
 krn_mount: 				    jmp fat_mount 
+
 .export krn_open
 krn_open: 				    jmp fat_open
+.export krn_open2
+krn_open2: 				    jmp fat_open2
+
+.export krn_isOpen
+krn_isOpen: 				jmp fat_isOpen
+
 .export krn_close
 krn_close: 				    jmp fat_close
+.export krn_close_all
+krn_close_all: 			    jmp fat_close_all
+
 .export krn_read
 krn_read:    				jmp fat_read 
 .export krn_open_rootdir

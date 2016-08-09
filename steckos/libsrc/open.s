@@ -1,30 +1,26 @@
 ;
 ;
 ; int open(const char *name,int flags,...);
-;
 
 ;TODO FIXME tmpX stuff
-        tmp3 = 19
+        ;tmp3 = 19
         
 		.include "fcntl.inc"
         .include "errno.inc"
 		.include	"../kernel/kernel_jumptable.inc"
+		.include	"../kernel/zeropage.inc"
 
         .export _open
         .destructor     closeallfiles, 5
 
-        .import _close
-        .import clriocb
-        .import fddecusage,newfd
+		.import popax
         .import incsp4
         .import ldaxysp,addysp
         .import __oserror
-        .importzp tmp4,tmp2
-.ifdef  UCASE_FILENAME
         .importzp tmp3
-        .import ucase_fn
-.endif
-
+		
+;--------------------------------------------------------------------------
+; _open
 .proc   _open
 
         dey                     ; parm count < 4 shouldn't be needed to be checked
@@ -40,115 +36,110 @@ seterr: jsr     __directerrno
         jsr     incsp4          ; clean up stack
         lda     #$FF
         tax
-        rts                     ; return -1
+        rts                     ; return -1 ($ffff)
 
-        ; process the mode argument
-parmok: ;jsr     krn_open
-        ;beq     iocbok          ; we found one
+; Parameters ok. Pop the flags and save them into tmp3
+
+parmok: jsr     popax           ; Get flags
+        sta     tmp3
+
+; Get the filename from stack and parse it. Bail out if is not ok
+
+        jsr     popax           ; Get name, ptr low/high in a/x
 		
-iocbok: stx     tmp4
-        ldy     #1
-        jsr     ldaxysp         ; get mode
-        ldx     tmp4
-        pha
-        and     #O_APPEND
-        beq     no_app
-        pla
-        and     #15
-        cmp     #O_RDONLY       ; DOS supports append with write-only only
-        beq     invret
-        cmp     #O_RDWR
-        beq     invret
-;        lda     #OPNOT|APPEND
- ;       bne     set
-
-
-no_app: pla
-        and     #15
-        cmp     #O_RDONLY
-        bne     l1
-        ;lda     #OPNIN
-set:    ;sta     ICAX1,x
-        bne     cont
-
-l1:     cmp     #O_WRONLY
-        bne     l2
-;        lda     #OPNOT
- ;       bne     set
-
-l2:     ; O_RDWR
-  ;      lda     #OPNOT|OPNIN
-   ;     bne     set
-
-        ; process the filename argument
-
-cont:   ldy     #3
-        jsr     ldaxysp
-
-        ldy     #$80
-        sty     tmp2            ; set flag for ucase_fn
-;        jsr     ucase_fn
-        bcc     ucok1
-invret: lda     #<EINVAL        ; file name is too long
-        jmp     seterr
-ucok1:
-
-        ldy     tmp4
-
-        ;AX - points to filename
-        ;Y  - iocb to use, if open needed
-;        jsr     newfd           ; maybe we don't need to open and can reuse an iocb
-                                ; returns fd num to use in tmp2, all regs unchanged
-        bcs     doopen          ; C set: open needed
-        lda     #0              ; clears N flag
-        beq     finish
-
-doopen: 
-        ldx     tmp4
-		jsr 	krn_open
+		sta		pPath			; setup path pointer
+		stx		pPath+1
+		jsr		krn_open2
 		
-        ; clean up the stack
+        ;jsr     fnparse         ; Parse it
+        ;tax
+        bne     oserror         ; Bail out if problem with name
 
-finish: php
-        txa
-        pha
-        tya
-        pha
+; Get a free file handle and remember it in tmp2
+;        jsr     freefd
+;        lda     #EMFILE         ; Load error code
+ ;       bcs     seterrno        ; Jump in case of errors
+;		stx     tmp2
 
-        jsr     incsp4          ; clean up stack
+; Check the flags. We cannot have both, read and write flags set, and we cannot
+; open a file for writing without creating it.
 
-        pla
-        tay
-        pla
-        tax
-        plp
+        lda     tmp3
+        and     #(O_RDWR | O_CREAT)
+        cmp     #O_RDONLY       ; Open for reading?
+        beq     doread          ; Yes: Branch
+        cmp     #(O_WRONLY | O_CREAT)   ; Open for writing?
+        beq     dowrite
 
-        bpl     ok
-        sty     tmp3            ; remember error code
-;		jsr 	krn_close
-        lda     tmp3            ; put error code into A
-        jmp     __mappederrno
+; Invalid open mode
 
-ok:     lda     tmp2            ; get fd
+        lda     #EINVAL
+
+; Error entry. Sets _errno, clears _oserror, returns -1
+
+seterrno:
+        jmp     __directerrno
+
+; Error entry: Set oserror and errno using error code in A and return -1
+oserror:jmp     __mappederrno
+
+; Read bit is set. Add an 'r' to the name
+
+doread:
+;		lda     #'r'
+ ;       jsr     fnaddmode       ; Add the mode to the name
+  ;      lda     #LFN_READ
+        ;TODO FIXME
+		bra		common          ; Branch always
+
+; If O_TRUNC is set, scratch the file, but ignore any errors
+
+dowrite:
+		lda		#ENOSYS			;TODO FIXME implement write
+		bne		oserror
+		
+        lda     tmp3
+        and     #O_TRUNC
+        beq     notrunc
+;        jsr     scratch
+
+; Complete the the file name. Check for append mode here.
+
+notrunc:
+        lda     tmp3            ; Get the mode again
+        and     #O_APPEND       ; Append mode?
+        bne     append          ; Branch if yes
+
+; Setup the name for create mode
+;        lda     #'w'
+ ;       jsr     fncomplete      ; Add type and mode to the name
+  ;      jmp     appendcreate
+
+; Append bit is set. Add an 'a' to the name
+
+append: 
+;		lda     #'a'
+;       jsr     fnaddmode       ; Add open mode to file name
+appendcreate:
+;        lda     #LFN_WRITE
+
+		
+; Common read/write code. Flags in A, handle in tmp2
+common:
+		sta     tmp3	; save cleanead flags
+		
+; Done. Return the handle in a/x
+		txa				; offset into fd_area from krn_open2 to a
         ldx     #0
-        stx     __oserror
+        stx     __oserror       ; Clear _oserror
         rts
-
 .endproc
 
-
-; closeallfiles: Close all files opened by the program.
+;--------------------------------------------------------------------------
+; closeallfiles: Close all open files.
 
 .proc   closeallfiles
 
-;        lda     #MAX_FD_INDEX-1
-loop:   ldx     #0
-        pha
-        jsr     _close
-        pla
-        clc
-        sbc     #0
-        bpl     loop
-        rts
+		jmp		krn_close_all
 
 .endproc

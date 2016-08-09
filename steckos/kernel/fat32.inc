@@ -38,13 +38,14 @@ sd_blocksize				= $200
 block_fat                   = $d800
 block_data                  = $da00
 
+; TODO FIXME replace with errno.inc from cc65 api
 fat_bad_block_signature		= 	$01
 fat_invalid_partition_type	=	$02
 fat_invalid_sector_size		=	$03
 fat_invalid_num_fats		=	$04
 fat_open_error				=	$05
-fat_too_many_files			=   $06
-fat_file_not_found			=   $07
+;fat_too_many_files			=   $06
+;fat_file_not_found			=   $07
 fat_file_not_open			=   $08
 fat_file_not_dir			=   $10
 fat_file_too_large			=   $11

@@ -1,8 +1,13 @@
 .include "kernel.inc"
 .include "fat32.inc"
 
+.include "errno.inc"
+
 .import sd_read_block, sd_read_multiblock, sd_write_block, sd_select_card, sd_deselect_card
-.export fat_mount, fat_open, fat_open2, fat_open_rootdir, fat_close, fat_read, fat_find_first, fat_find_next, fat_clone_cd_2_td
+.export fat_mount
+.export fat_open, fat_open2, fat_open_rootdir, fat_isOpen
+.export fat_read, fat_find_first, fat_find_next, fat_clone_cd_2_td
+.export fat_close_all, fat_close
 
 ; DEBUG
 .import hexout, primm, chrout, strout, print_crlf
@@ -39,6 +44,18 @@
 
 		;in: 
 		;	x - offset into fd_area
+fat_read2:
+        debugcpu "fr2"
+        jsr calc_lba_addr
+		jsr calc_blocks
+
+        debug32s "fr2 lba: ", lba_addr
+		debug24s "fr2 bc: ", blocks
+		jmp sd_read_block
+		
+
+		;in: 
+		;	x - offset into fd_area
 fat_read:
         stz errno
         
@@ -71,8 +88,7 @@ fat_open2:
 		bne	@l2
 		iny 
 		bne @l1
-        lda #$f0    ; TODO FIXME open errors
-        sta errno
+        lda #EINVAL
         bra @l_err
 @l2:	;	starts with / ? - cd root
 		cmp	#'/'
@@ -98,17 +114,19 @@ fat_open2:
 		inx
 		cpx	#12	        ; 8.3 file support only
 		bne	@l_parse_1
-        lda #$f1
-        sta errno       ; TODO FIXME open errors
+        lda #EINVAL
         bra @l_err
 @l_open:
 		_open
 		iny	
 		bne	@l3
 		;TODO FIXME handle overflow - <path argument> too large
-		lda	#$ff
-@l_err:	
+		lda	#EINVAL
+@l_err:
+.ifdef DEBUG
+        sta errno
 		debug8s	"oe:", errno
+.endif
 @l_end:
 		rts        
 @l_openfile:
@@ -124,7 +142,9 @@ pathFragment: .res 8+1+3+1; 12 chars + \0 for path fragment
         ;   C - (carry) if set the temp dir file descriptor - index 0+FD_Entry_Size - will be used for the opened directory, otherwise (clc) the current dir file descriptor - index 0 within fd_area - is used and overwritten
         ;out: 
         ;   x - index into fd_area of the opened file
-        ;   errno - set on errot
+        ;   A - errno 
+		; 	@DEPRECTAED 
+		;		errno - error code, 0 if no error occured
 fat_open:
 		pha
 		phy
@@ -139,7 +159,7 @@ fat_open:
 		bcs fat_open_found
         
 lbl_fat_no_such_file:
-		lda #fat_file_not_found
+		lda #ENOENT
 		sta errno
 		jmp end_open
 
@@ -159,9 +179,8 @@ fat_open_found:
 		beq lbl_fat_open_error
 
 		jsr fat_alloc_fd
-		cpx #$ff
-		beq lbl_fat_open_error
-
+		lda errno
+		bne lbl_fat_open_error
 @l2:	
         debugcpu "fd"
         ;save 32 bit cluster number from dir entry
@@ -578,9 +597,18 @@ fat_clone_cd_2_td:
 		Copy fd_area + FD_INDEX_CURRENT_DIR + FD_start_cluster, fd_area + FD_INDEX_TEMP_DIR + FD_start_cluster, 3
         rts
 
+		; in:
+		;	x - offset to fd_area
+		; out: 
+		;	carry - if set, the file is not open
+fat_isOpen:
+		lda fd_area + FD_start_cluster +3, x
+		cmp #$ff	;#$ff means not open, carry is set...
+		rts
 
 fat_init_fdarea:
 		ldx #$00
+fat_init_fdarea_with_x:		
         lda #$ff
 @l1:	sta fd_area + FD_start_cluster +3 , x
         inx
@@ -592,7 +620,7 @@ fat_init_fdarea:
 fat_alloc_fd:
 		ldx #(2*FD_Entry_Size)	; skip 2 entries, they're reserverd for current and temp dir
 @l1:	lda fd_area + FD_start_cluster +3, x
-		cmp #$ff	;is open?
+		cmp #$ff	;#$ff means unused, return current x as offset
 		beq @l2
 
 		txa ; 2 cycles
@@ -604,7 +632,7 @@ fat_alloc_fd:
 		bne @l1
 
 		; Too many open files, no free file descriptor found
-		lda #fat_too_many_files
+		lda #EMFILE
 		sta errno		
 @l2:
 		rts
@@ -616,7 +644,10 @@ fat_close:
 		sta fd_area + FD_start_cluster +3 , x
 		rts
 
-
+fat_close_all:
+		ldx #(2*FD_Entry_Size)	; skip 2 entries, they're reserverd for current and temp dir
+		bra	fat_init_fdarea_with_x
+		
 fat_find_first:
 		ldy #$00
 @l1:	lda (filenameptr),y
