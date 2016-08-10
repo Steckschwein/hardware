@@ -1,8 +1,10 @@
-.include 	"kernel.inc"
+.include	"kernel.inc"
+.include 	"errno.inc"
+.include 	"filedes.inc"
 
 .segment "KERNEL"
 
-.import fat_open, fat_open_rootdir, fat_read, fat_close, fat_clone_cd_2_td, fat_open2
+.import fat_open2, fat_read, fat_close
 ;.importzp ptr1
         
 .export execv
@@ -23,12 +25,18 @@
 
 ;		int execv(const char *path, char *const argv[]);
 execv:
-        sec		; set carry, we use temp dir fd during open
-        jsr fat_open2
+        sec				; set carry, we use temp dir fd during open
+        jsr fat_open2	; x - offset to fd_area
         lda errno
         bne @l_err
-        
-		SetVector appstart, sd_read_blkptr
+		
+		lda	fd_area + FD_file_attr, x	; TODO FIXME also check whether it's executable
+		bit #$20		; must be a file
+		bne	@l0
+		lda	#EINVAL
+		bra	@l_err
+		
+@l0:	SetVector appstart, sd_read_blkptr
 		jsr	fat_read
 		jsr	fat_close
         lda errno

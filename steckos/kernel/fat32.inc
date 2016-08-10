@@ -3,7 +3,6 @@ fat_begin_lba				= $0307	; begin of fat area, 4 bytes
 sectors_per_cluster 		= $030b ; sectors per cluster, 1 byte
 root_dir_first_clus 		= $030c ; first cluster of root dir, 4 bytes
 filename_buf				= $0310 ; file name buffer, 11 bytes
-fd_area						= $0320 ; File descriptor area, 6x8byte until $0350 
 sd_blktarget 				= $0400
 
 sd_blocksize				= $200
@@ -120,17 +119,3 @@ DIR_FileSize	= $1C	;32 Bits
 DIR_Attr_Mask_Dir  = $10
 DIR_Attr_Mask_File  = $20
 DIR_Entry_Size      = $20   ; size of a dir entry - 32 Byte
-
-
-;
-; File Descriptor Stuff
-;
-FD_Entries_Max = 16
-FD_Entry_Size = 9 ; 9 byte per fd entry
-
-FD_start_cluster = $00	; 32 Bit cluster nr
-FD_file_size = $04		; 32 Bit file size
-FD_file_attr = $08		; 8 Bit fat32 Attributes
-
-FD_INDEX_CURRENT_DIR = 0			    ; current dir always go to fd #0
-FD_INDEX_TEMP_DIR    = FD_Entry_Size    ; temp dir always go to fd #1

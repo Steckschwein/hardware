@@ -1,4 +1,5 @@
 OBJS=fat32.o sdcard.o textui.o t99xx.lib.o rtc.o spi.o uart.o via.o out.o key.o exec.o kernel.o
+ASM_INCLUDE=../asminc
 LDFLAGS=--config steckos.cfg
 DEBUG=-D DEBUG
 
@@ -10,7 +11,7 @@ clean:
 	rm -f *.o *.bin *.map *.txt kernel_jumptable.inc
 
 %.o: %.asm vdp.inc zeropage.inc fat32.inc
-	ca65 --target none $(DEBUG) $<
+	ca65 --target none $(DEBUG) --include-dir $(ASM_INCLUDE)  $<
 
 kernel.bin: $(OBJS) kernel.inc
 	ld65 $(LDFLAGS) $(OBJS) -m kernel.map -Ln symbols.txt -o kernel.bin 

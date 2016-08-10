@@ -1,13 +1,14 @@
 .include "kernel.inc"
 .include "fat32.inc"
 .include "errno.inc"
+.include "filedes.inc"
 
 .import sd_read_block, sd_read_multiblock, sd_write_block, sd_select_card, sd_deselect_card
 ;.importzp ptr1
         
 .export fat_mount
 .export fat_open, fat_open2, fat_open_rootdir, fat_isOpen
-.export fat_read, fat_find_first, fat_find_next, fat_clone_cd_2_td
+.export fat_read, fat_find_first, fat_find_next
 .export fat_close_all, fat_close
 
 ; DEBUG
