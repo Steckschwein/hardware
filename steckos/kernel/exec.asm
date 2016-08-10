@@ -2,10 +2,9 @@
 
 .segment "KERNEL"
 
-;.import	krn_open_rootdir, krn_open, krn_read, krn_close
-
 .import fat_open, fat_open_rootdir, fat_read, fat_close, fat_clone_cd_2_td, fat_open2
-
+;.importzp ptr1
+        
 .export execv
 
 .ifdef DEBUG    ; debug stuff
@@ -24,7 +23,8 @@
 
 ;		int execv(const char *path, char *const argv[]);
 execv:
-        Copy    cmdptr, pPath, 2
+        sta ptr1
+        stx ptr1+1
         sec		; set carry, we use temp dir fd during open
         jsr fat_open2
         lda errno

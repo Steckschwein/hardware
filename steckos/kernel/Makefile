@@ -16,7 +16,6 @@ kernel.bin: $(OBJS) kernel.inc
 	ld65 $(LDFLAGS) $(OBJS) -m kernel.map -Ln symbols.txt -o kernel.bin 
 	grep krn symbols.txt | sed "s/al 00//" | awk -F' ' '{print $$2" = $$"$$1}'| sed -e "s/^\.//g" > kernel_jumptable.inc
 
-
 loader.bin: kernel.bin loader.o
 	cl65 --target none --config steckos.cfg loader.asm -o loader.bin
 

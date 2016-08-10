@@ -587,8 +587,9 @@ cd:
 
 
 run:
-        jsr krn_execv
-        lda errno
+        lda cmdptr
+        ldx cmdptr+1    ; cmdline in a/x
+        jsr krn_execv   ; return A with errorcode
 		jsr krn_hexout
         jmp mainloop
 

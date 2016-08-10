@@ -17,13 +17,15 @@ crs_ptr = $e4
 ; OUT
 msgptr  = $e6		; 2 bytes
 
+; kernel pointer
+ptr1    = $e8
+
 ; SPI
 spitmp 	= $ea
 
 ; FAT32
 filenameptr = $f0   ; 2 byte
 dirptr 		= $f2 	; 2 byte
-pPath       = $f4   ; 2 byte
 
 ; SDCARD
 sd_read_blkptr = $f9

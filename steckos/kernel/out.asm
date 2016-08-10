@@ -1,8 +1,8 @@
+.include "kernel.inc"
 
 .segment "KERNEL"
 .export chrout, hexout, strout, primm, print_crlf
 .import textui_chrout
-.include "kernel.inc"
 
 ;----------------------------------------------------------------------------------------------
 ; Output char on active output device

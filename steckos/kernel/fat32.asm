@@ -1,9 +1,10 @@
 .include "kernel.inc"
 .include "fat32.inc"
-
 .include "errno.inc"
 
 .import sd_read_block, sd_read_multiblock, sd_write_block, sd_select_card, sd_deselect_card
+;.importzp ptr1
+        
 .export fat_mount
 .export fat_open, fat_open2, fat_open_rootdir, fat_isOpen
 .export fat_read, fat_find_first, fat_find_next, fat_clone_cd_2_td
@@ -52,7 +53,6 @@ fat_read2:
         debug32s "fr2 lba: ", lba_addr
 		debug24s "fr2 bc: ", blocks
 		jmp sd_read_block
-		
 
 		;in: 
 		;	x - offset into fd_area
@@ -71,7 +71,7 @@ fat_read:
 ;		jmp sd_read_block
  
         ;in:
-        ;   pPath - pointer to the file path
+        ;   ptr1 - pointer to the file path
         ;   C - (carry) if set the temp dir file descriptor - index 0+FD_Entry_Size - will be used for the opened directory, otherwise (clc) the current dir file descriptor - index 0 within fd_area - is used and overwritten
         ;out: 
         ;   x - index into fd_area of the opened file
@@ -85,7 +85,7 @@ fat_open2:
 @l0:
 		ldy	#0
 		;	trimm first chars
-@l1:	lda (pPath), y
+@l1:	lda (ptr1), y
 		cmp	#' '
 		bne	@l2
 		iny 
@@ -104,7 +104,7 @@ fat_open2:
 @l3:	;	parse path fragments and change dirs accordingly
 		ldx #0
 @l_parse_1:
-        lda	(pPath), y
+        lda	(ptr1), y
 		beq	@l_openfile
 		cmp	#' '    ;TODO FIXME file/dir name with space?
 		beq	@l_openfile
