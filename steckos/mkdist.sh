@@ -1,7 +1,7 @@
 #!/bin/bash
 
 TARGET=$1
-TOOLS="date.bin hello.bin more.bin uname.bin fibo.bin nvram.bin type.bin view.bin"
+TOOLS="ls.bin date.bin hello.bin uname.bin fibo.bin nvram.bin"
 
 mkdir -p dist/bin
 for n in loader.bin shell.bin ; do
