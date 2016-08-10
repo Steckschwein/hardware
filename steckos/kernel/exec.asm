@@ -25,7 +25,7 @@
 ;		int execv(const char *path, char *const argv[]);
 execv:
         Copy    cmdptr, pPath, 2
-        sec
+        sec		; set carry, we use temp dir fd during open
         jsr fat_open2
         lda errno
         bne @l_err

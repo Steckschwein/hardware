@@ -24,12 +24,14 @@ KEY_ESCAPE_CRSR_UP	= 'A'
 KEY_ESCAPE_CRSR_DOWN	= 'B'
 BUF_SIZE			= 32
 
+PATH:	.asciiz "/bin:/usr/bin:."
+
 entries = $00
 
 buf 				= $e600
 ;endbuf				= buf + BUF_SIZE*16
 bufptr				= $d0
-bufhwm				= $d2
+;bufhwm				= $d2
 ; Address pointers for serial upload
 startaddr			= $d9
 entryvec			= $d4
@@ -768,7 +770,4 @@ decoutz:
  ; Lookup table for decimal to ASCII
 dec_tbl:			.byte 128,160,200
 
-
-exec_extension:		.byte ".bin",$00
-filename: 			.byte "            ",$00
 pattern:			.byte "*.*",$00

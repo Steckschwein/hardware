@@ -75,7 +75,9 @@ fat_read:
         ;   C - (carry) if set the temp dir file descriptor - index 0+FD_Entry_Size - will be used for the opened directory, otherwise (clc) the current dir file descriptor - index 0 within fd_area - is used and overwritten
         ;out: 
         ;   x - index into fd_area of the opened file
-        ;   errno - set on errot
+        ;   A - errno 
+		; 	@DEPRECTAED 
+		;		errno (zp) - error code, 0 if no error occured
 fat_open2:
         ;php
         bcc @l0
