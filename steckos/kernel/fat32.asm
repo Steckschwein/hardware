@@ -71,7 +71,7 @@ fat_read:
 ;		jmp sd_read_block
  
         ;in:
-        ;   ptr1 - pointer to the file path
+        ;   a/x - pointer to the file path
         ;   C - (carry) if set the temp dir file descriptor - index 0+FD_Entry_Size - will be used for the opened directory, otherwise (clc) the current dir file descriptor - index 0 within fd_area - is used and overwritten
         ;out: 
         ;   x - index into fd_area of the opened file
@@ -79,13 +79,15 @@ fat_read:
 		; 	@DEPRECTAED 
 		;		errno (zp) - error code, 0 if no error occured
 fat_open2:
+        sta krn_ptr1
+        stx krn_ptr1+1
         ;php
         bcc @l0
         jsr fat_clone_cd_2_td        ; clone cd 2 temp dir
 @l0:
 		ldy	#0
 		;	trimm wildcard at the beginning
-@l1:	lda (ptr1), y
+@l1:	lda (krn_ptr1), y
 		cmp	#' '
 		bne	@l2
 		iny 
@@ -102,7 +104,7 @@ fat_open2:
 @l3:	;	parse path fragments and change dirs accordingly
 		ldx #0
 @l_parse_1:
-        lda	(ptr1), y
+        lda	(krn_ptr1), y
 		beq	@l_openfile
 		cmp	#' '    ;TODO FIXME file/dir name with space?
 		beq	@l_openfile
@@ -639,10 +641,15 @@ fat_alloc_fd:
 
         ; in:
         ;   x - offset into fd_area
+        ; out:
+        ;   C - carry set if file is not open
+        ;   A - error code if one, A = 0 otherwise
 fat_close:
-		lda #$ff
-		sta fd_area + FD_start_cluster +3 , x
-		rts
+        lda fd_area + FD_start_cluster +3 , x
+        cmp #$ff	;#$ff means not open, carry is set...
+        bcs @l1
+        sta fd_area + FD_start_cluster +3 , x
+@l1:    rts
 
 fat_close_all:
 		ldx #(2*FD_Entry_Size)	; skip 2 entries, they're reserverd for current and temp dir

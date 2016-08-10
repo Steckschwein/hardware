@@ -10,13 +10,11 @@
         .import fdtoiocb_down,__inviocb
 
 .proc   _close
-;        jsr     fdtoiocb_down           ; get iocb index into X and decr. usage count
-        bmi     inverr
-        bne     ok                      ; not last one -> don't close yet
- ;       lda     #CLOSE
-;        sta     ICCOM,x
- ;       jsr     CIOV
-        bmi     closerr
+        
+        tax     ;   a/x with fd - accu to x, cause it's offset for krn_close
+        jsr     krn_close
+        bcs     closerr
+        
 ok:     ldx     #0
         stx     __oserror               ; clear system specific error code
         txa

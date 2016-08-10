@@ -2,13 +2,10 @@
 ;
 ; int open(const char *name,int flags,...);
 
-;TODO FIXME tmpX stuff
-        ;tmp3 = 19
-        
 		.include "fcntl.inc"
         .include "errno.inc"
 		.include	"../kernel/kernel_jumptable.inc"
-		.include	"../kernel/zeropage.inc"
+;		.include	"../kernel/zeropage.inc"
 
         .export _open
         .destructor     closeallfiles, 5
@@ -47,9 +44,7 @@ parmok: jsr     popax           ; Get flags
 
         jsr     popax           ; Get name, ptr low/high in a/x
 		
-		sta		pPath			; setup path pointer
-		stx		pPath+1
-		jsr		krn_open2
+		jsr		krn_open2       ; with a/x ptr to path
 		
         ;jsr     fnparse         ; Parse it
         ;tax

@@ -23,8 +23,6 @@
 
 ;		int execv(const char *path, char *const argv[]);
 execv:
-        sta ptr1
-        stx ptr1+1
         sec		; set carry, we use temp dir fd during open
         jsr fat_open2
         lda errno

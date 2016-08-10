@@ -17,8 +17,8 @@ crs_ptr = $e4
 ; OUT
 msgptr  = $e6		; 2 bytes
 
-; kernel pointer
-ptr1    = $e8
+; kernel pointer (internally used)
+krn_ptr1    = $e8
 
 ; SPI
 spitmp 	= $ea

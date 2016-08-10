@@ -17,11 +17,19 @@ int main(int argc, char *argv[])
         cprintf("could not open '%s': %s\n", argv[1], strerror(errno)); 
         return EXIT_FAILURE;
     }
-    cprintf("file '%s' opened successfully.\n", argv[1]);
+    cprintf("file '%s' opened successfully fs='%d'\n", argv[1], f1);
+    
+    i = fclose(f1);
+    cprintf("file closed %d\n", i);
+    
+    return EXIT_SUCCESS;
+    
     if (feof(f1)) {
         cprintf("end of file reached..., read %d bytes\n", i);
         return EXIT_SUCCESS;
     }
     c = fgetc(f1);
     cprintf("read char %x\n", c);
+    
+    return EXIT_SUCCESS;
 }  
