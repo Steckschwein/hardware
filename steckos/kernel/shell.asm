@@ -24,7 +24,7 @@ KEY_ESCAPE_CRSR_UP	= 'A'
 KEY_ESCAPE_CRSR_DOWN	= 'B'
 BUF_SIZE			= 32
 
-PATH:	.asciiz "/bin:/usr/bin:."
+; PATH:	.asciiz "/bin:/usr/bin:."
 
 entries = $00
 
@@ -590,7 +590,51 @@ run:
         lda cmdptr
         ldx cmdptr+1    ; cmdline in a/x
         jsr krn_execv   ; return A with errorcode
-		jsr krn_hexout
+		; jsr krn_hexout
+		cmp #$00
+		beq back
+
+		ldx #$00
+copy_prefix:
+		lda path_prefix,x
+		beq copy_cmd
+		sta tmpbuf,x
+		inx
+		bra copy_prefix
+copy_cmd:
+		; inx 
+		ldy #$00
+copyloop:
+		lda (cmdptr),y
+		beq end
+		cmp #$20
+		beq end 
+		sta tmpbuf,x
+		iny
+		inx
+		stz tmpbuf,x
+		bra copyloop
+
+end:		
+
+		lda #<tmpbuf
+		ldx #>tmpbuf    ; cmdline in a/x
+		jsr krn_execv   ; return A with errorcode
+
+
+
+
+; 		ldx #$00
+
+; printloop:
+; 		lda tmpbuf,x
+; 		beq back
+; 		jsr krn_chrout
+; 		inx
+; 		bra printloop
+
+
+back:
         jmp mainloop
 
 
@@ -772,3 +816,5 @@ decoutz:
 dec_tbl:			.byte 128,160,200
 
 pattern:			.byte "*.*",$00
+path_prefix:		.asciiz "/bin/"
+tmpbuf:
