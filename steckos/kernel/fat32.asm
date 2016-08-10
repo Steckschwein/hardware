@@ -84,7 +84,7 @@ fat_open2:
         jsr fat_clone_cd_2_td        ; clone cd 2 temp dir
 @l0:
 		ldy	#0
-		;	trimm first chars
+		;	trimm wildcard at the beginning
 @l1:	lda (ptr1), y
 		cmp	#' '
 		bne	@l2
@@ -95,12 +95,10 @@ fat_open2:
 @l2:	;	starts with / ? - cd root
 		cmp	#'/'
 		bne	@l31
-		phy
         sec ;FIXME
 		jsr fat_open_rootdir
-		ply
 		iny
-@l31:   SetVector   pathFragment, filenameptr	; filenameptr to 
+@l31:   SetVector   pathFragment, filenameptr	; filenameptr to path fragment
 @l3:	;	parse path fragments and change dirs accordingly
 		ldx #0
 @l_parse_1:
@@ -132,12 +130,12 @@ fat_open2:
 @l_end:
 		rts        
 @l_openfile:
-        stz pathFragment, x   ;'\0' terminate
+		_open				; return with x as offset to fd_area
         debugstr "op:", pathFragment
         debugptr "fp:", filenameptr
-		_open				; return with x as offset to fd_area
         rts
 pathFragment: .res 8+1+3+1; 12 chars + \0 for path fragment
+
 
         ;in:
         ;   filenameptr - ptr to the filename
