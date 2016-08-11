@@ -18,11 +18,8 @@ text_mode_40 = 1
 .import keyin, getkey
 .import textui_enable, textui_disable, vdp_display_off,  textui_blank, textui_update_crs_ptr, textui_crsxy, textui_screen_dirty
 .import init_sdcard
-.import fat_mount, fat_open, fat_open2, fat_isOpen, fat_open_rootdir, fat_close, fat_close_all, fat_read, fat_find_first, fat_find_next
+.import fat_mount, fat_open, fat_open2, fat_isOpen, fat_open_rootdir, fat_close, fat_close_all, fat_read, fat_find_first, fat_find_next, fat_chdir
 .import execv
-
-;TODO FIXME testing purpose only
-.import vdp_bgcolor
 
 kern_init:
     sei
@@ -257,6 +254,8 @@ krn_mount: 				    jmp fat_mount
 krn_open: 				    jmp fat_open
 .export krn_open2
 krn_open2: 				    jmp fat_open2
+.export krn_chdir
+krn_chdir: 				    jmp fat_chdir
 
 .export krn_isOpen
 krn_isOpen: 				jmp fat_isOpen

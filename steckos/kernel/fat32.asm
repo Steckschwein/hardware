@@ -7,7 +7,7 @@
 ;.importzp ptr1
         
 .export fat_mount
-.export fat_open, fat_open2, fat_open_rootdir, fat_isOpen
+.export fat_open, fat_open2, fat_open_rootdir, fat_isOpen, fat_chdir
 .export fat_read, fat_find_first, fat_find_next
 .export fat_close_all, fat_close
 
@@ -36,7 +36,7 @@
 
 .macro _open
 		stz	pathFragment, x	;\0 terminate the current path fragment
-        sec
+        sec	;FIXME must be value from above
 		jsr	fat_open
 		lda	errno
 		beq	:+
@@ -71,6 +71,29 @@ fat_read:
 		jmp sd_read_multiblock
 ;		jmp sd_read_block
  
+ 
+		;in:
+        ;   a/x - pointer to the file path
+        ;out: 
+        ;   A - errno 
+fat_chdir:
+		sec						; change dir  using temp dir to not clobber the current dir, maybe we will run into an error
+		jsr fat_open2
+		bne	@l_err_exit			; exit on error
+		lda	fd_area + FD_file_attr, x
+		bit #FD_ATTR_DIR		; check that there is no error and we have a directory
+		beq	@l_err
+								; the temp dir fd is now set to the last dir of the path and we proofed that it's valid with the code above
+		jmp	fat_clone_td_2_cd
+@l_err:
+		lda	#EINVAL				; TODO FIXME error code for "Not a directory"
+@l_err_exit:
+.ifdef DEBUG
+		sta errno
+		debug8s	"fcd:", errno
+.endif
+		rts
+ 
         ;in:
         ;   a/x - pointer to the file path
         ;   C - (carry) if set the temp dir file descriptor - index 0+FD_Entry_Size - will be used for the opened directory, otherwise (clc) the current dir file descriptor - index 0 within fd_area - is used and overwritten
@@ -84,10 +107,10 @@ fat_open2:
         stx krn_ptr1+1
         ;php
         bcc @l0
-        jsr fat_clone_cd_2_td        ; clone cd 2 temp dir
+        jsr fat_clone_cd_2_td        ; clone current dir fd 2 temp dir fd
 @l0:
 		ldy	#0
-		;	trimm wildcard at the beginning
+		;	trim wildcard at the beginning
 @l1:	lda (krn_ptr1), y
 		cmp	#' '
 		bne	@l2
@@ -98,7 +121,7 @@ fat_open2:
 @l2:	;	starts with / ? - cd root
 		cmp	#'/'
 		bne	@l31
-        sec ;FIXME
+        sec ;FIXME must be value from above
 		jsr fat_open_rootdir
 		iny
 @l31:   SetVector   pathFragment, filenameptr	; filenameptr to path fragment
@@ -115,7 +138,7 @@ fat_open2:
 		sta pathFragment, x
 		iny
 		inx
-		cpx	#12	        ; 8.3 file support only
+		cpx	#8+1+3	        ; 8.3 file support only
 		bne	@l_parse_1
         lda #EINVAL
         bra @l_err
@@ -598,6 +621,10 @@ fat_open_rootdir_temp:
         ; clone file descriptor of current dir to temp directory
 fat_clone_cd_2_td:
 		Copy fd_area + FD_INDEX_CURRENT_DIR + FD_start_cluster, fd_area + FD_INDEX_TEMP_DIR + FD_start_cluster, 3
+        rts
+        ; clone file descriptor of current dir to temp directory
+fat_clone_td_2_cd:
+		Copy fd_area + FD_INDEX_TEMP_DIR + FD_start_cluster, fd_area + FD_INDEX_CURRENT_DIR + FD_start_cluster, 3
         rts
 
 		; in:

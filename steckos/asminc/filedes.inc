@@ -13,3 +13,7 @@ FD_file_attr = $08		; 8 Bit fat32 Attributes
 
 FD_INDEX_CURRENT_DIR = 0			    ; current dir always go to fd #0
 FD_INDEX_TEMP_DIR    = FD_Entry_Size    ; temp dir always go to fd #1
+
+
+FD_ATTR_DIR				= 1<<4;
+FD_ATTR_FILE			= 1<<5;

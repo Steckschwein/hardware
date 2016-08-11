@@ -27,25 +27,29 @@
 execv:
         sec				; set carry, we use temp dir fd during open
         jsr fat_open2	; x - offset to fd_area
-        lda errno
         bne @l_err
 		
-		lda	fd_area + FD_file_attr, x	; TODO FIXME also check whether it's executable
-		bit #$20		; must be a file
+		lda	fd_area + FD_file_attr, x
+		bit #FD_ATTR_FILE		; check that whether it's a regular file
 		bne	@l0
-		lda	#EINVAL
-		bra	@l_err
+		lda	#EINVAL				; TODO FIXME error code for "Is a directory"
+		bra @l_err_exit
 		
 @l0:	SetVector appstart, sd_read_blkptr
 		jsr	fat_read
-		jsr	fat_close
-        lda errno
-        bne @l_err
+		jsr	fat_close	; close regardless of error
+		lda	errno
+		bne	@l_err_exit
 @l_exec_run:
         ;TODO FIXME check excecutable - SOS65 header ;)
 		jmp	appstart
-@l_err:	
+@l_err:
+		lda	#EINVAL
+@l_err_exit:
+.ifdef DEBUG
+		sta errno
 		debug8s	"exce:", errno
+.endif
 		rts
 
 
