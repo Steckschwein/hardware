@@ -76,11 +76,11 @@ fat_chdir:
 		bit #FD_ATTR_DIR		; check that there is no error and we have a directory
 		beq	@l_err
 								; the temp dir fd is now set to the last dir of the path and we proofed that it's valid with the code above
-		jmp	fat_clone_td_2_cd	; therefore we can simply clone the temp dir to current dir fd ftw...
+		jmp	fat_clone_td_2_cd	; therefore we can simply clone the temp dir to current dir fd - ftw...
 @l_err:
 		lda	#EINVAL				; TODO FIXME error code for "Not a directory"
 @l_err_exit:
-		debugA	"fcd:"
+		debugA	"fcd:"        
 		rts
  
         ;in:
@@ -88,19 +88,19 @@ fat_chdir:
         ;   C - (carry) if set the temp dir file descriptor - index 0+FD_Entry_Size - will be used for the opened directory, otherwise (clc) the current dir file descriptor - index 0 within fd_area - is used and overwritten
         ;out: 
         ;   x - index into fd_area of the opened file
-        ;   A - errno
+        ;   a - errno
+fat_open2:
+
 .macro _open
 		stz	pathFragment, x	;\0 terminate the current path fragment
-;        debugstr "op:", pathFragment
-        debugptr "fp:", filenameptr
+        debugstr "op2:", pathFragment
+;        debugptr "fp:", filenameptr
         sec	;FIXME must be value from above
 		jsr	fat_open
 		lda	errno	; FIXME get rid of errno
-		bne @l_err
+		bne @l_exit
 :
 .endmacro
-
-fat_open2:
         sta krn_ptr1
         stx krn_ptr1+1				 ; save path arg
         jsr fat_clone_cd_2_td        ; clone current dir fd to temp dir fd
@@ -117,9 +117,15 @@ fat_open2:
 @l2:	;	starts with / ? - cd root
 		cmp	#'/'
 		bne	@l31
-        sec ;FIXME must be value from above
+        sec ;FIXME must be value from above        
 		jsr fat_open_rootdir
 		iny
+        lda	(krn_ptr1), y
+		beq	@l_exit         ; end of input? so it was the '/'
+        cmp #' '            ; or space
+        bne @l31
+        lda #0              ; exit, no error
+        bra @l_exit
 @l31:   SetVector   pathFragment, filenameptr	; filenameptr to path fragment
 @l3:	;	parse path fragments and change dirs accordingly
 		ldx #0
@@ -144,8 +150,8 @@ fat_open2:
 		bne	@l3
 		;TODO FIXME handle overflow - <path argument> too large
 		lda	#EINVAL
-@l_err:
-		debugA	"fo2e:"
+@l_exit:
+		debugA	"f2e:"
 		rts        
 @l_openfile:
 		_open				; return with x as offset to fd_area

@@ -561,7 +561,7 @@ cd:
 @l2:
 		jsr krn_primm
 		.asciiz "cd ok"
-		jmp mainloop 
+		jmp mainloop
 
 
 run:

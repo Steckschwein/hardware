@@ -1,8 +1,12 @@
 
 .macro debugA st
     pha
+    pha
     jsr primm
-    .asciiz st, "A"
+    .asciiz st, " A "
+    pla
+    jsr hexout
+    debug_newline
     pla
 .endmacro
 
@@ -16,19 +20,14 @@
     phx 
     pha
     jsr primm
-    .asciiz st, "AXY "
+    .asciiz st, " AXY "
     pla
     jsr hexout
-    lda #' '
-    jsr chrout
     pla
     jsr hexout
-    lda #' '
-    jsr chrout
     pla
     jsr hexout
     debug_newline
-    
     ply
     plx
     pla    
