@@ -34,16 +34,6 @@
 	sta where
 .endmacro
 
-.macro _open
-		stz	pathFragment, x	;\0 terminate the current path fragment
-        sec	;FIXME must be value from above
-		jsr	fat_open
-		lda	errno
-		beq	:+
-        bra @l_err
-:
-.endmacro
-
 		;in: 
 		;	x - offset into fd_area
 fat_read2:
@@ -88,10 +78,7 @@ fat_chdir:
 @l_err:
 		lda	#EINVAL				; TODO FIXME error code for "Not a directory"
 @l_err_exit:
-.ifdef DEBUG
-		sta errno
-		debug8s	"fcd:", errno
-.endif
+		debugA	"fcd:"
 		rts
  
         ;in:
@@ -99,16 +86,23 @@ fat_chdir:
         ;   C - (carry) if set the temp dir file descriptor - index 0+FD_Entry_Size - will be used for the opened directory, otherwise (clc) the current dir file descriptor - index 0 within fd_area - is used and overwritten
         ;out: 
         ;   x - index into fd_area of the opened file
-        ;   A - errno 
-		; 	@DEPRECTAED 
-		;		errno (zp) - error code, 0 if no error occured
+        ;   A - errno
+.macro _open
+		stz	pathFragment, x	;\0 terminate the current path fragment
+;        debugstr "op:", pathFragment
+        debugptr "fp:", filenameptr
+        sec	;FIXME must be value from above
+		jsr	fat_open
+		lda	errno	; FIXME get rid of errno
+		bne @l_err
+:
+.endmacro
+
 fat_open2:
         sta krn_ptr1
-        stx krn_ptr1+1
-        ;php
-        bcc @l0
-        jsr fat_clone_cd_2_td        ; clone current dir fd 2 temp dir fd
-@l0:
+        stx krn_ptr1+1				 ; save path arg
+        jsr fat_clone_cd_2_td        ; clone current dir fd to temp dir fd
+		
 		ldy	#0
 		;	trim wildcard at the beginning
 @l1:	lda (krn_ptr1), y
@@ -117,7 +111,7 @@ fat_open2:
 		iny 
 		bne @l1
         lda #EINVAL
-        bra @l_err
+        rts
 @l2:	;	starts with / ? - cd root
 		cmp	#'/'
 		bne	@l31
@@ -130,7 +124,7 @@ fat_open2:
 @l_parse_1:
         lda	(krn_ptr1), y
 		beq	@l_openfile
-		cmp	#' '    ;TODO FIXME file/dir name with space?
+		cmp	#' '    ;TODO FIXME support file/dir name with spaces? it's beyond 8.3 file support
 		beq	@l_openfile
 		cmp	#'/'
 		beq	@l_open
@@ -141,7 +135,7 @@ fat_open2:
 		cpx	#8+1+3	        ; 8.3 file support only
 		bne	@l_parse_1
         lda #EINVAL
-        bra @l_err
+        rts
 @l_open:
 		_open
 		iny	
@@ -149,16 +143,10 @@ fat_open2:
 		;TODO FIXME handle overflow - <path argument> too large
 		lda	#EINVAL
 @l_err:
-.ifdef DEBUG
-        sta errno
-		debug8s	"oe:", errno
-.endif
-@l_end:
+		debugA	"fo2e:"
 		rts        
 @l_openfile:
 		_open				; return with x as offset to fd_area
-        debugstr "op:", pathFragment
-        debugptr "fp:", filenameptr
         rts
 pathFragment: .res 8+1+3+1; 12 chars + \0 for path fragment
 
@@ -700,7 +688,7 @@ fat_find_first:
 ;		ldx #FD_INDEX_CURRENT_DIR
 ;        debugcpu "fst"
 		jsr calc_lba_addr
- ;       debug32s "ff lba: ", lba_addr
+		debug32s "fst lba: ", lba_addr
 		
 ff_l3:	SetVector sd_blktarget, dirptr	
 		jsr sd_read_block
@@ -733,6 +721,7 @@ fat_find_next:
 		bcc ff_l4			; no, show entr
 		; increment lba address to read next block 
 		jsr inc_lba_address
+		; TODO FIXME check whether the end of the cluster is reached
 		bra ff_l3
 
 ff_end:

@@ -1,4 +1,11 @@
 
+.macro debugA st
+    pha
+    jsr primm
+    .asciiz st, "A"
+    pla
+.endmacro
+
 .macro debugcpu st
 .ifdef DEBUG
     pha
