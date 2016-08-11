@@ -4,6 +4,7 @@
 .segment "KERNEL"
 .import spi_rw_byte, spi_r_byte
 .export init_sdcard, sd_read_block, sd_read_multiblock, sd_write_block, sd_select_card, sd_deselect_card
+.export sd_read_block_data
 
 ;---------------------------------------------------------------------
 ; check sd card presence and state of the read only switch
@@ -212,6 +213,14 @@ sd_cmd:
 	rts
 	
 ;---------------------------------------------------------------------
+; Read block from SD Card to kernel data block buffer
+;
+sd_read_block_data:
+        ;SetVector
+        jmp sd_read_block
+
+
+;---------------------------------------------------------------------
 ; Read block from SD Card
 ;---------------------------------------------------------------------
 sd_read_block:
@@ -233,7 +242,7 @@ sd_read_block:
 		bne @lx
         ;TODO FIXME error sd error codes 
         sta errno
-        bra @exit        
+        bra @exit
 @l1:
 		; wait for sd card data token
 		jsr sd_wait_data_token
@@ -251,7 +260,7 @@ sd_read_block:
 
 @exit:
 		jmp sd_deselect_card
-
+        
 halfblock:
 @l:		
 		jsr spi_r_byte

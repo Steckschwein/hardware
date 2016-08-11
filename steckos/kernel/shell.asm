@@ -552,34 +552,12 @@ dir_entry:
 
 
 cd:
-		; is it a slash?
-		ldy #$00
-		lda (paramptr),y
-		cmp #'/'
-		bne @l1
-		iny
-		lda (paramptr),y
-		bne @l1
-		
-		; its a slash, nothing else. cd to /
-		clc
-        jsr krn_open_rootdir
-		jmp mainloop
-
-@l1:	; not a slash. cd to whatever
-
-		jsr param2fileptr
-		
-		crlf
-
-        clc
-		jsr krn_open
-
-		lda errno
+        lda paramptr
+        ldx paramptr+1
+        jsr krn_chdir
 		beq @l2
 		jsr errmsg
-		
-		jmp mainloop
+        jmp mainloop
 @l2:
 		jsr krn_primm
 		.asciiz "cd ok"

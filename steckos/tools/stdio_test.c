@@ -9,6 +9,9 @@ int main(int argc, char *argv[])
     FILE *f1;
     char c;
     unsigned int i;
+    unsigned int n;
+    unsigned char *buf[32];
+    
     if (argc < 2) {
         return EXIT_FAILURE;
     }
@@ -17,19 +20,20 @@ int main(int argc, char *argv[])
         cprintf("could not open '%s': %s\n", argv[1], strerror(errno)); 
         return EXIT_FAILURE;
     }
-    cprintf("file '%s' opened successfully fs='%d'\n", argv[1], f1);
-    
-    i = fclose(f1);
-    cprintf("file closed %d\n", i);
-    
-    return EXIT_SUCCESS;
-    
+    cprintf("file '%s' opened fd='%d'\n", argv[1], f1);
+
+    i = fread(buf, sizeof(buf), sizeof(char), f1);
+    cprintf("read %d\n", i);
+    for(n=0;n<i;n++){
+//        cprintf("%x ", buf[n]);
+    }
     if (feof(f1)) {
         cprintf("end of file reached..., read %d bytes\n", i);
         return EXIT_SUCCESS;
     }
-    c = fgetc(f1);
-    cprintf("read char %x\n", c);
+    
+    i = fclose(f1);
+    cprintf("file closed %d\n", i);
     
     return EXIT_SUCCESS;
 }  

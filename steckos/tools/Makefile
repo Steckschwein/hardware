@@ -39,6 +39,9 @@ time-test: time-test.bin
     
 fibo: fibo.bin
 	../../transfer.py fibo.bin -s 0x1000
+    
+ls: ls.bin
+	../../transfer.py ls.bin -s 0x1000
 	
 %.bin: %.a
 	acme -v -Wtype-mismatch -f plain --cpu 65c02 -o $@ $<

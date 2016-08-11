@@ -41,8 +41,16 @@
 		bcs     invalidfd
 
 ; Read the block
-		;jsr		krn_read2
-
+		jsr		krn_read2
+        
+        ldy     #0
+        lda     
+        
+        ;TODO FIXME
+        lda     #0
+        ldx     #1  ;512Bytes read
+        bra     eof
+        
 @L0:    ;jsr     BASIN
 		
 ; Store the byte just read

@@ -32,11 +32,6 @@ sd_blocksize				= $200
 	;.res			11, 0 ;fill up to $20
 .endstruct
 
-
-;TODO FIXME needs clarification
-block_fat                   = $d800
-block_data                  = $da00
-
 ; TODO FIXME replace with errno.inc from cc65 api
 fat_bad_block_signature		= 	$01
 fat_invalid_partition_type	=	$02
