@@ -84,7 +84,7 @@ fat_chdir:
 		bit #FD_ATTR_DIR		; check that there is no error and we have a directory
 		beq	@l_err
 								; the temp dir fd is now set to the last dir of the path and we proofed that it's valid with the code above
-		jmp	fat_clone_td_2_cd
+		jmp	fat_clone_td_2_cd	; therefore we can simply clone the temp dir to current dir fd ftw...
 @l_err:
 		lda	#EINVAL				; TODO FIXME error code for "Not a directory"
 @l_err_exit:
