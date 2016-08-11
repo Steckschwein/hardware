@@ -44,7 +44,7 @@
 		jsr		krn_read2
         
         ldy     #0
-        lda     
+;        lda     
         
         ;TODO FIXME
         lda     #0
