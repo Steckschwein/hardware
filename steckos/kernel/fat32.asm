@@ -68,7 +68,7 @@ fat_read:
         ;   a/x - pointer to the file path
         ;out: 
         ;   a - errno 
-        ;   x - index into fd_aread of the opened directory
+        ;   x - index into fd_area of the opened directory
 fat_chdir:
 		sec						; change dir  using temp dir to not clobber the current dir, maybe we will run into an error
 		jsr fat_open2
@@ -76,14 +76,18 @@ fat_chdir:
         lda	fd_area + FD_file_attr, x
 		bit #FD_ATTR_DIR		; check that there is no error and we have a directory
 		beq	@l_err
-                                
+
+        phx
 		ldx #FD_INDEX_TEMP_DIR  ; the temp dir fd is now set to the last dir of the path and we proofed that it's valid with the code above
         ldy #FD_INDEX_CURRENT_DIR
-        jmp	fat_clone_fd        ; therefore we can simply clone the temp dir to current dir fd - ftw...
+        jsr	fat_clone_fd        ; therefore we can simply clone the temp dir to current dir fd - ftw...
+        plx
+        lda #0                  ; k, no error
+        rts
 @l_err:
 		lda	#EINVAL				; TODO FIXME error code for "Not a directory"
 @l_err_exit:
-		debugA	"fcd"        
+		debugA	"cde"        
 		rts
  
         ;in:
