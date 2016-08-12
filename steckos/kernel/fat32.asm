@@ -117,7 +117,6 @@ fat_open2:
 @l2:	;	starts with / ? - cd root
 		cmp	#'/'
 		bne	@l31
-        sec ;FIXME must be value from above        
 		jsr fat_open_rootdir
 		iny
         lda	(krn_ptr1), y
@@ -603,19 +602,14 @@ fat_mount:
 
 end_mount:
 		restore
-        ; go on, open_rootdir as current dir
-        clc
+		Copy root_dir_first_clus, fd_area + FD_INDEX_CURRENT_DIR + FD_start_cluster, 3
+        ldx #FD_INDEX_CURRENT_DIR
+        rts
         
         ;   
         ; out:
         ;   x - offset to fd area
 fat_open_rootdir:
-        bcs fat_open_rootdir_temp
-        ; Set root dir to FD_INDEX_TEMP_DIR
-		Copy root_dir_first_clus, fd_area + FD_INDEX_CURRENT_DIR + FD_start_cluster, 3
-        ldx #FD_INDEX_CURRENT_DIR
-        rts
-fat_open_rootdir_temp:
         Copy root_dir_first_clus, fd_area + FD_INDEX_TEMP_DIR + FD_start_cluster, 3
         ldx #FD_INDEX_TEMP_DIR
 		rts
