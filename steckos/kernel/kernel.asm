@@ -43,11 +43,6 @@ kern_init:
     .byte $00
     
 	
-; loop:
-; 	jsr keyin
-; 	jsr hexout
-; 	bra loop
-	
 	jsr init_sdcard
     debug8s "init e:", errno
 	lda errno

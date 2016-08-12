@@ -67,12 +67,13 @@ fat_read:
 		;in:
         ;   a/x - pointer to the file path
         ;out: 
-        ;   A - errno 
+        ;   a - errno 
+        ;   x - index into fd_aread of the opened directory
 fat_chdir:
 		sec						; change dir  using temp dir to not clobber the current dir, maybe we will run into an error
 		jsr fat_open2
 		bne	@l_err_exit			; exit on error
-		lda	fd_area + FD_file_attr, x
+        lda	fd_area + FD_file_attr, x
 		bit #FD_ATTR_DIR		; check that there is no error and we have a directory
 		beq	@l_err
 								; the temp dir fd is now set to the last dir of the path and we proofed that it's valid with the code above
@@ -80,7 +81,7 @@ fat_chdir:
 @l_err:
 		lda	#EINVAL				; TODO FIXME error code for "Not a directory"
 @l_err_exit:
-		debugA	"fcd:"        
+		debugA	"fcd"        
 		rts
  
         ;in:
@@ -94,7 +95,6 @@ fat_open2:
 .macro _open
 		stz	pathFragment, x	;\0 terminate the current path fragment
         debugstr "op2:", pathFragment
-;        debugptr "fp:", filenameptr
         sec	;FIXME must be value from above
 		jsr	fat_open
 		lda	errno	; FIXME get rid of errno
@@ -121,7 +121,7 @@ fat_open2:
 		jsr fat_open_rootdir
 		iny
         lda	(krn_ptr1), y
-		beq	@l_exit         ; end of input? so it was the '/'
+		beq	@l_exit         ; end of input? so it was just the '/'
         cmp #' '            ; or space
         bne @l31
         lda #0              ; exit, no error
@@ -605,13 +605,19 @@ end_mount:
 		restore
         ; go on, open_rootdir as current dir
         clc
-fat_open_rootdir: 
+        
+        ;   
+        ; out:
+        ;   x - offset to fd area
+fat_open_rootdir:
         bcs fat_open_rootdir_temp
         ; Set root dir to FD_INDEX_TEMP_DIR
 		Copy root_dir_first_clus, fd_area + FD_INDEX_CURRENT_DIR + FD_start_cluster, 3
+        ldx #FD_INDEX_CURRENT_DIR
         rts
 fat_open_rootdir_temp:
         Copy root_dir_first_clus, fd_area + FD_INDEX_TEMP_DIR + FD_start_cluster, 3
+        ldx #FD_INDEX_TEMP_DIR
 		rts
 
         ; clone file descriptor of current dir to temp directory
