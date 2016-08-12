@@ -9,7 +9,7 @@
         
 .export fat_mount
 .export fat_open, fat_open2, fat_isOpen, fat_chdir
-.export fat_read, fat_read2, fat_find_first, fat_find_next, fat_clone_cd_2_td
+.export fat_read, fat_read2, fat_find_first, fat_find_next
 .export fat_read, fat_find_first, fat_find_next
 .export fat_close_all, fat_close
 
@@ -76,8 +76,10 @@ fat_chdir:
         lda	fd_area + FD_file_attr, x
 		bit #FD_ATTR_DIR		; check that there is no error and we have a directory
 		beq	@l_err
-								; the temp dir fd is now set to the last dir of the path and we proofed that it's valid with the code above
-		jmp	fat_clone_td_2_cd	; therefore we can simply clone the temp dir to current dir fd - ftw...
+                                
+		ldx #FD_INDEX_TEMP_DIR  ; the temp dir fd is now set to the last dir of the path and we proofed that it's valid with the code above
+        ldy #FD_INDEX_CURRENT_DIR
+        jmp	fat_clone_fd        ; therefore we can simply clone the temp dir to current dir fd - ftw...
 @l_err:
 		lda	#EINVAL				; TODO FIXME error code for "Not a directory"
 @l_err_exit:
@@ -102,8 +104,10 @@ fat_open2:
 :
 .endmacro
         sta krn_ptr1
-        stx krn_ptr1+1				 ; save path arg
-        jsr fat_clone_cd_2_td        ; clone current dir fd to temp dir fd
+        stx krn_ptr1+1			    ; save path arg
+        ldx #FD_INDEX_CURRENT_DIR
+        ldy #FD_INDEX_TEMP_DIR
+        jsr fat_clone_fd            ; clone current dir fd to temp dir fd
 		
 		ldy	#0
 		;	trim wildcard at the beginning
@@ -605,24 +609,29 @@ end_mount:
 		Copy root_dir_first_clus, fd_area + FD_INDEX_CURRENT_DIR + FD_start_cluster, 3
         ldx #FD_INDEX_CURRENT_DIR
         rts
-        
         ;   
         ; out:
-        ;   x - offset to fd area
+        ;   x - FD_INDEX_TEMP_DIR offset to fd area
 fat_open_rootdir:
         Copy root_dir_first_clus, fd_area + FD_INDEX_TEMP_DIR + FD_start_cluster, 3
         ldx #FD_INDEX_TEMP_DIR
 		rts
 
         ; clone file descriptor of current dir to temp directory
-fat_clone_cd_2_td:
-		Copy fd_area + FD_INDEX_CURRENT_DIR + FD_start_cluster, fd_area + FD_INDEX_TEMP_DIR + FD_start_cluster, 3
+        ; in:
+        ;   x - source offset into fd_area
+        ;   y - target offset into fd_area
+fat_clone_fd:
+        lda #FD_Entry_Size
+        sta krn_tmp
+@l1:    lda fd_area, x
+        sta fd_area, y
+        inx
+        iny
+        dec krn_tmp
+        bpl @l1
         rts
-        ; clone file descriptor of current dir to temp directory
-fat_clone_td_2_cd:
-		Copy fd_area + FD_INDEX_TEMP_DIR + FD_start_cluster, fd_area + FD_INDEX_CURRENT_DIR + FD_start_cluster, 3
-        rts
-
+        
 		; in:
 		;	x - offset to fd_area
 		; out: 

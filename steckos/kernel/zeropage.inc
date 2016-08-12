@@ -21,7 +21,8 @@ msgptr  = $e6		; 2 bytes
 krn_ptr1    = $e8
 
 ; SPI
-spitmp 	= $ea
+spitmp 	    = $ec
+krn_tmp 	= $ed
 
 ; FAT32
 filenameptr = $f0   ; 2 byte

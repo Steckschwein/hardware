@@ -111,6 +111,22 @@
 .endif
 .endmacro
 
+.macro debug16s st, v16
+.ifdef DEBUG
+    pha
+    phy
+    jsr primm
+    .asciiz st
+    lda v16+1
+    jsr hexout
+    lda v16+0
+    jsr hexout
+    debug_newline
+    ply
+    pla
+.endif
+.endmacro
+
 .macro debug24s st, v24
 .ifdef DEBUG
     pha
