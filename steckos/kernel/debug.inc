@@ -1,5 +1,6 @@
 
 .macro debugA st
+.ifdef DEBUG
     pha
     pha
     jsr primm
@@ -8,6 +9,7 @@
     jsr hexout
     debug_newline
     pla
+.endif
 .endmacro
 
 .macro debugcpu st
