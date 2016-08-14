@@ -37,8 +37,14 @@ void init_kb(void)
 	MCUCR 	= (1 << ISC01);					  // INT0 interrupt on falling edge
 	GIMSK	= (1 << INT0);					  // Enable INT0 interrupt
 #endif
-	PORTC  	= 3;
-	DDRC	= (1 << PC0) | (1 << PC1);
+	
+	// PORTC  	= 3;
+	// DDRC	= (1 << PC0) | (1 << PC1);
+
+	// PORTC	= (1 << PC0) | (1 << PC1) | (1 << PC2);
+	// DDRC	= (1 << PC0) | (1 << PC1) | (1 << PC2);
+
+
 }
 
 
@@ -141,10 +147,11 @@ void decode(uint8_t sc)
 				
 				if (ctrl && alt && sc == 0x71) // CTRL ALT DEL
 				{
+					DDRC = (1 << PC0);
 					PORTC &= ~(1 << PC0);
-					_delay_ms(50);
+					_delay_us(500);
 					PORTC |= (1 << PC0);
-
+					DDRC = (0 << PC0);
 					return;
 				}
 
@@ -208,10 +215,11 @@ void decode(uint8_t sc)
 		{
 			if (sc == 0x84) // SYSRQ
 			{
+				DDRC = (1 << PC1);
 				PORTC &= ~(1 << PC1);
-				_delay_ms(50);
+				_delay_us(500);
 				PORTC |= (1 << PC1);
-
+				DDRC = (0 << PC1);
 				return;
 			}
 		}
