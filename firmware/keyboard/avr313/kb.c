@@ -5,7 +5,19 @@
 #include "kb.h"
 #include "scancodes_de_cp437.h"
 
+#define RESET_TRIG 	PC0
+#define NMI			PC1
+#define	IRQ			PC2
 
+void pull_line(unsigned char line)
+{
+	DDRC = line;
+	PORTC &= ~line;
+	_delay_us(500);
+	PORTC |= line;
+	DDRC = line;
+	return;
+}
 
 void init_kb(void)
 {
@@ -147,11 +159,12 @@ void decode(uint8_t sc)
 				
 				if (ctrl && alt && sc == 0x71) // CTRL ALT DEL
 				{
-					DDRC = (1 << PC0);
-					PORTC &= ~(1 << PC0);
-					_delay_us(500);
-					PORTC |= (1 << PC0);
-					DDRC = (0 << PC0);
+					pull_line((1 << RESET_TRIG));
+					// DDRC = (1 << PC0);
+					// PORTC &= ~(1 << PC0);
+					// _delay_us(500);
+					// PORTC |= (1 << PC0);
+					// DDRC = (0 << PC0);
 					return;
 				}
 
@@ -215,11 +228,12 @@ void decode(uint8_t sc)
 		{
 			if (sc == 0x84) // SYSRQ
 			{
-				DDRC = (1 << PC1);
-				PORTC &= ~(1 << PC1);
-				_delay_us(500);
-				PORTC |= (1 << PC1);
-				DDRC = (0 << PC1);
+				pull_line((1 << NMI));
+				// DDRC = (1 << PC1);
+				// PORTC &= ~(1 << PC1);
+				// _delay_us(500);
+				// PORTC |= (1 << PC1);
+				// DDRC = (0 << PC1);
 				return;
 			}
 		}
