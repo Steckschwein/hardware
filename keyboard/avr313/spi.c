@@ -9,14 +9,19 @@
 //SPI Transfer Complete Interrupt starting on page 124 in datasheet
 ISR( SPI_STC_vect)
 { 
+	if (SPDR != 0)
+	{
+		return;
+	}	
+
 	if (kb_buffcnt == 0)
 	{
-		SPDR;   //read and forget
+		// SPDR;   //read and forget
         SPDR = 0;
 	}
 	else
 	{
-        SPDR;  //read and forget
+        // SPDR;  //read and forget
         SPDR = *kb_outptr++;
 
 		// Pointer wrapping
