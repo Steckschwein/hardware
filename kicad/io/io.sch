@@ -24,8 +24,7 @@ LIBS:ttl_ieee
 LIBS:dallas-rtc
 LIBS:mini_din
 LIBS:w_connectors
-LIBS:io-cache
-EELAYER 24 0
+EELAYER 25 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
@@ -412,7 +411,6 @@ NoConn ~ 5650 2150
 NoConn ~ 5650 2350
 NoConn ~ 7550 1450
 NoConn ~ 7550 1550
-NoConn ~ 7550 2350
 NoConn ~ 7550 2450
 NoConn ~ 7550 2550
 NoConn ~ 7550 2650
@@ -1086,4 +1084,8 @@ Text GLabel 1150 6750 0    60   Input ~ 0
 /IRQ
 Wire Wire Line
 	1150 6750 1450 6750
+Text GLabel 8050 2350 2    60   Input ~ 0
+/IRQ
+Wire Wire Line
+	7550 2350 8050 2350
 $EndSCHEMATC
