@@ -1,7 +1,7 @@
 OBJS=fat32.o sdcard.o textui.o t99xx.lib.o rtc.o spi.o uart.o via.o out.o key.o exec.o kernel.o
 ASM_INCLUDE=../asminc
 LDFLAGS=--config steckos.cfg
-DEBUG=-D DEBUG
+#DEBUG=-D DEBUG
 
 .PHONY: all clean
 all: kernel.bin shell.bin loader.bin

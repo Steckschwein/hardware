@@ -44,7 +44,7 @@ parmok: jsr     popax           ; Get flags
 
         jsr     popax           ; Get name, ptr low/high in a/x
 		
-		jsr		krn_open2       ; with a/x ptr to path
+		jsr		krn_open       ; with a/x ptr to path
 		
         ;jsr     fnparse         ; Parse it
         ;tax

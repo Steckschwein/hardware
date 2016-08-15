@@ -3,6 +3,7 @@ dir_attrib_mask		= $0a
 .include "../kernel/kernel.inc"
 .include "../kernel/kernel_jumptable.inc"
 .include "../kernel/fat32.inc"
+.include "../asminc/filedes.inc"
 
 tmp0    = $a0
 tmp1    = $a1
@@ -21,7 +22,7 @@ l1:
 		copypointer paramptr, filenameptr
 
 @l2:
-        ldx #0
+        ldx #FD_INDEX_CURRENT_DIR
 		jsr krn_find_first
         lda errno
         beq @l2_1
@@ -32,6 +33,7 @@ l1:
 		bra @l5
 		; jsr .dir_show_entry
 @l3:
+        ldx #FD_INDEX_CURRENT_DIR
 		jsr krn_find_next
 		bcc @l5
 @l4:	

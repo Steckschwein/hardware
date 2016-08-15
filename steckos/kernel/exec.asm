@@ -4,8 +4,7 @@
 
 .segment "KERNEL"
 
-.import fat_open2, fat_read, fat_close
-;.importzp ptr1
+.import _fat_open, fat_open, fat_read, fat_close
         
 .export execv
 
@@ -13,20 +12,9 @@
 	.import	primm, hexout, chrout, strout, print_crlf
 .endif
 
-.macro _open
-		stz	execv_filename, x	;\0 terminate the current path fragment
-        sec
-		jsr	fat_open
-		lda	errno
-		beq	:+
-        jmp @l_err
-:
-.endmacro
-
 ;		int execv(const char *path, char *const argv[]);
 execv:
-        sec				; set carry, we use temp dir fd during open
-        jsr fat_open2	; x - offset to fd_area
+        jsr fat_open	; x - offset to fd_area
         bne @l_err
 		
 		lda	fd_area + FD_file_attr, x
@@ -55,6 +43,15 @@ execv:
 
 
 .ifdef DEPRECATED
+.macro _open
+		stz	execv_filename, x	;\0 terminate the current path fragment
+        sec
+		jsr	_fat_open
+		lda	errno
+		beq	:+
+        jmp @l_err
+:
+.endmacro
 execv_o:
         jsr fat_clone_cd_2_td        ; clone cd 2 temp dir
         

@@ -8,7 +8,7 @@
 ;.importzp ptr1
         
 .export fat_mount
-.export fat_open, fat_open2, fat_isOpen, fat_chdir
+.export _fat_open, fat_open, fat_open, fat_isOpen, fat_chdir
 .export fat_read, fat_read2, fat_find_first, fat_find_next
 .export fat_read, fat_find_first, fat_find_next
 .export fat_close_all, fat_close
@@ -71,7 +71,7 @@ fat_read:
         ;   x - index into fd_area of the opened directory
 fat_chdir:
 		sec						; change dir  using temp dir to not clobber the current dir, maybe we will run into an error
-		jsr fat_open2
+		jsr fat_open
 		bne	@l_err_exit			; exit on error
         lda	fd_area + FD_file_attr, x
 		bit #FD_ATTR_DIR		; check that there is no error and we have a directory
@@ -82,36 +82,34 @@ fat_chdir:
         ldy #FD_INDEX_CURRENT_DIR
         jsr	fat_clone_fd        ; therefore we can simply clone the temp dir to current dir fd - ftw...
         plx
-        lda #0                  ; k, no error
+        lda #0                  ; ok, no error
         rts
 @l_err:
 		lda	#EINVAL				; TODO FIXME error code for "Not a directory"
 @l_err_exit:
-		debugA	"cde"        
+		debugA	"cde"
 		rts
  
         ;in:
         ;   a/x - pointer to the file path
-        ;   C - (carry) if set the temp dir file descriptor - index 0+FD_Entry_Size - will be used for the opened directory, otherwise (clc) the current dir file descriptor - index 0 within fd_area - is used and overwritten
         ;out: 
         ;   x - index into fd_area of the opened file
         ;   a - errno
-fat_open2:
-
+fat_open:
 .macro _open
 		stz	pathFragment, x	;\0 terminate the current path fragment
         debugstr "op2:", pathFragment
-        sec	;FIXME must be value from above
-		jsr	fat_open
+		jsr	_fat_open
 		lda	errno	; FIXME get rid of errno
 		bne @l_exit
 :
 .endmacro
         sta krn_ptr1
         stx krn_ptr1+1			    ; save path arg
-        ldx #FD_INDEX_CURRENT_DIR
+        
+        ldx #FD_INDEX_CURRENT_DIR   ; clone current dir fd to temp dir fd
         ldy #FD_INDEX_TEMP_DIR
-        jsr fat_clone_fd            ; clone current dir fd to temp dir fd
+        jsr fat_clone_fd
 		
 		ldy	#0
 		;	trim wildcard at the beginning
@@ -162,29 +160,25 @@ fat_open2:
 		rts        
 @l_openfile:
 		_open				; return with x as offset to fd_area
+        lda #0              ; no error
         rts
 pathFragment: .res 8+1+3+1; 12 chars + \0 for path fragment
 
 
         ;in:
         ;   filenameptr - ptr to the filename
-        ;   C - (carry) if set the temp dir file descriptor - index 0+FD_Entry_Size - will be used for the opened directory, otherwise (clc) the current dir file descriptor - index 0 within fd_area - is used and overwritten
         ;out: 
         ;   x - index into fd_area of the opened file
         ;   A - errno 
 		; 	@DEPRECTAED 
 		;		errno - error code, 0 if no error occured
-fat_open:
+_fat_open:
 		pha
 		phy
-
-        ldx #FD_INDEX_CURRENT_DIR   ; 0 - use #FD_INDEX_CURRENT_DIR, the current dir always go to fd #0
-        bcc @l1
-        ldx #FD_INDEX_TEMP_DIR      ; otherwise use #FD_INDEX_TEMP_DIR	; temp dir always go to fd #1
-@l1:
-        phx ;safe for temp dir handling
+        
+        ldx #FD_INDEX_TEMP_DIR
 		jsr fat_find_first
-        plx        
+        ldx #FD_INDEX_TEMP_DIR
 		bcs fat_open_found
         
 lbl_fat_no_such_file:
@@ -210,7 +204,7 @@ fat_open_found:
 		jsr fat_alloc_fd
 		lda errno
 		bne lbl_fat_open_error
-@l2:	
+@l2:	        
         debugcpu "fd"
         ;save 32 bit cluster number from dir entry
 		ldy #DIR_FstClusHI +1
@@ -691,7 +685,9 @@ fat_close:
 fat_close_all:
 		ldx #(2*FD_Entry_Size)	; skip 2 entries, they're reserverd for current and temp dir
 		bra	fat_init_fdarea_with_x
-		
+
+        ; in:
+        ;   x - directory fd index into fd_area		
 fat_find_first:
 		ldy #$00
 @l1:	lda (filenameptr),y
@@ -706,8 +702,6 @@ fat_find_first:
 		sta filename_buf,y
 
 		SetVector sd_blktarget, sd_read_blkptr
-;		ldx #FD_INDEX_CURRENT_DIR
-;        debugcpu "fst"
 		jsr calc_lba_addr
 		debug32s "fst lba: ", lba_addr
 		
@@ -729,6 +723,8 @@ ff_l4:
 		jsr match
 		bcs ff_end
 
+        ; in:
+        ;   x - directory fd index into fd_area
 fat_find_next:
 		lda dirptr
 		clc

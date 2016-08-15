@@ -1,3 +1,5 @@
+ASM_INCLUDE=../asminc
+
 all: ls.bin date.bin type.bin view.bin more.bin nvram.bin uname.bin hello.bin time-test.bin mainarg.bin fibo.bin
 
 clean:
@@ -5,13 +7,13 @@ clean:
   
 %.o: %.c
 	cc65 -I ../../cc65 -t none --cpu 65c02 -O $<
-	ca65 -I ../../cc65 --cpu 65c02 $(@:.o=.s)
+	ca65 -I ../../cc65 --cpu 65c02 --include-dir $(ASM_INCLUDE) $(@:.o=.s)
      
 %.bin: %.o ../lib/steckschwein-kernel.lib
 	ld65 -C ../lib/steckschwein-kernel.cfg $< ../lib/steckschwein-kernel.lib -o $@
 
 ls.bin: 
-	cl65 --target none --config ../kernel/steckos.cfg ls.asm -o ls.bin
+	cl65 --include-dir $(ASM_INCLUDE) --target none --config ../kernel/steckos.cfg ls.asm -o ls.bin
 
 uname: uname.bin
 	../../transfer.py uname.bin -s 0x1000
