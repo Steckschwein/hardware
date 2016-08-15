@@ -1,6 +1,6 @@
 #include <avr/pgmspace.h>
 #include <avr/interrupt.h>
-#include <util/delay.h>
+// #include <util/delay.h>
 
 #include "kb.h"
 #include "scancodes_de_cp437.h"
@@ -11,11 +11,11 @@
 
 void pull_line(unsigned char line)
 {
-	DDRC = line;
-	PORTC &= ~line;
-	_delay_us(500);
-	PORTC |= line;
-	DDRC = line;
+	DDRC |= line;
+	// PORTC &= ~line;
+	// _delay_us(500);
+	// PORTC |= line;
+	DDRC &= ~line;
 	return;
 }
 
@@ -56,7 +56,9 @@ void init_kb(void)
 	// PORTC	= (1 << PC0) | (1 << PC1) | (1 << PC2);
 	// DDRC	= (1 << PC0) | (1 << PC1) | (1 << PC2);
 
-
+	// PORTC all input, all low
+	PORTC = 0;
+	DDRC  = 0;
 }
 
 
