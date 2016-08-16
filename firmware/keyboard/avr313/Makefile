@@ -9,7 +9,10 @@ CC=avr-gcc
 CFLAGS= -g -Os -Wall -mcall-prologues -mmcu=atmega8  -DF_CPU=$(CPUSPEED) -D__PROG_TYPES_COMPAT__ -std=gnu99
 
 #uncomment to use ATmega USART 
-CFLAGS+=-DUSART
+#CFLAGS+=-DUSART
+
+#uncomment to trigger host system IRQ line at every keytroke
+#CFLAGS+=-DUSE_IRQ
 
 OBJ2HEX=avr-objcopy
 OBJDUMP = avr-objdump
