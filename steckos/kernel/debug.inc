@@ -3,10 +3,10 @@
 .ifdef DEBUG
     pha
     pha
-    jsr primm
+    jsr krn_primm
     .asciiz st, " A "
     pla
-    jsr hexout
+    jsr krn_hexout
     debug_newline
     pla
 .endif
@@ -21,14 +21,14 @@
     phy
     phx 
     pha
-    jsr primm
+    jsr krn_primm
     .asciiz st, " AXY "
     pla
-    jsr hexout
+    jsr krn_hexout
     pla
-    jsr hexout
+    jsr krn_hexout
     pla
-    jsr hexout
+    jsr krn_hexout
     debug_newline
     ply
     plx
@@ -40,13 +40,13 @@
 .ifdef DEBUG
     pha
     phy
-    jsr primm
+    jsr krn_primm
     .byte s,0
     lda p
     sta msgptr
     lda p+1
     sta msgptr+1
-    jsr strout
+    jsr krn_strout
     debug_newline
     ply
     pla
@@ -57,13 +57,13 @@
 .ifdef DEBUG
     pha
     phy
-    jsr primm
+    jsr krn_primm
     .byte s,0
     lda #<p
     sta msgptr
     lda #>p
     sta msgptr+1
-    jsr strout
+    jsr krn_strout
     debug_newline
     ply
     pla
@@ -85,7 +85,7 @@
     pha
     phy
     lda v
-    jsr hexout
+    jsr krn_hexout
     debug_newline
     ply
     pla
@@ -94,7 +94,7 @@
 
 .macro debug_newline
 .ifdef DEBUG
-    jsr print_crlf
+    jsr krn_print_crlf
 .endif
 .endmacro
 
@@ -102,11 +102,11 @@
 .ifdef DEBUG
     pha
     phy
-    jsr primm
+    jsr krn_primm
     .byte st
     .byte 0    
     lda v8
-    jsr hexout
+    jsr krn_hexout
     debug_newline
     ply
     pla
@@ -117,12 +117,12 @@
 .ifdef DEBUG
     pha
     phy
-    jsr primm
+    jsr krn_primm
     .asciiz st
     lda v16+1
-    jsr hexout
+    jsr krn_hexout
     lda v16+0
-    jsr hexout
+    jsr krn_hexout
     debug_newline
     ply
     pla
@@ -133,14 +133,14 @@
 .ifdef DEBUG
     pha
     phy
-    jsr primm
+    jsr krn_primm
     .byte st,0
     lda v24+2
-    jsr hexout
+    jsr krn_hexout
     lda v24+1
-    jsr hexout
+    jsr krn_hexout
     lda v24+0
-    jsr hexout
+    jsr krn_hexout
     debug_newline
     ply
     pla
@@ -151,17 +151,17 @@
 .ifdef DEBUG
     pha
     phy
-    jsr primm
+    jsr krn_primm
     .byte st
     .byte 0    
     lda v32+3
-    jsr hexout
+    jsr krn_hexout
     lda v32+2
-    jsr hexout
+    jsr krn_hexout
     lda v32+1
-    jsr hexout
+    jsr krn_hexout
     lda v32+0
-    jsr hexout
+    jsr krn_hexout
     debug_newline
     ply
     pla

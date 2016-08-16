@@ -13,8 +13,10 @@
 .export fat_read, fat_find_first, fat_find_next
 .export fat_close_all, fat_close
 
-; DEBUG
-.import hexout, primm, chrout, strout, print_crlf
+
+.ifdef DEBUG ; DEBUG
+    .import krn_hexout, krn_primm, krn_chrout, krn_strout, krn_print_crlf
+.endif
 
 .segment "KERNEL"
 
@@ -104,6 +106,7 @@ fat_open:
 		bne @l_exit
 :
 .endmacro
+
         sta krn_ptr1
         stx krn_ptr1+1			    ; save path arg
         

@@ -1,7 +1,7 @@
 OBJS=fat32.o sdcard.o textui.o t99xx.lib.o rtc.o spi.o uart.o via.o out.o key.o exec.o kernel.o
 ASM_INCLUDE=../asminc
 LDFLAGS=--config steckos.cfg
-#DEBUG=-D DEBUG
+#DEBUG=-DDEBUG
 
 .PHONY: all clean
 all: kernel.bin shell.bin loader.bin
@@ -18,12 +18,12 @@ kernel.bin: $(OBJS) kernel.inc
 	grep krn symbols.txt | sed "s/al 00//" | awk -F' ' '{print $$2" = $$"$$1}'| sed -e "s/^\.//g" > kernel_jumptable.inc
 
 loader.bin: kernel.bin loader.o
-	cl65 --target none --config steckos.cfg loader.asm -o loader.bin
+	cl65 --target none $(DEBUG) --config steckos.cfg loader.asm -o loader.bin
 
 shell.bin: shell.o kernel.bin
-	cl65 --target none -m shell.map --config steckos.cfg shell.asm -o shell.bin
+	ld65 $(LDFLAGS) shell.o -m shell.map -o shell.bin
 
-shell: shell.bin 
+shell: shell.bin
 	../../transfer.py -s 0xe000 shell.bin
 
 transfer: loader.bin

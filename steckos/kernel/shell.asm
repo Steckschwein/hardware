@@ -10,6 +10,7 @@ tmp1    = $a1
 tmp5    = $a2
 
 .segment "OS"
+
 .include "kernel.inc"
 .include "kernel_jumptable.inc"
 .include "fat32.inc"
@@ -24,14 +25,12 @@ KEY_ESCAPE_CRSR_UP	= 'A'
 KEY_ESCAPE_CRSR_DOWN	= 'B'
 BUF_SIZE			= 32
 
-; PATH:	.asciiz "/bin:/usr/bin:."
-
 entries = $00
 
 buf 				= $e600
 ;endbuf				= buf + BUF_SIZE*16
 bufptr				= $d0
-;bufhwm				= $d2
+pathptr             = $d2
 ; Address pointers for serial upload
 startaddr			= $d9
 entryvec			= $d4
@@ -459,8 +458,13 @@ param2fileptr:
 
 
 errmsg:
-		jsr krn_hexout
-
+        ;TODO FIXME maybe use oserror() from cc65 lib
+        pha
+		jsr krn_primm
+        .asciiz "Error: "
+        pla
+        jsr krn_hexout
+        
 		; +errMsgEntry fat_bad_block_signature, .fat_err_signature
 		; +errMsgEntry fat_invalid_partition_type, .fat_err_partition
 		; +errMsgEntry fat_invalid_sector_size, .fat_err_bad_sect_size
@@ -472,7 +476,7 @@ errmsg:
 
 		; jsr strout
 		
-		rts
+		jmp mainloop
 
 
 ; .hellotxt		!text "SteckShell 0.11 ",$00
@@ -556,8 +560,8 @@ cd:
         ldx paramptr+1
         jsr krn_chdir
 		beq @l2
-		jsr errmsg
-        jmp mainloop
+        debugptr "cderr:", paramptr
+		jmp errmsg
 @l2:
 		jsr krn_primm
 		.asciiz "cd ok"
@@ -568,42 +572,57 @@ run:
         lda cmdptr
         ldx cmdptr+1    ; cmdline in a/x
         jsr krn_execv   ; return A with errorcode
-		; jsr krn_hexout
-		cmp #$00
-		beq back
-
-		ldx #$00
-copy_prefix:
-		lda path_prefix,x
-		beq copy_cmd
+        bne @l1         ; error? try different path
+        jmp mainloop
+        
+@l1:	
+        SetVector PATH, pathptr
+        stz tmp0
+ ;       lda #3      
+  ;      sta tmp1
+@try_path:
+        ldx #0
+        ldy tmp0
+@cp_path:
+;        debugcpu "cpp"
+		lda (pathptr), y
+		beq @check_path
+        cmp #':'
+        beq @cp_append
 		sta tmpbuf,x
-		inx
-		bra copy_prefix
-copy_cmd:
-		; inx 
-		ldy #$00
-copyloop:
+        inx
+		iny
+		bne @cp_path
+        lda #$ff
+        jmp errmsg
+@check_path:            ;PATH end reached and nothing prefixed
+        cpy tmp0    
+        bne @cp_append
+        lda #$fe
+        jmp errmsg
+@cp_append:
+        iny
+        sty tmp0        ;safe PATH offset, 4 next try
+		ldy #0
+@cp_loop:
 		lda (cmdptr),y
-		beq end
-		cmp #$20
-		beq end 
+		beq @l3
 		sta tmpbuf,x
 		iny
 		inx
+		bne @cp_loop
+@l3:
 		stz tmpbuf,x
-		bra copyloop
-
-end:		
-
+        debugstr "tmp:", tmpbuf        
 		lda #<tmpbuf
 		ldx #>tmpbuf    ; cmdline in a/x
-		jsr krn_execv   ; return A with errorcode
-
-
-
+        jsr krn_execv   ; return A with errorcode
+;        dec tmp1        
+        bne @try_path
+        lda #$fe
+        jmp errmsg
 
 ; 		ldx #$00
-
 ; printloop:
 ; 		lda tmpbuf,x
 ; 		beq back
@@ -794,5 +813,10 @@ init_textui:
 ; dec_tbl:			.byte 128,160,200
 
 pattern:			.byte "*.*",$00
-path_prefix:		.asciiz "/bin/"
+PATH:		        .asciiz "/bin/:/sbin/:/usr/bin/"
 tmpbuf:
+
+;.segment "OS_CACHE"
+;.segment "KERNEL"
+;.segment "JUMPTABLE"
+;.segment "VECTORS"

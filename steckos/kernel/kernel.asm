@@ -14,13 +14,15 @@ text_mode_40 = 1
 .import spi_r_byte, spi_rw_byte, spi_deselect, spi_select_rtc
 .import init_uart, uart_tx, uart_rx
 .import textui_init0, textui_update_screen, textui_chrout, textui_put
-.import strout, hexout, primm, print_crlf
 .import keyin, getkey
 .import textui_enable, textui_disable, vdp_display_off,  textui_blank, textui_update_crs_ptr, textui_crsxy, textui_screen_dirty
 .import init_sdcard
 .import fat_mount, fat_open, fat_isOpen, fat_close, fat_close_all, fat_read, fat_find_first, fat_find_next, fat_chdir
 .import fat_read2
+
 .import execv
+.import print_crlf
+.import strout, hexout, primm
 
 kern_init:
     sei
@@ -327,7 +329,10 @@ krn_uart_tx:			jmp uart_tx
 krn_uart_rx:			jmp uart_rx
 
 .export krn_primm
-krn_primm: 				jmp primm
+krn_primm:      		jmp primm
+
+.export krn_print_crlf
+krn_print_crlf:      	jmp print_crlf
 
 .segment "VECTORS"
 ; ----------------------------------------------------------------------------------------------

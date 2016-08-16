@@ -8,8 +8,8 @@
         
 .export execv
 
-.ifdef DEBUG    ; debug stuff
-	.import	primm, hexout, chrout, strout, print_crlf
+.ifdef DEBUG ; DEBUG
+    .import krn_hexout, krn_primm, krn_chrout, krn_strout, krn_print_crlf
 .endif
 
 ;		int execv(const char *path, char *const argv[]);
