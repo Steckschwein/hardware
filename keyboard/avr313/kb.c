@@ -5,9 +5,9 @@
 #include "kb.h"
 #include "scancodes_de_cp437.h"
 
-#define RESET_TRIG 	PC0
-#define NMI			PC1
-#define	IRQ			PC2
+
+
+
 
 void pull_line(unsigned char line)
 {
@@ -68,9 +68,12 @@ ISR (USART_RXC_vect)
 {
 	if (scan_buffcnt < SCAN_BUFF_SIZE)			  // If buffer not full
 	{
-		*scan_inptr++ = UDR;   // Put character into buffer, Increment pointer
+		*scan_inptr++ = UDR;   // Put character into buffer, Increment pointer		
 		scan_buffcnt++;
 
+#ifdef USE_IRQ
+		DDRC |= (1 << IRQ);		// pull IRQ line
+#endif
 		// Pointer wrapping
 		if (scan_inptr >= scan_buffer + SCAN_BUFF_SIZE)
 			scan_inptr = scan_buffer;
@@ -100,6 +103,10 @@ ISR (INT0_vect)
 		{
 			*scan_inptr++ = data;   // Put character into buffer, Increment pointer
 			scan_buffcnt++;
+
+#ifdef USE_IRQ
+		DDRC |= (1 << IRQ);		// pull IRQ line
+#endif
 
 			// Pointer wrapping
 			if (scan_inptr >= scan_buffer + SCAN_BUFF_SIZE)

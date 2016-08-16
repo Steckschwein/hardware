@@ -30,3 +30,7 @@ int  get_scanchar(void);
  uint8_t kb_buffcnt;
 
 #endif
+
+#define RESET_TRIG 	PC0
+#define NMI			PC1
+#define	IRQ			PC2
