@@ -41,7 +41,7 @@
     pha
     phy
     jsr krn_primm
-    .byte s,0
+    .byte "'",s,"'",0
     lda p
     sta msgptr
     lda p+1
@@ -58,12 +58,14 @@
     pha
     phy
     jsr krn_primm
-    .byte s,0
+    .byte s,"'",0
     lda #<p
     sta msgptr
     lda #>p
     sta msgptr+1
     jsr krn_strout
+    lda #'''
+    jsr krn_chrout
     debug_newline
     ply
     pla

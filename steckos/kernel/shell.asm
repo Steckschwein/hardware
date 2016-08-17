@@ -578,8 +578,6 @@ run:
 @l1:	
         SetVector PATH, pathptr
         stz tmp0
- ;       lda #3      
-  ;      sta tmp1
 @try_path:
         ldx #0
         ldy tmp0
@@ -588,7 +586,7 @@ run:
 		lda (pathptr), y
 		beq @check_path
         cmp #':'
-        beq @cp_append
+        beq @cp_next
 		sta tmpbuf,x
         inx
 		iny
@@ -596,28 +594,30 @@ run:
         lda #$ff
         jmp errmsg
 @check_path:            ;PATH end reached and nothing prefixed
-        cpy tmp0    
-        bne @cp_append
-        lda #$fe
+        cpy tmp0
+        bne @cp_next_e  ;end of path, no iny
+        lda #$ff        ;nothing found, "Invalid command"
         jmp errmsg
-@cp_append:
+@cp_next:
         iny
+@cp_next_e:
         sty tmp0        ;safe PATH offset, 4 next try
 		ldy #0
 @cp_loop:
 		lda (cmdptr),y
 		beq @l3
+        cmp #' '
+        beq @l3
 		sta tmpbuf,x
 		iny
 		inx
 		bne @cp_loop
 @l3:
 		stz tmpbuf,x
-        debugstr "tmp:", tmpbuf        
+;        debugstr "t:", tmpbuf
 		lda #<tmpbuf
 		ldx #>tmpbuf    ; cmdline in a/x
         jsr krn_execv   ; return A with errorcode
-;        dec tmp1        
         bne @try_path
         lda #$fe
         jmp errmsg
