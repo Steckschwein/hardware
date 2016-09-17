@@ -30,10 +30,9 @@ loop:
 	sta	via1porta
 	
 
-
-	jsr krn_primm
-	.asciiz "j1: "
-
+	SetVector text_j1, msgptr
+	jsr krn_strout
+	
 	lda	via1porta
 	and	#%00111111
 	jsr	krn_hexout
@@ -41,13 +40,21 @@ loop:
 	lda	#PORT_SEL_2			;port 2
 	sta	via1porta
 	
-	jsr krn_primm
-	.asciiz " j2: "
+	SetVector text_j2, msgptr
+	jsr krn_strout
 
 	lda	via1porta
 	and	#%00111111
 	jsr	krn_hexout
 	
-	stz crs_x	
+	ldx #$00
+	ldy crs_y
+	jsr krn_textui_crsxy
 	bra loop
+
+text_j1:
+	.asciiz "j1: "
+text_j2:
+	.asciiz " j2: "
+
 	
