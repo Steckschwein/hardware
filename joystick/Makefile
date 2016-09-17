@@ -2,8 +2,8 @@ all: joystick.bin
 clean:
 	rm -f *.bin 
 
-%.bin: %.a
-	acme -v -f plain --cpu 65c02 -o $@ $<
+joystick.bin: joystick.asm
+	cl65 --target none  --config ../steckos/kernel/steckos.cfg joystick.asm -o joystick.bin
 
 transfer: all
-	../transfer.py joystick.bin 0x1000
+	../transfer.py joystick.bin
