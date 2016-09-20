@@ -15,7 +15,7 @@ text_mode_40 = 1
 .import init_uart, uart_tx, uart_rx
 .import textui_init0, textui_update_screen, textui_chrout, textui_put
 .import keyin, getkey
-.import textui_enable, textui_disable, vdp_display_off,  textui_blank, textui_update_crs_ptr, textui_crsxy, textui_screen_dirty
+.import textui_enable, textui_disable, vdp_display_off,  textui_blank, textui_update_crs_ptr, textui_crsxy
 .import init_sdcard
 .import fat_mount, fat_open, fat_isOpen, fat_close, fat_close_all, fat_read, fat_find_first, fat_find_next, fat_chdir
 .import fat_read2
@@ -43,7 +43,11 @@ kern_init:
     .byte $d4,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd
     .byte $cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$be,$0a,$0d
     .byte $00
-	
+
+; @loop:
+; 	jmp @loop
+
+
 	jsr init_sdcard
     debug8s "init e:", errno
 	lda errno
@@ -97,6 +101,11 @@ do_irq:
 @exit:
 	jsr call_user_isr
 
+; 	jsr getkey
+; 	beq @foo
+; 	jsr krn_chrout
+; @foo:
+
 	restore
 	rti
 
@@ -134,8 +143,6 @@ upload:
 	crlf
 	printstring "Serial Upload"
 	
-	; jsr textui_screen_dirty
-
 	; load start address
 	jsr uart_rx
 	sta startaddr
@@ -150,7 +157,6 @@ upload:
 
 	lda #' '
 	jsr textui_chrout
-	; jsr textui_screen_dirty
 
 	jsr upload_ok
 	
@@ -179,7 +185,6 @@ upload:
 	
 	lda #' '
 	jsr textui_chrout
-	; jsr textui_screen_dirty
 
 	; sei 
 	lda startaddr

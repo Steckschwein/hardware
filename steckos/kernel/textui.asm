@@ -6,7 +6,7 @@ screen_buffer:      ;@see steckos.cfg
 
 .segment "KERNEL"
 .export textui_init0, textui_update_screen, textui_chrout, textui_put
-.export textui_enable, textui_disable, textui_blank, textui_update_crs_ptr, textui_crsxy, textui_screen_dirty
+.export textui_enable, textui_disable, textui_blank, textui_update_crs_ptr, textui_crsxy
 .import vdp_bgcolor, vdp_memcpy, vdp_mode_text, vdp_display_off
 
 screen_status 		=   screen_buffer + (COLS*(ROWS+1)) + 1
@@ -28,6 +28,11 @@ KEY_RETURN=$0d
 STATUS_BUFFER_DIRTY=1<<0
 STATUS_CURSOR=1<<1
 STATUS_TEXTUI_ENABLED=1<<2
+
+.macro _screen_dirty
+		lda #STATUS_BUFFER_DIRTY
+		tsb screen_status ;set dirty
+.endmacro
 
 textui_decy:
 		lda	crs_y
@@ -109,7 +114,11 @@ textui_blank:
     	stz crs_x
     	stz crs_y
         jsr	textui_update_crs_ptr
-        jmp textui_screen_dirty
+
+        _screen_dirty
+        rts
+        
+        ; jmp textui_screen_dirty
 
 textui_cursor:
 		lda screen_write_lock
@@ -209,7 +218,8 @@ textui_disable:
 textui_put:
         pha
 		sta	(crs_ptr)
-        jsr	textui_screen_dirty
+        ; jsr	textui_screen_dirty
+        _screen_dirty
         pla
         rts
     
@@ -222,7 +232,10 @@ textui_print:
 		iny
 		bne	@l1
 @l2:	stz	screen_write_lock	;write off
-		bra	textui_screen_dirty
+
+		_screen_dirty
+		rts
+		; bra	textui_screen_dirty
 
 textui_chrout:
 		beq	@l1	; \0 char
@@ -230,7 +243,10 @@ textui_chrout:
 		inc screen_write_lock	;write on
 		jsr textui_dispatch_char
 		stz	screen_write_lock	;write off
-		jsr	textui_screen_dirty
+		
+		; jsr	textui_screen_dirty
+		_screen_dirty
+
 		pla								; restore char
 @l1:	rts
 
@@ -279,7 +295,7 @@ lfeed:
 lupdate:	
 		jmp	textui_update_crs_ptr
 	
-textui_screen_dirty:
-		lda #STATUS_BUFFER_DIRTY
-		tsb screen_status       ;set dirty
-		rts
+; textui_screen_dirty:
+; 		lda #STATUS_BUFFER_DIRTY
+; 		tsb screen_status       ;set dirty
+; 		rts
