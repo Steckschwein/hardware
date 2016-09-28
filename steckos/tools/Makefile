@@ -1,6 +1,6 @@
 ASM_INCLUDE=../asminc
 
-all: ls.bin date.bin type.bin view.bin more.bin nvram.bin uname.bin hello.bin time-test.bin mainarg.bin fibo.bin
+all: ls.bin date.bin type.bin view.bin more.bin nvram.bin uname.bin hello.bin time-test.bin mainarg.bin fibo.bin clear.bin
 
 clean:
 	rm -f *.bin *.s *.o
@@ -14,6 +14,9 @@ clean:
 
 ls.bin: 
 	cl65 --include-dir $(ASM_INCLUDE) --target none --config ../kernel/steckos.cfg ls.asm -o ls.bin
+
+clear: clear.bin
+	../../transfer.py clear.bin -s 0x1000
 
 uname: uname.bin
 	../../transfer.py uname.bin -s 0x1000
