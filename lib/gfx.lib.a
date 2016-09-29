@@ -11,11 +11,24 @@
 	jsr	set_pixel_n0
 }
 
-!macro drawLine .x0, .y0, .x1, .y1, .color{
+x0=tmp0
+y0=tmp1
+dx=tmp2
+dy=tmp3
+t=tmp4
+c=tmp5
+dxy=tmp6
+
+op_inc=$e6
+op_inc_a=$1a
+op_dec=$c5
+op_dec_a=$3a
+
+!macro drawLine .x0, .y0, x1, y1, .color{
 	lda	#.x0
-    sta x0
+    sta .x0
 	lda	#.y0
-    sta y0
+    sta .y0
     ldx #.x1
     ldy #.y1
 	jsr	draw_line
@@ -364,11 +377,11 @@ set_pixel
 	txa
 .set_pixel_0
 	and	#$f8
-	sta	.adrl
+	sta	adrl
 	tya
 	and	#$07
-	ora	.adrl
-	sta	.adrl	;safe vram low byte
+	ora	adrl
+	sta	adrl	;safe vram low byte
 	sta	a_vreg	;set vdp vram address low byte
 	
 	; high byte vram address - div 8, result is vram address "page" $0000, $0100, ...
@@ -376,7 +389,7 @@ set_pixel
 	lsr
 	lsr
 	lsr
-	sta	.adrh	;safe vram high byte
+	sta	adrh	;safe vram high byte
 	sta	a_vreg	;set vdp vram address high byte
 	
 	txa			;set the appropriate bit 
@@ -386,14 +399,166 @@ set_pixel
 	ora	.bitmask,x
 	tax
 	
-	lda	.adrl
+	lda	adrl
 	sta a_vreg
-	lda	.adrh
+	lda	adrh
 	ora	#.WRITE_ADDRESS
 	sta	a_vreg
 	txa
 	sta a_vram	;set vdp vram address high byte
 	rts
-
 .bitmask
 	!byte $80,$40,$20,$10,$08,$04,$02,$01
+
+draw_line:
+		cpx x0		;x1<x0
+		bcs l1		;no, go +
+		lda x0		;swap x0/x1 and y0/y1
+		stx x0
+		tax
+		lda y0
+		sty y0
+		tay
+		
+l1		cpy y0		;y1<y0 ?
+		bcs l2		;no, go l2
+		
+		lda #op_dec ;s=-1 
+		sta ll4_c 	;self mode code
+		lda y0		;dy=y0-y1
+		sty y0		;
+		sec
+		sbc y0
+		bra l3
+l2   	lda #op_inc  	;s=+1 
+		sta ll4_c 	;self mode code
+		tya		;carry is set from branch above
+		sbc y0		;dy=y1-y0
+l3  	sta dy		
+		txa
+		;sec		;TODO FIXME proof if we have to set
+		sbc x0
+		sta dx
+		
+		cmp dy		;dx<dy ?
+		bcs l4 		;no, go l4
+		
+		lda dy		;dxy = dy-dx;
+		sec			;set carry, cause it is clear while the branch was not taken
+		sbc dx
+		sta dxy
+		
+		ldx dy		;
+		txa
+		lsr		; t=(dy-1)>>1
+		tay	
+ll1 	cpy dx		;t<dx ?
+		bcs ll2		
+		
+		;y0=drawVS(x0, y0, c, s, color);
+		
+		inc	x0	;x0++
+		lda	#01	;c=1
+		sta c
+		
+		tya		;t=t+dy-dx -> t=t+dxy
+		adc dxy
+		tay
+		dex
+		bne	ll1
+ll2 	inc	c	;
+		tya
+		sbc	dx
+		tay
+ll3 	dex
+		bne	ll1
+		rts
+		
+l4  	sbc dx		;dxy = dx-dy; accu has dx and carry is set already
+		sta dxy
+		
+		ldx	dx	;
+		txa
+		lsr		; t=(dx-1)>>1
+		lda	#01	; c=1
+		sta c
+		
+		ldy	t	; t<dy ?
+ll41	cpy	dy	; no ll42
+		bcs ll42
+		
+		;x0=drawHS(x0, y0, c, color)
+		
+ll4_c  	inc y0		;y++/y--
+		lda #01		;c=1
+		sta c
+		
+		tya 		;t=t-dy+dx -> t=t+dxy
+		adc dxy
+		tay 
+		
+		dex
+		bne ll41
+		rts	
+ll42	inc c		;c++
+		tya
+		sbc dy		;t=t-dy;
+		tay
+		dex
+		bne ll41
+		
+		;drawHS(x0, y0, c, color)
+		
+		rts
+
+;function incLine(x0, y0, x1, y1, color) {
+;        if(x1<x0){
+;            t=y0;
+;            y0=y1;
+;            y1=t;
+;            t=x0;
+;            x0=x1;
+;            x1=t;
+;        }
+;        if(y1<y0){
+;            dy=y0-y1;
+;            s=-1;
+;        }else{
+;            dy=y1-y0;
+;            s=1;
+;        }
+;        dx=x1-x0;
+
+;        if(dx<dy){
+;            t=(dy-1)>>1;
+;            c=1;
+;            for(i=dy;i>0;i--){
+;                if(t<dx){
+;                    y0=drawVS(x0, y0, c, s, color);
+;                    x0++;
+;                    t=t-dx+dy;
+;                    c=1;
+;                }else{
+;                    t=t-dx;
+;                    c++;
+;                }
+;            }
+;            drawVS(x0, y0, c, s, color);            
+;        }else{
+;            t=(dx-1)>>1;
+;            c=1;
+;            for(i=0;i<dx;i++){
+;                if(t<dy){
+;                    x0=drawHS(x0, y0, c, color);
+;                    y0+=s;
+;                    t=t-dy+dx;
+;                    c=1;
+;                }else{
+;                    t=t-dy;
+;                    c++;
+;                }
+;            }
+;            drawHS(x0, y0, c, color);
+;        }
+;    }
+;
