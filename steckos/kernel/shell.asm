@@ -591,12 +591,14 @@ run:
         inx
 		iny
 		bne @cp_path
-        lda #$ff
+        lda #$f0
         jmp errmsg
 @check_path:            ;PATH end reached and nothing prefixed
         cpy tmp0
         bne @cp_next_e  ;end of path, no iny
-        lda #$ff        ;nothing found, "Invalid command"
+        debug8s "t0", tmp0
+        debugcpu "c:"
+        lda #$f1        ;nothing found, "Invalid command"
         jmp errmsg
 @cp_next:
         iny

@@ -14,7 +14,7 @@
 
 ;		int execv(const char *path, char *const argv[]);
 execv:
-        jsr fat_open	; x - offset to fd_area
+        jsr fat_open	        ; a/x - pointer to filename
         bne @l_err
 		
 		lda	fd_area + FD_file_attr, x

@@ -117,8 +117,6 @@ textui_blank:
 
         _screen_dirty
         rts
-        
-        ; jmp textui_screen_dirty
 
 textui_cursor:
 		lda screen_write_lock
@@ -218,7 +216,6 @@ textui_disable:
 textui_put:
         pha
 		sta	(crs_ptr)
-        ; jsr	textui_screen_dirty
         _screen_dirty
         pla
         rts
@@ -235,7 +232,6 @@ textui_print:
 
 		_screen_dirty
 		rts
-		; bra	textui_screen_dirty
 
 textui_chrout:
 		beq	@l1	; \0 char
@@ -243,8 +239,6 @@ textui_chrout:
 		inc screen_write_lock	;write on
 		jsr textui_dispatch_char
 		stz	screen_write_lock	;write off
-		
-		; jsr	textui_screen_dirty
 		_screen_dirty
 
 		pla								; restore char
@@ -294,8 +288,3 @@ lfeed:
 		jmp	inc_cursor_y
 lupdate:	
 		jmp	textui_update_crs_ptr
-	
-; textui_screen_dirty:
-; 		lda #STATUS_BUFFER_DIRTY
-; 		tsb screen_status       ;set dirty
-; 		rts
