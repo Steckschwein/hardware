@@ -1,10 +1,6 @@
 text_mode_40 	= 1
 num_ls_entries 	= $03
 
-;.zeropage
-;tmp0:	.byte $00
-;tmp1:	.byte $00
-;tmp5:	.byte $00
 tmp0    = $a0
 tmp1    = $a1
 tmp5    = $a2
@@ -13,7 +9,6 @@ tmp5    = $a2
 
 .include "kernel.inc"
 .include "kernel_jumptable.inc"
-.include "fat32.inc"
 
 ; set attrib mask. hide volume label and hidden files
 dir_attrib_mask		= $0a
@@ -814,9 +809,9 @@ init_textui:
 ;  ; Lookup table for decimal to ASCII
 ; dec_tbl:			.byte 128,160,200
 
-pattern:			.byte "*.*",$00
+;pattern:			.byte "*.*",$00
 PATH:		        .asciiz "/bin/:/sbin/:/usr/bin/"
-tmpbuf:
+tmpbuf:				
 
 ;.segment "OS_CACHE"
 ;.segment "KERNEL"
