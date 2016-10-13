@@ -24,9 +24,10 @@ execv:
 		bra @l_err_exit
 		
 @l0:	SetVector appstart, sd_read_blkptr
+        phx             ; save fd
 		jsr	fat_read
-		jsr	fat_close	; close regardless of error
-		lda	errno
+        plx             ; restore fd
+		jsr	fat_close	; close after read, regardless of error to free fd
 		bne	@l_err_exit
 @l_exec_run:
         ;TODO FIXME check excecutable - SOS65 header ;)

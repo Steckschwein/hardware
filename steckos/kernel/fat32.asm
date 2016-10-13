@@ -676,14 +676,15 @@ fat_alloc_fd:
         ; in:
         ;   x - offset into fd_area
         ; out:
-        ;   C - carry set if file is not open
         ;   A - error code if one, A = 0 otherwise
 fat_close:
         lda fd_area + FD_start_cluster +3 , x
         cmp #$ff	;#$ff means not open, carry is set...
         bcs @l1
+        lda #$ff    ; otherwise mark as closed
         sta fd_area + FD_start_cluster +3 , x
-@l1:    rts
+@l1:    lda #0         
+        rts
 
 fat_close_all:
 		ldx #(2*FD_Entry_Size)	; skip 2 entries, they're reserverd for current and temp dir
