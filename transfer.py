@@ -6,13 +6,25 @@ import sys
 import os
 import struct
 
-devicerequired=False
 
-device=None
-try:
-	device = os.environ['TRANSFER_DEVICE']
-except KeyError:
-	devicerequired=True
+import serial.tools.list_ports
+ports = list(serial.tools.list_ports.grep("^/dev/cu.usbserial*|COM[0-9]"))
+
+device = None
+if device == None:
+	try:
+		
+
+		device = ports[0][0]
+		devicerequired=False
+	except KeyError:	
+		devicerequired=True
+
+if device == None:
+	try:
+		device = os.environ['TRANSFER_DEVICE']
+	except KeyError:
+		devicerequired=True
 
 parser = argparse.ArgumentParser(description='transfer binary via serial interface')
 parser.add_argument('-d', '--device', help="serial device. can also be set with environment variable TRANSFER_DEVICE.", required=devicerequired, default=device)
