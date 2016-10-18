@@ -11,23 +11,20 @@ import serial.tools.list_ports
 ports = list(serial.tools.list_ports.grep("^/dev/cu.usbserial*|COM[0-9]"))
 
 device = None
-if device == None:
+if device == None and len(ports)>0:
 	try:
-		
-
 		device = ports[0][0]
-		devicerequired=False
-	except KeyError:	
-		devicerequired=True
-
+	except KeyError:
+		pass		
+        
 if device == None:
 	try:
 		device = os.environ['TRANSFER_DEVICE']
 	except KeyError:
-		devicerequired=True
+		pass
 
 parser = argparse.ArgumentParser(description='transfer binary via serial interface')
-parser.add_argument('-d', '--device', help="serial device. can also be set with environment variable TRANSFER_DEVICE.", required=devicerequired, default=device)
+parser.add_argument('-d', '--device', help="serial device. can also be set with environment variable TRANSFER_DEVICE.", required=(device==None), default=device)
 parser.add_argument('-b', '--baudrate', type=int, help="baud rate. default 115200", required=False, default=115200)
 parser.add_argument('-s', '--startaddr', help="start address. default 0x1000", required=False, default="0x1000")
 parser.add_argument('filename', help="file to transfer")
