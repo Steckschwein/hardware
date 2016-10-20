@@ -1,14 +1,18 @@
 
 .macro debugA st
 .ifdef DEBUG
-    pha
-    pha
-    jsr krn_primm
+	pha
+	phx
+	phy	
+	pha
+	jsr krn_primm
     .asciiz st, " A "
-    pla
+	pla
     jsr krn_hexout
     debug_newline
-    pla
+	ply
+    plx
+	pla
 .endif
 .endmacro
 
@@ -41,12 +45,14 @@
     pha
     phy
     jsr krn_primm
-    .byte "'",s,"'",0
+    .byte s,"'",0
     lda p
     sta msgptr
     lda p+1
     sta msgptr+1
     jsr krn_strout
+    lda #'''
+    jsr krn_chrout
     debug_newline
     ply
     pla
@@ -55,7 +61,7 @@
 
 .macro debugstr s, p
 .ifdef DEBUG
-    pha
+	pha
     phy
     jsr krn_primm
     .byte s,"'",0
@@ -70,16 +76,6 @@
     ply
     pla
 .endif
-.endmacro
-
-.macro debugs st
-.ifdef DEBUG
-    pha
-    phy
-    debug_newline
-    ply
-    pla
-.endif    
 .endmacro
 
 .macro debug8 v

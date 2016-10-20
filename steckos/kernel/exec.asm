@@ -4,7 +4,7 @@
 
 .segment "KERNEL"
 
-.import _fat_open, fat_open, fat_read, fat_close
+.import fat_open, fat_read, fat_close
         
 .export execv
 
@@ -15,7 +15,7 @@
 ;		int execv(const char *path, char *const argv[]);
 execv:
         jsr fat_open	        ; a/x - pointer to filename
-        bne @l_err
+        bne @l_err_exit
 		
 		lda	fd_area + FD_file_attr, x
 		bit #FD_ATTR_FILE		; check that whether it's a regular file
@@ -24,31 +24,27 @@ execv:
 		bra @l_err_exit
 		
 @l0:	SetVector appstart, sd_read_blkptr
-        phx             ; save fd
 		jsr	fat_read
-        plx             ; restore fd
-		jsr	fat_close	; close after read, regardless of error to free fd
-		bne	@l_err_exit
+        lda errno
+		bne	@l_err_exit_close
+        jsr	fat_close	        ; close after read to free fd, regardless of error
+        bne	@l_err_exit
 @l_exec_run:
         ;TODO FIXME check excecutable - SOS65 header ;)
 		jmp	appstart
-@l_err:
-		lda	#EINVAL
+@l_err_exit_close:
+        pha                     ; save error
+        jsr	fat_close           ; close and ignore error
+        pla
 @l_err_exit:
-.ifdef DEBUG
-		sta errno
-		debug8s	"exce:", errno
-.endif
+        debugA "exc:"
 		rts
-
-
 
 .ifdef DEPRECATED
 .macro _open
 		stz	execv_filename, x	;\0 terminate the current path fragment
         sec
 		jsr	_fat_open
-		lda	errno
 		beq	:+
         jmp @l_err
 :
@@ -99,7 +95,7 @@ execv_o:
 		;TODO FIXME handle overflow - <path argument> too large
 		lda	#$ff
 @l_err:	
-		debug8s	"exce:", errno
+		debug8s	"exc:", errno
 @l_end:
 		rts
 		

@@ -365,16 +365,14 @@ run:
 		bne @cp_path
         lda #$f0
         jmp errmsg
-@check_path:            ;PATH end reached and nothing prefixed
-        cpy tmp0
-        bne @cp_next_e  ;end of path, no iny
-        debug8s "t0", tmp0
-        debugcpu "c:"
+@check_path:            ;PATH end reached and nothing to prefix
+        cpy tmp0        
+        bne @cp_next_piece  ;end of path, no iny
         lda #$f1        ;nothing found, "Invalid command"
         jmp errmsg
 @cp_next:
         iny
-@cp_next_e:
+@cp_next_piece:
         sty tmp0        ;safe PATH offset, 4 next try
 		ldy #0
 @cp_loop:
@@ -517,5 +515,5 @@ init_textui:
 	jsr	krn_textui_init
 	jsr	krn_textui_enable
 	rts
-PATH:		        .asciiz "/bin/:/sbin/:/usr/bin/"
+PATH:		        .asciiz "/bin/";:/sbin/:/usr/bin/"
 tmpbuf:				

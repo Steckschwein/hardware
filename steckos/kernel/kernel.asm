@@ -49,26 +49,24 @@ kern_init:
 
 
 	jsr init_sdcard
-    debug8s "init e:", errno
+    debug8s "ini:", errno
 	lda errno
 	bne do_upload
 
 	jsr fat_mount
-    debug8s "mnt e:", errno
+    debug8s "mnt:", errno
 	lda errno
 	bne do_upload
 	
     lda #<filename
     ldx #>filename
 	jsr fat_open
-    debugA "op2 r:"
+    debugA "op2:"
 	bne do_upload
 	
 	SetVector shell_addr, sd_read_blkptr
-    
-    debugA"rd 0"
     jsr fat_read
-    debugA "rd e:"
+    debugA "rd:"
 
 	jsr fat_close
 
