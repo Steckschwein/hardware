@@ -236,12 +236,15 @@ sd_read_block:
 		jsr spi_rw_byte
 
         ldy #sd_cmd_response_retries 	; wait for command response.
+		stz	spitmp				; use spitmp as loop var, not needed here		
 @lx:	jsr spi_r_byte
         beq @l1         		; everything other than $00 is an error
+		dec	spitmp
+		bne	@lx
         dey
 		bne @lx
+		sta errno
         ;TODO FIXME error sd error codes 
-        sta errno
         bra @exit
 @l1:
 		; wait for sd card data token
@@ -288,9 +291,12 @@ sd_read_multiblock:
 
 		; wait for command response.         
         ldy #sd_cmd_response_retries 	; wait for command response. 
+		stz	spitmp				; use spitmp as loop var, not needed here
 @lx:	jsr spi_r_byte
         beq @l1         		; everything other than $00 is an error
-        dey
+		dec	spitmp
+		bne	@lx
+		dey
 		bne @lx
         ;TODO FIXME error sd error codes 
 		sta errno
@@ -423,10 +429,13 @@ sd_busy_wait:
 ;---------------------------------------------------------------------
 sd_wait_data_token:
 		ldy #sd_data_token_retries
+		stz	spitmp				; use spitmp as loop var, not needed here
 @l1:
 		jsr spi_r_byte
 		cmp #sd_data_token
 		beq @l2
+		dec	spitmp
+		bne	@l1
 		dey
 		bne @l1
 		;TODO FIXME check card state here, may be was removed

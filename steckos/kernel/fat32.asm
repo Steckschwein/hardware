@@ -452,13 +452,10 @@ fat_next_cln_hi:
 ;---------------------------------------------------------------------
 fat_mount:
 		save
-
 		; set lba_addr to $00000000 since we want to read the bootsector
-		
 		.repeat 4, i
 			stz lba_addr + i	
 		.endrepeat
-		
 
 		SetVector sd_blktarget, sd_read_blkptr
 
