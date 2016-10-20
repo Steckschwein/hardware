@@ -515,5 +515,5 @@ init_textui:
 	jsr	krn_textui_init
 	jsr	krn_textui_enable
 	rts
-PATH:		        .asciiz "/bin/";:/sbin/:/usr/bin/"
+PATH:		        .asciiz "/bin/:/sbin/:/usr/bin/"
 tmpbuf:				
