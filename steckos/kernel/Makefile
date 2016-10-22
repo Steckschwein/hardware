@@ -1,7 +1,7 @@
 OBJS=fat32.o sdcard.o textui.o t99xx.lib.o rtc.o spi.o uart.o via.o out.o key.o exec.o kernel.o
 ASM_INCLUDE=../asminc
 LDFLAGS=--config steckos.cfg
-#DEBUG=-DDEBUG
+DEBUG=-DDEBUG
 #DEBUG=-DDEBUG_SHELL
 #DEBUG+=-DDEBUG_KERNEL
 

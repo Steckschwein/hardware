@@ -42,14 +42,14 @@
 
 ; Read the block
 		jsr		krn_read2
+		;bne			 TODO error handling
+
         
-        ldy     #0
-;        lda     
-        
-        ;TODO FIXME
-        lda     #0
-        ldx     #1  ;512Bytes read
-        bra     eof
+		lda     #0		;ok, no error
+        sta     __oserror
+        lda		#0		;$0200 bytes read
+		ldx     #2
+        rts
         
 @L0:    ;jsr     BASIN
 		

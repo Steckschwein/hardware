@@ -43,8 +43,7 @@ parmok: jsr     popax           ; Get flags
 ; Get the filename from stack and parse it. Bail out if is not ok
 
         jsr     popax           ; Get name, ptr low/high in a/x
-		
-		jsr		krn_open       ; with a/x ptr to path
+		jsr		krn_open       	; with a/x ptr to path
 		
         ;jsr     fnparse         ; Parse it
         ;tax

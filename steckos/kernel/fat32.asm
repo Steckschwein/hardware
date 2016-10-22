@@ -39,15 +39,21 @@
 
 		;in: 
 		;	x - offset into fd_area
+		;out:
+		;	a - 0 ok, otherwise error
 fat_read2:
-;        debugcpu "fr2"
- ;       jsr calc_lba_addr
-	;	jsr calc_blocks
-
-;        debug32s "fr2 lba:", lba_addr
-;		debug24s "fr2 bc:", blocks
-	;	jmp sd_read_block
-
+        debugcpu "fr2"
+        jsr calc_lba_addr
+		jsr calc_blocks
+;        debug32s "r2 lb:", lba_addr
+;		debug24s "r2 bc:", blocks
+		
+		SetVector block_data, sd_read_block		; vector to kernel block_data area		
+		jsr sd_read_block
+		lda	errno
+		debugA "r2"
+		rts
+		
 		;in: 
 		;	x - offset into fd_area
 fat_read:
@@ -192,8 +198,9 @@ lbl_fat_open_error:
 fat_open_found:
 		ldy #DIR_Attr
 		lda (dirptr),y
-		bit #$10 ; Is a directory?
-		bne @l2
+		debugA "d"
+		bit #$10 			; is it a directory?
+		bne @l2				; go on, do not allocate fd, index is set to FD_INDEX_TEMP_DIR
 
 @l1:	bit #$20 ; Is file?
 		beq lbl_fat_open_error

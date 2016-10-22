@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
     char c;
     unsigned int i;
     unsigned int n;
-    unsigned char *buf[32];
+    unsigned char buf[32];
     
     if (argc < 2) {
         return EXIT_FAILURE;
@@ -22,10 +22,10 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
     cprintf("file '%s' opened fd='%d'\n\r", argv[1], f1);
-    i = fread(buf, sizeof(buf), sizeof(char), f1);
+    i = fread(buf, sizeof(char), sizeof(buf), f1);
     cprintf("read %d\n\r", i);
-    for(n=0;n<i;n++){
-        cprintf("%x ", buf[n]);
+    for(n=0;n<i && n<16;n++){
+        cprintf("$%x ", buf[n]);
     }
     cprintf("\n\r");
     if (feof(f1)) {

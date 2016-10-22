@@ -1,9 +1,8 @@
-
 .macro debugA st
 .ifdef DEBUG
 	pha
-	phx
-	phy	
+	phy
+	
 	pha
 	jsr krn_primm
     .asciiz st, " A "
@@ -11,7 +10,6 @@
     jsr krn_hexout
     debug_newline
 	ply
-    plx
 	pla
 .endif
 .endmacro
@@ -19,7 +17,7 @@
 .macro debugcpu st
 .ifdef DEBUG
     pha
-    phx
+	phx		;TODO FIXME investigate, we must not save x here, but if we dont do so, we run into trouble
     phy
     
     phy
@@ -34,8 +32,9 @@
     pla
     jsr krn_hexout
     debug_newline
+	
     ply
-    plx
+	plx
     pla    
 .endif
 .endmacro

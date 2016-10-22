@@ -70,10 +70,10 @@ textui_update_crs_ptr:		;   updates the 16 bit pointer crs_p upon crs_x, crs_y v
 		asl
 		sta crs_ptr 	   	; save crs_y * 8
 		asl		   
-		rol crs_ptr+1	   	; carry to tmp1
+		rol crs_ptr+1	   	; save carry
 		asl
-		rol crs_ptr+1		; again, carry to tmp1
-		adc crs_ptr	    	; crs_y*32 + crs_y*8 (tmp0) => y*40
+		rol crs_ptr+1		; again, save carry
+		adc crs_ptr	    	; crs_y*32 + crs_y*8 (crs_ptr) => y*40
 		bcc @l1
 		inc	crs_ptr+1		; overflow inc page count
 		clc				; 
