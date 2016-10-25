@@ -1,6 +1,6 @@
 ASM_INCLUDE=../asminc
 
-all: ls.bin date.bin type.bin view.bin more.bin nvram.bin uname.bin hello.bin time-test.bin mainarg.bin fibo.bin clear.bin
+all: ls.bin ll.bin date.bin nvram.bin uname.bin hello.bin time-test.bin mainarg.bin fibo.bin clear.bin
 
 clean:
 	rm -f *.bin *.s *.o
@@ -8,12 +8,16 @@ clean:
 %.o: %.c
 	cc65 -I ../../cc65 -t none --cpu 65c02 -O $<
 	ca65 -I ../../cc65 --cpu 65c02 --include-dir $(ASM_INCLUDE) $(@:.o=.s)
-     
+%.o: %.asm
+	ca65 $(@:.o=.asm)
+
 %.bin: %.o ../lib/steckschwein-kernel.lib
 	ld65 -C ../lib/steckschwein-kernel.cfg $< ../lib/steckschwein-kernel.lib -o $@
 
-ls.bin: 
-	cl65 --include-dir $(ASM_INCLUDE) --target none --config ../kernel/steckos.cfg ls.asm -o ls.bin
+ls.bin: ls.o ls_entry_short.o
+	cl65 --include-dir $(ASM_INCLUDE) --target none --config ../kernel/steckos.cfg ls.o ls_entry_short.o -o ls.bin
+ll.bin: ls.o ls_entry_long.o
+	cl65 --include-dir $(ASM_INCLUDE) --target none --config ../kernel/steckos.cfg ls.o ls_entry_long.o -o ll.bin
 
 clear: clear.bin
 	../../transfer.py clear.bin -s 0x1000
