@@ -1,9 +1,8 @@
 .segment "CODE"
 .include "../kernel/kernel.inc"
 .include "../kernel/kernel_jumptable.inc"
-.include "ls.inc"
 
-.import print_filename
+.import print_filename, cnt
 .export dir_show_entry
 
 dir_show_entry:

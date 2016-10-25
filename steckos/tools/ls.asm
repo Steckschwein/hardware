@@ -4,14 +4,13 @@ dir_attrib_mask		= $0a
 .include "../kernel/kernel_jumptable.inc"
 .include "../kernel/fat32.inc"
 .include "../asminc/filedes.inc"
-.include "ls.inc"
 
-.export print_filename
+.export print_filename, cnt
 .import dir_show_entry
 main:
 
-		lda #$04
-		sta cnt
+		; lda #$04
+		; sta cnt
 		
 
 l1:
@@ -61,22 +60,6 @@ l1:
 		jmp (retvec)
 
 
-; dir_show_entry:
-; 		pha
-
-; 		dec cnt 
-; 		bne @l1
-; 		crlf
-; 		lda #$03
-; 		sta cnt	
-; @l1:
-; 		jsr print_filename
-; 		lda #' '
-; 		jsr krn_chrout
-; 		pla
-
-; 		rts
-
 
 print_filename:
 		ldy #DIR_Name
@@ -86,9 +69,7 @@ print_filename:
 		cpy #$0b
 		bne @l1
 		rts
- ; Lookup table for decimal to ASCII
-dec_tbl:			.byte 128,160,200
-
+ 
 pattern:			.byte "*.*",$00
-
+cnt: 	.byte $04
 

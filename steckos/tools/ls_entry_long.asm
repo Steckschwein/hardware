@@ -3,7 +3,11 @@
 .include "../kernel/kernel_jumptable.inc"
 .include "../kernel/fat32.inc"
 
-.include "ls.inc"
+
+tmp0    = $a0
+tmp1    = $a1
+
+
 
 .import print_filename
 .export dir_show_entry
