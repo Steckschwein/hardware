@@ -48,7 +48,7 @@ fat_read2:
 ;        debug32s "r2 lb:", lba_addr
 ;		debug24s "r2 bc:", blocks
 		
-		SetVector block_data, sd_read_block		; vector to kernel block_data area		
+		SetVector block_data, sd_read_blkptr		; vector to kernel block_data area		
 		jsr sd_read_block
 		lda	errno
 		debugA "r2"

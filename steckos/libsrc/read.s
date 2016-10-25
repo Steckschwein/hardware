@@ -9,7 +9,7 @@
 
         .import __rwsetup,__do_oserror,__inviocb,__oserror, popax
 		
-		.importzp tmp1,tmp2,tmp3,ptr1,ptr2,ptr3
+		.importzp tmp1,tmp2,tmp3,ptr1,ptr2,ptr3,ptr4
 		
         .export _read
 
@@ -19,14 +19,22 @@
 .code
 
 .proc   _read
-
         ; Pop params, check handle
-        eor     #$FF			; the count argument
+		cmp		#0
+		bne		@_r0			; edge case, test if the count argument is zero?
+		cpx		#0
+		bne		@_r0
+		lda     #0
+        sta     __oserror
+		rts		
+@_r0:	
+		sta     ptr3			; save as result
+        stx     ptr3+1          ; save count as result 
+		eor     #$FF			; the count argument
         sta     ptr1
         txa
         eor     #$FF
         sta     ptr1+1          ; Remember -count-1
-		;TODO FIXME check count>BLOCK_SIZE
 
         jsr     popax           ; get pointer to buf
         sta     ptr2
@@ -41,59 +49,41 @@
 		bcs     invalidfd
 
 ; Read the block
-		jsr		krn_read2
-		;bne			 TODO error handling
-
-        
-		lda     #0		;ok, no error
-        sta     __oserror
-        lda		#0		;$0200 bytes read
-		ldx     #2
-        rts
-        
-@L0:    ;jsr     BASIN
+		jsr		krn_read2		; x holds the fd
+		beq		@_r1
+        jmp     __directerrno   ; Sets _errno, clears _oserror, returns -1
+@_r1:
+		;TODO copy block to target 
+		;check count>BLOCK_SIZE
+		lda		#$00	; TODO FIXME impl. kernel memcpy()
+		sta		ptr4
+		lda		#$da
+		sta		ptr4+1
 		
-; Store the byte just read
-
-        ldy     #0
-        lda     tmp1
-        sta     (ptr2),y
-        inc     ptr2
-        bne     @L1
-        inc     ptr2+1          ; *buf++ = A;
-
-; Increment the byte count
-
-@L1:    inc     ptr3
-        bne     @L2
-        inc     ptr3+1
+		ldy		#0
+@_r2:
+		lda		(ptr4), y
+		sta		(ptr2), y
+		iny
+		bne		@_r3
+		inc		ptr2+1
+		inc		ptr4+1
 		
-; Get the status again and check the EOI bit
-
-@L2:    lda     tmp3
-        and     #%01000000      ; Check for EOI
-        bne     @L4             ; Jump if end of file reached
-
-; Decrement the count
-
-@L3:    inc     ptr1
-        bne     @L0
-        inc     ptr1+1
-        bne     @L0
-        beq     done            ; Branch always
-
-; Set the EOI flag and bail out
-
-@L4:    ldx     tmp2            ; Get the handle
-  ;      lda     #LFN_EOF
-;        ora     fdtab,x
- ;       sta     fdtab,x
-		
-done:   ;jsr	krn_close
-		;jsr     CLRCH
+		lda		ptr4+1		; block buffer end reached?
+		cmp		#$dc		
+		bne		@_r3
+		lda		#0			; 512 bytes read
+		sta 	ptr3
+		lda		#2
+		sta		ptr3+1
+		bra		eof
+@_r3:	; count bytes read ?
+		inc		ptr1
+		bne		@_r2
+		inc		ptr1+1
+		bne		@_r2
 		
 ; Clear _oserror and return the number of chars read
-
 eof:    lda     #0
         sta     __oserror
         lda     ptr3
