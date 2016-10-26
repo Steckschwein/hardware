@@ -2,7 +2,7 @@
 %.bin: %.a
 	acme -vv -f plain --cpu 65c02 -o $@ $<
 
-all: soundtest.bin synth.bin imfplayer.bin 
+all: imfplayer.bin 
 
 clean:
 	rm -f *.bin

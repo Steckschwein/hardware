@@ -1,12 +1,15 @@
-!source <defs.h.a>
-!src <kernel.h.a>
 
-!source <shell.h.a>
+; !src <kernel.h.a>
+!src "../steckos/kernel/zeropage.inc"
+!src "../steckos/kernel/kernel_jumptable.inc"
+!source <macro.h.a>
+; !source <shell.h.a>
 ; !source <bios.h.a>
-!source <ym3812.h.a>
+!source "../lib/ym3812.h.a"
 ;!source <t9929.h.a>
-
 !source <via.h.a>
+steckos_start = $1000
+
 
 CPU_CLOCK=clockspeed * 1000000
 
@@ -239,7 +242,7 @@ main
 .loading 		!text "Loading from $",$00
 .loading_to		!text " to $",$00
 !source <ym3812.a>
-!source <t99xx.lib.a>
+; !source <t99xx.lib.a>
 old_isr	!16 $ffff
 imf_end	!16 $ffff
 imf_data
