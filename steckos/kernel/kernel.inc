@@ -2,6 +2,7 @@
 .include    "zeropage.inc"
 .include    "debug.inc"
 
+clockspeed = 8
 user_isr 	        = $028e
 ;TODO FIXME needs clarification
 block_fat                   = $d800
