@@ -8,7 +8,7 @@ import struct
 
 
 import serial.tools.list_ports
-ports = list(serial.tools.list_ports.grep("^/dev/cu.usbserial*|COM[0-9]"))
+ports = list(serial.tools.list_ports.grep("^/dev/cu.usbserial*|/dev/tty*"))
 
 device = None
 if device == None and len(ports)>0:
