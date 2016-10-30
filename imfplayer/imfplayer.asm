@@ -21,36 +21,41 @@ main:
    		SetVector test_filename, filenameptr
 		; copypointer paramptr, filenameptr
 
-; 		ldy #$00
-; @l1:	lda (filenameptr),y
-; 		beq @l2
+		ldy #$00
+@l1:	lda (filenameptr),y
+		beq @l2
 	
-; 		iny
-; 		bra @l1
-; @l2:
-; 		dey 
-; 		lda (filenameptr),y
-; 		and #!$20
-; 		cmp #'F'
-; 		beq @l3
-; 		jmp error
-; @l3:
+		iny
+		bra @l1
+@l2:
+		dey 
+		lda (filenameptr),y
+		and #%11011111
+		cmp #'F'
+		beq @l3
+		jmp error
+@l3:
 
-; 		dey 
-; 		lda (filenameptr),y
-; 		and #!$20
-; 		cmp #'L'
-; 		bne @l4
+		dey 
+		lda (filenameptr),y
+		and #%11011111
+		cmp #'L'
+		bne @l4
 
-; 		dey 
-; 		lda (filenameptr),y
-; 		and #!$20
-; 		cmp #'W'
-; 		bne @l4
+		dey 
+		lda (filenameptr),y
+		and #%11011111
+		cmp #'W'
+		bne @l4
 
-; 		lda #$04
-; 		sta temponr
-; @l4:
+		lda #$04
+		sta temponr
+
+		lda #'X'
+		jsr krn_chrout
+
+
+@l4:
     	lda filenameptr
     	ldx filenameptr +1
 
@@ -63,6 +68,7 @@ main:
 		jmp error
 @l5:
 		SetVector imf_data, sd_read_blkptr
+
 
 ;     +Println
 ; 	+PrintString .loading
