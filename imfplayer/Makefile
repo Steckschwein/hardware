@@ -1,11 +1,17 @@
+OBJS=imfplayer.o ym3812.o
+TARGET=imfplayer.bin
 
-%.bin: %.asm
-	cl65 --target none  --config ../steckos/kernel/steckos.cfg -o $@ $<
+%.bin: $(OBJS)
+	cl65 --target none  --config ../steckos/kernel/steckos.cfg -o $@ $(OBJS)
 
-all: imfplayer.bin 
+%.o: %.asm
+	ca65 -o $@ $<
+
+all: $(TARGET) 
 
 clean:
-	rm -f *.bin
-imfplayer: imfplayer.bin
-	../transfer.py imfplayer.bin    
+	rm -f $(TARGET) $(OBJS)
+
+imfplayer: $(TARGET)
+	../transfer.py $(TARGET)    
 

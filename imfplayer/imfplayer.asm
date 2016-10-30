@@ -5,7 +5,6 @@
 .include "../steckos/asminc/filedes.inc"
 
 .include "../steckos/kernel/via.inc"
-.include "ym3812.inc"
 
 CPU_CLOCK=clockspeed * 1000000
 
@@ -16,6 +15,8 @@ delayl    = $a2
 delayh    = delayl + 1
 
 irq = $fffe
+
+.import init_opl2, opl2_delay_data, opl2_delay_register
 
 main:
    		SetVector test_filename, filenameptr
@@ -102,26 +103,17 @@ main:
 	    lda imf_end
 	    ; jsr krn_hexout
 
-	    jmp (retvec)
 
 ; 	+Println
 
-; 	+SetVector	imf_data, .imf_ptr
-; 	stz .delayl
-; 	stz .delayh
+ 	SetVector	imf_data, imf_ptr
+ 	stz delayl
+ 	stz delayh
 
-	; jsr .init_opl2
+	jsr init_opl2
 
 	sei
-; 	; TODO - set clockspeed according to filename extension
-; 	; 560 for imf
-; 	; 700 for wlf
 
-; 	; tempo is one of 280Hz (DN2), 560Hz (imf), 700Hz (.wlf) -> 4Mhz
-; 	; 280 Hz --> 14280
-; 	; 560 Hz -->  7140
-; 	; 700 Hz -->  5714
-; 	; tempo = 560
 	ldx temponr
 	lda tempo+0,x
 
@@ -246,6 +238,7 @@ end:
 	jmp (retvec)
 
 tempo:
+ 	; tempo is one of 280Hz (DN2), 560Hz (imf), 700Hz (.wlf) 
 	.word (CPU_CLOCK/240)
 	.word (CPU_CLOCK/560)
 	.word (CPU_CLOCK/700)

@@ -6,7 +6,7 @@ opl_data = opl_stat + 1 ; data register (write only)
 
 ; opl2_data_delay_time = 23000 ; ns
 ; opl2_reg_delay_time = 3300 ; ns
-
+.include "../steckos/kernel/kernel.inc"
 opl2_data_delay_time = 25000
 opl2_reg_delay_time = 5000
 
