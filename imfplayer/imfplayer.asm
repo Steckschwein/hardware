@@ -5,6 +5,16 @@
 .include "../steckos/asminc/filedes.inc"
 
 .include "../steckos/kernel/via.inc"
+.include "ym3812.inc"
+
+.macro dec16 word 
+        lda word
+        bne :+
+        dec word+1
+:       dec word
+.endmacro
+
+
 
 CPU_CLOCK=clockspeed * 1000000
 
@@ -51,10 +61,6 @@ main:
 
 		lda #$04
 		sta temponr
-
-		lda #'X'
-		jsr krn_chrout
-
 
 @l4:
     	lda filenameptr
@@ -106,32 +112,32 @@ main:
 
 ; 	+Println
 
- 	SetVector	imf_data, imf_ptr
- 	stz delayl
- 	stz delayh
+		SetVector	imf_data, imf_ptr
+		stz delayl
+		stz delayh
 
-	jsr init_opl2
+		jsr init_opl2
 
-	sei
+		sei
 
-	ldx temponr
-	lda tempo+0,x
+		ldx temponr
+		lda tempo+0,x
 
-	sta via1t1cl  
-	lda tempo+1,x
-	sta via1t1ch            ; set high byte of count
+		sta via1t1cl  
+		lda tempo+1,x
+		sta via1t1ch            ; set high byte of count
 
-    lda #%11000000
-	sta via1ier             ; enable VIA1 T1 interrupt
-	lda #%01000000          ; T1 continuous, PB7 disabled  
-	sta via1acr 
+		lda #%11000000
+		sta via1ier             ; enable VIA1 T1 interrupt
+		lda #%01000000          ; T1 continuous, PB7 disabled  
+		sta via1acr 
 
-	SetVector player_isr, user_isr
-    
-    cli
+		SetVector player_isr, user_isr
+
+		cli
 
 loop:
-	jmp loop
+		jmp loop
 ; -	jsr keyin
 ;  	cmp #$03
 ;  	beq +
@@ -153,81 +159,72 @@ loop:
 ;  	jmp (retvec)
 
 player_isr:
-	lda #$81
+		bit via1ifr		; Interrupt from VIA?
+		bpl @isr_end
 
-	; lda $0230
-	; eor #$80
-	sta $0230
-	bit via1ifr		; Interrupt from VIA?
-	bpl @isr_end
-	
-	bit via1t1cl	; Acknowledge timer interrupt by reading channel low	
+		bit via1t1cl	; Acknowledge timer interrupt by reading channel low	
+
+
+		; delay counter zero? 
+		lda delayh    
+		clc
+		adc delayl
+		beq @l1	
+
+		; if no, 16bit decrement and exit routine
+		dec16 delayh
+
+		bra @isr_end
+@l1:	
+		ldy #$00
+		lda (imf_ptr),y
+		sta opl_stat
+		
+		iny
+		lda (imf_ptr),y
+
+		jsr opl2_delay_register
+
+		sta opl_data		
+
+		; jsr opl2_delay_data
+
+		iny
+		lda (imf_ptr),y
+		sta delayh
+
+		iny
+		lda (imf_ptr),y
+		sta delayl
+
+	 	; song data end reached? then jump back to the beginning
+		lda imf_ptr_h
+		cmp imf_end+1
+		bne @l3
+		lda imf_ptr
+		cmp imf_end+0
+		bne @l3
+		SetVector	imf_data, imf_ptr
+		bra @isr_end
+@l3:
+
+		;advance pointer by 4 bytes
+		clc
+		lda #$04
+		adc imf_ptr
+		sta imf_ptr
+		bcc @l4
+		inc imf_ptr_h
+@l4:	
+		lda #10
+		jsr krn_chrout
+		lda imf_ptr_h
+		jsr krn_hexout
+		lda imf_ptr
+		jsr krn_hexout
 
 @isr_end:
 	rts
-
-; 	bit via1t1cl	; Acknowledge timer interrupt by reading channel low	
-
-; 	; delay counter zero? 
-; 	lda .delayh    
-; 	clc
-; 	adc .delayl
-; 	beq ++	
-	
-; 	; if no, 16bit decrement and exit routine
-; 	+dec16 .delayh
-
-; 	bra +++
-; ++	
-; 	ldy #$00
-; 	lda (.imf_ptr),y
-; 	sta opl_stat
-	
-; 	iny
-; 	lda (.imf_ptr),y
-
-; 	jsr opl2_delay_register
-
-; 	sta opl_data		
-
-; 	; jsr opl2_delay_data
-
-; 	iny
-; 	lda (.imf_ptr),y
-; 	sta .delayh
-
-; 	iny
-; 	lda (.imf_ptr),y
-; 	sta .delayl
-
-; 	; song data end reached? then jump back to the beginning
-; 	lda .imf_ptr_h
-; 	cmp imf_end+1
-; 	bne +
-; 	lda .imf_ptr
-; 	cmp imf_end+0
-; 	bne +
-; 	+SetVector	imf_data, .imf_ptr
-; 	bra +++
-; +	
-
-; 	;advance pointer by 4 bytes
-; 	clc
-; 	lda #$04
-; 	adc .imf_ptr
-; 	sta .imf_ptr
-; 	bcc +
-; 	inc .imf_ptr_h
-; +	
-;     lda #10
-;     jsr chrout
-;     lda .imf_ptr_h
-;     jsr hexout
-;     lda .imf_ptr
-;     jsr hexout
-
-; +++
-;     rts
 
 
 error:
@@ -247,9 +244,5 @@ temponr:
 test_filename:  .asciiz "test.wlf"
 ; .loading 		!text "Loading from $",$00
 ; .loading_to		!text " to $",$00
-; ; !source <ym3812.a>
-; ; !source <t99xx.lib.a>
-; old_isr	!16 $ffff
 imf_end:	.word $ffff
 imf_data:
-
