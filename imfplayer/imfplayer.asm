@@ -77,12 +77,14 @@ main:
 		SetVector imf_data, sd_read_blkptr
 
 
-;     +Println
-; 	+PrintString .loading
+		crlf
+		jsr krn_primm
+		.asciiz "Loading from $"
+
 		lda #>imf_data
-		; jsr krn_hexout
+		jsr krn_hexout
 		lda #<imf_data
-		; jsr krn_hexout
+		jsr krn_hexout
 	
 		jsr krn_read    
 		lda errno
@@ -103,14 +105,17 @@ main:
 		adc #>imf_data
 		sta imf_end+1
     
-;     +PrintString .loading_to
+
+		jsr krn_primm
+		.asciiz " to $"
+
 	    lda imf_end+1
-	    ; jsr krn_hexout
+	    jsr krn_hexout
 	    lda imf_end
-	    ; jsr krn_hexout
+	    jsr krn_hexout
 
+	    crlf
 
-; 	+Println
 
 		SetVector	imf_data, imf_ptr
 		stz delayl
@@ -132,6 +137,7 @@ main:
 		lda #%01000000          ; T1 continuous, PB7 disabled  
 		sta via1acr 
 
+		copypointer user_isr, old_isr
 		SetVector player_isr, user_isr
 
 		cli
@@ -146,17 +152,18 @@ loop:
 ;  	beq +
 ;  	bra -
     
-; +   sei
-;  	lda #%01111111          ; disable T1 interrupt
-;     sta via1ier             
-; ; SR shift in, External clock on CB1
-;     lda #%00001100
-;     sta via1acr
+		sei
+		lda #%01111111          ; disable T1 interrupt
+		sta via1ier             
+		; SR shift in, External clock on CB1
+		lda #%00001100
+		sta via1acr
 
-;  	+copyPointer old_isr, user_isr
-;  	jsr .init_opl2
-;  	cli
-;  	jmp (retvec)
+		copypointer old_isr, user_isr
+
+	  	jsr init_opl2
+		cli
+		jmp (retvec)
 
 player_isr:
 		bit via1ifr		; Interrupt from VIA?
@@ -242,7 +249,6 @@ tempo:
 temponr:
 	.byte $02
 test_filename:  .asciiz "test.wlf"
-; .loading 		!text "Loading from $",$00
-; .loading_to		!text " to $",$00
+old_isr:	.word $ffff
 imf_end:	.word $ffff
 imf_data:
