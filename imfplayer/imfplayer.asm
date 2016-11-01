@@ -24,97 +24,91 @@ imf_ptr_h = imf_ptr + 1
 delayl    = $a2
 delayh    = delayl + 1
 
-irq = $fffe
-
 .import init_opl2, opl2_delay_data, opl2_delay_register
 
 main:
-   		SetVector test_filename, filenameptr
-		; copypointer paramptr, filenameptr
+;    		SetVector test_filename, filenameptr
+; 		; copypointer paramptr, filenameptr
 
-		ldy #$00
-@l1:	lda (filenameptr),y
-		beq @l2
+; 		ldy #$00
+; @l1:	lda (filenameptr),y
+; 		beq @l2
 	
-		iny
-		bra @l1
-@l2:
-		dey 
-		lda (filenameptr),y
-		and #%11011111
-		cmp #'F'
-		beq @l3
-		jmp error
-@l3:
+; 		iny
+; 		bra @l1
+; @l2:
+; 		dey 
+; 		lda (filenameptr),y
+; 		and #%11011111
+; 		cmp #'F'
+; 		beq @l3
+; 		jmp error
+; @l3:
 
-		dey 
-		lda (filenameptr),y
-		and #%11011111
-		cmp #'L'
-		bne @l4
+; 		dey 
+; 		lda (filenameptr),y
+; 		and #%11011111
+; 		cmp #'L'
+; 		bne @l4
 
-		dey 
-		lda (filenameptr),y
-		and #%11011111
-		cmp #'W'
-		bne @l4
+; 		dey 
+; 		lda (filenameptr),y
+; 		and #%11011111
+; 		cmp #'W'
+; 		bne @l4
 
-		lda #$04
-		sta temponr
+; 		lda #$04
+; 		sta temponr
 
-@l4:
-    	lda filenameptr
-    	ldx filenameptr +1
+; @l4:
+;     	lda filenameptr
+;     	ldx filenameptr +1
 
-		jsr krn_open
-
-		lda errno	
-		jsr krn_hexout
-
-		beq @l5
-		jmp error
-@l5:
-		SetVector imf_data, sd_read_blkptr
+; 		jsr krn_open
+; 		beq @l5
+; 		jmp error
+; @l5:
+; 		SetVector imf_data, sd_read_blkptr
 
 
-		crlf
-		jsr krn_primm
-		.asciiz "Loading from $"
+; 		crlf
+; 		jsr krn_primm
+; 		.asciiz "Loading from $"
 
 		lda #>imf_data
 		jsr krn_hexout
 		lda #<imf_data
 		jsr krn_hexout
+
+		crlf
 	
-		jsr krn_read    
-		lda errno
-		beq @l6
-		jmp error
-@l6:
-		jsr krn_close
+; 		jsr krn_read    
+; 		lda errno
+; 		beq @l6
+; 		jmp error
+; @l6:
+; 		jsr krn_close
 
-		plx
-		lda fd_area + FD_file_size + 0, x
-		jsr krn_hexout
-		clc
-		adc #<imf_data 
-		sta imf_end
+; 		plx
+; 		lda fd_area + FD_file_size + 0, x
+; 		clc
+; 		adc #<imf_data 
+; 		sta imf_end
 
-		lda fd_area + FD_file_size + 1, x
-		jsr krn_hexout
-		adc #>imf_data
-		sta imf_end+1
+; 		lda fd_area + FD_file_size + 1, x
+; 		adc #>imf_data
+; 		sta imf_end+1
     
 
-		jsr krn_primm
-		.asciiz " to $"
+; 		jsr krn_primm
+; 		.asciiz " to $"
 
-	    lda imf_end+1
-	    jsr krn_hexout
-	    lda imf_end
-	    jsr krn_hexout
+		lda #>imf_end
+		jsr krn_hexout
+		lda #<imf_end
+		jsr krn_hexout
 
-	    crlf
+		crlf
 
 
 		SetVector	imf_data, imf_ptr
@@ -137,21 +131,22 @@ main:
 		lda #%01000000          ; T1 continuous, PB7 disabled  
 		sta via1acr 
 
-		copypointer user_isr, old_isr
-		SetVector player_isr, user_isr
+		copypointer $fffe, old_isr
+		;copypointer user_isr, old_isr
+		SetVector player_isr, $fffe
 
 		cli
 
 loop:
-		jmp loop
-; -	jsr keyin
-;  	cmp #$03
-;  	beq +
 
-;  	cmp #'x'
-;  	beq +
-;  	bra -
-    
+;		jsr krn_keyin
+;		cmp #$03
+;		beq exit
+
+;		cmp #'x'
+;		beq exit
+		bra loop
+exit:   
 		sei
 		lda #%01111111          ; disable T1 interrupt
 		sta via1ier             
@@ -182,17 +177,23 @@ player_isr:
 		dec16 delayh
 
 		bra @isr_end
-@l1:	
+@l1:
+
 		ldy #$00
 		lda (imf_ptr),y
 		sta opl_stat
-		
+;		jsr krn_hexout
+
+;		inc crs_x
+
 		iny
 		lda (imf_ptr),y
 
 		jsr opl2_delay_register
 
 		sta opl_data		
+;		jsr krn_hexout
+
 
 		; jsr opl2_delay_data
 
@@ -206,10 +207,10 @@ player_isr:
 
 	 	; song data end reached? then jump back to the beginning
 		lda imf_ptr_h
-		cmp imf_end+1
+		cmp #>imf_end
 		bne @l3
 		lda imf_ptr
-		cmp imf_end+0
+		cmp #<imf_end
 		bne @l3
 		SetVector	imf_data, imf_ptr
 		bra @isr_end
@@ -229,10 +230,10 @@ player_isr:
 		jsr krn_hexout
 		lda imf_ptr
 		jsr krn_hexout
-
 @isr_end:
-	rts
-
+		;rts
+		; jump to kernel isr
+		jmp (old_isr)
 
 error:
 	jsr krn_hexout
@@ -247,8 +248,10 @@ tempo:
 	.word (CPU_CLOCK/560)
 	.word (CPU_CLOCK/700)
 temponr:
-	.byte $02
+	.byte $04
 test_filename:  .asciiz "test.wlf"
 old_isr:	.word $ffff
-imf_end:	.word $ffff
+;imf_end:	.word $ffff
 imf_data:
+.incbin "/home/dommas/imf/introcw3.imf"
+imf_end = imf_data + 12660
