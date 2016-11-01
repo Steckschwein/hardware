@@ -29,12 +29,12 @@ init_opl2:
 
 
 opl2_delay_data: ; 23000ns / 0
-.repeat 68
+.repeat opl2_data_delay
 	nop
 .endrepeat
 
 opl2_delay_register: ; 3300 ns
-.repeat 8
+.repeat opl2_reg_delay
 	nop
 .endrepeat
 	rts
