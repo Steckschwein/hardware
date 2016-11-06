@@ -27,88 +27,90 @@ delayh    = delayl + 1
 .import init_opl2, opl2_delay_data, opl2_delay_register
 
 main:
-;    		SetVector test_filename, filenameptr
-; 		; copypointer paramptr, filenameptr
+;		SetVector test_filename, filenameptr
+		copypointer paramptr, filenameptr
 
-; 		ldy #$00
-; @l1:	lda (filenameptr),y
-; 		beq @l2
+ 		ldy #$00
+@l1:	lda (filenameptr),y
+ 		beq @l2
 	
-; 		iny
-; 		bra @l1
-; @l2:
-; 		dey 
-; 		lda (filenameptr),y
-; 		and #%11011111
-; 		cmp #'F'
-; 		beq @l3
-; 		jmp error
-; @l3:
+ 		iny
+ 		bra @l1
+@l2:
+ 		dey 
+ 		lda (filenameptr),y
+ 		and #%11011111
+ 		cmp #'F'
+ 		beq @l3
+ 		jmp error
+@l3:
 
-; 		dey 
-; 		lda (filenameptr),y
-; 		and #%11011111
-; 		cmp #'L'
-; 		bne @l4
+		dey 
+		lda (filenameptr),y
+		and #%11011111
+		cmp #'L'
+		bne @l4
 
-; 		dey 
-; 		lda (filenameptr),y
-; 		and #%11011111
-; 		cmp #'W'
-; 		bne @l4
+		dey 
+		lda (filenameptr),y
+		and #%11011111
+		cmp #'W'
+		bne @l4
 
-; 		lda #$04
-; 		sta temponr
+		lda #$04
+		sta temponr
 
-; @l4:
-;     	lda filenameptr
-;     	ldx filenameptr +1
+@l4:
+     	lda filenameptr
+     	ldx filenameptr +1
 
-; 		jsr krn_open
-; 		beq @l5
-; 		jmp error
-; @l5:
-; 		SetVector imf_data, sd_read_blkptr
+ 		jsr krn_open
+ 		beq @l5
+		jmp error
+@l5:
 
 
-; 		crlf
-; 		jsr krn_primm
-; 		.asciiz "Loading from $"
+		SetVector imf_data, sd_read_blkptr
+
+
+		crlf
+		jsr krn_primm
+ 		.asciiz "Loading from $"
 
 		lda #>imf_data
 		jsr krn_hexout
 		lda #<imf_data
 		jsr krn_hexout
-
-		crlf
 	
-; 		jsr krn_read    
-; 		lda errno
-; 		beq @l6
-; 		jmp error
-; @l6:
-; 		jsr krn_close
+		jsr krn_read    
+		lda errno
+ 		beq @l6
+ 		jmp error
+@l6:
 
 ; 		plx
-; 		lda fd_area + FD_file_size + 0, x
-; 		clc
-; 		adc #<imf_data 
-; 		sta imf_end
+		lda fd_area + FD_file_size + 0, x
+		
+		clc
+		adc #<imf_data 
+ 		sta imf_end
 
-; 		lda fd_area + FD_file_size + 1, x
-; 		adc #>imf_data
-; 		sta imf_end+1
-    
+ 		lda fd_area + FD_file_size + 1, x
+ 
+ 		adc #>imf_data
+ 		sta imf_end+1
 
-; 		jsr krn_primm
-; 		.asciiz " to $"
+ 		jsr krn_primm
+ 		.asciiz " to $"
 
-		lda #>imf_end
+		lda imf_end+1
 		jsr krn_hexout
-		lda #<imf_end
+		lda imf_end+0
 		jsr krn_hexout
 
 		crlf
+
+		jsr krn_close
 
 
 		SetVector	imf_data, imf_ptr
@@ -142,29 +144,37 @@ loop:
 ;		jsr krn_keyin
 ;		cmp #$03
 ;		beq exit
-
 ;		cmp #'x'
 ;		beq exit
+
 		bra loop
+
 exit:   
+		lda #'X'
+		jsr krn_chrout
+
+	  	jsr init_opl2
+
 		sei
-		lda #%01111111          ; disable T1 interrupt
+
+		lda via1ier
+		and #%00111111          ; disable T1 interrupt
 		sta via1ier             
-		; SR shift in, External clock on CB1
-		lda #%00001100
-		sta via1acr
 
 		copypointer old_isr, user_isr
 
-	  	jsr init_opl2
 		cli
 		jmp (retvec)
 
 player_isr:
+		pha
+		phy
+
 		bit via1ifr		; Interrupt from VIA?
 		bpl @isr_end
 
 		bit via1t1cl	; Acknowledge timer interrupt by reading channel low	
+
 
 
 		; delay counter zero? 
@@ -207,10 +217,10 @@ player_isr:
 
 	 	; song data end reached? then jump back to the beginning
 		lda imf_ptr_h
-		cmp #>imf_end
+		cmp imf_end+1
 		bne @l3
 		lda imf_ptr
-		cmp #<imf_end
+		cmp imf_end+0
 		bne @l3
 		SetVector	imf_data, imf_ptr
 		bra @isr_end
@@ -231,8 +241,9 @@ player_isr:
 		lda imf_ptr
 		jsr krn_hexout
 @isr_end:
-		;rts
 		; jump to kernel isr
+		ply
+		pla
 		jmp (old_isr)
 
 error:
@@ -251,7 +262,7 @@ temponr:
 	.byte $04
 test_filename:  .asciiz "test.wlf"
 old_isr:	.word $ffff
-;imf_end:	.word $ffff
-imf_data:
-.incbin "/home/dommas/imf/introcw3.imf"
-imf_end = imf_data + 12660
+imf_end:	.word $ffff
+imf_data = $1200
+;.incbin "/home/dommas/imf/pacman.imf"
+;imf_end = imf_data + 20836
