@@ -26,8 +26,8 @@ imf_ptr_h = imf_ptr + 1
 
 main:
 ;		jmp play
-		SetVector test_filename, filenameptr
-;		copypointer paramptr, filenameptr
+;		SetVector test_filename, filenameptr
+		copypointer paramptr, filenameptr
 
  		ldy #$00
 @l1:	
