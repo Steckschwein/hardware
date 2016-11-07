@@ -1,8 +1,6 @@
 
 .include "../steckos/kernel/kernel.inc"
 .include "../steckos/kernel/kernel_jumptable.inc"
-.include "../steckos/kernel/fat32.inc"
-.include "../steckos/asminc/filedes.inc"
 
 .include "../steckos/kernel/via.inc"
 .include "ym3812.inc"
@@ -21,17 +19,19 @@ CPU_CLOCK=clockspeed * 1000000
 imf_ptr   = $a0
 imf_ptr_h = imf_ptr + 1
 
-delayl    = $a2
-delayh    = delayl + 1
+;delayl    = $a2
+;delayh    = delayl + 1
 
 .import init_opl2, opl2_delay_data, opl2_delay_register
 
 main:
-;		SetVector test_filename, filenameptr
-		copypointer paramptr, filenameptr
+;		jmp play
+		SetVector test_filename, filenameptr
+;		copypointer paramptr, filenameptr
 
  		ldy #$00
-@l1:	lda (filenameptr),y
+@l1:	
+		lda (filenameptr),y
  		beq @l2
 	
  		iny
@@ -61,8 +61,8 @@ main:
 		sta temponr
 
 @l4:
-     	lda filenameptr
-     	ldx filenameptr +1
+	     	lda filenameptr
+     		ldx filenameptr +1
 
  		jsr krn_open
  		beq @l5
@@ -88,15 +88,14 @@ main:
  		jmp error
 @l6:
 
-; 		plx
-		lda fd_area + FD_file_size + 0, x
+		jsr krn_getfilesize
 		
 		clc
 		adc #<imf_data 
  		sta imf_end
 
- 		lda fd_area + FD_file_size + 1, x
- 
+		txa
+
  		adc #>imf_data
  		sta imf_end+1
 
@@ -112,7 +111,7 @@ main:
 
 		jsr krn_close
 
-
+play:
 		SetVector	imf_data, imf_ptr
 		stz delayl
 		stz delayh
@@ -260,9 +259,9 @@ tempo:
 	.word (CPU_CLOCK/700)
 temponr:
 	.byte $04
-test_filename:  .asciiz "test.wlf"
+test_filename:  .asciiz "pacman.wlf"
 old_isr:	.word $ffff
 imf_end:	.word $ffff
-imf_data = $1200
-;.incbin "/home/dommas/imf/pacman.imf"
-;imf_end = imf_data + 20836
+delayl:		.word $0000
+delayh = delayl + 1
+imf_data = $2000
