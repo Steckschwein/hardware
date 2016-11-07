@@ -140,18 +140,15 @@ play:
 
 loop:
 
-;		jsr krn_keyin
+		jsr krn_keyin
 ;		cmp #$03
 ;		beq exit
-;		cmp #'x'
-;		beq exit
+		cmp #'x'
+		beq exit
 
 		bra loop
 
 exit:   
-		lda #'X'
-		jsr krn_chrout
-
 	  	jsr init_opl2
 
 		sei
@@ -258,8 +255,8 @@ tempo:
 	.word (CPU_CLOCK/560)
 	.word (CPU_CLOCK/700)
 temponr:
-	.byte $04
-test_filename:  .asciiz "pacman.wlf"
+	.byte $02
+;test_filename:  .asciiz "pacman.wlf"
 old_isr:	.word $ffff
 imf_end:	.word $ffff
 delayl:		.word $0000
