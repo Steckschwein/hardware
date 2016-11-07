@@ -19,6 +19,7 @@ text_mode_40 = 1
 .import init_sdcard
 .import fat_mount, fat_open, fat_isOpen, fat_close, fat_close_all, fat_read, fat_find_first, fat_find_next, fat_chdir
 .import fat_read2
+.import fat_getfilesize
 
 .import execv
 .import print_crlf
@@ -336,6 +337,9 @@ krn_primm:      		jmp primm
 
 .export krn_print_crlf
 krn_print_crlf:      	jmp print_crlf
+
+.export krn_getfilesize
+krn_getfilesize:      	jmp fat_getfilesize
 
 .segment "VECTORS"
 ; ----------------------------------------------------------------------------------------------

@@ -10,7 +10,7 @@
 .export fat_mount
 .export fat_open, fat_isOpen, fat_chdir
 .export fat_read, fat_read2, fat_find_first, fat_find_next
-.export fat_close_all, fat_close
+.export fat_close_all, fat_close, fat_getfilesize
 
 
 .ifdef DEBUG ; DEBUG
@@ -691,6 +691,22 @@ fat_close_all:
 
         ; in:
         ;   x - directory fd index into fd_area		
+
+	; get size of file in fd
+	; in:
+	;   x - fd offset
+	; out:
+	;   a - filesize lo
+	;   x - filesize hi
+
+fat_getfilesize:
+	lda fd_area + FD_file_size + 0, x
+	pha
+	lda fd_area + FD_file_size + 1, x
+	tax
+	pla
+	rts
+
 fat_find_first:
 		ldy #$00
 @l1:	lda (filenameptr),y
