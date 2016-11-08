@@ -129,13 +129,11 @@ play:
 		lda #%11000000
 		sta via1ier             ; enable VIA1 T1 interrupt
 
-		lda #%01000000
+		lda #%01000000		; T1 continuous, PB7 disabled  
 		ora via1acr
-		;lda #%01001100          ; T1 continuous, PB7 disabled  
 		sta via1acr 
 
 		copypointer $fffe, old_isr
-		;copypointer user_isr, old_isr
 		SetVector player_isr, $fffe
 
 		cli
@@ -144,7 +142,7 @@ loop:
 		bit state
 		bmi exit
 
-		jsr krn_keyin
+		jsr krn_getkey
 		cmp #$03
 		beq exit
 		cmp #'x'
@@ -152,25 +150,27 @@ loop:
 
 		bra loop
 
+
 exit:   
+	  	jsr init_opl2
+
 		jsr krn_primm
 		.asciiz " done."
 		crlf
 
-	  	jsr init_opl2
-
 		sei
 
-		lda via1ier
-		and #%00111111          ; disable T1 interrupt
-		sta via1ier             
+		lda #%01111111
+		sta via1ier	
 
-		;lda #%10111111
-		;and via1acr
-		lda #%00001100          ; T1 continuous, PB7 disabled  
-		sta via1acr 
 
 		copypointer old_isr, user_isr
+
+
+		lda #%10111111
+		and via1acr
+		sta via1acr
+
 
 		cli
 		jmp (retvec)
@@ -183,6 +183,7 @@ player_isr:
 		bpl @isr_end
 
 		bit via1t1cl	; Acknowledge timer interrupt by reading channel low	
+
 
 		; delay counter zero? 
 		lda delayh    
@@ -229,8 +230,10 @@ player_isr:
 		lda imf_ptr
 		cmp imf_end+0
 		bne @l3
+
 		lda #$80
 		sta state
+
 		bra @isr_end
 @l3:
 
