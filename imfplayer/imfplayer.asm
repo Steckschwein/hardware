@@ -1,7 +1,6 @@
 
 .include "../steckos/kernel/kernel.inc"
 .include "../steckos/kernel/kernel_jumptable.inc"
-
 .include "../steckos/kernel/via.inc"
 .include "ym3812.inc"
 
@@ -22,7 +21,7 @@ imf_ptr_h = imf_ptr + 1
 ;delayl    = $a2
 ;delayh    = delayl + 1
 
-.import init_opl2, opl2_delay_data, opl2_delay_register
+.import init_opl2,  opl2_delay_register
 
 main:
 ;		jmp play
@@ -129,7 +128,10 @@ play:
 
 		lda #%11000000
 		sta via1ier             ; enable VIA1 T1 interrupt
-		lda #%01000000          ; T1 continuous, PB7 disabled  
+
+		lda #%01000000
+		ora via1acr
+		;lda #%01001100          ; T1 continuous, PB7 disabled  
 		sta via1acr 
 
 		copypointer $fffe, old_isr
@@ -139,16 +141,22 @@ play:
 		cli
 
 loop:
+		bit state
+		bmi exit
 
 		jsr krn_keyin
-;		cmp #$03
-;		beq exit
+		cmp #$03
+		beq exit
 		cmp #'x'
 		beq exit
 
 		bra loop
 
 exit:   
+		jsr krn_primm
+		.asciiz " done."
+		crlf
+
 	  	jsr init_opl2
 
 		sei
@@ -156,6 +164,11 @@ exit:
 		lda via1ier
 		and #%00111111          ; disable T1 interrupt
 		sta via1ier             
+
+		;lda #%10111111
+		;and via1acr
+		lda #%00001100          ; T1 continuous, PB7 disabled  
+		sta via1acr 
 
 		copypointer old_isr, user_isr
 
@@ -170,8 +183,6 @@ player_isr:
 		bpl @isr_end
 
 		bit via1t1cl	; Acknowledge timer interrupt by reading channel low	
-
-
 
 		; delay counter zero? 
 		lda delayh    
@@ -211,14 +222,15 @@ player_isr:
 		lda (imf_ptr),y
 		sta delayl
 
-	 	; song data end reached? then jump back to the beginning
+	 	; song data end reached? then set state to 80 so loop will terminate
 		lda imf_ptr_h
 		cmp imf_end+1
 		bne @l3
 		lda imf_ptr
 		cmp imf_end+0
 		bne @l3
-		SetVector	imf_data, imf_ptr
+		lda #$80
+		sta state
 		bra @isr_end
 @l3:
 
@@ -251,12 +263,13 @@ end:
 
 tempo:
  	; tempo is one of 280Hz (DN2), 560Hz (imf), 700Hz (.wlf) 
-	.word (CPU_CLOCK/240)
+	.word (CPU_CLOCK/280)
 	.word (CPU_CLOCK/560)
 	.word (CPU_CLOCK/700)
 temponr:
 	.byte $02
 ;test_filename:  .asciiz "pacman.wlf"
+state:	.byte $00
 old_isr:	.word $ffff
 imf_end:	.word $ffff
 delayl:		.word $0000
