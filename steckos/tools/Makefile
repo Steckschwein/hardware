@@ -1,9 +1,9 @@
 ASM_INCLUDE=../asminc
 
-all: ls.bin ll.bin date.bin nvram.bin uname.bin hello.bin time-test.bin mainarg.bin fibo.bin clear.bin
+all: ls.prg ll.prg date.prg nvram.prg uname.prg hello.prg time-test.prg mainarg.prg fibo.prg clear.prg
 
 clean:
-	rm -f *.bin *.s *.o
+	rm -f *.prg *.s *.o
   
 %.o: %.c
 	cc65 -I ../../cc65 -t none --cpu 65c02 -O $<
@@ -11,48 +11,48 @@ clean:
 %.o: %.asm
 	ca65 $(@:.o=.asm)
 
-%.bin: %.o ../lib/steckschwein-kernel.lib
+%.prg: %.o ../lib/steckschwein-kernel.lib
 	ld65 -C ../lib/steckschwein-kernel.cfg $< ../lib/steckschwein-kernel.lib -o $@
 
-ls.bin: ls.o ls_entry_short.o
-	cl65 --include-dir $(ASM_INCLUDE) --target none --config ../kernel/steckos.cfg ls.o ls_entry_short.o -o ls.bin
-ll.bin: ls.o ls_entry_long.o
-	cl65 --include-dir $(ASM_INCLUDE) --target none --config ../kernel/steckos.cfg ls.o ls_entry_long.o -o ll.bin
+ls.prg: ls.o ls_entry_short.o
+	cl65 --include-dir $(ASM_INCLUDE) --target none --config ../kernel/steckos.cfg ls.o ls_entry_short.o -o ls.prg
+ll.prg: ls.o ls_entry_long.o
+	cl65 --include-dir $(ASM_INCLUDE) --target none --config ../kernel/steckos.cfg ls.o ls_entry_long.o -o ll.prg
 
-clear: clear.bin
-	../../transfer.py clear.bin -s 0x1000
+clear: clear.prg
+	../../transfer.py clear.prg -s 0x1000
 
-uname: uname.bin
-	../../transfer.py uname.bin -s 0x1000
+uname: uname.prg
+	../../transfer.py uname.prg -s 0x1000
 
-mainarg: mainarg.bin
-	../../transfer.py mainarg.bin -s 0x1000
+mainarg: mainarg.prg
+	../../transfer.py mainarg.prg -s 0x1000
 	
-hello: hello.bin
-	../../transfer.py hello.bin -s 0x1000
+hello: hello.prg
+	../../transfer.py hello.prg -s 0x1000
     
-sieve: sieve.bin
-	../../transfer.py sieve.bin -s 0x1000
+sieve: sieve.prg
+	../../transfer.py sieve.prg -s 0x1000
 
-nvram: nvram.bin
-	../../transfer.py nvram.bin -s 0x1000
+nvram: nvram.prg
+	../../transfer.py nvram.prg -s 0x1000
 
-date: date.bin
-	../../transfer.py date.bin -s 0x1000
+date: date.prg
+	../../transfer.py date.prg -s 0x1000
     
-stdio_test: stdio_test.bin
-	../../transfer.py stdio_test.bin -s 0x1000
+stdio_test: stdio_test.prg
+	../../transfer.py stdio_test.prg -s 0x1000
 
-time-test: time-test.bin
-	../../transfer.py time-test.bin -s 0x1000
+time-test: time-test.prg
+	../../transfer.py time-test.prg -s 0x1000
     
-fibo: fibo.bin
-	../../transfer.py fibo.bin -s 0x1000
+fibo: fibo.prg
+	../../transfer.py fibo.prg -s 0x1000
     
-ls: ls.bin
-	../../transfer.py ls.bin -s 0x1000
+ls: ls.prg
+	../../transfer.py ls.prg -s 0x1000
 	
-%.bin: %.a
+%.prg: %.a
 	acme -v -Wtype-mismatch -f plain --cpu 65c02 -o $@ $<
 
 %.o: %.c

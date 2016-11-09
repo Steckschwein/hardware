@@ -141,6 +141,6 @@ execv_o:
         debugptr "cmdptr:", cmdptr
 		jmp	appstart
 		
-execv_fileext:	.byte ".bin",0
+execv_fileext:	.byte ".prg",0
 execv_filename: .res 8+1+3+1
 .endif
