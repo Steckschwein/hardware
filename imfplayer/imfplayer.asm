@@ -18,26 +18,26 @@ CPU_CLOCK=clockspeed * 1000000
 imf_ptr   = $a0
 imf_ptr_h = imf_ptr + 1
 
-;delayl    = $a2
-;delayh    = delayl + 1
+delayl    = $a2
+delayh    = delayl + 1
 
 .import init_opl2,  opl2_delay_register
 
 main:
 ;		jmp play
 ;		SetVector test_filename, filenameptr
-		copypointer paramptr, filenameptr
+;		copypointer paramptr, filenameptr
 
  		ldy #$00
 @l1:	
-		lda (filenameptr),y
+		lda (paramptr),y
  		beq @l2
 	
  		iny
  		bra @l1
 @l2:
  		dey 
- 		lda (filenameptr),y
+ 		lda (paramptr),y
  		and #%11011111
  		cmp #'F'
  		beq @l3
@@ -45,13 +45,13 @@ main:
 @l3:
 
 		dey 
-		lda (filenameptr),y
+		lda (paramptr),y
 		and #%11011111
 		cmp #'L'
 		bne @l4
 
 		dey 
-		lda (filenameptr),y
+		lda (paramptr),y
 		and #%11011111
 		cmp #'W'
 		bne @l4
@@ -60,8 +60,8 @@ main:
 		sta temponr
 
 @l4:
-	     	lda filenameptr
-     		ldx filenameptr +1
+	     	lda paramptr
+     		ldx paramptr +1
 
  		jsr krn_open
  		beq @l5
@@ -160,17 +160,16 @@ exit:
 
 		sei
 
-		lda #%01111111
+		lda #%01000000
 		sta via1ier	
 
 
 		copypointer old_isr, user_isr
 
 
-		lda #%10111111
-		and via1acr
+		lda via1acr
+		and #%10111111
 		sta via1acr
-
 
 		cli
 		jmp (retvec)
@@ -275,6 +274,6 @@ temponr:
 state:	.byte $00
 old_isr:	.word $ffff
 imf_end:	.word $ffff
-delayl:		.word $0000
-delayh = delayl + 1
-imf_data = $2000
+;delayl:		.word $0000
+;delayh = delayl + 1
+imf_data = $1230	
