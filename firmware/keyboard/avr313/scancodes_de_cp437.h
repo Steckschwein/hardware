@@ -7,13 +7,13 @@
 #define C_BEL 0x07 // Ctrl-G, Bell
 #define C_BS  0x08 // Ctrl-H, Backspace
 
-#define CRSR_UP 	 'A' | 0x80
-#define CRSR_DOWN 	 'B' | 0x80
-#define CRSR_RIGHT 	 'C' | 0x80
-#define CRSR_LEFT 	 'D' | 0x80
-#define KEY_HOME 	 'E' | 0x80
-#define KEY_END 	 'F' | 0x80
-#define KEY_DEL 	 'G' | 0x80
+#define CRSR_UP 	 0x1E // RS (Record Separator)
+#define CRSR_DOWN 	 0x1F // US (Unit separator)
+#define CRSR_RIGHT 	 0x10 // DLE (Data Link Escape)
+#define CRSR_LEFT 	 0x11 // DC1 (Device Control 1
+#define KEY_HOME 	 0x12 // DC2
+#define KEY_END 	 0x13 // DC3
+#define KEY_DEL 	 0x14 // DC4
 
 // Unshifted characters - for a "US QWERTY" keyboard only - Scan Code Set 2
 const unsigned char scancodes[][5] PROGMEM = {
