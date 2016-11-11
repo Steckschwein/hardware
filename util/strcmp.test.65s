@@ -3,12 +3,15 @@
 dirptr=$0
 
 test_dirs=10
-test_in=input_14
+test_in=input_15
 test_input=test_in + test_dirs; address of input + size of results
 
-	lda	#$e0
-	bit	#$30
-	cmp #$ff
+
+fd_area						= $0320 ; File descriptor area until $0350 
+FD_Entries_Max = 16
+FD_Entry_Size = 9 ; 9 byte per fd entry
+krn_tmp=$ea
+
 	jmp	test_suite	
 
 	.include "asm_unit.asm"
@@ -114,6 +117,8 @@ input_13 	.db 0,0,0,0,0,0,0,0,0,1
 			.ascii ".ssh",0
 input_14 	.db 0,0,0,0,0,0,0,0,0,0
 			.ascii "", 0
+input_15 	.db 0,0,1,0,0,0,0,0,0,0
+			.ascii "ls", 0
 
 
 test_dir_tab
