@@ -19,7 +19,7 @@ spi_select:
 ; Destructive: A,X,Y
 ;----------------------------------------------------------------------------------------------
 spi_rw_byte:
-		sta spitmp	; zu transferierendes byte im akku nach tmp0 retten
+		sta krn_tmp	; zu transferierendes byte im akku nach tmp0 retten
 
 		ldx #$08
 		
@@ -30,7 +30,7 @@ spi_rw_byte:
 		tay		 ; bunkern
 
 @l:
-		rol spitmp
+		rol krn_tmp
 		tya		; portinhalt
 		ror		; datenbit reinschieben
 

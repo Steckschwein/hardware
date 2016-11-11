@@ -18,11 +18,11 @@ crs_ptr = $e4
 msgptr  = $e6		; 2 bytes
 
 ; kernel pointer (internally used)
-krn_ptr1    = $e8
+krn_ptr1    = $e8	; 2 bytes
+krn_ptr2    = $ea	; 2 bytes
+krn_ptr3    = $ec	; 2 bytes
 
-; SPI
-spitmp 	    = $ec
-krn_tmp 	= $ed
+krn_tmp     = $ee	; 2 bytes
 
 ; FAT32
 filenameptr = $f0   ; 2 byte
@@ -39,3 +39,5 @@ lba_addr_fat 	= $0284		; 4 bytes
 blocks			= $0288		; 3 bytes - blocks to read, 4GB -> 4294967296 >> 9 = 8388608 ($800000) max blocks/file 
 
 errno	 	    = $0300
+;TODO FIXME rename
+__oserror 		= errno

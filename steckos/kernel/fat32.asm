@@ -38,21 +38,50 @@
 .endmacro
 
 		;in: 
-		;	x - offset into fd_area
+		;	a/x - count 
+		;	dw	- word as pointer to target adress
+		;	db	- byte as offset into fd_area
 		;out:
-		;	a - 0 ok, otherwise error
+		;	a/x - bytes read on success, -1 on error and errno set accordingly
 fat_read2:
+		cmp		#0
+		bne		@_r0			; edge case, test if the count argument is zero?
+		cpx		#0
+		bne		@_r1			
+        stz     __oserror
+		bra		@_rexit
+@_r0:	
+		cpx		#2				; a was not zero, if cpx is >= $2 we have to read > BLOCK_SIZE, cannot store to target ptr :/
+	
+@_r1:			
+		sta		krn_ptr3			; save count
+		stx		krn_ptr3+1
+		eor     #$ff				; the count argument
+        sta     krn_ptr1
+        txa
+        eor     #$ff
+        sta     krn_ptr1+1          ; remember -count-1
+		
+		pla
+		sta		sd_read_blkptr
+		pla
+		sta 	sd_read_blkptr+1
+		plx							; pop fd
         debugcpu "fr2"
         jsr calc_lba_addr
 		jsr calc_blocks
 ;        debug32s "r2 lb:", lba_addr
 ;		debug24s "r2 bc:", blocks
-		
-		SetVector block_data, sd_read_blkptr		; vector to kernel block_data area		
+;		SetVector block_data, sd_read_blkptr		; vector to kernel block_data area		
 		jsr sd_read_block
 		lda	errno
 		debugA "r2"
 		rts
+@_rexit:
+		pla
+		pla
+		pla
+		rts		
 		
 		;in: 
 		;	x - offset into fd_area
@@ -62,9 +91,8 @@ fat_read:
         debugcpu "fr"
         jsr calc_lba_addr
 		jsr calc_blocks
-
-        debug32s "fr lba:", lba_addr
-		debug24s "fr bc:", blocks
+;        debug32s "fr lba:", lba_addr
+;		debug24s "fr bc:", blocks
 ;        debug32s "fr fs: ", fd_area + (FD_Entry_Size*2) + FD_file_size ;1st file entry
 		jmp sd_read_multiblock
 ;		jmp sd_read_block
@@ -616,7 +644,7 @@ fat_open_rootdir:
         ldx #FD_INDEX_TEMP_DIR
 		rts
 
-        ; clone file descriptor of current dir to temp directory
+        ; clone source file descriptor with offset x into fd_area to target fd with y
         ; in:
         ;   x - source offset into fd_area
         ;   y - target offset into fd_area

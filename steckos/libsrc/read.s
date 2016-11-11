@@ -24,12 +24,11 @@
 		bne		@_r0			; edge case, test if the count argument is zero?
 		cpx		#0
 		bne		@_r0
-		lda     #0
-        sta     __oserror
+        stz     __oserror
 		rts		
 @_r0:	
-		sta     ptr3			; save as result
-        stx     ptr3+1          ; save count as result 
+		sta     ptr3			
+        stx     ptr3+1          ; save given count as result 
 		eor     #$FF			; the count argument
         sta     ptr1
         txa
@@ -44,25 +43,29 @@
         cpx     #$01			; high byte must be 0
         bcs     invalidfd
         sta     tmp2			; save to tmp2, offset to fd_area
-		tax
+		tax						; fd to x
+
+		
+		
 		jsr		krn_isOpen
 		bcs     invalidfd
 
 ; Read the block
+		
 		jsr		krn_read2		; x holds the fd
+		
 		beq		@_r1
         jmp     __directerrno   ; Sets _errno, clears _oserror, returns -1
 @_r1:
-		;TODO copy block to target 
-		;check count>BLOCK_SIZE
-		lda		#$00	; TODO FIXME impl. kernel memcpy()
-		sta		ptr4
-		lda		#$da
-		sta		ptr4+1
+
+;		lda		#$00	; TODO FIXME impl. kernel memcpy()
+;		sta		ptr4
+;		lda		#$da
+;		sta		ptr4+1
 		
 		ldy		#0
 @_r2:
-		lda		(ptr4), y
+		lda		(ptr3), y
 		sta		(ptr2), y
 		iny
 		bne		@_r3
