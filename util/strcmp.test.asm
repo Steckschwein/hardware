@@ -5,8 +5,6 @@ main:
     bra main
 
 .include "../bios/bios_call.inc"
-.include "strcmp.asm"
-.include "asm_unit.asm"
 
 dirptr=$0
 test_dirs=11
@@ -40,8 +38,8 @@ test_input=*;   input_X + test_dirs; address of input + size of results
 .endmacro
 
 test_suite:
-;    SetTestInput input_1
- ;   jsr test
+    SetTestInput input_1
+    jsr test
     SetTestInput input_2
     jsr test
     SetTestInput input_3
@@ -66,7 +64,9 @@ test_suite:
     jsr test
     SetTestInput input_13
     jsr test
-    SetTestInput input_14
+;    SetTestInput input_14
+ ;   jsr test
+    SetTestInput input_15
     jsr test
     rts
     
@@ -107,7 +107,7 @@ dir_1:	     .byte "FILE00  TXT"
 dir_2:	     .byte "LL      BIN"	;2
 dir_3:	     .byte "LS      BIN"	;4
 dir_4:	     .byte "LOADER  BIN"	;6
-dir_5:	     .byte "FILE04  TXT"	;8
+dir_5:	     .byte "FIBONACIPRG"	;8
 dir_6:	     .byte "TEST    TXT"	;10
 dir_7:	     .byte "PROGS      "	;12
 dir_8:	     .byte ".          "	;14
@@ -116,16 +116,16 @@ dir_10:	     .byte ".SSH       "	;18
 dir_11:	     .byte "..FOO      "	;20
 
 input_1: 	.byte 0,0,1,0,0,0,0,0,0,0,0 ;expected result - 0 - no match, 1 - match - eg. 0,0,1 mean matches "LS        BIN" from dir_3
-			.byte "ls.bin",0        ;user input
+			.byte "ls.bin",0        	;user input
 input_2: 	.byte 0,1,1,1,0,0,0,0,0,0,0
 			.byte "l*.bin",0
 input_3: 	.byte 0,1,1,0,0,0,0,0,0,0,0
 			.byte "l?.bin",0
-input_4: 	.byte 0,1,1,1,0,0,0,0,0,0,0
+input_4: 	.byte 0,1,1,1,0,0,0,0,0,0,0; 
 			.byte "l**.bin",0
-input_5: 	.byte 0,0,0,0,0,0,0,0,0,0,0; FIXME
+input_5: 	.byte 0,1,1,0,0,0,0,0,0,0,0;
 			.byte "l??.bin",0
-input_6: 	.byte 0,0,0,1,0,0,0,0,0,0,0; FIXME
+input_6: 	.byte 0,1,1,1,0,0,0,0,0,0,0;
 			.byte "l?????.bin",0
 input_7: 	.byte 0,0,1,0,0,0,0,0,0,0,0
 			.byte "Ls.bin",0
@@ -141,8 +141,10 @@ input_12: 	.byte 0,0,0,0,0,0,1,0,0,0,0
 			.byte "progs",0
 input_13: 	.byte 0,0,0,0,0,0,0,0,0,1,0
 			.byte ".ssh",0
-input_14: 	.byte 0,0,0,0,0,0,0,0,0,0,1
+input_14: 	.byte 0,0,0,0,0,0,0,0,0,0,1; FIXME
 			.byte "..foo",0
+input_15: 	.byte 0,0,0,0,0,0,0,0,0,0,0
+			.byte "l",0
 
 test_dir_tab:
 	.word dir_1
@@ -157,3 +159,6 @@ test_dir_tab:
     .word dir_10
     .word dir_11
 test_dir_tab_e:
+
+.include "strcmp.asm"
+.include "asm_unit.asm"

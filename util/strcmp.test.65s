@@ -87,7 +87,6 @@ dir_6	     .ascii "TEST    TXT"	;10
 dir_7	     .ascii "PROGS      "	;12
 dir_8	     .ascii ".          "	;14
 dir_9	     .ascii "..         "	;16
-dir_10	     .ascii ".SSH       "	;18
 
 input_1 	.db 0,0,1,0,0,0,0,0,0,0
 			.ascii "ls.bin",0
@@ -119,6 +118,10 @@ input_14 	.db 0,0,0,0,0,0,0,0,0,0
 			.ascii "", 0
 input_15 	.db 0,0,1,0,0,0,0,0,0,0
 			.ascii "ls", 0
+input_16 	.db 1,1,1,1,1,1,1,1,1,1
+			.ascii "*.*", 0
+input_17 	.db 0,0,1,0,0,0,0,0,0,0
+			.ascii "*", 0
 
 
 test_dir_tab

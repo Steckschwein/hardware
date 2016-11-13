@@ -8,10 +8,10 @@ clean:
 	rm -f *.o *.bin 
 
 %.o: %.asm
-	ca65 --target none $<
+	ca65 -t none --cpu 65c02 -o $@ $(@:.o=.asm)
 
 strcmp.test.bin: $(OBJS)
 	ld65 $(LDFLAGS) $(OBJS) -o strcmp.test.bin
     
-test: all
+test: strcmp.test.bin
 	../transfer.py strcmp.test.bin -s 0x1000
