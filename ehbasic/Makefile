@@ -1,10 +1,10 @@
-OBJ=min_mon.bin
-all: $(OBJ) basic.a
+OBJ=steck_mon.prg
+all: $(OBJ) 
 clean:
-	rm -f *.bin 
+	rm -f *.prg *.o
 
-%.bin: %.a basic.a ext/*.a
-	acme -v -f plain -l $<.labels --cpu 65c02 -o $@ $<
+%.prg: %.asm basic.asm 
+	cl65 -t none --config ../steckos/kernel/steckos.cfg -o $@ $<
 
 transfer: all
-	../transfer.py $(OBJ) 0xb000
+	../transfer.py $(OBJ) 
