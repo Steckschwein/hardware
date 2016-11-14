@@ -176,7 +176,7 @@ chrout:
 	rts
     
 getkey:
-	jsr krn_keyin
+	jsr krn_getkey
 	cmp #$00; restore zero flag, cause plx override it
 	rts
 
