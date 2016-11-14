@@ -1,76 +1,6 @@
 dir_entry_size=11
 krn_tmp=$a0
 
-match2:
-				lda	test_input		;empty input?
-				beq	m_not_found
-				
-				ldx #0
-				ldy	#0
-@0:				lda	test_input,x	; skip leading dots
-				beq	<compare>
-				cmp	#'.'
-				bne	@uppercase_0
-				sta buffer,y
-				inx
-				iny
-				cpx	#2
-				bne	@0				;go on, there may other chars still left
-@uppercase:		lda	test_input,x
-				beq	<compare>
-@uppercase_0:	cmp	#'.'
-				beq	@fill_name_space
-				cmp	#'*'
-				beq	@fill_name_wildcard
-				cmp	#'a'			; regular char, match uppercase
-				bcc @uppercase_1
-				cmp #'z'
-				bcs @uppercase_1
-				and #$df			; uppercase
-@uppercase_1:	sta buffer,y
-				inx
-				iny
-				cpx	#8+3+1
-				bne	@0
-				bra	m_not_found		; 8.3 overflow
-				
-@fill_name_wildcard:
-				lda #'?'
-				bra	@fill_name
-@fill_name_space:
-				lda	#' '
-@fill_name:		sta	buffer,y
-				iny
-				cpy	#8
-				bne	@fill_name
-				inx	; skip the 		; l*l.bin
-				
-				
-@cdpd_or_ext:	
-				cpx	#0				; file starts with '.'
-				beq	@cdpd_0			; handle cd or pd
-				bra	@ext_0			; handle ext - skip the dot, not used during compare
-
-@cdpd:			lda	test_input,x
-				beq	<compare>
-@cdpd_0:	
-				sta	buffer,y
-				iny
-				inx
-				cpx	#8+3+1
-				bne	@cdpd
-				bra m_not_found
-				
-@ext:			lda	test_input,x
-				beq	<compare>
-				sta	buffer,y
-				iny
-@ext_0:			inx
-				cpx	#8+3+1
-				bne	@ext
-				bra m_not_found				
-
-
 match:
 	ldx #0
 	ldy #0
@@ -158,4 +88,3 @@ m_found:
 m_not_found:
 	clc
  	rts
-buffer: .res 8+3, 0

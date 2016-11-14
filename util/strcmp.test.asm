@@ -1,10 +1,13 @@
 .setcpu "65c02"
 .org    $1000
-	jsr	test_suite
-main:
-    bra main
+
+			jsr	test_suite			
+main:		bra main
 
 .include "../bios/bios_call.inc"
+.include "asm_unit.asm"
+;.include "strcmp.asm"
+.include "strcmp2.asm"
 
 dirptr=$0
 test_dirs=11
@@ -18,23 +21,30 @@ test_input=*;   input_X + test_dirs; address of input + size of results
 .endmacro
 
 .macro SetTestInput input
-    lda #<input+test_dirs
-    sta a0+1
-    sta a1+1
-    sta a2+1
-    sta a3+1
-    sta a4+1
+    lda #<(input+test_dirs)
+	sta uppaercase+1
+	sta testinput+1
+;    sta a0+1
+ ;   sta a1+1
+  ;  sta a2+1
+   ; sta a3+1
+    ;sta a4+1
     lda #<input
     sta a5+1
+	;sta a50+1
     ;high bytes
     lda #>(input+test_dirs)
-    sta a0+2
-    sta a1+2
-    sta a2+2
-    sta a3+2
-    sta a4+2
+	sta uppaercase+2
+	sta testinput+2
+;    sta a0+2
+ ;   sta a1+2
+  ;  sta a2+2
+   ; sta a3+2
+    ;sta a4+2
+	
     lda #>input
     sta a5+2
+	;sta a50+2
 .endmacro
 
 test_suite:
@@ -64,44 +74,54 @@ test_suite:
     jsr test
     SetTestInput input_13
     jsr test
-;    SetTestInput input_14
- ;   jsr test
+	SetTestInput input_14
+	jsr test
     SetTestInput input_15
     jsr test
     rts
     
 test:
-    Println
-	ldx #0
-	ldy #0
+			Println
+			ldx #0
+			ldy #0
 l1:
-	lda test_dir_tab,x
-	sta dirptr
-	lda test_dir_tab+1,x
-	sta dirptr+1
+			lda test_dir_tab,x
+			sta dirptr
+			lda test_dir_tab+1,x
+			sta dirptr+1
     
-	phx
-	phy
-	jsr match	; check <name>.<ext> against 11 byte dir entry <name> <ext>
-	ply
-	plx
-	lda	#0
-	rol			;result in carry to bit 0	
-    ;jsr hexout
-a5:	cmp	test_input, y
-	bne	_failed
-	jsr	_test_ok
-    bra _next
+			phx
+			phy
+			jsr match2	; check <name>.<ext> against 11 byte dir entry <name> <ext>
+			ply
+			plx
+			lda	#0
+			rol			;result in carry to bit 0	
+;			jsr hexout
+;a50:		lda test_input, y
+;			jsr hexout
+a5:			cmp	test_input, y
+			bne	_failed
+			jsr	_test_ok
+			bra _next
 _failed:
-	;failed with 'y'
-	jsr	_test_failed
+			;failed with 'y'
+			jsr	_test_failed
 _next:
-	iny
-	inx
-	inx
-	cpx	#test_dir_tab_e-test_dir_tab
-	bne	l1	
-	rts
+			iny
+			inx
+			inx
+			cpx	#test_dir_tab_e-test_dir_tab
+			bne	l1
+			lda #' '
+			jsr vdp_chrout
+			ldx #0
+testinput:	lda	test_input, x
+			beq	@oe
+			jsr vdp_chrout
+			inx 	
+			bne testinput
+@oe:		rts
 		
 dir_1:	     .byte "FILE00  TXT"
 dir_2:	     .byte "LL      BIN"	;2
@@ -159,6 +179,3 @@ test_dir_tab:
     .word dir_10
     .word dir_11
 test_dir_tab_e:
-
-.include "strcmp.asm"
-.include "asm_unit.asm"
