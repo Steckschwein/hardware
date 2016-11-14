@@ -167,13 +167,7 @@ EscapePressed:
         STX  IN                 ; Store length of string
         RTS                     ; Return
 
-chrout:
-	pha
-	phx
-	jsr krn_chrout
-	plx
-	pla
-	rts
+chrout 	= krn_chrout
     
 getkey:
 	jsr krn_getkey
