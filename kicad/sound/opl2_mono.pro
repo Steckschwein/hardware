@@ -1,4 +1,4 @@
-update=Donnerstag, 29. Oktober 2015 'u02' 18:02:11
+update=Mon 31 Oct 2016 11:56:42 AM CET
 version=1
 last_client=kicad
 [cvpcb]
@@ -65,3 +65,13 @@ LibName31=y3014b
 LibName32=ym3812
 LibName33=rc4136
 LibName34=osc
+[schematic_editor]
+version=1
+PageLayoutDescrFile=
+PlotDirectoryName=
+SubpartIdSeparator=0
+SubpartFirstId=65
+NetFmtName=
+SpiceForceRefPrefix=0
+SpiceUseNetNumbers=0
+LabSize=60

@@ -18,6 +18,12 @@ KEY_BACKSPACE 		= $08
 KEY_ESCAPE			= $1b
 KEY_ESCAPE_CRSR_UP	= 'A'
 KEY_ESCAPE_CRSR_DOWN	= 'B'
+
+KEY_CRSR_UP 		= $1E 
+KEY_CRSR_DOWN 	 	= $1F 
+KEY_CRSR_RIGHT 	 	= $10 
+KEY_CRSR_LEFT 	 	= $11 
+
 BUF_SIZE			= 32
 
 entries = $00
@@ -96,6 +102,31 @@ inputloop:
 
 	cmp #KEY_ESCAPE
 	beq escape
+	
+	cmp #KEY_CRSR_LEFT
+	bne @l1
+	jsr krn_primm
+	.asciiz "links"
+	bra inputloop
+@l1:
+	cmp #KEY_CRSR_RIGHT
+	bne @l2
+	jsr krn_primm
+	.asciiz "rechts"
+	bra inputloop
+@l2:
+	cmp #KEY_ESCAPE_CRSR_UP
+	bne @l3
+	jsr krn_primm
+	.asciiz "hoch"
+	bra inputloop
+@l3:
+	cmp #KEY_ESCAPE_CRSR_DOWN
+	bne @l4
+	jsr krn_primm
+	.asciiz "runter"
+	bra inputloop
+@l4:
 
 
 	sta (bufptr),y
