@@ -1,4 +1,4 @@
-SERIALDEVICE=$(shell ls -1r /dev/cu.usbmodem* | head -1)
+SERIALDEVICE=/dev/ttyACM1
 
 # 8MHz
 CPUSPEED=8000000
@@ -40,13 +40,13 @@ $(PRG).eep: $(PRG).elf
 $(PRG).lss: $(PRG).elf 
 	$(OBJDUMP) -h -S $< > $@
 
-clean :
+clean:
 	rm -f *.hex *.obj *.o *.elf *.eep *.lss
 
-burn : $(PRG).hex
+burn: $(PRG).hex
 	$(LOADER) $(BURN)
     
-fuse : 
+fuse: 
 	$(LOADER) $(FUSES)
 
 
