@@ -48,10 +48,15 @@ test_input=*;   input_X + test_dirs; address of input + size of results
 .endmacro
 
 test_suite:
+    SetTestInput input_8
+ ;   jsr test
+    SetTestInput input_9
+;    jsr test
+	;rts
     SetTestInput input_1
     jsr test
     SetTestInput input_2
-    jsr test
+	jsr test
     SetTestInput input_3
     jsr test
     SetTestInput input_4
@@ -77,6 +82,12 @@ test_suite:
 	SetTestInput input_14
 	jsr test
     SetTestInput input_15
+    jsr test
+    SetTestInput input_16
+    jsr test
+    SetTestInput input_17
+    jsr test
+    SetTestInput input_18
     jsr test
     rts
     
@@ -123,7 +134,7 @@ testinput:	lda	test_input, x
 			bne testinput
 @oe:		rts
 		
-dir_1:	     .byte "FILE00  TXT"
+dir_1:	     .byte "A       TXT"
 dir_2:	     .byte "LL      BIN"	;2
 dir_3:	     .byte "LS      BIN"	;4
 dir_4:	     .byte "LOADER  BIN"	;6
@@ -153,8 +164,8 @@ input_8: 	.byte 0,0,0,0,0,0,0,1,0,0,0
 			.byte ".",0
 input_9: 	.byte 0,0,0,0,0,0,0,0,1,0,0
 			.byte "..",0
-input_10: 	.byte 0,0,0,0,0,0,0,0,0,0,0
-			.byte "test.txtfoobar",0
+input_10: 	.byte 1,1,1,1,1,1,1,1,1,1,1
+			.byte "*.*",0
 input_11: 	.byte 0,0,0,0,0,1,0,0,0,0,0
 			.byte "test.txt",0
 input_12: 	.byte 0,0,0,0,0,0,1,0,0,0,0
@@ -163,8 +174,14 @@ input_13: 	.byte 0,0,0,0,0,0,0,0,0,1,0
 			.byte ".ssh",0
 input_14: 	.byte 0,0,0,0,0,0,0,0,0,0,1; FIXME
 			.byte "..foo",0
-input_15: 	.byte 0,0,0,0,0,0,0,0,0,0,0
-			.byte "l",0
+input_15: 	.byte 0,1,1,1,0,0,0,0,0,0,0
+			.byte "l*.*",0
+input_16: 	.byte 1,0,0,0,0,0,0,0,0,0,0
+			.byte "a.*",0
+input_17: 	.byte 0,1,1,1,0,0,0,0,0,0,0
+			.byte "l*.b*",0
+input_18: 	.byte 0,0,0,0,0,0,0,0,0,0,0; FIXME
+			.byte "ls",0
 
 test_dir_tab:
 	.word dir_1
