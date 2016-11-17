@@ -9,8 +9,7 @@
 
 .include "../steckos/kernel/kernel.inc"
 .include "../steckos/kernel/kernel_jumptable.inc"
-.include "../steckos/kernel/via.inc"
-
+.include "../steckos/kernel/fat32.inc"
 
 .include "basic.asm"
 
@@ -19,10 +18,10 @@ CR  = $0D        ; Return character
 LF  = $0A        ; Line feed character
 
 ;IN    = $0200    ; Buffer used by GetLine. From $0200 through $027F (shared with Woz Mon)
-IN    =  $bf00    ; Buffer used by GetLine. From $0200 through $027F (shared with Woz Mon)
+IN    =  $0300
 
-SaveZeroPage    = $9140      ; Routines in CFFA1 firmware
-RestoreZeroPage = $9135
+;SaveZeroPage    = $9140      ; Routines in CFFA1 firmware
+;RestoreZeroPage = $9135
 
 ; put the IRQ and MNI code in RAM so that it can be changed
 
@@ -81,8 +80,8 @@ LAB_nokey:
 LAB_dowarm:
 	JMP	LAB_WARM		; do EhBASIC warm start
 
-@cold_start: 
-	.asciiz "cold start..."
+;@cold_start: 
+;	.asciiz "cold start..."
     
 ; Implementation of LOAD using a CFFA1 flash interface if present.
 LOAD:
@@ -100,13 +99,17 @@ LOAD:
 ; If filename was empty, call CFFA1 menu
         LDA     IN                     ; string length
         BNE     LoadFile               ; Was is zero length?
-;        JSR     Menu                   ; If so, call CFFA1 menu
         RTS                            ; and return
 
-; Need to save the page zero locations used by the CFFA1 because they are also used by BASIC.
 LoadFile:
-;        JSR     SaveZeroPage
-;         TODO FIXME load file from device
+
+;	jsr krn_open
+;	beq @l5
+;	jsr krn_hexout
+;	jmp Return1
+;@l5:
+
+;	jsr krn_hexout
         
         RTS
  
@@ -167,15 +170,19 @@ EscapePressed:
         STX  IN                 ; Store length of string
         RTS                     ; Return
 
-chrout 	= krn_chrout
+chrout = krn_chrout
     
 getkey:
 	jsr krn_getkey
-	cmp #$00; restore zero flag, cause plx override it
+	cmp #$00 
+	beq @l1
+	sec
+	rts
+@l1:	clc
 	rts
 
-FilenameString:
-	.asciiz "FILENAME? "
+;FilenameString:
+;	.asciiz "FILENAME? "
 
 ; vector tables
 
