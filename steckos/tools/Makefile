@@ -25,6 +25,9 @@ clear: clear.prg
 uname: uname.prg
 	../../transfer.py uname.prg -s 0x1000
 
+coniotst: coniotst.prg
+	../../transfer.py coniotst.prg -s 0x1000
+
 mainarg: mainarg.prg
 	../../transfer.py mainarg.prg -s 0x1000
 	
