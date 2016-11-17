@@ -181,8 +181,8 @@ getkey:
 @l1:	clc
 	rts
 
-;FilenameString:
-;	.asciiz "FILENAME? "
+FilenameString:
+	.asciiz "FILENAME? "
 
 ; vector tables
 
