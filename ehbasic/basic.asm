@@ -434,7 +434,8 @@ Ibuffs		= IRQ_vec+$14
 					; start of input buffer after IRQ/NMI code
 Ibuffe		= Ibuffs+$47; end of input buffer
 
-Ram_base	= $0300	; start of user RAM (set as needed, should be page aligned)
+Code_base       = $1000     ; *** RAM above code Patch ***
+Ram_base	= $4000	; start of user RAM (set as needed, should be page aligned)
 Ram_top		= $b000	; end of user RAM+1 (set as needed, should be page aligned)
 
 ; This start can be changed to suit your system
@@ -482,6 +483,7 @@ TabLoop:
 	STA	PLUS_0,X		; save byte in page zero
 	DEX				; decrement count
 	BNE	TabLoop		; loop if not all done
+
     
 ; set-up start values
 	LDA	#$00			; clear A
@@ -501,16 +503,16 @@ TabLoop:
 	LDA	#<LAB_MSZM		; point to memory size message (low addr)
 	LDY	#>LAB_MSZM		; point to memory size message (high addr)
 	JSR	LAB_18C3		; print null terminated string from memory
+	JSR	LAB_INLN		; print "? " and get BASIC input
 ; fix memory patch    
-	;JSR	LAB_INLN		; print "? " and get BASIC input
    	 ;fake ram setting
-    	ldx #$00
-@l1:   	lda LAB_MSZM_INIT,x
-    	beq @l2
-    	sta Ibuffs,x
-    	inx 
-    	bne @l1
-@l2:    jsr LAB_1866        ;jump direclty to input scan
+;    	ldx #$00
+;@l1:   	lda LAB_MSZM_INIT,x
+;    	beq @l2
+;    	sta Ibuffs,x
+;    	inx 
+;    	bne @l1
+;@l2:    jsr LAB_1866        ;jump direclty to input scan
 ; fix memory patch end 
  
 	STX	Bpntrl		    ; set BASIC execute pointer low byte
@@ -2448,6 +2450,7 @@ LAB_18C3:
 ; print string from Sutill/Sutilh
 
 LAB_18C6:
+
 	JSR	LAB_22B6		; pop string off descriptor stack, or from top of string
 					; space returns with A = length, X=$71=pointer low byte,
 					; Y=$72=pointer high byte
@@ -4340,6 +4343,7 @@ LAB_209C:
 	STX	des_2l		; save descriptor pointer low byte
 	STY	des_2h		; save descriptor pointer high byte
 
+
 ; make string space A bytes long
 ; A=length, X=Sutill=ptr low byte, Y=Sutilh=ptr high byte
 
@@ -4397,9 +4401,16 @@ LAB_20D0:
 LAB_20DC:
 	STX	Sendh			; save string end high byte
 	LDA	ssptr_h		; get string start high byte
-	CMP	#>Ram_base		; compare with start of program memory
+	
+
+	; bugfix http://forum.6502.org/viewtopic.php?p=48370#p48370
+       .if   Ram_base < Code_base
+        CMP #>Ram_base        ; compare with start of program memory
+       .else
+        CMP #>Code_base       ; compare with start of program memory
+       .endif
 	BCS	LAB_RTST		; branch if not in utility area
-    
+	
 					; string in utility area, move to string memory
 	TYA				; copy length to A
 	JSR	LAB_209C		; copy des_pl/h to des_2l/h and make string space A bytes
@@ -4408,6 +4419,7 @@ LAB_20DC:
 	LDY	ssptr_h		; get string start high byte
 	JSR	LAB_2298		; store string A bytes long from XY to (Sutill)
 
+
 ; check for space on descriptor stack then ..
 ; put string address and length on descriptor stack and update stack pointers
 
@@ -4415,7 +4427,6 @@ LAB_RTST:
 	LDX	next_s		    ; get string stack pointer
 	CPX	#des_sk+$09		; compare with max+1
 	BNE	LAB_20F8		; branch if space on string stack
-
 					; else do string too complex error
 	LDX	#$1C			; error code $1C ("String too complex" error)
 LAB_20F5:
@@ -4463,7 +4474,9 @@ LAB_2122:
 	CPY	Earryh		; compare with array mem end high byte
 	BCC	LAB_2137		; do out of memory error if less
 
+
 	BNE	LAB_212C		; if not = skip next test
+
 
 	CMP	Earryl		; compare with array mem end low byte
 	BCC	LAB_2137		; do out of memory error if less
@@ -7806,8 +7819,8 @@ EndTab:
 
 LAB_MSZM:
 	.byte	$0D,$0A,"Memory size ",$00
-LAB_MSZM_INIT:
-    .byte    "$ad00",$0d,0
+;LAB_MSZM_INIT:
+    ;.byte    "$ad00",$0d,0
 
 LAB_SMSG:
 	.byte	" Bytes free",$0D,$0A,$0A
@@ -8701,3 +8714,4 @@ LAB_IMSG:	.byte	" Extra ignored",$0D,$0A,$00
 LAB_REDO:	.byte	" Redo from start",$0D,$0A,$00
 
 AA_end_basic:
+
