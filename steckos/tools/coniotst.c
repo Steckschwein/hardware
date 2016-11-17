@@ -4,7 +4,7 @@
 int main (){
 	unsigned long int i = 0;
 	for(;;i++)
-		cprintf("%lu\n\r", i);
+		cprintf("%lu ", i);
 	
 	return EXIT_SUCCESS;
 }
