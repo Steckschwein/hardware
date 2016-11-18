@@ -503,16 +503,16 @@ TabLoop:
 	LDA	#<LAB_MSZM		; point to memory size message (low addr)
 	LDY	#>LAB_MSZM		; point to memory size message (high addr)
 	JSR	LAB_18C3		; print null terminated string from memory
-	JSR	LAB_INLN		; print "? " and get BASIC input
+;	JSR	LAB_INLN		; print "? " and get BASIC input
 ; fix memory patch    
    	 ;fake ram setting
-;    	ldx #$00
-;@l1:   	lda LAB_MSZM_INIT,x
-;    	beq @l2
-;    	sta Ibuffs,x
-;    	inx 
-;    	bne @l1
-;@l2:    jsr LAB_1866        ;jump direclty to input scan
+    	ldx #$00
+@l1:   	lda LAB_MSZM_INIT,x
+    	beq @l2
+    	sta Ibuffs,x
+    	inx 
+    	bne @l1
+@l2:    jsr LAB_1866        ;jump direclty to input scan
 ; fix memory patch end 
  
 	STX	Bpntrl		    ; set BASIC execute pointer low byte
@@ -7819,8 +7819,8 @@ EndTab:
 
 LAB_MSZM:
 	.byte	$0D,$0A,"Memory size ",$00
-;LAB_MSZM_INIT:
-    ;.byte    "$ad00",$0d,0
+LAB_MSZM_INIT:
+    .byte    "$a000",$0d,0
 
 LAB_SMSG:
 	.byte	" Bytes free",$0D,$0A,$0A
