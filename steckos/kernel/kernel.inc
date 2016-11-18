@@ -90,7 +90,6 @@ BANK3 = BANK_SEL1 | BANK_SEL0
 
 
 .macro save
-	php
 	pha
 	phy
 	phx
@@ -100,7 +99,6 @@ BANK3 = BANK_SEL1 | BANK_SEL0
 	plx
 	ply
 	pla
-	plp
 .endmacro
 
 .macro Copy src, trgt, len
