@@ -43,7 +43,7 @@ init_vdp:
 			; SyncBlank
 
 			lda	#<ADDRESS_GFX_SPRITE
-			ldy	#WRITE_ADDRESS + >ADDRESS_GFX_SPRITE
+			ldy	#(WRITE_ADDRESS + >ADDRESS_GFX_SPRITE)
 			vdp_sreg
 			lda	#$d0					;sprites off, at least y=$d0 will disable the sprite subsystem
 			; vnops
@@ -51,15 +51,13 @@ init_vdp:
 			sta a_vram
 
 			lda	#<ADDRESS_GFX1_SCREEN
-			ldy	#WRITE_ADDRESS + >ADDRESS_GFX1_SCREEN
+			ldy	#(WRITE_ADDRESS + >ADDRESS_GFX1_SCREEN)
 			vdp_sreg
-			ldy   #$00      ;2
+			ldy #$00      ;2
 			ldx	#$03                    ;3 pages - 3x256 byte
 			lda	#' '					;fill vram screen with blank
 @l1: 
 			vnops          ;8
-			; nop             
-			; nop
 			iny             ;2
 			sta   a_vram    ;
 			bne   @l1        ;3
@@ -70,7 +68,7 @@ init_vdp:
 			stz crs_y
 
 			lda #<ADDRESS_GFX1_PATTERN
-			ldy #WRITE_ADDRESS + >ADDRESS_GFX1_PATTERN
+			ldy #(WRITE_ADDRESS + >ADDRESS_GFX1_PATTERN)
 			vdp_sreg
 			ldx #$08                    ;load charset
 			ldy   #$00     ;2
@@ -111,40 +109,30 @@ init_vdp:
 
 
 
-; foo = ADDRESS_GFX1_SCREEN+(WRITE_ADDRESS<<8)
 vdp_scroll_up:
-			SetVector	ADDRESS_GFX1_SCREEN+COLS, ptr1		        ; +.COLS - offset second row
-			SetVector	(ADDRESS_GFX1_SCREEN+(WRITE_ADDRESS<<8)), ptr2	; offset first row
+			SetVector	(ADDRESS_GFX1_SCREEN+COLS), ptr1		        	; +COLS - offset second row
+			SetVector	(ADDRESS_GFX1_SCREEN+(WRITE_ADDRESS<<8)), ptr2	; offset first row as "write adress"
 
-			lda	a_vreg  ; clear v-blank bit, we dont know where we are...
+			lda	a_vreg  ; clear v-blank bit, we dont know where we are...			
 @l1:
+			lda	a_vreg
 			bit	a_vreg  ; sync with next v-blank, so that we have the full 4,3µs
 			bpl	@l1
 @l2:
 			lda	ptr1l	; 3cl
 			sta	a_vreg
+			nop
 			lda	ptr1h	; 3cl
 			sta	a_vreg
-			; nop			; wait 2µs, 4Mhz = 8cl => 4 nop
-			; nop			; 2cl
-			; nop			; 2cl
-			; nop			; 2cl
-			vnops
-
+			vnops		; wait 2µs, 8Mhz = 16cl => 8 nop
 			ldx	a_vram	;
-			; nop			; 2cl
-			; nop			; 2cl
-			; nop			; 2cl
-			; nop			; 2cl
 			vnops
+			
 			lda	ptr2l	; 3cl
 			sta	a_vreg
+			nop
 			lda	ptr2h	; 3cl
 			sta a_vreg
-			; nop			; 2cl
-			; nop			; 2cl
-			; nop			; 2cl
-			; nop			; 2cl
 			vnops
 			stx	a_vram
 			inc	ptr1l	; 5cl
@@ -157,7 +145,7 @@ vdp_scroll_up:
 			inc	ptr2l  ; 5cl
 			bne	@l2		; 3cl
 			inc	ptr2h
-			bra	@l1
+			bra	@l1			
 @l4:
 			ldx	#COLS	; write address is already setup from loop
 			lda	#' '
@@ -167,6 +155,7 @@ vdp_scroll_up:
 			dex
 			bne	@l5
 			rts
+			
 inc_cursor_y:
 			lda crs_y
 			cmp	#ROWS		;last line ?
@@ -236,7 +225,7 @@ vdp_set_addr:			; set the vdp vram adress to write one byte afterwards
 		lsr					; div 8 -> page offset 0-2
 		lsr
 		lsr
-		ora	#WRITE_ADDRESS + >ADDRESS_GFX1_SCREEN
+		ora	#(WRITE_ADDRESS + >ADDRESS_GFX1_SCREEN)
 		sta a_vreg
 		rts
 
@@ -252,12 +241,4 @@ vdp_init_bytes_gfx1:
 vnopslide:
 		nop
 		nop
-		; nop
-		; nop
-		; nop
-		; nop
-		; nop
-		; nop
-
 		rts
-
