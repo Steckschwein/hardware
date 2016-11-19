@@ -22,7 +22,7 @@ sd_cmd_param 		= $02a0
 sd_cmd_chksum		= sd_cmd_param+4
 sd_cmd_result 		= $02a5
 
-sd_cmd_response_retries = $04
-sd_data_token_retries = $04 ; increase, card specific and must be larger for "huge" cards
+sd_cmd_response_retries = $08
+sd_data_token_retries = $08 ; increase, card specific and must be larger for "huge" cards
 ;TODO FIXME does not work yet
 ;sd_busy_retries = $ff
