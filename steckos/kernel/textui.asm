@@ -132,8 +132,8 @@ textui_cursor:
 @l2:	rts
 
 textui_update_screen:
-		lda	#Dark_Green
-		jsr	vdp_bgcolor
+;		lda	#Dark_Green
+;		jsr	vdp_bgcolor
 
 		lda	screen_status
 		and	#STATUS_TEXTUI_ENABLED
