@@ -115,7 +115,6 @@ vdp_scroll_up:
 
 			lda	a_vreg  ; clear v-blank bit, we dont know where we are...			
 @l1:
-			lda	a_vreg
 			bit	a_vreg  ; sync with next v-blank, so that we have the full 4,3µs
 			bpl	@l1
 @l2:
@@ -173,6 +172,7 @@ vdp_chrout:
 @l1:
 			cmp	#KEY_LF			;line feed
 			bne	@l2
+			stz	crs_x
 			bra	inc_cursor_y
 @l2:
 			cmp	#KEY_BACKSPACE
