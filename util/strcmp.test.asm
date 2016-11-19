@@ -7,11 +7,85 @@ main:		bra main
 .include "../bios/bios_call.inc"
 .include "asm_unit.asm"
 ;.include "strcmp.asm"
+dir_entry_size=11
+krn_tmp=$a0
 .include "strcmp2.asm"
 
 dirptr=$0
-test_dirs=11
-test_input=*;   input_X + test_dirs; address of input + size of results
+test_dirs=12
+filename_buf=*;   pointer of input + size of results (input_X + test_dirs)
+
+.scope	TestData
+dir_1:	     .byte "A       TXT"
+dir_2:	     .byte "LL      PRG"	;2
+dir_3:	     .byte "LS      PRG"	;4
+dir_4:	     .byte "LOADER  PRG"	;6
+dir_5:	     .byte "FIBONACIPRG"	;8
+dir_6:	     .byte "TEST    TXT"	;10
+dir_7:	     .byte "PROGS      "	;12
+dir_8:	     .byte ".          "	;14
+dir_9:	     .byte "..         "	;16
+dir_10:	     .byte ".SSH       "	;18
+dir_11:	     .byte "..FOO      "	;20
+dir_12:	     .byte "1          "	;22
+
+input_1: 	.byte 0,0,1,0,0,0,0,0,0,0,0,0 ;expected result - 0 - no match, 1 - match - eg. 0,0,1 mean matches "LS        PRG" from dir_3
+			.byte "ls.prg",0        	;user input
+input_2: 	.byte 0,1,1,1,0,0,0,0,0,0,0,0
+			.byte "l*.prg",0
+input_3: 	.byte 0,1,1,0,0,0,0,0,0,0,0,0
+			.byte "l?.prg",0
+input_4: 	.byte 0,1,1,1,0,0,0,0,0,0,0,0
+			.byte "l**.prg",0
+input_5: 	.byte 0,1,1,0,0,0,0,0,0,0,0,0
+			.byte "l??.prg",0
+input_6: 	.byte 0,1,1,1,0,0,0,0,0,0,0,0
+			.byte "l?????.PRG",0
+input_7: 	.byte 0,0,1,0,0,0,0,0,0,0,0,0
+			.byte "Ls.PrG",0
+input_8: 	.byte 0,0,0,0,0,0,0,1,0,0,0,0
+			.byte ".",0
+input_9: 	.byte 0,0,0,0,0,0,0,0,1,0,0,0
+			.byte "..",0
+input_10: 	.byte 1,1,1,1,1,1,1,1,1,1,1,1
+			.byte "*.*",0
+input_11: 	.byte 0,0,0,0,0,1,0,0,0,0,0,0
+			.byte "test.txt",0
+input_12: 	.byte 0,0,0,0,0,0,1,0,0,0,0,0
+			.byte "progs",0
+input_13: 	.byte 0,0,0,0,0,0,0,0,0,1,0,0
+			.byte ".ssh",0
+input_14: 	.byte 0,0,0,0,0,0,0,0,0,0,1,0; FIXME
+			.byte "..foo",0
+input_15: 	.byte 0,1,1,1,0,0,0,0,0,0,0,0
+			.byte "l*.*",0
+input_16: 	.byte 1,0,0,0,0,0,0,0,0,0,0,0
+			.byte "a.*",0
+input_17: 	.byte 0,1,1,1,0,0,0,0,0,0,0,0
+			.byte "l*.p*",0
+input_18: 	.byte 0,0,0,0,0,0,0,0,0,0,0,0
+			.byte "ls",0
+input_19: 	.byte 0,0,0,0,0,0,0,0,0,0,0,1
+			.byte "1",0
+input_20: 	.byte 0,1,1,1,1,0,0,0,0,0,0,0
+			.byte "*.prg",0
+
+.align	32,0			
+test_dir_tab:
+	.word dir_1
+	.word dir_2
+	.word dir_3
+	.word dir_4
+	.word dir_5
+	.word dir_6
+	.word dir_7
+	.word dir_8
+	.word dir_9
+    .word dir_10
+    .word dir_11
+	.word dir_12
+test_dir_tab_e:
+.endscope
 
 .macro Println
     lda #13
@@ -22,7 +96,7 @@ test_input=*;   input_X + test_dirs; address of input + size of results
 
 .macro SetTestInput input
     lda #<(input+test_dirs)
-	sta uppaercase+1
+	sta prepareinput+1
 	sta testinput+1
 ;    sta a0+1
  ;   sta a1+1
@@ -34,7 +108,7 @@ test_input=*;   input_X + test_dirs; address of input + size of results
 	;sta a50+1
     ;high bytes
     lda #>(input+test_dirs)
-	sta uppaercase+2
+	sta prepareinput+2
 	sta testinput+2
 ;    sta a0+2
  ;   sta a1+2
@@ -48,46 +122,45 @@ test_input=*;   input_X + test_dirs; address of input + size of results
 .endmacro
 
 test_suite:
-    SetTestInput input_8
- ;   jsr test
-    SetTestInput input_9
-;    jsr test
-	;rts
-    SetTestInput input_1
+    SetTestInput TestData::input_1
     jsr test
-    SetTestInput input_2
+    SetTestInput TestData::input_2
+    jsr test
+    SetTestInput TestData::input_3
+    jsr test
+	SetTestInput TestData::input_4
 	jsr test
-    SetTestInput input_3
+    SetTestInput TestData::input_5
     jsr test
-    SetTestInput input_4
+    SetTestInput TestData::input_6
     jsr test
-    SetTestInput input_5
+    SetTestInput TestData::input_7
     jsr test
-    SetTestInput input_6
+    SetTestInput TestData::input_8
     jsr test
-    SetTestInput input_7
+    SetTestInput TestData::input_9
     jsr test
-    SetTestInput input_8
+    SetTestInput TestData::input_10
     jsr test
-    SetTestInput input_9
+    SetTestInput TestData::input_11
     jsr test
-    SetTestInput input_10
+    SetTestInput TestData::input_12
     jsr test
-    SetTestInput input_11
+    SetTestInput TestData::input_13
     jsr test
-    SetTestInput input_12
+    SetTestInput TestData::input_14
     jsr test
-    SetTestInput input_13
+    SetTestInput TestData::input_15
     jsr test
-	SetTestInput input_14
-	jsr test
-    SetTestInput input_15
+    SetTestInput TestData::input_16
     jsr test
-    SetTestInput input_16
+    SetTestInput TestData::input_17
     jsr test
-    SetTestInput input_17
+    SetTestInput TestData::input_18
     jsr test
-    SetTestInput input_18
+    SetTestInput TestData::input_19
+    jsr test
+    SetTestInput TestData::input_20
     jsr test
     rts
     
@@ -96,9 +169,9 @@ test:
 			ldx #0
 			ldy #0
 l1:
-			lda test_dir_tab,x
+			lda TestData::test_dir_tab,x
 			sta dirptr
-			lda test_dir_tab+1,x
+			lda TestData::test_dir_tab+1,x
 			sta dirptr+1
     
 			phx
@@ -111,7 +184,7 @@ l1:
 ;			jsr hexout
 ;a50:		lda test_input, y
 ;			jsr hexout
-a5:			cmp	test_input, y
+a5:			cmp	filename_buf, y
 			bne	_failed
 			jsr	_test_ok
 			bra _next
@@ -122,77 +195,14 @@ _next:
 			iny
 			inx
 			inx
-			cpx	#test_dir_tab_e-test_dir_tab
+			cpx	#(TestData::test_dir_tab_e-TestData::test_dir_tab)
 			bne	l1
 			lda #' '
 			jsr vdp_chrout
 			ldx #0
-testinput:	lda	test_input, x
+testinput:	lda	filename_buf, x
 			beq	@oe
 			jsr vdp_chrout
 			inx 	
 			bne testinput
 @oe:		rts
-		
-dir_1:	     .byte "A       TXT"
-dir_2:	     .byte "LL      BIN"	;2
-dir_3:	     .byte "LS      BIN"	;4
-dir_4:	     .byte "LOADER  BIN"	;6
-dir_5:	     .byte "FIBONACIPRG"	;8
-dir_6:	     .byte "TEST    TXT"	;10
-dir_7:	     .byte "PROGS      "	;12
-dir_8:	     .byte ".          "	;14
-dir_9:	     .byte "..         "	;16
-dir_10:	     .byte ".SSH       "	;18
-dir_11:	     .byte "..FOO      "	;20
-
-input_1: 	.byte 0,0,1,0,0,0,0,0,0,0,0 ;expected result - 0 - no match, 1 - match - eg. 0,0,1 mean matches "LS        BIN" from dir_3
-			.byte "ls.bin",0        	;user input
-input_2: 	.byte 0,1,1,1,0,0,0,0,0,0,0
-			.byte "l*.bin",0
-input_3: 	.byte 0,1,1,0,0,0,0,0,0,0,0
-			.byte "l?.bin",0
-input_4: 	.byte 0,1,1,1,0,0,0,0,0,0,0; 
-			.byte "l**.bin",0
-input_5: 	.byte 0,1,1,0,0,0,0,0,0,0,0;
-			.byte "l??.bin",0
-input_6: 	.byte 0,1,1,1,0,0,0,0,0,0,0;
-			.byte "l?????.bin",0
-input_7: 	.byte 0,0,1,0,0,0,0,0,0,0,0
-			.byte "Ls.bin",0
-input_8: 	.byte 0,0,0,0,0,0,0,1,0,0,0
-			.byte ".",0
-input_9: 	.byte 0,0,0,0,0,0,0,0,1,0,0
-			.byte "..",0
-input_10: 	.byte 1,1,1,1,1,1,1,1,1,1,1
-			.byte "*.*",0
-input_11: 	.byte 0,0,0,0,0,1,0,0,0,0,0
-			.byte "test.txt",0
-input_12: 	.byte 0,0,0,0,0,0,1,0,0,0,0
-			.byte "progs",0
-input_13: 	.byte 0,0,0,0,0,0,0,0,0,1,0
-			.byte ".ssh",0
-input_14: 	.byte 0,0,0,0,0,0,0,0,0,0,1; FIXME
-			.byte "..foo",0
-input_15: 	.byte 0,1,1,1,0,0,0,0,0,0,0
-			.byte "l*.*",0
-input_16: 	.byte 1,0,0,0,0,0,0,0,0,0,0
-			.byte "a.*",0
-input_17: 	.byte 0,1,1,1,0,0,0,0,0,0,0
-			.byte "l*.b*",0
-input_18: 	.byte 0,0,0,0,0,0,0,0,0,0,0; FIXME
-			.byte "ls",0
-
-test_dir_tab:
-	.word dir_1
-	.word dir_2
-	.word dir_3
-	.word dir_4
-	.word dir_5
-	.word dir_6
-	.word dir_7
-	.word dir_8
-	.word dir_9
-    .word dir_10
-    .word dir_11
-test_dir_tab_e:

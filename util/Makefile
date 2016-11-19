@@ -7,7 +7,7 @@ all: strcmp.test.bin
 clean:
 	rm -f *.o *.bin 
 
-%.o: %.asm strcmp.asm strcmp2.asm
+%.o: %.asm strcmp.asm strcmp2.asm ../bios/bios_call.inc
 	ca65 -t none --cpu 65c02 -o $@ $(@:.o=.asm)
 
 strcmp.test.bin: $(OBJS)
