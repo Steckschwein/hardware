@@ -30,13 +30,13 @@ void rechne(int (*calc)(unsigned int, unsigned int)){
 			cscanf("%d", &input);
             cprintf("%d ", input);
 			if(expected == input){
-				cprintf("Richtig.\r\n");
+				cprintf("\nRichtig.\n");
 				points++;
 			}
 			else
-				cprintf("Falsch!\r\n");
+				cprintf("\nFalsch!\n");
 		}
-		cprintf("Du hast %d von %d Aufgaben richtig gerechnet.\r\n", points, (i-1));
+		cprintf("Du hast %d von %d Aufgaben richtig gerechnet.\n", points, (i-1));
 }
 
 int main (int argc, const char* argv[]){
@@ -47,10 +47,10 @@ int main (int argc, const char* argv[]){
         } else if(c == '+'){
             rechne(&plus);
         }
-    	cprintf("\n\rAuswahl:\n\r");
-        cprintf("+ addition\n\r");
-        cprintf("- subtraktion\n\r");
-        cprintf("e exit\n\r");
+    	cprintf("\nAuswahl:\n");
+        cprintf("+ addition\n");
+        cprintf("- subtraktion\n");
+        cprintf("e exit\n");
     }while((c = cgetc()) != 'e');
     
     return EXIT_SUCCESS;
