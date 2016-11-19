@@ -22,9 +22,6 @@ CURSOR_CHAR=$db ; invert blank char - @see charset_6x8.asm
 KEY_CR=$0d
 KEY_LF=$0a
 KEY_BACKSPACE=$08
-KEY_CARIAGE_RETURN=$0a
-KEY_RETURN=$0d
-
 STATUS_BUFFER_DIRTY=1<<0
 STATUS_CURSOR=1<<1
 STATUS_TEXTUI_ENABLED=1<<2
@@ -135,8 +132,8 @@ textui_cursor:
 @l2:	rts
 
 textui_update_screen:
-;		lda	#Dark_Green
-;		jsr	vdp_bgcolor
+		lda	#Dark_Green
+		jsr	vdp_bgcolor
 
 		lda	screen_status
 		and	#STATUS_TEXTUI_ENABLED
@@ -253,14 +250,14 @@ textui_crsxy:
 		jmp textui_update_crs_ptr
     
 textui_dispatch_char:
-		cmp	#KEY_CARIAGE_RETURN	;cariage return?
+		cmp	#KEY_CR			;cariage return?
 		bne	lfeed
-textui_pos1:
 		stz	crs_x
-		bra	lupdate
+ 	   	jmp textui_update_crs_ptr
 lfeed:
-		cmp	#KEY_RETURN			;line feed
+		cmp	#KEY_LF			;line feed
 		bne	@l1
+		stz crs_x
  	   	jmp	inc_cursor_y
 @l1:	cmp	#KEY_BACKSPACE
 		bne	@l4
