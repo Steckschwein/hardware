@@ -351,10 +351,9 @@ errmsg:
 
 
 helptxt1:
-				.byte $0a,$0d,"ll/ls       - directory (long/short)"
-				.byte $0a,$0d,"cd <name>   - change directory"
-				; !text $0a,$0d,"run <name>  - run program"		
-				.byte $0a,$0d,"dump <addr> <addr> - dump memory"
+				.byte $0a,"ll/ls       - directory (long/short)"
+				.byte $0a,"cd <name>   - change directory"
+				.byte $0a,"dump <addr> <addr> - dump memory"
 				.byte $00
 
 
@@ -367,17 +366,16 @@ cd:
 		jmp errmsg
 @l2:
 		jsr krn_primm
-		.asciiz "cd ok"
+		.asciiz " cd ok"
 		jmp mainloop
-
 
 run:
         lda cmdptr
         ldx cmdptr+1    ; cmdline in a/x
         jsr krn_execv   ; return A with errorcode
         bne @l1         ; error? try different path
-        jmp mainloop
-        
+        jmp mainloop		
+		
 @l1:	
         SetVector PATH, pathptr
         stz tmp0
@@ -405,18 +403,31 @@ run:
         iny
 @cp_next_piece:
         sty tmp0        ;safe PATH offset, 4 next try
+		stz	tmp1
 		ldy #0
 @cp_loop:
 		lda (cmdptr),y
 		beq @l3
-        cmp #' '
+		cmp #'.'
+		bne	@cp_loop_1
+		stx	tmp1
+@cp_loop_1:
+        cmp #' '		;end of program name?
         beq @l3
 		sta tmpbuf,x
 		iny
 		inx
 		bne @cp_loop
-@l3:
-		stz tmpbuf,x
+@l3:	lda tmp1
+		bne	@l4
+		ldy #0
+@l5:	lda	BINEXT,y
+		beq @l4
+		sta tmpbuf,x
+		inx
+		iny
+		bne	@l5
+@l4:	stz tmpbuf,x
 ;        debugstr "t:", tmpbuf
 		lda #<tmpbuf
 		ldx #>tmpbuf    ; cmdline in a/x
@@ -547,4 +558,5 @@ init_textui:
 	jsr	krn_textui_enable
 	rts
 PATH:		        .asciiz "/bin/:/sbin/:/usr/bin/"
-tmpbuf:				
+BINEXT:				.asciiz ".PRG"
+tmpbuf:	.res 64,0

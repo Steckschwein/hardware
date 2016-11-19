@@ -15,10 +15,10 @@ block_data                  = $da00
 .endmacro
 
 .macro crlf
-	lda #$0a
+	lda #$0a		;\n already does the carriage return
 	jsr krn_chrout
-	lda #$0d
-	jsr krn_chrout
+;	lda #$0d
+;	jsr krn_chrout
 .endmacro
 
 ROM_OFF = 1<<0
