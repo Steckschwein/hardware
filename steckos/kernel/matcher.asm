@@ -1,5 +1,10 @@
+;	*.*	- matches any file or directory with extension
+;	*	- matches any file or directory without extension
+_CHARS_BLACKLIST:
+;	.asciiz ".*+,/:;<=>?\[]|"
+;	@see https://en.wikipedia.org/wiki/8.3_filename
 ; 				match input name[.[ext]] against 11 byte dir entry <name><ext>
-match2:
+matcher:
 				stz krn_tmp			; 0 means without extension
 				ldx #0
 prepareinput:	lda	filename_buf,x

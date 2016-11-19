@@ -767,7 +767,7 @@ ff_l4:
 		cmp #$0f
 		beq fat_find_next
 		
-		jsr match2
+		jsr matcher
 		bcs ff_end
 
         ; in:
@@ -790,13 +790,5 @@ fat_find_next:
 
 ff_end:
 		rts
-
-;	*.*	- matches any file or directory with extension
-;	*	- matches any file or directory without extension
-_CHARS_BLACKLIST:
-;	.asciiz ".*+,/:;<=>?\[]|"
-;	@see https://en.wikipedia.org/wiki/8.3_filename
-; 				match input name[.[ext]] against 11 byte dir entry <name><ext>
-; 				match input name[.[ext]] against 11 byte dir entry <name><ext>
-
-.include "../../util/strcmp2.asm"
+		
+.include "matcher.asm"

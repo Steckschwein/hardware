@@ -4,12 +4,12 @@
 			jsr	test_suite			
 main:		bra main
 
-.include "../bios/bios_call.inc"
-.include "asm_unit.asm"
-;.include "strcmp.asm"
+.include "../../bios/bios_call.inc"
+.include "../../asmunit/asm_unit.asm"
+
 dir_entry_size=11
 krn_tmp=$a0
-.include "strcmp2.asm"
+.include "matcher.asm"
 
 dirptr=$0
 test_dirs=12
@@ -176,7 +176,7 @@ l1:
     
 			phx
 			phy
-			jsr match2	; check <name>.<ext> against 11 byte dir entry <name> <ext>
+			jsr matcher	; check <name>.<ext> against 11 byte dir entry <name> <ext>
 			ply
 			plx
 			lda	#0

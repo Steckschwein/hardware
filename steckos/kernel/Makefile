@@ -36,3 +36,13 @@ test.bin: test.o
 
 test: test.bin
 	../../transfer.py test.bin -s 0x1000
+
+
+matcher.test.o: matcher.asm ../../bios/bios_call.inc
+	ca65 -t none --cpu 65c02 -o $@ $(@:.o=.asm)
+	
+matcher.test.bin: matcher.test.o
+	ld65 --config ../../bios/bios.cfg matcher.test.o -o matcher.test.bin
+
+test.matcher: matcher.test.bin
+	../../transfer.py matcher.test.bin
