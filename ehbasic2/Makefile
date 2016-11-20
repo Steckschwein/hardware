@@ -7,4 +7,4 @@ clean:
 	cl65 -t none  --feature labels_without_colons --config basic.cfg -o $@ $<
 
 transfer: all
-	../transfer.py $(OBJ) -s 0x1000
+	../transfer.py $(OBJ) -s 0xb000
