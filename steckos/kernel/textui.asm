@@ -232,13 +232,15 @@ textui_print:
 
 textui_chrout:
 		beq	@l1	; \0 char
+		php
 		pha		; safe char
 		inc screen_write_lock	;write on
 		jsr textui_dispatch_char
 		stz	screen_write_lock	;write off
 		_screen_dirty
 
-		pla								; restore char
+		pla
+		plp		; restore a/p
 @l1:	rts
 
 	
