@@ -83,10 +83,11 @@ chrin
        bne chrin_nochar
 
        lda uart1rxtx
-	sec
+       sec
        rts
 
 chrin_nochar
+	lda #$00
 	clc
 	rts
 
@@ -94,11 +95,25 @@ no_load				; empty load vector for EhBASIC
 no_save				; empty save vector for EhBASIC
 	RTS
 
+local_uart_tx:
+   pha
+
+@l:   
+   lda uart1lsr
+   and #$20
+   beq @l
+
+   pla 
+
+   sta uart1rxtx
+
+   rts
+
 ; vector tables
 
 LAB_vec
 	.word	chrin		; byte in from UART
-	.word	uart_tx		; byte out to UART
+	.word	local_uart_tx		; byte out to UART
 	.word	no_load		; null load vector for EhBASIC
 	.word	no_save		; null save vector for EhBASIC
 
