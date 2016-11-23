@@ -4,12 +4,12 @@
 			jsr	test_suite			
 main:		bra main
 
-.include "../../bios/bios_call.inc"
-.include "../../asmunit/asm_unit.asm"
+.include "../../../bios/bios_call.inc"
+.include "../../../asmunit/asm_unit.asm"
 
 dir_entry_size=11
 krn_tmp=$a0
-.include "matcher.asm"
+.include "../matcher.asm"
 
 dirptr=$0
 test_dirs=12

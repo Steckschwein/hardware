@@ -238,7 +238,7 @@ textui_chrout:
 		stz	screen_write_lock	;write off
 		_screen_dirty
 
-		pla								; restore char
+		pla					; restore a/p
 @l1:	rts
 
 	
