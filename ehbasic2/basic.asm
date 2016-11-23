@@ -413,14 +413,14 @@ PLUS_1		= $01		; X or Y plus 1
 PLUS_2		= $02		; X or Y plus 2
 PLUS_3		= $03		; X or Y plus 3
 
-LAB_STAK		= $0100	; stack bottom, no offset
+LAB_STAK	= $0100	; stack bottom, no offset
 
-LAB_SKFE		= LAB_STAK+$FE
+LAB_SKFE	= LAB_STAK+$FE
 					; flushed stack address
-LAB_SKFF		= LAB_STAK+$FF
+LAB_SKFF	= LAB_STAK+$FF
 					; flushed stack address
 
-ccflag		= $0290	; BASIC CTRL-C flag, 00 = enabled, 01 = dis
+ccflag		= $0300	; BASIC CTRL-C flag, 00 = enabled, 01 = dis
 ccbyte		= ccflag+1	; BASIC CTRL-C byte
 ccnull		= ccbyte+1	; BASIC CTRL-C byte timeout
 
