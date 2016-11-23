@@ -18,7 +18,7 @@ CR  = $0D        ; Return character
 LF  = $0A        ; Line feed character
 
 ;IN    = $0200    ; Buffer used by GetLine. From $0200 through $027F (shared with Woz Mon)
-IN    =  $0300
+IN    =  $c000
 
 ;SaveZeroPage    = $9140      ; Routines in CFFA1 firmware
 ;RestoreZeroPage = $9135
@@ -30,7 +30,7 @@ NMI_vec	= IRQ_vec+$0A	; NMI code vector
 
 ; setup for the 6502 simulator environment
 
-IO_AREA	= $0200		; set I/O area for this monitor
+; IO_AREA	= $0200		; set I/O area for this monitor
 
 ; now the code. all this does is set up the vectors and interrupt code
 ; and wait for the user to select [C]old or [W]arm start. nothing else
@@ -45,7 +45,6 @@ RES_vec:
 	LDX	#$FF			; empty stack
 	TXS				; set the stack
 
-	sei
 ; set up vectors and interrupt code, copy them to page 2
 
  	LDY	#END_CODE-LAB_vec	; set index/count
@@ -56,30 +55,30 @@ LAB_stlp:
  	BNE	LAB_stlp		; loop if more to do
     
 ; now do the signon message, Y = $00 here
-LAB_signon:
-	LDA	LAB_mess,Y		; get byte from sign on message
-	BEQ	LAB_nokey		; exit loop if done
-	JSR	V_OUTP		    ; output character
-	INY				    ; increment index
-	BNE	LAB_signon		; loop, branch always
+;LAB_signon:
+;	LDA	LAB_mess,Y		; get byte from sign on message
+;	BEQ	LAB_nokey		; exit loop if done
+;	JSR	V_OUTP		    ; output character
+;	INY				    ; increment index
+;	BNE	LAB_signon		; loop, branch always
     
-LAB_nokey:
+;LAB_nokey:
 ;	JSR	V_INPT          ; call scan input device   
-	lda #'c'            ; by cold start question
+;	lda #'c'            ; by cold start question
     
-    Beq	LAB_nokey		; loop if no key
+;    Beq	LAB_nokey		; loop if no key
     
-	AND	#$DF			; mask xx0x xxxx, ensure upper case
-	CMP	#'W'			; compare with [W]arm start
-	BEQ	LAB_dowarm		; branch if [W]arm start
+;	AND	#$DF			; mask xx0x xxxx, ensure upper case
+;	CMP	#'W'			; compare with [W]arm start
+;	BEQ	LAB_dowarm		; branch if [W]arm start
 
-	CMP	#'C'			; compare with [c]old start
-	BNE	RES_vec		    ; loop if not [c]old start
+;	CMP	#'C'			; compare with [c]old start
+;	BNE	RES_vec		    ; loop if not [c]old start
             
 	JMP	LAB_COLD		; do EhBASIC cold start
 
-LAB_dowarm:
-	JMP	LAB_WARM		; do EhBASIC warm start
+;LAB_dowarm:
+;	JMP	LAB_WARM		; do EhBASIC warm start
 
 ;@cold_start: 
 ;	.asciiz "cold start..."
@@ -133,7 +132,7 @@ PrintString:
         LDY #0
 @l1:	LDA (Itempl),Y
         BEQ done
-        JSR krn_chrout
+        JSR chrout
         INY
         BNE @l1       ; if doesn't branch, string is too long
 done:   RTS
@@ -171,7 +170,18 @@ EscapePressed:
         STX  IN                 ; Store length of string
         RTS                     ; Return
 
-chrout = krn_uart_tx
+chrout = krn_chrout
+;chrout:
+	;php
+	;pha
+	;phx
+	;phy
+	 ;jsr krn_chrout
+	;ply
+	;plx
+	;pla
+	;plp
+	;rts
     
 getkey:
 	jsr krn_getkey
@@ -179,7 +189,9 @@ getkey:
 	beq @l1
 	sec
 	rts
-@l1:	clc
+@l1:	
+	lda #$00
+	clc
 	rts
 
 FilenameString:
@@ -221,8 +233,8 @@ NMI_CODE:
 
 END_CODE:
 
-LAB_mess:
-	.byte	$0D,$0A,"6502 EhBASIC [C]old/[W]arm ?",$00
+;LAB_mess:
+	;.byte	$0D,$0A,"6502 EhBASIC [C]old/[W]arm ?",$00
 					; sign on string
 
 ; system vectors

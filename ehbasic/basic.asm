@@ -434,9 +434,9 @@ Ibuffs		= IRQ_vec+$14
 					; start of input buffer after IRQ/NMI code
 Ibuffe		= Ibuffs+$47; end of input buffer
 
-Code_base       = $b000     ; *** RAM above code Patch ***
-Ram_base	= $0300	; start of user RAM (set as needed, should be page aligned)
-Ram_top		= $e800	; end of user RAM+1 (set as needed, should be page aligned)
+Code_base       = $1000     ; *** RAM above code Patch ***
+Ram_base	= $4000	; start of user RAM (set as needed, should be page aligned)
+Ram_top		= $e000	; end of user RAM+1 (set as needed, should be page aligned)
 
 ; This start can be changed to suit your system
     ;*=$b000
@@ -499,7 +499,7 @@ TabLoop:
 	LDX	#des_sk		; descriptor stack start
 	STX	next_s		; set descriptor stack pointer
     
-	JSR	LAB_CRLF	; print CR/LF    
+;	JSR	LAB_CRLF	; print CR/LF    
 	LDA	#<LAB_MSZM		; point to memory size message (low addr)
 	LDY	#>LAB_MSZM		; point to memory size message (high addr)
 	JSR	LAB_18C3		; print null terminated string from memory
@@ -7820,7 +7820,7 @@ EndTab:
 LAB_MSZM:
 	.byte	$0D,$0A,"Memory size ",$00
 LAB_MSZM_INIT:
-    .byte    "$a000",$0d,0
+    .byte    "$c000",$0d,0
 
 LAB_SMSG:
 	.byte	" Bytes free",$0D,$0A,$0A
