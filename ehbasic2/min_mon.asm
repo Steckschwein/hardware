@@ -1,4 +1,4 @@
-
+.setcpu "65c02"
 ; .include "../steckos/kernel/kernel.inc"
 ; .include "../steckos/kernel/kernel_jumptable.inc"
 ; .include "../steckos/kernel/uart.inc"
@@ -109,11 +109,21 @@ local_uart_tx:
 
    rts
 
+chrout
+	pha
+	phx
+	phy
+	jsr vdp_chrout
+	ply
+	plx
+	pla
+	rts
+
 ; vector tables
 
 LAB_vec
 	.word	chrin		; byte in from UART
-	.word	local_uart_tx		; byte out to UART
+	.word	chrout		; byte out to UART
 	.word	no_load		; null load vector for EhBASIC
 	.word	no_save		; null save vector for EhBASIC
 
