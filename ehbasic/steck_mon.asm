@@ -45,6 +45,7 @@ RES_vec:
 	LDX	#$FF			; empty stack
 	TXS				; set the stack
 
+	sei
 ; set up vectors and interrupt code, copy them to page 2
 
  	LDY	#END_CODE-LAB_vec	; set index/count
@@ -170,7 +171,7 @@ EscapePressed:
         STX  IN                 ; Store length of string
         RTS                     ; Return
 
-chrout = krn_chrout
+chrout = krn_uart_tx
     
 getkey:
 	jsr krn_getkey
