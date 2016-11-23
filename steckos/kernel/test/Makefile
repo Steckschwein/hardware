@@ -1,9 +1,6 @@
 OBJS=fat32.o sdcard.o textui.o t99xx.lib.o rtc.o spi.o uart.o via.o out.o key.o exec.o kernel.o
 ASM_INCLUDE=../../asminc
 LDFLAGS=--config ../steckos.cfg
-DEBUG=-DDEBUG
-#DEBUG=-DDEBUG_SHELL
-#DEBUG+=-DDEBUG_KERNEL
 
 .PHONY: all clean
 all: matcher.test.bin
@@ -12,11 +9,8 @@ all: matcher.test.bin
 clean:
 	rm -f *.o *.bin *.map *.txt
 
-%.test.o: %.test.asm
+%.test.o: %.test.asm ../../../bios/bios_call.inc
 	ca65 -t none $(DEBUG) --include-dir $(ASM_INCLUDE) --cpu 65c02 -o $@ $(@:.o=.asm)
-
-matcher.test.o: ../matcher.asm ../../../bios/bios_call.inc
-	ca65 -t none --cpu 65c02 -o $@ $(@:.o=.asm)
 	
 matcher.test.bin: matcher.test.o
 	ld65 --config ../../../bios/bios.cfg matcher.test.o -o matcher.test.bin

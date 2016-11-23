@@ -69,6 +69,8 @@ input_19: 	.byte 0,0,0,0,0,0,0,0,0,0,0,1
 			.byte "1",0
 input_20: 	.byte 0,1,1,1,1,0,0,0,0,0,0,0
 			.byte "*.prg",0
+input_21: 	.byte 0,0,0,0,1,0,0,0,0,0,0,0
+			.byte "FIBONACIPRG",0
 
 .align	32,0			
 test_dir_tab:
@@ -161,6 +163,8 @@ test_suite:
     SetTestInput TestData::input_19
     jsr test
     SetTestInput TestData::input_20
+    jsr test
+    SetTestInput TestData::input_21
     jsr test
     rts
     
