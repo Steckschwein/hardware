@@ -9,7 +9,7 @@
         
 .export fat_mount
 .export fat_open, fat_isOpen, fat_chdir
-.export fat_read, fat_read2, fat_find_first, fat_find_next
+.export fat_read, fat_read2, fat_find_first, fat_find_next, fat_write
 .export fat_close_all, fat_close, fat_getfilesize
 
 
@@ -70,7 +70,7 @@ fat_read2:
         debugcpu "fr2"
         jsr calc_lba_addr
 		jsr calc_blocks
-;        debug32s "r2 lb:", lba_addr
+;       debug32s "r2 lb:", lba_addr
 ;		debug24s "r2 bc:", blocks
 ;		SetVector block_data, sd_read_blkptr		; vector to kernel block_data area		
 		jsr sd_read_block
@@ -85,6 +85,8 @@ fat_read2:
 		
 		;in: 
 		;	x - offset into fd_area
+	
+
 fat_read:
         stz errno
         
@@ -98,6 +100,24 @@ fat_read:
 ;		jmp sd_read_block
  
  
+fat_write:
+        stz errno
+        
+        debugcpu "fw"
+        jsr calc_lba_addr
+	jsr calc_blocks
+ ;      debug32s "r2 lb:", lba_addr
+
+@l:
+	jsr sd_write_block
+	jsr inc_lba_address
+	dec blocks
+	bne @l
+
+	rts
+
+
+
 		;in:
         ;   a/x - pointer to the file path
         ;out: 
@@ -399,39 +419,38 @@ inc_lba_address:
 		rts
 
 ;vol->LbaFat + (cluster_nr>>7);// div 128 -> 4 (32bit) * 128 cluster numbers per block (512 bytes)
-calc_fat_lba_addr:
-		;instead of shift right 7 times in a loop, we copy over the hole byte (same as >>8) - and simple shift left once (<<1)
-		lda fd_area + F32_fd::CurrentCluster	+0,	x
-		asl
-		lda fd_area + F32_fd::CurrentCluster	+1,x
-		rol
-		sta lba_addr_fat+0
-		lda fd_area + F32_fd::CurrentCluster	+2,x
-		rol
-		sta lba_addr_fat+1
-		lda fd_area + F32_fd::CurrentCluster	+3,x
-		rol
-		sta lba_addr_fat+2
-		lda fd_area + F32_fd::CurrentCluster	+3,x
-		rol
-		rol		
-		and	#$01;only bit 0
-        sta lba_addr_fat+3
+;calc_fat_lba_addr:
+		;;instead of shift right 7 times in a loop, we copy over the hole byte (same as >>8) - and simple shift left once (<<1)
+		;lda fd_area + F32_fd::CurrentCluster	+0,	x
+		;asl
+		;lda fd_area + F32_fd::CurrentCluster	+1,x
+		;rol
+		;sta lba_addr_fat+0
+		;lda fd_area + F32_fd::CurrentCluster	+2,x
+		;rol
+		;sta lba_addr_fat+1
+		;lda fd_area + F32_fd::CurrentCluster	+3,x
+		;rol
+		;sta lba_addr_fat+2
+		;lda fd_area + F32_fd::CurrentCluster	+3,x
+		;rol
+		;rol		
+		;and	#$01;only bit 0
+        ;sta lba_addr_fat+3
         ; add fat_begin_lba and lba_addr_fat
-		clc
-		lda fat_begin_lba+0
-		adc lba_addr_fat +0
-		sta lba_addr_fat +0
-		lda fat_begin_lba+1
-		adc lba_addr_fat +1
-		sta lba_addr_fat +1
-		lda fat_begin_lba+2
-		adc lba_addr_fat +2
-		sta lba_addr_fat +2
-		lda fat_begin_lba+3
-		adc lba_addr_fat +3
-		sta lba_addr_fat +3
-		rts	
+		;clc
+		;lda fat_begin_lba+0
+		;adc lba_addr_fat +0
+		;sta lba_addr_fat +0
+		;lda fat_begin_lba+1
+		;adc lba_addr_fat +1
+		;sta lba_addr_fat +1
+		;lda fat_begin_lba+2
+
+		;lda fat_begin_lba+3
+		;adc lba_addr_fat +3
+		;sta lba_addr_fat +3
+		;rts	
 
 		; check whether the EOC (end of cluster chain) cluster number is reached
 		; @return Z = 1 if EOC detected
