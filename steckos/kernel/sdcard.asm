@@ -235,17 +235,17 @@ sd_read_block:
 		lda #$01                ; send "crc" and stop bit
 		jsr spi_rw_byte
 
-        ldy #sd_cmd_response_retries 	; wait for command response.
+        	ldy #sd_cmd_response_retries 	; wait for command response.
 		stz	krn_tmp				; use krn_tmp as loop var, not needed here		
-@lx:	jsr spi_r_byte
-        beq @l1         		; everything other than $00 is an error
+@lx:		jsr spi_r_byte
+        	beq @l1         		; everything other than $00 is an error
 		dec	krn_tmp
 		bne	@lx
-        dey
+        	dey
 		bne @lx
 		sta errno
-        ;TODO FIXME error sd error codes 
-        bra @exit
+        	;TODO FIXME error sd error codes 
+        	bra @exit
 @l1:
 		; wait for sd card data token
 		jsr sd_wait_data_token
@@ -368,15 +368,19 @@ sd_read_multiblock:
 ; Write block to SD Card
 ;---------------------------------------------------------------------
 sd_write_block:
+	save
 	jsr sd_select_card
 
-	; jsr sd_busy_wait
-
 	lda #cmd24
-	jsr sd_cmd
+	jsr spi_rw_byte         ; send CMD24 command byte
+	jsr sd_send_lba         ; send 32 Bit block address
+
+	; Send stopbit
+	lda #$01                ; send "crc" and stop bit
+	jsr spi_rw_byte
 	
 @l1:	
-    lda #$ff
+    	lda #$ff
 	jsr spi_rw_byte             
 	bne @l1
 
@@ -400,7 +404,7 @@ sd_write_block:
 	ply
 	iny
 	bne @l3
-	dec sd_read_blkptr+1
+	dec sd_write_blkptr+1
 
 	; Send fake CRC bytes
 	lda #$00
@@ -408,7 +412,8 @@ sd_write_block:
 	lda #$00
 	jsr spi_rw_byte
 
-	jmp spi_r_byte              
+        restore
+        jmp sd_deselect_card
 
 ;---------------------------------------------------------------------
 ; wait while sd card is busy
