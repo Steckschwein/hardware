@@ -1,9 +1,10 @@
-all: fat.bin
+OBJ=fat.prg
+all: $(OBJ) 
 clean:
-	rm *.bin
+	rm -f *.prg *.o
 
-%.bin: %.a
-	acme -Dexperimental=1 -v -f plain  --cpu 65c02 -o $@ $<
+%.prg: %.asm
+	cl65 -t none --config ../steckos/kernel/steckos.cfg -o $@ $<
 
 transfer: all
-	../transfer.py fat.bin
+	../transfer.py $(OBJ) 
