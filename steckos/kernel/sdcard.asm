@@ -404,7 +404,6 @@ sd_write_block:
 	ply
 	iny
 	bne @l3
-	dec sd_write_blkptr+1
 
 	; Send fake CRC bytes
 	lda #$00
