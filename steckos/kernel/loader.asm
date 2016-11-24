@@ -89,6 +89,6 @@ payload:
 .incbin "kernel.bin"
 payload_end:
 
-.segment "KERNEL"
-.segment "VECTORS"
-.segment "JUMPTABLE"
+;.segment "KERNEL"
+;segment "VECTORS"
+;segment "JUMPTABLE"
