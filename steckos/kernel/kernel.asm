@@ -41,7 +41,7 @@ kern_init:
     jsr primm
     .byte $d5,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd
     .byte $cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$b8,$0a,$0d
-    .byte $b3," SteckOS Kernel 0.5 ",$b3,$0a,$0d
+    .byte $b3," SteckOS Kernel 0.6 ",$b3,$0a,$0d
     .byte $d4,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd
     .byte $cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$be,$0a,$0d
     .byte $00
