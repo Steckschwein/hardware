@@ -17,9 +17,10 @@ text_mode_40 = 1
 .import keyin, getkey
 .import textui_enable, textui_disable, vdp_display_off,  textui_blank, textui_update_crs_ptr, textui_crsxy
 .import init_sdcard
-.import fat_mount, fat_open, fat_isOpen, fat_close, fat_close_all, fat_read, fat_find_first, fat_find_next, fat_chdir
+.import fat_mount, fat_open, fat_isOpen, fat_close, fat_close_all, fat_read, fat_find_first, fat_find_next, fat_chdir, fat_write
 .import fat_read2
 .import fat_getfilesize
+.import sd_read_block, sd_write_block
 
 .import execv
 .import print_crlf
@@ -340,6 +341,15 @@ krn_print_crlf:      	jmp print_crlf
 
 .export krn_getfilesize
 krn_getfilesize:      	jmp fat_getfilesize
+
+.export krn_write
+krn_write:    		jmp fat_write
+
+.export krn_sd_write_block
+krn_sd_write_block:    	jmp sd_write_block
+
+.export krn_sd_read_block
+krn_sd_read_block:    	jmp sd_read_block
 
 .segment "VECTORS"
 ; ----------------------------------------------------------------------------------------------
