@@ -220,6 +220,21 @@ sd_read_block_data:
         jmp sd_read_block
 
 
+sd_wait_timeout:
+		stz errno
+        	ldy #sd_cmd_response_retries 	; wait for command response.
+		stz krn_tmp				; use krn_tmp as loop var, not needed here		
+@l:		jsr spi_r_byte
+        	beq @x
+		dec krn_tmp
+		bne @l
+        	dey
+		bne @l
+		sta errno
+        	;TODO FIXME error sd error codes 
+@x:
+		rts
+
 ;---------------------------------------------------------------------
 ; Read block from SD Card
 ;---------------------------------------------------------------------
@@ -235,17 +250,19 @@ sd_read_block:
 		lda #$01                ; send "crc" and stop bit
 		jsr spi_rw_byte
 
-        	ldy #sd_cmd_response_retries 	; wait for command response.
-		stz	krn_tmp				; use krn_tmp as loop var, not needed here		
-@lx:		jsr spi_r_byte
-        	beq @l1         		; everything other than $00 is an error
-		dec	krn_tmp
-		bne	@lx
-        	dey
-		bne @lx
-		sta errno
-        	;TODO FIXME error sd error codes 
-        	bra @exit
+;	      	ldy #sd_cmd_response_retries 	; wait for command response.
+		;stz krn_tmp				; use krn_tmp as loop var, not needed here		
+;@lx:		jsr spi_r_byte
+        	;beq @l1         		; everything other than $00 is an error
+		;dec krn_tmp
+		;bne @lx
+        	;dey
+		;bne @lx
+		;sta errno
+
+		jsr sd_wait_timeout
+		lda errno
+        	bne @exit
 @l1:
 		; wait for sd card data token
 		jsr sd_wait_data_token
@@ -290,16 +307,9 @@ sd_read_multiblock:
 		jsr spi_rw_byte
 
 		; wait for command response.         
-        ldy #sd_cmd_response_retries 	; wait for command response. 
-		stz	krn_tmp				; use krn_tmp as loop var, not needed here
-@lx:	jsr spi_r_byte
-        beq @l1         		; everything other than $00 is an error
-		dec	krn_tmp
-		bne	@lx
-		dey
-		bne @lx
-        ;TODO FIXME error sd error codes 
-		sta errno
+		jsr sd_wait_timeout
+		lda errno
+        	beq @l1
 		jmp @exit
 @l1:	
 		jsr sd_wait_data_token
