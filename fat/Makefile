@@ -1,4 +1,4 @@
-OBJ=fat.prg
+OBJ=rename.prg fat.prg
 all: $(OBJ) 
 clean:
 	rm -f *.prg *.o
@@ -6,5 +6,7 @@ clean:
 %.prg: %.asm
 	cl65 -t none --config ../steckos/kernel/steckos.cfg -o $@ $<
 
-transfer: all
-	../transfer.py $(OBJ) 
+transfer: fat.prg
+	../transfer.py fat.prg
+rename: rename.prg
+	../transfer.py rename
