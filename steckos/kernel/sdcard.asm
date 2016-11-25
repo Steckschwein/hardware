@@ -389,10 +389,13 @@ sd_write_block:
 	lda #$01                ; send "crc" and stop bit
 	jsr spi_rw_byte
 	
-@l1:	
-    	lda #$ff
-	jsr spi_rw_byte             
-	bne @l1
+	jsr sd_wait_timeout
+	lda errno
+        bne @exit
+;@l1:	
+    	;lda #$ff
+	;jsr spi_rw_byte             
+	;bne @l1
 
 	lda #$fe
 	jsr spi_rw_byte
@@ -420,7 +423,7 @@ sd_write_block:
 	jsr spi_rw_byte
 	lda #$00
 	jsr spi_rw_byte
-
+@exit:
         restore
         jmp sd_deselect_card
 
