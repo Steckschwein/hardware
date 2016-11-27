@@ -2,11 +2,10 @@ OBJS=fat32.o sdcard.o textui.o t99xx.lib.o rtc.o spi.o uart.o via.o out.o key.o 
 ASM_INCLUDE=../asminc
 LDFLAGS=--config steckos.cfg
 #DEBUG=-DDEBUG
-#DEBUG=-DDEBUG_SHELL
 #DEBUG+=-DDEBUG_KERNEL
 
 .PHONY: all clean
-all: kernel.bin shell.bin loader.bin
+all: kernel.bin loader.bin
 
 .PHONY: clean
 clean:
@@ -21,12 +20,6 @@ kernel.bin: $(OBJS) kernel.inc
 
 loader.bin: kernel.bin loader.o
 	cl65 --target none $(DEBUG) --config steckos.cfg loader.asm -o loader.bin
-
-shell.bin: shell.o kernel.bin
-	ld65 $(LDFLAGS) shell.o -m shell.map -o shell.bin
-
-shell: shell.bin
-	../../transfer.py -s 0xe000 shell.bin
 
 transfer: loader.bin
 	../../transfer.py -s 0x1000 loader.bin
