@@ -114,7 +114,7 @@ mem_ok:
 		
 			jsr init_vdp
 
-			printstring "BIOS 20160801"
+			printstring "BIOS 20161128"
 			jsr print_crlf
 			printstring "Memcheck $"
 
@@ -242,9 +242,9 @@ dummy_irq:
 		rti
 
 
-num_patterns = $01	
+num_patterns = $02	
 pattern:
-	.byte $aa,$55
+	.byte $aa,$55,$00
 
 param_defaults:
 	.byte $42
