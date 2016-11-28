@@ -71,7 +71,6 @@ main:
 
 		SetVector imf_data, sd_read_blkptr
 
-
 		crlf
 		jsr krn_primm
  		.asciiz "Loading from $"
@@ -246,11 +245,11 @@ player_isr:
 @l4:	
 		;lda #10
 		;jsr krn_chrout
-		stz crs_x
-		lda imf_ptr_h
-		jsr krn_hexout
-		lda imf_ptr
-		jsr krn_hexout
+;		stz crs_x
+;		lda imf_ptr_h
+;		jsr krn_hexout
+;		lda imf_ptr
+;		jsr krn_hexout
 @isr_end:
 		; jump to kernel isr
 		ply
