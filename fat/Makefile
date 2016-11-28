@@ -9,4 +9,4 @@ clean:
 transfer: fat.prg
 	../transfer.py fat.prg
 rename: rename.prg
-	../transfer.py rename
+	../transfer.py rename.prg

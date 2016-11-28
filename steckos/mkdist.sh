@@ -1,15 +1,14 @@
 #!/bin/bash
 
 TARGET=$1
-TOOLS="clear.bin ls.bin date.bin hello.bin uname.bin fibo.bin nvram.bin"
+TOOLS="clear.prg ls.prg ll.prg date.prg hello.prg uname.prg fibo.prg nvram.prg"
 
 mkdir -p dist/bin
-for n in loader.bin shell.bin ; do
-	cp kernel/$n dist
-done
+cp kernel/kernel.bin dist
+cp shell/shell.bin dist
 
 for n in $TOOLS ; do
 	cp tools/$n dist/bin
 done
 
-cp -a dist/* $TARGET && diskutil unmount $TARGET
+cp -a dist/* $TARGET &&  umount $TARGET

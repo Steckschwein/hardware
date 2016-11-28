@@ -123,7 +123,7 @@ chrout
 
 LAB_vec
 	.word	chrin		; byte in from UART
-	.word	chrout		; byte out to UART
+	.word	local_uart_tx		; byte out to UART
 	.word	no_load		; null load vector for EhBASIC
 	.word	no_save		; null save vector for EhBASIC
 

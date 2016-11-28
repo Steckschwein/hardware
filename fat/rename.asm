@@ -26,12 +26,23 @@
 	bne @l1
 
 	ldy #DIR_Name
-@l2:
-	lda newfilename, y
-	sta (dirptr),y
-	iny
-	cpy #$0b
-	bne @l2
+;@l2:
+	;lda newfilename, y
+	;sta (dirptr),y
+	;iny
+	;cpy #$0b
+	;bne @l2
+
+        ldy #DIR_FileSize
+        lda #$10
+        sta (dirptr),y
+        iny
+        lda #$00
+        sta (dirptr),y
+        iny
+        sta (dirptr),y
+        iny
+        sta (dirptr),y
 
 	SetVector sd_blktarget, sd_write_blkptr
 
@@ -46,4 +57,4 @@ loop:	jmp loop
 filename: 
 	.asciiz "FILE.DAT"     ;
 newfilename: 
-	.asciiz "POPANZ  DAT"
+	.asciiz "FILE    DAT"

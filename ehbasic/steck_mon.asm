@@ -78,6 +78,9 @@ LAB_stlp:
 
 LOAD:
 SAVE:
+	jsr LAB_EVST
+	jsr krn_hexout
+	LDA #$00
         RTS                            ; and return
 
 
