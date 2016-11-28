@@ -435,8 +435,8 @@ Ibuffs		= IRQ_vec+$14
 Ibuffe		= Ibuffs+$47; end of input buffer
 
 Code_base       = $1000     ; *** RAM above code Patch ***
-Ram_base	= $4000	; start of user RAM (set as needed, should be page aligned)
-Ram_top		= $e000	; end of user RAM+1 (set as needed, should be page aligned)
+Ram_base	= $3900	; start of user RAM (set as needed, should be page aligned)
+Ram_top		= $e800	; end of user RAM+1 (set as needed, should be page aligned)
 
 ; This start can be changed to suit your system
     ;*=$b000
@@ -503,16 +503,16 @@ TabLoop:
 	LDA	#<LAB_MSZM		; point to memory size message (low addr)
 	LDY	#>LAB_MSZM		; point to memory size message (high addr)
 	JSR	LAB_18C3		; print null terminated string from memory
-;	JSR	LAB_INLN		; print "? " and get BASIC input
+	JSR	LAB_INLN		; print "? " and get BASIC input
 ; fix memory patch    
    	 ;fake ram setting
-    	ldx #$00
-@l1:   	lda LAB_MSZM_INIT,x
-    	beq @l2
-    	sta Ibuffs,x
-    	inx 
-    	bne @l1
-@l2:    jsr LAB_1866        ;jump direclty to input scan
+    	;ldx #$00
+;@l1:   	lda LAB_MSZM_INIT,x
+    	;beq @l2
+    	;sta Ibuffs,x
+    	;inx 
+    	;bne @l1
+;@l2:    jsr LAB_1866        ;jump direclty to input scan
 ; fix memory patch end 
  
 	STX	Bpntrl		    ; set BASIC execute pointer low byte
@@ -7819,8 +7819,8 @@ EndTab:
 
 LAB_MSZM:
 	.byte	$0D,$0A,"Memory size ",$00
-LAB_MSZM_INIT:
-    .byte    "$c000",$0d,0
+;LAB_MSZM_INIT:
+;    	.byte    "$a800",$0d,0
 
 LAB_SMSG:
 	.byte	" Bytes free",$0D,$0A,$0A
