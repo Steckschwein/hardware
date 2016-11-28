@@ -164,7 +164,7 @@ exit:
 		sta via1ier	
 
 
-		copypointer old_isr, user_isr
+		copypointer old_isr, $fffe
 
 
 		lda via1acr
@@ -244,8 +244,9 @@ player_isr:
 		bcc @l4
 		inc imf_ptr_h
 @l4:	
-		lda #10
-		jsr krn_chrout
+		;lda #10
+		;jsr krn_chrout
+		stz crs_x
 		lda imf_ptr_h
 		jsr krn_hexout
 		lda imf_ptr
