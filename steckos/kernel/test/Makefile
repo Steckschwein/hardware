@@ -9,7 +9,7 @@ all: matcher.test.bin
 clean:
 	rm -f *.o *.bin *.map *.txt
 
-%.test.o: %.test.asm ../../../bios/bios_call.inc
+%.test.o: %.test.asm ../matcher.asm ../../../bios/bios_call.inc
 	ca65 -t none $(DEBUG) --include-dir $(ASM_INCLUDE) --cpu 65c02 -o $@ $(@:.o=.asm)
 	
 matcher.test.bin: matcher.test.o

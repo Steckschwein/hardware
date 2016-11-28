@@ -1,21 +1,20 @@
-.setcpu "65c02"
-.org    $1000
-
-			jsr	test_suite			
+.org $1000
+			jsr	test_suite
 main:		bra main
 
 .include "../../../bios/bios_call.inc"
 .include "../../../asmunit/asm_unit.asm"
 
 dir_entry_size=11
-krn_tmp=$a0
-.include "../matcher.asm"
+krn_tmp=$ee
 
+.include	"../matcher.asm"
+buffer: .res 8+1+3,0
+ 
 dirptr=$0
 test_dirs=12
 filename_buf=*;   pointer of input + size of results (input_X + test_dirs)
 
-.scope	TestData
 dir_1:	     .byte "A       TXT"
 dir_2:	     .byte "LL      PRG"	;2
 dir_3:	     .byte "LS      PRG"	;4
@@ -70,9 +69,10 @@ input_19: 	.byte 0,0,0,0,0,0,0,0,0,0,0,1
 input_20: 	.byte 0,1,1,1,1,0,0,0,0,0,0,0
 			.byte "*.prg",0
 input_21: 	.byte 0,0,0,0,1,0,0,0,0,0,0,0
-			.byte "FIBONACIPRG",0
-
-.align	32,0			
+			.byte "FIBONACI.PRG",0
+input_22: 	.byte 0,0,0,0,1,0,0,0,0,0,0,0
+			.byte "FI*ONA*I.P*G",0
+			
 test_dir_tab:
 	.word dir_1
 	.word dir_2
@@ -87,18 +87,16 @@ test_dir_tab:
     .word dir_11
 	.word dir_12
 test_dir_tab_e:
-.endscope
 
-.macro Println
+Println:
     lda #13
     jsr vdp_chrout
     lda #10
-    jsr vdp_chrout    
-.endmacro
+    jmp vdp_chrout
 
 .macro SetTestInput input
     lda #<(input+test_dirs)
-	sta prepareinput+1
+	sta matcher_prepareinput+1
 	sta testinput+1
 ;    sta a0+1
  ;   sta a1+1
@@ -110,7 +108,7 @@ test_dir_tab_e:
 	;sta a50+1
     ;high bytes
     lda #>(input+test_dirs)
-	sta prepareinput+2
+	sta matcher_prepareinput+2
 	sta testinput+2
 ;    sta a0+2
  ;   sta a1+2
@@ -124,58 +122,58 @@ test_dir_tab_e:
 .endmacro
 
 test_suite:
-    SetTestInput TestData::input_1
+    SetTestInput input_1
     jsr test
-    SetTestInput TestData::input_2
+    SetTestInput input_2
     jsr test
-    SetTestInput TestData::input_3
+    SetTestInput input_3
     jsr test
-	SetTestInput TestData::input_4
+	SetTestInput input_4
 	jsr test
-    SetTestInput TestData::input_5
+    SetTestInput input_5
     jsr test
-    SetTestInput TestData::input_6
+    SetTestInput input_6
     jsr test
-    SetTestInput TestData::input_7
+    SetTestInput input_7
     jsr test
-    SetTestInput TestData::input_8
+    SetTestInput input_8
     jsr test
-    SetTestInput TestData::input_9
+    SetTestInput input_9
     jsr test
-    SetTestInput TestData::input_10
+    SetTestInput input_10
     jsr test
-    SetTestInput TestData::input_11
+    SetTestInput input_11
     jsr test
-    SetTestInput TestData::input_12
+    SetTestInput input_12
     jsr test
-    SetTestInput TestData::input_13
+    SetTestInput input_13
     jsr test
-    SetTestInput TestData::input_14
+    SetTestInput input_14
     jsr test
-    SetTestInput TestData::input_15
+    SetTestInput input_15
     jsr test
-    SetTestInput TestData::input_16
+    SetTestInput input_16
     jsr test
-    SetTestInput TestData::input_17
+    SetTestInput input_17
     jsr test
-    SetTestInput TestData::input_18
+    SetTestInput input_18
     jsr test
-    SetTestInput TestData::input_19
+    SetTestInput input_19
     jsr test
-    SetTestInput TestData::input_20
+    SetTestInput input_20
     jsr test
-    SetTestInput TestData::input_21
+    SetTestInput input_21
     jsr test
     rts
     
 test:
-			Println
+			jsr Println
 			ldx #0
 			ldy #0
 l1:
-			lda TestData::test_dir_tab,x
+			lda test_dir_tab,x
 			sta dirptr
-			lda TestData::test_dir_tab+1,x
+			lda test_dir_tab+1,x
 			sta dirptr+1
     
 			phx
@@ -199,7 +197,7 @@ _next:
 			iny
 			inx
 			inx
-			cpx	#(TestData::test_dir_tab_e-TestData::test_dir_tab)
+			cpx	#(test_dir_tab_e-test_dir_tab)
 			bne	l1
 			lda #' '
 			jsr vdp_chrout

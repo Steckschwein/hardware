@@ -146,6 +146,8 @@ upload:
 	; load start address
 	jsr uart_rx
 	sta startaddr
+
+	sei	
 	
 	jsr uart_rx
 	sta startaddr+1
@@ -186,7 +188,6 @@ upload:
 	lda #' '
 	jsr textui_chrout
 
-	; sei 
 	lda startaddr
 	sta addr
 	lda startaddr+1
@@ -194,7 +195,6 @@ upload:
 
 	jsr upload_ok
 	
-
 	ldy #$00
 @l1:
 	sei
