@@ -93,11 +93,13 @@ getkey:
 	clc
 	rts
 
+
+
 ; vector tables
 
 LAB_vec:
 	.word	getkey		; byte in
-	.word	chrout		; byte out
+	.word	krn_chrout		; byte out
 	.word	LOAD		; load vector for EhBASIC
 	.word	SAVE		; save vector for EhBASIC
 
