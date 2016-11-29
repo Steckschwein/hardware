@@ -14,21 +14,20 @@ STATUS_CURSOR=1<<1
 STATUS_TEXTUI_ENABLED=1<<2
 
 .segment "OS_CACHE"
-screen_buffer:      ;.res 960, 0 ;@see steckos.cfg
+screen_buffer:      	;.res 960, 0 ;@see steckos.cfg
 ;screen_status: 		.byte 0
 ;screen_write_lock: 	.byte 0
 ;screen_frames:		.byte 0
 ;saved_char:			.byte 0
+screen_status 		=   screen_buffer + (COLS*(ROWS+1))
+screen_write_lock 	=   screen_status + 1
+screen_frames		=   screen_status + 2
+saved_char			=   screen_status + 3
 
 .segment "KERNEL"
 .export textui_init0, textui_update_screen, textui_chrout, textui_put
 .export textui_enable, textui_disable, textui_blank, textui_update_crs_ptr, textui_crsxy
 .import vdp_bgcolor, vdp_memcpy, vdp_mode_text, vdp_display_off
-
-screen_status 		=   screen_buffer + (COLS*(ROWS+1))
-screen_write_lock 	=   screen_status + 1
-screen_frames		=   screen_status + 2
-saved_char			=   screen_status + 3
 
 .macro _screen_dirty
 		lda #STATUS_BUFFER_DIRTY

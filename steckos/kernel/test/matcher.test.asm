@@ -54,7 +54,7 @@ input_12: 	.byte 0,0,0,0,0,0,1,0,0,0,0,0
 			.byte "progs",0
 input_13: 	.byte 0,0,0,0,0,0,0,0,0,1,0,0
 			.byte ".ssh",0
-input_14: 	.byte 0,0,0,0,0,0,0,0,0,0,1,0; FIXME
+input_14: 	.byte 0,0,0,0,0,0,0,0,0,0,1,0
 			.byte "..foo",0
 input_15: 	.byte 0,1,1,1,0,0,0,0,0,0,0,0
 			.byte "l*.*",0
@@ -97,6 +97,10 @@ Println:
 .macro SetTestInput input
     lda #<(input+test_dirs)
 	sta matcher_prepareinput+1
+;	sta matcher_prepareinput2+1
+ ;   sta matcher_NEXT+1
+  ;  sta matcher_bf+1
+	
 	sta testinput+1
 ;    sta a0+1
  ;   sta a1+1
@@ -109,6 +113,9 @@ Println:
     ;high bytes
     lda #>(input+test_dirs)
 	sta matcher_prepareinput+2
+;	sta matcher_prepareinput2+2
+ ;   sta matcher_NEXT+2
+  ;  sta matcher_bf+2
 	sta testinput+2
 ;    sta a0+2
  ;   sta a1+2

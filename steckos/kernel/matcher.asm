@@ -5,51 +5,30 @@ _CHARS_BLACKLIST:
 ;	matcher_see https://en.wikipedia.org/wiki/8.3_filename
 ; 				match input name[.[ext]] against 11 byte dir entry <name><ext>
 matcher:
-
-;				ldx 	#$ff
-;				lda	#'.'
-;m_skip:				inx
-;matcher_prepareinput:		cmp	filename_buf,x
-;				beq	m_skip
-;matcher_prepareinput2:
-;				lda	filename_buf,x
-;				beq	m_e								
-;				cmp	#'.'
-;				beq	m_e
-;				inx
-;				bne	matcher_prepareinput2
-;m_e:				stx	krn_tmp+1
-;				inx
-				
-				stz 	krn_tmp			; 0 means without extension
-				ldx 	#0
-matcher_prepareinput:		
+				ldx	#0
+matcher_prepareinput:
 				lda	filename_buf,x
-				beq	matcher_prepare_end
-				cmp	#'.'				
-				bne	matcher_store
-				stx 	krn_tmp			; save the offset of the '.'
-matcher_store:			
+				beq	matcher_prepare1
+				sta	buffer,x
+				inx	
+				bne	matcher_prepareinput
+matcher_prepare1:		lda	#' '			;set end of string to ' '
+				sta	buffer,x
+				stx	krn_tmp 		;safe end of string
+				lda	#'.'
+matcher_prepare2:		dex
+				bmi	matcher_prepare3	;x underrun?
+				cmp	buffer,x		;go from end of string to start, search for '.'
+				bne	matcher_prepare2
+				cmp	buffer			;starts with '.'
+				beq	matcher_prepare3	;yes, do no extension match
+				lda	#' '			;no, replace with the end of string at this position ' '
 				sta 	buffer,x
 				inx
-				bne	matcher_prepareinput	;no, next char
-matcher_prepare_end:
-				lda 	#' '
-				sta 	buffer,x		;' ' end of input
-				
-				lda 	krn_tmp			; '.' found in input and position >0 ?
-				bne	matcher_match_ext		; no, match the filename with extension
-				bra matcher_match_ext_1	; yes, match the filename and extension must be "", x already points to buffer \0 from loop above
-matcher_match_ext:		
-				tax
-				lda	buffer			; input starts with '.' ?
-				cmp	#'.'
-				beq	matcher_match_ext_0	; yes, skip the '.'
-				lda #' '
-				sta	buffer,x		; no, replace '.' with end of string
-matcher_match_ext_0:	
-				inx					; inc x to next char after the '.'
-matcher_match_ext_1:
+				bra	matcher_prepare4
+matcher_prepare3:
+				ldx	krn_tmp			; no '.' found, skip extension match set x to end of string which is ' ' for the matcher below
+matcher_prepare4:
 				lda	#8+3
 				sta	krn_tmp
 				ldy	#7				; y index to offset of file extension at dirptr
@@ -58,9 +37,10 @@ matcher_match_ext_1:
 matcher_match_name:		
 				LDX #$00			;  yes, now match the filename
 				LDY #$FF        ; Y is an index in the string
-				lda	#8;krn_tmp+1
-				sta	krn_tmp				
-matcher_NEXT:    		LDA buffer,X   	; Look at next pattern character
+				lda #08
+				sta krn_tmp				
+matcher_NEXT:    		
+				LDA buffer,X   	; Look at next pattern character
 				CMP #'*'		; Is it a star?
 				BEQ matcher_STAR        ; Yes, do the complicated stuff
 				INY             ; No, let's look at the string
@@ -71,24 +51,24 @@ matcher_NEXT:    		LDA buffer,X   	; Look at next pattern character
 				cmp (dirptr),y   	 ;  expect space in dir name, marks end of string within dir entry
 				bne matcher_FAIL
 				rts				 ; found, succes C=1 here
-matcher_quest:			CMP #'?'	     ; Is the pattern caracter a ques?
+matcher_quest:	CMP #'?'	     ; Is the pattern caracter a ques?
 				BNE matcher_REG         ; No, it's a regular character
 				LDA (dirptr),Y     ; Yes, so it will match anything
 				BEQ matcher_FAIL        ;  except the end of string
-matcher_REG:			cmp	#'a'			; char [a-z] ?
+matcher_REG:	cmp	#'a'			; char [a-z] ?
 				bcc matcher_cmp
 				cmp #'z'
 				bcs matcher_cmp
 				and #$df			; uppercase
-matcher_cmp:			CMP (dirptr),Y     ; Are both characters the same?
+matcher_cmp:	CMP (dirptr),Y     ; Are both characters the same?
 				BNE matcher_FAIL        ; No, so no match
 				INX             ; Yes, keep checking
 				CMP #0			; Are we at end of string?
 				BNE matcher_NEXT        ; Not yet, loop
-matcher_FOUND:   		RTS             ; Success, return with C=1
+matcher_FOUND:  RTS             ; Success, return with C=1
 
-matcher_STAR:    		INX             ; Skip star in pattern
-matcher_bf:		CMP buffer,X   ; String of stars equals one star
+matcher_STAR:   INX             ; Skip star in pattern
+				CMP buffer,X   ; String of stars equals one star
 				BEQ matcher_STAR        ;  so skip them also
 matcher_STLOOP:  			             ; We first try to match with * = ""
 				phx             ;  and grow it by 1 character every
