@@ -1098,6 +1098,14 @@ LAB_13D8:
 	CMP	Ibuffs,X		; compare with byte from input buffer
 	BEQ	LAB_13D6		; go compare next if match
 
+	; toupper and cmp again to be case insensitive in the tokenizer
+
+	tolower
+ 	CMP Ibuffs,X  ; compare with byte from input buffer
+ 	BEQ LAB_13D6  ; go compare next if match
+
+
+
 	BNE	LAB_1417		; branch if >< (not found keyword)
 
 LAB_13EA:

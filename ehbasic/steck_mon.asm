@@ -88,7 +88,7 @@ getkey:
 	jsr krn_getkey
 	cmp #$00 
 	beq @l1
-	toupper
+	;toupper
 	sec
 	rts
 @l1:	
