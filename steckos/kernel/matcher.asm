@@ -29,15 +29,15 @@ matcher_prepare2:		dex
 matcher_prepare3:
 				ldx	krn_tmp			; no '.' found, skip extension match set x to end of string which is ' ' for the matcher below
 matcher_prepare4:
-				lda	#8+3
+				lda	#8+3			; end of string is byte 11 of dir filename entry
 				sta	krn_tmp
 				ldy	#7				; y index to offset of file extension at dirptr
 				jsr	matcher_NEXT			; match the extension, x is already set above
 				bcc	matcher_FAIL			;  no, exit if extension did not match				
 matcher_match_name:		
 				LDX #$00			;  yes, now match the filename
-				LDY #$FF        ; Y is an index in the string
-				lda #08
+				LDY #$FF        	; Y is an index in the string
+				lda #8				; end of string match is file name
 				sta krn_tmp				
 matcher_NEXT:    		
 				LDA buffer,X   	; Look at next pattern character
