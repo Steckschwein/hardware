@@ -4,8 +4,7 @@ LDFLAGS=--config steckos.cfg
 VERSION_MAJOR=0
 VERSION_MINOR=6
 
-#DEBUG=-DDEBUG
-#DEBUG+=-DDEBUG_KERNEL
+DEBUG=-DDEBUG
 
 .PHONY: all clean
 all: kernel.bin loader.bin

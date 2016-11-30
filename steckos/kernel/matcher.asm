@@ -6,9 +6,20 @@ _CHARS_BLACKLIST:
 ; 				match input name[.[ext]] against 11 byte dir entry <name><ext>
 matcher:
 				ldx	#0
+matcher_test1:			lda 	filename_buf,x
+				cmp	#'a'			; char [a-z] ?
+				bcc 	matcher_prepare0
+				cmp 	#'z'
+				bcs 	matcher_prepare0
+				and 	#$df			; uppercase
+matcher_firstchar:		cmp 	(dirptr)
+				beq	matcher_prepare0
+				clc
+				rts
 matcher_prepareinput:
 				lda	filename_buf,x
 				beq	matcher_prepare1
+matcher_prepare0:				
 				sta	buffer,x
 				inx	
 				bne	matcher_prepareinput
@@ -17,18 +28,14 @@ matcher_prepare1:		lda	#' '			;set end of string to ' '
 				stx	krn_tmp 		;safe end of string
 				lda	#'.'
 matcher_prepare2:		dex
-				bmi	matcher_prepare3	;x underrun?
+				bmi	matcher_match_name	;x underrun? means no '.' found, skip extension match, go to filename
 				cmp	buffer,x		;go from end of string to start, search for '.'
 				bne	matcher_prepare2
-				cmp	buffer			;starts with '.'
-				beq	matcher_prepare3	;yes, do no extension match
-				lda	#' '			;no, replace with the end of string at this position ' '
+				cmp	buffer			;input starts with '.'
+				beq	matcher_match_name	;yes, do no extension match
+				lda	#' '			;no, replace '.' with the end of string (' ')
 				sta 	buffer,x
 				inx
-				bra	matcher_prepare4
-matcher_prepare3:
-				ldx	krn_tmp			; no '.' found, skip extension match set x to end of string which is ' ' for the matcher below
-matcher_prepare4:
 				lda	#8+3			; end of string is byte 11 of dir filename entry
 				sta	krn_tmp
 				ldy	#7				; y index to offset of file extension at dirptr
@@ -51,21 +58,21 @@ matcher_NEXT:
 				cmp (dirptr),y   	 ;  expect space in dir name, marks end of string within dir entry
 				bne matcher_FAIL
 				rts				 ; found, succes C=1 here
-matcher_quest:	CMP #'?'	     ; Is the pattern caracter a ques?
+matcher_quest:			CMP #'?'	     ; Is the pattern caracter a ques?
 				BNE matcher_REG         ; No, it's a regular character
 				LDA (dirptr),Y     ; Yes, so it will match anything
 				BEQ matcher_FAIL        ;  except the end of string
-matcher_REG:	cmp	#'a'			; char [a-z] ?
+matcher_REG:			cmp	#'a'			; char [a-z] ?
 				bcc matcher_cmp
 				cmp #'z'
 				bcs matcher_cmp
 				and #$df			; uppercase
-matcher_cmp:	CMP (dirptr),Y     ; Are both characters the same?
+matcher_cmp:			CMP (dirptr),Y     ; Are both characters the same?
 				BNE matcher_FAIL        ; No, so no match
 				INX             ; Yes, keep checking
 				CMP #0			; Are we at end of string?
 				BNE matcher_NEXT        ; Not yet, loop
-matcher_FOUND:  RTS             ; Success, return with C=1
+matcher_FOUND:  		RTS             ; Success, return with C=1
 
 matcher_STAR:   INX             ; Skip star in pattern
 				CMP buffer,X   ; String of stars equals one star

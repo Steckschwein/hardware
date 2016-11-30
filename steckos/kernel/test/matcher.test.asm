@@ -62,7 +62,7 @@ input_16: 	.byte 1,0,0,0,0,0,0,0,0,0,0,0
 			.byte "a.*",0
 input_17: 	.byte 0,1,1,1,0,0,0,0,0,0,0,0
 			.byte "l*.p*",0
-input_18: 	.byte 0,0,0,0,0,0,0,0,0,0,0,0
+input_18: 	.byte 0,0,1,0,0,0,0,0,0,0,0,0
 			.byte "ls",0
 input_19: 	.byte 0,0,0,0,0,0,0,0,0,0,0,1
 			.byte "1",0
@@ -72,6 +72,10 @@ input_21: 	.byte 0,0,0,0,1,0,0,0,0,0,0,0
 			.byte "FIBONACI.PRG",0
 input_22: 	.byte 0,0,0,0,1,0,0,0,0,0,0,0
 			.byte "FI*ONA*I.P*G",0
+input_23: 	.byte 0,1,1,1,0,0,0,0,0,0,0,0
+			.byte "l*",0
+input_24: 	.byte 0,0,1,0,0,0,0,0,0,0,0,0
+			.byte "ls*",0
 			
 test_dir_tab:
 	.word dir_1
@@ -97,31 +101,16 @@ Println:
 .macro SetTestInput input
     lda #<(input+test_dirs)
 	sta matcher_prepareinput+1
-;	sta matcher_prepareinput2+1
- ;   sta matcher_NEXT+1
-  ;  sta matcher_bf+1
-	
+	sta matcher_test1+1
 	sta testinput+1
-;    sta a0+1
- ;   sta a1+1
-  ;  sta a2+1
-   ; sta a3+1
-    ;sta a4+1
+	
     lda #<input
     sta a5+1
-	;sta a50+1
     ;high bytes
     lda #>(input+test_dirs)
 	sta matcher_prepareinput+2
-;	sta matcher_prepareinput2+2
- ;   sta matcher_NEXT+2
-  ;  sta matcher_bf+2
+	sta matcher_test1+2
 	sta testinput+2
-;    sta a0+2
- ;   sta a1+2
-  ;  sta a2+2
-   ; sta a3+2
-    ;sta a4+2
 	
     lda #>input
     sta a5+2
@@ -170,6 +159,12 @@ test_suite:
     SetTestInput input_20
     jsr test
     SetTestInput input_21
+    jsr test
+    SetTestInput input_22
+    jsr test
+    SetTestInput input_23
+    jsr test
+    SetTestInput input_24
     jsr test
     rts
     

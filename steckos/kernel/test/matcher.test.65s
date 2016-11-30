@@ -3,7 +3,7 @@
 dirptr=$0
 
 test_dirs=12
-test_in=input_3
+test_in=input_18
 test_input=test_in + test_dirs; address of input + size of results
 
 
@@ -29,14 +29,10 @@ vdp_chrout:
 test_suite
     lda #<test_input
     sta matcher_prepareinput+1
-;    sta matcher_prepareinput2+1
-;    sta matcher_NEXT+1
-;    sta matcher_bf+1
+    sta matcher_test1+1
     lda #>test_input
     sta matcher_prepareinput+2
-;    sta matcher_prepareinput2+2
-;    sta matcher_NEXT+2
-;    sta matcher_bf+2
+    sta matcher_test1+2
     
     lda #<test_in
     sta a5+1
@@ -128,7 +124,7 @@ input_16: 	.db 1,0,0,0,0,0,0,0,0,0,0,0
 			.db "a.*",0
 input_17: 	.db 0,1,1,1,0,0,0,0,0,0,0,0
 			.db "l*.p*",0
-input_18: 	.db 0,0,0,0,0,0,0,0,0,0,0,0
+input_18: 	.db 0,0,1,0,0,0,0,0,0,0,0,0
 			.db "ls",0
 input_19: 	.db 0,0,0,0,0,0,0,0,0,0,0,1
 			.db "1",0
@@ -138,6 +134,10 @@ input_21: 	.db 0,0,0,0,1,0,0,0,0,0,0,0
 			.db "FIBONACI.PRG",0
 input_22: 	.db 0,0,0,0,1,0,0,0,0,0,0,0
 			.db "FI*ONA*I.P*G",0
+input_23: 	.db 0,1,1,1,0,0,0,0,0,0,0,0
+			.db "l*",0
+input_24: 	.db 0,0,1,0,0,0,0,0,0,0,0,0
+			.db "ls*",0
 
 
 test_dir_tab
