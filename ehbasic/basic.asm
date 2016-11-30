@@ -1033,6 +1033,8 @@ LAB_13AC:
 	LDA	Ibuffs,X		; get byte from input buffer
 	BEQ	LAB_13EC		; if null save byte then exit
 
+	toupper
+
 	CMP	#'_'			; compare with "_"
 	BCS	LAB_13EC		; if >= go save byte then continue crunching
 
@@ -1048,6 +1050,7 @@ LAB_13AC:
 
 	CMP	#'*'			; compare with "*"
 	BCC	LAB_13EC		; if < go save byte then continue crunching
+	
 
 					; else crunch now
 LAB_13CC:
@@ -1100,7 +1103,9 @@ LAB_13D8:
 
 	; toupper and cmp again to be case insensitive in the tokenizer
 
-	tolower
+	; convert to lowercase, short version 
+	ORA #$20
+
  	CMP Ibuffs,X  ; compare with byte from input buffer
  	BEQ LAB_13D6  ; go compare next if match
 
