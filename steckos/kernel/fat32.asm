@@ -199,7 +199,7 @@ fat_open:
 		sta pathFragment, x
 		iny
 		inx
-		cpx	#8+1+3	            ; 8.3 file support only
+		cpx	#8+1+3	+1            ; 8.3 file support only
 		bne	@l_parse_1
         lda #EINVAL
         bra @l_exit
