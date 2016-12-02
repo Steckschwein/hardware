@@ -1,22 +1,23 @@
 OBJS=bios.o charset_8x8.o charset_6x8.o uart.o via.o spi.o out.o vdp.o sdcard.o fat32.o nvram.o
 LDFLAGS=--config bios.cfg -m map.txt
 .PHONY: all clean
-all: bios.bin 
+all: version.inc bios.bin 
 
 .PHONY: clean
 clean:
-	rm -f *.o *.bin 
+	rm -f *.o *.bin version.inc
 
 %.o: %.asm
 	ca65 --target none $<
 
-version.inc:
-	echo -n ".byte \"r`hg log -l1 | grep changeset | cut -d ':' -f2 | tr -d ' '`\"" > version.inc
 
 
 bios.bin: $(OBJS) bios.inc version.inc
 	ld65 $(LDFLAGS) $(OBJS) -Ln symbols.txt -o bios.bin
 	cat symbols.txt | awk -F' ' '{print $$3" = $$"$$2}'| sed -e "s/^\.//g" > bios_call.inc
+
+version.inc:
+	echo -n ".byte \"r`hg log -l1 | grep changeset | cut -d ':' -f2 | tr -d ' '`\"" > version.inc
 
 
 loader.bin: bios.bin
