@@ -1,6 +1,6 @@
 .include "kernel.inc"
 .include "fat32.inc"
-.include "errno.inc"
+.include "errno.inc"	; from ca65 api
 .include "filedes.inc"
 
 .import sd_read_block, sd_read_multiblock, sd_write_block, sd_select_card, sd_deselect_card
@@ -38,9 +38,9 @@
 .endmacro
 
 		;in: 
-		;	a/x - count 
-		;	dw	- word as pointer to target adress
-		;	db	- byte as offset into fd_area
+		;	a/x 		- count 
+		;	dw stack 	- word as pointer to target adress
+		;	db stack 	- byte as offset into fd_area
 		;out:
 		;	a/x - bytes read on success, -1 on error and errno set accordingly
 fat_read2:
@@ -121,7 +121,8 @@ fat_write:
 		;in:
         ;   a/x - pointer to the file path
         ;out: 
-        ;   a - errno 
+		;	C - 0 ok, 1 error
+        ;   a - errno
         ;   x - index into fd_area of the opened directory
 fat_chdir:
 		jsr fat_open			; change dir using temp dir to not clobber the current dir, maybe we will run into an error
@@ -133,9 +134,9 @@ fat_chdir:
         phx
 		ldx #FD_INDEX_TEMP_DIR  ; the temp dir fd is now set to the last dir of the path and we proofed that it's valid with the code above
         ldy #FD_INDEX_CURRENT_DIR
-        jsr	fat_clone_fd        ; therefore we can simply clone the temp dir to current dir fd - ftw...
+        jsr	fat_clone_fd        ; therefore we can simply clone the temp dir to current dir fd - FTW!
         plx
-        lda #0                  ; ok, no error
+        lda #0                  ; ok, C=0 no error
         rts
 @l_err:
 		lda	#EINVAL				; TODO FIXME error code for "Not a directory"
@@ -180,11 +181,11 @@ fat_open:
 		bne	@l31
 		jsr fat_open_rootdir
 		iny
-        lda	(krn_ptr1), y
-		beq	@l_exit_noerr       ; end of input? so it was just the '/'
-        cmp #' '                ; or space
-        bne @l31
-        bra @l_exit_noerr       ; exit, no error
+        lda	(krn_ptr1), y		;end of input?
+		beq	@l_exit_noerr       ;yes, so it was just the '/'
+;        cmp #' '               ;no, go on
+ ;       bne @l31
+  ;      bra @l_exit_noerr       ; exit, no error
 @l31:   SetVector   pathFragment, filenameptr	; filenameptr to path fragment
 @l3:	;	parse path fragments and change dirs accordingly
 		ldx #0
@@ -199,7 +200,7 @@ fat_open:
 		sta pathFragment, x
 		iny
 		inx
-		cpx	#8+1+3	+1            ; 8.3 file support only
+		cpx	#8+1+3		+1		; buffer overflow ? - 8.3 file support only
 		bne	@l_parse_1
         lda #EINVAL
         bra @l_exit
