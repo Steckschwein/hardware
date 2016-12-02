@@ -1,8 +1,6 @@
 OBJS=fat32.o sdcard.o textui.o t99xx.lib.o rtc.o spi.o uart.o via.o out.o key.o exec.o kernel.o
 ASM_INCLUDE=../asminc
 LDFLAGS=--config steckos.cfg
-VERSION_MAJOR=0
-VERSION_MINOR=6
 
 DEBUG=-DDEBUG
 
@@ -17,9 +15,9 @@ clean:
 	ca65 --target none $(DEBUG) --include-dir $(ASM_INCLUDE)  $<
 
 version.inc:
-	echo -n ".byte \"$(VERSION_MAJOR).$(VERSION_MINOR).r`hg log -l1 | grep changeset | cut -d ':' -f2 | tr -d ' '`\"" > version.inc
+	echo -n ".byte \"r`hg log -l1 | grep changeset | cut -d ':' -f2 | tr -d ' '`\"" > version.inc
 	
-kernel.bin: $(OBJS) kernel.inc
+kernel.bin: $(OBJS) kernel.inc version.inc
 	ld65 $(LDFLAGS) $(OBJS) -m kernel.map -Ln symbols.txt -o kernel.bin 
 	grep krn symbols.txt | sed "s/al 00//" | awk -F' ' '{print $$2" = $$"$$1}'| sed -e "s/^\.//g" > kernel_jumptable.inc
 
