@@ -1,5 +1,5 @@
  	*=$1000
-test_in=input_24
+test_in=input_10
 test_dirs=13
 test_input=test_in + test_dirs; address of input + size of results
 

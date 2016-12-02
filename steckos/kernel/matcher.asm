@@ -3,38 +3,44 @@
 ;		*.*	- matches any file or directory with extension
 ;		*	- matches any file or directory without extension
 matcher:
-				ldx	#0
-				ldy	#0
-matcher_test1:	lda filename_buf,x
-				jsr	matcher_upper_cmp
-				bne matcher_FAIL			; no, we can early exit
+				ldx #0
+matcher_test1:			lda filename_buf,x
+				cmp #'a'				; char [a-z] ?
+				bcc matcher_prepare0			; no, we have to go the long way
+				cmp #'z'
+				bcs matcher_prepare0
+				and #$df			; uppercase
+				cmp (dirptr)			; match first byte?
+				beq matcher_prepare0		; yes, go on check the rest
+				clc				; no, we can early exit
+				rts
 matcher_prepare0:
-				sta	buffer,x
+				sta buffer,x
 				inx
-				cpx	#8+1+3 +1				;buffer overflow?
-				beq	matcher_FAIL
+				cpx #8+1+3 +1			;buffer overflow?
+				beq matcher_FAIL
 matcher_prepareinput:
-				lda	filename_buf,x
-				bne	matcher_prepare0
+				lda filename_buf,x
+				bne matcher_prepare0
 matcher_prepare1:
-				lda	#' '					;set end of string to ' ', which means end of string in dir entry
-				sta	buffer,x
-				lda	#'.'
+				lda #' '			;set end of string to ' ', which means end of string in dir entry
+				sta buffer,x
+				lda #'.'
 matcher_prepare2:
 				dex							;walk back from end of string
-				bmi	matcher_match_name		;x underrun? means no '.' found, skip extension match, go to filename match
-				cmp	buffer,x				;is it a '.' ?
-				bne	matcher_prepare2		;no, go on
-				cmp	buffer					;yes, test whether input starts with '.'
-				beq	matcher_match_name		;yes, do no extension match, go to filename match
-				lda	#' '					;no,
-				sta	buffer,x				;replace the '.' with the end of string (' ')
+				bmi matcher_match_name		;x underrun? means no '.' found, skip extension match, go to filename match
+				cmp buffer,x				;is it a '.' ?
+				bne matcher_prepare2		;no, go on
+				cmp buffer					;yes, test whether input starts with '.'
+				beq matcher_match_name		;yes, do no extension match, go to filename match
+				lda #' '					;no,
+				sta buffer,x				;replace the '.' with the end of string (' ')
 				inx							;set x to the first char of the extension
-				lda	#8+3					;end of dir entry to index 11, end of the extension of the 8.3 dir entry
-				sta	krn_tmp
-				ldy	#7						;y set to offset of file extension-1 at dirptr
-				jsr	matcher_NEXT			;match the extension, x is already set above
-				bcc	matcher_EXIT			;no, exit if extension did not match, C=0 already
+				lda #8+3					;end of dir entry to index 11, end of the extension of the 8.3 dir entry
+				sta krn_tmp
+				ldy #7						;y set to offset of file extension-1 at dirptr
+				jsr matcher_NEXT			;match the extension, x is already set above
+				bcc matcher_EXIT			;no, exit if extension did not match, C=0 already
 matcher_match_name:
 				LDX #$00					;yes, now match the filename
 				LDY #$FF        			;y is an index in the string
@@ -58,7 +64,12 @@ matcher_quest:
 				LDA (dirptr),Y     			; Yes, so it will match anything
 				BEQ matcher_FAIL        	;  except the end of string
 matcher_REG:	
-				jsr matcher_upper_cmp
+				cmp #'a'				; char [a-z] ?
+				bcc matcher_cmp			; no, we have to go the long way
+				cmp #'z'
+				bcs matcher_cmp
+				and #$df				; uppercase
+matcher_cmp:			cmp (dirptr),y			; match first byte?
 				BNE matcher_FAIL        	; No, so no match
 				INX             			; Yes, keep checking
 				CMP #0						; Are we at end of string?
@@ -79,15 +90,5 @@ matcher_STLOOP:  			             	; We first try to match with * = ""
 				LDA (dirptr),Y     			; Are we at the end of string?
 				cmp #' '
 				BNE matcher_STLOOP      	; Not yet, add a character
-matcher_FAIL:   CLC             			; Yes, no match found, return with C=0
-matcher_EXIT:	RTS
-
-matcher_upper_cmp:
-				cmp	#'a'					; char [a-z] ?
-				bcc matcher_upper_cmp0
-				cmp #'z'
-				bcs matcher_upper_cmp0
-				and #$df					; uppercase
-matcher_upper_cmp0:
-				cmp (dirptr),y				; match first byte?
-				rts
+matcher_FAIL:   		CLC            			; Yes, no match found, return with C=0
+matcher_EXIT:			RTS

@@ -12,7 +12,7 @@ krn_tmp=$ee
 buffer: .res 8+1+3,0
  
 dirptr=$0
-test_dirs=12
+test_dirs=13
 filename_buf=*;   pointer of input + size of results (input_X + test_dirs)
 
 dir_1:	     .byte "A       TXT"
