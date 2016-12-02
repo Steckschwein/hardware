@@ -10,7 +10,11 @@ clean:
 %.o: %.asm
 	ca65 --target none $<
 
-bios.bin: $(OBJS) bios.inc
+version.inc:
+	echo -n ".byte \"r`hg log -l1 | grep changeset | cut -d ':' -f2 | tr -d ' '`\"" > version.inc
+
+
+bios.bin: $(OBJS) bios.inc version.inc
 	ld65 $(LDFLAGS) $(OBJS) -Ln symbols.txt -o bios.bin
 	cat symbols.txt | awk -F' ' '{print $$3" = $$"$$2}'| sed -e "s/^\.//g" > bios_call.inc
 

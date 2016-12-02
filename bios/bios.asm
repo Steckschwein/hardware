@@ -114,7 +114,10 @@ mem_ok:
 		
 			jsr init_vdp
 
-			printstring "BIOS 20161128"
+			printstring "BIOS "
+			jsr primm
+.include "version.inc"
+			.byte $00
 			jsr print_crlf
 			printstring "Memcheck $"
 
