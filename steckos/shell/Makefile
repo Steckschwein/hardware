@@ -9,7 +9,11 @@ all: shell.bin
 clean:
 	rm -f *.o *.bin *.map *.txt kernel_jumptable.inc
 
-shell.bin: shell.o
+version.inc:
+	echo -n ".byte \"r`hg log -l1 | grep changeset | cut -d ':' -f2 | tr -d ' '`\"" > version.inc
+
+
+shell.bin: shell.o version.inc
 	ld65 $(LDFLAGS) shell.o -o shell.bin
 
 shell: shell.bin

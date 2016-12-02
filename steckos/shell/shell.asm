@@ -75,7 +75,9 @@ init:
 hello:
 	crlf
 	jsr krn_primm
-	.asciiz "SteckShell 0.12c"
+	.byte "SteckShell "
+	.include "version.inc"
+	.byte $00
 	crlf
 
 mainloop:
