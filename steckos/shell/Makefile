@@ -3,11 +3,11 @@ LDFLAGS=--config ../kernel/steckos.cfg
 #DEBUG=-DDEBUG_SHELL
 
 .PHONY: all clean
-all: shell.bin 
+all: version.inc shell.bin 
 
 .PHONY: clean
 clean:
-	rm -f *.o *.bin *.map *.txt kernel_jumptable.inc
+	rm -f *.o *.bin *.map *.txt kernel_jumptable.inc version.inc
 
 version.inc:
 	echo -n ".byte \"r`hg log -l1 | grep changeset | cut -d ':' -f2 | tr -d ' '`\"" > version.inc
