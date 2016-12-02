@@ -27,54 +27,55 @@ dir_9:	     .byte "..         "	;16
 dir_10:	     .byte ".SSH       "	;18
 dir_11:	     .byte "..FOO      "	;20
 dir_12:	     .byte "1          "	;22
+dir_13:	     .byte "LIST0001DB "	;24
 
-input_1: 	.byte 0,0,1,0,0,0,0,0,0,0,0,0 ;expected result - 0 - no match, 1 - match - eg. 0,0,1 mean matches "LS        PRG" from dir_3
+input_1: 	.byte 0,0,1,0,0,0,0,0,0,0,0,0,0 ;expected result - 0 - no match, 1 - match - eg. 0,0,1 mean matches "LS        PRG" from dir_3
 			.byte "ls.prg",0        	;user input
-input_2: 	.byte 0,1,1,1,0,0,0,0,0,0,0,0
+input_2: 	.byte 0,1,1,1,0,0,0,0,0,0,0,0,0
 			.byte "l*.prg",0
-input_3: 	.byte 0,1,1,0,0,0,0,0,0,0,0,0
+input_3: 	.byte 0,1,1,0,0,0,0,0,0,0,0,0,0
 			.byte "l?.prg",0
-input_4: 	.byte 0,1,1,1,0,0,0,0,0,0,0,0
+input_4: 	.byte 0,1,1,1,0,0,0,0,0,0,0,0,0
 			.byte "l**.prg",0
-input_5: 	.byte 0,1,1,0,0,0,0,0,0,0,0,0
+input_5: 	.byte 0,1,1,0,0,0,0,0,0,0,0,0,0
 			.byte "l??.prg",0
-input_6: 	.byte 0,1,1,1,0,0,0,0,0,0,0,0
+input_6: 	.byte 0,1,1,1,0,0,0,0,0,0,0,0,0
 			.byte "l?????.PRG",0
-input_7: 	.byte 0,0,1,0,0,0,0,0,0,0,0,0
+input_7: 	.byte 0,0,1,0,0,0,0,0,0,0,0,0,0
 			.byte "Ls.PrG",0
-input_8: 	.byte 0,0,0,0,0,0,0,1,0,0,0,0
+input_8: 	.byte 0,0,0,0,0,0,0,1,0,0,0,0,0
 			.byte ".",0
-input_9: 	.byte 0,0,0,0,0,0,0,0,1,0,0,0
+input_9: 	.byte 0,0,0,0,0,0,0,0,1,0,0,0,0
 			.byte "..",0
-input_10: 	.byte 1,1,1,1,1,1,1,1,1,1,1,1
+input_10: 	.byte 1,1,1,1,1,1,1,1,1,1,1,1,1
 			.byte "*.*",0
-input_11: 	.byte 0,0,0,0,0,1,0,0,0,0,0,0
+input_11: 	.byte 0,0,0,0,0,1,0,0,0,0,0,0,0
 			.byte "test.txt",0
-input_12: 	.byte 0,0,0,0,0,0,1,0,0,0,0,0
+input_12: 	.byte 0,0,0,0,0,0,1,0,0,0,0,0,0
 			.byte "progs",0
-input_13: 	.byte 0,0,0,0,0,0,0,0,0,1,0,0
+input_13: 	.byte 0,0,0,0,0,0,0,0,0,1,0,0,0
 			.byte ".ssh",0
-input_14: 	.byte 0,0,0,0,0,0,0,0,0,0,1,0
+input_14: 	.byte 0,0,0,0,0,0,0,0,0,0,1,0,0
 			.byte "..foo",0
-input_15: 	.byte 0,1,1,1,0,0,0,0,0,0,0,0
+input_15: 	.byte 0,1,1,1,0,0,0,0,0,0,0,0,0
 			.byte "l*.*",0
-input_16: 	.byte 1,0,0,0,0,0,0,0,0,0,0,0
+input_16: 	.byte 1,0,0,0,0,0,0,0,0,0,0,0,0
 			.byte "a.*",0
-input_17: 	.byte 0,1,1,1,0,0,0,0,0,0,0,0
+input_17: 	.byte 0,1,1,1,0,0,0,0,0,0,0,0,0
 			.byte "l*.p*",0
-input_18: 	.byte 0,0,1,0,0,0,0,0,0,0,0,0
+input_18: 	.byte 0,0,1,0,0,0,0,0,0,0,0,0,0
 			.byte "ls",0
-input_19: 	.byte 0,0,0,0,0,0,0,0,0,0,0,1
+input_19: 	.byte 0,0,0,0,0,0,0,0,0,0,0,1,0
 			.byte "1",0
-input_20: 	.byte 0,1,1,1,1,0,0,0,0,0,0,0
+input_20: 	.byte 0,1,1,1,1,0,0,0,0,0,0,0,0
 			.byte "*.prg",0
-input_21: 	.byte 0,0,0,0,1,0,0,0,0,0,0,0
+input_21: 	.byte 0,0,0,0,1,0,0,0,0,0,0,0,0
 			.byte "FIBONACI.PRG",0
-input_22: 	.byte 0,0,0,0,1,0,0,0,0,0,0,0
+input_22: 	.byte 0,0,0,0,1,0,0,0,0,0,0,0,0
 			.byte "FI*ONA*I.P*G",0
-input_23: 	.byte 0,1,1,1,0,0,0,0,0,0,0,0
+input_23: 	.byte 0,1,1,1,0,0,0,0,0,0,0,0,1
 			.byte "l*",0
-input_24: 	.byte 0,0,1,0,0,0,0,0,0,0,0,0
+input_24: 	.byte 0,0,1,0,0,0,0,0,0,0,0,0,0
 			.byte "ls*",0
 			
 test_dir_tab:
@@ -90,6 +91,7 @@ test_dir_tab:
     .word dir_10
     .word dir_11
 	.word dir_12
+	.word dir_13
 test_dir_tab_e:
 
 Println:

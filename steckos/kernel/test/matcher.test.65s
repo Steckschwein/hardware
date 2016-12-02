@@ -1,12 +1,10 @@
  	*=$1000
-
-dirptr=$0
-
-test_dirs=12
-test_in=input_18
+test_in=input_24
+test_dirs=13
 test_input=test_in + test_dirs; address of input + size of results
 
 
+dirptr=$0
 fd_area						= $0320 ; File descriptor area until $0350 
 FD_Entries_Max = 16
 FD_Entry_Size = 9 ; 9 byte per fd entry
@@ -17,9 +15,9 @@ krn_tmp=$ee
 
 	.include "../../../asmunit/asm_unit.asm"
 	.include "../matcher.asm"
-buffer: 	.rs 8+1+3
+	
+buffer:			.rs 8+1+3
 filename_buf: 	.rs 32
-
 
 vdp_chrout:
 	sta	$e001
@@ -89,54 +87,55 @@ dir_9:	     .ascii "..         "	;16
 dir_10:	     .ascii ".SSH       "	;18
 dir_11:	     .ascii "..FOO      "	;20
 dir_12:	     .ascii "1          "	;22
+dir_13:	     .ascii "LIST0001DB "	;24
 
-input_1: 	.db 0,0,1,0,0,0,0,0,0,0,0,0 ;expected result - 0 - no match, 1 - match - eg. 0,0,1 mean matches "LS        PRG" from dir_3
+input_1: 	.db 0,0,1,0,0,0,0,0,0,0,0,0,0 ;expected result - 0 - no match, 1 - match - eg. 0,0,1 mean matches "LS        PRG" from dir_3
 			.db "ls.prg",0        	;user input
-input_2: 	.db 0,1,1,1,0,0,0,0,0,0,0,0
+input_2: 	.db 0,1,1,1,0,0,0,0,0,0,0,0,0
 			.db "l*.prg",0
-input_3: 	.db 0,1,1,0,0,0,0,0,0,0,0,0
+input_3: 	.db 0,1,1,0,0,0,0,0,0,0,0,0,0
 			.db "l?.prg",0
-input_4: 	.db 0,1,1,1,0,0,0,0,0,0,0,0
+input_4: 	.db 0,1,1,1,0,0,0,0,0,0,0,0,0
 			.db "l**.prg",0
-input_5: 	.db 0,1,1,0,0,0,0,0,0,0,0,0
+input_5: 	.db 0,1,1,0,0,0,0,0,0,0,0,0,0
 			.db "l??.prg",0
-input_6: 	.db 0,1,1,1,0,0,0,0,0,0,0,0
+input_6: 	.db 0,1,1,1,0,0,0,0,0,0,0,0,0
 			.db "l?????.PRG",0
-input_7: 	.db 0,0,1,0,0,0,0,0,0,0,0,0
+input_7: 	.db 0,0,1,0,0,0,0,0,0,0,0,0,0
 			.db "Ls.PrG",0
-input_8: 	.db 0,0,0,0,0,0,0,1,0,0,0,0
+input_8: 	.db 0,0,0,0,0,0,0,1,0,0,0,0,0
 			.db ".",0
-input_9: 	.db 0,0,0,0,0,0,0,0,1,0,0,0
+input_9: 	.db 0,0,0,0,0,0,0,0,1,0,0,0,0
 			.db "..",0
-input_10: 	.db 1,1,1,1,1,1,1,1,1,1,1,1
+input_10: 	.db 1,1,1,1,1,1,1,1,1,1,1,1,1
 			.db "*.*",0
-input_11: 	.db 0,0,0,0,0,1,0,0,0,0,0,0
+input_11: 	.db 0,0,0,0,0,1,0,0,0,0,0,0,0
 			.db "test.txt",0
-input_12: 	.db 0,0,0,0,0,0,1,0,0,0,0,0
+input_12: 	.db 0,0,0,0,0,0,1,0,0,0,0,0,0
 			.db "progs",0
-input_13: 	.db 0,0,0,0,0,0,0,0,0,1,0,0
+input_13: 	.db 0,0,0,0,0,0,0,0,0,1,0,0,0
 			.db ".ssh",0
-input_14: 	.db 0,0,0,0,0,0,0,0,0,0,1,0; FIXME
+input_14: 	.db 0,0,0,0,0,0,0,0,0,0,1,0,0
 			.db "..foo",0
-input_15: 	.db 0,1,1,1,0,0,0,0,0,0,0,0
+input_15: 	.db 0,1,1,1,0,0,0,0,0,0,0,0,0
 			.db "l*.*",0
-input_16: 	.db 1,0,0,0,0,0,0,0,0,0,0,0
+input_16: 	.db 1,0,0,0,0,0,0,0,0,0,0,0,0
 			.db "a.*",0
-input_17: 	.db 0,1,1,1,0,0,0,0,0,0,0,0
+input_17: 	.db 0,1,1,1,0,0,0,0,0,0,0,0,0
 			.db "l*.p*",0
-input_18: 	.db 0,0,1,0,0,0,0,0,0,0,0,0
+input_18: 	.db 0,0,1,0,0,0,0,0,0,0,0,0,0
 			.db "ls",0
-input_19: 	.db 0,0,0,0,0,0,0,0,0,0,0,1
+input_19: 	.db 0,0,0,0,0,0,0,0,0,0,0,1,0
 			.db "1",0
-input_20: 	.db 0,1,1,1,1,0,0,0,0,0,0,0
+input_20: 	.db 0,1,1,1,1,0,0,0,0,0,0,0,0
 			.db "*.prg",0
-input_21: 	.db 0,0,0,0,1,0,0,0,0,0,0,0
+input_21: 	.db 0,0,0,0,1,0,0,0,0,0,0,0,0
 			.db "FIBONACI.PRG",0
-input_22: 	.db 0,0,0,0,1,0,0,0,0,0,0,0
-			.db "FI*ONA*I.P*G",0
-input_23: 	.db 0,1,1,1,0,0,0,0,0,0,0,0
+input_22: 	.db 0,0,0,0,1,0,0,0,0,0,0,0,0
+			.db "FI*ONAI*.P*G",0
+input_23: 	.db 0,1,1,1,0,0,0,0,0,0,0,0,1
 			.db "l*",0
-input_24: 	.db 0,0,1,0,0,0,0,0,0,0,0,0
+input_24: 	.db 0,0,1,0,0,0,0,0,0,0,0,0,0
 			.db "ls*",0
 
 
@@ -152,5 +151,6 @@ test_dir_tab
 	.dw dir_9
 	.dw dir_10
 	.dw dir_11
-	.dw dir_12	
+	.dw dir_12
+	.dw dir_13
 test_dir_tab_e
