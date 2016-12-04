@@ -759,13 +759,12 @@ fat_find_first:
 		ldy #$00
 @l1:	lda (filenameptr),y
 		beq @l2
-		toupper
 		sta filename_buf,y
 		
 		iny
-		cpy #12
+		cpy #8+1+3	+1		;?buffer overflow
 		bne @l1
-@l2:	lda #$00
+@l2:	lda	#0
 		sta filename_buf,y
 
 		SetVector sd_blktarget, sd_read_blkptr

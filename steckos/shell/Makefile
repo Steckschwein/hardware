@@ -12,8 +12,7 @@ clean:
 version.inc:
 	echo -n ".byte \"r`hg log -l1 | grep changeset | cut -d ':' -f2 | tr -d ' '`\"" > version.inc
 
-
-shell.bin: shell.o version.inc
+shell.bin: version.inc shell.o
 	ld65 $(LDFLAGS) shell.o -o shell.bin
 
 shell: shell.bin
