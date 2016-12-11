@@ -84,24 +84,10 @@ SAVE:
         RTS                            ; and return
 
 
-getkey:
-	jsr krn_getkey
-	cmp #$00 
-	beq @l1
-	;toupper
-	sec
-	rts
-@l1:	
-	lda #$00
-	clc
-	rts
-
-
-
 ; vector tables
 
 LAB_vec:
-	.word	getkey		; byte in
+	.word	krn_getkey		; byte in
 	.word	krn_chrout		; byte out
 	.word	LOAD		; load vector for EhBASIC
 	.word	SAVE		; save vector for EhBASIC
