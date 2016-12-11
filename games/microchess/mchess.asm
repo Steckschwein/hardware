@@ -761,7 +761,14 @@ POUT
 		jsr     POUT13		; print copyright
 		JSR	POUT10		; print column labels
 		LDY   	#$00		; init board location
-		JSR	POUT5		; print board horz edge
+		;JSR	POUT5		; print board horz edge
+		ldx #$00
+@l1:
+		lda TOP,x
+		beq POUT1
+		jsr syschout
+		inx
+		bra @l1
 POUT1	lDA   	#$B3		; print vert edge
 		JSR   	syschout	; PRINT ONE ASCII CHR - SPACE
 		LDX   	#$1F
@@ -797,7 +804,16 @@ POUT3	INY			;
 		JSR   	syschout	; PRINT ONE ASCII CHR - |             
 		jsr	POUT12		; print row number
 		JSR   	POUT9		; print CRLF
-        JSR   	POUT5		; print bottom edge of board
+        	;JSR   	POUT5		; print bottom edge of board
+
+		ldx #$00
+@l1:
+		lda MIDDLE,x
+		beq @end
+		jsr syschout
+		inx
+		bra @l1
+@end:
 		CLC			; 
 		TYA			; 
 		ADC	#$08		; point y to beginning of next row
@@ -816,20 +832,20 @@ POUT42	JSR	syschout	;
 		jsr syschout	; 
 		BNE	POUT3		; branch always
 
-POUT5   ;TXA			; print "-----...-----<crlf>"
-		;PHA
-		phx		; 65c02
-		LDX	#$19
-		LDA	#$C4
-POUT6	JSR   	syschout	; PRINT ONE ASCII CHR - "-"
-		DEX
-		BNE	POUT6
-		; PLA
-		; TAX
-		plx
-		jmp POUT9
-		; JSR	POUT9
-		; RTS	 		
+;POUT5   ;TXA			; print "-----...-----<crlf>"
+;		;PHA
+;		phx		; 65c02
+;		LDX	#$19
+;		LDA	#$C4
+;POUT6	JSR   	syschout	; PRINT ONE ASCII CHR - "-"
+;		DEX
+;		BNE	POUT6
+;		; PLA
+;		; TAX
+;		plx
+;		jmp POUT9
+;		; JSR	POUT9
+;		; RTS	 		
 
 POUT8	jsr	POUT10		;
 		LDA   	DIS1
@@ -913,6 +929,9 @@ OPNING  	.byte 	$99, $25, $0B, $25, $01, $00, $33, $25
         	.byte 	$25, $0D, $45, $35, $04, $55, $22, $06
 		.byte	$43, $33, $0F, $CC
 
+TOP		.byte   $da, $c4, $c4, $c2, $c4, $c4, $c2, $c4, $c4, $c2, $c4, $c4, $c2, $c4, $c4, $c2, $c4, $c4, $c2, $c4, $c4, $c2, $c4, $c4, $bf, $0a, $00
+MIDDLE		.byte   $c3, $c4, $c4, $c5, $c4, $c4, $c5, $c4, $c4, $c5, $c4, $c4, $c5, $c4, $c4, $c5, $c4, $c4, $c5, $c4, $c4, $c5, $c4, $c4, $b4, $0a, $00
+BOTTOM		.byte   $c0, $c4, $c4, $c1, $c4, $c4, $c1, $c4, $c4, $c1, $c4, $c4, $c1, $c4, $c4, $c1, $c4, $c4, $c1, $c4, $c4, $c1, $c4, $c4, $d9, $0a, $00
 ;
 ;
 ; end of file
