@@ -1,9 +1,10 @@
-all: microchess.bin mchess_serial.bin
+OBJ=mchess.prg
+all: $(OBJ)
 clean:
-	rm -f *.bin 
+	rm -f *.prg *.o
 
-%.bin: %.a
-	acme -v -f plain --cpu 65c02 -o $@ $<
+%.prg: %.asm
+	cl65 -t none --feature labels_without_colons --config ../../steckos/kernel/steckos.cfg -o $@ $<
 
 transfer: all
-	../../transfer.py mchess_serial.bin 0x1000
+	../../transfer.py mchess.prg 

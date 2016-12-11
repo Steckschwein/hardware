@@ -35,18 +35,11 @@
 ; Updated with corrections to earlier OCR errors by Bill Forster, August 2005.
 ;
 ; Adapted for the Steckschwein 65c02 homebrew computer by Thomas Woinke, March 2015 
-; - use BIOS routines for serial communication
 ; - relocate zero page variables
-; - output moves to serial and LCD
-; - slight syntax changes for the ACME cross assembler
 ;
-!src <defs.h.a>
-!src <via.h.a>
-!src <bios.h.a>
-!src <kernel.h.a>
-!address {
-.key = $09
-}
+.include "../../steckos/kernel/kernel.inc"
+.include "../../steckos/kernel/kernel_jumptable.inc"
+key = $09
 
 ;
 ; page zero variables
@@ -138,39 +131,13 @@ temp    =   $6C
 ; DIS3    =	$F9
 ; temp    =   $FC
 		
-		*=$1000			; load into RAM @ $1000-$15FF
+;		*=$1000			; load into RAM @ $1000-$15FF
 		; jmp .init
 
 ; !src "../shell/util.h.a"
 ; !src "../kernel/textui.a"
 
-.init
-		; stz .key
-		; jsr	.textui_init0
-
-		; +SetVector _textui_chrout, outvec
-
-		; +SetVector uart_tx, outvec	
-
-		; lda #<count
-		; sta via1t1cl            ; set low byte of count
-		; lda #>count
-		; sta via1t1ch            ; set high byte of count
-
-		; lda #%11000000
-		; sta via1ier             ; enable VIA1 T1 interrupts
-
-		; lda #%01000000
-		; sta via1acr             ; T1 continuous, PB7 disabled
-
-		; +SetVector .irq, irqvec
-
-		; lda #%01111110
-		; sta via1portb
-
-
-		; cli
-
+init
 		LDA     #$00		; REVERSE TOGGLE
 		STA     REV
         
@@ -653,7 +620,7 @@ PUSH	CMP	BESTV         	; IS THIS BEST
 		LDA	SQUARE
 		STA	BESTM        	; FLASH DISPLAY
 RETP	
-		LDA	#"."		; print ... instead of flashing disp
+		LDA	#'.'		; print ... instead of flashing disp
 		Jmp	syschout	; print . and return
 		rts
 ;			
@@ -795,7 +762,7 @@ POUT
 		JSR	POUT10		; print column labels
 		LDY   	#$00		; init board location
 		JSR	POUT5		; print board horz edge
-POUT1	lDA   	#$1d		; print vert edge
+POUT1	lDA   	#$B3		; print vert edge
 		JSR   	syschout	; PRINT ONE ASCII CHR - SPACE
 		LDX   	#$1F
 POUT2	TYA					; scan the pieces for a location match
@@ -816,8 +783,8 @@ POUT2	TYA					; scan the pieces for a location match
 		adc   	temp		; combine row & col to determine square color  
 		and   	#$01		; is board square white or blk?
 		bne	POUT25 		; white, print space
-		lda   	#$8c		; black, print *
-		!byte	$2c		; used to skip over LDA #$20
+		lda   	#$DB		; black, print *
+		.byte	$2c		; used to skip over LDA #$20
 POUT25	LDA   	#$20		; ASCII space
 		JSR   	syschout	; PRINT ONE ASCII CHR - SPACE
 		JSR   	syschout	; PRINT ONE ASCII CHR - SPACE
@@ -826,7 +793,7 @@ POUT3	INY			;
         AND   	#$08		; have we completed the row?	 
         BEQ   	POUT1		; no, do next column
 ;		LDA   	#"|"		; yes, put the right edge on
-		lda 	#$1D
+		lda 	#$B3
 		JSR   	syschout	; PRINT ONE ASCII CHR - |             
 		jsr	POUT12		; print row number
 		JSR   	POUT9		; print CRLF
@@ -853,7 +820,7 @@ POUT5   ;TXA			; print "-----...-----<crlf>"
 		;PHA
 		phx		; 65c02
 		LDX	#$19
-		LDA	#$03
+		LDA	#$C4
 POUT6	JSR   	syschout	; PRINT ONE ASCII CHR - "-"
 		DEX
 		BNE	POUT6
@@ -909,61 +876,42 @@ POUT14	lda   	banner,x
 		bne   	POUT14
 POUT15	rts         
 
-KIN    	LDA   	#"?"
+KIN    	LDA   	#'?'
 		JSR   	syschout	; PRINT ONE ASCII CHR - ?
 		JSR   	syskin		; GET A KEYSTROKE FROM SYSTEM
        	AND   	#$4F            ; MASK 0-7, AND ALPHA'S
        	RTS
 
-syskin		= chrin
-; syschout	= mychrout
-syshexout	= hexout
+syskin		= krn_keyin
+syshexout	= krn_hexout
+syschout 	= krn_chrout
 
-syschout 
-	+save
-	jsr chrout
-	+restore
-	rts
-; syshexout      PHA                     ;  prints AA hex digits
-;                LSR                     ;  MOVE UPPER NIBBLE TO LOWER
-;                LSR                     ;
-;                LSR                     ;
-;                LSR                     ;
-;                JSR   PrintDig          ;
-;                PLA                     ;
-; PrintDig       PHY                     ;  prints A hex nibble (low 4 bits)
-;                AND   #$0F              ;
-;                TAY                     ;
-;                LDA   Hexdigdata,Y      ;
-;                PLY                     ;
-;                jmp   syschout          ;
-
-Hexdigdata	!text	"0123456789ABCDEF"
-banner		!text	"MicroChess (c) 1976-2005 ",$0a,$0d,"Peter Jennings, peterj@benlo.com"
-		!byte	$0d, $0a, $00
-cpl		!text	"WWWWWWWWWWWWWWWWBBBBBBBBBBBBBBBBWWWWWWWWWWWWWWWW"
-cph		!text   "KQCCBBRRPPPPPPPPKQCCBBRRPPPPPPPP"
-		!byte	$00
+Hexdigdata	.byte	"0123456789ABCDEF"
+banner		.byte	"MicroChess (c) 1976-2005 ",$0a,$0d,"Peter Jennings, peterj@benlo.com"
+		.byte	$0d, $0a, $00
+cpl		.byte	"WWWWWWWWWWWWWWWWBBBBBBBBBBBBBBBBWWWWWWWWWWWWWWWW"
+cph		.byte   "KQCCBBRRPPPPPPPPKQCCBBRRPPPPPPPP"
+		.byte	$00
 ;
 ; end of added code
 ;
 ; BLOCK DATA
 ;		*= $1580
-SETW		!byte 	$03, $04, $00, $07, $02, $05, $01, $06
-        	!byte 	$10, $17, $11, $16, $12, $15, $14, $13
-        	!byte 	$73, $74, $70, $77, $72, $75, $71, $76
-		 	!byte	$60, $67, $61, $66, $62, $65, $64, $63
+SETW		.byte 	$03, $04, $00, $07, $02, $05, $01, $06
+        	.byte 	$10, $17, $11, $16, $12, $15, $14, $13
+        	.byte 	$73, $74, $70, $77, $72, $75, $71, $76
+	 	.byte	$60, $67, $61, $66, $62, $65, $64, $63
 
-MOVEX   	!byte 	$00, $F0, $FF, $01, $10, $11, $0F, $EF, $F1
-			!byte	$DF, $E1, $EE, $F2, $12, $0E, $1F, $21
+MOVEX   	.byte 	$00, $F0, $FF, $01, $10, $11, $0F, $EF, $F1
+		.byte	$DF, $E1, $EE, $F2, $12, $0E, $1F, $21
 
-POINTS  	!byte 	$0B, $0A, $06, $06, $04, $04, $04, $04
-			!byte 	$02, $02, $02, $02, $02, $02, $02, $02
+POINTS  	.byte 	$0B, $0A, $06, $06, $04, $04, $04, $04
+		.byte 	$02, $02, $02, $02, $02, $02, $02, $02
 
-OPNING  	!byte 	$99, $25, $0B, $25, $01, $00, $33, $25
-			!byte	$07, $36, $34, $0D, $34, $34, $0E, $52
-        	!byte 	$25, $0D, $45, $35, $04, $55, $22, $06
-			!byte	$43, $33, $0F, $CC
+OPNING  	.byte 	$99, $25, $0B, $25, $01, $00, $33, $25
+		.byte	$07, $36, $34, $0D, $34, $34, $0E, $52
+        	.byte 	$25, $0D, $45, $35, $04, $55, $22, $06
+		.byte	$43, $33, $0F, $CC
 
 ;
 ;
