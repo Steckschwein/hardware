@@ -8,8 +8,7 @@
 
 keyin:
 @l:	jsr getkey
-	cmp #$00
-	beq @l
+	bcc @l
 	rts
 
 ; Select Keyboard controller on SPI, get byte from buffer
@@ -26,4 +25,14 @@ getkey:
 	stx via1portb
 
 	plx
-	rts
+
+        cmp #$00 
+        beq @l1
+        ;toupper
+        sec
+        rts
+@l1:
+        lda #$00
+        clc
+        rts
+
