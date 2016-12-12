@@ -1,4 +1,4 @@
-all: dinosaur.bin
+all: dinosaur.prg
 
 %.res: %.xpm
 	sh xpm2acme16bit.sh dinosaur.sprites.xpm > dinosaur.sprites.res
@@ -17,9 +17,9 @@ all: dinosaur.bin
 	sh xpm2acme8bit.sh dinosaur.chars.6.4px.xpm > dinosaur.chars.6.4px.res
 
 clean:
-	rm -f *.bin *.labels *.res
+	rm -f *.prg *.labels *.res
 
-%.bin: %.a ${ACME}/t9929.h.a ${ACME}/*.lib.a *.res 
+%.prg: %.a ${ACME}/t9929.h.a ${ACME}/*.lib.a *.res 
 	acme -v -f plain --cpu 65c02 -o $@ $<
 
 transfer: all
