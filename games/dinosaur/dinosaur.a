@@ -1,6 +1,5 @@
-!src "../../steckos/kernel/zeropage.inc"
 !src "../../steckos/kernel/kernel_jumptable.inc"
-
+!src "../../steckos/kernel/zeropage.inc"
 !src "../../steckos/kernel/via.inc"
 !src "../../steckos/asminc/joystick.inc"
 
@@ -254,12 +253,16 @@ memctl = $0230
 .game_over
 	jsr	.get_joy_status
 	and	#JOY_FIRE		;if fire is pressed set bit
-	bne	+
-	lda	#.STATUS_JOY_PRESSED
-+	ora	#.STATUS_GAME_OVER
+	beq	+
+    jsr krn_getkey
+	cmp #$20    ; space ?
+	bne ++
++	lda	#.STATUS_JOY_PRESSED | .STATUS_GAME_OVER
+	bra	+++
+++	lda	#.STATUS_GAME_OVER
 	sta .game_state
 	
-	+SetVector .text_game_over, addr
++++	+SetVector .text_game_over, addr
 	lda	#<(.A_GX_SCR + (.Y_OFS_GAME_OVER*32))
 	ldy	#.WRITE_ADDRESS + >(.A_GX_SCR+(.Y_OFS_GAME_OVER*32))
 	jsr .vdp_print
@@ -281,9 +284,9 @@ memctl = $0230
 +	rts
 
 .get_joy_status
-	lda	#.JOY_PORT
+	lda	#.JOY_PORT		;select joy port
 	sta	via1porta
-	lda	via1porta
+	lda	via1porta		;read port input
 	rts
 	
 .animate_dinosaur
@@ -366,7 +369,7 @@ memctl = $0230
     adc #.EC_MAX_LEFT_POS ; offset and EC enabled
 	bra	+
 	
-++  jsr	.disabled_pd
+++  jsr	.disable_pd
 	rts
 	
 +	tay
@@ -439,8 +442,8 @@ memctl = $0230
 
 	+save
 	
-    lda   #Dark_Yellow
-    jsr   vdp_bgcolor
+;    lda   #Dark_Yellow
+;    jsr   vdp_bgcolor
 	
 	lda	.game_state
 	and	#.STATUS_PLAY
@@ -462,12 +465,9 @@ memctl = $0230
 	lda	.game_state
 	and #!.STATUS_JOY_PRESSED
 	sta .game_state
-;    jsr getkey
-;	cmp #$03
-;    bne +
- ;   jmp (retvec)
-;+   cmp #$20    ; space ?
- ;   bne +++
+    jsr krn_getkey
+	cmp #$20    ; space ?
+	bne +++
 	
 ++	lda	.game_state
 	and	#.STATUS_JOY_PRESSED
@@ -485,7 +485,7 @@ memctl = $0230
 .game_isr_exit	
 	rti
 
-.disabled_pd
+.disable_pd
 	stz	.enemy_state
 	lda	#.PD_Y_OFF
 	sta .sprite_tab_enemy+4*0,x
@@ -523,6 +523,8 @@ memctl = $0230
 	
 	stz	.dinosaur_state	; run initialy
 	stz	.enemy_state
+	
+	jsr	.disable_pd
 	
 	lda	#$05
 	sta .score_board_cnt
