@@ -20,7 +20,7 @@ dir_2:	     .byte "LL      PRG"	;2
 dir_3:	     .byte "LS      PRG"	;4
 dir_4:	     .byte "LOADER  PRG"	;6
 dir_5:	     .byte "FIBONACIPRG"	;8
-dir_6:	     .byte "TEST    TXT"	;10
+dir_6:	     .byte "TESTZME TXT"	;10
 dir_7:	     .byte "PROGS      "	;12
 dir_8:	     .byte ".          "	;14
 dir_9:	     .byte "..         "	;16
@@ -50,14 +50,14 @@ input_9: 	.byte 0,0,0,0,0,0,0,0,1,0,0,0,0
 input_10: 	.byte 1,1,1,1,1,1,1,1,1,1,1,1,1
 			.byte "*.*",0
 input_11: 	.byte 0,0,0,0,0,1,0,0,0,0,0,0,0
-			.byte "test.txt",0
+			.byte "testzme.txt",0
 input_12: 	.byte 0,0,0,0,0,0,1,0,0,0,0,0,0
 			.byte "progs",0
 input_13: 	.byte 0,0,0,0,0,0,0,0,0,1,0,0,0
 			.byte ".ssh",0
 input_14: 	.byte 0,0,0,0,0,0,0,0,0,0,1,0,0
 			.byte "..foo",0
-input_15: 	.byte 0,1,1,1,0,0,0,0,0,0,0,0,0
+input_15: 	.byte 0,1,1,1,0,0,0,0,0,0,0,0,1
 			.byte "l*.*",0
 input_16: 	.byte 1,0,0,0,0,0,0,0,0,0,0,0,0
 			.byte "a.*",0

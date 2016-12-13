@@ -4,26 +4,26 @@
 ;		*	- matches any file or directory without extension
 matcher:
 				ldx #0
-matcher_test1:			lda filename_buf,x
-				cmp #'a'				; char [a-z] ?
-				bcc matcher_prepare0			; no, we have to go the long way
-				cmp #'z'
+matcher_test1:	lda filename_buf,x
+				cmp #'a'					; char [a-z] ?
+				bcc matcher_prepare0		; no, we have to go the long way
+				cmp #'z'+1
 				bcs matcher_prepare0
-				and #$df			; uppercase
-				cmp (dirptr)			; match first byte?
+				and #$df					; uppercase
+				cmp (dirptr)				; match first byte?
 				beq matcher_prepare0		; yes, go on check the rest
-				clc				; no, we can early exit
+				clc							; no, we can early exit
 				rts
 matcher_prepare0:
 				sta buffer,x
 				inx
-				cpx #8+1+3 +1			;buffer overflow?
+				cpx #8+1+3 +1				;buffer overflow?
 				beq matcher_FAIL
 matcher_prepareinput:
 				lda filename_buf,x
 				bne matcher_prepare0
 matcher_prepare1:
-				lda #' '			;set end of string to ' ', which means end of string in dir entry
+				lda #' '					;set end of string to ' ', which means end of string in dir entry
 				sta buffer,x
 				lda #'.'
 matcher_prepare2:
@@ -66,7 +66,7 @@ matcher_quest:
 matcher_REG:	
 				cmp #'a'				; char [a-z] ?
 				bcc matcher_cmp			; no, we have to go the long way
-				cmp #'z'
+				cmp #'z'+1
 				bcs matcher_cmp
 				and #$df				; uppercase
 matcher_cmp:			cmp (dirptr),y			; match first byte?

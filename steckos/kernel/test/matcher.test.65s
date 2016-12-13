@@ -1,5 +1,5 @@
  	*=$1000
-test_in=input_10
+test_in=input_15
 test_dirs=13
 test_input=test_in + test_dirs; address of input + size of results
 
@@ -43,7 +43,7 @@ test_suite
 	
 test
 	
-	ldx #0
+	ldx #0	
 	ldy #0
 	
 l1:
@@ -80,7 +80,7 @@ dir_2:	     .ascii "LL      PRG"	;2
 dir_3:	     .ascii "LS      PRG"	;4
 dir_4:	     .ascii "LOADER  PRG"	;6
 dir_5:	     .ascii "FIBONACIPRG"	;8
-dir_6:	     .ascii "TEST    TXT"	;10
+dir_6:	     .ascii "TESTZME TXT"	;10
 dir_7:	     .ascii "PROGS      "	;12
 dir_8:	     .ascii ".          "	;14
 dir_9:	     .ascii "..         "	;16
@@ -110,14 +110,14 @@ input_9: 	.db 0,0,0,0,0,0,0,0,1,0,0,0,0
 input_10: 	.db 1,1,1,1,1,1,1,1,1,1,1,1,1
 			.db "*.*",0
 input_11: 	.db 0,0,0,0,0,1,0,0,0,0,0,0,0
-			.db "test.txt",0
+			.db "testzme.txt",0
 input_12: 	.db 0,0,0,0,0,0,1,0,0,0,0,0,0
 			.db "progs",0
 input_13: 	.db 0,0,0,0,0,0,0,0,0,1,0,0,0
 			.db ".ssh",0
 input_14: 	.db 0,0,0,0,0,0,0,0,0,0,1,0,0
 			.db "..foo",0
-input_15: 	.db 0,1,1,1,0,0,0,0,0,0,0,0,0
+input_15: 	.db 0,1,1,1,0,0,0,0,0,0,0,0,1
 			.db "l*.*",0
 input_16: 	.db 1,0,0,0,0,0,0,0,0,0,0,0,0
 			.db "a.*",0
