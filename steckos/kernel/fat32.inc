@@ -8,28 +8,6 @@ sd_blktarget 				= $0400
 sd_blocksize				= $200
 
 
-;.struct F32Volume
-	;BytsPerSec	.word
-	;SecPerClus	.byte
-	;RsvdSecCnt	.word
-	;NumFATs		.byte
-	;FATSz32		.word	2
-	;RootClus	.word	2
-	;LbaFat		.word	2
-	;LbaCluster	.word	2
-;.endstruct
-
-.struct F32_fd
-	Filename		.byte 12
-	Attr			.byte
-	StartCluster	.word 2	; +4
-	Size			.word 2	; +4
-	
-	CurrentCluster	.word 2
-	SeekPos			.word 2
-	;.res			11, 0 ;fill up to $20
-.endstruct
-
 ; TODO FIXME replace with errno.inc from cc65 api
 fat_bad_block_signature		= $01
 fat_invalid_partition_type	= $02
@@ -128,7 +106,23 @@ FAT_EOC			= $0ffffff8	; end of cluster chain marker
 	FstClusLO	.word
 	FileSize	.byte 4
 .endstruct
-
 DIR_Attr_Mask_Dir   = $10
 DIR_Attr_Mask_File  = $20
 DIR_Entry_Size      = $20   ; size of a dir entry - 32 Byte
+
+;--------------------------------------------------------------------------------------
+; File descriptor struct
+;--------------------------------------------------------------------------------------
+
+.struct F32_fd
+	Filename	.byte 12
+	Attr		.byte
+	StartCluster	.word 2	; +4
+	Size		.word 2	; +4
+	
+	CurrentCluster	.word 2
+	SeekPos		.word 2
+	;.res		11, 0 ;fill up to $20
+.endstruct
+
+
