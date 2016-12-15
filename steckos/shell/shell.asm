@@ -1,6 +1,3 @@
-text_mode_40 	= 1
-num_ls_entries 	= $03
-
 tmp0    = $a0
 tmp1    = $a1
 tmp5    = $a2
@@ -13,29 +10,23 @@ tmp5    = $a2
 ; set attrib mask. hide volume label and hidden files
 dir_attrib_mask		= $0a
 steckos_start 		= appstart
-KEY_RETURN 			= $0d
-KEY_BACKSPACE 		= $08
-KEY_ESCAPE			= $1b
-KEY_ESCAPE_CRSR_UP	= 'A'
-KEY_ESCAPE_CRSR_DOWN	= 'B'
 
+KEY_RETURN 		= $0d
+KEY_BACKSPACE 		= $08
+KEY_ESCAPE		= $1b
 KEY_CRSR_UP 		= $1E 
 KEY_CRSR_DOWN 	 	= $1F 
 KEY_CRSR_RIGHT 	 	= $10 
 KEY_CRSR_LEFT 	 	= $11 
 
-BUF_SIZE			= 32
+BUF_SIZE		= 32
 
-entries = $00
-
-buf 				= $e600
+buf 			= $e600
 ;endbuf				= buf + BUF_SIZE*16
-bufptr				= $d0
-pathptr             = $d2
+bufptr			= $d0
+pathptr			= $d2
 ; Address pointers for serial upload
-startaddr			= $d9
-entryvec			= $d4
-
+startaddr		= $d9
 
 ;---------------------------------------------------------------------------------------------------------
 ; init shell
@@ -45,105 +36,101 @@ entryvec			= $d4
 ;---------------------------------------------------------------------------------------------------------
 
 init:
-	; jsr init_textui
 	
-	sei
-	jsr krn_init_sdcard
-	cli
-	lda errno
-	beq @l1
+;	sei
+;	jsr krn_init_sdcard
+;	cli
+;	lda errno
+;	beq @l1
+;
+;	printstring "SD card init error"
+;
+;	bra hello
 
-	printstring "SD card init error"
 
-	bra hello
+;@l1:
+;	jsr krn_mount
+;	lda errno
+;	beq @l2
 
+;	printstring "SD card mount error"
+;	bra hello
 
-@l1:
-	jsr krn_mount
-	lda errno
-	beq @l2
+;@l2: 
 
-	printstring "SD card mount error"
-	bra hello
-
-@l2: 
-
-	SetVector mainloop, retvec
-	SetVector buf, bufptr
+		SetVector mainloop, retvec
+		SetVector buf, bufptr
 
 
 hello:
-	crlf
-	jsr krn_primm
-	.byte "SteckShell "
-	.include "version.inc"
-	.byte $00
-	crlf
+		crlf
+		jsr krn_primm
+		.byte "SteckShell "
+		.include "version.inc"
+		.byte $00
+		crlf
 
 mainloop:
-	; output prompt character
-	
-	crlf
-	lda #'>'
-	jsr krn_chrout
-	
-	; reset input buffer
-	lda #$00
-	tay
-	sta (bufptr)
+		; output prompt character
+		
+		crlf
+		lda #'>'
+		jsr krn_chrout
+		
+		; reset input buffer
+		lda #$00
+		tay
+		sta (bufptr)
 
-	; put input into buffer until return is pressed
+		; put input into buffer until return is pressed
 inputloop:	
-	jsr krn_keyin
+		jsr krn_keyin
 
-	cmp #KEY_RETURN ; return?
-	beq parse
+		cmp #KEY_RETURN ; return?
+		beq parse
 
-	cmp #KEY_BACKSPACE
-	beq backspace
+		cmp #KEY_BACKSPACE
+		beq backspace
 
-	cmp #KEY_ESCAPE
-	beq escape
-	
-	cmp #KEY_CRSR_LEFT
-	bne @l1
-	jsr krn_primm
-	.asciiz "links"
-	bra inputloop
+		cmp #KEY_ESCAPE
+		beq escape
+		
+		cmp #KEY_CRSR_LEFT
+		bne @l1
+		jsr krn_primm
+		.asciiz "links"
+		bra inputloop
 @l1:
-	cmp #KEY_CRSR_RIGHT
-	bne @l2
-	jsr krn_primm
-	.asciiz "rechts"
-	bra inputloop
+		cmp #KEY_CRSR_RIGHT
+		bne @l2
+		jsr krn_primm
+		.asciiz "rechts"
+		bra inputloop
 @l2:
-	cmp #KEY_ESCAPE_CRSR_UP
-	bne @l3
-	jsr krn_primm
-	.asciiz "hoch"
-	bra inputloop
+		cmp #KEY_CRSR_UP
+		bne @l3
+		jsr krn_primm
+		.asciiz "hoch"
+		bra inputloop
 @l3:
-	cmp #KEY_ESCAPE_CRSR_DOWN
-	bne @l4
-	jsr krn_primm
-	.asciiz "runter"
-	bra inputloop
+		cmp #KEY_CRSR_DOWN
+		bne @l4
+		jsr krn_primm
+		.asciiz "runter"
+		bra inputloop
 @l4:
-
-
-	sta (bufptr),y
-	iny
+		sta (bufptr),y
+		iny
 
 line_end:
-	jsr terminate
-	jsr krn_chrout
+		jsr terminate
+		jsr krn_chrout
 
-	; prevent overflow of input buffer 
-	cpy #BUF_SIZE
-	beq mainloop
+		; prevent overflow of input buffer 
+		cpy #BUF_SIZE
+		beq mainloop
 
-	
-	bra inputloop
+		bra inputloop
 
 backspace:
 		cpy #$00
@@ -155,20 +142,7 @@ backspace:
 
 escape:
 		jsr krn_getkey
-; 		cmp #KEY_ESCAPE_CRSR_UP
-; 		bne +
-
-; 	jsr .decbufptr
-; 	bra ++
-
-; +	cmp #KEY_ESCAPE_CRSR_DOWN
-; 	bne +
-
-; 	jsr .incbufptr
-; ++
 		jsr printbuf
-
-; +	
 		bra inputloop
 
 terminate:
@@ -182,7 +156,7 @@ parse:
 		copypointer bufptr, cmdptr
 
 		; find begin of command word
-foo:	lda (cmdptr)	; skip non alphanumeric stuff	
+foo:		lda (cmdptr)	; skip non alphanumeric stuff	
 		bne @l2
 		jmp mainloop
 @l2:
@@ -193,17 +167,17 @@ foo:	lda (cmdptr)	; skip non alphanumeric stuff
 @l3:
 		copypointer cmdptr, paramptr
 
-	; find begin of parameter (everything behind the command word, separated by space)
-	; first, fast forward until space or abort if null (no parameters then)
-@l4:	lda (paramptr)
+		; find begin of parameter (everything behind the command word, separated by space)
+		; first, fast forward until space or abort if null (no parameters then)
+@l4:		lda (paramptr)
 		beq @l7
 		cmp #$20
 		beq @l5
 		inc paramptr
 		bra @l4	
 @l5:
-	; space found.. fast forward until non space or null
-@l6:	lda (paramptr)
+		; space found.. fast forward until non space or null
+@l6:		lda (paramptr)
 		beq @l7
 		cmp #$20
 		bne @l7
@@ -219,8 +193,8 @@ foo:	lda (cmdptr)	; skip non alphanumeric stuff
 compare:
 		; compare 	
 		ldx #$00
-@l1:	ldy #$00
-@l2:	lda (cmdptr),y
+@l1:		ldy #$00
+@l2:		lda (cmdptr),y
 
 		; if not, there is a terminating null
 		; cmp #$00
@@ -278,7 +252,7 @@ unknown:
 		crlf
 		jmp run
 
-@l1:	jmp mainloop
+@l1:		jmp mainloop
 
 printbuf:
 		ldy #$01
@@ -286,35 +260,35 @@ printbuf:
 		jsr krn_textui_update_crs_ptr
 		
 		ldy #$00
-@l1:	lda (bufptr),y
+@l1:		lda (bufptr),y
 		beq @l2
 		sta buf,y
 		jsr krn_chrout
 		iny
 		bra @l1
-@l2:	rts
+@l2:		rts
 
 
 cmdlist:
 
-	.byte "cd"
-	.byte $00	
-	.word cd
-	
-	.byte "up",0
-	.word krn_upload
-    
-	.byte "help"
-	.byte $00	
-	.word help
-
-	.byte "dump"
-	.byte $00	
-	.word dump
-	
-	; End of list
-	.byte $ff
-
+		.byte "cd"
+		.byte $00	
+		.word cd
+		
+		.byte "up",0
+		.word krn_upload
+	    
+		.byte "help"
+		.byte $00	
+		.word help
+.ifdef DEBUG
+		.byte "dump"
+		.byte $00	
+		.word dump
+.endif
+		
+		; End of list
+		.byte $ff
 
 
 atoi:
@@ -325,86 +299,76 @@ atoi:
 		and #$0f
 		rts
 
-@l1:	sec
+@l1:		sec
 		sbc #$30
 		rts
 
 
 errmsg:
-        ;TODO FIXME maybe use oserror() from cc65 lib
-        pha
+		;TODO FIXME maybe use oserror() from cc65 lib
+		pha
 		jsr krn_primm
-        .asciiz "Error: "
-        pla
-        jsr krn_hexout
-        
-		; +errMsgEntry fat_bad_block_signature, .fat_err_signature
-		; +errMsgEntry fat_invalid_partition_type, .fat_err_partition
-		; +errMsgEntry fat_invalid_sector_size, .fat_err_bad_sect_size
-		; +errMsgEntry fat_invalid_num_fats, .fat_err_bad_sect_size		
-		; +errMsgEntry fat_open_error, .fat_err_open
-		; +errMsgEntry fat_too_many_files, .fat_err_too_many_open
-		; +errMsgEntry fat_file_not_found, .fat_err_no_such_file
-		; +errMsgEntry fat_file_not_open, .fat_err_file_not_open
-
-		; jsr strout
+		.asciiz "Error: "
+		pla
+		jsr krn_hexout
 		
 		jmp mainloop
 
 
 helptxt1:
-				.byte $0a,"ll/ls       - directory (long/short)"
-				.byte $0a,"cd <name>   - change directory"
-				.byte $0a,"dump <addr> <addr> - dump memory"
-				.byte $00
+		.byte $0a,"ll/ls       - directory (long/short)"
+		.byte $0a,"cd <name>   - change directory"
+.ifdef DEBUG
+		.byte $0a,"dump <addr> <addr> - dump memory"
+.endif
+		.byte $00
 
 
 cd:
-        lda paramptr
-        ldx paramptr+1
-        jsr krn_chdir
+        	lda paramptr
+        	ldx paramptr+1
+        	jsr krn_chdir
 		beq @l2
-        debugptr "cderr:", paramptr
+        	debugptr "cderr:", paramptr
 		jmp errmsg
 @l2:
 		jsr krn_primm
-		.asciiz " cd ok"
+		.byte $0a," cd ok",$00
 		jmp mainloop
 
 run:
-        lda cmdptr
-        ldx cmdptr+1    ; cmdline in a/x
-        jsr krn_execv   ; return A with errorcode
-        bne @l1         ; error? try different path
-        jmp mainloop		
+		lda cmdptr
+		ldx cmdptr+1    ; cmdline in a/x
+		jsr krn_execv   ; return A with errorcode
+		bne @l1         ; error? try different path
+		jmp mainloop		
 		
 @l1:	
-        SetVector PATH, pathptr
-        stz tmp0
+		SetVector PATH, pathptr
+		stz tmp0
 @try_path:
-        ldx #0
-        ldy tmp0
+		ldx #0
+		ldy tmp0
 @cp_path:
-;        debugcpu "cpp"
 		lda (pathptr), y
 		beq @check_path
-        cmp #':'
-        beq @cp_next
+		cmp #':'
+		beq @cp_next
 		sta tmpbuf,x
-        inx
+		inx
 		iny
 		bne @cp_path
-        lda #$f0
-        jmp errmsg
-@check_path:            ;PATH end reached and nothing to prefix
-        cpy tmp0        
-        bne @cp_next_piece  ;end of path, no iny
-        lda #$f1        ;nothing found, "Invalid command"
-        jmp errmsg
+		lda #$f0
+		jmp errmsg
+@check_path:    ;PATH end reached and nothing to prefix
+		cpy tmp0        
+		bne @cp_next_piece  ;end of path, no iny
+		lda #$f1        ;nothing found, "Invalid command"
+		jmp errmsg
 @cp_next:
-        iny
+		iny
 @cp_next_piece:
-        sty tmp0        ;safe PATH offset, 4 next try
+		sty tmp0        ;safe PATH offset, 4 next try
 		stz	tmp1
 		ldy #0
 @cp_loop:
@@ -414,43 +378,44 @@ run:
 		bne	@cp_loop_1
 		stx	tmp1
 @cp_loop_1:
-        cmp #' '		;end of program name?
-        beq @l3
+		cmp #' '		;end of program name?
+		beq @l3
 		sta tmpbuf,x
 		iny
 		inx
 		bne @cp_loop
-@l3:	lda tmp1
+@l3:		lda tmp1
 		bne	@l4
 		ldy #0
-@l5:	lda	BINEXT,y
+@l5:		lda	BINEXT,y
 		beq @l4
 		sta tmpbuf,x
 		inx
 		iny
 		bne	@l5
-@l4:	stz tmpbuf,x
+@l4:		stz tmpbuf,x
 ;        debugstr "t:", tmpbuf
 		lda #<tmpbuf
 		ldx #>tmpbuf    ; cmdline in a/x
-        jsr krn_execv   ; return A with errorcode
-        bne @try_path
-        lda #$fe
-        jmp errmsg
+		jsr krn_execv   ; return A with errorcode
+		bne @try_path
+		lda #$fe
+		jmp errmsg
 
 
-dumpvec 		= $c0
+.ifdef DEBUG
+dumpvec		= $c0
 dumpvec_end   	= dumpvec
 dumpvec_start 	= dumpvec+2
 
 dump:
-	; stz .dumpvec
-	stz dumpvec+1
-	stz dumpvec+2
-	stz dumpvec+3
+		; stz .dumpvec
+		stz dumpvec+1
+		stz dumpvec+2
+		stz dumpvec+3
 
-	ldy #$00
-	ldx #$03
+		ldy #$00
+		ldx #$03
 @l1:
 		lda (paramptr),y
 		beq @l2
@@ -538,27 +503,23 @@ dump:
 		sta dumpvec_start+1
 		bra @l3
 
-@l8:	jmp mainloop
+@l8:		jmp mainloop
+.endif
 
 upload:
-	sei
-	jsr upload
-    cli
-	; jump to new code
-	jmp (startaddr)	
+		sei
+		jsr upload
+		cli
+		; jump to new code
+		jmp (startaddr)	
 
 help:
-	crlf
-	; +ShellPrintString .hellotxt
-	SetVector helptxt1, msgptr
-	jsr krn_strout
-	jmp mainloop
+		crlf
+		; +ShellPrintString .hellotxt
+		SetVector helptxt1, msgptr
+		jsr krn_strout
+		jmp mainloop
 
-init_textui:
-	jsr	krn_display_off			;restore textui
-	jsr	krn_textui_init
-	jsr	krn_textui_enable
-	rts
 PATH:		        .asciiz "/bin/:/sbin/:/usr/bin/"
-BINEXT:				.asciiz ".PRG"
+BINEXT:			.asciiz ".PRG"
 tmpbuf:	.res 64,0
