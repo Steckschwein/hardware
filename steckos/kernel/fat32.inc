@@ -8,16 +8,16 @@ sd_blktarget 				= $0400
 sd_blocksize				= $200
 
 
-.struct F32Volume
-	BytsPerSec	.word
-	SecPerClus	.byte
-	RsvdSecCnt	.word
-	NumFATs		.byte
-	FATSz32		.word	2
-	RootClus	.word	2
-	LbaFat		.word	2
-	LbaCluster	.word	2
-.endstruct
+;.struct F32Volume
+	;BytsPerSec	.word
+	;SecPerClus	.byte
+	;RsvdSecCnt	.word
+	;NumFATs		.byte
+	;FATSz32		.word	2
+	;RootClus	.word	2
+	;LbaFat		.word	2
+	;LbaCluster	.word	2
+;.endstruct
 
 .struct F32_fd
 	Filename		.byte 12
