@@ -198,9 +198,6 @@ player_isr:
 		ldy #$00
 		lda (imf_ptr),y
 		sta opl_stat
-;		jsr krn_hexout
-
-;		inc crs_x
 
 		iny
 		lda (imf_ptr),y
@@ -208,7 +205,6 @@ player_isr:
 		jsr opl2_delay_register
 
 		sta opl_data		
-;		jsr krn_hexout
 
 
 		; jsr opl2_delay_data
