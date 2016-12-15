@@ -31,30 +31,30 @@ sd_blocksize				= $200
 .endstruct
 
 ; TODO FIXME replace with errno.inc from cc65 api
-fat_bad_block_signature		= 	$01
-fat_invalid_partition_type	=	$02
-fat_invalid_sector_size		=	$03
-fat_invalid_num_fats		=	$04
-fat_open_error				=	$05
-;fat_too_many_files			=   $06
-;fat_file_not_found			=   $07
-fat_file_not_open			=   $08
-fat_file_not_dir			=   $10
-fat_file_too_large			=   $11
+fat_bad_block_signature		= $01
+fat_invalid_partition_type	= $02
+fat_invalid_sector_size		= $03
+fat_invalid_num_fats		= $04
+fat_open_error			= $05
+;fat_too_many_files		= $06
+;fat_file_not_found		= $07
+fat_file_not_open		= $08
+fat_file_not_dir		= $10
+fat_file_too_large		= $11
 
 ; SD card error codes
-sd_no_card					= 	$ff
-sd_invalid_card				=	$0f
-sd_init_failed				= 	$f1
+sd_no_card			= $ff
+sd_invalid_card			= $0f
+sd_init_failed			= $f1
 
 ; these correspond exactly to sd card R1 response error codes
-sd_parameter_error			=	$40
-sd_address_error			=	$20
-sd_erase_sequence_error		=	$10
-sd_cmd_crc_error			=	$08
-sd_cmd_illegal_error		= 	$04
-sd_erase_reset_error		= 	$02
-sd_idle_state				= 	$01
+sd_parameter_error		= $40
+sd_address_error		= $20
+sd_erase_sequence_error		= $10
+sd_cmd_crc_error		= $08
+sd_cmd_illegal_error		= $04
+sd_erase_reset_error		= $02
+sd_idle_state			= $01
 
 ;--------------------------------------------------------------------------------------
 ; partition entry
