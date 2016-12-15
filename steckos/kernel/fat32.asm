@@ -54,8 +54,8 @@ fat_read2:
 		cpx		#2				; a was not zero, if cpx is >= $2 we have to read > BLOCK_SIZE, cannot store to target ptr :/
 	
 @_r1:			
-		sta		krn_ptr3			; save count
-		stx		krn_ptr3+1
+		sta	krn_ptr3			; save count
+		stx	krn_ptr3+1
 		eor     #$ff				; the count argument
 		sta     krn_ptr1
 		txa
@@ -63,7 +63,7 @@ fat_read2:
 		sta     krn_ptr1+1          ; remember -count-1
 		
 		pla
-		sta		sd_read_blkptr
+		sta	sd_read_blkptr
 		pla
 		sta 	sd_read_blkptr+1
 		plx							; pop fd
@@ -74,7 +74,7 @@ fat_read2:
 ;		debug24s "r2 bc:", blocks
 ;		SetVector block_data, sd_read_blkptr		; vector to kernel block_data area		
 		jsr sd_read_block
-		lda	errno
+		lda errno
 		debugA "r2"
 		rts
 @_rexit:
