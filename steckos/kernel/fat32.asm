@@ -326,10 +326,10 @@ inc_blkptr:
 fat_check_signature:
 		rts
 		lda #$55
-		cmp sd_blktarget + BS_Signature
+		cmp sd_blktarget + BootSector::Signature
 		bne @l1
 		asl ; $aa
-		cmp sd_blktarget + BS_Signature+1
+		cmp sd_blktarget + BootSector::Signature + 1
 		beq @l2
 @l1:	lda #fat_bad_block_signature
 		sta errno
@@ -523,7 +523,7 @@ fat_mount:
 		jmp end_mount
 	
 @l1:
-		part0 = sd_blktarget + BS_Partition0
+		part0 = sd_blktarget + BootSector::Partitions + PartTable::Partition_0
 
 		lda part0 + PartitionEntry::TypeCode
 		cmp #$0b
@@ -561,18 +561,18 @@ fat_mount:
 
 
 		; Bytes per Sector, must be 512 = $0200
-		lda sd_blktarget + BPB_BytsPerSec
+		lda sd_blktarget + VolumeID::BytsPerSec
 		bne @l5
-		lda sd_blktarget + BPB_BytsPerSec + 1
+		lda sd_blktarget + VolumeID::BytsPerSec + 1
 		cmp #$02
 		beq @l6
-@l5:	lda #fat_invalid_sector_size
+@l5:		lda #fat_invalid_sector_size
 		sta errno
 		jmp end_mount
 @l6:
 
 		; Sectors per Cluster. Valid: 1,2,4,8,16,32,64,128
-		lda sd_blktarget + BPB_SecPerClus
+		lda sd_blktarget + VolumeID::SecPerClus
 		sta sectors_per_cluster
         
 		; cluster_begin_lba = Partition_LBA_Begin + Number_of_Reserved_Sectors + (Number_of_FATs * Sectors_Per_FAT) -  (2 * sec/cluster);
@@ -581,11 +581,11 @@ fat_mount:
 		clc
 
 		lda lba_addr + 0
-		adc sd_blktarget + BPB_RsvdSecCnt + 0
+		adc sd_blktarget + VolumeID::RsvdSecCnt + 0
 		sta cluster_begin_lba + 0
 		sta fat_begin_lba + 0	
 		lda lba_addr + 1
-		adc sd_blktarget + BPB_RsvdSecCnt + 1
+		adc sd_blktarget + VolumeID::RsvdSecCnt + 1
 		sta cluster_begin_lba + 1
 		sta fat_begin_lba + 1	
 
@@ -605,10 +605,11 @@ fat_mount:
 		; add sectors_per_fat * 2 to cluster_begin_lba
 
 		ldy #$02
-@l7:	clc
+@l7:		clc
 		ldx #$00	
-@l8:	ror ; get carry flag back
-		lda sd_blktarget + BPB_FATSz32,x ; sectors per fat
+@l8:		ror ; get carry flag back
+		;lda sd_blktarget + BPB_FATSz32,x ; sectors per fat
+		lda sd_blktarget + VolumeID::FATSz32,x ; sectors per fat
 		adc cluster_begin_lba,x
 		sta cluster_begin_lba,x
 		inx
@@ -618,37 +619,37 @@ fat_mount:
 		dey
 		bne @l7
 
-        ; cluster_begin_lba_m2 -> cluster_begin_lba - (BPB_RootClus*sec/cluster)        
-        debug8s "sec/cl:", sectors_per_cluster
-        debug32s "clb1:", cluster_begin_lba
-        		
-        ;TODO FIXME we assume 2 here insteasd of using the value in BPB_RootClus
-        ; cluster_begin_lba_m2 -> cluster_begin_lba - (2*sec/cluster) -> sec/cluster << 1
-        lda sectors_per_cluster ; max sec/cluster can be 128, with 2 (BPB_RootClus) * 128 wie may subtract max 256
-        asl
-        sta lba_addr        ;   used as tmp
-        stz lba_addr +1     ;   safe carry
-        rol	lba_addr +1     
-        sec	                ;   subtract from cluster_begin_lba
-        lda cluster_begin_lba
-        sbc lba_addr
-        sta cluster_begin_lba
-        lda cluster_begin_lba +1
-        sbc lba_addr +1
-        sta cluster_begin_lba +1
-        lda cluster_begin_lba +2
-        sbc #0
-        sta cluster_begin_lba +2
-        lda cluster_begin_lba +3
-        sbc #0
-        sta cluster_begin_lba +3 
-        
-        debug32s "clb2:", cluster_begin_lba
+		; cluster_begin_lba_m2 -> cluster_begin_lba - (BPB_RootClus*sec/cluster)        
+		debug8s "sec/cl:", sectors_per_cluster
+		debug32s "clb1:", cluster_begin_lba
+				
+		;TODO FIXME we assume 2 here insteasd of using the value in BPB_RootClus
+		; cluster_begin_lba_m2 -> cluster_begin_lba - (2*sec/cluster) -> sec/cluster << 1
+		lda sectors_per_cluster ; max sec/cluster can be 128, with 2 (BPB_RootClus) * 128 wie may subtract max 256
+		asl
+		sta lba_addr        ;   used as tmp
+		stz lba_addr +1     ;   safe carry
+		rol	lba_addr +1     
+		sec	                ;   subtract from cluster_begin_lba
+		lda cluster_begin_lba
+		sbc lba_addr
+		sta cluster_begin_lba
+		lda cluster_begin_lba +1
+		sbc lba_addr +1
+		sta cluster_begin_lba +1
+		lda cluster_begin_lba +2
+		sbc #0
+		sta cluster_begin_lba +2
+		lda cluster_begin_lba +3
+		sbc #0
+		sta cluster_begin_lba +3 
+		
+		debug32s "clb2:", cluster_begin_lba
         
 		; init file descriptor area
 		jsr fat_init_fdarea
 
-		Copy sd_blktarget + BPB_RootClus, root_dir_first_clus, 3
+		Copy sd_blktarget + VolumeID::RootClus, root_dir_first_clus, 3
 		; now we have the lba address of the first sector of the first cluster
 
 end_mount:
