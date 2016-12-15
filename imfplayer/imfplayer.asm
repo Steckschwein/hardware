@@ -71,15 +71,6 @@ main:
 
 		SetVector imf_data, sd_read_blkptr
 
-		crlf
-		jsr krn_primm
- 		.asciiz "Loading from $"
-
-		lda #>imf_data
-		jsr krn_hexout
-		lda #<imf_data
-		jsr krn_hexout
-	
 		jsr krn_read    
 		lda errno
  		beq @l6
@@ -96,16 +87,6 @@ main:
 
  		adc #>imf_data
  		sta imf_end+1
-
- 		jsr krn_primm
- 		.asciiz " to $"
-
-		lda imf_end+1
-		jsr krn_hexout
-		lda imf_end+0
-		jsr krn_hexout
-
-		crlf
 
 		jsr krn_close
 
@@ -206,9 +187,6 @@ player_isr:
 
 		sta opl_data		
 
-
-		; jsr opl2_delay_data
-
 		iny
 		lda (imf_ptr),y
 		sta delayh
@@ -236,16 +214,8 @@ player_isr:
 		lda #$04
 		adc imf_ptr
 		sta imf_ptr
-		bcc @l4
+		bcc @isr_end
 		inc imf_ptr_h
-@l4:	
-		;lda #10
-		;jsr krn_chrout
-;		stz crs_x
-;		lda imf_ptr_h
-;		jsr krn_hexout
-;		lda imf_ptr
-;		jsr krn_hexout
 @isr_end:
 		; jump to kernel isr
 		ply
