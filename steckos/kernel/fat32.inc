@@ -96,21 +96,19 @@ FAT_EOC			= $0ffffff8	; end of cluster chain marker
 ;--------------------------------------------------------------------------------------
 ; FAT32 Directory Entry
 ;--------------------------------------------------------------------------------------
-DIR_Name		= $00	;Filename, 8 Bytes
-DIR_Ext			= $08 	;Extension, 3 Bytes
-DIR_Attr		= $0B	;8 Bits
-DIR_FstClusHI	= $14	;16 Bits
-DIR_WrtTime		= $16   ; File write time, 16 bits
-						; Bits 0–4: 2-second count, valid value range 0–29 inclusive (0 – 58 seconds). 
-						; Bits 5–10: Minutes, valid value range 0–59 inclusive.
-						; Bits 11–15: Hours, valid value range 0–23 inclusive.
-DIR_WrtDate		= $18	; file write date, 16 bits
-						; Bits 0–4: Day of month, valid value range 1-31 inclusive.
-						; Bits 5–8: Month of year, 1 = January, valid value range 1–12 inclusive.
-						; Bits 9–15: Count of years from 1980, valid value range 0–127 inclusive (1980–2107).
-DIR_FstClusLO	= $1A	;16 Bits
-DIR_FileSize	= $1C	;32 Bits
+.struct F32DirEntry
+Name		.byte 8
+Ext		.byte 3
+Attr		.byte 
+Reserved	.byte 8
+FstClusHI	.word
+WrtTime		.word
+WrtDate		.word
+FstClusLO	.word
+FileSize	.byte 4
+.endstruct
 
 DIR_Attr_Mask_Dir  = $10
 DIR_Attr_Mask_File  = $20
 DIR_Entry_Size      = $20   ; size of a dir entry - 32 Byte
+

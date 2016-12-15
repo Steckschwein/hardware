@@ -20,7 +20,7 @@
 .segment "KERNEL"
 
 .macro saveClusterNo where
-	ldy #DIR_FstClusHI +1
+	ldy #F32DirEntry::FstClusHI +1
 	lda (sd_read_blkptr),y
 	sta where +3
 
@@ -28,7 +28,7 @@
 	lda (sd_read_blkptr),y
 	sta where +2
 
-	ldy #DIR_FstClusLO +1
+	ldy #F32DirEntry::FstClusLO +1
 	lda (sd_read_blkptr),y
 	sta where +1
 	
@@ -245,7 +245,7 @@ lbl_fat_open_error:
 
 ; found.
 fat_open_found:
-		ldy #DIR_Attr
+		ldy #F32DirEntry::Attr
 		lda (dirptr),y
 		debugA "d"
 		bit #$10 			; is it a directory?
@@ -260,14 +260,14 @@ fat_open_found:
 @l2:	        
         debugcpu "fd"
         ;save 32 bit cluster number from dir entry
-		ldy #DIR_FstClusHI +1
+		ldy #F32DirEntry::FstClusHI +1
 		lda (dirptr),y
 		sta fd_area + FD_start_cluster +3, x
 		dey
 		lda (dirptr),y
 		sta fd_area + FD_start_cluster +2, x
 		
-		ldy #DIR_FstClusLO +1
+		ldy #F32DirEntry::FstClusLO +1
 		lda (dirptr),y
 		sta fd_area + FD_start_cluster +1, x
 		dey
@@ -290,19 +290,19 @@ fat_open_found:
 		sta fd_area + FD_start_cluster +0, x
 
 @l3:
-		ldy #DIR_FileSize + 3
+		ldy #F32DirEntry::FileSize + 3
 		lda (dirptr),y
 		sta fd_area + FD_file_size + 3, x
-		ldy #DIR_FileSize + 2
+		ldy #F32DirEntry::FileSize + 2
 		lda (dirptr),y
 		sta fd_area + FD_file_size + 2, x
-		ldy #DIR_FileSize + 1
+		ldy #F32DirEntry::FileSize + 1
 		lda (dirptr),y
 		sta fd_area + FD_file_size + 1, x
-		ldy #DIR_FileSize + 0
+		ldy #F32DirEntry::FileSize + 0
 		lda (dirptr),y
 		sta fd_area + FD_file_size + 0, x
-        ldy #DIR_Attr
+        ldy #F32DirEntry::Attr
         lda (dirptr),y
 		sta fd_area + FD_file_attr, x
 
@@ -781,7 +781,7 @@ ff_l4:
 		clc 				; first byte of dir entry is $00?
 		rts   				; we are at the end, clear carry and return	
 @l5:
-		ldy #DIR_Attr		; else check if long filename entry
+		ldy #F32DirEntry::Attr		; else check if long filename entry
 		lda (dirptr),y 		; we are only going to filter those here (or maybe not?)
 		cmp #$0f
 		beq fat_find_next
