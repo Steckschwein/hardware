@@ -7,8 +7,6 @@ sd_blktarget 				= $0400
 
 sd_blocksize				= $200
 
-.struct PartitionEntry
-.endstruct
 
 .struct F32Volume
 	BytsPerSec	.word
@@ -65,13 +63,14 @@ BS_Signature	= 510   ; must be 0x55AA
 ;--------------------------------------------------------------------------------------
 ; partition entry
 ;--------------------------------------------------------------------------------------
-PE_Bootflag		= 0
-PE_CHSBegin		= 1
-PE_TypeCode		= 4
-PE_CHSEnd		= 6
-PE_LBABegin		= 8
-PE_NumSectors	= 12
-
+.struct PartitionEntry
+Bootflag	.byte
+CHSBegin	.byte 3
+TypeCode	.byte
+CHSEnd		.byte 3	
+LBABegin	.dword
+NumSectors	.dword
+.endstruct
 
 BS_VolLab2		= 71
 

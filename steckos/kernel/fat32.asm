@@ -525,7 +525,7 @@ fat_mount:
 @l1:
 		part0 = sd_blktarget + BS_Partition0
 
-		lda part0 + PE_TypeCode
+		lda part0 + PartitionEntry::TypeCode
 		cmp #$0b
 		beq @l2
 		cmp #$0c
@@ -539,7 +539,7 @@ fat_mount:
 @l2:
 		ldx #$00
 @l3:	
-		lda part0 + PE_LBABegin,x
+		lda part0 + PartitionEntry::LBABegin,x
 		sta lba_addr,x
 		inx
 		cpx #$04
