@@ -19,7 +19,7 @@ dir_show_entry:
 		lda #' '
 		jsr krn_chrout
 
-		ldy #DIR_Attr
+		ldy #F32DirEntry::Attr
 		lda (dirptr),y
 
 
@@ -46,18 +46,18 @@ dir_show_entry:
 		lda #' '
 		jsr krn_chrout
 		
-		ldy #DIR_FileSize + 1 +1
-@l5:	dey
+		ldy #F32DirEntry::FileSize + 2
+@l5:		dey
 		lda (dirptr),y
 		jsr krn_hexout
 
-		cpy #DIR_FileSize
+		cpy #F32DirEntry::FileSize
 		bne @l5
 
 		lda #' '
 		jsr krn_chrout
 
-		ldy #DIR_WrtDate 
+		ldy #F32DirEntry::WrtDate 
 		lda (dirptr),y
 		and #%00011111
 		jsr decoutz
@@ -77,8 +77,6 @@ dir_show_entry:
 		
 		jsr decoutz
 		
-		; +PrintChar '.'
-		; year
 		txa
 		clc 
 		adc #80   	; add begin of msdos epoch (1980)
@@ -93,7 +91,7 @@ dir_show_entry:
 		jsr krn_chrout
 
 
-		ldy #DIR_WrtTime +1
+		ldy #F32DirEntry::WrtTime +1
 		lda (dirptr),y
 		tax
 		lsr

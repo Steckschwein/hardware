@@ -23,7 +23,7 @@ l1:
 
 @l2:
         ldx #FD_INDEX_CURRENT_DIR
-		jsr krn_find_first
+	jsr krn_find_first
         lda errno
         beq @l2_1
         printstring "i/o error"
@@ -41,7 +41,7 @@ l1:
 		cmp #$e5
 		beq @l3
 
-		ldy #DIR_Attr
+		ldy #F32DirEntry::Attr
 		lda (dirptr),y
 
 		bit #dir_attrib_mask ; Hidden attribute set, skip
@@ -62,7 +62,7 @@ l1:
 
 
 print_filename:
-		ldy #DIR_Name
+		ldy #F32DirEntry::Name
 @l1:	lda (dirptr),y
 		jsr krn_chrout
 		iny
