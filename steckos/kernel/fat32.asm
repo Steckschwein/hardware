@@ -13,9 +13,9 @@
 .export fat_close_all, fat_close, fat_getfilesize
 
 
-.ifdef DEBUG ; DEBUG
+;.ifdef DEBUG ; DEBUG
     .import krn_hexout, krn_primm, krn_chrout, krn_strout, krn_print_crlf
-.endif
+;.endif
 
 .segment "KERNEL"
 
@@ -247,7 +247,7 @@ fat_open_found:
 		ldy #F32DirEntry::Attr
 		lda (dirptr),y
 		debugA "d"
-		bit #$10 			; is it a directory?
+		bit #DIR_Attr_Mask_Dir 		; is it a directory?
 		bne @l2				; go on, do not allocate fd, index is set to FD_INDEX_TEMP_DIR
 
 @l1:	bit #$20 ; Is file?
@@ -558,6 +558,11 @@ fat_mount:
 		jmp end_mount
 @l4:
 
+		jsr krn_primm
+		.asciiz "MF: "
+		lda sd_blktarget + VolumeID::MirrorFlags
+		jsr krn_hexout
+		
 
 		; Bytes per Sector, must be 512 = $0200
 		lda sd_blktarget + VolumeID::BytsPerSec
