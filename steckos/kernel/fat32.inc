@@ -77,8 +77,14 @@ sd_idle_state			= $01
 	NumFATs		.byte ; 16
 	Reserved2	.byte 4 ; 17
 	Media		.byte	; 21 ; For removable media, 0xF0 is frequently used. 
-				; The legal values for this field are 0xF0, 0xF8, 0xF9, 0xFA, 0xFB, 0xFC, 0xFD, 0xFE, and 0xFF. 
-	Reserved3	.byte 14
+				; The legal values for this field are 
+				; 0xF0, 0xF8, 0xF9, 0xFA, 0xFB, 0xFC, 0xFD, 0xFE, and 0xFF. 
+	MirrorFlags	.word   ; Bits 0-3: number of active FAT (if bit 7 is 1)
+        			; Bits 4-6: reserved
+        			; Bit 7: one: single active FAT; zero: all FATs are updated at runtime
+        			; Bits 8-15: reserved
+				; https://www.win.tue.nl/~aeb/linux/fs/fat/fat-1.html
+	Reserved3	.byte 12
 	FATSz32		.dword
 	Reserved4	.byte 4
 	RootClus	.dword
@@ -108,7 +114,7 @@ FAT_EOC			= $0ffffff8	; end of cluster chain marker
 .endstruct
 DIR_Attr_Mask_Dir   = $10
 DIR_Attr_Mask_File  = $20
-DIR_Entry_Size      = $20   ; size of a dir entry - 32 Byte
+DIR_Entry_Size      = .sizeof(F32DirEntry)
 
 ;--------------------------------------------------------------------------------------
 ; File descriptor struct
