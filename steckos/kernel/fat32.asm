@@ -558,10 +558,12 @@ fat_mount:
 		jmp end_mount
 @l4:
 
+.ifdef DEBUG
 		jsr krn_primm
 		.asciiz "MF: "
 		lda sd_blktarget + VolumeID::MirrorFlags
 		jsr krn_hexout
+.endif
 		
 
 		; Bytes per Sector, must be 512 = $0200
