@@ -1,6 +1,6 @@
 ASM_INCLUDE=../asminc
 
-all: ls.prg ll.prg date.prg nvram.prg uname.prg hello.prg time-test.prg mainarg.prg fibo.prg clear.prg
+all: ls.prg ll.prg date.prg nvram.prg uname.prg hello.prg time-test.prg mainarg.prg fibo.prg clear.prg setdate.prg
 
 clean:
 	rm -f *.prg *.s *.o
@@ -48,13 +48,19 @@ stdio_test: stdio_test.prg
 
 time-test: time-test.prg
 	../../transfer.py time-test.prg -s 0x1000
+
+setdate: setdate.prg
+	../../transfer.py setdate.prg -s 0x1000
     
 fibo: fibo.prg
 	../../transfer.py fibo.prg -s 0x1000
     
 ls: ls.prg
 	../../transfer.py ls.prg -s 0x1000
-	
+
+view: view.prg
+	../../transfer.py view.prg -s 0x1000
+
 %.prg: %.a
 	acme -v -Wtype-mismatch -f plain --cpu 65c02 -o $@ $<
 
