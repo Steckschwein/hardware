@@ -46,6 +46,9 @@ sd_idle_state			= $01
 	NumSectors	.dword
 .endstruct
 
+PartType_FAT32		= $0b
+PartType_FAT32_LBA	= $0c
+
 ;--------------------------------------------------------------------------------------
 ; FAT bootsector and partition table
 ;--------------------------------------------------------------------------------------

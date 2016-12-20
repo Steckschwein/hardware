@@ -12,30 +12,24 @@
 .export fat_read, fat_read2, fat_find_first, fat_find_next, fat_write
 .export fat_close_all, fat_close, fat_getfilesize
 
+.macro inc32 val
+		.local @l1
+		inc val + 0
+		bne @l1
+		inc val + 1
+		bne @l1
+		inc val + 2
+		bne @l1
+		inc val + 3
+@l1:
+.endmacro
+
 
 ;.ifdef DEBUG ; DEBUG
     .import krn_hexout, krn_primm, krn_chrout, krn_strout, krn_print_crlf
 ;.endif
 
 .segment "KERNEL"
-
-.macro saveClusterNo where
-	ldy #F32DirEntry::FstClusHI +1
-	lda (sd_read_blkptr),y
-	sta where +3
-
-	dey
-	lda (sd_read_blkptr),y
-	sta where +2
-
-	ldy #F32DirEntry::FstClusLO +1
-	lda (sd_read_blkptr),y
-	sta where +1
-	
-	dey
-	lda (sd_read_blkptr),y
-	sta where
-.endmacro
 
 		;in: 
 		;	a/x 		- count 
@@ -273,13 +267,19 @@ fat_open_found:
 		sta fd_area + FD_start_cluster +0, x
 
 		; cluster no = 0? - its root dir, set to root dir first cluster
+	;	lda fd_area + FD_start_cluster + 3, x
+	;	bne @l3
+	;	lda fd_area + FD_start_cluster + 2, x
+	;	bne @l3
+	;	lda fd_area + FD_start_cluster + 1, x
+	;	bne @l3
+	;	lda fd_area + FD_start_cluster + 0, x
+	;	bne @l3
+
 		lda fd_area + FD_start_cluster + 3, x
-		bne @l3
-		lda fd_area + FD_start_cluster + 2, x
-		bne @l3
-		lda fd_area + FD_start_cluster + 1, x
-		bne @l3
-		lda fd_area + FD_start_cluster + 0, x
+		ora fd_area + FD_start_cluster + 2, x
+		ora fd_area + FD_start_cluster + 1, x
+		ora fd_area + FD_start_cluster + 0, x
 		bne @l3
 		
 		lda root_dir_first_clus +1
@@ -291,15 +291,21 @@ fat_open_found:
 		ldy #F32DirEntry::FileSize + 3
 		lda (dirptr),y
 		sta fd_area + FD_file_size + 3, x
-		ldy #F32DirEntry::FileSize + 2
+		;ldy #F32DirEntry::FileSize + 2
+		dey
 		lda (dirptr),y
 		sta fd_area + FD_file_size + 2, x
-		ldy #F32DirEntry::FileSize + 1
+
+		;ldy #F32DirEntry::FileSize + 1
+		dey
 		lda (dirptr),y
 		sta fd_area + FD_file_size + 1, x
-		ldy #F32DirEntry::FileSize + 0
+
+		;ldy #F32DirEntry::FileSize + 0
+		dey
 		lda (dirptr),y
 		sta fd_area + FD_file_size + 0, x
+
 		ldy #F32DirEntry::Attr
 		lda (dirptr),y
 		sta fd_area + FD_file_attr, x
@@ -406,15 +412,10 @@ file_not_open:
 		sta errno
 		bra calc_end
 
+
+
 inc_lba_address:
-		inc lba_addr + 0
-		bne @l1
-		inc lba_addr + 1
-		bne @l1
-		inc lba_addr + 2
-		bne @l1
-		inc lba_addr + 3
-@l1:
+		inc32 lba_addr
 		rts
 
 ;vol->LbaFat + (cluster_nr>>7);// div 128 -> 4 (32bit) * 128 cluster numbers per block (512 bytes)
@@ -524,24 +525,23 @@ fat_mount:
 		part0 = sd_blktarget + BootSector::Partitions + PartTable::Partition_0
 
 		lda part0 + PartitionEntry::TypeCode
-		cmp #$0b
+		cmp #PartType_FAT32
 		beq @l2
-		cmp #$0c
+		cmp #PartType_FAT32_LBA
 		beq @l2
 
-		; type code not $0b or $0c
+		; type code not PartType_FAT32 or PartType_FAT32_LBA
 		lda #fat_invalid_partition_type
 		sta errno
 		jmp end_mount
 
 @l2:
-		ldx #$00
+		ldx #$03
 @l3:	
 		lda part0 + PartitionEntry::LBABegin,x
 		sta lba_addr,x
-		inx
-		cpx #$04
-		bne @l3
+		dex
+		bpl @l3
 
 		; Write LBA start address to sd param buffer
 		; +SDBlockAddr fat_begin_lba
