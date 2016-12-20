@@ -3,6 +3,7 @@
 ;.importzp ptr1
 
 .exportzp  ptr1
+.exportzp  tmp1
 
 .export	vdp_init_reg
 .export	vdp_bgcolor
@@ -10,6 +11,7 @@
 .export	vdp_fills, vdp_fill
 
 .zeropage
+tmp1:
 ptr1:
 	
 .code
@@ -87,10 +89,10 @@ vdp_fill:
 ;	input:
 ;		a/y - vram adress
 ;		x - amount of 256byte blocks (page counter)
-;		stack - pattern
+;		tmp1 - pattern
 			vdp_sreg
 			ldy   #0      ;2
-			pla   
+			lda tmp1
 @0:			vnops          ;2
 			iny             ;2
 			sta   a_vram    ;
@@ -103,11 +105,30 @@ vdp_fills:
 ;	input:
 ;		a/y - vram adress
 ;		x - amount of bytes
-;		stack - fill value
+;		tmp1 - fill value
 			vdp_sreg
-			pla				; pop value
+			lda tmp1
 @0:			vnops          	;2
 			dex             ;2
 			sta a_vram    ;4
 			bne	@0           ;3
 			rts
+			
+;	input:
+;	adrl/adrh vector set
+;	a - low byte vram adress
+;	y - high byte vram adress
+;  	x - amount of 256byte blocks (page counter)
+vdp_memcpy:
+		vdp_sreg
+		ldy   #$00      ;2
+@l1:	lda   (ptr1),y ;5
+		iny             ;2
+		vnops
+		sta   a_vram    ;1 opcode fetch
+		
+		bne   @l1         ;3
+		inc   ptr1+1
+		dex
+		bne   @l1
+		rts

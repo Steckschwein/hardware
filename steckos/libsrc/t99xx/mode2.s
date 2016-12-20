@@ -1,6 +1,7 @@
 .include "vdp.inc"
 
 .importzp ptr1
+.importzp tmp1
 
 .import	vdp_init_reg
 .import vdp_nopslide
@@ -53,14 +54,13 @@ vdp_init_bytes_gfx2:
 ; adrl - color to fill
 ;    
 vdp_mode_gfx2_blank:		; 2 x 6K
-	pha
+	sta tmp1
 	lda #<ADDRESS_GFX2_COLOR
 	ldy #WRITE_ADDRESS + >ADDRESS_GFX2_COLOR
-	ldx	#$18
+	ldx	#24		;6144 byte color map
 	jsr	vdp_fill
+	stz tmp1	;
 	lda #<ADDRESS_GFX2_PATTERN
 	ldy #WRITE_ADDRESS + >ADDRESS_GFX2_PATTERN
-	ldx	#$18
-	lda	#0
-	pha
+	ldx	#24		;6144 byte pattern map
 	jmp	vdp_fill
