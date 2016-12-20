@@ -1,19 +1,9 @@
 .include "kernel.inc"
-.include "vdp.inc"
+.include "../asminc/vdp.inc"
 
 .export vdp_bgcolor, vdp_memcpy, vdp_mode_text, vdp_display_off
 
 .segment "KERNEL"
-
-; vnops - 16cl -> 8Mhz -> 2µs, the min vdp wait
-.macro	vnops
-	jsr vdp_nopslide	;6cl	
-.endmacro
-
-vdp_nopslide:
-		nop			;2cl
-		nop			;2cl
-		rts			;6cl
 
 vdp_display_off:
         SyncBlank
@@ -85,3 +75,5 @@ vdp_bgcolor:
 	vnops
 	sta   a_vreg
 	rts
+	
+m_vdp_nopslide

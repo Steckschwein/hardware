@@ -7,6 +7,15 @@
 ;		improve some functions,  avoid nop for vdp write delay 2µs by opcode reordering
 ;		investigate the difference between wdc and rockwell if no nop is used
 ;
+
+vdp_nopslide:
+		nop			;2cl
+		nop			;2cl
+		nop			;2cl
+		nop			;2cl
+		
+		rts			;6cl
+
 vdp_irq_off
 	lda #v_reg1_16k|v_reg1_display_on|v_reg1_spr_size	;switch interupt off
 	ldy	#v_reg1

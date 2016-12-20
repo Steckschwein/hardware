@@ -1,6 +1,6 @@
 .setcpu "65C02"
 .include "kernel.inc"
-.include "vdp.inc"
+.include "../asminc/vdp.inc"
 
 .segment "CODE"
 
@@ -8,17 +8,6 @@
 charset = $e800
 memctl = $0230
 dest = $f000
-
-.macro	vnops
-		nop			;2cl
-		nop			;2cl
-		nop
-		nop
-		nop
-		nop
-		nop
-		nop
-.endmacro
 
 ; .pages = (.payload_end - .payload) / 256 + 1
 
@@ -82,6 +71,8 @@ end:
 
 		; jump to reset vector
 		jmp ($fffc)
+
+m_vdp_nopslide
 		
 .align 256
 ; *=$1100
