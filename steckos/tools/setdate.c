@@ -59,7 +59,7 @@ int main (int argc, char *argv[]){
 		t = _systime();
 		cprintf("\nset to %s\n", asctime(localtime(&t)));
 	}else
-		cprintf("\nusage: %s yyyymmddHHMMss\n", argv[0]);
+		cprintf("\nusage: %s [yyyymmdd]HHMMss\n", argv[0]);
 
     return EXIT_SUCCESS;
 }
