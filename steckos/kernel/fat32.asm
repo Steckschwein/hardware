@@ -24,6 +24,15 @@
 @l1:
 .endmacro
 
+.macro copy32 src, dest
+		.local @l
+		ldx #$03
+@l:		
+		lda src,x
+		sta dest,x
+		dex
+		bpl @l
+.endmacro
 
 ;.ifdef DEBUG ; DEBUG
     .import krn_hexout, krn_primm, krn_chrout, krn_strout, krn_print_crlf
@@ -267,15 +276,6 @@ fat_open_found:
 		sta fd_area + FD_start_cluster +0, x
 
 		; cluster no = 0? - its root dir, set to root dir first cluster
-	;	lda fd_area + FD_start_cluster + 3, x
-	;	bne @l3
-	;	lda fd_area + FD_start_cluster + 2, x
-	;	bne @l3
-	;	lda fd_area + FD_start_cluster + 1, x
-	;	bne @l3
-	;	lda fd_area + FD_start_cluster + 0, x
-	;	bne @l3
-
 		lda fd_area + FD_start_cluster + 3, x
 		ora fd_area + FD_start_cluster + 2, x
 		ora fd_area + FD_start_cluster + 1, x
@@ -291,17 +291,15 @@ fat_open_found:
 		ldy #F32DirEntry::FileSize + 3
 		lda (dirptr),y
 		sta fd_area + FD_file_size + 3, x
-		;ldy #F32DirEntry::FileSize + 2
+		
 		dey
 		lda (dirptr),y
 		sta fd_area + FD_file_size + 2, x
 
-		;ldy #F32DirEntry::FileSize + 1
 		dey
 		lda (dirptr),y
 		sta fd_area + FD_file_size + 1, x
 
-		;ldy #F32DirEntry::FileSize + 0
 		dey
 		lda (dirptr),y
 		sta fd_area + FD_file_size + 0, x
@@ -372,14 +370,18 @@ calc_lba_addr:
 		beq file_not_open
 		
 		; lba_addr = cluster_begin_lba_m2 + (cluster_number * sectors_per_cluster);
-		lda fd_area + FD_start_cluster  +0,x
-		sta lba_addr
-		lda fd_area + FD_start_cluster  +1,x
-		sta lba_addr +1
-		lda fd_area + FD_start_cluster  +2,x
-		sta lba_addr +2
-		lda fd_area + FD_start_cluster  +3,x
-		sta lba_addr +3
+		.repeat 4,i
+			lda fd_area + FD_start_cluster + i,x
+			sta lba_addr + i
+		.endrepeat
+		;lda fd_area + FD_start_cluster  +0,x
+		;sta lba_addr
+		;lda fd_area + FD_start_cluster  +1,x
+		;sta lba_addr +1
+		;lda fd_area + FD_start_cluster  +2,x
+		;sta lba_addr +2
+		;lda fd_area + FD_start_cluster  +3,x
+		;sta lba_addr +3
         
 		;sectors_per_cluster -> is a power of 2 value, therefore cluster << n, where n ist the number of bit set in sectors_per_cluster
 		lda sectors_per_cluster
@@ -536,15 +538,7 @@ fat_mount:
 		jmp end_mount
 
 @l2:
-		ldx #$03
-@l3:	
-		lda part0 + PartitionEntry::LBABegin,x
-		sta lba_addr,x
-		dex
-		bpl @l3
-
-		; Write LBA start address to sd param buffer
-		; +SDBlockAddr fat_begin_lba
+		copy32 part0 + PartitionEntry::LBABegin, lba_addr
 
 		SetVector sd_blktarget, sd_read_blkptr	
 		; Read FAT Volume ID at LBABegin and Check signature
@@ -671,7 +665,7 @@ end_mount:
 fat_open_rootdir:
 		Copy root_dir_first_clus, fd_area + FD_INDEX_TEMP_DIR + FD_start_cluster, 3
 		ldx #FD_INDEX_TEMP_DIR
-			rts
+		rts
 
 		; clone source file descriptor with offset x into fd_area to target fd with y
 		; in:
@@ -767,21 +761,21 @@ fat_getfilesize:
 
 fat_find_first:
 		ldy #$00
-@l1:	lda (filenameptr),y
+@l1:		lda (filenameptr),y
 		beq @l2
 		sta filename_buf,y
 		
 		iny
 		cpy #8+1+3	+1		;?buffer overflow
 		bne @l1
-@l2:	lda	#0
+@l2:		lda	#0
 		sta filename_buf,y
 
 		SetVector sd_blktarget, sd_read_blkptr
 		jsr calc_lba_addr
 		debug32s "lba:", lba_addr
 		
-ff_l3:	SetVector sd_blktarget, dirptr	
+ff_l3:		SetVector sd_blktarget, dirptr	
 		jsr sd_read_block
 		dec sd_read_blkptr+1
 		
