@@ -326,7 +326,6 @@ inc_blkptr:
 		rts
 
 fat_check_signature:
-		rts
 		lda #$55
 		cmp sd_blktarget + BootSector::Signature
 		bne @l1
