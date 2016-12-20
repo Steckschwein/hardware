@@ -1,5 +1,5 @@
-OBJS=imfplayer.o ym3812.o
-TARGET=imfplayer.prg
+OBJS=imf.o ym3812.o
+TARGET=imf.prg
 
 %.prg: $(OBJS)
 	cl65 --target none  --config ../steckos/kernel/steckos.cfg -o $@ $(OBJS)
