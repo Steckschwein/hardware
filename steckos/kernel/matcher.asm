@@ -12,9 +12,10 @@ matcher_test1:			lda filename_buf,x
 				bcs matcher_prepare0
 				and #$df					; uppercase
 				cmp (dirptr)				; match first byte?
-				beq matcher_prepare0		; yes, go on check the rest
-				clc							; no, we can early exit
-				rts
+				bne matcher_FAIL
+				;beq matcher_prepare0		; yes, go on check the rest
+				;clc							; no, we can early exit
+				;rts
 matcher_prepare0:
 				sta buffer,x
 				inx
@@ -89,9 +90,7 @@ matcher_STLOOP:  			             	; We first try to match with * = ""
 				BCS matcher_FOUND       	; We found a match, return with C=1
 				INY             			; No match yet, try to grow * string
 				LDA (dirptr),Y     			; Are we at the end of string?
-				cmp #' '
+;				cmp #' '
 				BNE matcher_STLOOP      	; Not yet, add a character
 matcher_FAIL:   		CLC            			; Yes, no match found, return with C=0
 matcher_EXIT:			RTS
-buffer: .res 8+1+3,0
-

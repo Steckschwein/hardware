@@ -149,7 +149,6 @@ fat_chdir:
 		jsr	_fat_open
 		debugA "o_"
 		bne @l_exit
-:
 .endmacro
 
         ;in:
@@ -768,29 +767,29 @@ fat_getfilesize:
 
 fat_find_first:
 		ldy #$00
-@l1:		lda (filenameptr),y
+@l1:	lda (filenameptr),y
 		beq @l2
 		sta filename_buf,y
 		
 		iny
 		cpy #8+1+3	+1		;?buffer overflow
 		bne @l1
-@l2:		lda	#0
+@l2:	lda	#0
 		sta filename_buf,y
 
 		SetVector sd_blktarget, sd_read_blkptr
 		jsr calc_lba_addr
 		debug32s "lba:", lba_addr
 		
-ff_l3:		SetVector sd_blktarget, dirptr	
+ff_l3:	SetVector sd_blktarget, dirptr	
 		jsr sd_read_block
 		dec sd_read_blkptr+1
 		
 ff_l4:
 		lda (dirptr)
-		bne @l5
-		clc 				; first byte of dir entry is $00?
-		rts   				; we are at the end, clear carry and return	
+		bne @l5				; first byte of dir entry is $00?
+		clc
+		rts   				; we are at the end, C=0 and return
 @l5:
 		ldy #F32DirEntry::Attr		; else check if long filename entry
 		lda (dirptr),y 		; we are only going to filter those here (or maybe not?)
@@ -822,4 +821,4 @@ ff_end:
 		rts
 		
 .include "matcher.asm"
-;buffer: .res 8+1+3,0
+buffer: .res 8+1+3,0
