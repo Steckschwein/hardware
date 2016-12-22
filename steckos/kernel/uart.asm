@@ -8,70 +8,56 @@
 ; init UART
 ;----------------------------------------------------------------------------------------------
 init_uart:
-			lda #%10000000
-			sta uart1lcr
+		lda #%10000000
+		sta uart1lcr
+			
+		; 115200 baud
+		lda #$01
+		sta uart1dll	
+		stz uart1dlh
 
+		; 8N1
+		lda #%00000011
+		sta uart1lcr
 
-			; ldy #param_uart_div	
-			; lda (paramvec),y
-			; sta uart1dll	
+		lda #$01	; Enable FIFO
+		sta uart1fcr	
 
-			; iny
-			; lda (paramvec),y
-			; sta uart1dlh	
+		stz uart1ier	; polled mode (so far) 
+		stz uart1mcr	; reset DTR, RTS
 
-			; ; $0001 , 115200 baud
-			lda #$01
-			sta uart1dll	
-			stz uart1dlh
+		and #%00001100	; keep OUT1, OUT2 values
+		sta uart1mcr	; reset DTR, RTS
 
-			; ldy #param_lsr  
-			; lda (paramvec),y
-			lda #%00000011
-			sta uart1lcr
-
-			; lda #$00
-			stz uart1fcr	; FIFO off
-			stz uart1ier	; polled mode (so far) 
-			stz uart1mcr	; reset DTR, RTS
-
-			and #%00001100			; keep OUT1, OUT2 values
-			sta uart1mcr		; reset DTR, RTS
-			; clc
-
-			rts
+		rts
 
 ;----------------------------------------------------------------------------------------------
 ; send byte in A 
 ;----------------------------------------------------------------------------------------------
 uart_tx:
-			pha
+		pha
 
+		lda #$20
 @l:			
-			lda uart1lsr
-			and #$20
-			beq @l
+		bit uart1lsr
+		beq @l
 
-			pla 
+		pla 
 
-			sta uart1rxtx
+		sta uart1rxtx
 
-			rts
+		rts
 
 ;----------------------------------------------------------------------------------------------
 ; receive byte, store in A 
 ;----------------------------------------------------------------------------------------------
 uart_rx:
-@l:		
-			lda uart1lsr 
-			and #$1f
-			cmp #$01
-			bne @l
-			
-			lda uart1rxtx
-		 
-			rts
-
+		lda #$01        ; Maske fuer DataReady Bit
+@l:
+		bit uart1lsr
+		beq @l
+		lda uart1rxtx
+		rts
 ;----------------------------------------------------------------------------------------------
 
 ; upload:
