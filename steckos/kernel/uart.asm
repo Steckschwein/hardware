@@ -20,7 +20,7 @@ init_uart:
 		lda #%00000011
 		sta uart1lcr
 
-		lda #$01	; Enable FIFO
+		lda #%00000111	; Enable FIFO, reset tx/rx FIFO
 		sta uart1fcr	
 
 		stz uart1ier	; polled mode (so far) 
