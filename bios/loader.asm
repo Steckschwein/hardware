@@ -1,9 +1,6 @@
 .setcpu "65c02"
 
 
-	lda #$80
-	sta $0230
-
 loop:
 @a:	lda biosdata
 @b:	sta $e000
