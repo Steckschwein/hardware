@@ -23,4 +23,4 @@ clean:
 	acme -v -f plain --cpu 65c02 -o $@ $<
 
 transfer: all
-	../../transfer.py dinosaur.bin	
+	../../transfer.py dinosaur.prg
