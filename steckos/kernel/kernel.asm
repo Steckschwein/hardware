@@ -147,8 +147,6 @@ upload:
 	jsr uart_rx
 	sta startaddr
 
-	sei	
-	
 	jsr uart_rx
 	sta startaddr+1
 
@@ -195,9 +193,9 @@ upload:
 
 	jsr upload_ok
 	
+	sei	; disable interrupt while loading the actual data
 	ldy #$00
 @l1:
-	sei
 	jsr uart_rx
 	sta (addr),y
 
@@ -220,7 +218,6 @@ upload:
 	; yes? write OK and jump to start addr	
 
 	jsr upload_ok
-	; cli 
 
 	lda #'O'
 	jsr textui_chrout
