@@ -2,7 +2,7 @@ OBJS=fat32.o sdcard.o textui.o t99xx.lib.o rtc.o spi.o uart.o via.o out.o key.o 
 ASM_INCLUDE=../asminc
 LDFLAGS=--config steckos.cfg
 
-DEBUG=-DDEBUG
+#DEBUG=-DDEBUG
 
 .PHONY: all clean
 all: kernel.bin loader.bin
@@ -11,7 +11,7 @@ all: kernel.bin loader.bin
 clean:
 	rm -f *.o *.bin *.map *.txt kernel_jumptable.inc version.inc
 
-%.o: %.asm vdp.inc zeropage.inc fat32.inc version.inc
+%.o: %.asm 
 	ca65 --target none $(DEBUG) --include-dir $(ASM_INCLUDE)  $<
 
 version.inc:
