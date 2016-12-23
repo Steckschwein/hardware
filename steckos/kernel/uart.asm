@@ -26,9 +26,6 @@ init_uart:
 		stz uart1ier	; polled mode (so far) 
 		stz uart1mcr	; reset DTR, RTS
 
-		and #%00001100	; keep OUT1, OUT2 values
-		sta uart1mcr	; reset DTR, RTS
-
 		rts
 
 ;----------------------------------------------------------------------------------------------
