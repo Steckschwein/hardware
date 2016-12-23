@@ -29,14 +29,11 @@ init_uart:
 			lda (paramvec),y
 			sta uart1lcr
 
-			; lda #$00
-			stz uart1fcr	; FIFO off
+			lda #$03
+			sta uart1fcr	; FIFO on, reset FIFO
+
 			stz uart1ier	; polled mode (so far) 
 			stz uart1mcr	; reset DTR, RTS
-
-			and #%00001100			; keep OUT1, OUT2 values
-			sta uart1mcr		; reset DTR, RTS
-			; clc
 
 			rts
 
@@ -44,32 +41,30 @@ init_uart:
 ; send byte in A 
 ;----------------------------------------------------------------------------------------------
 uart_tx:
-			pha
+                pha
 
-@l:			
-			lda uart1lsr
-			and #$20
-			beq @l
+                lda #$20
+@l:
+                bit uart1lsr
+                beq @l
 
-			pla 
+                pla
 
-			sta uart1rxtx
+                sta uart1rxtx
 
-			rts
+                rts
+
 
 ;----------------------------------------------------------------------------------------------
 ; receive byte, store in A 
 ;----------------------------------------------------------------------------------------------
 uart_rx:
-@l:		
-			lda uart1lsr 
-			and #$1f
-			cmp #$01
-			bne @l
-			
-			lda uart1rxtx
-		 
-			rts
+                lda #$01        ; Maske fuer DataReady Bit
+@l:
+                bit uart1lsr
+                beq @l
+                lda uart1rxtx
+                rts
 
 ;----------------------------------------------------------------------------------------------
 
