@@ -7,10 +7,10 @@
 spi_device_deselect=$7e		; deselect any device
 
 spi_deselect:
-    lda #spi_device_deselect
+		lda #spi_device_deselect
 spi_select:
-	sta via1portb
-    rts
+		sta via1portb
+		rts
  	
 
 ;----------------------------------------------------------------------------------------------
@@ -51,27 +51,27 @@ spi_rw_byte:
 ; Destructive: A,X
 ;----------------------------------------------------------------------------------------------
 spi_r_byte:
-       lda via1portb   ; Port laden
-       AND #$fe        ; Takt ausschalten
-       TAX             ; aufheben
-       ORA #$01
+		lda via1portb   ; Port laden
+		AND #$fe        ; Takt ausschalten
+		TAX             ; aufheben
+		ORA #$01
 
-       STA via1portb ; Takt An 1
-       STX via1portb ; Takt aus
-       STA via1portb ; Takt An 2
-       STX via1portb ; Takt aus
-       STA via1portb ; Takt An 3
-       STX via1portb ; Takt aus
-       STA via1portb ; Takt An 4
-       STX via1portb ; Takt aus
-       STA via1portb ; Takt An 5
-       STX via1portb ; Takt aus
-       STA via1portb ; Takt An 6
-       STX via1portb ; Takt aus
-       STA via1portb ; Takt An 7
-       STX via1portb ; Takt aus
-       STA via1portb ; Takt An 8
-       STX via1portb ; Takt aus
+		STA via1portb ; Takt An 1
+		STX via1portb ; Takt aus
+		STA via1portb ; Takt An 2
+		STX via1portb ; Takt aus
+		STA via1portb ; Takt An 3
+		STX via1portb ; Takt aus
+		STA via1portb ; Takt An 4
+		STX via1portb ; Takt aus
+		STA via1portb ; Takt An 5
+		STX via1portb ; Takt aus
+		STA via1portb ; Takt An 6
+		STX via1portb ; Takt aus
+		STA via1portb ; Takt An 7
+		STX via1portb ; Takt aus
+		STA via1portb ; Takt An 8
+		STX via1portb ; Takt aus
 
-       lda via1sr
-       rts
+		lda via1sr
+		rts
