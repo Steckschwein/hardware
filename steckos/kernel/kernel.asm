@@ -23,7 +23,6 @@ text_mode_40 = 1
 .import sd_read_block, sd_write_block
 
 .import execv
-.import print_crlf
 .import strout, hexout, primm
 
 kern_init:
@@ -334,7 +333,7 @@ krn_uart_rx:			jmp uart_rx
 krn_primm:      		jmp primm
 
 .export krn_print_crlf
-krn_print_crlf:      	jmp print_crlf
+krn_print_crlf:      	jmp krn_print_crlf
 
 .export krn_getfilesize
 krn_getfilesize:      	jmp fat_getfilesize
