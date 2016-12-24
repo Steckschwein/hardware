@@ -332,8 +332,9 @@ krn_uart_rx:			jmp uart_rx
 .export krn_primm
 krn_primm:      		jmp primm
 
-.export krn_print_crlf
-krn_print_crlf:      	jmp krn_print_crlf
+;.export krn_print_crlf
+;krn_print_crlf:      	jmp krn_print_crlf
+.res 3
 
 .export krn_getfilesize
 krn_getfilesize:      	jmp fat_getfilesize
