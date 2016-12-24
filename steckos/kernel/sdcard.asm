@@ -33,7 +33,7 @@ init_sdcard:
 	tay
 	iny
 
-@l1:   sty via1portb
+@l1:	sty via1portb
 	sta via1portb
 	dex
 	bne @l1
