@@ -29,8 +29,8 @@ init_uart:
 			lda (paramvec),y
 			sta uart1lcr
 
-			lda #$03
-			sta uart1fcr	; FIFO on, reset FIFO
+	                lda #%00000111  ; Enable FIFO, reset tx/rx FIFO
+			sta uart1fcr	
 
 			stz uart1ier	; polled mode (so far) 
 			stz uart1mcr	; reset DTR, RTS
