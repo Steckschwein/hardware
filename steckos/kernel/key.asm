@@ -1,6 +1,6 @@
 .include "kernel.inc"
 .include "via.inc"
-.import spi_r_byte 
+.import spi_r_byte, spi_deselect
 .export keyin, getkey
 .segment "KERNEL"
 
@@ -18,7 +18,6 @@ getkey:
 	lda #%01111010
 	sta via1portb
 
-	; lda #$ff
 	jsr spi_r_byte
        
 	ldx #%11111110
@@ -28,11 +27,9 @@ getkey:
 
         cmp #$00 
         beq @l1
-        ;toupper
         sec
         rts
 @l1:
-        lda #$00
         clc
         rts
 
