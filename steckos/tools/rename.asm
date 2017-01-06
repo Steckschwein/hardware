@@ -7,7 +7,7 @@
 	ldy #$00
 @loop:
 	lda (paramptr),y
-	beq out
+	beq rename
 	cmp #' '
 	beq next
 	sta filename,y
