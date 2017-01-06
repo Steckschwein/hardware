@@ -1,7 +1,7 @@
 #!/bin/bash
 
 TARGET=$1
-TOOLS="clear.prg ls.prg ll.prg date.prg nvram.prg setdate.prg"
+TOOLS="clear.prg ls.prg ll.prg rename.prg date.prg nvram.prg setdate.prg"
 
 mkdir -p dist/bin
 cp kernel/loader.bin dist
