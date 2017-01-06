@@ -1,6 +1,6 @@
 ASM_INCLUDE=../asminc
 
-all: ls.prg ll.prg date.prg nvram.prg uname.prg hello.prg time-test.prg mainarg.prg fibo.prg clear.prg setdate.prg
+all: ls.prg ll.prg rename.prg date.prg nvram.prg uname.prg hello.prg time-test.prg mainarg.prg fibo.prg clear.prg setdate.prg
 
 clean:
 	rm -f *.prg *.s *.o
