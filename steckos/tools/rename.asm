@@ -3,6 +3,7 @@
 .include "../kernel/fat32.inc"
 .include "../asminc/filedes.inc"
 
+	; everything until <space> in the parameter string is the source file name
 	ldy #$00
 @loop:
 	lda (paramptr),y
@@ -15,7 +16,11 @@
 	sta filename,y
 	bra @loop
 
+	; after <space> there comes the destination filename
+	; copy and normalize it FAT dir entry style
+
 next:
+	; first we init the buffer with spaces so we just need to fill in the filename and extension
 	ldx #$0b
 	lda #' '
 @l:
@@ -27,10 +32,11 @@ next:
 	ldx #$00
 @loop:
         lda (paramptr),y
-        beq out
+        beq rename
 	cmp #'.'
 	bne @skip
-
+	
+	; found the dot. advance x to pos. 8, point y to the next byte and go again
 	iny
 	ldx #8
 	bra @loop
@@ -42,13 +48,13 @@ next:
 	iny
 	bra @loop
 
-out:
-
+rename:
 	lda #<filename
 	ldx #>filename
 	jsr krn_open
 	bne error
 
+	; dirptr still points to the correct dir entry, so just overwrite the name
 	ldy #$0b
 @l:
 	lda normalizedfilename,y
@@ -56,8 +62,10 @@ out:
 	dey
 	bpl @l
 
+	; set write pointer accordingly and
 	SetVector sd_blktarget, sd_write_blkptr
 
+	; just write back the block. lba_address still contains the right address
 	jsr krn_sd_write_block
 	lda errno
 
