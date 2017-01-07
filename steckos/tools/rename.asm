@@ -26,7 +26,7 @@ next:
 @l:
 	sta normalizedfilename,x
 	dex
-	bpl @l
+	bne @l
 
 	iny
 	ldx #$00
@@ -49,13 +49,19 @@ next:
 	bra @loop
 
 rename:
-	lda #<filename
-	ldx #>filename
-	jsr krn_open
-	bne error
+	SetVector filename, filenameptr
+	ldx #FD_INDEX_CURRENT_DIR
+	jsr krn_find_first
+	lda errno
+	beq @go
+	printstring "i/o error"
 
+	jmp (retvec)
+@go:	bcs @found
+	bra error
+@found:
 	; dirptr still points to the correct dir entry, so just overwrite the name
-	ldy #$0b
+	ldy #$0b -1
 @l:
 	lda normalizedfilename,y
 	sta (dirptr),y
@@ -69,7 +75,6 @@ rename:
 	jsr krn_sd_write_block
 	lda errno
 
-	jsr krn_close
 	cmp #$00
 	bne wrerror
 
