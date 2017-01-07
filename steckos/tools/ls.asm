@@ -22,18 +22,18 @@ l1:
 		copypointer paramptr, filenameptr
 
 @l2:
-        ldx #FD_INDEX_CURRENT_DIR
-	jsr krn_find_first
-        lda errno
-        beq @l2_1
-        printstring "i/o error"
-        jmp (retvec)
+		ldx #FD_INDEX_CURRENT_DIR
+		jsr krn_find_first
+		lda errno
+		beq @l2_1
+		printstring "i/o error"
+		jmp (retvec)
         
-@l2_1:	bcs @l4
+@l2_1:		bcs @l4
 		bra @l5
 		; jsr .dir_show_entry
 @l3:
-        ldx #FD_INDEX_CURRENT_DIR
+		ldx #FD_INDEX_CURRENT_DIR
 		jsr krn_find_next
 		bcc @l5
 @l4:	
@@ -63,7 +63,7 @@ l1:
 
 print_filename:
 		ldy #F32DirEntry::Name
-@l1:	lda (dirptr),y
+@l1:		lda (dirptr),y
 		jsr krn_chrout
 		iny
 		cpy #$0b
