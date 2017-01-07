@@ -13,4 +13,8 @@ for n in $TOOLS ; do
 	cp tools/$n dist/BIN/$un
 done
 
+for i in {0..9} ; do 
+	dd if=/dev/zero of=dist/FILE000$i.DAT bs=32k count=1 
+done
+
 cp -a dist/* $TARGET &&  umount $TARGET
