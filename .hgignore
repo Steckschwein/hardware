@@ -3,11 +3,14 @@ syntax: glob
 
 .DS_Store
 *.bin
+*.prg
 *.chp
 *.fus
 *.jed
 *.pin
 *.labels
 *.orig
+*.o
+*.s
 *.bak
 *~
