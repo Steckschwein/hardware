@@ -1,12 +1,13 @@
 .include "../kernel/kernel.inc"
 .include "../kernel/kernel_jumptable.inc"
 .include "../asminc/vdp.inc"
+.include "../asminc/zeropage.inc"
 .include "../kernel/fat32.inc"
 
 content = $2000	
 
-collor_offs=$1800    
-color=content+collor_offs
+color_offs=$1800    
+color=content+color_offs
 
 main:
 	
@@ -27,7 +28,7 @@ main:
 	lda errno
 	bne err	
 
-	jsr	textui_disable			;disable textui
+	jsr	krn_textui_disable			;disable textui
 	SetVector content, addr
     	jsr	gfxui_on
     	jsr	gfxui_blend_on
@@ -36,9 +37,9 @@ main:
 	jsr	gfxui_blend_off
 	jsr	gfxui_off
     
-	jsr	display_off			;restore textui
-	jsr	textui_init
-	jsr	textui_enable
+	jsr	krn_display_off			;restore textui
+	jsr	krn_textui_init
+	jsr	krn_textui_enable
 	cli
 	bra l2
 
@@ -56,8 +57,8 @@ gfxui_blend_on:
 	lda #$ff
 l3:
 	sta tmp2
-	SetVector  ((WRITE_ADDRESS<<8)+ADDRESS_GFX2_COLOR+0),          ptr1
-	SetVector  ((WRITE_ADDRESS<<8)+ADDRESS_GFX2_COLOR+row+$f8),   ptr2; +1 row and $f8 end of line
+	SetVector  ((WRITE_ADDRESS<<8)+ADDRESS_GFX2_COLOR+0),          krn_ptr1
+	SetVector  ((WRITE_ADDRESS<<8)+ADDRESS_GFX2_COLOR+row+$f8),   krn_ptr2; +1 row and $f8 end of line
 
 	stz tmp0
 	lda #8
@@ -126,15 +127,20 @@ l3:
 	sec
 	sbc #08
 	sta tmp3
-	sta ptr2l
+	sta krn_ptr2l
 
-	lda #((WRITE_ADDRESS)+>ADDRESS_GFX2_COLOR+row+$f8)
+	lda #(WRITE_ADDRESS)+>(ADDRESS_GFX2_COLOR+row+$f8)
 	sta ptr2h
-	lda #>color+row
+	lda #>(color+row)
 	sta @c2+2
 	lda tmp0
 	beq @l4
 	jmp @l
 @l4:	rts
 
-
+tmp0:	.res 1
+;tmp1:	.res 1
+;tmp2:	.res 1
+;tmp3:	.res 1
+;tmp4:	.res 1
+tmp5:	.res 1
