@@ -4,8 +4,10 @@
 
 
 main:
-	jsr krn_primm
-	.byte $0a,0
 	jsr krn_keyin
-	jsr	krn_hexout
+	pha
+	jsr krn_primm
+	.byte $0a,"0x",0
+	pla
+	jsr	krn_hexout	
 	jmp (retvec)
