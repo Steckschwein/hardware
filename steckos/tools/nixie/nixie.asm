@@ -22,6 +22,7 @@ main:
 			jsr	krn_display_off
 
 			lda	#Black<<4|Black
+			jsr	vdp_mode_gfx2_blank
 			jsr	init_digits
 			jsr	init_screen
 			
@@ -35,7 +36,7 @@ main:
 			cli
 			
 @0:			jsr	krn_getkey
-			cmp #$03
+			cmp #KEY_ESCAPE
 			beq exit
 			cmp #'x'
 			beq exit
