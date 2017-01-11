@@ -221,7 +221,7 @@ memctl = $0230
 ;	##		  #
 ;	##
 .detect_collision
-	ldx	#(.DINOSAUR_Y-4*8+.DINOSAUR_HEIGHT)	; 4x8px height cacti char
+	ldx	#(.DINOSAUR_Y-4*8+.DINOSAUR_HEIGHT)		; 4x8px height cacti char
 	lda	#.CHAR_LAST_FG							; test cacti chars
 	cmp	.screen+(.DINOSAUR_X/8)+1
 	bcs	+
@@ -242,9 +242,10 @@ memctl = $0230
 	cmp	.sprite_tab+3*4					
 	bcc	+
 	beq	+
-	
-                                     ;detect collision - pterodactyl
     
+	;detect collision - pterodactyl
+	
+	
     rts
     
 +	lda	#.DINOSAUR_DEAD
@@ -540,10 +541,8 @@ memctl = $0230
 	inx
 	cpx	#4
 	bne	-
-
 	
-	;set new highscore
-	lda	.score_value
+	lda	.score_value			;set new highscore
 	cmp	.score_value_high
 	bcc	++
 	bne	+
@@ -702,14 +701,15 @@ memctl = $0230
 	+vnops
 	sta	a_vram
 	inx
-	bne	-
-+	lda	.score_value_high
+	bne	-	
++	
+	lda	.score_value_high
 	jsr .digit_out
 	lda	.score_value_high+1
 	jsr .digits_out
 	lda	.score_value_high+2
 	jsr .digits_out
-    +vnops                      ; flicker fix - .digits_out rts (6cl), lda #' ' (2l) gives 8cl => 1µs/8Mhz, but 2µs delay betwenn to writes are required!
+    +vnops                      		; flicker fix - .digits_out rts (6cl), lda #' ' (2l) gives 8cl => 1µs/8Mhz, but 2µs delay betwenn to writes are required!
 	lda	#' '
 	sta a_vram
 	lda	.score_value
