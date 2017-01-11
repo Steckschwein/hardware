@@ -4,17 +4,13 @@
 .include	"../../kernel/zeropage.inc"
 .include	"../../kernel/kernel_jumptable.inc"
 
-;.import		krn_spi_select_rtc, krn_spi_deselect
-;.import		krn_spi_r_byte
-
 .import		vdp_bgcolor
 .import		vdp_mode_gfx2
 .import		vdp_mode_gfx2_blank
 .import		vdp_memcpys
 
-
 CHAR_BLANK=$ff
-row=tmp1
+
 .code
 main:
 			sei
@@ -136,42 +132,39 @@ to_number:
 			rts
 			
 update_screen:
+			SetVector screen_buffer, ptr1
 			lda	#<(ADDRESS_GFX2_SCREEN+256*1)
 			ldy	#WRITE_ADDRESS+>(ADDRESS_GFX2_SCREEN+256*1)
-			vdp_sreg
-			SetVector screen_buffer, ptr1
 			ldx #2
-			jmp copy
+			bra vram_copy_x
 
 init_digits:
 			;5 rows 1st pattern/color bank
+			SetVector tab_pattern, ptr1
 			lda	#<(ADDRESS_GFX2_PATTERN+($0800*1));pattern for 2nd screen bank
 			ldy	#WRITE_ADDRESS+>(ADDRESS_GFX2_PATTERN+(2048*1))
-			vdp_sreg
-			SetVector tab_pattern, ptr1
-			ldx #8
-			jsr	copy
+			jsr vram_copy
 			;4 rows 2nd pattern/color bank
+			SetVector (tab_pattern+$0800), ptr1
 			lda	#<(ADDRESS_GFX2_PATTERN+($0800*2));pattern for 3rd screen bank
 			ldy	#WRITE_ADDRESS+>(ADDRESS_GFX2_PATTERN+(2048*2))
-			vdp_sreg
-			SetVector (tab_pattern+$0800), ptr1
-			ldx #8
-			jsr	copy
+			jsr vram_copy
 			
 			;5 rows 1st pattern/color bank
+			SetVector tab_color, ptr1
 			lda	#<(ADDRESS_GFX2_COLOR+($0800*1))
 			ldy	#WRITE_ADDRESS+>(ADDRESS_GFX2_COLOR+(2048*1))
-			vdp_sreg
-			SetVector tab_color, ptr1
-			ldx #8
-			jsr	copy
+			jsr vram_copy
 			;4 rows 2nd pattern/color bank
+			SetVector (tab_color+$0800), ptr1
 			lda	#<(ADDRESS_GFX2_COLOR+($0800*2))
 			ldy	#WRITE_ADDRESS+>(ADDRESS_GFX2_COLOR+(2048*2))
+			jmp vram_copy
+
+vram_copy:
+			ldx #8			
+vram_copy_x:
 			vdp_sreg
-			SetVector (tab_color+$0800), ptr1
-			ldx #8
 			jmp	copy
 
 datetime:	.byte 0,0, $ff,0,0,$ff,0,0,$ee; date/time buffer
@@ -261,6 +254,11 @@ frmcnt:		.res 1, 1
 			
 m_vdp_nopslide
 
+digit_offset:
+	.repeat 10, i
+		.byte i*5
+	.endrep
+	
 .align 256
 digit_tab:
 	.repeat 250, i
@@ -272,12 +270,6 @@ tab_color:
 .incbin "DIGITS_0-9.reorg.tiac"
 tab_pattern:
 .incbin	"DIGITS_0-9.reorg.tiap"
-.align 256
 screen_buffer:
 	.res 256,CHAR_BLANK
 	.res 256,CHAR_BLANK
-	
-digit_offset:
-	.repeat 10, i
-		.byte i*5
-	.endrep
