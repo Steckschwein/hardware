@@ -31,7 +31,7 @@ main:
 			copypointer	$fffe, irqsave
 			SetVector	isr, $fffe
 			
-			stz tmp2
+			stz display_datetime
 			
 			cli
 			
@@ -64,7 +64,7 @@ isr:
 			sta frmcnt
 			jsr update_screen
 			jsr update_datetime
-			jsr draw_digits
+			jsr draw_digits			
 @0:
 			lda #Black
 			jsr vdp_bgcolor
@@ -76,13 +76,22 @@ isr:
 			rti
 
 update_datetime:
+			inc display_datetime
+			lda display_datetime
+			cmp #$06
+			bne	@0
+			lda #0
+			sta display_datetime
+@0:			
 			jsr	krn_spi_select_rtc
-			
+			lda display_datetime
+			beq	@date
+@time:
 			lda #0 ; read from rtc, start with seconds
 			jsr krn_spi_rw_byte
 
-			ldy	#7 				  ; offset in datetime - end of time
 			jsr krn_spi_r_byte    ;seconds
+			ldy	#7 				  ; offset in datetime - end of time
 			jsr to_number			
 			dey					  ;space
 			
@@ -92,26 +101,24 @@ update_datetime:
 			
 			jsr krn_spi_r_byte     ;hour
 			jsr to_number
-			
-			ldy	#17				; offset in datetime - end of date
-			jsr krn_spi_r_byte     ;week day
-			
-			jsr krn_spi_r_byte     ;day of month
+			bra @exit
+@date:
+			lda #4 					; read from rtc, start with day of month
+			jsr krn_spi_rw_byte
+
+			jsr krn_spi_r_byte     	;day of month
+			ldy	#1					; offset in datetime - end of date
 			jsr to_number
 			
-			jsr krn_spi_r_byte     ;month
-			dec                     ;dc1306 gives 1-12, but 0-11 expected
-;			jsr BCD2dec
-;			sta TM+tm::tm_mon
-;
+			jsr krn_spi_r_byte     ;month - dc1306 gives 1-12, but 0-11 expected
+			ldy	#4
+			jsr to_number
+			
 			jsr krn_spi_r_byte     ;year value - rtc yeat 2000+year register
-;			jsr BCD2dec
-;			clc
-;			adc #100                ;TM starts from 1900, so add the difference
-;			sta TM+tm::tm_year
-
-			jsr krn_spi_deselect
-			rts
+			ldy	#7
+			jsr to_number
+@exit:
+			jmp krn_spi_deselect
 
 to_number:
 			pha 
@@ -127,20 +134,6 @@ to_number:
 			sta datetime, y
 			dey
 			rts
-			
-; dec = (((BCD>>4)*10) + (BCD&0xf))
-BCD2dec:tax
-        and     #%00001111
-        sta     tmp1
-        txa
-        and     #%11110000      ; *16
-        lsr                     ; *8
-        sta     tmp2
-        lsr
-        lsr                     ; *2
-        adc     tmp2            ; = *10
-        adc     tmp1
-        rts
 			
 update_screen:
 			lda	#<(ADDRESS_GFX2_SCREEN+256*1)
@@ -181,8 +174,7 @@ init_digits:
 			ldx #8
 			jmp	copy
 
-datetime:	.byte 0,1,$ff,2,3,$ff,4,5,$ee; time
-			.byte 0,0, $ff,0,0,$ff,0,0,$ee; date
+datetime:	.byte 0,0, $ff,0,0,$ff,0,0,$ee; date/time buffer
 
 init_screen:
 			lda	#<(ADDRESS_GFX2_SCREEN+256*1)
@@ -202,6 +194,7 @@ init_screen:
 datetime_ix=tmp1
 screen_x=tmp2
 digit_pos=tmp3
+display_datetime=tmp4
 
 draw_digits:
 			stz datetime_ix
