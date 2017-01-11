@@ -1,9 +1,8 @@
-
 .include "common.inc"
+.include "filedes.inc"
 .include "../kernel/kernel.inc"
 .include "../kernel/kernel_jumptable.inc"
 .include "../kernel/fat32.inc"
-.include "../asminc/filedes.inc"
 
 	; everything until <space> in the parameter string is the source file name
 	ldy #$00
