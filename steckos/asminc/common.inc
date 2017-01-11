@@ -11,3 +11,6 @@
 		sta toptr	+i	
 	.endrepeat
 .endmacro
+
+
+KEY_ESCAPE = 27
