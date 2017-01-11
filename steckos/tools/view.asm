@@ -13,27 +13,23 @@
 .import vdp_mode_sprites_off
 .import vdp_bgcolor
 
-
 content = $2000	
 color=content+$1800
 
-main:	
-	copypointer paramptr, filenameptr
-	
+main:
+	lda paramptr
+	ldx paramptr+1
 	jsr krn_open
- 	phx
- 
-	lda errno
 	bne err
+ 	phx
 
 	SetVector content, sd_read_blkptr
-	jsr krn_read	
-
+	jsr krn_read
 	plx
 	jsr krn_close
 	lda errno
 	bne err	
-
+	
 		jsr	krn_textui_disable			;disable textui
 		SetVector content, addr
 		jsr	gfxui_on
@@ -51,7 +47,9 @@ main:
 
 err:
 	jsr krn_primm
-	.asciiz "load error"
+	.asciiz "load error file "
+	copypointer	paramptr, msgptr
+	jsr krn_strout
 
 l2:	jmp (retvec)
 

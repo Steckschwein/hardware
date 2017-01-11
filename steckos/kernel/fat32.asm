@@ -89,8 +89,8 @@ fat_read2:
 		
 		;in: 
 		;	x - offset into fd_area
-	
-
+		;out:
+		;	errno - error number - TODO FIXME use carry flag and A to indicate error
 fat_read:
 		stz errno
         
