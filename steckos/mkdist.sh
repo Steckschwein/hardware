@@ -1,7 +1,7 @@
 #!/bin/bash
 
 TARGET=$1
-TOOLS="clear.prg ls.prg ll.prg rename.prg date.prg nvram.prg setdate.prg"
+TOOLS="clear.prg ls.prg ll.prg rename.prg date.prg nvram.prg setdate.prg keycode.prg"
 
 rm -r dist/*
 mkdir -p dist/BIN
