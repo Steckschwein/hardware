@@ -25,6 +25,18 @@ vdp_chrout:
 
 	
 test_suite
+	lda #<test_in
+	sta $10
+	lda #>test_in
+	sta $10+1
+	
+	ldx #2
+	lda $10, x
+	sta $4
+ll1:	dec $4
+	bpl ll1
+	
+
     lda #<test_input
     sta matcher_prepareinput+1
     sta matcher_test1+1

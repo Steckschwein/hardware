@@ -1,3 +1,4 @@
+.include "common.inc"
 .include "kernel.inc"
 .include "fat32.inc"
 .include "errno.inc"	; from ca65 api

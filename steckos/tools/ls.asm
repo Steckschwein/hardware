@@ -1,5 +1,6 @@
 dir_attrib_mask		= $0a
 .segment "CODE"
+.include "common.inc"
 .include "../kernel/kernel.inc"
 .include "../kernel/kernel_jumptable.inc"
 .include "../kernel/fat32.inc"

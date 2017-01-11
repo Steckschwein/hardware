@@ -9,7 +9,7 @@
 
 .export vdp_mode_gfx2
 .export vdp_mode_gfx2_blank
-;.export vdp_fill_name_table
+.export vdp_fill_name_table
 
 
 .code
@@ -17,7 +17,6 @@
 ;	gfx 2 - each pixel can be addressed - e.g. for image
 ;	
 vdp_mode_gfx2:
-			jsr	vdp_fill_name_table
 			lda #<vdp_init_bytes_gfx2
 			sta ptr1
 			lda #>vdp_init_bytes_gfx2
@@ -63,4 +62,8 @@ vdp_mode_gfx2_blank:		; 2 x 6K
 	lda #<ADDRESS_GFX2_PATTERN
 	ldy #WRITE_ADDRESS + >ADDRESS_GFX2_PATTERN
 	ldx	#24		;6144 byte pattern map
+	jsr	vdp_fill
+	lda #<ADDRESS_GFX2_SCREEN
+	ldy #WRITE_ADDRESS + >ADDRESS_GFX2_SCREEN
+	ldx	#3		;768 byte screen map
 	jmp	vdp_fill

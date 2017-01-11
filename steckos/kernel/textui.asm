@@ -1,3 +1,4 @@
+.include "common.inc"
 .include "kernel.inc"
 .include "vdp.inc"
 

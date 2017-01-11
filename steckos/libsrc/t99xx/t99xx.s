@@ -1,19 +1,12 @@
 .include "vdp.inc"
-
-;.importzp ptr1
-
-.exportzp  ptr1
-.exportzp  tmp1
+.include "zeropage.inc"
 
 .export	vdp_init_reg
 .export	vdp_bgcolor
 .export	vdp_nopslide
 .export	vdp_fills, vdp_fill
+.export	vdp_memcpys
 
-.zeropage
-tmp1:
-ptr1:
-	
 .code
 ;
 ;	TODO	
@@ -115,7 +108,7 @@ vdp_fills:
 			rts
 			
 ;	input:
-;	adrl/adrh vector set
+;	A(ptr1) to data
 ;	a - low byte vram adress
 ;	y - high byte vram adress
 ;  	x - amount of 256byte blocks (page counter)
@@ -131,4 +124,20 @@ vdp_memcpy:
 		inc   ptr1+1
 		dex
 		bne   @l1
+		rts
+		
+;	input:
+;	A(ptr1) to data
+;	a - low byte vram adress
+;	y - high byte vram adress
+;  	x - amount of bytes to copy
+vdp_memcpys:
+		vdp_sreg
+		ldy   #$00
+@0:		lda   (ptr1),y ;5
+		vnops
+		sta   a_vram    ;4
+		iny             ;2
+		dex             ;2
+		bne	@0
 		rts

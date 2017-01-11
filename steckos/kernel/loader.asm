@@ -1,6 +1,7 @@
 .setcpu "65C02"
+.include "common.inc"
 .include "kernel.inc"
-.include "../asminc/vdp.inc"
+.include "vdp.inc"
 
 .segment "CODE"
 

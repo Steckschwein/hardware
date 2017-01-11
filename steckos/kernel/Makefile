@@ -11,7 +11,7 @@ all: kernel.bin loader.bin
 clean:
 	rm -f *.o *.bin *.map *.txt kernel_jumptable.inc version.inc
 
-%.o: %.asm 
+%.o: %.asm $(ASM_INCLUDE)/vdp.inc zeropage.inc fat32.inc version.inc
 	ca65 --target none $(DEBUG) --include-dir $(ASM_INCLUDE)  $<
 
 version.inc:
@@ -22,7 +22,7 @@ kernel.bin: version.inc $(OBJS) kernel.inc
 	grep krn symbols.txt | sed "s/al 00//" | awk -F' ' '{print $$2" = $$"$$1}'| sed -e "s/^\.//g" > kernel_jumptable.inc
 
 loader.bin: kernel.bin loader.o
-	cl65 --target none $(DEBUG) --config steckos.cfg loader.asm -o loader.bin
+	ld65 $(LDFLAGS) loader.o -o loader.bin
 
 transfer: loader.bin
 	../../transfer.py -s 0x1000 loader.bin

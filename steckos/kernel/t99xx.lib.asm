@@ -1,5 +1,6 @@
+.include "common.inc"
 .include "kernel.inc"
-.include "../asminc/vdp.inc"
+.include "vdp.inc"
 
 .export vdp_bgcolor, vdp_memcpy, vdp_mode_text, vdp_display_off
 

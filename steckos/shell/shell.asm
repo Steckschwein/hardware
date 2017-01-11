@@ -4,6 +4,7 @@ tmp5    = $a2
 
 .segment "OS"
 
+.include "common.inc"
 .include "../kernel/kernel.inc"
 .include "../kernel/kernel_jumptable.inc"
 
