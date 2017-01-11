@@ -14,6 +14,7 @@
 #define KEY_HOME 	 0x12 // DC2
 #define KEY_END 	 0x13 // DC3
 #define KEY_DEL 	 0x14 // DC4
+#define KEY_ESC		 0x1b // Escape Key
 
 // Unshifted characters - for a "US QWERTY" keyboard only - Scan Code Set 2
 const unsigned char scancodes[][5] PROGMEM = {
@@ -92,6 +93,7 @@ const unsigned char scancodes[][5] PROGMEM = {
 	{0x73,'5', '5', 0, 0} ,
 	{0x74,CRSR_RIGHT, CRSR_RIGHT, 0, 0} ,
 	{0x75,CRSR_UP, CRSR_UP, 0, 0} ,
+	{0x76,KEY_ESC, KEY_ESC, 0, 0} ,
 	{0x78,' ', ' ', 0, 0} ,// F11
 	{0x79,'+', '+', 0, 0} ,
 	{0x7a,'3', '3', 0, 0} ,
