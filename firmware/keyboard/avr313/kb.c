@@ -152,6 +152,7 @@ void decode(uint8_t sc)
 			alt=1;
 		}
 
+/*
 		else if(sc == 0x05)					  // F1
 		{
 			if(mode == 0)
@@ -159,6 +160,7 @@ void decode(uint8_t sc)
 			if(mode == 2)
 				mode = 3;					  // Leave scan code mode
 		}
+*/
 //        else if(sc == 0x05)
             
 		else
