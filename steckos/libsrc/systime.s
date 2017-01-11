@@ -57,8 +57,6 @@ rtc_read=0
     adc #100                ;TM starts from 1900, so add the difference
     sta TM+tm::tm_year
 
-;	jsr krn_spi_r_byte     
-
     jsr krn_spi_deselect
     
     lda     #<TM                    ; pointer to TM struct
