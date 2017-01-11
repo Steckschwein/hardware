@@ -1,11 +1,13 @@
 .include "vdp.inc"
 .include "zeropage.inc"
 
+.export	vdp_display_off
 .export	vdp_init_reg
 .export	vdp_bgcolor
 .export	vdp_nopslide
 .export	vdp_fills, vdp_fill
-.export	vdp_memcpys
+.export	vdp_mode_sprites_off
+.export	vdp_memcpys, vdp_memcpy
 
 .code
 ;

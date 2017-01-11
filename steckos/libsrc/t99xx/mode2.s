@@ -10,7 +10,7 @@
 .export vdp_mode_gfx2
 .export vdp_mode_gfx2_blank
 .export vdp_fill_name_table
-
+;.export 
 
 .code
 ;
