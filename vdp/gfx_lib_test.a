@@ -1,9 +1,6 @@
 *=$1000
 	jmp .main
 	
-!src <gfx.lib.a>
-!src <t99xx.lib.a>
-
 .main
 	sei
 	
@@ -36,4 +33,5 @@
 
 -	bra	-
 	
-	
+!src <gfx.lib.a>
+!src <t99xx.lib.a>

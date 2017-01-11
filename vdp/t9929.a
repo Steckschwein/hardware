@@ -1,6 +1,7 @@
 *=$1000
+
+!source "../bios/bios_call.inc"
 !source <defs.h.a>
-!source <bios.h.a>
 !source <via.h.a>
 !source <t9929.h.a>
 
@@ -35,7 +36,7 @@ pic4_col:
 
 main:
 	lda   #'0'
-	jsr   chrout
+	jsr   vdp_chrout
 
 	jsr   vdp_init
  	jsr   vdp_clear_vram
@@ -45,7 +46,7 @@ main:
 	
 	jsr	vdp_colortest
 	lda   #'1'
-	jsr   chrout
+	jsr   vdp_chrout
 
 ;   jsr   vdp_color
 ;   jsr   vdp_write
@@ -60,7 +61,7 @@ main:
    jsr   vdp_sreg
 
 	lda   #'2'
-	jsr   chrout
+	jsr   vdp_chrout
 
 
 ;  	jsr	vdp_gfx2_init	

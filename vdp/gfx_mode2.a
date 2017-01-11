@@ -7,6 +7,7 @@
 !src <t99xx.lib.a>
 
 .safeirq
+
 main
     sei
 	jsr	vdp_display_off			;display off
@@ -18,7 +19,7 @@ main
     lda #Black<<4|Black
     jsr vdp_mode_gfx2_blank
     
-	;jsr	vdp_mode_gfx2_load_bitmap
+;	jsr	vdp_mode_gfx2_load_bitmap
     
     +SetVector .pattern, addr
 	lda	#<ADDRESS_GFX2_PATTERN
@@ -26,14 +27,16 @@ main
 	ldx	#$18	;6k bitmap - $1800
 	jsr	vdp_memcpy					;load the pic data --> pattern table at vram $0000
 
-    +SetVector  irqvec, .safeirq
-    +SetVector  .blend_isr, irqvec
+    lda #1<<0
+	sta $0230
+    +SetVector  $fffe, .safeirq	
+    +SetVector  .blend_isr, $fffe
 	jsr vdp_mode_gfx2			;enable gfx2 mode
-    cli
+	cli
 --  
-    jsr vdp_gfx2_blend_on
-    jsr vdp_gfx2_blend_off
-    
+	jsr vdp_gfx2_blend_on
+;    jsr vdp_gfx2_blend_off
+	
     bra	--
     
     sei
@@ -43,11 +46,12 @@ main
 .blend_isr
     bit a_vreg
     bpl +
-    
     +save
     lda #$80
     sta tmp5
-    +restore
+    lda	#Black
+	jsr vdp_bgcolor
+	+restore
     
 +   rti
     
@@ -140,10 +144,12 @@ vdp_gfx2_blend_on
 
 !align 255,0
 .pattern
-!bin "test/BRUNI_TRUDI.TIAP"
+;!bin "test/BRUNI_TRUDI.TIAP"
+!bin "test/DIGITS_0-9_2.TIAP"
 ;!bin "VESPA.TIAP"
 ;!bin "test/GIRL_02.TIAP"
 .color
-!bin "test/BRUNI_TRUDI.TIAC"
+;!bin "test/BRUNI_TRUDI.TIAC"
+!bin "test/DIGITS_0-9_2.TIAC"
 ;!bin "VESPA.TIAC"
 ;!bin "test/GIRL_02.TIAC"
