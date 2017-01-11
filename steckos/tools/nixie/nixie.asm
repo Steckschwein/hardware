@@ -62,7 +62,7 @@ isr:
 			lda #50
 			sta frmcnt
 			jsr update_screen
-			jsr update_time
+			jsr update_datetime
 			jsr draw_digits
 @0:
 			lda #Black
@@ -74,13 +74,13 @@ isr:
 @e:
 			rti
 
-update_time:
+update_datetime:
 			jsr	krn_spi_select_rtc
 			
 			lda #0 ; read from rtc, start with seconds
 			jsr krn_spi_rw_byte
 
-			ldy	#7 				  ; offset to number
+			ldy	#7 				  ; offset in datetime - end of time
 			jsr krn_spi_r_byte    ;seconds
 			jsr to_number			
 			dey					  ;space
@@ -92,18 +92,18 @@ update_time:
 			jsr krn_spi_r_byte     ;hour
 			jsr to_number
 			
-;			jsr krn_spi_r_byte     ;week day
-;			sta TM+tm::tm_wday
-;			jsr krn_spi_r_byte     ;day of month
-;			jsr BCD2dec
-;			sta TM+tm::tm_mday
-;
-;			jsr krn_spi_r_byte     ;month
-;			dec                     ;dc1306 gives 1-12, but 0-11 expected
+			ldy	#17				; offset in datetime - end of date
+			jsr krn_spi_r_byte     ;week day
+			
+			jsr krn_spi_r_byte     ;day of month
+			jsr to_number
+			
+			jsr krn_spi_r_byte     ;month
+			dec                     ;dc1306 gives 1-12, but 0-11 expected
 ;			jsr BCD2dec
 ;			sta TM+tm::tm_mon
 ;
-;			jsr krn_spi_r_byte     ;year value - rtc yeat 2000+year register
+			jsr krn_spi_r_byte     ;year value - rtc yeat 2000+year register
 ;			jsr BCD2dec
 ;			clc
 ;			adc #100                ;TM starts from 1900, so add the difference
@@ -115,7 +115,7 @@ update_time:
 to_number:
 			pha 
 			and #$0f
-			sta number, y
+			sta datetime, y
 			dey
 			pla 
 			lsr
@@ -123,7 +123,7 @@ to_number:
 			lsr
 			lsr
 			and #$0f
-			sta number, y
+			sta datetime, y
 			dey
 			rts
 			
@@ -180,7 +180,8 @@ init_digits:
 			ldx #8
 			jmp	copy
 
-number:	.byte 0,1,$ff,2,3,$ff,4,5,$ee
+datetime:	.byte 0,1,$ff,2,3,$ff,4,5,$ee; time
+			.byte 0,0, $ff,0,0,$ff,0,0,$ee; date
 
 init_screen:
 			lda	#<(ADDRESS_GFX2_SCREEN+256*1)
@@ -197,16 +198,16 @@ init_screen:
 			bne @0
 			rts
 			
-number_ix=tmp1
+datetime_ix=tmp1
 screen_x=tmp2
 digit_pos=tmp3
 
 draw_digits:
-			stz number_ix
+			stz datetime_ix
 			stz screen_x
 			
-@2:			ldy number_ix
-			ldx number, y
+@2:			ldy datetime_ix
+			ldx datetime, y
 			cpx #$ee
 			beq @ex
 			cpx #$ff
@@ -214,7 +215,7 @@ draw_digits:
 			inc screen_x
 			bra @1
 @0:			jsr draw_digit
-@1:			inc number_ix
+@1:			inc datetime_ix
 			bra @2
 @ex:		rts
 
