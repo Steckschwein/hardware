@@ -36,6 +36,11 @@ main:
 			beq exit
 			cmp #'x'
 			beq exit
+			cmp #'d'
+			bne @0
+			lda	#05
+			sta display_datetime
+			
 			bra @0
 exit:			
 			sei
@@ -56,7 +61,7 @@ isr:
 				
 			dec	frmcnt
 			bne	@0
-			lda #50
+			lda #5
 			sta frmcnt
 			jsr update_screen
 			jsr update_datetime
@@ -72,16 +77,10 @@ isr:
 			rti
 
 update_datetime:
-			inc display_datetime
-			lda display_datetime
-			cmp #$06
-			bne	@0
-			lda #0
-			sta display_datetime
 @0:			
 			jsr	krn_spi_select_rtc
 			lda display_datetime
-			beq	@date
+			bne	@date
 @time:
 			lda #0 ; read from rtc, start with seconds
 			jsr krn_spi_rw_byte
@@ -99,6 +98,7 @@ update_datetime:
 			jsr to_number
 			bra @exit
 @date:
+			dec display_datetime
 			lda #4 					; read from rtc, start with day of month
 			jsr krn_spi_rw_byte
 
