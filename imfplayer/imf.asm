@@ -2,6 +2,7 @@
 .include "../steckos/kernel/kernel.inc"
 .include "../steckos/kernel/kernel_jumptable.inc"
 .include "../steckos/kernel/via.inc"
+.include "../steckos/asminc/common.inc"
 .include "ym3812.inc"
 
 .macro dec16 word 
@@ -125,7 +126,7 @@ loop:
 		jsr krn_getkey
 		cmp #$03
 		beq exit
-		cmp #'x'
+		cmp #$1b ; escape
 		beq exit
 
 		bra loop
