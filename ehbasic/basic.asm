@@ -1070,7 +1070,8 @@ LAB_13D0:
 	CMP	(ut2_pl),Y		; compare with keyword first character table byte
 	BEQ	LAB_13D1		; go do word_table_chr if match
 
-	BCC	LAB_13EA		; if < keyword first character table byte go restore
+	;BCC	LAB_13EA		; if < keyword first character table byte go restore
+	BCC 	PATCH_LC2
 					; Y and save to crunched
 
 	INY				; else increment pointer
@@ -1171,6 +1172,7 @@ LAB_141B:
 	LDA	(ut2_pl),Y		; get byte from keyword table
 	BNE	LAB_13D8		; go test next word if not zero byte (end of table)
 
+PATCH_LC2:
 					; reached end of table with no match
 	LDA	Ibuffs,X		; restore byte from input buffer
 	BPL	LAB_13EA		; branch always (all bytes in buffer are $00-$7F)
