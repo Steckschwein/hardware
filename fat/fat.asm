@@ -1,3 +1,4 @@
+.include "../steckos/asminc/common.inc"
 .include "../steckos/kernel/kernel.inc"
 .include "../steckos/kernel/kernel_jumptable.inc"
 .include "../steckos/kernel/fat32.inc"
@@ -17,6 +18,22 @@
 	jsr krn_open
 	lda errno
 	bne error
+
+;	inc dirptr+1
+	
+	jsr calc_dir_entry_nr
+	jsr krn_hexout
+	
+
+	jsr calc_dirptr_from_entry_nr
+
+	lda dirptr +1
+	jsr krn_hexout
+	lda dirptr +0
+	jsr krn_hexout
+
+
+foo:	jmp foo
 
 	
 	SetVector $2000, sd_write_blkptr
@@ -62,6 +79,44 @@ error:
 	lda errno
 	jsr krn_hexout
 	bra loop
+
+calc_dirptr_from_entry_nr:
+
+	stz dirptr
+
+	lsr
+	ror dirptr
+	ror 
+	ror dirptr
+	ror 
+	ror dirptr
+
+	clc 
+	adc #>sd_blktarget
+	sta dirptr+1
+	
+	rts
+
+calc_dir_entry_nr:
+	phx
+
+	lda dirptr
+	sta krn_tmp
+
+	lda dirptr+1
+	sec
+	sbc #>sd_blktarget	
+
+	ldx #$03
+	clc
+@l:
+	rol krn_tmp
+	rol 
+	dex
+	bne @l
+
+	plx
+	rts
 filename: .asciiz "FILE.DAT"
 text: .asciiz "Es hat geklappt!"
-tmp: .byte $00,$00,$00,$00
+tmp: .res 4 
