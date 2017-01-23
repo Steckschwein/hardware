@@ -312,6 +312,18 @@ fat_open_found:
 		lda (dirptr),y
 		sta fd_area + F32_fd::Attr, x
 
+	 	lda lba_addr + 3
+		sta fd_area + F32_fd::DirEntryLBA + 3, x
+	 	lda lba_addr + 2
+		sta fd_area + F32_fd::DirEntryLBA + 2, x
+	 	lda lba_addr + 1
+		sta fd_area + F32_fd::DirEntryLBA + 1, x
+	 	lda lba_addr + 0
+		sta fd_area + F32_fd::DirEntryLBA + 0, x
+
+		jsr calc_dir_entry_nr
+		sta fd_area + F32_fd::DirEntryPos + 0, x
+
 		lda #0 ; no error
 end_open_err:
 		ply
@@ -819,5 +831,43 @@ fat_find_next:
 ff_end:
 		rts
 		
+calc_dirptr_from_entry_nr:
+
+		stz dirptr
+
+		lsr
+		ror dirptr
+		ror
+		ror dirptr
+		ror
+		ror dirptr
+
+		clc
+		adc #>sd_blktarget
+		sta dirptr+1
+
+		rts
+
+calc_dir_entry_nr:
+		phx
+
+		lda dirptr
+		sta krn_tmp
+
+		lda dirptr+1
+		sec
+		sbc #>sd_blktarget      
+
+		ldx #$03
+		clc
+@l:
+		rol krn_tmp
+		rol
+		dex
+		bne @l
+
+		plx
+		rts
+
 .include "matcher.asm"
 buffer: .res 8+1+3,0
