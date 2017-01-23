@@ -21,9 +21,6 @@ main
     lda #%11000000
 	sta via1ier             ; enable VIA1 T1 interrupts
     
-    lda #03
-    sta tmp1
-    
     cli
 -   
     bra -
@@ -34,58 +31,53 @@ main
     bit a_vreg
     bpl +
     jsr .via_timer_blank    ;bottom border, start first via timeout until start of active display area after 4300µs
-    lda #00                 ;32 bars
-    sta tmp0
+    stz tmp0
     lda #Black
     bra +++
     
 +	bit via1ifr		; Interrupt from VIA?
 	bpl ++
 	bit via1t1cl	; Acknowledge timer interrupt
-    lda tmp1
-    beq ++
-
 rmWaitTweak=3
 rmWait=rmWaitTweak+(57*1000/125)
     lda #<rmWait   ; 63,695µs per line -> 63000
 	sta via1t1cl            ; set low byte of count
 	lda #>rmWait
 	sta via1t1ch            ; set high byte of count
-    ldx tmp0
-    lda .raster_bar_colors,x
-    inx
-    cpx #13
-    bne +
-    dec tmp1
-    ldx #0
-+   stx tmp0
-    bra +++
-    
-++ 
-    lda #14
-    sta tmp1
-	lda .raster_bar_colors
-	pha
-	ldx #0
-.scroll
-	lda .raster_bar_colors+1, x
-	sta .raster_bar_colors, x
-	inx 
-	cpx #12
-	bne .scroll
-	pla
-	sta .raster_bar_colors, x
-    lda #Black
-+++
+	inc tmp0
+	lda	tmp0
+	cmp #$41
+	bcc ++
+	
+		lda	#v_reg0_m3
+		sta a_vreg
+		+vnops
+		lda	#v_reg0
+		sta a_vreg
+;		lda	#v_reg1_16k|v_reg1_display_on|v_reg1_spr_size|v_reg1_int
+;		sta a_vreg
+;		+vnops
+;		lda	#v_reg1
+;		sta a_vreg
+		lda #Magenta
+		bra +++
+++
+		lda	#0
+;		lda	#v_reg1_16k	;enable 16K ram, disable screen
+		sta a_vreg
+		+vnops
+		lda	#v_reg0
+;		lda	#v_reg1
+		sta a_vreg
+		lda	#Dark_Yellow	
+		
++++	
     jsr vdp_bgcolor
-    
-    ;lda #Black
-	;jsr vdp_bgcolor
     
     pla
     rti
     
-tweak=$659e
+tweak=$6580
 .via_timer_blank
     ; 4300µs --> 8Mhz/125ns --> 4.300.000ns / 125ns =  34400cl
     blank_counter=tweak+(4300*1000/125) ;125ns/8Mhz
@@ -95,18 +87,3 @@ tweak=$659e
 	sta via1t1ch            ; set high byte of count
     rts
     
-.raster_bar_colors
-	!byte Magenta
-	!byte Dark_Red
-	!byte	Medium_Red
-	!byte	Light_Red
-	!byte	Dark_Yellow
-	!byte	Light_Yellow
-	!byte	White
-	!byte	Light_Yellow
-	!byte	Dark_Yellow
-	!byte	Light_Red
-	!byte	Medium_Red
-	!byte Dark_Red
-	!byte Magenta
-.raster_bar_colors_e
