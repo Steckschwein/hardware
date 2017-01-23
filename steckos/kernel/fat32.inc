@@ -1,8 +1,11 @@
-cluster_begin_lba 			= $0303 ; begin of cluster area, 4 bytes
-fat_begin_lba				= $0307	; begin of fat area, 4 bytes
+cluster_begin_lba 		= $0303 ; begin of cluster area, 4 bytes
+fat_begin_lba			= $0307	; begin of fat area, 4 bytes
 sectors_per_cluster 		= $030b ; sectors per cluster, 1 byte
 root_dir_first_clus 		= $030c ; first cluster of root dir, 4 bytes
-filename_buf				= $0310 ; file name buffer, 11 bytes
+filename_buf			= $0310 ; file name buffer, 11 bytes
+
+fd_area                         = $0320 ; File descriptor area until $0350
+
 sd_blktarget 				= $0400
 
 sd_blocksize				= $200
@@ -124,14 +127,26 @@ DIR_Entry_Size      = .sizeof(F32DirEntry)
 ;--------------------------------------------------------------------------------------
 
 .struct F32_fd
-	Filename	.byte 12
-	Attr		.byte
 	StartCluster	.word 2	; +4
 	Size		.word 2	; +4
-	
 	CurrentCluster	.word 2
 	SeekPos		.word 2
-	;.res		11, 0 ;fill up to $20
+	DirEntryLBA	.word 2 ; LBA of the block where the dir entry of the file is located
+	DirEntryPos	.byte	; block offset within the block (DirEntryPos * DIR_Entry_Size)
+	Reserved	.byte 11;fill up to $20
 .endstruct
+FD_Size = .sizeof(F32_fd)
+
+FD_Entries_Max = 16
+FD_Entry_Size = 9 ; 9 byte per fd entry
+
+FD_start_cluster = $00  ; 32 Bit cluster nr
+FD_file_size = $04              ; 32 Bit file size
+FD_file_attr = $08              ; 8 Bit fat32 Attributes
+
+FD_INDEX_CURRENT_DIR = 0                            ; current dir always go to fd #0
+FD_INDEX_TEMP_DIR    = FD_Entry_Size    ; temp dir always go to fd #1
 
 
+FD_ATTR_DIR                             = 1<<4;
+FD_ATTR_FILE                    = 1<<5;
