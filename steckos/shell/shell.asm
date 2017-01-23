@@ -14,7 +14,6 @@ steckos_start 		= appstart
 
 KEY_RETURN 		= $0d
 KEY_BACKSPACE 		= $08
-KEY_ESCAPE		= $1b
 KEY_CRSR_UP 		= $1E 
 KEY_CRSR_DOWN 	 	= $1F 
 KEY_CRSR_RIGHT 	 	= $10 
