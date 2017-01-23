@@ -127,25 +127,26 @@ DIR_Entry_Size      = .sizeof(F32DirEntry)
 
 .struct F32_fd
 	StartCluster	.word 2	; +4
-	Size		.word 2	; +4
+	FileSize	.word 2	; +4
+	Attr		.byte
 	CurrentCluster	.word 2
 	SeekPos		.word 2
 	DirEntryLBA	.word 2 ; LBA of the block where the dir entry of the file is located
 	DirEntryPos	.byte	; block offset within the block (DirEntryPos * DIR_Entry_Size)
-	Reserved	.byte 11;fill up to $20
+	Reserved	.byte 10;fill up to $20
 .endstruct
 FD_Size = .sizeof(F32_fd)
 
-FD_Entries_Max = 16
-FD_Entry_Size = 9 ; 9 byte per fd entry
+FD_Entries_Max = ($400 - $320) / $20
+FD_Entry_Size = .sizeof(F32_fd)  
 
-FD_start_cluster = $00  ; 32 Bit cluster nr
-FD_file_size = $04              ; 32 Bit file size
-FD_file_attr = $08              ; 8 Bit fat32 Attributes
+;FD_start_cluster = $00  ; 32 Bit cluster nr
+;FD_file_size = $04              ; 32 Bit file size
+;FD_file_attr = $08              ; 8 Bit fat32 Attributes
 
 FD_INDEX_CURRENT_DIR = 0                            ; current dir always go to fd #0
 FD_INDEX_TEMP_DIR    = FD_Entry_Size    ; temp dir always go to fd #1
 
 
-FD_ATTR_DIR                             = 1<<4;
+FD_ATTR_DIR                     = 1<<4;
 FD_ATTR_FILE                    = 1<<5;

@@ -128,7 +128,7 @@ fat_write:
 fat_chdir:
 		jsr fat_open			; change dir using temp dir to not clobber the current dir, maybe we will run into an error
 		bne	@l_err_exit			; exit on error
-		lda	fd_area + FD_file_attr, x
+		lda	fd_area + F32_fd::Attr, x
 		bit #FD_ATTR_DIR		; check that there is no error and we have a directory
 		beq	@l_err
 
@@ -263,50 +263,54 @@ fat_open_found:
 		;save 32 bit cluster number from dir entry
 		ldy #F32DirEntry::FstClusHI +1
 		lda (dirptr),y
-		sta fd_area + FD_start_cluster +3, x
+		;sta fd_area + FD_start_cluster +3, x
+		sta fd_area + F32_fd::StartCluster + 3, x
 		dey
 		lda (dirptr),y
-		sta fd_area + FD_start_cluster +2, x
+		;sta fd_area + FD_start_cluster +2, x
+		sta fd_area + F32_fd::StartCluster + 2, x
 		
 		ldy #F32DirEntry::FstClusLO +1
 		lda (dirptr),y
-		sta fd_area + FD_start_cluster +1, x
+		;sta fd_area + FD_start_cluster +1, x
+		sta fd_area + F32_fd::StartCluster + 1, x
 		dey
 		lda (dirptr),y
-		sta fd_area + FD_start_cluster +0, x
+		;sta fd_area + FD_start_cluster +0, x
+		sta fd_area + F32_fd::StartCluster + 0, x
 
 		; cluster no = 0? - its root dir, set to root dir first cluster
-		lda fd_area + FD_start_cluster + 3, x
-		ora fd_area + FD_start_cluster + 2, x
-		ora fd_area + FD_start_cluster + 1, x
-		ora fd_area + FD_start_cluster + 0, x
+		lda fd_area + F32_fd::StartCluster + 3, x
+		ora fd_area + F32_fd::StartCluster + 2, x
+		ora fd_area + F32_fd::StartCluster + 1, x
+		ora fd_area + F32_fd::StartCluster + 0, x
 		bne @l3
 		
 		lda root_dir_first_clus +1
-		sta fd_area + FD_start_cluster +1, x
+		sta fd_area + F32_fd::StartCluster +1, x
 		lda root_dir_first_clus +0
-		sta fd_area + FD_start_cluster +0, x
+		sta fd_area + F32_fd::StartCluster +0, x
 
 @l3:
 		ldy #F32DirEntry::FileSize + 3
 		lda (dirptr),y
-		sta fd_area + FD_file_size + 3, x
+		sta fd_area + F32_fd::FileSize + 3, x
 		
 		dey
 		lda (dirptr),y
-		sta fd_area + FD_file_size + 2, x
+		sta fd_area + F32_fd::FileSize + 2, x
 
 		dey
 		lda (dirptr),y
-		sta fd_area + FD_file_size + 1, x
+		sta fd_area + F32_fd::FileSize + 1, x
 
 		dey
 		lda (dirptr),y
-		sta fd_area + FD_file_size + 0, x
+		sta fd_area + F32_fd::FileSize + 0, x
 
 		ldy #F32DirEntry::Attr
 		lda (dirptr),y
-		sta fd_area + FD_file_attr, x
+		sta fd_area + F32_fd::Attr, x
 
 		lda #0 ; no error
 end_open_err:
@@ -338,17 +342,17 @@ fat_check_signature:
 
 
 calc_blocks: ;blocks = filesize / BLOCKSIZE -> filesize >> 9 (div 512) +1 if filesize LSB is not 0
-		lda fd_area + FD_file_size+3,x
+		lda fd_area + F32_fd::FileSize + 3,x
 		lsr
 		sta blocks + 2
-		lda fd_area + FD_file_size+2,x
+		lda fd_area + F32_fd::FileSize + 2,x
 		ror
 		sta blocks + 1
-		lda fd_area + FD_file_size+1,x
+		lda fd_area + F32_fd::FileSize + 1,x
 		ror
 		sta blocks
 		bcs @l1
-		lda fd_area + FD_file_size+0,x
+		lda fd_area + F32_fd::FileSize + 0,x
 		beq @l2
 @l1:		inc blocks
 		bne @l2
@@ -364,13 +368,13 @@ calc_lba_addr:
 		pha
 		phx
 		
-		lda fd_area + FD_start_cluster +3, x 
+		lda fd_area + F32_fd::StartCluster +3, x 
 		cmp #$ff
 		beq file_not_open
 		
 		; lba_addr = cluster_begin_lba_m2 + (cluster_number * sectors_per_cluster);
 		.repeat 4,i
-			lda fd_area + FD_start_cluster + i,x
+			lda fd_area + F32_fd::StartCluster + i,x
 			sta lba_addr + i
 		.endrepeat
 		;lda fd_area + FD_start_cluster  +0,x
@@ -420,38 +424,38 @@ inc_lba_address:
 		rts
 
 ;vol->LbaFat + (cluster_nr>>7);// div 128 -> 4 (32bit) * 128 cluster numbers per block (512 bytes)
-;calc_fat_lba_addr:
-		;;instead of shift right 7 times in a loop, we copy over the hole byte (same as >>8) - and simple shift left once (<<1)
-		;lda fd_area + F32_fd::CurrentCluster	+0,	x
-		;asl
-		;lda fd_area + F32_fd::CurrentCluster	+1,x
-		;rol
-		;sta lba_addr_fat+0
-		;lda fd_area + F32_fd::CurrentCluster	+2,x
-		;rol
-		;sta lba_addr_fat+1
-		;lda fd_area + F32_fd::CurrentCluster	+3,x
-		;rol
-		;sta lba_addr_fat+2
-		;lda fd_area + F32_fd::CurrentCluster	+3,x
-		;rol
-		;rol		
-		;and	#$01;only bit 0
-		;sta lba_addr_fat+3
+calc_fat_lba_addr:
+		;instead of shift right 7 times in a loop, we copy over the hole byte (same as >>8) - and simple shift left once (<<1)
+		lda fd_area + F32_fd::CurrentCluster	+0,	x
+		asl
+		lda fd_area + F32_fd::CurrentCluster	+1,x
+		rol
+		sta lba_addr_fat+0
+		lda fd_area + F32_fd::CurrentCluster	+2,x
+		rol
+		sta lba_addr_fat+1
+		lda fd_area + F32_fd::CurrentCluster	+3,x
+		rol
+		sta lba_addr_fat+2
+		lda fd_area + F32_fd::CurrentCluster	+3,x
+		rol
+		rol		
+		and	#$01;only bit 0
+		sta lba_addr_fat+3
 		; add fat_begin_lba and lba_addr_fat
-		;clc
-		;lda fat_begin_lba+0
-		;adc lba_addr_fat +0
-		;sta lba_addr_fat +0
-		;lda fat_begin_lba+1
-		;adc lba_addr_fat +1
-		;sta lba_addr_fat +1
-		;lda fat_begin_lba+2
+		clc
+		lda fat_begin_lba+0
+		adc lba_addr_fat +0
+		sta lba_addr_fat +0
+		lda fat_begin_lba+1
+		adc lba_addr_fat +1
+		sta lba_addr_fat +1
+		lda fat_begin_lba+2
 
-		;lda fat_begin_lba+3
-		;adc lba_addr_fat +3
-		;sta lba_addr_fat +3
-		;rts	
+		lda fat_begin_lba+3
+		adc lba_addr_fat +3
+		sta lba_addr_fat +3
+		rts	
 
 		; check whether the EOC (end of cluster chain) cluster number is reached
 		; @return Z = 1 if EOC detected
@@ -652,7 +656,7 @@ fat_mount:
 
 end_mount:
 		restore
-		Copy root_dir_first_clus, fd_area + FD_INDEX_CURRENT_DIR + FD_start_cluster, 3
+		Copy root_dir_first_clus, fd_area + FD_INDEX_CURRENT_DIR + F32_fd::StartCluster, 3
 		ldx #FD_INDEX_CURRENT_DIR
 		rts
 
@@ -662,7 +666,8 @@ end_mount:
 		; out:
 		;   x - FD_INDEX_TEMP_DIR offset to fd area
 fat_open_rootdir:
-		Copy root_dir_first_clus, fd_area + FD_INDEX_TEMP_DIR + FD_start_cluster, 3
+		;Copy root_dir_first_clus, fd_area + FD_INDEX_TEMP_DIR + FD_start_cluster, 3
+		Copy root_dir_first_clus, fd_area + FD_INDEX_TEMP_DIR + F32_fd::StartCluster, 3
 		ldx #FD_INDEX_TEMP_DIR
 		rts
 
@@ -686,7 +691,7 @@ fat_clone_fd:
 		; out: 
 		;	carry - if set, the file is not open
 fat_isOpen:
-		lda fd_area + FD_start_cluster +3, x
+		lda fd_area + F32_fd::StartCluster +3, x
 		cmp #$ff	;#$ff means not open, carry is set...
 		rts
 
@@ -694,7 +699,7 @@ fat_init_fdarea:
 		ldx #$00
 fat_init_fdarea_with_x:		
 		lda #$ff
-@l1:		sta fd_area + FD_start_cluster +3 , x
+@l1:		sta fd_area + F32_fd::StartCluster + 3 , x
 		inx
 		cpx #(FD_Entry_Size*FD_Entries_Max)
 		bne @l1
@@ -705,7 +710,8 @@ fat_init_fdarea_with_x:
 		;       x - with index to fd_area, otherwise A is set with errno
 fat_alloc_fd:
 		ldx #(2*FD_Entry_Size)	; skip 2 entries, they're reserverd for current and temp dir
-@l1:		lda fd_area + FD_start_cluster +3, x
+@l1:		lda fd_area + F32_fd::StartCluster +3, x
+	
 		cmp #$ff	;#$ff means unused, return current x as offset
 		beq @l2
 
@@ -729,11 +735,11 @@ fat_alloc_fd:
         ; out:
         ;   A - error code if one, A = 0 otherwise
 fat_close:
-		lda fd_area + FD_start_cluster +3 , x
+		lda fd_area + F32_fd::StartCluster +3, x
 		cmp #$ff	;#$ff means not open, carry is set...
 		bcs @l1
 		lda #$ff    ; otherwise mark as closed
-		sta fd_area + FD_start_cluster +3 , x
+		sta fd_area + F32_fd::StartCluster +3, x
 @l1:		lda #0         
 		rts
 
@@ -751,9 +757,9 @@ fat_close_all:
 		;   x - filesize hi
 
 fat_getfilesize:
-		lda fd_area + FD_file_size + 0, x
+		lda fd_area + F32_fd::FileSize + 0, x
 		pha
-		lda fd_area + FD_file_size + 1, x
+		lda fd_area + F32_fd::FileSize + 1, x
 		tax
 		pla
 		rts
