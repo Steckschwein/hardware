@@ -1,7 +1,7 @@
 .include 	"common.inc"
 .include	"kernel.inc"
 .include 	"errno.inc"
-.include 	"filedes.inc"
+.include 	"fat32.inc"
 
 .segment "KERNEL"
 

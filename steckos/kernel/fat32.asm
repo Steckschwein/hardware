@@ -2,7 +2,6 @@
 .include "kernel.inc"
 .include "fat32.inc"
 .include "errno.inc"	; from ca65 api
-.include "filedes.inc"
 
 .import sd_read_block, sd_read_multiblock, sd_write_block, sd_select_card, sd_deselect_card
 .import sd_read_block_data

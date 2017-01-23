@@ -4,11 +4,10 @@ sectors_per_cluster 		= $030b ; sectors per cluster, 1 byte
 root_dir_first_clus 		= $030c ; first cluster of root dir, 4 bytes
 filename_buf			= $0310 ; file name buffer, 11 bytes
 
-fd_area                         = $0320 ; File descriptor area until $0350
+fd_area                         = $0320 ; File descriptor area until $0400
 
-sd_blktarget 				= $0400
-
-sd_blocksize				= $200
+sd_blktarget 			= $0400
+sd_blocksize			= $200
 
 
 ; TODO FIXME replace with errno.inc from cc65 api
