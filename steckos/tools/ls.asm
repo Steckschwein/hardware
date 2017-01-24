@@ -4,7 +4,6 @@ dir_attrib_mask		= $0a
 .include "../kernel/kernel.inc"
 .include "../kernel/kernel_jumptable.inc"
 .include "../kernel/fat32.inc"
-.include "../asminc/filedes.inc"
 
 .export print_filename, cnt
 .import dir_show_entry
