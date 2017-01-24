@@ -137,8 +137,10 @@ DIR_Entry_Size      = .sizeof(F32DirEntry)
 .endstruct
 FD_Size = .sizeof(F32_fd)
 
-FD_Entries_Max = ($400 - $320) / $20
+
+
 FD_Entry_Size = .sizeof(F32_fd)  
+FD_Entries_Max = ($3ff - fd_area) / FD_Entry_Size
 
 ;FD_start_cluster = $00  ; 32 Bit cluster nr
 ;FD_file_size = $04              ; 32 Bit file size
