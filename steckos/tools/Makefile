@@ -1,7 +1,7 @@
 ASM_INCLUDE=../asminc
 LIBS=../lib/steckschwein-kernel.lib ../lib/steckschwein-gfx.lib
 
-all: ls.prg ll.prg rename.prg date.prg nvram.prg uname.prg hello.prg time-test.prg mainarg.prg fibo.prg clear.prg setdate.prg view.prg
+all: ls.prg ll.prg rename.prg date.prg nvram.prg uname.prg hello.prg fibo.prg clear.prg setdate.prg view.prg
 
 clean:
 	rm -f *.prg *.s *.o
@@ -30,12 +30,6 @@ uname: uname.prg
 keycode: keycode.prg
 	../../transfer.py keycode.prg -s 0x1000
 	
-coniotst: coniotst.prg
-	../../transfer.py coniotst.prg -s 0x1000
-
-mainarg: mainarg.prg
-	../../transfer.py mainarg.prg -s 0x1000
-	
 hello: hello.prg
 	../../transfer.py hello.prg -s 0x1000
     
@@ -48,12 +42,6 @@ nvram: nvram.prg
 date: date.prg
 	../../transfer.py date.prg -s 0x1000
     
-stdio_test: stdio_test.prg
-	../../transfer.py stdio_test.prg -s 0x1000
-
-time-test: time-test.prg
-	../../transfer.py time-test.prg -s 0x1000
-
 setdate: setdate.prg
 	../../transfer.py setdate.prg -s 0x1000
     

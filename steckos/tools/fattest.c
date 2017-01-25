@@ -317,7 +317,7 @@ int main(int argc, char* argv[]){
 	printf("lba_fat: $%x ($%x + $%x)\n", vol.LbaFat, pe.LBABegin, vol.RsvdSecCnt);
 	printf("lba_cluster: $%x ($%x + ($%x * $%x))\n", vol.LbaCluster, vol.LbaFat, vol.FATSz32, vol.NumFATs);
 	
-	//FIXME works only cause we have 512 Bytes/Sektor and 512 byte per sd-card block otherwise we have to do more calculation
+	//FIXME works easily, cause we have 512 Bytes/Sektor and 512 byte per sd-card block otherwise we have to do more calculation
 	unsigned int e=0;
 	unsigned long int dirCln = vol.RootClus;
 	printf("Reading Root-Dir (cnr $%x)...\n", dirCln);

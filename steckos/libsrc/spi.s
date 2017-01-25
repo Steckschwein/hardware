@@ -1,10 +1,22 @@
 ;
+; extern void __fastcall__ spi_select(SpiDevice d);
+;
+_spi_select:
+	
+
+	rts
+
+;	
+_spi_deselect = krn_spi_deselect
+
+;
 ;
 ; unsigned char _spi_read ();
 ;
         .export         _spi_read
         .export         _spi_write
         .export         _spi_deselect
+        .export         _spi_select
         
 		.include		"../kernel/kernel_jumptable.inc"
 		
@@ -23,5 +35,3 @@ _spi_write:
 ;        jsr krn_hexout
         pla
 		rts		
-
-_spi_deselect = krn_spi_deselect
