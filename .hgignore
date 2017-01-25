@@ -11,6 +11,5 @@ syntax: glob
 *.labels
 *.orig
 *.o
-*.s
 *.bak
 *~
