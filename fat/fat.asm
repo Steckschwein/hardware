@@ -5,12 +5,15 @@
 
 	jsr krn_init_sdcard
 	lda errno
-	bne error
-
+	beq @ok
+	jmp error
+@ok:
 
 	jsr krn_mount 
 	lda errno
-	bne error
+	beq @ok2
+	jmp error
+@ok2:
 
 	
 	lda #<filename
@@ -19,19 +22,34 @@
 	lda errno
 	bne error
 
-;	inc dirptr+1
 	
-	jsr calc_dir_entry_nr
-	jsr krn_hexout
-	
+        lda fd_area + F32_fd::DirEntryLBA+3 , x
+        sta lba_addr+3
+        lda fd_area + F32_fd::DirEntryLBA+2 , x
+        sta lba_addr+2
+        lda fd_area + F32_fd::DirEntryLBA+1 , x
+        sta lba_addr+1
+        lda fd_area + F32_fd::DirEntryLBA+0 , x
+        sta lba_addr+0
 
-	jsr calc_dirptr_from_entry_nr
+        lda fd_area + F32_fd::DirEntryPos , x
+        jsr krn_hexout
+        jsr krn_calc_dirptr_from_entry_nr
+        lda dirptr+1
+        jsr krn_hexout
+        lda dirptr+0
+        jsr krn_hexout
 
-	lda dirptr +1
-	jsr krn_hexout
-	lda dirptr +0
-	jsr krn_hexout
+        SetVector sd_blktarget, sd_read_blkptr
+        jsr krn_sd_read_block
 
+        ldy #$00
+@rep:
+        lda (dirptr),y
+        jsr krn_chrout
+        iny
+        cpy #12
+        bne @rep
 
 foo:	jmp foo
 
@@ -80,43 +98,6 @@ error:
 	jsr krn_hexout
 	bra loop
 
-calc_dirptr_from_entry_nr:
-
-	stz dirptr
-
-	lsr
-	ror dirptr
-	ror 
-	ror dirptr
-	ror 
-	ror dirptr
-
-	clc 
-	adc #>sd_blktarget
-	sta dirptr+1
-	
-	rts
-
-calc_dir_entry_nr:
-	phx
-
-	lda dirptr
-	sta krn_tmp
-
-	lda dirptr+1
-	sec
-	sbc #>sd_blktarget	
-
-	ldx #$03
-	clc
-@l:
-	rol krn_tmp
-	rol 
-	dex
-	bne @l
-
-	plx
-	rts
 filename: .asciiz "FILE.DAT"
 text: .asciiz "Es hat geklappt!"
 tmp: .res 4 
