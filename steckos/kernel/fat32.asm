@@ -11,6 +11,7 @@
 .export fat_open, fat_isOpen, fat_chdir
 .export fat_read, fat_read2, fat_find_first, fat_find_next, fat_write
 .export fat_close_all, fat_close, fat_getfilesize
+.export calc_dirptr_from_entry_nr
 
 .macro inc32 val
 		.local @l1

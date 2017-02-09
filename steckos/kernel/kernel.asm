@@ -335,7 +335,9 @@ krn_primm:      		jmp primm
 
 ;.export krn_print_crlf
 ;krn_print_crlf:      	jmp krn_print_crlf
-.res 3
+.import calc_dirptr_from_entry_nr
+.export krn_calc_dirptr_from_entry_nr
+krn_calc_dirptr_from_entry_nr:    	jmp calc_dirptr_from_entry_nr
 
 .export krn_getfilesize
 krn_getfilesize:      	jmp fat_getfilesize
@@ -348,6 +350,7 @@ krn_sd_write_block:    	jmp sd_write_block
 
 .export krn_sd_read_block
 krn_sd_read_block:    	jmp sd_read_block
+
 
 .segment "VECTORS"
 ; ----------------------------------------------------------------------------------------------
