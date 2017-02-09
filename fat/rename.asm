@@ -1,3 +1,4 @@
+.include "../steckos/asminc/common.inc"
 .include "../steckos/kernel/kernel.inc"
 .include "../steckos/kernel/kernel_jumptable.inc"
 .include "../steckos/kernel/fat32.inc"

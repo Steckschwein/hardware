@@ -1,4 +1,4 @@
-OBJ=rename.prg fat.prg
+OBJ=fat.prg
 all: $(OBJ) 
 clean:
 	rm -f *.prg *.o
