@@ -35,9 +35,9 @@
 		bpl @l
 .endmacro
 
-;.ifdef DEBUG ; DEBUG
+.ifdef DEBUG ; DEBUG
     .import krn_hexout, krn_primm, krn_chrout, krn_strout, krn_print_crlf
-;.endif
+.endif
 
 .segment "KERNEL"
 
@@ -109,12 +109,53 @@ fat_write:
 			
 		jsr calc_lba_addr
 		jsr calc_blocks
+		phx
 
 @l:
 		jsr sd_write_block
 		jsr inc_lba_address
 		dec blocks
 		bne @l
+
+		plx
+fat_update_direntry:
+
+		lda fd_area + F32_fd::DirEntryLBA+3 , x
+		sta lba_addr+3
+		lda fd_area + F32_fd::DirEntryLBA+2 , x
+		sta lba_addr+2
+		lda fd_area + F32_fd::DirEntryLBA+1 , x
+		sta lba_addr+1
+		lda fd_area + F32_fd::DirEntryLBA+0 , x
+		sta lba_addr+0
+
+		lda fd_area + F32_fd::DirEntryPos , x
+		jsr calc_dirptr_from_entry_nr
+
+		phx
+		SetVector sd_blktarget, sd_read_blkptr
+		jsr sd_read_block
+		plx
+
+		lda fd_area + F32_fd::FileSize+3 , x
+		ldy #F32DirEntry::FileSize+3
+		sta (dirptr),y
+
+		lda fd_area + F32_fd::FileSize+2 , x
+		dey
+		sta (dirptr),y
+
+		lda fd_area + F32_fd::FileSize+1 , x
+		dey
+		sta (dirptr),y
+
+		lda fd_area + F32_fd::FileSize+0 , x
+		dey
+		sta (dirptr),y
+	
+		SetVector sd_blktarget, sd_write_blkptr
+		jsr sd_write_block
+		lda errno
 
 		rts
 
