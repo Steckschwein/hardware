@@ -91,7 +91,7 @@
 
 .macro debug_newline
 .ifdef DEBUG
-    jsr krn_print_crlf
+    crlf
 .endif
 .endmacro
 
