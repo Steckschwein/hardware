@@ -48,9 +48,19 @@
 .STATUS_PLAY=1<<0
 .STATUS_GAME_OVER=1<<1
 .STATUS_JOY_PRESSED=1<<2
-
+.filename !text "DINOSAUR.HI",$00
 main:
 	sei
+	
+        lda #<.filename
+        ldx #>.filename
+        jsr krn_open
+        lda errno
+
+        +SetVector score_data, sd_read_blkptr
+        jsr krn_read
+	jsr krn_close
+
     
 	lda	a_vreg
 	jsr	vdp_display_off
@@ -560,9 +570,21 @@ memctl = $0230
 	sta	.score_value_high+1
 	lda	.score_value
 	sta	.score_value_high
+
+        lda #<.filename
+        ldx #>.filename
+        jsr krn_open
+        lda errno
+
+        +SetVector score_data, sd_write_blkptr
+        jsr krn_write
+	jsr krn_close
+
 ++	stz	.score_value
 	stz	.score_value+1
 	stz	.score_value+2
+
+	
 	
 +	lda	#.STATUS_PLAY
 	sta .game_state
@@ -803,7 +825,7 @@ memctl = $0230
 .text_game_over		!text "           GAME OVER!",$0
 .text_score_board	!text "HI ",$0
 .score_value		!byte 0,0,0
-.score_value_high 	!byte 0,0,0
+;.score_value_high 	!byte 0,0,0
 
 .level_bg_1; cactus
     !byte 3
@@ -885,3 +907,6 @@ PI = 3.14159265358979323846
 !align 255,0
 charset:
 !src "../../charsets/ati_8x8.h.a"
+!align 255,0
+score_data:
+.score_value_high !byte $00,$00,$00
