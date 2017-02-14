@@ -56,11 +56,12 @@ main:
         ldx #>.filename
         jsr krn_open
         lda errno
+	bne +
 
         +SetVector score_data, sd_read_blkptr
         jsr krn_read
 	jsr krn_close
-
++
     
 	lda	a_vreg
 	jsr	vdp_display_off
@@ -575,10 +576,12 @@ memctl = $0230
         ldx #>.filename
         jsr krn_open
         lda errno
+	bne +++
 
         +SetVector score_data, sd_write_blkptr
         jsr krn_write
 	jsr krn_close
++++
 
 ++	stz	.score_value
 	stz	.score_value+1
