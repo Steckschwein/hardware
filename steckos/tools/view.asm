@@ -23,7 +23,7 @@ main:
 	bne err
  	phx
 
-	SetVector content, sd_read_blkptr
+	SetVector content, read_blkptr
 	jsr krn_read
 	plx
 	jsr krn_close
