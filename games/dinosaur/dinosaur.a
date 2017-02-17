@@ -4,11 +4,8 @@
 !src "../../steckos/asminc/joystick.inc"
 
 *=appstart
-	jmp main
-!src <t99xx.lib.a>
 		
 .JOY_PORT=PORT_SEL_2		;port 2
-.frame_cnt	!byte 0
 .enemy_state=$0
 .seed=$1
 .game_state=$2
@@ -48,7 +45,8 @@
 .STATUS_PLAY=1<<0
 .STATUS_GAME_OVER=1<<1
 .STATUS_JOY_PRESSED=1<<2
-.filename !text "DINOSAUR.HI",$00
+	jmp main
+!src <t99xx.lib.a>
 main:
 	sei
 	
@@ -907,6 +905,8 @@ PI = 3.14159265358979323846
 !src "dinosaur.chars.5.4px.res"
 !src "dinosaur.chars.6.4px.res"
 
+.frame_cnt	!byte 0
+.filename !text "DINOSAUR.HI",$00
 !align 255,0
 charset:
 !src "../../charsets/ati_8x8.h.a"
