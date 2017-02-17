@@ -70,7 +70,7 @@ main:
 @l5:
 
 
-		SetVector imf_data, sd_read_blkptr
+		SetVector imf_data, read_blkptr
 
 		jsr krn_read    
 		lda errno

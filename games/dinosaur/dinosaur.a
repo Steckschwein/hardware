@@ -56,7 +56,7 @@ main:
         lda errno
 	bne +
 
-        +SetVector score_data, sd_read_blkptr
+        +SetVector score_data, read_blkptr
         jsr krn_read
 	jsr krn_close
 +
@@ -576,7 +576,7 @@ memctl = $0230
         lda errno
 	bne +++
 
-        +SetVector score_data, sd_write_blkptr
+        +SetVector score_data, write_blkptr
         jsr krn_write
 	jsr krn_close
 +++

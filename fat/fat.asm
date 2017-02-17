@@ -23,8 +23,8 @@
 	bne error
 	stx tmp
 
-	SetVector $2000, sd_write_blkptr
-	SetVector $2000, sd_read_blkptr
+	SetVector $2000, write_blkptr
+	SetVector $2000, read_blkptr
 
 	jsr krn_read
 	jsr krn_hexout
