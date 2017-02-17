@@ -271,7 +271,7 @@ sd_read_block:
 
 		jsr halfblock
 
-		inc sd_read_blkptr+1
+		inc read_blkptr+1
 
 		jsr halfblock
 
@@ -284,7 +284,7 @@ sd_read_block:
 halfblock:
 @l:		
 		jsr spi_r_byte
-		sta (sd_read_blkptr),y
+		sta (read_blkptr),y
 		iny
 		bne @l
 		rts
@@ -331,11 +331,11 @@ sd_read_multiblock:
 	.endrepeat
 
 		lda via1sr
-		sta (sd_read_blkptr),y
+		sta (read_blkptr),y
 		iny
 		bne @l2a
 
-		inc sd_read_blkptr+1             
+		inc read_blkptr+1             
 
 @l2b:	lda sd_tmp
 
@@ -345,11 +345,11 @@ sd_read_multiblock:
 	.endrepeat
 
 		lda via1sr
-		sta (sd_read_blkptr),y
+		sta (read_blkptr),y
 		iny
 		bne @l2b
 
-		inc sd_read_blkptr+1             
+		inc read_blkptr+1             
 		
 		lda sd_tmp
 	; Read CRC bytes     
@@ -401,17 +401,17 @@ sd_write_block:
 	jsr spi_rw_byte
 
 	ldy #$00
-@l2:	lda (sd_write_blkptr),y
+@l2:	lda (write_blkptr),y
 	phy
 	jsr spi_rw_byte
 	ply
 	iny
 	bne @l2
 
-	inc sd_write_blkptr+1
+	inc write_blkptr+1
 
 	ldy #$00
-@l3:	lda (sd_write_blkptr),y
+@l3:	lda (write_blkptr),y
 	phy
 	jsr spi_rw_byte
 	ply

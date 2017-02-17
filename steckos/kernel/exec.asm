@@ -24,7 +24,7 @@ execv:
 		lda	#EINVAL				; TODO FIXME error code for "Is a directory"
 		bra @l_err_exit
 		
-@l0:		SetVector appstart, sd_read_blkptr
+@l0:		SetVector appstart, read_blkptr
 		jsr	fat_read
       		lda errno
 		bne	@l_err_exit_close

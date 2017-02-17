@@ -67,16 +67,16 @@ fat_read2:
 		sta     krn_ptr1+1          ; remember -count-1
 		
 		pla
-		sta	sd_read_blkptr
+		sta	read_blkptr
 		pla
-		sta 	sd_read_blkptr+1
+		sta 	read_blkptr+1
 		plx							; pop fd
 	        debugcpu "fr2"
 		jsr calc_lba_addr
 		jsr calc_blocks
 ;       	debug32s "r2 lb:", lba_addr
 ;		debug24s "r2 bc:", blocks
-;		SetVector block_data, sd_read_blkptr		; vector to kernel block_data area		
+;		SetVector block_data, read_blkptr		; vector to kernel block_data area		
 		jsr sd_read_block
 		lda errno
 		debugA "r2"
@@ -133,7 +133,7 @@ fat_update_direntry:
 		jsr calc_dirptr_from_entry_nr
 
 		phx
-		SetVector sd_blktarget, sd_read_blkptr
+		SetVector sd_blktarget, read_blkptr
 		jsr sd_read_block
 		plx
 
@@ -153,7 +153,7 @@ fat_update_direntry:
 		dey
 		sta (dirptr),y
 	
-		SetVector sd_blktarget, sd_write_blkptr
+		SetVector sd_blktarget, write_blkptr
 		jsr sd_write_block
 		lda errno
 
@@ -375,11 +375,11 @@ end_open_err:
 inc_blkptr:
 		; Increment blkptr by 32 bytes, jump to next dir entry
 		clc
-		lda sd_read_blkptr
+		lda read_blkptr
 		adc #32
-		sta sd_read_blkptr
+		sta read_blkptr
 		bcc @l
-		inc sd_read_blkptr+1	
+		inc read_blkptr+1	
 @l:
 		rts
 
@@ -570,7 +570,7 @@ fat_mount:
 			stz lba_addr + i	
 		.endrepeat
 
-		SetVector sd_blktarget, sd_read_blkptr
+		SetVector sd_blktarget, read_blkptr
 
 		jsr sd_read_block
 		
@@ -597,7 +597,7 @@ fat_mount:
 @l2:
 		copy32 part0 + PartitionEntry::LBABegin, lba_addr
 
-		SetVector sd_blktarget, sd_read_blkptr	
+		SetVector sd_blktarget, read_blkptr	
 		; Read FAT Volume ID at LBABegin and Check signature
 		jsr sd_read_block
 
@@ -830,13 +830,13 @@ fat_find_first:
 @l2:		lda	#0
 		sta filename_buf,y
 
-		SetVector sd_blktarget, sd_read_blkptr
+		SetVector sd_blktarget, read_blkptr
 		jsr calc_lba_addr
 		debug32s "lba:", lba_addr
 		
 ff_l3:		SetVector sd_blktarget, dirptr	
 		jsr sd_read_block
-		dec sd_read_blkptr+1
+		dec read_blkptr+1
 		
 ff_l4:
 		lda (dirptr)

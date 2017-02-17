@@ -66,7 +66,7 @@ kern_init:
     debugA "op2:"
 	bne do_upload
 	
-	SetVector shell_addr, sd_read_blkptr
+	SetVector shell_addr, read_blkptr
     jsr fat_read
     debugA "rd:"
 
