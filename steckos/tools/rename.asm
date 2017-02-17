@@ -69,7 +69,7 @@ rename:
 	bpl @l
 
 	; set write pointer accordingly and
-	SetVector sd_blktarget, sd_write_blkptr
+	SetVector sd_blktarget, write_blkptr
 
 	; just write back the block. lba_address still contains the right address
 	jsr krn_sd_write_block
