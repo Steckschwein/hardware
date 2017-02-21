@@ -3,7 +3,7 @@
 .include "via.inc"
 .segment "KERNEL"
 .import spi_rw_byte, spi_r_byte
-.export init_sdcard, sd_read_block, sd_read_multiblock, sd_write_block, sd_select_card, sd_deselect_card
+.export init_sdcard, sd_read_block, sd_read_multiblock, sd_write_block, sd_write_multiblock, sd_select_card, sd_deselect_card
 .export sd_read_block_data
 
 ;---------------------------------------------------------------------
@@ -397,7 +397,7 @@ sd_write_block:
 	;jsr spi_rw_byte             
 	;bne @l1
 
-	lda #$fe
+	lda #sd_data_token
 	jsr spi_rw_byte
 
 	ldy #$00
@@ -427,6 +427,69 @@ sd_write_block:
         restore
         jmp sd_deselect_card
 
+;---------------------------------------------------------------------
+; Write multiple blocks to SD Card
+;---------------------------------------------------------------------
+sd_write_multiblock:
+	save
+
+	jsr sd_select_card
+
+	lda #cmd25	; Send CMD25 command byte
+	jsr spi_rw_byte
+
+	jsr sd_send_lba
+
+	; Send stopbit
+	lda #$01
+	jsr spi_rw_byte
+
+	; wait for command response.         
+	jsr sd_wait_timeout
+	lda errno
+       	bne @exit
+
+@block:
+	lda #sd_data_token
+	jsr spi_rw_byte
+
+	ldy #$00
+@l2:	lda (write_blkptr),y
+	phy
+	jsr spi_rw_byte
+	ply
+	iny
+	bne @l2
+
+	inc write_blkptr+1
+
+	ldy #$00
+@l3:	lda (write_blkptr),y
+	phy
+	jsr spi_rw_byte
+	ply
+	iny
+	bne @l3
+
+	; Send fake CRC bytes
+	lda #$00
+	jsr spi_rw_byte
+	lda #$00
+	jsr spi_rw_byte
+
+	dec blocks
+	bne @block
+
+        ; all blocks read, send cmd12 to end transmission
+        ; jsr sd_param_init
+        lda #cmd12
+        jsr sd_cmd
+
+        jsr sd_busy_wait
+
+@exit:
+	restore
+	rts
 ;---------------------------------------------------------------------
 ; wait while sd card is busy
 ;---------------------------------------------------------------------

@@ -3,7 +3,7 @@
 .include "fat32.inc"
 .include "errno.inc"	; from ca65 api
 
-.import sd_read_block, sd_read_multiblock, sd_write_block, sd_select_card, sd_deselect_card
+.import sd_read_block, sd_read_multiblock, sd_write_block, sd_write_multiblock, sd_select_card, sd_deselect_card
 .import sd_read_block_data
 ;.importzp ptr1
         
@@ -111,11 +111,12 @@ fat_write:
 		jsr calc_blocks
 		phx
 
-@l:
-		jsr sd_write_block
-		jsr inc_lba_address
-		dec blocks
-		bne @l
+		jsr sd_write_multiblock
+;@l:
+;		jsr sd_write_block
+;		jsr inc_lba_address
+;		dec blocks
+;		bne @l
 
 		plx
 fat_update_direntry:
