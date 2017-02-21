@@ -109,16 +109,20 @@ fat_write:
 			
 		jsr calc_lba_addr
 		jsr calc_blocks
-		phx
 
+.ifdef MULTIBLOCK_WRITE
+.warning "SD multiblock writes are EXPERIMENTAL"
 		jsr sd_write_multiblock
-;@l:
-;		jsr sd_write_block
-;		jsr inc_lba_address
-;		dec blocks
-;		bne @l
+.else
+		phx
+@l:
+		jsr sd_write_block
+		jsr inc_lba_address
+		dec blocks
+		bne @l
 
 		plx
+.endif
 fat_update_direntry:
 
 		lda fd_area + F32_fd::DirEntryLBA+3 , x
