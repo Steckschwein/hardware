@@ -90,17 +90,19 @@ fat_read2:
 		;in: 
 		;	x - offset into fd_area
 		;out:
-		;	errno - error number - TODO FIXME use carry flag and A to indicate error
+		;	A - A = 0 on success, error code otherwise
+		;	@deprecated errno - error number
 fat_read:
-		stz errno
-        
 		debugcpu "fr"
 		jsr calc_lba_addr
 		jsr calc_blocks
 ;		debug32s "fr lba:", lba_addr
 ;		debug24s "fr bc:", blocks
 ;		debug32s "fr fs: ", fd_area + (FD_Entry_Size*2) + FD_file_size ;1st file entry
-		jmp sd_read_multiblock
+		stz errno
+		jsr sd_read_multiblock
+		lda errno
+		rts
 ;		jmp sd_read_block
  
  
@@ -791,14 +793,14 @@ fat_alloc_fd:
         ; in:
         ;   x - offset into fd_area
         ; out:
-        ;   A - error code if one, A = 0 otherwise
+        ;   A - A = 0 on success, error code otherwise
 fat_close:
 		lda fd_area + F32_fd::StartCluster +3, x
 		cmp #$ff	;#$ff means not open, carry is set...
 		bcs @l1
 		lda #$ff    ; otherwise mark as closed
 		sta fd_area + F32_fd::StartCluster +3, x
-@l1:		lda #0         
+@l1:	lda #0
 		rts
 
 fat_close_all:

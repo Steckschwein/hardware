@@ -24,19 +24,15 @@ execv:
 		lda	#EINVAL				; TODO FIXME error code for "Is a directory"
 		bra @l_err_exit
 		
-@l0:		SetVector appstart, read_blkptr
+@l0:	SetVector appstart, read_blkptr
 		jsr	fat_read
-      		lda errno
-		bne	@l_err_exit_close
-		jsr	fat_close	        ; close after read to free fd, regardless of error
+		pha
+		jsr fat_close			; close after read to free fd, regardless of error
+		pla
 		bne	@l_err_exit
 @l_exec_run:
 		;TODO FIXME check excecutable - SOS65 header ;)
 		jmp	appstart
-@l_err_exit_close:
-		pha                     ; save error
-		jsr	fat_close           ; close and ignore error
-		pla
 @l_err_exit:
 		debugA "exc:"
 		rts
