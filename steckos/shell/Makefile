@@ -1,6 +1,6 @@
 ASM_INCLUDE=../asminc
 LDFLAGS=--config ../kernel/steckos.cfg
-#DEBUG=-DDEBUG
+DEBUG=-DDEBUG
 
 .PHONY: all clean
 all: version.inc shell.bin 

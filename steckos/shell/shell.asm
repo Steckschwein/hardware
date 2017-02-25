@@ -329,7 +329,7 @@ cd:
         	ldx paramptr+1
         	jsr krn_chdir
 		beq @l2
-        	debugptr "cderr:", paramptr
+        ;	debugptr "cderr:", paramptr
 		jmp errmsg
 @l2:
 		jsr krn_primm
