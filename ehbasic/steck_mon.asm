@@ -18,7 +18,7 @@ CR  = $0D        ; Return character
 LF  = $0A        ; Line feed character
 
 ;IN    = $0200    ; Buffer used by GetLine. From $0200 through $027F (shared with Woz Mon)
-IN    =  $c000
+;IN    =  $c000
 
 ; put the IRQ and MNI code in RAM so that it can be changed
 IRQ_vec	= VEC_SV+2		; IRQ code vector
@@ -86,8 +86,10 @@ io_error:
 
 psave:
 		save
-		lda #<filename
-		ldx #>filename
+
+		lda Bpntrl
+		ldx Bpntrh
+
 		jsr krn_open
 		beq @go
 		jsr io_error
@@ -95,34 +97,33 @@ psave:
 		rts
 @go:
 		phx
-		jsr	pscan
-		ldy	#$00
-		lda	Itempl
-		sta	(Itempl),y
+		jsr pscan
+		ldy #$00
+		lda Itempl
+		sta (Itempl),y
 		iny
-		lda	Itemph
-		sta	(Itempl),y
-		lda	Smemh
+		lda Itemph
+		sta (Itempl),y
+
+		lda Smemh
 		sta write_blkptr + 1
-		lda	Smeml
+		lda Smeml
 		sta write_blkptr + 0
 
 		plx
 
 		sec
-		lda	Itempl
-		sbc	Smeml
-
+		lda Itempl
+		sbc Smeml
         	sta fd_area + F32_fd::FileSize + 0,x
 
-		lda	Itemph
-		sbc	Smemh
+		lda Itemph
+		sbc Smemh
         	sta fd_area + F32_fd::FileSize + 1,x
 
         	lda #$00
-        	sta fd_area + F32_fd::FileSize + 3,x
         	sta fd_area + F32_fd::FileSize + 2,x
-
+        	sta fd_area + F32_fd::FileSize + 3,x
 
 		jsr krn_write
 		jsr krn_close
@@ -132,8 +133,12 @@ psave:
 
 pload:
 		save
-		lda #<filename
-		ldx #>filename
+
+		lda Bpntrl
+		ldx Bpntrh
+
+;		lda #<filename
+;		ldx #>filename
 		jsr krn_open
 		beq @go
 @pload_err:
@@ -141,15 +146,28 @@ pload:
 		restore
 		rts
 @go:
-		lda	Smeml
-		sta read_blkptr + 0
+		jsr krn_primm
+		.asciiz "Loading from $"
+
 		lda	Smemh
 		sta read_blkptr + 1
+		jsr krn_hexout
+
+		lda	Smeml
+		sta read_blkptr + 0
+		jsr krn_hexout
+
+		jsr krn_primm
+		.asciiz " to $"
 
 		jsr krn_read
+		lda errno
+		bne @pload_err
+
 		jsr krn_close
 		lda errno
 		bne @pload_err
+
 		jsr	pscan
 		lda	Itempl
 		sta	Svarl
@@ -159,6 +177,12 @@ pload:
 		sta	Svarh
 		sta	Sarryh
 		sta	Earryh
+		jsr krn_hexout
+		lda Itempl
+		jsr krn_hexout
+
+		jsr krn_primm
+		.byte $0a, "Ok", $0a, $00
 		restore
 		JMP   LAB_1319		
 pscan:
