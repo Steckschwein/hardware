@@ -43,7 +43,7 @@
 
 		;in: 
 		;	a/x 		- count 
-		;	dw stack 	- word as pointer to target adress
+		;	dw stack 	- word as pointer to target address
 		;	db stack 	- byte as offset into fd_area
 		;out:
 		;	a/x - bytes read on success, -1 on error and errno set accordingly
@@ -51,7 +51,7 @@ fat_read2:
 		cmp		#0
 		bne		@_r0			; edge case, test if the count argument is zero?
 		cpx		#0
-		bne		@_r1			
+		bne		@_r1
 		stz     __oserror
 		bra		@_rexit
 @_r0:	
@@ -71,15 +71,15 @@ fat_read2:
 		pla
 		sta 	read_blkptr+1
 		plx							; pop fd
-	        debugcpu "fr2"
+	    ;    debugcpu "fr2"
 		jsr calc_lba_addr
 		jsr calc_blocks
-;       	debug32s "r2 lb:", lba_addr
+;      	debug32s "r2 lb:", lba_addr
 ;		debug24s "r2 bc:", blocks
 ;		SetVector block_data, read_blkptr		; vector to kernel block_data area		
 		jsr sd_read_block
 		lda errno
-		debugA "r2"
+		;debugA "r2"
 		rts
 @_rexit:
 		pla
@@ -189,7 +189,7 @@ fat_chdir:
 @l_err:
 		lda	#EINVAL				; TODO FIXME error code for "Not a directory"
 @l_err_exit:
-		debugA	"cde"
+		debugA	"cd"
 		rts
  
  
@@ -197,7 +197,7 @@ fat_chdir:
 		stz	pathFragment, x	;\0 terminate the current path fragment
 		;debugstr "_o", pathFragment		
 		jsr	_fat_open
-		debugA "o_"
+		;debugA "o_"
 		bne @l_exit
 .endmacro
 
@@ -205,7 +205,7 @@ fat_chdir:
         ;   a/x - pointer to the file path
         ;out: 
         ;   x - index into fd_area of the opened file
-        ;   a - errno
+        ;   a - errno, 0 - means no error
 fat_open:
 		sta krn_ptr1
 		stx krn_ptr1+1			    ; save path arg given in a/x
@@ -216,7 +216,7 @@ fat_open:
 		
 		ldy	#0
 		;	trim wildcard at the beginning
-@l1:		lda (krn_ptr1), y
+@l1:	lda (krn_ptr1), y
 		cmp	#' '
 		bne	@l2
 		iny 
@@ -262,7 +262,7 @@ fat_open:
 @l_exit_noerr:
 		lda #0
 @l_exit:
-		debugA	"f2e:"
+		debugA	"fe"
 		rts        
 @l_openfile:
 		_open				; return with x as offset to fd_area
@@ -278,7 +278,7 @@ pathFragment: .res 8+1+3+1; 12 chars + \0 for path fragment
 _fat_open:
 		phy
         
-		debugptr "fp:", filenameptr
+		debugptr "p", filenameptr
 		
 		ldx #FD_INDEX_TEMP_DIR
 		jsr fat_find_first
@@ -295,7 +295,7 @@ lbl_fat_open_error:
 fat_open_found:
 		ldy #F32DirEntry::Attr
 		lda (dirptr),y
-		debugA "d"
+		;debugA "d"
 		bit #DIR_Attr_Mask_Dir 		; is it a directory?
 		bne @l2				; go on, do not allocate fd, index is set to FD_INDEX_TEMP_DIR
 
@@ -306,7 +306,6 @@ fat_open_found:
 		beq @l2
 		jmp end_open_err
 @l2:	        
-		debugcpu "fd"
 		;save 32 bit cluster number from dir entry
 		ldy #F32DirEntry::FstClusHI +1
 		lda (dirptr),y
@@ -613,7 +612,7 @@ fat_mount:
 		jmp end_mount
 @l4:
 
-.ifdef DEBUG
+.ifdef DEBUGFAT
 		jsr krn_primm
 		.asciiz "MF: "
 		lda sd_blktarget + VolumeID::MirrorFlags
@@ -681,8 +680,8 @@ fat_mount:
 		bne @l7
 
 		; cluster_begin_lba_m2 -> cluster_begin_lba - (BPB_RootClus*sec/cluster)        
-		debug8s "sec/cl:", sectors_per_cluster
-		debug32s "clb1:", cluster_begin_lba
+		;debug8s "sec/cl:", sectors_per_cluster
+		;debug32s "clb1:", cluster_begin_lba
 				
 		;TODO FIXME we assume 2 here insteasd of using the value in BPB_RootClus
 		; cluster_begin_lba_m2 -> cluster_begin_lba - (2*sec/cluster) -> sec/cluster << 1
@@ -705,7 +704,7 @@ fat_mount:
 		sbc #0
 		sta cluster_begin_lba +3 
 		
-		debug32s "clb2:", cluster_begin_lba
+		;debug32s "clb2:", cluster_begin_lba
         
 		; init file descriptor area
 		jsr fat_init_fdarea

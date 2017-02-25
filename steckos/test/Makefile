@@ -3,6 +3,8 @@ LIBS=../lib/steckschwein-kernel.lib ../lib/steckschwein-gfx.lib
 
 all: time-test.prg mainarg.prg coniotst.prg stdio_test.prg time-test.prg
 
+.PHONY: clean
+
 clean:
 	rm -f *.prg *.s *.o
   
