@@ -8,6 +8,8 @@
 #include <errno.h>
 #include "dir.h"
 
+#include <conio.h>
+
 // from global dirent.h
 DIR* __fastcall__ opendir (register const char* name)
 {
@@ -28,7 +30,6 @@ DIR* __fastcall__ opendir (register const char* name)
         errno = EINVAL;
         goto exitpoint;
     }
-
     /* Set the offset of the first entry */
     d.off = sizeof (buf);
 

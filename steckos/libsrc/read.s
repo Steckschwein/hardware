@@ -15,7 +15,6 @@
 
 ;--------------------------------------------------------------------------
 ; _read
-
 .code
 
 .proc   _read
@@ -52,7 +51,7 @@
 
 ; Read the block
 		
-		jsr		krn_read2		; x holds the fd
+		jsr		krn_read		; x holds the fd
 		
 		beq		@_r1
         jmp     __directerrno   ; Sets _errno, clears _oserror, returns -1

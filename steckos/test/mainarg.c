@@ -6,11 +6,11 @@ int main (int argc, const char* argv[])
 {
     unsigned char i;
 
-    cprintf("\n\r");
-    cprintf("argc: %d\n\r", argc);
+    cprintf("\n");
+    cprintf("argc: %d\n", argc);
     
     for(i=0;i<argc;i++)
-        cprintf("argv[%d]: %s\n\r", i, argv[i]);
+        cprintf("argv[%d]: %s\n", i, argv[i]);
     
     return EXIT_SUCCESS;
 }
