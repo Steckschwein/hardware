@@ -48,7 +48,7 @@ io_error:
 		rts
 
 psave:
-		php
+
 		save
 
 		lda Bpntrl
@@ -92,12 +92,13 @@ psave:
 		jsr krn_write
 		jsr krn_close
 		
+@exit_save:
 		restore
-		plp
 		rts
 
 pload:
 		save
+
 
 		lda Bpntrl
 		ldx Bpntrh
