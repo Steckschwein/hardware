@@ -17,22 +17,9 @@ ESC = $1B        ; Escape character
 CR  = $0D        ; Return character
 LF  = $0A        ; Line feed character
 
-;IN    = $0200    ; Buffer used by GetLine. From $0200 through $027F (shared with Woz Mon)
-;IN    =  $c000
-
 ; put the IRQ and MNI code in RAM so that it can be changed
 IRQ_vec	= VEC_SV+2		; IRQ code vector
 NMI_vec	= IRQ_vec+$0A	; NMI code vector
-
-; setup for the 6502 simulator environment
-
-; IO_AREA	= $0200		; set I/O area for this monitor
-
-; now the code. all this does is set up the vectors and interrupt code
-; and wait for the user to select [C]old or [W]arm start. nothing else
-; fits in less than 128 bytes
-
-;	.org	$FF80			; pretend this is in a 1/8K ROM
 
 ; reset vector points here
 
