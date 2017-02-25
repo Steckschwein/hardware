@@ -76,12 +76,21 @@ LAB_stlp:
 ;LAB_dowarm:
 ;	JMP	LAB_WARM		; do EhBASIC warm start
 
+io_error:
+		pha
+		jsr	krn_primm
+		.asciiz "io error: "
+		pla
+		jsr krn_hexout
+		rts
+
 psave:
 		save
 		lda #<filename
 		ldx #>filename
 		jsr krn_open
 		beq @go
+		jsr io_error
 		restore
 		rts
 @go:
@@ -121,23 +130,26 @@ psave:
 		restore
 		rts
 
-pload:		
+pload:
 		save
 		lda #<filename
 		ldx #>filename
 		jsr krn_open
 		beq @go
+@pload_err:
+		jsr io_error
 		restore
 		rts
 @go:
-		lda	Smemh
-		sta read_blkptr + 1
 		lda	Smeml
 		sta read_blkptr + 0
+		lda	Smemh
+		sta read_blkptr + 1
 
 		jsr krn_read
 		jsr krn_close
-
+		lda errno
+		bne @pload_err
 		jsr	pscan
 		lda	Itempl
 		sta	Svarl
