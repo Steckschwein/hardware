@@ -76,12 +76,86 @@ LAB_stlp:
 ;LAB_dowarm:
 ;	JMP	LAB_WARM		; do EhBASIC warm start
 
-LOAD:
-SAVE:
-	jsr LAB_EVST
-	jsr krn_hexout
-	LDA #$00
-        RTS                            ; and return
+psave:
+		lda #<filename
+		ldx #>filename
+		jsr krn_open
+		beq @go
+		rts
+@go:
+		phx
+		jsr	pscan
+		ldy	#$00
+		lda	Itempl
+		sta	(Itempl),y
+		iny
+		lda	Itemph
+		sta	(Itempl),y
+		lda	Smemh
+		sta write_blkptr + 1
+		lda	Smeml
+		sta write_blkptr + 0
+
+		plx
+
+		sec
+		lda	Itempl
+		sbc	Smeml
+
+        	sta fd_area + F32_fd::FileSize + 0,x
+
+		lda	Itemph
+		sbc	Smemh
+        	sta fd_area + F32_fd::FileSize + 1,x
+
+        	lda #$00
+        	sta fd_area + F32_fd::FileSize + 3,x
+        	sta fd_area + F32_fd::FileSize + 2,x
+
+
+		jsr krn_write
+		jsr krn_close
+		
+		rts
+
+pload:		
+		jsr	pscan
+		lda	Itempl
+		sta	Svarl
+		sta	Sarryl
+		sta	Earryl
+		lda	Itemph
+		sta	Svarh
+		sta	Sarryh
+		sta	Earryh
+		JMP   LAB_1319		
+pscan:
+		lda	Smeml
+      		sta	Itempl
+     	 	lda	Smemh
+     	 	sta	Itemph
+pscan1:		ldy   #$00
+		lda   (Itempl),y
+		bne   pscan2
+		iny   
+		lda   (Itempl),y
+		bne   pscan2
+		clc
+		lda   #$02
+		adc   Itempl
+		sta	Itempl
+		lda	#$00
+		adc	Itemph
+		sta	Itemph
+		rts
+pscan2:		ldy   #$00
+		lda	(Itempl),y
+		tax
+		iny
+		lda	(Itempl),y
+		sta	Itemph
+		stx	Itempl
+		bra	pscan1
 
 
 ; vector tables
@@ -89,8 +163,8 @@ SAVE:
 LAB_vec:
 	.word	krn_getkey		; byte in
 	.word	krn_chrout		; byte out
-	.word	LOAD		; load vector for EhBASIC
-	.word	SAVE		; save vector for EhBASIC
+	.word	pload		; load vector for EhBASIC
+	.word	psave		; save vector for EhBASIC
 
 ; EhBASIC IRQ support
 
@@ -124,6 +198,7 @@ END_CODE:
 	;.byte	$0D,$0A,"6502 EhBASIC [C]old/[W]arm ?",$00
 					; sign on string
 
+filename:	.asciiz	"FILE0000.DAT"
 ; system vectors
 	;.org	$FFFA
 	;.word	NMI_vec		; NMI vector
