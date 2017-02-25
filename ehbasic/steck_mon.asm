@@ -77,10 +77,12 @@ LAB_stlp:
 ;	JMP	LAB_WARM		; do EhBASIC warm start
 
 psave:
+		save
 		lda #<filename
 		ldx #>filename
 		jsr krn_open
 		beq @go
+		restore
 		rts
 @go:
 		phx
@@ -116,19 +118,22 @@ psave:
 		jsr krn_write
 		jsr krn_close
 		
+		restore
 		rts
 
 pload:		
+		save
 		lda #<filename
 		ldx #>filename
 		jsr krn_open
 		beq @go
+		restore
 		rts
 @go:
 		lda	Smemh
-		sta write_blkptr + 1
+		sta read_blkptr + 1
 		lda	Smeml
-		sta write_blkptr + 0
+		sta read_blkptr + 0
 
 		jsr krn_read
 		jsr krn_close
@@ -142,6 +147,7 @@ pload:
 		sta	Svarh
 		sta	Sarryh
 		sta	Earryh
+		restore
 		JMP   LAB_1319		
 pscan:
 		lda	Smeml
