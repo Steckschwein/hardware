@@ -119,6 +119,20 @@ psave:
 		rts
 
 pload:		
+		lda #<filename
+		ldx #>filename
+		jsr krn_open
+		beq @go
+		rts
+@go:
+		lda	Smemh
+		sta write_blkptr + 1
+		lda	Smeml
+		sta write_blkptr + 0
+
+		jsr krn_read
+		jsr krn_close
+
 		jsr	pscan
 		lda	Itempl
 		sta	Svarl
