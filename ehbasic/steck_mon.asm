@@ -37,31 +37,7 @@ LAB_stlp:
  	DEY				    ; decrement index/count
  	BNE	LAB_stlp		; loop if more to do
     
-; now do the signon message, Y = $00 here
-;LAB_signon:
-;	LDA	LAB_mess,Y		; get byte from sign on message
-;	BEQ	LAB_nokey		; exit loop if done
-;	JSR	V_OUTP		    ; output character
-;	INY				    ; increment index
-;	BNE	LAB_signon		; loop, branch always
-    
-;LAB_nokey:
-;	JSR	V_INPT          ; call scan input device   
-;	lda #'c'            ; by cold start question
-    
-;    Beq	LAB_nokey		; loop if no key
-    
-;	AND	#$DF			; mask xx0x xxxx, ensure upper case
-;	CMP	#'W'			; compare with [W]arm start
-;	BEQ	LAB_dowarm		; branch if [W]arm start
-
-;	CMP	#'C'			; compare with [c]old start
-;	BNE	RES_vec		    ; loop if not [c]old start
-            
 	JMP	LAB_COLD		; do EhBASIC cold start
-
-;LAB_dowarm:
-;	JMP	LAB_WARM		; do EhBASIC warm start
 
 io_error:
 		pha
@@ -72,6 +48,7 @@ io_error:
 		rts
 
 psave:
+		php
 		save
 
 		lda Bpntrl
@@ -102,20 +79,21 @@ psave:
 		sec
 		lda Itempl
 		sbc Smeml
-        	sta fd_area + F32_fd::FileSize + 0,x
+		sta fd_area + F32_fd::FileSize + 0,x
 
 		lda Itemph
 		sbc Smemh
-        	sta fd_area + F32_fd::FileSize + 1,x
+		sta fd_area + F32_fd::FileSize + 1,x
 
-        	lda #$00
-        	sta fd_area + F32_fd::FileSize + 2,x
-        	sta fd_area + F32_fd::FileSize + 3,x
+		lda #$00
+		sta fd_area + F32_fd::FileSize + 2,x
+		sta fd_area + F32_fd::FileSize + 3,x
 
 		jsr krn_write
 		jsr krn_close
 		
 		restore
+		plp
 		rts
 
 pload:
