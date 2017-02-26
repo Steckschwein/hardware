@@ -108,7 +108,7 @@ FAT_EOC			= $0ffffff8	; end of cluster chain marker
 ;--------------------------------------------------------------------------------------
 .struct F32DirEntry
 	Name		.byte 8
-	Ext		.byte 3
+	Ext			.byte 3
 	Attr		.byte 
 	Reserved	.byte 8
 	FstClusHI	.word
@@ -117,8 +117,8 @@ FAT_EOC			= $0ffffff8	; end of cluster chain marker
 	FstClusLO	.word
 	FileSize	.byte 4
 .endstruct
-DIR_Attr_Mask_Dir   = $10
-DIR_Attr_Mask_File  = $20
+DIR_Attr_Mask_Dir   = 1<<4;
+DIR_Attr_Mask_File  = 1<<5;
 DIR_Entry_Size      = .sizeof(F32DirEntry)
 
 ;--------------------------------------------------------------------------------------
@@ -138,7 +138,6 @@ DIR_Entry_Size      = .sizeof(F32DirEntry)
 FD_Size = .sizeof(F32_fd)
 
 
-
 FD_Entry_Size = .sizeof(F32_fd)  
 FD_Entries_Max = ($3ff - fd_area) / FD_Entry_Size
 
@@ -149,6 +148,3 @@ FD_Entries_Max = ($3ff - fd_area) / FD_Entry_Size
 FD_INDEX_CURRENT_DIR = 0                            ; current dir always go to fd #0
 FD_INDEX_TEMP_DIR    = FD_Entry_Size    ; temp dir always go to fd #1
 
-
-FD_ATTR_DIR                     = 1<<4;
-FD_ATTR_FILE                    = 1<<5;

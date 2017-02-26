@@ -5,7 +5,7 @@
 ;		*	- matches any file or directory without extension
 matcher:
 				ldx #0
-matcher_test1:			lda filename_buf,x
+matcher_test1:	lda filename_buf,x
 				cmp #'a'					; char [a-z] ?
 				bcc matcher_prepare0		; no, we have to go the long way
 				cmp #'z'+1

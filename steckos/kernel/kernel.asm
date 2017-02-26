@@ -19,7 +19,7 @@ text_mode_40 = 1
 .import textui_enable, textui_disable, vdp_display_off,  textui_blank, textui_update_crs_ptr, textui_crsxy
 .import init_sdcard
 .import fat_mount, fat_open, fat_isOpen, fat_close, fat_close_all, fat_read, fat_find_first, fat_find_next, fat_chdir, fat_write
-.import fat_read2
+.import fat_read_block
 .import fat_getfilesize
 .import sd_read_block, sd_write_block
 
@@ -263,8 +263,9 @@ krn_close_all: 			    jmp fat_close_all
 
 .export krn_read
 krn_read:    				jmp fat_read 
-.export krn_read2
-krn_read2:    				jmp fat_read2
+
+.export krn_read_block
+krn_read_block:    			jmp fat_read_block
 
 .export krn_find_first
 krn_find_first:			    jmp fat_find_first
