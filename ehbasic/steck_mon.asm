@@ -50,14 +50,15 @@ get_filename:
 		jsr LAB_EVEX
 		lda Dtypef
 		bne @go
-		; not a string, trigger type mismatch error
-		ldx #$18
+		; not a string, trigger syntax error
+		ldx #$02
 		jsr LAB_XERR
 @go:
 
 		ldy #$00
 @l:
 		lda (ssptr_l),y
+		beq @term
 		cmp #'"'
 		beq @term
 		iny
