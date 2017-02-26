@@ -46,18 +46,39 @@ io_error:
 		pla
 		jsr krn_hexout
 		rts
+get_filename:
+		jsr LAB_EVEX
+		lda Dtypef
+		bne @go
+		; not a string, trigger type mismatch error
+		ldx #$18
+		jsr LAB_XERR
+@go:
+
+		ldy #$00
+@l:
+		lda (ssptr_l),y
+		cmp #'"'
+		beq @term
+		iny
+		bne @l
+@term:
+		lda #$00
+		sta (ssptr_l),y
+	
+		lda ssptr_l
+		ldx ssptr_h
+
+		rts
+		
 
 psave:
 
-		save
-
-		lda Bpntrl
-		ldx Bpntrh
+		jsr get_filename
 
 		jsr krn_open
 		beq @go
 		jsr io_error
-		restore
 		rts
 @go:
 		phx
@@ -93,23 +114,15 @@ psave:
 		jsr krn_close
 		
 @exit_save:
-		restore
 		rts
 
 pload:
-		save
+		jsr get_filename
 
-
-		lda Bpntrl
-		ldx Bpntrh
-
-;		lda #<filename
-;		ldx #>filename
 		jsr krn_open
 		beq @go
 @pload_err:
 		jsr io_error
-		restore
 		rts
 @go:
 		jsr krn_primm
@@ -149,7 +162,6 @@ pload:
 
 		jsr krn_primm
 		.byte $0a, "Ok", $0a, $00
-		restore
 		JMP   LAB_1319		
 pscan:
 		lda	Smeml
