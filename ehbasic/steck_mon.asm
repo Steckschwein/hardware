@@ -39,14 +39,7 @@ LAB_stlp:
     
 	JMP	LAB_COLD		; do EhBASIC cold start
 
-io_error:
-		pha
-		jsr	krn_primm
-		.asciiz "io error: "
-		pla
-		jsr krn_hexout
-		rts
-get_filename:
+openfile:
 		jsr LAB_EVEX
 		lda Dtypef
 		bne @go
@@ -54,7 +47,6 @@ get_filename:
 		ldx #$02
 		jsr LAB_XERR
 @go:
-
 		ldy #$00
 @l:
 		lda (ssptr_l),y
@@ -69,19 +61,18 @@ get_filename:
 	
 		lda ssptr_l
 		ldx ssptr_h
-
+		jsr krn_open
+		bne	io_error
 		rts
-		
+io_error:
+		pha
+		jsr	krn_primm
+		.asciiz "io error: "
+		pla
+		jmp krn_hexout		
 
 psave:
-
-		jsr get_filename
-
-		jsr krn_open
-		beq @go
-		jsr io_error
-		rts
-@go:
+		jsr openfile		
 		phx
 		jsr pscan
 		ldy #$00
@@ -97,7 +88,7 @@ psave:
 		sta write_blkptr + 0
 
 		plx
-
+		
 		sec
 		lda Itempl
 		sbc Smeml
@@ -112,22 +103,12 @@ psave:
 		sta fd_area + F32_fd::FileSize + 3,x
 
 		jsr krn_write
-		jsr krn_close
+		jmp krn_close
 		
-@exit_save:
-		rts
-
 pload:
-		jsr get_filename
-
-		jsr krn_open
-		beq @go
-@pload_err:
-		jsr io_error
-		rts
-@go:
+		jsr openfile
 		jsr krn_primm
-		.asciiz "Loading from $"
+		.asciiz "Load from $"
 
 		lda	Smemh
 		sta read_blkptr + 1
@@ -141,13 +122,11 @@ pload:
 		.asciiz " to $"
 
 		jsr krn_read
-		lda errno
-		bne @pload_err
+		bne io_error
 
 		jsr krn_close
-		lda errno
-		bne @pload_err
-
+		bne io_error
+		
 		jsr	pscan
 		lda	Itempl
 		sta	Svarl
