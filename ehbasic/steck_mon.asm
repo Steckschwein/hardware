@@ -50,7 +50,7 @@ openfile:
 		ldy #$00
 @l:
 		lda (ssptr_l),y
-		beq @term
+		beq @open
 		cmp #'"'
 		beq @term
 		iny
@@ -58,7 +58,7 @@ openfile:
 @term:
 		lda #$00
 		sta (ssptr_l),y
-	
+@open:	
 		lda ssptr_l
 		ldx ssptr_h
 		jsr krn_open
@@ -107,19 +107,12 @@ psave:
 		
 pload:
 		jsr openfile
-		jsr krn_primm
-		.asciiz "Load from $"
 
 		lda	Smemh
 		sta read_blkptr + 1
-		jsr krn_hexout
 
 		lda	Smeml
 		sta read_blkptr + 0
-		jsr krn_hexout
-
-		jsr krn_primm
-		.asciiz " to $"
 
 		jsr krn_read
 		bne io_error
@@ -136,12 +129,9 @@ pload:
 		sta	Svarh
 		sta	Sarryh
 		sta	Earryh
-		jsr krn_hexout
-		lda Itempl
-		jsr krn_hexout
 
 		jsr krn_primm
-		.byte $0a, "Ok", $0a, $00
+		.byte "Ok", $0a, $00
 		JMP   LAB_1319		
 pscan:
 		lda	Smeml
