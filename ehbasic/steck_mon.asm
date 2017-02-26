@@ -233,7 +233,6 @@ END_CODE:
 	;.byte	$0D,$0A,"6502 EhBASIC [C]old/[W]arm ?",$00
 					; sign on string
 
-filename:	.asciiz	"FILE0000.DAT"
 ; system vectors
 	;.org	$FFFA
 	;.word	NMI_vec		; NMI vector
