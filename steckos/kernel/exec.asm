@@ -19,7 +19,7 @@ execv:
 		bne @l_err_exit
 		
 		lda	fd_area + F32_fd::Attr, x
-		bit #FD_ATTR_FILE		; check that whether it's a regular file
+		bit #DIR_Attr_Mask_File		; check that whether it's a regular file
 		bne	@l0
 		lda	#EINVAL				; TODO FIXME error code for "Is a directory"
 		bra @l_err_exit

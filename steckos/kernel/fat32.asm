@@ -9,7 +9,7 @@
         
 .export fat_mount
 .export fat_open, fat_isOpen, fat_chdir
-.export fat_read, fat_read2, fat_find_first, fat_find_next, fat_write
+.export fat_read, fat_read_block, fat_find_first, fat_find_next, fat_write
 .export fat_close_all, fat_close, fat_getfilesize
 .export calc_dirptr_from_entry_nr
 
@@ -41,69 +41,37 @@
 
 .segment "KERNEL"
 
-		;in: 
-		;	a/x 		- count 
-		;	dw stack 	- word as pointer to target address
-		;	db stack 	- byte as offset into fd_area
+		;	read one block, updates the seek position within FD
+		;in:
+		;	X	- offset into fd_area
 		;out:
-		;	a/x - bytes read on success, -1 on error and errno set accordingly
-fat_read2:
-		cmp		#0
-		bne		@_r0			; edge case, test if the count argument is zero?
-		cpx		#0
-		bne		@_r1
-		stz     __oserror
-		bra		@_rexit
-@_r0:	
-		cpx		#2				; a was not zero, if cpx is >= $2 we have to read > BLOCK_SIZE, cannot store to target ptr :/
-	
-@_r1:			
-		sta	krn_ptr3			; save count
-		stx	krn_ptr3+1
-		eor     #$ff				; the count argument
-		sta     krn_ptr1
-		txa
-		eor     #$ff
-		sta     krn_ptr1+1          ; remember -count-1
-		
-		pla
-		sta	read_blkptr
-		pla
-		sta 	read_blkptr+1
-		plx							; pop fd
-	    ;    debugcpu "fr2"
-		jsr calc_lba_addr
-		jsr calc_blocks
-;      	debug32s "r2 lb:", lba_addr
-;		debug24s "r2 bc:", blocks
-;		SetVector block_data, read_blkptr		; vector to kernel block_data area		
-		jsr sd_read_block
-		lda errno
-		;debugA "r2"
-		rts
-@_rexit:
-		pla
-		pla
-		pla
-		rts		
-		
-		;in: 
-		;	x - offset into fd_area
+		;	A - A = 0 on success, error code otherwise
+		;	@deprecated errno - error number
+fat_read_block:
+		lda fd_area + F32_fd::SeekPos+0,x
+		lda fd_area + F32_fd::SeekPos+1,x
+		lda	#1
+		sta blocks		; just one block
+		bra _fat_read
+
+		;in:
+		;	X - offset into fd_area
 		;out:
 		;	A - A = 0 on success, error code otherwise
 		;	@deprecated errno - error number
 fat_read:
+		jsr calc_blocks
+_fat_read:
 		debugcpu "fr"
 		jsr calc_lba_addr
-		jsr calc_blocks
 ;		debug32s "fr lba:", lba_addr
 ;		debug24s "fr bc:", blocks
 ;		debug32s "fr fs: ", fd_area + (FD_Entry_Size*2) + FD_file_size ;1st file entry
 		stz errno
 		jsr sd_read_multiblock
+;		jsr sd_read_block
 		lda errno
 		rts
-;		jmp sd_read_block
  
  
 fat_write:
@@ -171,14 +139,13 @@ fat_update_direntry:
 	;in:
         ;   a/x - pointer to the file path
         ;out: 
-		;	C - 0 ok, 1 error
-        ;   a - errno
+		;	A - errno, 0 - means no error
         ;   x - index into fd_area of the opened directory
 fat_chdir:
 		jsr fat_open			; change dir using temp dir to not clobber the current dir, maybe we will run into an error
 		bne	@l_err_exit			; exit on error
 		lda	fd_area + F32_fd::Attr, x
-		bit #FD_ATTR_DIR		; check that there is no error and we have a directory
+		bit #DIR_Attr_Mask_Dir		; check that there is no error and we have a directory
 		beq	@l_err
 
 		phx
@@ -186,7 +153,7 @@ fat_chdir:
 		ldy #FD_INDEX_CURRENT_DIR
 		jsr	fat_clone_fd        ; therefore we can simply clone the temp dir to current dir fd - FTW!
 		plx
-		lda #0                  ; ok, C=0 no error
+		lda #0                  ; ok
 		rts
 @l_err:
 		lda	#EINVAL				; TODO FIXME error code for "Not a directory"
@@ -197,7 +164,7 @@ fat_chdir:
  
 .macro _open
 		stz	pathFragment, x	;\0 terminate the current path fragment
-		;debugstr "_o", pathFragment		
+		debugstr "_o", pathFragment		
 		jsr	_fat_open
 		;debugA "o_"
 		bne @l_exit
@@ -206,12 +173,12 @@ fat_chdir:
         ;in:
         ;   a/x - pointer to the file path
         ;out: 
-        ;   x - index into fd_area of the opened file
-        ;   a - errno, 0 - means no error
+        ;   X - index into fd_area of the opened file
+        ;   A - errno, 0 - means no error
 fat_open:
 		sta krn_ptr1
 		stx krn_ptr1+1			    ; save path arg given in a/x
-			
+		
 		ldx #FD_INDEX_CURRENT_DIR   ; clone current dir fd to temp dir fd
 		ldy #FD_INDEX_TEMP_DIR
 		jsr fat_clone_fd
@@ -225,19 +192,16 @@ fat_open:
 		bne @l1
 		lda #EINVAL
 		rts
-
 @l2:		;	starts with / ? - cd root
 		cmp	#'/'
 		bne	@l31
 		jsr fat_open_rootdir
 		iny
-        	lda	(krn_ptr1), y		;end of input?
+        lda	(krn_ptr1), y		;end of input?
 		beq	@l_exit_noerr       ;yes, so it was just the '/'
-;        cmp #' '               ;no, go on
- ;       bne @l31
-  ;      bra @l_exit_noerr       ; exit, no error
-@l31:		SetVector   pathFragment, filenameptr	; filenameptr to path fragment
-@l3:		;	parse path fragments and change dirs accordingly
+@l31:		
+		SetVector   pathFragment, filenameptr	; filenameptr to path fragment
+@l3:	;	parse path fragments and change dirs accordingly
 		ldx #0
 @l_parse_1:
 		lda	(krn_ptr1), y
@@ -268,6 +232,7 @@ fat_open:
 		rts        
 @l_openfile:
 		_open				; return with x as offset to fd_area
+		; TODO FIXME 		if opened "path" is a directory, alloc a new fd to save them
 		bra @l_exit_noerr
 pathFragment: .res 8+1+3+1; 12 chars + \0 for path fragment
 
@@ -275,8 +240,8 @@ pathFragment: .res 8+1+3+1; 12 chars + \0 for path fragment
         ;in:
         ;   filenameptr - ptr to the filename
         ;out: 
-        ;   x - index into fd_area of the opened file
-        ;   a - errno
+        ;   X - index into fd_area of the opened file
+		;   A - A = 0 on success, error code otherwise
 _fat_open:
 		phy
         
@@ -298,33 +263,27 @@ fat_open_found:
 		ldy #F32DirEntry::Attr
 		lda (dirptr),y
 		;debugA "d"
-		bit #DIR_Attr_Mask_Dir 		; is it a directory?
-		bne @l2				; go on, do not allocate fd, index is set to FD_INDEX_TEMP_DIR
-
-@l1:	bit #$20 ; Is file?
+		bit #DIR_Attr_Mask_Dir 		; directory?
+		bne @l2						; go on, do not allocate fd, index (X) is already set to FD_INDEX_TEMP_DIR
+		bit #DIR_Attr_Mask_File ; Is file?
 		beq lbl_fat_open_error
-
 		jsr fat_alloc_fd
-		beq @l2
-		jmp end_open_err
+		bne end_open_err
+;		jmp end_open_err
 @l2:	        
 		;save 32 bit cluster number from dir entry
 		ldy #F32DirEntry::FstClusHI +1
 		lda (dirptr),y
-		;sta fd_area + FD_start_cluster +3, x
 		sta fd_area + F32_fd::StartCluster + 3, x
 		dey
 		lda (dirptr),y
-		;sta fd_area + FD_start_cluster +2, x
 		sta fd_area + F32_fd::StartCluster + 2, x
 		
 		ldy #F32DirEntry::FstClusLO +1
 		lda (dirptr),y
-		;sta fd_area + FD_start_cluster +1, x
 		sta fd_area + F32_fd::StartCluster + 1, x
 		dey
 		lda (dirptr),y
-		;sta fd_area + FD_start_cluster +0, x
 		sta fd_area + F32_fd::StartCluster + 0, x
 
 		; cluster no = 0? - its root dir, set to root dir first cluster
@@ -414,15 +373,16 @@ calc_blocks: ;blocks = filesize / BLOCKSIZE -> filesize >> 9 (div 512) +1 if fil
 		bcs @l1
 		lda fd_area + F32_fd::FileSize + 0,x
 		beq @l2
-@l1:		inc blocks
+@l1:	inc blocks
 		bne @l2
 		inc blocks+1
 		bne @l2
 		inc blocks+2
-@l2:		rts
+@l2:	rts
 
 ; calculate LBA address of first block from cluster number found in file descriptor entry
 ; file descriptor index must be in x
+;		in:	X - file descriptor index
 calc_data_lba_addr:
 calc_lba_addr:
 		pha
@@ -437,18 +397,10 @@ calc_lba_addr:
 			lda fd_area + F32_fd::StartCluster + i,x
 			sta lba_addr + i
 		.endrepeat
-		;lda fd_area + FD_start_cluster  +0,x
-		;sta lba_addr
-		;lda fd_area + FD_start_cluster  +1,x
-		;sta lba_addr +1
-		;lda fd_area + FD_start_cluster  +2,x
-		;sta lba_addr +2
-		;lda fd_area + FD_start_cluster  +3,x
-		;sta lba_addr +3
         
 		;sectors_per_cluster -> is a power of 2 value, therefore cluster << n, where n ist the number of bit set in sectors_per_cluster
 		lda sectors_per_cluster
-@lm:		lsr
+@lm:	lsr
 		beq @lme    ; 1 sec/cluster nothing at all
 		tax
 		asl lba_addr +0
@@ -738,7 +690,7 @@ fat_open_rootdir:
 fat_clone_fd:
 		lda #FD_Entry_Size
 		sta krn_tmp
-@l1:		lda fd_area, x
+@l1:	lda fd_area, x
 		sta fd_area, y
 		inx
 		iny
@@ -766,11 +718,12 @@ fat_init_fdarea_with_x:
 		rts
 		
 		;
-		; return: 
-		;       x - with index to fd_area, otherwise A is set with errno
+		; out: 
+		;       X - with index to fd_area
+		;		A - errno if one, 0 otherwise
 fat_alloc_fd:
 		ldx #(2*FD_Entry_Size)	; skip 2 entries, they're reserverd for current and temp dir
-@l1:		lda fd_area + F32_fd::StartCluster +3, x
+@l1:	lda fd_area + F32_fd::StartCluster +3, x
 	
 		cmp #$ff	;#$ff means unused, return current x as offset
 		beq @l2
@@ -785,13 +738,11 @@ fat_alloc_fd:
 		; Too many open files, no free file descriptor found
 		lda #EMFILE
 		rts
-
-
-@l2:		lda #0
+@l2:	lda #0
 		rts
 
         ; in:
-        ;   x - offset into fd_area
+        ;   X - offset into fd_area
         ; out:
         ;   A - A = 0 on success, error code otherwise
 fat_close:
@@ -807,15 +758,12 @@ fat_close_all:
 		ldx #(2*FD_Entry_Size)	; skip 2 entries, they're reserverd for current and temp dir
 		bra	fat_init_fdarea_with_x
 
-		; in:
-		;   x - directory fd index into fd_area		
 		; get size of file in fd
 		; in:
 		;   x - fd offset
 		; out:
 		;   a - filesize lo
 		;   x - filesize hi
-
 fat_getfilesize:
 		lda fd_area + F32_fd::FileSize + 0, x
 		pha
@@ -826,23 +774,23 @@ fat_getfilesize:
 
 fat_find_first:
 		ldy #$00
-@l1:		lda (filenameptr),y
+@l1:	lda (filenameptr),y
 		beq @l2
 		sta filename_buf,y
 		
 		iny
 		cpy #8+1+3	+1		;?buffer overflow
 		bne @l1
-@l2:		lda	#0
+@l2:	lda	#0
 		sta filename_buf,y
 
 		SetVector sd_blktarget, read_blkptr
 		jsr calc_lba_addr
 		debug32s "lba:", lba_addr
 		
-ff_l3:		SetVector sd_blktarget, dirptr	
+ff_l3:	SetVector sd_blktarget, dirptr	
 		jsr sd_read_block
-		dec read_blkptr+1
+		dec read_blkptr+1	; set read_blkptr to origin address
 		
 ff_l4:
 		lda (dirptr)
@@ -875,7 +823,6 @@ fat_find_next:
 		jsr inc_lba_address
 		; TODO FIXME check whether the end of the cluster is reached
 		bra ff_l3
-
 ff_end:
 		rts
 		

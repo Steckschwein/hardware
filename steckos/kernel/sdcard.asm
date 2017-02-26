@@ -250,19 +250,9 @@ sd_read_block:
 		lda #$01                ; send "crc" and stop bit
 		jsr spi_rw_byte
 
-;	      	ldy #sd_cmd_response_retries 	; wait for command response.
-		;stz krn_tmp				; use krn_tmp as loop var, not needed here		
-;@lx:		jsr spi_r_byte
-        	;beq @l1         		; everything other than $00 is an error
-		;dec krn_tmp
-		;bne @lx
-        	;dey
-		;bne @lx
-		;sta errno
-
 		jsr sd_wait_timeout
 		lda errno
-        	bne @exit
+       	bne @exit
 @l1:
 		; wait for sd card data token
 		jsr sd_wait_data_token
@@ -272,8 +262,8 @@ sd_read_block:
 		jsr halfblock
 
 		inc read_blkptr+1
-
 		jsr halfblock
+;		dec read_blkptr+1
 
 		jsr spi_r_byte		; Read 2 CRC bytes
 		jsr spi_r_byte

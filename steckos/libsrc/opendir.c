@@ -1,62 +1,72 @@
 /*
  * steckos adaption
  */
+#include <stddef.h>
 #include <stdlib.h>
-#include <string.h>
-#include <fcntl.h>
+#include <stdio.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <errno.h>
-#include "dir.h"
+#include <dirent.h>
+#include "dir.h" 
 
-#include <conio.h>
+//#include <conio.h>
+/*****************************************************************************/
+/*                                   Data                                    */
+/*****************************************************************************/
+extern char _cwd[FILENAME_MAX];
 
 // from global dirent.h
 DIR* __fastcall__ opendir (register const char* name)
 {
-    unsigned char buf[2];
-    DIR* dir = 0;
-    DIR d;
+    register DIR* dir;
 
-    /* Setup the actual file name that is sent to the disk. We accept "0:",
-    ** "1:" and "." as directory names.
-    */
-    d.name[0] = '$';
-    if (name == 0 || name[0] == '\0' || (name[0] == '.' && name[1] == '\0')) {
-        d.name[1] = '\0';
-    } else if ((name[0] == '0' || name[0] == '1') && name[1] == ':' && name[2] == '\0') {
-        d.name[1] = name[0];
-        d.name[2] = '\0';
-    } else {
-        errno = EINVAL;
-        goto exitpoint;
+    /* Alloc DIR */
+    if ((dir = malloc (sizeof (*dir))) == NULL) {
+
+        /* May not have been done by malloc() */
+        _directerrno (ENOMEM);
+
+        /* Return failure */
+        return NULL;
     }
-    /* Set the offset of the first entry */
-    d.off = sizeof (buf);
 
-    /* Open the directory on disk for reading */
-    d.fd = open (d.name, O_RDONLY);
-    if (d.fd >= 0) {
+    /* Interpret dot as current working directory */
+    if (*name == '.') {
+        //name = _cwd;
+    }
 
-        /* Skip the load address */         
-        if (_dirread (&d, buf, sizeof (buf))) {
+    /* Open directory file */
+    if ((dir->fd = open (name, O_RDONLY)) != -1) {
 
-            /* Allocate memory for the DIR structure returned */
-            dir = malloc (sizeof (*dir));
+        /* Read directory key block */
+		/*
+        if (read (dir->fd,
+                  dir->block.bytes,
+                  sizeof (dir->block)) == sizeof (dir->block)) {
 
-            /* Copy the contents of d */
-            if (dir) {
-                memcpy (dir, &d, sizeof (d));
-            } else {
-                /* Set an appropriate error code */
-                errno = ENOMEM;
-            }
+            // Get directory entry infos from directory header
+            dir->entry_length      = dir->block.bytes[0x23];
+            dir->entries_per_block = dir->block.bytes[0x24];
+
+            // Skip directory header entry
+            dir->current_entry = 1;
+
+            // Return success
+            return dir;
         }
+		*/
+        // EOF: Most probably no directory file at all
+        if (_oserror == 0) {
+            _directerrno (EINVAL);
+        }
+        // Cleanup directory file
+        close (dir->fd);
     }
+	
+    // Cleanup DIR
+    free (dir);
 
-exitpoint:
-    /* Done */
-    return dir;
-}
-
-
-
+    //Return failure
+    return NULL;
+} 

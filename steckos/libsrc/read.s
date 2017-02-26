@@ -6,6 +6,7 @@
 		.include "fcntl.inc"
         .include "errno.inc"
 		.include	"../kernel/kernel_jumptable.inc"
+		.include	"../kernel/zeropage.inc"
 
         .import __rwsetup,__do_oserror,__inviocb,__oserror, popax
 		
@@ -36,7 +37,9 @@
 
         jsr     popax           ; get pointer to buf
         sta     ptr2
+		sta		read_blkptr
         stx     ptr2+1
+		stx		read_blkptr+1
 
         jsr     popax           ; the fd handle
         cpx     #$01			; high byte must be 0
@@ -44,14 +47,11 @@
         sta     tmp2			; save to tmp2, offset to fd_area
 		tax						; fd to x
 
-		
-		
 		jsr		krn_isOpen
 		bcs     invalidfd
 
 ; Read the block
-		
-		jsr		krn_read		; x holds the fd
+		jsr		krn_read_block	; read single block, x holds the fd
 		
 		beq		@_r1
         jmp     __directerrno   ; Sets _errno, clears _oserror, returns -1
@@ -61,29 +61,30 @@
 ;		sta		ptr4
 ;		lda		#$da
 ;		sta		ptr4+1
+
+;		
+;		ldy		#0
+;@_r2:
+;		lda		(ptr3), y
+;		sta		(ptr2), y
+;		iny
+;		bne		@_r3
+;		inc		ptr2+1
+;		inc		ptr4+1
 		
-		ldy		#0
-@_r2:
-		lda		(ptr3), y
-		sta		(ptr2), y
-		iny
-		bne		@_r3
-		inc		ptr2+1
-		inc		ptr4+1
-		
-		lda		ptr4+1		; block buffer end reached?
-		cmp		#$dc		
-		bne		@_r3
-		lda		#0			; 512 bytes read
-		sta 	ptr3
-		lda		#2
-		sta		ptr3+1
-		bra		eof
-@_r3:	; count bytes read ?
-		inc		ptr1
-		bne		@_r2
-		inc		ptr1+1
-		bne		@_r2
+;		lda		ptr4+1		; block buffer end reached?
+;		cmp		#$dc		
+;		bne		@_r3
+;		lda		#0			; 512 bytes read
+;		sta 	ptr3
+;		lda		#2
+;		sta		ptr3+1
+;		bra		eof
+;@_r3:	; count bytes read ?
+;		inc		ptr1
+;		bne		@_r2
+;		inc		ptr1+1
+;		bne		@_r2
 		
 ; Clear _oserror and return the number of chars read
 eof:    lda     #0
