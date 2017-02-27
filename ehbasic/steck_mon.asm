@@ -10,6 +10,7 @@
 .include "../steckos/kernel/kernel.inc"
 .include "../steckos/kernel/kernel_jumptable.inc"
 .include "../steckos/kernel/fat32.inc"
+.include "../steckos/kernel/uart.inc"
 
 .include "basic.asm"
 
@@ -24,20 +25,20 @@ NMI_vec	= IRQ_vec+$0A	; NMI code vector
 ; reset vector points here
 
 RES_vec:
-	CLD				; clear decimal mode
-	LDX	#$FF			; empty stack
-	TXS				; set the stack
+		CLD			; clear decimal mode
+		LDX	#$FF		; empty stack
+		TXS			; set the stack
 
 ; set up vectors and interrupt code, copy them to page 2
 
- 	LDY	#END_CODE-LAB_vec	; set index/count
+ 		LDY	#END_CODE-LAB_vec	; set index/count
 LAB_stlp:
- 	LDA	LAB_vec-1,Y		; get byte from interrupt code
-    	STA	VEC_IN-1,Y		; save to RAM
- 	DEY				    ; decrement index/count
- 	BNE	LAB_stlp		; loop if more to do
+ 		LDA	LAB_vec-1,Y		; get byte from interrupt code
+    		STA	VEC_IN-1,Y		; save to RAM
+ 		DEY				; decrement index/count
+ 		BNE	LAB_stlp		; loop if more to do
     
-	JMP	LAB_COLD		; do EhBASIC cold start
+		JMP	LAB_COLD		; do EhBASIC cold start
 
 openfile:
 		jsr LAB_EVEX
@@ -71,30 +72,19 @@ io_error:
 		pla
 		jmp krn_hexout		
 
-psave:
+bsave:
 		jsr openfile		
-		phx
-		jsr pscan
-		ldy #$00
-		lda Itempl
-		sta (Itempl),y
-		iny
-		lda Itemph
-		sta (Itempl),y
-
 		lda Smemh
 		sta write_blkptr + 1
 		lda Smeml
 		sta write_blkptr + 0
 
-		plx
-		
 		sec
-		lda Itempl
+		lda Svarl
 		sbc Smeml
 		sta fd_area + F32_fd::FileSize + 0,x
 
-		lda Itemph
+		lda Svarh
 		sbc Smemh
 		sta fd_area + F32_fd::FileSize + 1,x
 
@@ -105,13 +95,13 @@ psave:
 		jsr krn_write
 		jmp krn_close
 		
-pload:
+bload:
 		jsr openfile
 
-		lda	Smemh
+		lda Smemh
 		sta read_blkptr + 1
 
-		lda	Smeml
+		lda Smeml
 		sta read_blkptr + 0
 
 		jsr krn_read
@@ -119,56 +109,27 @@ pload:
 
 		jsr krn_close
 		bne io_error
-		
-		jsr	pscan
-		lda	Itempl
-		sta	Svarl
-		sta	Sarryl
-		sta	Earryl
-		lda	Itemph
-		sta	Svarh
-		sta	Sarryh
-		sta	Earryh
 
+		clc
+		lda Smeml
+		adc fd_area + F32_fd::FileSize + 0,x
+		sta Svarl
+
+		lda Smemh
+		adc fd_area + F32_fd::FileSize + 1,x
+		sta Svarh
+		
 		jsr krn_primm
 		.byte "Ok", $0a, $00
 		JMP   LAB_1319		
-pscan:
-		lda	Smeml
-      		sta	Itempl
-     	 	lda	Smemh
-     	 	sta	Itemph
-pscan1:		ldy   #$00
-		lda   (Itempl),y
-		bne   pscan2
-		iny   
-		lda   (Itempl),y
-		bne   pscan2
-		clc
-		lda   #$02
-		adc   Itempl
-		sta	Itempl
-		lda	#$00
-		adc	Itemph
-		sta	Itemph
-		rts
-pscan2:		ldy   #$00
-		lda	(Itempl),y
-		tax
-		iny
-		lda	(Itempl),y
-		sta	Itemph
-		stx	Itempl
-		bra	pscan1
-
 
 ; vector tables
 
 LAB_vec:
 	.word	krn_getkey		; byte in
 	.word	krn_chrout		; byte out
-	.word	pload		; load vector for EhBASIC
-	.word	psave		; save vector for EhBASIC
+	.word	bload		; load vector for EhBASIC
+	.word	bsave		; save vector for EhBASIC
 
 ; EhBASIC IRQ support
 
