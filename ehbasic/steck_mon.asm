@@ -93,7 +93,9 @@ bsave:
 		sta fd_area + F32_fd::FileSize + 3,x
 
 		jsr krn_write
+		bne io_error
 		jmp krn_close
+		bne io_error
 		
 bload:
 		jsr openfile
@@ -107,8 +109,6 @@ bload:
 		jsr krn_read
 		bne io_error
 
-		jsr krn_close
-		bne io_error
 
 		clc
 		lda Smeml
@@ -118,6 +118,9 @@ bload:
 		lda Smemh
 		adc fd_area + F32_fd::FileSize + 1,x
 		sta Svarh
+
+		jsr krn_close
+		bne io_error
 		
 		jsr krn_primm
 		.byte "Ok", $0a, $00
