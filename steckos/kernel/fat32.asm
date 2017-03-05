@@ -5,8 +5,7 @@
 
 .import sd_read_block, sd_read_multiblock, sd_write_block, sd_write_multiblock, sd_select_card, sd_deselect_card
 .import sd_read_block_data
-;.importzp ptr1
-        
+
 .export fat_mount
 .export fat_open, fat_isOpen, fat_chdir
 .export fat_read, fat_read_block, fat_find_first, fat_find_next, fat_write
@@ -35,10 +34,6 @@
 		bpl @l
 .endmacro
 
-.ifdef DEBUG ; DEBUG
-    .import krn_hexout, krn_primm, krn_chrout, krn_strout, krn_print_crlf
-.endif
-
 .segment "KERNEL"
 
 		;	read one block, updates the seek position within FD
@@ -62,7 +57,7 @@ fat_read_block:
 fat_read:
 		jsr calc_blocks
 _fat_read:
-		debugcpu "fr"
+		debug "fr:"
 		jsr calc_lba_addr
 ;		debug32s "fr lba:", lba_addr
 ;		debug24s "fr bc:", blocks
@@ -158,13 +153,13 @@ fat_chdir:
 @l_err:
 		lda	#EINVAL				; TODO FIXME error code for "Not a directory"
 @l_err_exit:
-		debugA	"cd"
+		debug "cd"
 		rts
  
  
 .macro _open
 		stz	pathFragment, x	;\0 terminate the current path fragment
-		debugstr "_o", pathFragment		
+		;debugstr "_o", pathFragment		
 		jsr	_fat_open
 		;debugA "o_"
 		bne @l_exit
@@ -228,7 +223,7 @@ fat_open:
 @l_exit_noerr:
 		lda #0
 @l_exit:
-		debugA	"fe"
+		debug	"fe"
 		rts        
 @l_openfile:
 		_open				; return with x as offset to fd_area
@@ -245,7 +240,7 @@ pathFragment: .res 8+1+3+1; 12 chars + \0 for path fragment
 _fat_open:
 		phy
         
-		debugptr "p", filenameptr
+		;debugptr "p", filenameptr
 		
 		ldx #FD_INDEX_TEMP_DIR
 		jsr fat_find_first
@@ -262,7 +257,7 @@ lbl_fat_open_error:
 fat_open_found:
 		ldy #F32DirEntry::Attr
 		lda (dirptr),y
-		;debugA "d"
+		;debug "d"
 		bit #DIR_Attr_Mask_Dir 		; directory?
 		bne @l2						; go on, do not allocate fd, index (X) is already set to FD_INDEX_TEMP_DIR
 		bit #DIR_Attr_Mask_File ; Is file?
@@ -673,7 +668,6 @@ end_mount:
 		rts
 
 
-
 		;   
 		; out:
 		;   x - FD_INDEX_TEMP_DIR offset to fd area
@@ -701,7 +695,7 @@ fat_clone_fd:
 		; in:
 		;	x - offset to fd_area
 		; out: 
-		;	carry - if set, the file is not open
+		;	carry - C=0 if file is open, C=1 otherwise
 fat_isOpen:
 		lda fd_area + F32_fd::StartCluster +3, x
 		cmp #$ff	;#$ff means not open, carry is set...
@@ -786,7 +780,7 @@ fat_find_first:
 
 		SetVector sd_blktarget, read_blkptr
 		jsr calc_lba_addr
-		debug32s "lba:", lba_addr
+;		debug32s "lba:", lba_addr
 		
 ff_l3:	SetVector sd_blktarget, dirptr	
 		jsr sd_read_block

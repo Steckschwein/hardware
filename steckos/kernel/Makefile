@@ -1,7 +1,8 @@
-OBJS=fat32.o sdcard.o textui.o t99xx.lib.o rtc.o spi.o uart.o via.o out.o key.o exec.o kernel.o
+CPU=65c02
+OBJS=fat32.o sdcard.o textui.o t99xx.lib.o rtc.o spi.o uart.o via.o out.o key.o exec.o kernel.o debug.o
 ASM_INCLUDE=../asminc
 LDFLAGS=--config steckos.cfg
-#DEBUG=-DDEBUG
+DEBUG=-DDEBUG
 
 .PHONY: all clean
 all: kernel.bin loader.bin
@@ -11,7 +12,7 @@ clean:
 	rm -f *.o *.bin *.map *.txt kernel_jumptable.inc version.inc
 
 %.o: %.asm $(ASM_INCLUDE)/vdp.inc zeropage.inc fat32.inc version.inc
-	ca65 --target none $(DEBUG) --include-dir $(ASM_INCLUDE)  $<
+	ca65 --cpu $(CPU) --target none $(DEBUG) --include-dir $(ASM_INCLUDE)  $<
 
 version.inc:
 	echo -n ".byte \"r`hg log -l1 | grep changeset | cut -d ':' -f2 | tr -d ' '`\"" > version.inc

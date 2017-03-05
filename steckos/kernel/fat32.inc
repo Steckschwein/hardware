@@ -1,7 +1,7 @@
 cluster_begin_lba 		= $0303 ; begin of cluster area, 4 bytes
 fat_begin_lba			= $0307	; begin of fat area, 4 bytes
-sectors_per_cluster 		= $030b ; sectors per cluster, 1 byte
-root_dir_first_clus 		= $030c ; first cluster of root dir, 4 bytes
+sectors_per_cluster 	= $030b ; sectors per cluster, 1 byte
+root_dir_first_clus 	= $030c ; first cluster of root dir, 4 bytes
 filename_buf			= $0310 ; file name buffer, 11 bytes
 
 fd_area                         = $0320 ; File descriptor area until $0400
@@ -9,6 +9,9 @@ fd_area                         = $0320 ; File descriptor area until $0400
 sd_blktarget 			= $0400
 sd_blocksize			= $200
 
+;TODO FIXME needs clarification
+block_fat                   = $d800
+block_data                  = $da00
 
 ; TODO FIXME replace with errno.inc from cc65 api
 fat_bad_block_signature		= $01

@@ -49,26 +49,25 @@ kern_init:
 ; @loop:
 ; 	jmp @loop
 
-
 	jsr init_sdcard
-    debug8s "ini:", errno
-	lda errno
+    lda errno
+	debug "init"
 	bne do_upload
 
 	jsr fat_mount
-    debug8s "mnt:", errno
-	lda errno
+    lda errno
+	debug "mnt"	
 	bne do_upload
 	
     lda #<filename
     ldx #>filename
 	jsr fat_open
-    debugA "op2:"
+    debug "op2"
 	bne do_upload
 	
 	SetVector shell_addr, read_blkptr
     jsr fat_read
-    debugA "rd:"
+    debug "rd"
 
 	jsr fat_close
 
@@ -351,7 +350,6 @@ krn_sd_write_block:    	jmp sd_write_block
 
 .export krn_sd_read_block
 krn_sd_read_block:    	jmp sd_read_block
-
 
 .segment "VECTORS"
 ; ----------------------------------------------------------------------------------------------

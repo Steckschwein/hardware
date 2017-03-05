@@ -1,3 +1,4 @@
+CPU=65c02
 ASM_INCLUDE=../asminc
 LDFLAGS=--config ../kernel/steckos.cfg
 DEBUG=-DDEBUG
@@ -19,5 +20,5 @@ shell: shell.bin
 	../../transfer.py -s 0xe000 shell.bin
 
 %.o: %.asm 
-	ca65 --target none $(DEBUG) --include-dir $(ASM_INCLUDE)  $<
+	ca65 --cpu $(CPU) --target none $(DEBUG) --include-dir $(ASM_INCLUDE)  $<
 

@@ -9,10 +9,6 @@
         
 .export execv
 
-.ifdef DEBUG ; DEBUG
-    .import krn_hexout, krn_primm, krn_chrout, krn_strout, krn_print_crlf
-.endif
-
 ;		int execv(const char *path, char *const argv[]);
 execv:
 		jsr fat_open	        ; a/x - pointer to filename
@@ -34,5 +30,5 @@ execv:
 		;TODO FIXME check excecutable - SOS65 header ;)
 		jmp	appstart
 @l_err_exit:
-		debugA "exc:"
+		debug "exc:"
 		rts
