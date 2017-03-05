@@ -1,3 +1,4 @@
+CPU=65c02
 ASM_INCLUDE=../asminc
 LIBS=../lib/steckschwein-kernel.lib ../lib/steckschwein-gfx.lib
 
@@ -7,11 +8,11 @@ clean:
 	rm -f *.prg *.s *.o
   
 %.o: %.c
-	cc65 -I ../../cc65 -t none --cpu 65c02 -O $<
-	ca65 -I ../../cc65 --cpu 65c02 --include-dir $(ASM_INCLUDE) $(@:.o=.s)
+	cc65 -I ../../cc65 -t none --cpu $(CPU) -O $<
+	ca65 -I ../../cc65 --cpu $(CPU) --include-dir $(ASM_INCLUDE) $(@:.o=.s)
 
 %.o: %.asm
-	ca65 --include-dir $(ASM_INCLUDE) $(@:.o=.asm)
+	ca65 --cpu $(CPU) --include-dir $(ASM_INCLUDE) $(@:.o=.asm)
 
 %.prg: %.o ../lib/steckschwein-kernel.lib
 	ld65 -C ../lib/steckschwein-kernel.cfg $< $(LIBS) -o $@
