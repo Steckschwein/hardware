@@ -31,19 +31,18 @@ _debugout:
 		pla
 		sta     msgptr+1       	; Get the high part of "return" address
                                 ; (data start address)				
-@PSINB:	ldy     #1				; Note: actually we're pointing one short
-		lda     (msgptr),y      ; Get the next string character
+@PSINB:							; Note: actually we're pointing one short
 		inc     msgptr          ; update the pointer
 		bne     @PSICHO         ; if not, we're pointing to next character
 		inc     msgptr+1		; account for page crossing
-@PSICHO:ora     #0          	; Set flags according to contents of
-                               	;    Accumulator
+		
+@PSICHO:lda     (msgptr)	    ; Get the next string character
 		beq     @PSIX1          ; don't print the final NULL
 		jsr     krn_chrout		; write it out
 		bra     @PSINB          ; back around
 @PSIX1:	inc     msgptr  		;
 		bne     @PSIX2      	;
-		inc     msgptr+1         ; account for page crossing
+		inc     msgptr+1        ; account for page crossing
 @PSIX2:	lda	#$0a
 		jsr krn_chrout
 
