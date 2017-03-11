@@ -64,7 +64,7 @@ DPH		= msgptr+1
 
 primm:
 PUTSTRI: 
-		pla			; Get the low part of "return" address
+		pla						; Get the low part of "return" address
                                 ; (data start address)
 		sta     DPL
 		pla

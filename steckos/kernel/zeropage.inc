@@ -38,10 +38,7 @@ lba_addr_data	= lba_addr
 lba_addr_fat 	= $0284		; 4 bytes 
 blocks			= $0288		; 3 bytes - blocks to read, 4GB -> 4294967296 >> 9 = 8388608 ($800000) max blocks/file 
 
-dbg_acc			= $0290
-dbg_xreg		= $0291
-dbg_yreg		= $0292
-dbg_status		= $0293
+
 
 errno		= $0300
 ;TODO FIXME rename

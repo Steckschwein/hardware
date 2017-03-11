@@ -1,8 +1,7 @@
-;.ifndef __DEBUG_INC
-;.define	__DEBUG_INC ""
+.ifndef __DEBUG_INC
+.define	__DEBUG_INC "__DEBUG_INC"
 
-.import _debugout
-		
+.import _debugout, _debugout32		
 .macro debug msg
 .ifdef DEBUG
 		jsr	_debugout
@@ -10,19 +9,11 @@
 .endif
 .endmacro
 
-.macro _debugA st
+.macro debug32 msg, ptr
 .ifdef DEBUG
-	pha
-	phy
-	
-	pha
-	jsr krn_primm
-    .asciiz st, " A "
-	pla
-    jsr krn_hexout
-    debug_newline
-	ply
-	pla
+		jsr	_debugout32
+		.word ptr
+		.asciiz msg
 .endif
 .endmacro
 
@@ -117,9 +108,4 @@
 .endif
 .endmacro
 
-.macro _debug32s st, v32
-.ifdef DEBUG
 .endif
-.endmacro
-
-;.endif

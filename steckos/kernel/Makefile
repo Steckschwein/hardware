@@ -17,7 +17,7 @@ clean:
 version.inc:
 	echo -n ".byte \"r`hg log -l1 | grep changeset | cut -d ':' -f2 | tr -d ' '`\"" > version.inc
 	
-kernel.bin: version.inc $(OBJS) kernel.inc
+kernel.bin: version.inc $(OBJS) kernel.inc zeropage.inc debug.inc
 	ld65 $(LDFLAGS) $(OBJS) -m kernel.map -Ln symbols.txt -o kernel.bin 
 	grep krn symbols.txt | sed "s/al 00//" | awk -F' ' '{print $$2" = $$"$$1}'| sed -e "s/^\.//g" > kernel_jumptable.inc
 

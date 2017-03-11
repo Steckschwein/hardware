@@ -30,5 +30,5 @@ execv:
 		;TODO FIXME check excecutable - SOS65 header ;)
 		jmp	appstart
 @l_err_exit:
-		debug "exc:"
+		debug "exec"
 		rts

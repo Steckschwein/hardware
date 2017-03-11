@@ -57,7 +57,7 @@ fat_read_block:
 fat_read:
 		jsr calc_blocks
 _fat_read:
-		debug "fr:"
+		debug "fr"
 		jsr calc_lba_addr
 ;		debug32s "fr lba:", lba_addr
 ;		debug24s "fr bc:", blocks
@@ -161,7 +161,7 @@ fat_chdir:
 		stz	pathFragment, x	;\0 terminate the current path fragment
 		;debugstr "_o", pathFragment		
 		jsr	_fat_open
-		;debugA "o_"
+		debug "o_"
 		bne @l_exit
 .endmacro
 
@@ -257,7 +257,7 @@ lbl_fat_open_error:
 fat_open_found:
 		ldy #F32DirEntry::Attr
 		lda (dirptr),y
-		;debug "d"
+		debug "d"
 		bit #DIR_Attr_Mask_Dir 		; directory?
 		bne @l2						; go on, do not allocate fd, index (X) is already set to FD_INDEX_TEMP_DIR
 		bit #DIR_Attr_Mask_File ; Is file?
@@ -780,7 +780,7 @@ fat_find_first:
 
 		SetVector sd_blktarget, read_blkptr
 		jsr calc_lba_addr
-;		debug32s "lba:", lba_addr
+		debug32 "lba:", lba_addr
 		
 ff_l3:	SetVector sd_blktarget, dirptr	
 		jsr sd_read_block
