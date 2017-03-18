@@ -12,10 +12,10 @@ main:
 	jsr krn_keyin
 	cmp #$0d
 	beq out
-	jsr krn_chrout
 	sta buf,x
 	inx
 	stz buf,x
+	jsr krn_chrout
 	bra @loop
 
 	
@@ -28,28 +28,34 @@ out:
 	lda buf,x
 	beq main
 
-	ldy #51
+	ldy #$00
+	bit #$20	; capital letter? keep in mind
+	bne @l1
+	iny
+@l1:
+	
+	ora #$20	; make lowercase
+	
+	cmp #'a'-1	; lower than a or greater than z ? just output
+	bcc @output
+	cmp #'z'+1
+	bcs @output
+	
+
+;	clc ; no need to clear carry explicitly here
+	adc #13		; shift character by 13 
+	cmp #'z'+1	; wraparound?
+	bcc @l
+;	sec ; no need to set carry explicitly here
+	sbc #26		; yes, substract 26
 @l:
-	cmp table_a,y
-	beq @lookup
-	dey
-	bpl @l
 	
-	
-	bra @output
-	
-@lookup:
-	lda table_r,y
-
 @output:
-	jsr krn_chrout
+	cpy #$00	; was it uppercase?
+	beq @l2
+	and #$df	; yes, make encoded character uppercase
+@l2:
 	inx
+	jsr krn_chrout
 	bra @loop
-	
-
-table_a:
-	.byte "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
-table_r:
-	.byte "NOPQRSTUVWXYZABCDEFGHIJKLMnopqrstuvwxyzabcdefghijklm"
-	
 buf:
