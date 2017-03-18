@@ -45,10 +45,9 @@ out:
 ;	clc ; no need to clear carry explicitly here
 	adc #13		; shift character by 13 
 	cmp #'z'+1	; wraparound?
-	bcc @l
+	bcc @output
 ;	sec ; no need to set carry explicitly here
 	sbc #26		; yes, substract 26
-@l:
 	
 @output:
 	cpy #$00	; was it uppercase?
