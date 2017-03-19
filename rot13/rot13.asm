@@ -28,33 +28,33 @@ out:
 	lda buf,x
 	beq main
 
-	ldy #$00
-	bit #$20	; capital letter? keep in mind
-	bne @l1
-	iny
-@l1:
-	
-	ora #$20	; make lowercase
-	
-	cmp #'a'-1	; lower than a or greater than z ? just output
-	bcc @output
-	cmp #'z'+1
-	bcs @output
-	
 
-;	clc ; no need to clear carry explicitly here
-	adc #13		; shift character by 13 
-	cmp #'z'+1	; wraparound?
+;rot13:
+	cmp #'z'+1		; $7B
+	bcs @output
+	cmp #'A'		; $41
 	bcc @output
-;	sec ; no need to set carry explicitly here
-	sbc #26		; yes, substract 26
-	
+	cmp #'O'-1		; $4E
+	bcc @add
+	cmp #'Z'+1		; $5B
+	bcc @sub
+	cmp #'a'		; $61
+	bcc @output
+	cmp #'o'-1		; $6E
+	bcc @add
+
+
+
+
+@sub:
+	sec 
+	sbc #13
+	bra @output
+@add:
+	;clc ; carry will always be clear when we get here, so save on byte 
+	adc #13
 @output:
-	cpy #$00	; was it uppercase?
-	beq @l2
-	and #$df	; yes, make encoded character uppercase
-@l2:
-	inx
-	jsr krn_chrout
+	inx         ; Cycles: 2 
+	jsr krn_chrout ; Cycles: 6 
 	bra @loop
 buf:
