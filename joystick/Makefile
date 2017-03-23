@@ -1,9 +1,19 @@
+CPU=65c02
+OBJS=fat32.o sdcard.o textui.o t99xx.lib.o rtc.o spi.o uart.o via.o out.o key.o exec.o kernel.o debug.o
+ASM_INCLUDE=--include-dir ../steckos/kernel --include-dir ../steckos/asminc
+LDFLAGS=--config ../steckos/kernel/steckos.cfg
+
+.PHONY: all clean
+
 all: joystick.bin
 clean:
 	rm -f *.bin 
 
-joystick.bin: joystick.asm
-	cl65 --target none  --config ../steckos/kernel/steckos.cfg joystick.asm -o joystick.bin
+%.o: %.asm
+	ca65 --cpu $(CPU) --target none $(DEBUG) $(ASM_INCLUDE)  $<
 
-transfer: all
+joystick.bin: joystick.o
+	ld65 $(LDFLAGS) joystick.o -o joystick.bin
+
+joystick: all
 	../transfer.py joystick.bin
