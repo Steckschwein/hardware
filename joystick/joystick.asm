@@ -1,9 +1,9 @@
 
-.include "common.inc"
-.include "kernel.inc"
-.include "kernel_jumptable.inc"
-.include "via.inc"
-.include "joystick.inc"
+.include "../steckos/kernel/kernel.inc"
+.include "../steckos/kernel/kernel_jumptable.inc"
+.include "../steckos/kernel/via.inc"
+.include "../steckos/asminc/common.inc"
+.include "../steckos/asminc/joystick.inc"
 
 
 main:
@@ -19,10 +19,12 @@ main:
 	sta via1ddra
 
 
+loop:
+	
 	lda	#PORT_SEL_1			;port 1
 	sta	via1porta
 	
-loop:
+
 	SetVector text_j1, msgptr
 	jsr krn_strout
 	
@@ -30,15 +32,15 @@ loop:
 	and	#%00111111
 	jsr	krn_hexout
 
-;	lda	#PORT_SEL_2			;port 2
-;	sta	via1porta
+	lda	#PORT_SEL_2			;port 2
+	sta	via1porta
 	
-;	SetVector text_j2, msgptr
-;	jsr krn_strout
+	SetVector text_j2, msgptr
+	jsr krn_strout
 
-;	lda	via1porta
-;	and	#%00111111
-;	jsr	krn_hexout
+	lda	via1porta
+	and	#%00111111
+	jsr	krn_hexout
 	
 	ldx #$00
 	ldy crs_y
@@ -49,3 +51,5 @@ text_j1:
 	.asciiz "j1: "
 text_j2:
 	.asciiz " j2: "
+
+	
