@@ -16,14 +16,19 @@ exp     = $00
 base    = $02
 prod	= $04
 
+op2	= 7569
+op1	= 4
 
-	lda #65
+
+	lda #<op1
 	sta exp
-	stz exp+1
+	lda #>op1
+	sta exp+1
 
-	lda #13
+	lda #<op2
 	sta base
-	stz base+1
+	lda #>op2
+	sta base+1
 
 	stz prod
 	stz prod+1
@@ -46,7 +51,7 @@ loop:
 	lda base+1
 	adc prod+1
 	sta prod+1
-	
+
 @even:
 
 	asl16 base
