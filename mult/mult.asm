@@ -16,8 +16,8 @@ exp     = $00
 base    = $02
 prod	= $04
 
-op2	= 7569
-op1	= 4
+op1	= 7569
+op2	= 5
 
 
 	lda #<op1
@@ -36,11 +36,13 @@ op1	= 4
 loop:
 	jsr print_row
 
-	clc
-	lda exp+1
-	ror
+	;clc
+	;lda exp+1
+	;ror
 	lda exp
-	ror
+	;ror
+	lsr
+
 	bcc @even
 	; exp is odd, add base to product
 	lda base
