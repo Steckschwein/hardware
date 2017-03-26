@@ -2,16 +2,31 @@
 .include "../steckos/kernel/kernel_jumptable.inc"
 .include "../steckos/asminc/common.inc"
 
+.macro asl16 op
+	asl op
+	rol op+1
+.endmacro
+
+.macro lsr16 op
+	lsr op
+	ror op+1
+.endmacro
+
 exp     = $00
 base    = $02
 prod	= $04
 
 
-	lda #3
+	lda #65
 	sta exp
-	lda #4
+	stz exp+1
+
+	lda #13
 	sta base
+	stz base+1
+
 	stz prod
+	stz prod+1
 
 loop:
 	jsr print_row
@@ -24,10 +39,15 @@ loop:
 	clc
 	adc prod
 	sta prod
+
+	lda base+1
+	adc prod+1
+	sta prod+1
+	
 @even:
 
-	asl base
-	lsr exp
+	asl16 base
+	lsr16 exp
 
 	lda exp
 	bne loop	
@@ -35,6 +55,8 @@ loop:
 	lda #$0a
 	jsr krn_chrout
 
+	lda prod+1
+	jsr krn_hexout
 	lda prod
 	jsr krn_hexout
 
