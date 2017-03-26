@@ -5,7 +5,7 @@ TARGET=mult.prg
 	cl65 --target none  --config ../steckos/kernel/steckos.cfg -o $@ $(OBJS)
 
 %.o: %.asm
-	ca65 --cpu 65c02 -o $@ $<
+	ca65 -DOUTPUT --cpu 65c02 -o $@ $<
 
 all: $(TARGET) 
 
