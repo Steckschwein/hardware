@@ -8,8 +8,8 @@
 .endmacro
 
 .macro lsr16 op
-	lsr op
-	ror op+1
+	lsr op+1
+	ror op
 .endmacro
 
 exp     = $00
@@ -60,17 +60,26 @@ loop:
 	lda prod
 	jsr krn_hexout
 
-end:	jmp end
+end:	jmp krn_upload
+
 print_row:
 	lda #$0a
 	jsr krn_chrout
 
+	lda exp+1
+	jsr krn_hexout
 	lda exp
 	jsr krn_hexout
 
 	lda #' '
 	jsr krn_chrout
+	lda #'*'
+	jsr krn_chrout
+	lda #' '
+	jsr krn_chrout
 
+	lda base+1
+	jsr krn_hexout
 	lda base
 	jsr krn_hexout
 	
