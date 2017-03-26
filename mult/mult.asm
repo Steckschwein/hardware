@@ -31,6 +31,9 @@ prod	= $04
 loop:
 	jsr print_row
 
+	clc
+	lda exp+1
+	ror
 	lda exp
 	ror
 	bcc @even
@@ -49,6 +52,8 @@ loop:
 	asl16 base
 	lsr16 exp
 
+	lda exp+1
+	bne loop	
 	lda exp
 	bne loop	
 
