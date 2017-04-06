@@ -14,7 +14,7 @@ for n in $TOOLS ; do
 done
 
 for i in {0..9} ; do 
-	dd if=/dev/zero of=dist/FILE000$i.DAT bs=32k count=1 
+	echo foobar > dist/FILE000$i.DAT
 done
 
 cp -a dist/* $TARGET &&  umount $TARGET
