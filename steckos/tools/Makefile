@@ -2,7 +2,7 @@ CPU=65c02
 ASM_INCLUDE=../asminc
 LIBS=../lib/steckschwein-kernel.lib ../lib/steckschwein-gfx.lib
 
-all: ls.prg ll.prg rename.prg date.prg nvram.prg uname.prg hello.prg fibo.prg clear.prg setdate.prg view.prg
+all: ls.prg ll.prg rename.prg date.prg nvram.prg uname.prg hello.prg fibo.prg clear.prg setdate.prg view.prg keycode.prg
 
 clean:
 	rm -f *.prg *.s *.o
