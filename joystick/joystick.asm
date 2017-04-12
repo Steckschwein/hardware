@@ -15,13 +15,14 @@ main:
 	stz via1acr
 	lda #%11001100 			; set level
 	sta via1pcr
-	lda #%11000000 			; set PA6,7 to output (port select), PA1-6 to input (directions)
+	lda #%10000000 			; set PA6,7 to output (port select), PA1-6 to input (directions)
 	sta via1ddra
 
 
 loop:
 	
 	lda	#PORT_SEL_1			;port 1
+	;lda	#00
 	sta	via1porta
 	
 
