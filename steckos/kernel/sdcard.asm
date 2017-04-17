@@ -413,6 +413,7 @@ sd_write_block:
 	jsr spi_rw_byte
 	lda #$00
 	jsr spi_rw_byte
+	inc write_blkptr+1
 @exit:
         restore
         jmp sd_deselect_card
