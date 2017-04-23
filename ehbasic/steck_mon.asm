@@ -126,11 +126,34 @@ bload:
 		.byte "Ok", $0a, $00
 		JMP   LAB_1319		
 
+.ifdef UART
+uart_in:
+	lda #$01        ; Maske fuer DataReady Bit
+	bit uart1lsr
+	beq @l1
+	lda uart1rxtx
+
+	;jsr krn_uart_rx
+        cmp #$00 
+        beq @l1
+        sec
+        rts
+@l1:
+        clc
+        rts
+.endif
+
+
 ; vector tables
 
 LAB_vec:
+.ifdef UART
+	.word	uart_in		; byte in
+	.word	krn_uart_tx		; byte out
+.else
 	.word	krn_getkey		; byte in
 	.word	krn_chrout		; byte out
+.endif
 	.word	bload		; load vector for EhBASIC
 	.word	bsave		; save vector for EhBASIC
 
