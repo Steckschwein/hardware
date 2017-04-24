@@ -63,7 +63,7 @@ openfile:
 		lda ssptr_l
 		ldx ssptr_h
 		jsr krn_open
-		bne	io_error
+		;bne	io_error
 		rts
 io_error:
 		pha
@@ -74,6 +74,8 @@ io_error:
 
 bsave:
 		jsr openfile		
+		bne io_error
+
 		lda Smemh
 		sta write_blkptr + 1
 		lda Smeml
@@ -88,17 +90,17 @@ bsave:
 		sbc Smemh
 		sta fd_area + F32_fd::FileSize + 1,x
 
-		lda #$00
-		sta fd_area + F32_fd::FileSize + 2,x
-		sta fd_area + F32_fd::FileSize + 3,x
+		;lda #$00
+		stz fd_area + F32_fd::FileSize + 2,x
+		stz fd_area + F32_fd::FileSize + 3,x
 
 		jsr krn_write
 		bne io_error
 		jmp krn_close
-		bne io_error
 		
 bload:
 		jsr openfile
+		bne io_error
 
 		lda Smemh
 		sta read_blkptr + 1
