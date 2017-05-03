@@ -1,8 +1,11 @@
 !src <defs.h.a>
-!src <via.h.a>
 !src <t9929.h.a>
+!src "../steckos/asminc/via.inc"
+;!src "../steckos/asminc/vdp.inc"
 
-!src "../bios/vdp.a"
+;!src "../bios/vdp.a"
+!src "../bios/bios_call.inc"
+
 .init_io
     +SetVector RESET, nmivec
     +SetVector COUT1, CSWL

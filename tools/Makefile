@@ -1,16 +1,20 @@
-TARGET=appleiimonitor.prg
-
-%.prg: appleiimonitor.asm
-	cl65 --cpu 65c02 --target none  --config ../steckos/kernel/steckos.cfg -o $@  appleiimonitor.asm
-
-%.o: %.asm
-	ca65 -o $@ $<
-
-all: $(TARGET) 
+all: wozmon.bin appleiimonitor.bin
 
 clean:
-	rm -f $(TARGET) $(OBJS)
+	rm -f *.bin
+	
+%.bin: %.a steckschwein.adapter.a ${ACME}/*.a ../bios/bios_call.inc
+	acme -v -f plain -l $<.labels --cpu 65c02 -o $@ $<
 
-imfplayer: $(TARGET)
-	../transfer.py $(TARGET)    
+loader: loader.bin
 
+loader.bin: appleiimonitor.bin
+
+transfer: all
+	../transfer.py wozmon.bin 0x1000
+
+mon: appleiimonitor.bin
+	../transfer.py appleiimonitor.bin -s 0x1000
+    
+romtest: loader
+	../transfer.py loader.bin -s 0x0400

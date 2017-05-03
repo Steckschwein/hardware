@@ -1,5 +1,5 @@
 .segment "BIOS"
-.export init_vdp, vdp_chrout
+.export init_vdp, vdp_chrout, vdp_scroll_up
 .import charset_8x8
 .include "bios.inc"
 .include "vdp.inc"

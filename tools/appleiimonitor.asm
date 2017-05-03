@@ -1,8 +1,3 @@
-.include "../steckos/kernel/kernel.inc"
-.include "../steckos/kernel/kernel_jumptable.inc"
-.include "../steckos/asminc/common.inc"
-COLS=40
-
 ; Port of Apple II monitor to Apple 1
 ;
 ; Original port by Winston Gayler with additional adaptations by
@@ -16,7 +11,7 @@ COLS=40
 ; Macro to define a string in ASCII with high bit set on each character.
 ;!macro Str Arg {
 ;    .repeat .strlen(Arg), I
-;    .byte   .strat(Arg, I) | $80
+;    !byte   .strat(Arg, I) | $80
 ;    .endrep
 ;}
 ; ***********************
@@ -48,6 +43,9 @@ A4L =    $42
 A4H =    $43
 FMT =    $44
 
+.COLS=32
+
+
 IN =     $300
 ; INSDS2 = $F88E
 ; INSTDSP = $F8D0
@@ -70,7 +68,7 @@ IN =     $300
 
 ;  .org $B500
 ;  .org $F400
-; *=$f000
+ *=$f000
  ;*=$1000
   jmp RESET
   
@@ -243,16 +241,16 @@ GETNSP: LDA IN,Y
 
 ; Add filler bytes so that the Mini-Assembler starts at the documented
 ; entry point at address $F666
-.byte $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-.byte $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-.byte $FF
-.byte $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+!byte $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+!byte $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+!byte $FF
+!byte $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
 ;*=$f666
 MINIASM:  JMP   RESETZ
 ; Add filler bytes up to documented SWEET16 entry point at
 ; address $X689
-.byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-.byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+!byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+!byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 
 ; ***********************
 ; *                     *
@@ -328,38 +326,38 @@ SETZ: LDA (R15L),Y ; HIGH-ORDER BYTE OF CONSTANT
   BCC SET2
   INC R15H
 SET2: RTS
-OPTBL: .byte <SET-1 ; 1X
-BRTBL: .byte <RTN-1 ; 0
-  .byte <LD-1 ; 2X
-  .byte <BR-1 ; 1
-  .byte <ST-1 ; 3X
-  .byte <BNC-1 ; 2
-  .byte <LDAT-1 ; 4X
-  .byte <BC-1 ; 3
-  .byte <STAT-1 ; 5X
-  .byte <BP-1 ; 4
-  .byte <LDDAT-1 ; 6X
-  .byte <BM-1 ; 5
-  .byte <STDAT-1 ; 7X
-  .byte <BZ-1 ; 6
-  .byte <POP-1 ; 8X
-  .byte <BNZ-1 ; 7
-  .byte <STPAT-1 ; 9X
-  .byte <BM1-1 ; 8
-  .byte <ADD-1 ; AX
-  .byte <BNM1-1 ; 9
-  .byte <SUB-1 ; BX
-  .byte <BK-1 ; A
-  .byte <POPD-1 ; CX
-  .byte <RS-1 ; B
-  .byte <CPR-1 ; DX
-  .byte <BS-1 ; C
-  .byte <INR-1 ; EX
-  .byte <NUL-1 ; D
-  .byte <DCR-1 ; FX
-  .byte <NUL-1 ; E
-  .byte <NUL-1 ; UNUSED
-  .byte <NUL-1 ; F
+OPTBL: !byte <SET-1 ; 1X
+BRTBL: !byte <RTN-1 ; 0
+  !byte <LD-1 ; 2X
+  !byte <BR-1 ; 1
+  !byte <ST-1 ; 3X
+  !byte <BNC-1 ; 2
+  !byte <LDAT-1 ; 4X
+  !byte <BC-1 ; 3
+  !byte <STAT-1 ; 5X
+  !byte <BP-1 ; 4
+  !byte <LDDAT-1 ; 6X
+  !byte <BM-1 ; 5
+  !byte <STDAT-1 ; 7X
+  !byte <BZ-1 ; 6
+  !byte <POP-1 ; 8X
+  !byte <BNZ-1 ; 7
+  !byte <STPAT-1 ; 9X
+  !byte <BM1-1 ; 8
+  !byte <ADD-1 ; AX
+  !byte <BNM1-1 ; 9
+  !byte <SUB-1 ; BX
+  !byte <BK-1 ; A
+  !byte <POPD-1 ; CX
+  !byte <RS-1 ; B
+  !byte <CPR-1 ; DX
+  !byte <BS-1 ; C
+  !byte <INR-1 ; EX
+  !byte <NUL-1 ; D
+  !byte <DCR-1 ; FX
+  !byte <NUL-1 ; E
+  !byte <NUL-1 ; UNUSED
+  !byte <NUL-1 ; F
 SET: BPL SETZ ; ALWAYS TAKEN
 LD: LDA R0L,X
 BK = LD+1
@@ -497,7 +495,7 @@ RS: LDX #$18 ; 12*2 FOR R12 AS STACK POINTER
 RTN: JMP RTNZ
 
 ; Padding bytes to make System Monitor start at $F800
-  .byte 0,0,0
+  !byte 0,0,0
 
 ; ***************************
 ; *                         *
@@ -721,7 +719,7 @@ MNNDX2: LSR; 1) 1XXX1010->00101XXX
 MNNDX3: DEY
   BNE MNNDX1
   RTS
-  .byte $FF,$FF,$FF
+  !byte $FF,$FF,$FF
 INSTDSP: JSR INSDS1 ; GEN FMT, LEN BYTES
   PHA ; SAVE MNEMONIC TABLE INDEX
 PRNTOP: LDA (PCL),Y
@@ -802,36 +800,36 @@ RTS2: RTS
 ; IF Y=0 THEN LEFT HALF BYTE
 ; IF Y=1 THEN RIGHT HALF BYTE
 ; (X=INDEX)
-FMT1: .byte $04,$20,$54,$30,$0D
-  .byte $80,$04,$90,$03,$22
-  .byte $54,$33,$0D,$80,$04
-  .byte $90,$04,$20,$54,$33
-  .byte $0D,$80,$04,$90,$04
-  .byte $20,$54,$3B,$0D,$80
-  .byte $04,$90,$00,$22,$44
-  .byte $33,$0D,$C8,$44,$00
-  .byte $11,$22,$44,$33,$0D
-  .byte $C8,$44,$A9,$01,$22
-  .byte $44,$33,$0D,$80,$04
-  .byte $90,$01,$22,$44,$33
-  .byte $0D,$80,$04,$90
-  .byte $26,$31,$87,$9A ; $ZZXXXY01 INSTR'S
-FMT2: .byte $00 ; ERR
-  .byte $21 ; IMM
-  .byte $81 ; Z-PAGE
-  .byte $82 ; ABS
-  .byte $00 ; IMPLIED
-  .byte $00 ; ACCUMULATOR
-  .byte $59 ; (ZPAG,X)
-  .byte $4D ; (ZPAG),Y
-  .byte $91 ; ZPAG,X
-  .byte $92 ; ABS,X
-  .byte $86 ; ABS,Y
-  .byte $4A ; (ABS)
-  .byte $85 ; ZPAG,Y
-  .byte $9D ; RELATIVE
-CHAR1: .byte ",),#($"
-CHAR2: .byte $D9,$00,$D8,$A4,$A4,$00
+FMT1: !byte $04,$20,$54,$30,$0D
+  !byte $80,$04,$90,$03,$22
+  !byte $54,$33,$0D,$80,$04
+  !byte $90,$04,$20,$54,$33
+  !byte $0D,$80,$04,$90,$04
+  !byte $20,$54,$3B,$0D,$80
+  !byte $04,$90,$00,$22,$44
+  !byte $33,$0D,$C8,$44,$00
+  !byte $11,$22,$44,$33,$0D
+  !byte $C8,$44,$A9,$01,$22
+  !byte $44,$33,$0D,$80,$04
+  !byte $90,$01,$22,$44,$33
+  !byte $0D,$80,$04,$90
+  !byte $26,$31,$87,$9A ; $ZZXXXY01 INSTR'S
+FMT2: !byte $00 ; ERR
+  !byte $21 ; IMM
+  !byte $81 ; Z-PAGE
+  !byte $82 ; ABS
+  !byte $00 ; IMPLIED
+  !byte $00 ; ACCUMULATOR
+  !byte $59 ; (ZPAG,X)
+  !byte $4D ; (ZPAG),Y
+  !byte $91 ; ZPAG,X
+  !byte $92 ; ABS,X
+  !byte $86 ; ABS,Y
+  !byte $4A ; (ABS)
+  !byte $85 ; ZPAG,Y
+  !byte $9D ; RELATIVE
+CHAR1: !text ",),#($"
+CHAR2: !byte $D9,$00,$D8,$A4,$A4,$00
 ; CHAR2: "Y",0,"X$$",0
 ; MNEML IS OF FORM:
 ; (A) XXXXX000
@@ -840,35 +838,35 @@ CHAR2: .byte $D9,$00,$D8,$A4,$A4,$00
 ; (D) XXXYYY10
 ; (E) XXXYYY01
 ; (X=INDEX)
-MNEML: .byte $1C,$8A,$1C,$23,$5D,$8B
-  .byte $1B,$A1,$9D,$8A,$1D,$23
-  .byte $9D,$8B,$1D,$A1,$00,$29
-  .byte $19,$AE,$69,$A8,$19,$23
-  .byte $24,$53,$1B,$23,$24,$53
-  .byte $19,$A1 ; (A) FORMAT ABOVE
-  .byte $00,$1A,$5B,$5B,$A5,$69
-  .byte $24,$24 ; (B) FORMAT
-  .byte $AE,$AE,$A8,$AD,$29,$00
-  .byte $7C,$00 ; (C) FORMAT
-  .byte $15,$9C,$6D,$9C,$A5,$69
-  .byte $29,$53 ; (D) FORMAT
-  .byte $84,$13,$34,$11,$A5,$69
-  .byte $23,$A0 ; (E) FORMAT
-MNEMR: .byte $D8,$62,$5A,$48,$26,$62
-  .byte $94,$88,$54,$44,$C8,$54
-  .byte $68,$44,$E8,$94,$00,$B4
-  .byte $08,$84,$74,$B4,$28,$6E
-  .byte $74,$F4,$CC,$4A,$72,$F2
-  .byte $A4,$8A ; (A) FORMAT
-  .byte $00,$AA,$A2,$A2,$74,$74
-  .byte $74,$72 ; (B) FORMAT
-  .byte $44,$68,$B2,$32,$B2,$00
-  .byte $22,$00 ; (C) FORMAT
-  .byte $1A,$1A,$26,$26,$72,$72
-  .byte $88,$C8 ; (D) FORMAT
-  .byte $C4,$CA,$26,$48,$44,$44
-  .byte $A2,$C8 ; (E) FORMAT
-  .byte $FF,$FF,$FF
+MNEML: !byte $1C,$8A,$1C,$23,$5D,$8B
+  !byte $1B,$A1,$9D,$8A,$1D,$23
+  !byte $9D,$8B,$1D,$A1,$00,$29
+  !byte $19,$AE,$69,$A8,$19,$23
+  !byte $24,$53,$1B,$23,$24,$53
+  !byte $19,$A1 ; (A) FORMAT ABOVE
+  !byte $00,$1A,$5B,$5B,$A5,$69
+  !byte $24,$24 ; (B) FORMAT
+  !byte $AE,$AE,$A8,$AD,$29,$00
+  !byte $7C,$00 ; (C) FORMAT
+  !byte $15,$9C,$6D,$9C,$A5,$69
+  !byte $29,$53 ; (D) FORMAT
+  !byte $84,$13,$34,$11,$A5,$69
+  !byte $23,$A0 ; (E) FORMAT
+MNEMR: !byte $D8,$62,$5A,$48,$26,$62
+  !byte $94,$88,$54,$44,$C8,$54
+  !byte $68,$44,$E8,$94,$00,$B4
+  !byte $08,$84,$74,$B4,$28,$6E
+  !byte $74,$F4,$CC,$4A,$72,$F2
+  !byte $A4,$8A ; (A) FORMAT
+  !byte $00,$AA,$A2,$A2,$74,$74
+  !byte $74,$72 ; (B) FORMAT
+  !byte $44,$68,$B2,$32,$B2,$00
+  !byte $22,$00 ; (C) FORMAT
+  !byte $1A,$1A,$26,$26,$72,$72
+  !byte $88,$C8 ; (D) FORMAT
+  !byte $C4,$CA,$26,$48,$44,$44
+  !byte $A2,$C8 ; (E) FORMAT
+  !byte $FF,$FF,$FF
 STEP: JSR INSTDSP ; DISASSEMBLE ONE INST
   PLA ; AT (PCL,H)
   STA RTNL ; ADJUST TO USER
@@ -983,11 +981,11 @@ INITBL: NOP
   NOP ; DUMMY FILL FOR
   JMP NBRNCH ; XEQ AREA
   JMP BRANCH
-RTBL: .byte $C1
-  .byte $D8
-  .byte $D9
-  .byte $D0
-  .byte $D3
+RTBL: !byte $C1
+  !byte $D8
+  !byte $D9
+  !byte $D0
+  !byte $D3
 PREAD: LDA PTRIG ; TRIGGER PADDLES
   LDY #$00 ; INIT COUNT
   NOP ; COMPENSATE FOR 1ST COUNT
@@ -1012,7 +1010,7 @@ SETGR: LDA TXTCLR ; SET FOR GRAPHICS MODE
 SETWND: STA WNDTOP ; SET FOR 40 COL WINDOW
   LDA #$00 ; TOP IN A-REG,
   STA WNDLFT ; BTTM AT LINE 24
-  LDA #COLS    ;$28
+  LDA #.COLS    ;$28
   STA WNDWDTH
   LDA #$18
   STA WNDBTM ; VTAB TO ROW 23
@@ -1032,8 +1030,8 @@ MUL3: LDA XTNDL+2,X ; ADD MPLCND (AUX)
   INX
   BNE MUL3
 MUL4: LDX #$03
-MUL5: .byte $76
-  .byte $50
+MUL5: !byte $76
+  !byte $50
   DEX
   BPL MUL5
   DEY
@@ -1100,7 +1098,7 @@ BELL1: ;CMP #$87 ; BELL CHAR? (CNTRL-G)
 ;  DEY
 ;  BNE BELL2
 RTS2B: RTS
-STOADV: jsr krn_chrout
+STOADV: jsr .chrout2
   LDY CH ; CURSOR H INDEX TO Y-REG
   STA (BASL),Y ; STORE CHAR IN LINE
 ADVANCE: INC CH ; INCREMENT CURSOR H INDEX
@@ -1168,7 +1166,7 @@ LF: INC CV ; INCR CURSOR V(DOWN 1 LINE)
   DEC CV ; DECR CURSOR V (BACK TO BOTTOM)
 SCROLL:
   phx 
-  jsr krn_textui_scroll_up
+  jsr vdp_scroll_up
   plx
   LDA WNDTOP ; START AT TOP OF SCRL WNDW
   PHA
@@ -1270,7 +1268,7 @@ KEYIN: INC RNDL
   BNE KEYIN2 ; INCR RND NUMBER
   INC RNDH
 KEYIN2:
-  jsr krn_keyin
+  jsr .getkey
 ;  BIT KBD ; KEY DOWN?
 ;  BPL KEYIN ; LOOP
   cmp #$80
@@ -1353,10 +1351,9 @@ XAMPM: LSR; DETERMINE IF MON
   LSR; ADD, OR SUB
   LSR
   LDA A2L
-  BCC @l
+  BCC +
   EOR #$FF ; SUB: FORM 2'S COMPLEMENT
-@l: 
- ADC A1L
++ ADC A1L
   PHA
   LDA #$BD
   JSR COUT ; PRINT '=', THEN RESULT
@@ -1555,10 +1552,7 @@ SAV1: STX XREG
   RTS
 RESET:
    JSR SETNORM ; SET SCREEN MODE
-   ;SetVector RESET, nmivec
-   SetVector COUT1, CSWL
-   SetVector krn_keyin, KSWL
-
+   JSR .init_io
    JSR INIT ; AND INIT KBD/SCREEN
 ;   JSR SETVID ; AS I/O DEV'S
 ;   JSR SETKBD
@@ -1617,64 +1611,64 @@ TOSUB: LDA #GO/256 ; PUSH HIGH-ORDER
 ZMODE: LDY #$00 ; CLR MODE, OLD MODE
    STY MODE ; TO A-REG
    RTS ; GO TO SUBR VIA RTS
-CHRTBL: .byte $BC ; F("CTRL-C")
-  .byte $B2 ; F("CTRL-Y")
-  .byte $BE ; F("CTRL-E")
-  .byte $ED ; F("T")
-  .byte $EF ; F("V")
-  .byte $C4 ; F("CTRL-K")
-  .byte $EC ; F("S")
-  .byte $A9 ; F("CTRL-P")
-  .byte $BB ; F("CTRL-B")
-  .byte $A6 ; F("-")
-  .byte $A4 ; F("+")
-  .byte $06 ; F("M") (F=EX-OR $B0+$89)
-  .byte $95 ; F("<")
-  .byte $07 ; F("N")
-  .byte $02 ; F("I")
-  .byte $05 ; F("L")
-  .byte $F0 ; F("W")
-  .byte $00 ; F("G")
-  .byte $EB ; F("R")
-  .byte $93 ; F(":")
-  .byte $A7 ; F(".")
-  .byte $C6 ; F("CR")
-  .byte $99 ; F(BLANK)
+CHRTBL: !byte $BC ; F("CTRL-C")
+  !byte $B2 ; F("CTRL-Y")
+  !byte $BE ; F("CTRL-E")
+  !byte $ED ; F("T")
+  !byte $EF ; F("V")
+  !byte $C4 ; F("CTRL-K")
+  !byte $EC ; F("S")
+  !byte $A9 ; F("CTRL-P")
+  !byte $BB ; F("CTRL-B")
+  !byte $A6 ; F("-")
+  !byte $A4 ; F("+")
+  !byte $06 ; F("M") (F=EX-OR $B0+$89)
+  !byte $95 ; F("<")
+  !byte $07 ; F("N")
+  !byte $02 ; F("I")
+  !byte $05 ; F("L")
+  !byte $F0 ; F("W")
+  !byte $00 ; F("G")
+  !byte $EB ; F("R")
+  !byte $93 ; F(":")
+  !byte $A7 ; F(".")
+  !byte $C6 ; F("CR")
+  !byte $99 ; F(BLANK)
 
-SUBTBL: .byte <BASCONT-1
-  .byte <USR-1
-  .byte <REGZ-1
-  .byte <TRACE-1
-  .byte <VFY-1
-  .byte <INPRT-1
-  .byte <STEPZ-1
-  .byte <OUTPRT-1
-  .byte <XBASIC-1
-  .byte <SETMODE-1
-  .byte <SETMODE-1
-  .byte <MOVE-1
-  .byte <LT-1
-  .byte <SETNORM-1
-  .byte <SETINV-1
-  .byte <LIST-1
-  .byte <WRITE-1
-  .byte <GO-1
-  .byte <READ-1
-  .byte <SETMODE-1
-  .byte <SETMODE-1
-  .byte <CRMON-1
-  .byte <BLANK-1
-  .word NMI        ;NMI VECTOR
-  .word RESET      ;RESET VECTOR
-  .word IRQ        ;IRQ VECTOR
-.ifdef WOZMON
-  .word NMI        ;NMI VECTOR
-  .word RESET      ;RESET VECTOR
-  .word IRQ        ;IRQ VECTOR
-.endif
+SUBTBL: !byte <BASCONT-1
+  !byte <USR-1
+  !byte <REGZ-1
+  !byte <TRACE-1
+  !byte <VFY-1
+  !byte <INPRT-1
+  !byte <STEPZ-1
+  !byte <OUTPRT-1
+  !byte <XBASIC-1
+  !byte <SETMODE-1
+  !byte <SETMODE-1
+  !byte <MOVE-1
+  !byte <LT-1
+  !byte <SETNORM-1
+  !byte <SETINV-1
+  !byte <LIST-1
+  !byte <WRITE-1
+  !byte <GO-1
+  !byte <READ-1
+  !byte <SETMODE-1
+  !byte <SETMODE-1
+  !byte <CRMON-1
+  !byte <BLANK-1
+  !word NMI        ;NMI VECTOR
+  !word RESET      ;RESET VECTOR
+  !word IRQ        ;IRQ VECTOR
+!ifdef WOZMON{
+  !word NMI        ;NMI VECTOR
+  !word RESET      ;RESET VECTOR
+  !word IRQ        ;IRQ VECTOR
+}
 XQTNZ = $3C
 
-.ifdef WOZMON
+!ifdef WOZMON{
 .proc WozMon
 
 ;  The WOZ Monitor for the Apple 1
@@ -1833,23 +1827,23 @@ ECHO:           BIT DSP         ; bit (B7) cleared yet?
 
 ; Interrupt Vectors
 
-                .word $0F00     ; NMI
-                .word RESET     ; RESET
-                .word $0000     ; BRK/IRQ
+                !word $0F00     ; NMI
+                !word RESET     ; RESET
+                !word $0000     ; BRK/IRQ
 .endproc
-.endif
+}
 
-;!src "steckschwein.adapter.a"
+!src "steckschwein.adapter.a"
 
 ;----------------------------------------------------------------------------------------------
 ; Interrupt vectors
 ;----------------------------------------------------------------------------------------------
 ; $FFFA/$FFFB NMI Vector
-;*= $fffa
-;.word RESET
+*= $fffa
+!word RESET
 ; $FFFC/$FFFD reset vector
 ;*= $fffc
-;.word RESET
+!word RESET
 ; $FFFE/$FFFF IRQ vector
 ;*= $fffe
-;.word RESET
+!word RESET
