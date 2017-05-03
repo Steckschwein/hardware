@@ -3,7 +3,7 @@ all: wozmon.bin appleiimonitor.bin
 clean:
 	rm -f *.bin
 	
-%.bin: %.a steckschwein.adapter.a ${ACME}/*.a ../bios/vdp.a
+%.bin: %.a steckschwein.adapter.a ${ACME}/*.a ../bios/bios_call.inc
 	acme -v -f plain -l $<.labels --cpu 65c02 -o $@ $<
 
 loader: loader.bin
@@ -14,7 +14,7 @@ transfer: all
 	../transfer.py wozmon.bin 0x1000
 
 mon: appleiimonitor.bin
-	../transfer.py appleiimonitor.bin 0x1000
+	../transfer.py appleiimonitor.bin -s 0x1000
     
 romtest: loader
-	../transfer.py loader.bin 0x0400
+	../transfer.py loader.bin -s 0x0400

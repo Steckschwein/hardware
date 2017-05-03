@@ -43,6 +43,9 @@ A4L =    $42
 A4H =    $43
 FMT =    $44
 
+.COLS=32
+
+
 IN =     $300
 ; INSDS2 = $F88E
 ; INSTDSP = $F8D0
@@ -1163,7 +1166,7 @@ LF: INC CV ; INCR CURSOR V(DOWN 1 LINE)
   DEC CV ; DECR CURSOR V (BACK TO BOTTOM)
 SCROLL:
   phx 
-  jsr .vdp_scroll_up
+  jsr vdp_scroll_up
   plx
   LDA WNDTOP ; START AT TOP OF SCRL WNDW
   PHA
