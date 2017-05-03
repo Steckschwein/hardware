@@ -1,4 +1,4 @@
-all: wozmon.bin appleiimonitor.bin
+all: appleiimonitor.bin
 
 clean:
 	rm -f *.bin
