@@ -2,7 +2,7 @@ CPU=65c02
 OBJ=ehbasic.prg
 LDFLAGS=--config ../steckos/kernel/steckos.cfg
 # uncomment for a serial line version
-#DEFINES=-DUART
+DEFINES=-DUART
 
 all: $(OBJ) 
 clean:

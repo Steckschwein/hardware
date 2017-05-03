@@ -15,7 +15,7 @@ text_color_ix !byte 0
 seconds !byte 0
 
 .line1:
-!text	"       -+-  VCFe 17.0 -+-       ",1
+!text	"       -+-  VCFe 18.0 -+-       ",1
 !text	"      -+- Steckschwein -+-      ",1
 !text	" -+- 8bit Homebrew Computer -+- ",1
 !text	"    -+- CPU 65c02 / 8 MHz -+-   ",1

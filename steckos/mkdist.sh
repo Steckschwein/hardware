@@ -14,7 +14,7 @@ for n in $TOOLS ; do
 done
 
 for i in {0..9} ; do 
-	echo foobar > dist/FILE000$i.DAT
+	echo foobar > dist/FILE$i.DAT
 done
 
 cp -a dist/* $TARGET &&  umount $TARGET

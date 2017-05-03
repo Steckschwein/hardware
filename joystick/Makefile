@@ -5,15 +5,15 @@ LDFLAGS=--config ../steckos/kernel/steckos.cfg
 
 .PHONY: all clean
 
-all: joystick.bin
+all: joystick.prg
 clean:
-	rm -f *.bin 
+	rm -f *.prg 
 
 %.o: %.asm
 	ca65 --cpu $(CPU) --target none $(DEBUG) $(ASM_INCLUDE)  $<
 
-joystick.bin: joystick.o
-	ld65 $(LDFLAGS) joystick.o -o joystick.bin
+joystick.prg: joystick.o
+	ld65 $(LDFLAGS) joystick.o -o joystick.prg
 
 joystick: all
-	../transfer.py joystick.bin
+	../transfer.py joystick.prg

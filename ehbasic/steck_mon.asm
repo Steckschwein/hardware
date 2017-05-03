@@ -25,9 +25,9 @@ NMI_vec	= IRQ_vec+$0A	; NMI code vector
 ; reset vector points here
 
 RES_vec:
-		CLD			; clear decimal mode
-		LDX	#$FF		; empty stack
-		TXS			; set the stack
+;		CLD			; clear decimal mode
+;		LDX	#$FF		; empty stack
+;		TXS			; set the stack
 
 ; set up vectors and interrupt code, copy them to page 2
 

@@ -27,7 +27,7 @@ saved_char			=   screen_status + 3
 
 .segment "KERNEL"
 .export textui_init0, textui_update_screen, textui_chrout, textui_put
-.export textui_enable, textui_disable, textui_blank, textui_update_crs_ptr, textui_crsxy
+.export textui_enable, textui_disable, textui_blank, textui_update_crs_ptr, textui_crsxy, textui_scroll_up
 .import vdp_bgcolor, vdp_memcpy, vdp_mode_text, vdp_display_off
 
 .macro _screen_dirty

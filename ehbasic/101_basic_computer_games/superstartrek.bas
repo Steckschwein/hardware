@@ -21,21 +21,21 @@
 205 REM *** SOME LINES ARE LONGER THAN 72 CHARACTERS; THIS WAS DONE
 210 REM *** BY USING "?" INSTEAD OF "PRINT" WHEN ENTERING LINES
 215 REM ***
-220 PRINT:PRINT:PRINT:PRINT:PRINT:PRINT:PRINT:PRINT:PRINT:PRINT:PRINT
-221 PRINT"                                    ,------*------,"
-222 PRINT"                    ,-------------   '---  ------'"
-223 PRINT"                     '-------- --'      / /"
-224 PRINT"                         ,---' '-------/ /--,"
-225 PRINT"                          '----------------'":PRINT
-226 PRINT"                    THE USS ENTERPRISE --- NCC-1701"
-227 PRINT:PRINT:PRINT:PRINT:PRINT
+220 PRINT:PRINT:PRINT:PRINT:PRINT
+221 PRINT"           ,------*------,"
+222 PRINT"---------   '---  ------'"
+223 PRINT"----- --'      / /"
+224 PRINT",---' '-------/ /--,"
+225 PRINT" '----------------'":PRINT
+226 PRINT" THE USS ENTERPRISE --- NCC-1701"
+227 PRINT
 260 REM CLEAR 600
 270 Z$="                         "
 330 DIM G(8,8),C(9,2),K(3,3),N(3),Z(8,8),D(8)
-370 T=INT(RND(0)*20+20)*100:T0=T:T9=25+INT(RND(1)*10):D0=0:E=3000:E0=E
+370 T=INT(RND(0)*20+20)*100:T0=T:T9=25+INT(RND(0)*10):D0=0:E=3000:E0=E
 440 P=10:P0=P:S9=200:S=0:B9=2:K9=0:X$="":X0$=" IS "
 470 DEF FND(D)=SQR((K(I,1)-S1)^2+(K(I,2)-S2)^2)
-475 DEF FNR(R)=INT(RND(R)*7.98+1.01)
+475 DEF FNR(R)=INT(RND(0)*7.98+1.01)
 480 REM INITIALIZE ENTERPRIZE'S POSITION
 490 Q1=FNR(1):Q2=FNR(1):S1=FNR(1):S2=FNR(1)
 530 FORI=1TO9:C(I,1)=0:C(I,2)=0:NEXTI

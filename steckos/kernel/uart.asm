@@ -12,6 +12,8 @@ init_uart:
 			
 		; 115200 baud
 		lda #$01
+		; 19200 baud
+;		lda #$06
 		sta uart1dll	
 		stz uart1dlh
 
