@@ -1,3 +1,4 @@
+.setcpu "65c02"
 .include    "zeropage.inc"
 .include    "debug.inc"
 
