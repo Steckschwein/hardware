@@ -118,6 +118,18 @@ user_isr_default:
 ;----------------------------------------------------------------------------------------------
 do_nmi:
 			; rti
+			pha
+			phx
+			plx
+			ldx #$00
+@copy:
+			lda trampolin,x
+			sta $1000,x
+			inx
+			cpx #(trampolin_end - trampolin)
+			bne @copy
+
+			jmp $1000
 			
 
 do_reset:
@@ -235,6 +247,17 @@ upload_ok:
 	rts
 
 filename:	.asciiz "shell.bin"
+
+; trampolin code to enter ML monitor on NMI
+; this code gets copied to $1000 and executed there
+trampolin:
+	sei
+	; switch to ROM bank 1
+	lda #$02
+	sta $0230
+	; go!
+	jmp $e000
+trampolin_end:
 
 .segment "JUMPTABLE"
 ; "kernel" jumptable
