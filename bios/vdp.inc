@@ -49,7 +49,12 @@ ADDRESS_GFX1_SPRITE		=ADDRESS_GFX_SPRITE
 ADDRESS_GFX1_SPRITE_PATTERN=$1000
 
 ROWS=23
+.ifdef CHAR6x8
+COLS=40
+.endif
+.ifndef CHAR6x8
 COLS=32
+.endif
 
 ; Cursor Position and buffer
 crs_x	= $e6

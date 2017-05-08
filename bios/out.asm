@@ -62,7 +62,7 @@ print_crlf:
 		pha
 		lda #$0a
 		jsr vdp_chrout
-		lda #$0d
-		jsr vdp_chrout
+;		lda #$0d
+;		jsr vdp_chrout
 		pla
 		rts

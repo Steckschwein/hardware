@@ -1,30 +1,25 @@
 .segment "BIOS"
 .export init_vdp, vdp_chrout, vdp_scroll_up
+
+.ifdef CHAR6x8
+.import charset_6x8
+.endif
+.ifndef CHAR6x8
 .import charset_8x8
+.endif
+
 .include "bios.inc"
 .include "vdp.inc"
 .macro	vnops
 			jsr vnopslide
-			; nop
-			; nop
-			; nop
-			; nop
-			; nop
-			; nop
-			; nop
-			; nop
-			; nop
-			; nop
-			; nop
-			; nop
 .endmacro
 
-; .macro	SyncBlank
-;     		lda a_vreg
-; @lada:	
-; 			bit	a_vreg
-; 			bpl @lada	   ; wait until blank - irq flag set?
-; .endmacro
+.macro	SyncBlank
+     		lda a_vreg
+@lada:	
+ 			bit	a_vreg
+ 			bpl @lada	   ; wait until blank - irq flag set?
+.endmacro
 
 .macro vdp_sreg 
 			sta	a_vreg
@@ -35,12 +30,11 @@
 ;----------------------------------------------------------------------------------------------
 ; init tms9929 into gfx1 mode
 ;----------------------------------------------------------------------------------------------
-init_vdp:
-			;display off
+init_vdp:			
+			SyncBlank			;wait blank, display off
 			lda		#v_reg1_16k	;enable 16K ram, disable screen
 			ldy	  	#v_reg1
-			vdp_sreg
-			; SyncBlank
+			vdp_sreg			
 
 			lda	#<ADDRESS_GFX_SPRITE
 			ldy	#(WRITE_ADDRESS + >ADDRESS_GFX_SPRITE)
@@ -54,7 +48,7 @@ init_vdp:
 			ldy	#(WRITE_ADDRESS + >ADDRESS_GFX1_SCREEN)
 			vdp_sreg
 			ldy #$00      ;2
-			ldx	#$03                    ;3 pages - 3x256 byte
+			ldx	#$04                    ;4 pages - 4x256 byte, sufficient for 32*24 and 40*24 mode
 			lda	#' '					;fill vram screen with blank
 @l1: 
 			vnops          ;8
@@ -71,8 +65,13 @@ init_vdp:
 			ldy #(WRITE_ADDRESS + >ADDRESS_GFX1_PATTERN)
 			vdp_sreg
 			ldx #$08                    ;load charset
-			ldy   #$00     ;2
+			ldy   #$00
+			.ifdef CHAR6x8
+			SetVector    charset_6x8, addr
+			.endif
+			.ifndef CHAR6x8		; 8x8 and 32 cols, also setup colors in color ram
 			SetVector    charset_8x8, addr
+			.endif
 @l2:
 			lda   (addr),y ;5
 			iny            ;2
@@ -83,31 +82,31 @@ init_vdp:
 			dex
 			bne   @l2
 
+			; in 8x8 and 32 cols we must setup colors in color vram
 			lda	#<ADDRESS_GFX1_COLOR
-			ldy	#WRITE_ADDRESS + >ADDRESS_GFX1_COLOR	;color vram
+			ldy	#WRITE_ADDRESS + >ADDRESS_GFX1_COLOR
 			vdp_sreg
-			lda #Gray<<4|Black          ;enable gfx 1 with cyan on black background
+			lda #Gray<<4|Black          ;enable gfx 1 with gray on black background
 			ldx	#$20
-@l3:
-			vnops      ;8
-			; nop
-			; nop
-			dex         ;2
-			sta a_vram  ;
-			bne @l3       ;3
+@l3:		vnops
+			dex         
+			sta a_vram  
+			bne @l3			
 
-			ldx	#$00
+			ldx	#$00					;init vdp regs
 			ldy	#v_reg0
-@l4:
+@l4:		.ifdef CHAR6x8
+			lda vdp_init_bytes_text,x
+			.endif
+			.ifndef CHAR6x8
 			lda vdp_init_bytes_gfx1,x
+			.endif			
 			vdp_sreg
 			iny
 			inx
 			cpx	#$08
 			bne @l4
 			rts
-
-
 
 vdp_scroll_up:
 			SetVector	(ADDRESS_GFX1_SCREEN+COLS), ptr1		        	; +COLS - offset second row
@@ -229,6 +228,7 @@ vdp_set_addr:			; set the vdp vram adress to write one byte afterwards
 		sta a_vreg
 		rts
 
+.ifndef CHAR6x8
 vdp_init_bytes_gfx1:
 		.byte 	0
 		.byte	v_reg1_16k|v_reg1_display_on|v_reg1_spr_size
@@ -238,7 +238,22 @@ vdp_init_bytes_gfx1:
 		.byte	(ADDRESS_GFX1_SPRITE / $80)	; sprite attribute table - value * $80 		--> offset in VRAM
 		.byte 	(ADDRESS_GFX1_SPRITE_PATTERN / $800)  ; sprite pattern table - value * $800  		--> offset in VRAM
 		.byte	Black
+.endif
+
+.ifdef CHAR6x8
+vdp_init_bytes_text:
+	.byte 0
+	.byte   v_reg1_16k|v_reg1_display_on|v_reg1_int|v_reg1_m1
+	.byte 	(ADDRESS_GFX1_SCREEN / $400)	; name table - value * $400					--> characters 
+	.byte 	0	; not used
+	.byte 	(ADDRESS_GFX1_PATTERN / $800) ; pattern table (charset) - value * $800  	--> offset in VRAM 
+	.byte	0	; not used
+	.byte 	0	; not used
+	.byte	Gray<<4|Black
+.endif
+		
 vnopslide:
+		nop
 		nop
 		nop
 		rts
