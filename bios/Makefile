@@ -1,6 +1,6 @@
 OBJS=bios.o charset_8x8.o charset_6x8.o uart.o via.o spi.o out.o vdp.o sdcard.o fat32.o nvram.o
 LDFLAGS=--config bios.cfg -m map.txt
-#DEFINES=-DCHAR6x8
+DEFINES=-DCHAR6x8
 
 .PHONY: all clean
 all: version.inc bios.bin 

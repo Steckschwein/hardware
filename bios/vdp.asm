@@ -40,7 +40,6 @@ init_vdp:
 			ldy	#(WRITE_ADDRESS + >ADDRESS_GFX_SPRITE)
 			vdp_sreg
 			lda	#$d0					;sprites off, at least y=$d0 will disable the sprite subsystem
-			; vnops
 			vnops
 			sta a_vram
 
@@ -109,12 +108,12 @@ init_vdp:
 			rts
 
 vdp_scroll_up:
-			SetVector	(ADDRESS_GFX1_SCREEN+COLS), ptr1		        	; +COLS - offset second row
+			SetVector	(ADDRESS_GFX1_SCREEN+COLS), ptr1		        ; +COLS - offset second row
 			SetVector	(ADDRESS_GFX1_SCREEN+(WRITE_ADDRESS<<8)), ptr2	; offset first row as "write adress"
 
 			lda	a_vreg  ; clear v-blank bit, we dont know where we are...			
 @l1:
-			bit	a_vreg  ; sync with next v-blank, so that we have the full 4,3µs
+			bit	a_vreg  ; sync with next v-blank, so that we have the full 4300µs to copy the vram
 			bpl	@l1
 @l2:
 			lda	ptr1l	; 3cl
@@ -137,7 +136,7 @@ vdp_scroll_up:
 			bne	@l3		; 3cl
 			inc	ptr1h
 			lda	ptr1h
-			cmp	#>(ADDRESS_GFX1_SCREEN+(COLS * 24))	;screen ram $1800 - $1b00
+			cmp	#>(ADDRESS_GFX1_SCREEN+(COLS * 24 + (COLS * 24 .MOD 256)))	;screen ram $1800 - $1b00
 			beq	@l4
 @l3:
 			inc	ptr2l  ; 5cl
@@ -209,8 +208,8 @@ vdp_putchar:
 		sta a_vram
 		rts
 
-
-vdp_set_addr:			; set the vdp vram adress to write one byte afterwards
+.ifndef CHAR6x8
+vdp_set_addr:				; set the vdp vram adress, write A to vram
 		lda	crs_y   		; * 32
 		asl
 		asl
@@ -228,7 +227,6 @@ vdp_set_addr:			; set the vdp vram adress to write one byte afterwards
 		sta a_vreg
 		rts
 
-.ifndef CHAR6x8
 vdp_init_bytes_gfx1:
 		.byte 	0
 		.byte	v_reg1_16k|v_reg1_display_on|v_reg1_spr_size
@@ -241,6 +239,28 @@ vdp_init_bytes_gfx1:
 .endif
 
 .ifdef CHAR6x8
+vdp_set_addr:				; set the vdp vram adress, write A to vram
+		stz	tmp1
+		lda crs_y
+		asl
+		asl
+		asl
+		sta tmp0			; save crs_y * 8
+		asl		   			; crs_y*16
+		rol tmp1		   	; save carry if overflow
+		asl					; crs_y*32
+		rol tmp1			; again, save carry
+		adc tmp0		   	; crs_y*32 + crs_y*8 (crs_ptr) => y*40
+		bcc @l1
+		inc	tmp1			; overflow inc page count
+		clc					; 
+@l1:	adc crs_x			; add x to address
+		sta a_vreg
+		lda #(WRITE_ADDRESS + >ADDRESS_GFX1_SCREEN)
+		adc	tmp1			; add carry and page to address high byte
+		sta	a_vreg
+		rts
+
 vdp_init_bytes_text:
 	.byte 0
 	.byte   v_reg1_16k|v_reg1_display_on|v_reg1_int|v_reg1_m1
@@ -253,6 +273,7 @@ vdp_init_bytes_text:
 .endif
 		
 vnopslide:
+		nop
 		nop
 		nop
 		nop

@@ -156,11 +156,13 @@ foo:		jsr upload
 			jmp startup
 
 boot_from_card:
+			jsr print_crlf
 			printstring "Boot from SD card.. "
 			jsr fat_mount
 
 			lda errno
 			beq @findfile
+			jsr print_crlf
 			printstring "FAT32 mount error: "
 			jsr hexout
 
