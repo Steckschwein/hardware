@@ -43,10 +43,9 @@ A4L =    $42
 A4H =    $43
 FMT =    $44
 
-.COLS=32
+.COLS=40
 
-
-IN =     $300
+IN =    	$300
 ; INSDS2 = $F88E
 ; INSTDSP = $F8D0
 ; PRBL2 =  $F94A
@@ -68,8 +67,8 @@ IN =     $300
 
 ;  .org $B500
 ;  .org $F400
- *=$f000
- ;*=$1000
+*=$f000
+; *=$1000
   jmp RESET
   
   ;.export MON
@@ -1098,7 +1097,7 @@ BELL1: ;CMP #$87 ; BELL CHAR? (CNTRL-G)
 ;  DEY
 ;  BNE BELL2
 RTS2B: RTS
-STOADV: jsr .chrout2
+STOADV: jsr .chrout
   LDY CH ; CURSOR H INDEX TO Y-REG
   STA (BASL),Y ; STORE CHAR IN LINE
 ADVANCE: INC CH ; INCREMENT CURSOR H INDEX
@@ -1165,8 +1164,8 @@ LF: INC CV ; INCR CURSOR V(DOWN 1 LINE)
   BCC VTABZ ; NO, SET BASE ADDR
   DEC CV ; DECR CURSOR V (BACK TO BOTTOM)
 SCROLL:
-  phx 
-  jsr vdp_scroll_up
+  phx
+  jsr .scroll
   plx
   LDA WNDTOP ; START AT TOP OF SCRL WNDW
   PHA
@@ -1839,7 +1838,7 @@ ECHO:           BIT DSP         ; bit (B7) cleared yet?
 ; Interrupt vectors
 ;----------------------------------------------------------------------------------------------
 ; $FFFA/$FFFB NMI Vector
-*= $fffa
+;*= $fffa
 !word RESET
 ; $FFFC/$FFFD reset vector
 ;*= $fffc

@@ -29,6 +29,7 @@
 ;
 .chrout2
     pha
+	pha
                     ; set the vdp vram adress to write one byte afterwards
 	lda	CV   		; * 32
 	asl
@@ -47,9 +48,9 @@
 	sta a_vreg
     
     pla
-    and #$7f    
+    and #$7f
     sta a_vram
-    
+    pla
     rts
     
 ;----------------------------------------------------------------------------------------------

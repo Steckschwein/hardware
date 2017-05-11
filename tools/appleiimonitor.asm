@@ -45,8 +45,7 @@ FMT =    $44
 
 .COLS=32
 
-
-IN =     $300
+IN =    	$300
 ; INSDS2 = $F88E
 ; INSTDSP = $F8D0
 ; PRBL2 =  $F94A
@@ -68,7 +67,7 @@ IN =     $300
 
 ;  .org $B500
 ;  .org $F400
- *=$f000
+*=$f000
  ;*=$1000
   jmp RESET
   

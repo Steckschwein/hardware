@@ -1,16 +1,14 @@
 !src <defs.h.a>
-!src <t9929.h.a>
 !src "../steckos/asminc/via.inc"
-;!src "../steckos/asminc/vdp.inc"
-
-;!src "../bios/vdp.a"
+!src <t9929.h.a>
 !src "../bios/bios_call.inc"
 
 .init_io
     +SetVector RESET, nmivec
     +SetVector COUT1, CSWL
     +SetVector .getkey, KSWL
-    jmp init_vdp
+    rts
+	;jmp init_vdp
     
 .getkey
 	phx
@@ -24,33 +22,116 @@
 	plx
     ora #$80; apple 2 monitor specific
     rts 
-    
+	
+vdp_nopslide:
+		nop
+		nop
+		nop
+		nop
+		rts
+		
+.scroll
+		pha
+		phx
+
+		+SetVector	(ADDRESS_GFX1_SCREEN+.COLS), ptr1		        ; +COLS - offset second row
+		+SetVector	(ADDRESS_GFX1_SCREEN+(.WRITE_ADDRESS<<8)), ptr2	; offset first row as "write adress"
+
+		lda	a_vreg  ; clear v-blank bit, we dont know where we are...			
+-
+		bit	a_vreg  ; sync with next v-blank, so that we have the full 4300µs to copy the vram
+		bpl	-
+--
+		lda	ptr1l	; 3cl
+		sta	a_vreg
+		nop
+		lda	ptr1h	; 3cl
+		sta	a_vreg
+		+vnops		; wait 2µs, 8Mhz = 16cl => 8 nop
+		ldx	a_vram	;
+		+vnops
+		
+		lda	ptr2l	; 3cl
+		sta	a_vreg
+		nop
+		lda	ptr2h	; 3cl
+		sta a_vreg
+		+vnops
+		stx	a_vram
+		inc	ptr1l	; 5cl
+		bne	+		; 3cl
+		inc	ptr1h
+		lda	ptr1h
+		cmp	#>(ADDRESS_GFX1_SCREEN+(.COLS * 24 + ((.COLS * 24) % 256)))	;screen ram $1800 - $1b00
+		beq	++
++
+		inc	ptr2l  ; 5cl
+		bne	--		; 3cl
+		inc	ptr2h
+		bra	-			
+++
+		ldx	#.COLS	; write address is already setup from loop
+		lda	#' '
+-
+		sta	a_vram
+		+vnops
+		dex
+		bne	-
+
+		plx
+		pla 
+		rts
+		
 ; output char upon CH/CV cursor pointer
 ;
-.chrout2
-    pha
-                    ; set the vdp vram adress to write one byte afterwards
-	lda	CV   		; * 32
-	asl
-	asl
-	asl
-	asl
-	asl
-	ora	CH
-	sta	a_vreg
-    
-	lda CV   		; * 32
-	lsr					; div 8 -> page offset 0-2
-	lsr
-	lsr
-	ora	#.WRITE_ADDRESS + >ADDRESS_GFX1_SCREEN
-	sta a_vreg
-    
-    pla
-    and #$7f    
-    sta a_vram
-    
-    rts
+.chrout						; set the vdp vram adress and write one byte afterwards
+		pha
+		pha
+		
+!ifndef CHAR6x8{
+		lda	CV   		; * 32
+		asl
+		asl
+		asl
+		asl
+		asl
+		ora	CH
+		sta	a_vreg
+		
+		lda CV   		; * 32
+		lsr					; div 8 -> page offset 0-2
+		lsr
+		lsr
+		ora	#.WRITE_ADDRESS + >ADDRESS_GFX1_SCREEN
+		sta a_vreg
+}
+
+!ifdef CHAR6x8{
+		stz	tmp1
+		lda CV
+		asl
+		asl
+		asl
+		sta tmp0			; save crs_y * 8
+		asl		   			; crs_y*16
+		rol tmp1		   	; save carry if overflow
+		asl					; crs_y*32
+		rol tmp1			; again, save carry
+		adc tmp0		   	; crs_y*32 + crs_y*8 (crs_ptr) => y*40
+		bcc +
+		inc	tmp1			; overflow inc page count
+		clc					; 
++		adc CH				; add x to address
+		sta a_vreg
+		lda #(.WRITE_ADDRESS + >ADDRESS_GFX1_SCREEN)
+		adc	tmp1			; add carry and page to address high byte
+		sta	a_vreg
+}
+		pla
+		and #$7f
+		sta a_vram
+		pla
+		rts
     
 ;----------------------------------------------------------------------------------------------
 ; Receive byte VIA SPI
