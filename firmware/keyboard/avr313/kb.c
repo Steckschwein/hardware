@@ -151,6 +151,9 @@ void decode(uint8_t sc)
 		{
 			alt=1;
 		}
+		else if (sc == 0xAA)     // Selftest ok
+		{
+		}
 
 /*
 		else if(sc == 0x05)					  // F1
