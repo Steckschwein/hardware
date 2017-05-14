@@ -56,7 +56,42 @@ int __attribute__((OS_main noreturn)) main(void)
 {
 	uint8_t tmp;
     
-    cli();
+    	cli();
+
+	// Clock line low
+	//DDRD |= (uint8_t)(1 << PD2) ;
+	//PORTD &= (uint8_t)~(1<< PD2);
+
+	// wait at least 100us
+	//_delay_us(101);
+
+	// data line low
+
+	// Set PD0 to output
+	//DDRD |= (uint8_t)(1 << PD0);
+	// Clear bit
+	//PORTD &= (uint8_t)~(1<< PD0);
+
+	// clock line back high
+	//PORTD = (uint8_t)(1<< PD2);
+	//DDRD &= (uint8_t)~(1 << PD2) ;
+
+
+	// wait for clock to become low
+	//while (PIND & (uint8_t)(1<<PD2)) {};
+
+	// set data line
+	//PORTD |= (uint8_t)(1 << PD0);
+
+	// Set PD0 to input
+	//DDRD &= (uint8_t)~(1 << PD0);
+
+	// wait for clock to become low
+	//while (PIND & (uint8_t)(1<<PD0)) {};
+
+	// wait for clock to become low
+	//while (PIND & (uint8_t)(1<<PD2)) {};
+
 	init_kb();
 	spiInitSlave();
 	sei();
@@ -67,6 +102,8 @@ int __attribute__((OS_main noreturn)) main(void)
 		tmp = get_scanchar();
 		if (tmp != 0)
 		{
+		//	put_kbbuff(tmp);
+
 			decode(tmp);
 		}
 		
