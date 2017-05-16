@@ -1,14 +1,34 @@
-!src <defs.h.a>
 !src "../steckos/asminc/via.inc"
+;!src "../steckos/asminc/vdp.inc"
 !src <t9929.h.a>
-!src "../bios/bios_call.inc"
+
+!macro SetVector .word, .addr {
+        lda #<.word
+        sta .addr
+        lda #>.word
+        sta .addr+1
+} 
+
+; general purpose pointer
+addr 		= $e0
+adrl     	= addr
+adrh     	= addr+1
+ptr1		= $e2
+ptr1l		= ptr1
+ptr1h		= ptr1+1
+ptr2		= $e4
+ptr2l		= ptr2
+ptr2h		= ptr2+1 
+; general purpose temp variables
+tmp0		= $ea
+tmp1		= $eb 
 
 .init_io
-    +SetVector RESET, nmivec
+    ;+SetVector RESET, nmivec direct loaded into ROM
     +SetVector COUT1, CSWL
     +SetVector .getkey, KSWL
     rts
-	;jmp init_vdp
+	;jmp init_vdp done by bios already
     
 .getkey
 	phx
@@ -21,19 +41,27 @@
     beq -
 	plx
     ora #$80; apple 2 monitor specific
-    rts 
+    rts
 	
 vdp_nopslide:
-		nop
-		nop
-		nop
-		nop
-		rts
+;		nop	;2
+;		nop	;2
+		rts	;6 + 6 = 
 		
+.scroll2
+
+vdp_bgcolor:
+		sta   a_vreg
+		lda   #v_reg7
+		+vnops
+		nop
+		sta   a_vreg
+		rts
+
 .scroll
 		pha
 		phx
-
+		
 		+SetVector	(ADDRESS_GFX1_SCREEN+.COLS), ptr1		        ; +COLS - offset second row
 		+SetVector	(ADDRESS_GFX1_SCREEN+(.WRITE_ADDRESS<<8)), ptr2	; offset first row as "write adress"
 
@@ -41,10 +69,12 @@ vdp_nopslide:
 -
 		bit	a_vreg  ; sync with next v-blank, so that we have the full 4300µs to copy the vram
 		bpl	-
+		lda	#Gray<<4|Dark_Yellow
+		jsr vdp_bgcolor
 --
 		lda	ptr1l	; 3cl
 		sta	a_vreg
-		nop
+		+vnops
 		lda	ptr1h	; 3cl
 		sta	a_vreg
 		+vnops		; wait 2µs, 8Mhz = 16cl => 8 nop
@@ -53,7 +83,7 @@ vdp_nopslide:
 		
 		lda	ptr2l	; 3cl
 		sta	a_vreg
-		nop
+		+vnops
 		lda	ptr2h	; 3cl
 		sta a_vreg
 		+vnops
@@ -68,18 +98,24 @@ vdp_nopslide:
 		inc	ptr2l  ; 5cl
 		bne	--		; 3cl
 		inc	ptr2h
+		lda	#Gray<<4|Black
+		jsr vdp_bgcolor
 		bra	-			
 ++
 		ldx	#.COLS	; write address is already setup from loop
 		lda	#' '
 -
-		sta	a_vram
-		+vnops
-		dex
-		bne	-
+;		sta	a_vram
+;		+vnops
+;		dex
+;		bne	-
 
+		lda	#Gray<<4|Black
+		jsr vdp_bgcolor
+		
 		plx
-		pla 
+		pla
+		
 		rts
 		
 ; output char upon CH/CV cursor pointer

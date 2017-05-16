@@ -1838,11 +1838,11 @@ ECHO:           BIT DSP         ; bit (B7) cleared yet?
 ; Interrupt vectors
 ;----------------------------------------------------------------------------------------------
 ; $FFFA/$FFFB NMI Vector
-;*= $fffa
+*= $fffa
 !word RESET
 ; $FFFC/$FFFD reset vector
-;*= $fffc
+*= $fffc
 !word RESET
 ; $FFFE/$FFFF IRQ vector
-;*= $fffe
+*= $fffe
 !word RESET
