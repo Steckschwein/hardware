@@ -1,7 +1,7 @@
 
 .include "../steckos/kernel/kernel.inc"
 .include "../steckos/kernel/kernel_jumptable.inc"
-.include "../steckos/kernel/via.inc"
+.include "../steckos/asminc/via.inc"
 .include "../steckos/asminc/common.inc"
 .include "ym3812.inc"
 
