@@ -13,7 +13,9 @@ clean:
 transfer: all
 	../transfer.py wozmon.bin 0x1000
 
-loader: appleiimonitor.bin loader.bin 
+loader.bin: appleiimonitor.bin
+
+loader: appleiimonitor.bin loader.bin
 
 mon: appleiimonitor.bin
 	../transfer.py appleiimonitor.bin -s 0x1000

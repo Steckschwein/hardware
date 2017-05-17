@@ -46,7 +46,7 @@ FMT =    $44
 .COLS=40
 .ROWS=24;TODO FIXME 24 rows
 
-BUFFER	=	$1000
+BUFFER	=	$0400
 
 IN =    	$300
 ; INSDS2 = $F88E
