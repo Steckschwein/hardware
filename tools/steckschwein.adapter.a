@@ -24,13 +24,11 @@ tmp0		= $e6
 tmp1		= $e7 
 
 .init_io
-    ;+SetVector RESET, nmivec direct loaded into ROM
-    +SetVector COUT1, CSWL
-    +SetVector .getkey, KSWL
-    ;rts
-;	jmp init_vdp; done by bios already
-    
-init_vdp:
+		;+SetVector RESET, nmivec direct loaded into ROM
+		+SetVector COUT1, CSWL
+		+SetVector .getkey, KSWL
+		rts
+		
 		+SyncBlank
 		nop
 		nop
