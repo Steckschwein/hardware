@@ -29,25 +29,6 @@ tmp1		= $e7
 		+SetVector .getkey, KSWL
 		rts
 		
-		+SyncBlank
-		nop
-		nop
-		stz	a_vreg		
-		+vnops
-		lda #>(ADDRESS_GFX1_SCREEN+(.WRITE_ADDRESS<<8))
-		sta	a_vreg
-		
-		ldx	#0
-		ldy	#4
--		+vnops		; wait 2µs, 8Mhz = 16cl => 8 nop
-		lda	#' '
-		sta a_vram		
-		inx
-		bne	-
-		dey
-		bne	-
-		rts
-	
 .getkey
 	phx
 -	lda #%01111010
@@ -70,8 +51,7 @@ vdp_bgcolor:
 		+vnops
 		sta   a_vreg
 		rts
-
-
+		
 .scroll_page
 		lda	ptr1l
 		sta	a_vreg

@@ -71,11 +71,10 @@ IN =    	$300
 ;  .org $B500
 ;  .org $F400
 *=$f000
-; *=$1000
   jmp RESET
-  
-  ;.export MON
-  ;.export REL
+
+;.export MON
+;.export REL
   
 REL: SBC #$81 ; IS FMT COMPATIBLE
   LSR ; WITH RELATIVE MODE?
@@ -1670,12 +1669,13 @@ SUBTBL: !byte <BASCONT-1
 }
 XQTNZ = $3C
 
+!src "steckschwein.adapter.a" 
+
 !ifdef WOZMON{
 .proc WozMon
 
 ;  The WOZ Monitor for the Apple 1
 ;  Written by Steve Wozniak in 1976
-
 
 ; Page 0 Variables
 
@@ -1834,8 +1834,6 @@ ECHO:           BIT DSP         ; bit (B7) cleared yet?
                 !word $0000     ; BRK/IRQ
 .endproc
 }
-
-!src "steckschwein.adapter.a"
 
 ;----------------------------------------------------------------------------------------------
 ; Interrupt vectors
