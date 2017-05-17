@@ -20,16 +20,36 @@ ptr2		= $e4
 ptr2l		= ptr2
 ptr2h		= ptr2+1 
 ; general purpose temp variables
-tmp0		= $ea
-tmp1		= $eb 
+tmp0		= $e6
+tmp1		= $e7 
 
 .init_io
     ;+SetVector RESET, nmivec direct loaded into ROM
     +SetVector COUT1, CSWL
     +SetVector .getkey, KSWL
-    rts
-	;jmp init_vdp done by bios already
+    ;rts
+;	jmp init_vdp; done by bios already
     
+init_vdp:
+		+SyncBlank
+		nop
+		nop
+		stz	a_vreg		
+		+vnops
+		lda #>(ADDRESS_GFX1_SCREEN+(.WRITE_ADDRESS<<8))
+		sta	a_vreg
+		
+		ldx	#0
+		ldy	#4
+-		+vnops		; wait 2µs, 8Mhz = 16cl => 8 nop
+		lda	#' '
+		sta a_vram		
+		inx
+		bne	-
+		dey
+		bne	-
+		rts
+	
 .getkey
 	phx
 -	lda #%01111010
@@ -44,21 +64,87 @@ tmp1		= $eb
     rts
 	
 vdp_nopslide:
-;		nop	;2
-;		nop	;2
-		rts	;6 + 6 = 
-		
-.scroll2
+		rts	;jsr/rts 12
 
 vdp_bgcolor:
 		sta   a_vreg
 		lda   #v_reg7
 		+vnops
-		nop
 		sta   a_vreg
 		rts
 
+
+.scroll_page
+		lda	ptr1l
+		sta	a_vreg
+		+vnops
+		lda	ptr1h	; 3cl
+		sta	a_vreg
+		
+		nop			;2
+		ldx	tmp0	;3		
+		
+-		nop
+		nop
+		nop
+		lda	a_vram	;4
+		sta BUFFER,x	;5
+		dex			;2
+		bne	-		;2/3
+		
+		+vnops
+		lda	ptr2l
+		sta	a_vreg
+		+vnops
+		lda	ptr2h	; 3
+		sta a_vreg	; 4
+		
+		nop			;2
+		ldx	tmp0	;3		
+
+-		nop			;2
+		nop			;2
+		nop			;2
+		lda	BUFFER,x	;4
+		sta	a_vram	;4
+		dex			;2
+		bne	-		;3
+		
+		inc	ptr2h
+		inc	ptr1h
+		rts
+		
 .scroll
+		pha
+		phx
+		
+		+SetVector	(ADDRESS_GFX1_SCREEN+.COLS), ptr1		        ; +COLS - offset second row
+		+SetVector	(ADDRESS_GFX1_SCREEN+(.WRITE_ADDRESS<<8)), ptr2	; offset first row as "write adress"
+		
+		lda	a_vreg  ; clear v-blank bit, we dont know where we are...
+-
+		bit	a_vreg  ; sync with next v-blank, so that we have the full 4300µs to copy the vram
+		bpl	-
+		
+;		lda	#Gray<<4|Dark_Blue
+;		jsr vdp_bgcolor
+		
+		stz	tmp0
+		jsr	.scroll_page
+		jsr	.scroll_page
+		jsr	.scroll_page
+		lda	#192			;40*24 = 960 => 256 * 3 + 192
+		sta	tmp0
+		jsr	.scroll_page
+		
+		lda	#Gray<<4|Black
+		jsr vdp_bgcolor
+		
+		plx
+		pla		
+		rts
+		
+;.scroll
 		pha
 		phx
 		
@@ -69,7 +155,7 @@ vdp_bgcolor:
 -
 		bit	a_vreg  ; sync with next v-blank, so that we have the full 4300µs to copy the vram
 		bpl	-
-		lda	#Gray<<4|Dark_Yellow
+		lda	#Gray<<4|Dark_Blue
 		jsr vdp_bgcolor
 --
 		lda	ptr1l	; 3cl
@@ -92,7 +178,7 @@ vdp_bgcolor:
 		bne	+		; 3cl
 		inc	ptr1h
 		lda	ptr1h
-		cmp	#>(ADDRESS_GFX1_SCREEN+(.COLS * 24 + ((.COLS * 24) % 256)))	;screen ram $1800 - $1b00
+		cmp	#>(ADDRESS_GFX1_SCREEN+(.COLS * .ROWS + ((.COLS * .ROWS) % 256)))	;screen ram $1800 - $1b00
 		beq	++
 +
 		inc	ptr2l  ; 5cl
@@ -102,14 +188,6 @@ vdp_bgcolor:
 		jsr vdp_bgcolor
 		bra	-			
 ++
-		ldx	#.COLS	; write address is already setup from loop
-		lda	#' '
--
-;		sta	a_vram
-;		+vnops
-;		dex
-;		bne	-
-
 		lda	#Gray<<4|Black
 		jsr vdp_bgcolor
 		
