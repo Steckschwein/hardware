@@ -4,8 +4,10 @@
 #define C_STX 0x02 // Ctrl-B, Start of text
 #define C_ETX 0x03 // Ctrl-C, End of text
 #define C_EOT 0x04 // Ctrl-D, End of transmission
+#define C_ENQ 0x05 // Ctrl-E, Enquiry
 #define C_BEL 0x07 // Ctrl-G, Bell
 #define C_BS  0x08 // Ctrl-H, Backspace
+
 
 #define CRSR_UP 	 0x1E // RS (Record Separator)
 #define CRSR_DOWN 	 0x1F // US (Unit separator)
@@ -43,7 +45,7 @@ const unsigned char scancodes[][5] PROGMEM = {
 	{0x21,'c', 'C', C_ETX, 0} ,
 	{0x22,'x', 'X', 0, 0} ,
 	{0x23,'d', 'D', C_EOT, 0} ,
-	{0x24,'e', 'E', 0, '¤'} ,
+	{0x24,'e', 'E', C_ENQ , '¤'} ,
 	{0x25,'4', '$', 0, 0} ,
 	{0x26,'3', 0x15, 0, 0} , //§
 	{0x29,' ', ' ', 0, 0} ,
