@@ -30,17 +30,17 @@ tmp1		= $e7
 		rts
 		
 .getkey
-	phx
--	lda #%01111010
-	sta via1portb
-	jsr .spi_r_byte
-	ldx #%11111110
-	stx via1portb
-    cmp #$00
-    beq -
-	plx
-    ora #$80; apple 2 monitor specific
-    rts
+		phx
+	-	lda #%01111010
+		sta via1portb
+		jsr .spi_r_byte
+		ldx #%11111110
+		stx via1portb
+		cmp #$00
+		beq -
+		plx
+		ora #$80; apple 2 monitor specific
+		rts
 	
 vdp_nopslide:
 		rts	;jsr/rts 12
@@ -121,58 +121,6 @@ vdp_bgcolor:
 		
 		plx
 		pla		
-		rts
-		
-;.scroll
-		pha
-		phx
-		
-		+SetVector	(ADDRESS_GFX1_SCREEN+.COLS), ptr1		        ; +COLS - offset second row
-		+SetVector	(ADDRESS_GFX1_SCREEN+(.WRITE_ADDRESS<<8)), ptr2	; offset first row as "write adress"
-
-		lda	a_vreg  ; clear v-blank bit, we dont know where we are...			
--
-		bit	a_vreg  ; sync with next v-blank, so that we have the full 4300µs to copy the vram
-		bpl	-
-		lda	#Gray<<4|Dark_Blue
-		jsr vdp_bgcolor
---
-		lda	ptr1l	; 3cl
-		sta	a_vreg
-		+vnops
-		lda	ptr1h	; 3cl
-		sta	a_vreg
-		+vnops		; wait 2µs, 8Mhz = 16cl => 8 nop
-		ldx	a_vram	;
-		+vnops
-		
-		lda	ptr2l	; 3cl
-		sta	a_vreg
-		+vnops
-		lda	ptr2h	; 3cl
-		sta a_vreg
-		+vnops
-		stx	a_vram
-		inc	ptr1l	; 5cl
-		bne	+		; 3cl
-		inc	ptr1h
-		lda	ptr1h
-		cmp	#>(ADDRESS_GFX1_SCREEN+(.COLS * .ROWS + ((.COLS * .ROWS) % 256)))	;screen ram $1800 - $1b00
-		beq	++
-+
-		inc	ptr2l  ; 5cl
-		bne	--		; 3cl
-		inc	ptr2h
-		lda	#Gray<<4|Black
-		jsr vdp_bgcolor
-		bra	-			
-++
-		lda	#Gray<<4|Black
-		jsr vdp_bgcolor
-		
-		plx
-		pla
-		
 		rts
 		
 ; output char upon CH/CV cursor pointer
