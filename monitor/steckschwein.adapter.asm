@@ -1,7 +1,7 @@
 .include "../steckos/asminc/common.inc"
 .include "../steckos/asminc/via.inc"
 .include "../steckos/asminc/vdp.inc"
-;!src <t9929.h.a>
+.segment "MONITOR" 
 
 ; general purpose pointer
 addr 		= $e0
@@ -27,7 +27,9 @@ getkey:
 		phx
 @l:		lda #%01111010
 		sta via1portb
+
 		jsr spi_r_byte
+
 		ldx #%11111110
 		stx via1portb
 		cmp #$00
@@ -178,22 +180,11 @@ spi_r_byte:
     TAX             ; aufheben
     ORA #$01
 
+.repeat 8
     STA via1portb ; Takt An 1
     STX via1portb ; Takt aus
-    STA via1portb ; Takt An 2
-    STX via1portb ; Takt aus
-    STA via1portb ; Takt An 3
-    STX via1portb ; Takt aus
-    STA via1portb ; Takt An 4
-    STX via1portb ; Takt aus
-    STA via1portb ; Takt An 5
-    STX via1portb ; Takt aus
-    STA via1portb ; Takt An 6
-    STX via1portb ; Takt aus
-    STA via1portb ; Takt An 7
-    STX via1portb ; Takt aus
-    STA via1portb ; Takt An 8
-    STX via1portb ; Takt aus
+    NOP ; make slower
+.endrep
 
     lda via1sr
     rts
