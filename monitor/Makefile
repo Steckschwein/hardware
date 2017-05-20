@@ -1,5 +1,5 @@
 DEFINES=-DCHAR6X8
-OBJS=steckschwein.adapter.o appleiimonitor.o
+OBJS=appleiimonitor.o
 
 .PHONY: all clean
 
@@ -8,12 +8,13 @@ all: appleiimonitor.bin
 clean:
 	rm -f *.bin
 	
-#%.o: %.asm
-#	ca65 -o $@ $<
+%.o: %.asm
+	ca65 --cpu 65c02 -o $@ $<
 
 
-%.bin: %.asm 
-	cl65 $(DEFINES)  -Ln symbols.txt --config monitor.cfg -t none --cpu 65c02 -o $@ $<
+appleiimonitor.bin: $(OBJS)
+	ld65 $(OBJS) --config monitor.cfg -Ln symbols.txt -o appleiimonitor.bin
+
 
 loader.bin: appleiimonitor.bin
 	acme -v -f plain --cpu 65c02 -o loader.bin loader.a
