@@ -5,36 +5,52 @@
 #include <unistd.h> /* UNIX Standard Definitions         */
 #include <errno.h>  /* ERROR Number Definitions          */
 #include <sys/stat.h>
-int main()
+
+int main(int argc, char* argv[])
 {
+	if(argc <2){
+		fprintf(stderr, "no file name given!");
+		return 1;
+	}
+	char* filename = argv[1];
+	char* devicePath;
+	if((devicePath= getenv("TRANSFER_DEVICE")) ==NULL){
+		devicePath = "/dev/ttyUSB0";
+	}
+	fprintf(stdout, "using device %s\n", devicePath);
+	
 	struct termios SerialPortSettings;
-	char filename[] = "bios/loader.bin";
 	FILE * fp;
 	struct stat st;
 	unsigned short address = 0x1000;
-	unsigned short size;
+	unsigned short endaddress;
 	unsigned char * buffer;
+	unsigned short filesize;
 	int fd;
 	char read_buffer[32];                
 	int  bytes_read = 0;                 
 	int  bytes_written  =  0 ;   
 
-	stat(filename, &st);
-	size = st.st_size;
-	printf("size: %d\n", (int)size);
+	if(stat(filename, &st) == -1){
+		perror("stat");
+		exit(EXIT_FAILURE);
+	}	
+	filesize = st.st_size;
+	endaddress = address + filesize;
 
-	buffer = malloc(size);
+	printf("load from $%x to $%x, size: %d\n", address, endaddress, filesize);
+	
+	buffer = malloc(filesize);
 
 	fp = fopen(filename, "r");
-        if (!fread(buffer, size, 1, fp))
+	if (!fread(buffer, filesize, 1, fp))
 	{
-		fprintf(stderr, "Error opening file.");
+		fprintf(stderr, "Error opening or reading file.");
 		return 1;
 	}
 	fclose(fp);
 
-
-	fd = open("/dev/ttyUSB0",O_RDWR | O_NOCTTY);
+	fd = open(devicePath,O_RDWR | O_NOCTTY);
 	if (!fd)
 	{
 		fprintf(stderr, "Error opening serial device.");
@@ -64,31 +80,29 @@ int main()
 
 	tcsetattr(fd,TCSANOW,&SerialPortSettings);
 
-                                                          
+	// start adress
 	bytes_written = write(fd,&address,sizeof(address));
-//	printf("written: %d\n", bytes_written);
-
+	printf("written: %d\n", bytes_written);
                              
 	bytes_read = read(fd,&read_buffer,2);
-//	printf("read: %d, [%s]\n", bytes_read, read_buffer);
+	printf("read: %d, [%.2s]\n", bytes_read, read_buffer);
 
-
-	bytes_written = write(fd,&size,sizeof(size));
+	// end adress
+	bytes_written = write(fd,&endaddress,sizeof(endaddress));
 	printf("written: %d\n", bytes_written);
 
 	bytes_read = read(fd,&read_buffer,2);
-//	printf("read: %d, [%s]\n", bytes_read, read_buffer);
+	printf("read: %d, [%.2s]\n", bytes_read, read_buffer);
 
 	bytes_written = 0;
-	for(unsigned char * p = buffer; p <= buffer+size; p++)
+	for(unsigned char * p = buffer; p <= buffer+filesize; p++)
 	{
 		bytes_written += write(fd, p, 1);
-	}
-	
+	}	
 	printf("bytes written: %d\n", bytes_written);
 
 	bytes_read = read(fd,&read_buffer,2);
-	//printf("read: %d, [%s]\n", bytes_read, read_buffer);
+	printf("read: %d, [%.2s]\n", bytes_read, read_buffer);
 
 
   	close(fd);
