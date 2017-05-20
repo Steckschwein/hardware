@@ -38,6 +38,7 @@ lba_addr_data	= lba_addr
 lba_addr_fat 	= $0284		; 4 bytes 
 blocks			= $0288		; 3 bytes - blocks to read, 4GB -> 4294967296 >> 9 = 8388608 ($800000) max blocks/file 
 
+trampolin	= $0291
 
 
 errno		= $0300

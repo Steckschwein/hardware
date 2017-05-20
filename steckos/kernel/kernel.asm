@@ -123,13 +123,13 @@ do_nmi:
 			plx
 			ldx #$00
 @copy:
-			lda trampolin,x
-			sta $1000,x
+			lda trampolin_code,x
+			sta trampolin,x
 			inx
-			cpx #(trampolin_end - trampolin)
+			cpx #(trampolin_code_end - trampolin_code)
 			bne @copy
 
-			jmp $1000
+			jmp trampolin
 			
 
 do_reset:
@@ -250,14 +250,14 @@ filename:	.asciiz "shell.bin"
 
 ; trampolin code to enter ML monitor on NMI
 ; this code gets copied to $1000 and executed there
-trampolin:
+trampolin_code:
 	sei
 	; switch to ROM bank 1
 	lda #$02
 	sta $0230
 	; go!
-	jmp $e000
-trampolin_end:
+	jmp $f000
+trampolin_code_end:
 
 .segment "JUMPTABLE"
 ; "kernel" jumptable
