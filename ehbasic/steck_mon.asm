@@ -28,13 +28,12 @@ RES_vec:
 ;		CLD			; clear decimal mode
 ;		LDX	#$FF		; empty stack
 ;		TXS			; set the stack
-
+		
 ; set up vectors and interrupt code, copy them to page 2
-
  		LDY	#END_CODE-LAB_vec	; set index/count
 LAB_stlp:
  		LDA	LAB_vec-1,Y		; get byte from interrupt code
-    		STA	VEC_IN-1,Y		; save to RAM
+		STA	VEC_IN-1,Y		; save to RAM
  		DEY				; decrement index/count
  		BNE	LAB_stlp		; loop if more to do
     
@@ -163,8 +162,8 @@ LAB_vec:
 
 IRQ_CODE:
 	PHA				; save A
-    	lda #'i'
-    	jsr V_OUTP
+    lda #'i'
+    jsr V_OUTP
 	LDA	IrqBase		; get the IRQ flag byte
 	LSR				; shift the set b7 to b6, and on down ...
 	ORA	IrqBase		; OR the original back in
@@ -176,8 +175,8 @@ IRQ_CODE:
 
 NMI_CODE:
 	PHA				; save A
-    	lda #'n'
-    	jsr V_OUTP
+   	lda #'n'
+   	jsr V_OUTP
 	LDA	NmiBase		; get the NMI flag byte
 	LSR				; shift the set b7 to b6, and on down ...
 	ORA	NmiBase		; OR the original back in
