@@ -1,6 +1,6 @@
 !src "../../steckos/kernel/kernel_jumptable.inc"
 !src "../../steckos/kernel/zeropage.inc"
-!src "../../steckos/kernel/via.inc"
+!src "../../steckos/asminc/via.inc"
 !src "../../steckos/asminc/joystick.inc"
 
 *=appstart
