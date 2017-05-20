@@ -1,6 +1,6 @@
-.include "../steckos/asminc/common.inc"
-.include "../steckos/asminc/via.inc"
-.include "../steckos/asminc/vdp.inc"
+.include "../../steckos/asminc/common.inc"
+.include "../../steckos/asminc/via.inc"
+.include "../../steckos/asminc/vdp.inc"
 .segment "MONITOR" 
 
 ; general purpose pointer
