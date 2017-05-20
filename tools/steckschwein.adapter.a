@@ -102,6 +102,7 @@ vdp_bgcolor:
 		lda	a_vreg  ; clear v-blank bit, we dont know where we are...
 -
 		bit	a_vreg  ; sync with next v-blank, so that we have the full 4300µs to copy the vram
+		+vnops
 		bpl	-
 		
 ;		lda	#Gray<<4|Dark_Blue
