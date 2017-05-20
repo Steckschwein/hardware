@@ -13,7 +13,7 @@ clean:
 
 
 appleiimonitor.bin: $(OBJS)
-	ld65 $(OBJS) --config monitor.cfg -Ln symbols.txt -o appleiimonitor.bin
+	ld65 $(OBJS) --config monitor.cfg -o appleiimonitor.bin
 
 
 loader.bin: appleiimonitor.bin

@@ -1,5 +1,4 @@
 ; Port of Apple II monitor to Apple 1
-.export MINIASM
 ;
 ; Original port by Winston Gayler with additional adaptations by
 ; Wendell Sander. Source code reverse-engineered and ported to CA65
@@ -248,7 +247,6 @@ GETNSP: LDA IN,Y
 ;.byte $FF
 ;.byte $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
 ;*=$f666
-;.segment "MINIASM"
 MINIASM:  JMP   RESETZ
 ; Add filler bytes up to documented SWEET16 entry point at
 ; address $X689
