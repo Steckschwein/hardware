@@ -116,11 +116,22 @@ user_isr_default:
 ;----------------------------------------------------------------------------------------------
 ; IO_NMI Routine. Handle NMI
 ;----------------------------------------------------------------------------------------------
+ACC = $45
+XREG = $46
+YREG = $47
+STATUS = $48
+SPNT = $49
+
 do_nmi:
 			; rti
-			pha
-			phx
-			plx
+			sta ACC
+			stx XREG
+			sty YREG
+			pla
+			sta STATUS
+			tsx
+			stx SPNT
+			
 			ldx #$00
 @copy:
 			lda trampolin_code,x
