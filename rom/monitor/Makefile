@@ -23,4 +23,4 @@ loader.bin: appleiimonitor.bin
 loader: appleiimonitor.bin loader.bin
 
 romtest: loader
-	../transfer.py loader.bin -s 0x0400
+	../../transfer.py loader.bin -s 0x0400
