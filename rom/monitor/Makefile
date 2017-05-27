@@ -7,7 +7,7 @@ all: appleiimonitor.bin
 clean:
 	rm -f *.bin
 	
-%.bin: %.a steckschwein.adapter.a ${ACME}/*.a ../../rom/bios/bios_call.inc
+%.bin: %.a steckschwein.adapter.a ${ACME}/*.a 
 	acme -v $(DEFINES) -f plain -l $<.labels --cpu 65c02 -o $@ $<
 
 transfer: all
