@@ -27,7 +27,16 @@ text_mode_40 = 1
 .import strout, hexout, primm
 
 kern_init:
-    sei
+	sei
+
+	; copy trampolin code for ml monitor entry to ram
+	ldx #$00
+@copy:
+	lda trampolin_code,x
+	sta trampolin,x
+	inx
+	cpx #(trampolin_code_end - trampolin_code)
+	bne @copy
     
 	jsr init_via1
 	jsr init_rtc
@@ -36,38 +45,36 @@ kern_init:
     
 	jsr textui_init0
 
-    cli
+	cli
 
-    jsr primm
-    .byte $d5,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$b8,$0a
-    .byte $b3," SteckOS Kernel "
+	jsr primm
+	.byte $d5,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$b8,$0a
+	.byte $b3," SteckOS Kernel "
 	.include "version.inc" 
 	.byte $20,$b3,$0a
-    .byte $d4,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$be,$0a
-    .byte $00
+	.byte $d4,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$be,$0a
+	.byte $00
 
-; @loop:
-; 	jmp @loop
 
 	jsr init_sdcard
-    lda errno
+	lda errno
 	debug "init"
 	bne do_upload
 
 	jsr fat_mount
-    lda errno
+	lda errno
 	debug "mnt"	
 	bne do_upload
 	
-    lda #<filename
-    ldx #>filename
+	lda #<filename
+	ldx #>filename
 	jsr fat_open
-    debug "op2"
+	debug "op2"
 	bne do_upload
 	
 	SetVector shell_addr, read_blkptr
-    jsr fat_read
-    debug "rd"
+	jsr fat_read
+	debug "rd"
 
 	jsr fat_close
 
@@ -100,11 +107,6 @@ do_irq:
 @exit:
 	jsr call_user_isr
 
-; 	jsr getkey
-; 	beq @foo
-; 	jsr krn_chrout
-; @foo:
-
 	restore
 	rti
 
@@ -123,38 +125,30 @@ STATUS = $48
 SPNT = $49
 
 do_nmi:
-			; rti
-			sta ACC
-			stx XREG
-			sty YREG
-			pla
-			sta STATUS
-			tsx
-			stx SPNT
-			
-			ldx #$00
-@copy:
-			lda trampolin_code,x
-			sta trampolin,x
-			inx
-			cpx #(trampolin_code_end - trampolin_code)
-			bne @copy
+	sta ACC
+	stx XREG
+	sty YREG
+	pla
+	sta STATUS
+	tsx
+	stx SPNT
+	
 
-			jmp trampolin
+	jmp trampolin
 			
 
 do_reset:
-			; disable interrupt
-			sei
+	; disable interrupt
+	sei
 
-			; clear decimal flag
-			cld
+	; clear decimal flag
+	cld
 
-			; init stack pointer
-			ldx #$ff
-			txs
+	; init stack pointer
+	ldx #$ff
+	txs
 
-			jmp kern_init
+	jmp kern_init
 
 startaddr = $b0 ; FIXME - find better location for this
 endaddr   = $fd
@@ -267,7 +261,8 @@ trampolin_code:
 	lda #$02
 	sta $0230
 	; go!
-	jmp $f000
+	brk
+	;jmp $f000
 trampolin_code_end:
 
 .segment "JUMPTABLE"
