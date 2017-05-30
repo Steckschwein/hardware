@@ -1372,7 +1372,7 @@ PRHEXZ: ORA #$B0 ; LSB'S
   BCC COUT
   ADC #$06
 COUT:
-  JMP (CSWL) ; VECTOR TO USER OUTPUT ROUTINE
+;  JMP (CSWL) ; VECTOR TO USER OUTPUT ROUTINE
 COUT1: CMP #$A0
   BCC COUTZ ; DON'T OUTPUT CTRL'S INVERSE
   AND INVFLG ; MASK WITH INVERSE FLAG
@@ -1840,7 +1840,7 @@ ECHO:           BIT DSP         ; bit (B7) cleared yet?
 ;----------------------------------------------------------------------------------------------
 ; $FFFA/$FFFB NMI Vector
 *= $fffa
-!word RESET
+!word BREAK
 ; $FFFC/$FFFD reset vector
 *= $fffc
 !word RESET
