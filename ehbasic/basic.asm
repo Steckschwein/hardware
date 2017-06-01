@@ -1,4 +1,3 @@
-
 ; Enhanced BASIC to assemble under 6502 simulator, $ver 2.22
 
 ; $E7E1 $E7CF $E7C6 $E7D3 $E7D1 $E7D5 $E7CF $E81E $E825
@@ -445,7 +444,7 @@ Ram_top		= $e800	; end of user RAM+1 (set as needed, should be page aligned)
 ; run from the load address.
 	JMP	RES_vec
     ;extensions
-    ;!src "ext/gfx.a"        
+	.include "ext/gfx.asm"
 ; BASIC cold start entry point
 
 ; new page 2 initialisation, copy block to ccflag on

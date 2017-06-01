@@ -1,5 +1,6 @@
-CPU=65c02
 OBJ=ehbasic.prg
+ASM_INCLUDE=../steckos/asminc
+CA65 := $(CC65_HOME)/bin/ca65
 LDFLAGS=--config ../steckos/kernel/steckos.cfg
 # uncomment for a serial line version
 #DEFINES=-DUART
@@ -8,8 +9,8 @@ all: $(OBJ)
 clean:
 	rm -f *.prg *.o
 
-%.o: %.asm 
-	ca65 --cpu $(CPU) --target none $(DEFINES)  $<
+%.o: %.asm basic.asm
+	$(CA65) --include-dir $(ASM_INCLUDE) --target none $(DEFINES)  $<
 
 
 ehbasic.prg: steck_mon.o 

@@ -1,3 +1,4 @@
+.setcpu "65C02"
 
 ; minimal monitor for EhBASIC and 6502 simulator V1.05
 ; Modified to support the Replica 1 by Jeff Tranter <tranter@pobox.com>
