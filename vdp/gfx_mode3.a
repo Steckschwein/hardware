@@ -7,7 +7,7 @@
 	jsr vdp_mode_sprites_off	;sprites off
 
 	+SetVector .pattern,	gfx3_mode_bitmap_address
-	jsr	vdp_mode_gfx3_load_bitmap
+	;jsr	vdp_mode_gfx3_load_bitmap
 
 	jsr vdp_mode_gfx3			;enable gfx3 mode
 

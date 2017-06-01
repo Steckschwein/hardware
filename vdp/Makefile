@@ -3,12 +3,12 @@ ACMEOPT = -v1 -f plain
 all: vdp
 
 clean:
-	rm -f *.bin
+	rm -f *.prg
 	
 vdp: t9929.bin vramtest.bin gfx_mode2.bin gfx_mode3.bin text_mode.bin libtest.bin raster.bin #gfx_lib_test.bin
 
 # !!! we have to explicitly list the %.h.a dependency, otherwise changes within the .h.a file are not detected by make
-%.bin: %.a ${ACME}/t9929.h.a ${ACME}/*.lib.a
+%.prg: %.a ${ACME}/t9929.h.a ${ACME}/*.lib.a
 	acme ${ACMEOPT} -l $<.labels --cpu 65c02 -o $@ $<
 
 splitscreen: splitscreen.bin
@@ -17,12 +17,12 @@ splitscreen: splitscreen.bin
 raster: raster.bin
 	../transfer.py raster.bin -s 0x1000
     
-transfer: gfx_mode2.bin
+transfer: gfx_mode_mc.prg
 #	../transfer.py t9929.bin -s 0x1000
 #	../transfer.py vramtest.bin 0x1000
 #	../transfer.py libtest.bin 0x1000
 #	../transfer.py gfx_mode2.bin -s 0x1000
-#	../transfer.py gfx_mode3.bin 0x1000
+	../transfer.py gfx_mode_mc.prg -s 0x1000
 #	../transfer.py text_mode.bin 0x1000
 #	../transfer.py gfx_lib_test.bin -s 0x1000
 

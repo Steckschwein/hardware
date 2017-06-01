@@ -189,9 +189,8 @@ vdp_mode_gfx2:
 ;
 ;	gfx 3 - 4x4 color block - multicolor mode
 ;	
-vdp_mode_gfx3
-	jsr	.vdp_fill_name_table
-	+SetVector	vdp_init_bytes_gfx3, adrl
+vdp_mode_gfx_mc
+	+SetVector	.vdp_init_bytes_gfx_mc, adrl
 	bra	vdp_init_reg
 
 ;
@@ -283,14 +282,14 @@ vdp_init_bytes_gfx2
 	!byte	(ADDRESS_GFX2_SPRITE_PATTERN / $800)	; sprite pattern table - value * $800  --> offset in VRAM
 	!byte	Black
 
-vdp_init_bytes_gfx3
+.vdp_init_bytes_gfx_mc
 	!byte 	0		; 
 	!byte 	v_reg1_16k|v_reg1_display_on|v_reg1_m2|v_reg1_spr_size; |v_reg1_int
-	!byte 	($3800 / $400)	; name table - value * $400
-	!byte	$ff				; color table setting for gfx mode 2 --> only Bit 7 is taken into account 0 => at vram $0000, 1 => at vram $2000, Bit 6-0 AND to character number
-	!byte	$03 			; pattern table - either at vram $0000 (Bit 2 = 0) or at vram $2000 (Bit 2=1), Bit 0,1 are AND to select the pattern array
-	!byte	($3c00 / $80)	; sprite attribute table - value * $80 --> offset in VRAM
-	!byte	($1800 / $800)	; sprite pattern table - value * $800  --> offset in VRAM
+	!byte 	(ADDRESS_GFX_MC_SCREEN / $400)		; name table - value * $400 -> 3 * 256 pattern names (3 pages)
+	!byte	$ff									; color table not used in multicolor mode
+	!byte	(ADDRESS_GFX_MC_PATTERN / $800) 	; pattern table, 1536 byte - 3 * 256 
+	!byte	(ADDRESS_GFX_MC_SPRITE / $80)	; sprite attribute table - value * $80 --> offset in VRAM
+	!byte	(ADDRESS_GFX_MC_SPRITE_PATTERN / $800)	; sprite pattern table - value * $800  --> offset in VRAM
 	!byte	Black
 	
 ;
