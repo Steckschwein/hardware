@@ -4,19 +4,6 @@
 !src <defs.h.a>
 !source <t9929.h.a>
 
-!macro fill i{
-	ldy #0
---	ldx	#i*32
--	+vnops
-	stx a_vram
-	inx
-	cpx	#(i*32)+32
-	bne	-
-	iny
-	cpy #4
-	bne	--
-}
-
 *=$1000
 	jsr	vdp_display_off			;display off
 	jsr vdp_mode_sprites_off	;sprites off
@@ -27,13 +14,29 @@
 	lda	#<ADDRESS_GFX_MC_SCREEN
 	ldy	#.WRITE_ADDRESS+ >ADDRESS_GFX_MC_SCREEN
 	+vdp_sreg
-	+fill 0
-	+fill 1
-	+fill 2
-	+fill 3
-	+fill 4
-	+fill 5
-	+fill 6	
+	stz tmp0
+	lda #32
+	sta tmp1
+---	ldy #0
+--	ldx	tmp0
+-	+vnops
+	stx a_vram
+	inx
+	cpx	tmp1
+	bne	-
+	iny
+	cpy #4
+	bne	--
+	cpx	#32*6
+	beq +
+	stx tmp0	; next 
+	clc
+	txa
+	adc #32
+	sta tmp1
+	bra ---
+	+
+	
 	
 	+SetVector .pattern, addr
 	lda	#<ADDRESS_GFX_MC_PATTERN
