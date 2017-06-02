@@ -1,6 +1,6 @@
 OBJ=ehbasic.prg
 ASM_INCLUDE=../steckos/asminc
-CA65 := $(CC65_HOME)/bin/ca65
+CA65 := ca65
 LDFLAGS=--config ../steckos/kernel/steckos.cfg
 # uncomment for a serial line version
 #DEFINES=-DUART
