@@ -24,8 +24,10 @@ struct DIR {
     int         fd;             /* File descriptor for directory */
     unsigned    off;            /* Current byte offset in directory */
     char        name[8+1+3 +1];     /* Name passed to opendir */
+    union {
+        unsigned char bytes[512];
+    } block; 	
 };
-
 
 
 /*****************************************************************************/

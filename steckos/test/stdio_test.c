@@ -19,8 +19,8 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 */
-	test(test_file_io());
-	//test(test_dir_io());
+//	test(test_file_io());
+	test(test_dir_io());
 	return EXIT_SUCCESS;
 }
 
@@ -56,15 +56,16 @@ int test_file_io(){
     for(n=0;n<i && n<i;n++){
         cprintf("%x ", buf[n]);
     }
-    cprintf("\n");
 /*    if (feof(f1)) {
         cprintf("end of file reached..., read %d bytes\n", i);
         return EXIT_SUCCESS;
     }
 */	
     i = fclose(f1);
-    cprintf("file closed %d\n", i);
-    
+    if (i == -1) {
+        cprintf("close error '%s': %s\n", fileName, strerror(errno)); 
+        return EXIT_FAILURE;
+    }    
     return EXIT_SUCCESS;	
 }
 

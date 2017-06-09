@@ -1,8 +1,6 @@
 ;
-; ca65 --cpu 6502 crt0.s
-; ar65 a ../../cc65/lib/stecki.lib crt0.o
 ; ---------------------------------------------------------------------------
-; crt0-kernel.s
+; crt0.s
 ; ---------------------------------------------------------------------------
 ;
 ; Startup code for cc65 (Single Board Computer version)
@@ -19,7 +17,7 @@
 .importzp       ST
 
 		.include  	"zeropage.inc"	;cc65 default zp
-		.include	"../kernel/zeropage.inc"	; FIXME kernel vs default zp
+		.include	"../kernel/zeropage.inc"	; FIXME kernel vs default zp ?!?
 		.include	"../kernel/kernel_jumptable.inc"
 
 ; ---------------------------------------------------------------------------

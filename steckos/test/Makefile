@@ -1,7 +1,8 @@
 ASM_INCLUDE=../asminc
-LIBS=../lib/steckschwein-kernel.lib ../lib/steckschwein-gfx.lib
+LIBS=../lib/steckschwein-kernel.lib
 
-all: time-test.prg mainarg.prg coniotst.prg stdio_test.prg time-test.prg
+all: time-test.prg mainarg.prg coniotst.prg time-test.prg
+# stdio_test.prg 
 
 .PHONY: clean
 
