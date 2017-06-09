@@ -148,5 +148,6 @@ l2:
 !src <t99xx.lib.a>
 
 .pattern
+;!bin "test/LNINJA.TIAP"
 ;!bin "test/MODE3.TIAP"
 ;!bin "test/PM112012.TIAP"

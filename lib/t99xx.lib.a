@@ -11,9 +11,6 @@
 vdp_nopslide:
 		nop			;2cl
 		nop			;2cl
-		nop			;2cl
-		nop			;2cl
-		
 		rts			;6cl
 
 vdp_irq_off
