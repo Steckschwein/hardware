@@ -1,5 +1,5 @@
 ASM_INCLUDE=../../asminc
-LIBS=../../lib/steckschwein-gfx.lib
+LIBS=../../lib/steckschwein-kernel.lib
 
 all: nixie.prg
 
