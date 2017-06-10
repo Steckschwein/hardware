@@ -1,78 +1,91 @@
 .include "vdp.inc"
 
 .importzp ptr1
-.importzp tmp0, tmp1
-
+.importzp tmp1, tmp2
 .import	vdp_init_reg
 .import vdp_nopslide
 .import vdp_fill
 
-.export vdp_mode_mc
-.export vdp_mode_mc_blank
-.export vdp_set_pixel_mc
+.export vdp_mc_on
+.export vdp_mc_blank
+.export vdp_mc_set_pixel
+.export vdp_mc_init_screen
+
 
 .code
 ;
 ;	gfx multi color mode - 4x4px blocks where each can have one of the 15 colors
 ;	
-vdp_mode_mc:
-			lda #<vdp_init_bytes_mc
+vdp_mc_on:
+			jsr	vdp_mc_init_screen
+			lda #<vdp_mc_init_bytes
 			sta ptr1
-			lda #>vdp_init_bytes_mc
+			lda #>vdp_mc_init_bytes
 			sta ptr1+1
-			jmp	vdp_init_reg
+			jmp vdp_init_reg
 
-vdp_fill_name_table:
-			;set 768 different patterns --> name table
-			lda	#<ADDRESS_GFX2_SCREEN
-			ldy	#WRITE_ADDRESS+ >ADDRESS_GFX2_SCREEN
-			vdp_sreg
-			ldy	#$03
-			ldx	#$00
-@0:			vnops
-			stx	a_vram  ;
-			inx         ;2
-			bne	@0       ;3
-			dey
-			bne	@0
-			rts
-
-vdp_init_bytes_mc:
-			.byte 	v_reg0_m3		; 
-			.byte 	v_reg1_16k|v_reg1_display_on|v_reg1_spr_size |v_reg1_int
-			.byte 	(ADDRESS_GFX2_SCREEN / $400)	; name table - value * $400
-			.byte	$ff				; color table setting for gfx mode 2 --> only Bit 7 is taken into account 0 => at vram $0000, 1 => at vram $2000, Bit 6-0 AND to character number
-			.byte	$03 			; pattern table - either at vram $0000 (Bit 2 = 0) or at vram $2000 (Bit 2=1), Bit 0,1 are AND to select the pattern array
-			.byte	(ADDRESS_GFX2_SPRITE / $80)	; sprite attribute table - value * $80 --> offset in VRAM
-			.byte	(ADDRESS_GFX2_SPRITE_PATTERN / $800)	; sprite pattern table - value * $800  --> offset in VRAM
+vdp_mc_init_bytes:
+			.byte 	0		; 
+			.byte 	v_reg1_16k|v_reg1_display_on|v_reg1_m2|v_reg1_spr_size; |v_reg1_int
+			.byte 	(ADDRESS_GFX_MC_SCREEN / $400)		; name table - value * $400 -> 3 * 256 pattern names (3 pages)
+			.byte	$ff									; color table not used in multicolor mode
+			.byte	(ADDRESS_GFX_MC_PATTERN / $800) 	; pattern table, 1536 byte - 3 * 256 
+			.byte	(ADDRESS_GFX_MC_SPRITE / $80)	; sprite attribute table - value * $80 --> offset in VRAM
+			.byte	(ADDRESS_GFX_MC_SPRITE_PATTERN / $800)	; sprite pattern table - value * $800  --> offset in VRAM
 			.byte	Black
 
+;			
 ;
-; blank gfx mode 2 with 
-; adrl - color to fill
-;    
-vdp_mode_mc_blank:		; 2 x 6K
-	sta tmp1
-	lda #<ADDRESS_GFX2_COLOR
-	ldy #WRITE_ADDRESS + >ADDRESS_GFX2_COLOR
-	ldx	#24		;6144 byte color map
-	jsr	vdp_fill
-	stz tmp1	;
-	lda #<ADDRESS_GFX2_PATTERN
-	ldy #WRITE_ADDRESS + >ADDRESS_GFX2_PATTERN
-	ldx	#24		;6144 byte pattern map
-	jsr	vdp_fill
-	lda #<ADDRESS_GFX2_SCREEN
-	ldy #WRITE_ADDRESS + >ADDRESS_GFX2_SCREEN
-	ldx	#3		;768 byte screen map
-	jmp	vdp_fill
-	
-vdp_set_pixel_mc:
+;
+vdp_mc_init_screen:
+			lda	#<ADDRESS_GFX_MC_SCREEN
+			ldy	#WRITE_ADDRESS+ >ADDRESS_GFX_MC_SCREEN
+			vdp_sreg
+			stz tmp2
+			lda #32
+			sta tmp1
+@l1:		ldy #0
+@l2:		ldx	tmp2
+@l3:		vnops
+			stx a_vram
+			inx
+			cpx	tmp1
+			bne	@l3
+			iny
+			cpy #4		; 4 rows filled ?
+			bne	@l2
+			cpx	#32*6	; 6 pages overall
+			beq @le
+			stx tmp2	; next 
+			clc
+			txa
+			adc #32
+			sta tmp1
+			bra @l1
+@le:		rts
+
+;
+; blank multi color mode, set all pixel to black
+; 	A - color to blank
+;
+vdp_mc_blank:
+			sta	tmp1
+			lda	#<ADDRESS_GFX_MC_PATTERN
+			ldy	#WRITE_ADDRESS+ >ADDRESS_GFX_MC_PATTERN
+			ldx #1536/256
+			jmp vdp_fill
+
+;	set pixel to mc screen
+;			
+;	X - x coordinate [0..3f]
+;	Y - y coordinate [0..2f]
+;	A - color [0..f]
+;
+; 	VRAM ADDRESS = 8(INT(X DIV 2)) + 256(INT(Y DIV 8)) + (Y MOD 8)
+vdp_mc_set_pixel:
 	and #$0f
-	sta tmp0	;safe color
+	sta tmp2	;safe color
 	
-; 	0 1 2 3 4 5 6 7 8 91011
-;   0 0 8 81616242432324040
 	txa			
 	and #$3e	; x div 2 * 8 => and, asl, asl
 	asl
@@ -101,19 +114,19 @@ vdp_set_pixel_mc:
 	lda #$f0				;2
 	and a_vram				;4
 	bra l2					;3
-l1:	lda tmp0
+l1:	lda tmp2
 	asl						;2
 	asl						;2
 	asl						;2
 	asl
-	sta tmp0
+	sta tmp2
 	lda a_vram
-	and #$0f
+	and #$0f				;2
 l2:	
-	ora tmp0				;3
-	nop
-	nop
-	nop
+	ora tmp2				;3
+	nop						;2
+	nop						;2
+	nop						;2
 	ldx tmp1				;3
 	stx	a_vreg				;4 setup write adress
 	nop						;2
