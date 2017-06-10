@@ -1,5 +1,5 @@
 .include "vdp.inc"
-.include "zeropage.inc"
+;.include "zeropage.inc"
 
 .export	vdp_display_off
 .export	vdp_init_reg

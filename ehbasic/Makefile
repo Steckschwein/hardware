@@ -19,7 +19,7 @@ clean:
 
 
 ehbasic.prg: steck_mon.o 
-	$(LD65) $(LDFLAGS) steck_mon.o $(LIBS) -o ehbasic.prg
+	$(LD65) $(LDFLAGS) steck_mon.o $(LIBS) -Ln ehbasic.lbl -o ehbasic.prg
 
 transfer: all
 	../transfer.py $(OBJ) 

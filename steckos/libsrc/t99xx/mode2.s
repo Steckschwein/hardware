@@ -1,7 +1,8 @@
 .include "vdp.inc"
 
-.importzp ptr1
-.importzp tmp1
+; TODO FIXME conflicts with ehbasic zeropage locaitons - use steckschwein specific zeropage.s not the cc65....runtime/zeropage.s definition
+;.importzp ptr1
+;.importzp tmp1
 
 .import	vdp_init_reg
 .import vdp_nopslide

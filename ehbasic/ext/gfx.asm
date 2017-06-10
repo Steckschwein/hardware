@@ -2,8 +2,16 @@
 
 .import	vdp_display_off
 .import	vdp_mc_on
+.import	vdp_mc_blank
 .import	vdp_mc_init_screen
 .import	vdp_mc_set_pixel
+
+.import vdp_mode_gfx2
+
+.export GFX_MC_On
+.export GFX_MC_Off
+.export GFX_MC_Plot
+
 ;
 ;	within basic define extensions as follows
 ;
@@ -18,36 +26,42 @@ GFX_BgColor:
     RTS ; return to BASIC
 
 GFX_MC_Off:
-@l:		jsr krn_keyin
-		beq @l
+		sei
 		jsr	krn_display_off			;restore textui
 		jsr	krn_textui_init
-		jsr	krn_textui_enable 	
+		jsr	krn_textui_enable
+		cli
 		rts
 
 GFX_MC_On:
+		sei
 		jsr	krn_textui_disable			;disable textui
-		
-		jsr vdp_display_off
-		lda #Cyan<4|Dark_Yellow
-		jsr vdp_mc_init_screen
+		jsr krn_display_off
+		lda #0 ; black/black
+		jsr vdp_mc_blank
 		jsr	vdp_mc_on
-		jmp GFX_MC_Off
+		cli
 		rts
 	
 GFX_MC_Plot:
+		SyncBlank
+		JSR LAB_SCGB 	; scan for "," and get byte 
+		stx PLOT_XBYT ; save plot x 
 		JSR LAB_SCGB ; scan for "," and get byte 
-		CPX #255 ;
-		BCS PLOT_FCER; 
-		STX PLOT_XBYT ; save plot x 
+		stx PLOT_YBYT
 		JSR LAB_SCGB ; scan for "," and get byte 
-		CPX #192 ; compare with max+1 
-		BCS PLOT_FCER ;
 		txa
-		tay
+		and #$0f
+;		jsr krn_hexout
 		ldx PLOT_XBYT
-	;    jsr set_pixel
-		RTS ; return to BASIC 
+;		txa
+;		jsr krn_hexout
+		ldy PLOT_YBYT
+;		tya
+;		jsr krn_hexout
+;		rts
+		jmp vdp_mc_set_pixel
+;		RTS ; return to BASIC 
 		
 		; does BASIC function call error 
 PLOT_FCER: 
@@ -55,4 +69,5 @@ PLOT_FCER:
 		; now we just need the variable storage 
 PLOT_XBYT:
 		.byte $00 ; set default
-	
+PLOT_YBYT:
+		.byte $00 ; set default

@@ -1,7 +1,9 @@
 .include "vdp.inc"
 
-.importzp ptr1
-.importzp tmp1, tmp2
+; TODO FIXME conflicts with ehbasic zeropage locaitons - use steckschwein specific zeropage.s not the cc65....runtime/zeropage.s definition
+;.importzp ptr1
+;.importzp tmp1, tmp2
+
 .import	vdp_init_reg
 .import vdp_nopslide
 .import vdp_fill
@@ -11,28 +13,17 @@
 .export vdp_mc_set_pixel
 .export vdp_mc_init_screen
 
-
 .code
 ;
 ;	gfx multi color mode - 4x4px blocks where each can have one of the 15 colors
 ;	
 vdp_mc_on:
-			jsr	vdp_mc_init_screen
+			jsr vdp_mc_init_screen
 			lda #<vdp_mc_init_bytes
 			sta ptr1
 			lda #>vdp_mc_init_bytes
 			sta ptr1+1
 			jmp vdp_init_reg
-
-vdp_mc_init_bytes:
-			.byte 	0		; 
-			.byte 	v_reg1_16k|v_reg1_display_on|v_reg1_m2|v_reg1_spr_size; |v_reg1_int
-			.byte 	(ADDRESS_GFX_MC_SCREEN / $400)		; name table - value * $400 -> 3 * 256 pattern names (3 pages)
-			.byte	$ff									; color table not used in multicolor mode
-			.byte	(ADDRESS_GFX_MC_PATTERN / $800) 	; pattern table, 1536 byte - 3 * 256 
-			.byte	(ADDRESS_GFX_MC_SPRITE / $80)	; sprite attribute table - value * $80 --> offset in VRAM
-			.byte	(ADDRESS_GFX_MC_SPRITE_PATTERN / $800)	; sprite pattern table - value * $800  --> offset in VRAM
-			.byte	Black
 
 ;			
 ;
@@ -72,7 +63,7 @@ vdp_mc_blank:
 			sta	tmp1
 			lda	#<ADDRESS_GFX_MC_PATTERN
 			ldy	#WRITE_ADDRESS+ >ADDRESS_GFX_MC_PATTERN
-			ldx #1536/256
+			ldx #(1536/256)
 			jmp vdp_fill
 
 ;	set pixel to mc screen
@@ -137,3 +128,13 @@ l2:
 	sta a_vram
 	
 	rts
+
+vdp_mc_init_bytes:
+			.byte 	0		; 
+			.byte 	v_reg1_16k|v_reg1_display_on|v_reg1_m2|v_reg1_spr_size;|v_reg1_int
+			.byte 	(ADDRESS_GFX_MC_SCREEN / $400)		; name table - value * $400 -> 3 * 256 pattern names (3 pages)
+			.byte	$ff									; color table not used in multicolor mode
+			.byte	(ADDRESS_GFX_MC_PATTERN / $800) 	; pattern table, 1536 byte - 3 * 256 
+			.byte	(ADDRESS_GFX_MC_SPRITE / $80)	; sprite attribute table - value * $80 --> offset in VRAM
+			.byte	(ADDRESS_GFX_MC_SPRITE_PATTERN / $800)	; sprite pattern table - value * $800  --> offset in VRAM
+			.byte	Black
