@@ -1,3 +1,9 @@
+; TODO FIXME conflicts with ehbasic zeropage locaitons - use steckschwein specific zeropage.s not the cc65....runtime/zeropage.s definition
+tmp1=$e0
+tmp2=$e1
+ptr1=$e8
+
+
 a_vdp		= $0220
 a_vram		= a_vdp
 a_vreg		= a_vdp+1
