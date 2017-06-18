@@ -7,7 +7,7 @@ all: version.inc bios.bin
 
 .PHONY: clean
 clean:
-	rm -f *.o *.bin version.inc
+	rm -f *.o *.bin version.inc bios_call.inc *.txt
 
 %.o: %.asm
 	ca65 --target none $(DEFINES) $<

@@ -12,7 +12,7 @@ LDFLAGS=--config ../steckos/kernel/steckos.cfg
 
 all: $(OBJ) 
 clean:
-	rm -f *.prg *.o
+	rm -f *.prg *.o *.lbl
 
 %.o: %.asm basic.asm ext/*.asm $(LIBS)
 	$(CA65) --include-dir $(ASM_INCLUDE) --target none $(DEFINES)  $<
