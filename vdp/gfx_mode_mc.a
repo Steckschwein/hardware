@@ -14,26 +14,26 @@
 	lda	#<ADDRESS_GFX_MC_SCREEN
 	ldy	#.WRITE_ADDRESS+ >ADDRESS_GFX_MC_SCREEN
 	+vdp_sreg
-	stz tmp0
+	stz tmp1
 	lda #32
-	sta tmp1
+	sta tmp2
 ---	ldy #0
---	ldx	tmp0
+--	ldx	tmp1
 -	+vnops
 	stx a_vram
 	inx
-	cpx	tmp1
+	cpx	tmp2
 	bne	-
 	iny
 	cpy #4
 	bne	--
 	cpx	#32*6
 	beq +
-	stx tmp0	; next 
+	stx tmp1	; next 
 	clc
 	txa
 	adc #32
-	sta tmp1
+	sta tmp2
 	bra ---
 +
 
@@ -41,17 +41,17 @@
 	
 	;jsr load_gfx
 	lda #47
-	sta tmp2
--	ldx tmp2
-	ldy tmp2
+	sta tmp3
+-	ldx tmp3
+	ldy tmp3
 	lda #Cyan
-	jsr set_pixel_mc
-	lda tmp2
+	jsr vdp_mc_set_pixel
+	lda tmp3
 	tax
 	ldy #24
 	lda #Dark_Blue
-	jsr set_pixel_mc
-	dec tmp2
+	jsr vdp_mc_set_pixel
+	dec tmp3
 	bpl -
 	
 	jsr vdp_mode_gfx_mc			;enable gfx3 mode
@@ -59,7 +59,7 @@
 -	jmp	-
 
 blank:
-	stz	tmp1; 0 means Black
+	stz adrl; 0 means Black|Black	
 	lda	#<ADDRESS_GFX_MC_PATTERN
 	ldy	#.WRITE_ADDRESS+ >ADDRESS_GFX_MC_PATTERN
 	ldx #1536/256
@@ -72,69 +72,66 @@ load_gfx:
 	ldx #1536/256
 	jsr vdp_memcpy
 
-coltab:
-	!byte $10,$20,$30,$40,$50,$60,$70,$80,$90,$a0,$b0,$c0,$d0,$e0,$f0
-	
 ;	X - x coordinate [0..3f]
 ;	Y - y coordinate [0..2f]
 ;	A - color [0..f]
 ;
 ; 	VRAM ADDRESS = 8(INT(X DIV 2)) + 256(INT(Y DIV 8)) + (Y MOD 8)
-set_pixel_mc:
-	and #$0f
-	sta tmp0	;safe color
-	
-	txa			
-	and #$3e	; x div 2 * 8 => and, asl, asl
-	asl
-	asl
-	sta tmp1
-	
-	tya
-	and	#$07	; y mod 8
-	ora	tmp1
-	sta	a_vreg				;4 set vdp vram address low byte
-	sta	tmp1				;3 safe vram address low byte
-	
-	; high byte vram address - div 8, result is vram address "page" $0000, $0100, ... until $05ff
-	tya						;2
-	lsr						;2
-	lsr						;2
-	lsr						;2
-	sta	a_vreg				;set vdp vram address high byte
-	ora #.WRITE_ADDRESS		;2 adjust for write
-	tay	;adrh				;2 safe vram high byte for write
+vdp_mc_set_pixel:
+		and #$0f
+		sta tmp1				;safe color
+		
+		txa			
+		and #$3e				; x div 2 * 8 => x div 2 * 2 * 2 * 2 => lsr, asl, asl, asl => lsr,asl = and #3e ($3f - x boundary), asl, asl
+		asl
+		asl
+		sta tmp2
+		
+		tya
+		and	#$07				; y mod 8
+		ora	tmp2				; with x
+		sta	a_vreg				;4 set vdp vram address low byte
+		sta	tmp2				;3 safe vram address low byte for write
+		
+		; high byte vram address - div 8, result is vram address "page" $0000, $0100, ... until $05ff
+		tya						;2
+		lsr						;2
+		lsr						;2
+		lsr						;2
+		sta	a_vreg				;set vdp vram address high byte
+		ora #.WRITE_ADDRESS		;2 adjust for write
+		tay						;2 safe vram high byte for write in y
 
-    txa						;2
-	bit #1					;3 test color shift required, upper nibble?
-	beq l1					;2/3
-	nop						;2
-	lda #$f0				;2
-	and a_vram				;4
-	bra l2					;3
-l1:	lda tmp0
-	asl						;2
-	asl						;2
-	asl						;2
-	asl
-	sta tmp0
-	lda a_vram
-	and #$0f				;2
+		txa						;2
+		bit #1					;3 test color shift required, upper nibble?
+		beq l1					;2/3
+		nop						;2
+		lda #$f0				;2
+		and a_vram				;4
+		bra l2					;3
+l1:		lda tmp1				;3
+		asl						;2
+		asl						;2
+		asl						;2
+		asl						;2
+		sta tmp1
+		lda #$0f
+		and a_vram
 l2:	
-	ora tmp0				;3
-	nop						;2
-	nop						;2
-	nop						;2
-	ldx tmp1				;3
-	stx	a_vreg				;4 setup write adress
-	nop						;2
-	nop						;2
-	nop						;2
-	sty a_vreg
-	+vnops
-	sta a_vram
-	
-	rts
+		ora tmp1				;3
+		nop						;2
+		nop						;2
+		nop						;2
+		ldx tmp2				;3
+		stx	a_vreg				;4 setup write adress
+		nop						;2
+		nop						;2
+		nop						;2
+		sty a_vreg
+		+vnops
+		sta a_vram
+		
+		rts
 
 
 	lda	#<ADDRESS_GFX_MC_PATTERN
