@@ -67,67 +67,67 @@ vdp_mc_blank:
 			jmp vdp_fill
 
 ;	set pixel to mc screen
-;			
+;
 ;	X - x coordinate [0..3f]
 ;	Y - y coordinate [0..2f]
 ;	A - color [0..f]
 ;
 ; 	VRAM ADDRESS = 8(INT(X DIV 2)) + 256(INT(Y DIV 8)) + (Y MOD 8)
 vdp_mc_set_pixel:
-	and #$0f
-	sta tmp2	;safe color
-	
-	txa			
-	and #$3e	; x div 2 * 8 => and, asl, asl
-	asl
-	asl
-	sta tmp1
-	
-	tya
-	and	#$07	; y mod 8
-	ora	tmp1
-	sta	a_vreg				;4 set vdp vram address low byte
-	sta	tmp1				;3 safe vram address low byte
-	
-	; high byte vram address - div 8, result is vram address "page" $0000, $0100, ... until $05ff
-	tya						;2
-	lsr						;2
-	lsr						;2
-	lsr						;2
-	sta	a_vreg				;set vdp vram address high byte
-	ora #WRITE_ADDRESS		;2 adjust for write
-	tay	;adrh				;2 safe vram high byte for write
+		and #$0f
+		sta tmp1				;safe color
+		
+		txa			
+		and #$3e				; x div 2 * 8 => x div 2 * 2 * 2 * 2 => lsr, asl, asl, asl => lsr,asl = and #3e ($3f - x boundary), asl, asl
+		asl
+		asl
+		sta tmp2
+		
+		tya
+		and	#$07				; y mod 8
+		ora	tmp2				; with x
+		sta	a_vreg				;4 set vdp vram address low byte
+		sta	tmp2				;3 safe vram address low byte for write
+		
+		; high byte vram address - div 8, result is vram address "page" $0000, $0100, ... until $05ff
+		tya						;2
+		lsr						;2
+		lsr						;2
+		lsr						;2
+		sta	a_vreg				;set vdp vram address high byte
+		ora #WRITE_ADDRESS		;2 adjust for write
+		tay						;2 safe vram high byte for write in y
 
-    txa						;2
-	bit #1					;3 test color shift required, upper nibble?
-	beq l1					;2/3
-	nop						;2
-	lda #$f0				;2
-	and a_vram				;4
-	bra l2					;3
-l1:	lda tmp2
-	asl						;2
-	asl						;2
-	asl						;2
-	asl
-	sta tmp2
-	lda a_vram
-	and #$0f				;2
+		txa						;2
+		bit #1					;3 test color shift required, upper nibble?
+		beq l1					;2/3
+		nop						;2
+		lda #$f0				;2
+		and a_vram				;4
+		bra l2					;3
+l1:		lda tmp1				;3
+		asl						;2
+		asl						;2
+		asl						;2
+		asl						;2
+		sta tmp1
+		lda #$0f
+		and a_vram
 l2:	
-	ora tmp2				;3
-	nop						;2
-	nop						;2
-	nop						;2
-	ldx tmp1				;3
-	stx	a_vreg				;4 setup write adress
-	nop						;2
-	nop						;2
-	nop						;2
-	sty a_vreg
-	vnops
-	sta a_vram
-	
-	rts
+		ora tmp1				;3
+		nop						;2
+		nop						;2
+		nop						;2
+		ldx tmp2				;3
+		stx	a_vreg				;4 setup write adress
+		nop						;2
+		nop						;2
+		nop						;2
+		sty a_vreg
+		vnops
+		sta a_vram
+		
+		rts
 
 vdp_mc_init_bytes:
 			.byte 	0		; 

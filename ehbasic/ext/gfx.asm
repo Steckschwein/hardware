@@ -46,27 +46,14 @@ GFX_MC_On:
 GFX_MC_Plot:
 		SyncBlank
 		JSR LAB_SCGB 	; scan for "," and get byte 
-		stx PLOT_XBYT ; save plot x 
-		JSR LAB_SCGB ; scan for "," and get byte 
-		stx PLOT_YBYT
-		JSR LAB_SCGB ; scan for "," and get byte 
-		txa
-		and #$0f
-;		jsr krn_hexout
+		stx PLOT_XBYT 	; save plot x 
+		JSR LAB_SCGB 	; scan for "," and get byte 
+		stx PLOT_YBYT	; save plot y
+		JSR LAB_SCGB 	; scan for "," and get byte 
+		txa				; color to A
 		ldx PLOT_XBYT
-;		txa
-;		jsr krn_hexout
 		ldy PLOT_YBYT
-;		tya
-;		jsr krn_hexout
-;		rts
 		jmp vdp_mc_set_pixel
-;		RTS ; return to BASIC 
-		
-		; does BASIC function call error 
-PLOT_FCER: 
-		JMP LAB_FCER ; do function call error, then warm start 
-		; now we just need the variable storage 
 PLOT_XBYT:
 		.byte $00 ; set default
 PLOT_YBYT:
