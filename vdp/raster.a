@@ -3,7 +3,8 @@
 !src <defs.h.a>
 !src <macro.h.a>
 !src <t99xx.lib.a>
-!src <via.h.a>
+
+!source "../steckos/asminc/via.inc"
 
 .safeirq !word 0
 

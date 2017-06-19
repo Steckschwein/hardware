@@ -3,7 +3,8 @@
 !src <defs.h.a>
 !src <macro.h.a>
 !src <t99xx.lib.a>
-!src <via.h.a>
+
+!source "../steckos/asminc/via.inc"
 
 .safeirq !word 0
 
@@ -12,7 +13,7 @@ main
     
     lda #1<<0	;bios off
 	sta $0230
-;    +SetVector  $fffe, .safeirq	
+;    +SetVector  $fffe, .safeirq
     +SetVector  .raster_irq, $fffe
     
     lda #Cyan<<4
@@ -39,7 +40,7 @@ main
 	bpl ++
 	bit via1t1cl	; Acknowledge timer interrupt
 rmWaitTweak=3
-rmWait=rmWaitTweak+(57*1000/125)
+rmWait=rmWaitTweak+(48*1000/125)
     lda #<rmWait   ; 63,695µs per line -> 63000
 	sta via1t1cl            ; set low byte of count
 	lda #>rmWait
