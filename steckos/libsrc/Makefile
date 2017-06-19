@@ -34,7 +34,7 @@ mostlyclean:
 	$(call RMDIR,../libwrk)
 
 
-CA65FLAGS =
+CA65FLAGS = --cpu 65c02 --include-dir ../asminc
 CC65FLAGS = -Or -W error
 
 SRCDIR=.
@@ -43,7 +43,7 @@ SRCDIRS +=  t99xx
 SRCDIRS +=  $(CC65_HOME)/libsrc/conio     	\
 			$(CC65_HOME)/libsrc/runtime	 	\
 			$(CC65_HOME)/libsrc/zlib		\
-			$(CC65_HOME)/libsrc/common	 
+			$(CC65_HOME)/libsrc/common
 	#		$(CC65_HOME)/libsrc/serial   \
 	#		$(CC65_HOME)/libsrc/tgi      \
 #            $(CC65_HOME)/libsrc/dbg      \
@@ -66,11 +66,11 @@ CA65 := $(if $(wildcard ../bin/ca65*),../bin/ca65,ca65)
 CC65 := $(if $(wildcard ../bin/cc65*),../bin/cc65,cc65)
 LD65 := $(if $(wildcard ../bin/ld65*),../bin/ld65,ld65)
 
-export CC65_HOME := $(abspath ..)
+# export CC65_HOME := $(abspath ..)
 
 define ASSEMBLE_recipe
 $(if $(QUIET),,@echo $(TARGET) - $<)
-@$(CA65) -t $(TARGET_SYS) --cpu 65c02 $(CA65FLAGS) --create-dep $(@:.o=.d) -o $@ $<
+@$(CA65) -t $(TARGET_SYS) $(CA65FLAGS) --create-dep $(@:.o=.d) -o $@ $<
 endef # ASSEMBLE_recipe
 
 define COMPILE_recipe
@@ -92,19 +92,3 @@ endef # COMPILE_recipe
 	@$(call MKDIR,$@)
 
 -include $(DEPS)
-
-# TODO design fdtable.o 
-#kernel-lib: $(OBJS) crt0.o mainargs.o cputc.o cgetc.o gotoxy.o clrscr.o kbhit.o spi.o rtc.o sysuname.o systime.o oserror.o open.o read.o close.o inviocb.o do_oserr.o sysremove.o sysrename.o closedir.o write.o dir.o seekdir.o rewinddir.o telldir.o opendir.o initcwd.o
-#	$(AR65) a ../lib/steckschwein-kernel.lib \
-#			zeropage.o pushax.o	\
-#			crt0.o cputc.o cgetc.o gotoxy.o clrscr.o spi.o rtc.o kbhit.o mainargs.o sysuname.o systime.o oserror.o open.o read.o close.o inviocb.o do_oserr.o sysremove.o sysrename.o closedir.o write.o dir.o seekdir.o rewinddir.o telldir.o opendir.o initcwd.o
-#steckschwein: ../lib/$(TARGET).lib
-#	$(AR65) a ../lib/steckschwein-kernel.lib $(OBJS)
-
-gfx-lib: zeropage.o t99xx/t99xx.o t99xx/mode3.o t99xx/mode2.o t99xx/mode1.o t99xx/mode_mc.o
-	$(AR65) a ../lib/steckschwein-gfx.lib zeropage.o \
-		t99xx/t99xx.o \
-		t99xx/mode3.o \
-		t99xx/mode2.o \
-		t99xx/mode1.o \
-		t99xx/mode_mc.o

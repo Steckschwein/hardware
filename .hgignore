@@ -3,6 +3,7 @@ syntax: glob
 
 .DS_Store
 *.bin
+**.dis
 *.prg
 *.chp
 *.fus
@@ -10,6 +11,6 @@ syntax: glob
 *.pin
 *.labels
 *.orig
-*.o
+**.o
 *.bak
 *~
