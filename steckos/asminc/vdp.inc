@@ -88,3 +88,8 @@ vdp_nopslide:
 @l:	bit	a_vreg
 	bpl @l	   ; wait until blank - irq flag set?
 .endmacro
+
+.macro InBlank
+@l:	bit	a_vreg
+	bpl @l	   ; wait until blank - irq flag set?
+.endmacro

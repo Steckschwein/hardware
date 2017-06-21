@@ -16,12 +16,23 @@ main
 	+SetVector .pattern,	ptr1
 	+SetVector .color,		ptr2
     
-    lda #Black<<4|Black
+    lda #Cyan<<4|Black
     jsr vdp_mode_gfx2_blank
-    
-;	jsr	vdp_mode_gfx2_load_bitmap
-    
-    +SetVector .pattern, addr
+    	
+	lda	#0
+	ldx #0
+	ldy #0
+	jsr vdp_gfx2_set_pixel
+	ldx #1
+	ldy #1
+	jsr vdp_gfx2_set_pixel
+	
+	jsr vdp_mode_gfx2			;enable gfx2 mode
+-	bra -
+	
+    jsr	vdp_mode_gfx2_load_bitmap
+
+	+SetVector .pattern, addr
 	lda	#<ADDRESS_GFX2_PATTERN
 	ldy	#.WRITE_ADDRESS + >ADDRESS_GFX2_PATTERN
 	ldx	#$18	;6k bitmap - $1800
@@ -30,7 +41,8 @@ main
     lda #1<<0
 	sta $0230
     +SetVector  $fffe, .safeirq	
-    +SetVector  .blend_isr, $fffe
+	+SetVector  .blend_isr, $fffe	
+
 	jsr vdp_mode_gfx2			;enable gfx2 mode
 	cli
 --  
@@ -43,6 +55,57 @@ main
     +SetVector  .safeirq, irqvec
     cli
 
+;	set pixel to gfx2 mode screen
+;
+;	X - x coordinate [0..ff]
+;	Y - y coordinate [0..bf]
+;	A - color [0..f]
+;
+; 	VRAM ADDRESS = 8(INT(X DIV 8)) + 256(INT(Y DIV 8)) + (Y MOD 8)
+vdp_gfx2_set_pixel:
+		and #$0f
+		sta tmp1	
+		; calculate low byte vram adress
+		txa
+		and	#$f8
+		sta	tmp2
+		tya
+		and	#$07
+		ora	tmp2
+		sta	a_vreg	;4 set vdp vram address low byte
+		sta	tmp2	;3 safe vram low byte
+		
+		; high byte vram address - div 8, result is vram address "page" $0000, $0100, ...
+		tya						;2
+		lsr						;2
+		lsr						;2
+		lsr						;2
+		sta	a_vreg				;set vdp vram address high byte
+		ora #.WRITE_ADDRESS		;2 adjust for write
+		tay						;2 safe vram high byte for write in y
+	
+		txa						;2 set the appropriate bit 
+		and	#$07				;2
+		tax						;2
+		nop						;2
+		lda	bitmask,x			;4
+		ora	a_vram				;4 read current byte in vram and OR with new pixel
+		tax						;2 
+		
+		nop						;2
+		lda	tmp2				;2
+		sta a_vreg
+		tya
+		nop
+		nop
+		sta	a_vreg
+		+vnops
+		stx a_vram	;set vdp vram address high byte
+		rts
+bitmask:
+	!byte $80,$40,$20,$10,$08,$04,$02,$01
+
+	
 .blend_isr
     bit a_vreg
     bpl +
@@ -142,14 +205,16 @@ vdp_gfx2_blend_on
     jmp --
 +   rts
 
+
+	
 !align 255,0
 .pattern
 ;!bin "test/BRUNI_TRUDI.TIAP"
-!bin "test/DIGITS_0-9_2.TIAP"
+;!bin "test/DIGITS_0-9_2.TIAP"
 ;!bin "VESPA.TIAP"
 ;!bin "test/GIRL_02.TIAP"
 .color
 ;!bin "test/BRUNI_TRUDI.TIAC"
-!bin "test/DIGITS_0-9_2.TIAC"
+;!bin "test/DIGITS_0-9_2.TIAC"
 ;!bin "VESPA.TIAC"
 ;!bin "test/GIRL_02.TIAC"

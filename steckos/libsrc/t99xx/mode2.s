@@ -11,6 +11,7 @@
 .export vdp_mode_gfx2
 .export vdp_mode_gfx2_blank
 .export vdp_fill_name_table
+.export vdp_gfx2_set_pixel
 
 .code
 ;
@@ -47,7 +48,7 @@ vdp_init_bytes_gfx2:
 			.byte	(ADDRESS_GFX2_SPRITE / $80)	; sprite attribute table - value * $80 --> offset in VRAM
 			.byte	(ADDRESS_GFX2_SPRITE_PATTERN / $800)	; sprite pattern table - value * $800  --> offset in VRAM
 			.byte	Black
-
+			
 ;
 ; blank gfx mode 2 with 
 ; adrl - color to fill
@@ -67,3 +68,53 @@ vdp_mode_gfx2_blank:		; 2 x 6K
 	ldy #WRITE_ADDRESS + >ADDRESS_GFX2_SCREEN
 	ldx	#3		;768 byte screen map
 	jmp	vdp_fill
+	
+;	set pixel to gfx2 mode screen
+;
+;	X - x coordinate [0..ff]
+;	Y - y coordinate [0..bf]
+;	A - color [0..f]
+;
+; 	VRAM ADDRESS = 8(INT(X DIV 8)) + 256(INT(Y DIV 8)) + (Y MOD 8)
+vdp_gfx2_set_pixel:
+		and #$0f
+		sta tmp1	
+		; calculate low byte vram adress
+		txa
+		and	#$f8
+		sta	tmp2
+		tya
+		and	#$07
+		ora	tmp2
+		sta	a_vreg	;4 set vdp vram address low byte
+		sta	tmp2	;3 safe vram low byte
+		
+		; high byte vram address - div 8, result is vram address "page" $0000, $0100, ...
+		tya						;2
+		lsr						;2
+		lsr						;2
+		lsr						;2
+		sta	a_vreg				;set vdp vram address high byte
+		ora #WRITE_ADDRESS		;2 adjust for write
+		tay						;2 safe vram high byte for write in y
+	
+		txa						;2 set the appropriate bit 
+		and	#$07				;2
+		tax						;2
+		nop						;2
+		lda	bitmask,x			;4
+		ora	a_vram				;4 read current byte in vram and OR with new pixel
+		tax						;2 
+		
+		nop						;2
+		lda	tmp2				;2
+		sta a_vreg
+		tya
+		nop
+		nop
+		sta	a_vreg
+		vnops
+		stx a_vram	;set vdp vram address high byte
+		rts
+bitmask:
+	.byte $80,$40,$20,$10,$08,$04,$02,$01
