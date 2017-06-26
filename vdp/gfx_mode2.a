@@ -18,16 +18,20 @@ main
     
     lda #Cyan<<4|Black
     jsr vdp_mode_gfx2_blank
+	jsr vdp_mode_gfx2			;enable gfx2 mode
     	
 	lda	#0
-	ldx #0
-	ldy #0
-	jsr vdp_gfx2_set_pixel
-	ldx #1
-	ldy #1
-	jsr vdp_gfx2_set_pixel
+	sta	tmp3
+	sta	tmp4
 	
-	jsr vdp_mode_gfx2			;enable gfx2 mode
+-	ldx tmp3
+	ldy tmp4
+	jsr vdp_gfx2_set_pixel
+	inc tmp3
+	bne	-
+	inc	tmp4
+	bne	-
+	
 -	bra -
 	
     jsr	vdp_mode_gfx2_load_bitmap
@@ -63,6 +67,7 @@ main
 ;
 ; 	VRAM ADDRESS = 8(INT(X DIV 8)) + 256(INT(Y DIV 8)) + (Y MOD 8)
 vdp_gfx2_set_pixel:
+		+SyncBlank
 		and #$0f
 		sta tmp1	
 		; calculate low byte vram adress
@@ -87,17 +92,18 @@ vdp_gfx2_set_pixel:
 		txa						;2 set the appropriate bit 
 		and	#$07				;2
 		tax						;2
-		nop						;2
+;		nop						;2
 		lda	bitmask,x			;4
 		ora	a_vram				;4 read current byte in vram and OR with new pixel
-		tax						;2 
-		
+		tax						;2 or value to x
+		nop						;2
+		nop						;2
 		nop						;2
 		lda	tmp2				;2
 		sta a_vreg
-		tya
-		nop
-		nop
+		tya						;2
+		nop						;2
+		nop						;2
 		sta	a_vreg
 		+vnops
 		stx a_vram	;set vdp vram address high byte
