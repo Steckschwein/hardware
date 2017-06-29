@@ -8,16 +8,16 @@
 .import vdp_nopslide
 .import vdp_fill
 
-.export vdp_mode_gfx2
-.export vdp_mode_gfx2_blank
-.export vdp_fill_name_table
+.export vdp_gfx2_on
+.export vdp_gfx2_blank
 .export vdp_gfx2_set_pixel
 
 .code
 ;
 ;	gfx 2 - each pixel can be addressed - e.g. for image
 ;	
-vdp_mode_gfx2:
+vdp_gfx2_on:
+			jsr vdp_fill_name_table
 			lda #<vdp_init_bytes_gfx2
 			sta ptr1
 			lda #>vdp_init_bytes_gfx2
@@ -51,9 +51,9 @@ vdp_init_bytes_gfx2:
 			
 ;
 ; blank gfx mode 2 with 
-; adrl - color to fill
+; 	A - color to fill [0..f]
 ;    
-vdp_mode_gfx2_blank:		; 2 x 6K
+vdp_gfx2_blank:		; 2 x 6K
 	sta tmp1
 	lda #<ADDRESS_GFX2_COLOR
 	ldy #WRITE_ADDRESS + >ADDRESS_GFX2_COLOR
@@ -77,9 +77,9 @@ vdp_mode_gfx2_blank:		; 2 x 6K
 ;
 ; 	VRAM ADDRESS = 8(INT(X DIV 8)) + 256(INT(Y DIV 8)) + (Y MOD 8)
 vdp_gfx2_set_pixel:
-		and #$0f
-		sta tmp1	
-		; calculate low byte vram adress
+		beq vdp_gfx2_set_pixel_e	; 0 - not set, leave blank
+;		sta tmp1					; otherwise go on and set pixel
+		; calculate low byte vram adress	
 		txa
 		and	#$f8
 		sta	tmp2
@@ -101,20 +101,22 @@ vdp_gfx2_set_pixel:
 		txa						;2 set the appropriate bit 
 		and	#$07				;2
 		tax						;2
-		nop						;2
 		lda	bitmask,x			;4
+;		and tmp1				;3
 		ora	a_vram				;4 read current byte in vram and OR with new pixel
-		tax						;2 
-		
+		tax						;2 or value to x
+		nop						;2
+		nop						;2
 		nop						;2
 		lda	tmp2				;2
 		sta a_vreg
-		tya
-		nop
-		nop
+		tya						;2
+		nop						;2
+		nop						;2
 		sta	a_vreg
 		vnops
 		stx a_vram	;set vdp vram address high byte
+vdp_gfx2_set_pixel_e:
 		rts
 bitmask:
 	.byte $80,$40,$20,$10,$08,$04,$02,$01

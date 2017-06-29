@@ -92,7 +92,6 @@ vdp_gfx2_set_pixel:
 		txa						;2 set the appropriate bit 
 		and	#$07				;2
 		tax						;2
-;		nop						;2
 		lda	bitmask,x			;4
 		ora	a_vram				;4 read current byte in vram and OR with new pixel
 		tax						;2 or value to x
