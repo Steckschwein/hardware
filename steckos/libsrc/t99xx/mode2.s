@@ -80,7 +80,7 @@ vdp_gfx2_set_pixel:
 		beq vdp_gfx2_set_pixel_e	; 0 - not set, leave blank
 ;		sta tmp1					; otherwise go on and set pixel
 		; calculate low byte vram adress	
-		txa
+		txa						;2
 		and	#$f8
 		sta	tmp2
 		tya

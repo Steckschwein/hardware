@@ -1,13 +1,13 @@
 .include "common.inc"
 .include "vdp.inc"
 .include "zeropage.inc"
-.include "../kernel/kernel.inc"
-.include "../kernel/kernel_jumptable.inc"
-.include "../kernel/fat32.inc"
+.include "kernel_jumptable.inc"
 
-.import vdp_mode_gfx2
-.import vdp_mode_gfx2_blank
-.import vdp_fill_name_table
+.importzp ptr2, ptr3
+.importzp tmp3, tmp4
+
+.import vdp_gfx2_on
+.import vdp_gfx2_blank
 .import vdp_display_off
 .import vdp_memcpy
 .import vdp_mode_sprites_off
@@ -160,8 +160,8 @@ gfxui_on:
 	jsr vdp_mode_sprites_off	;sprites off
 
     lda #Black<<4|Black
-    jsr vdp_mode_gfx2_blank
-    jsr vdp_fill_name_table
+    jsr vdp_gfx2_blank
+    ;jsr vdp_fill_name_table
 	
     SetVector  content, ptr1    ; only load the pattern data, leave colors black to blend them later
 	lda	#<ADDRESS_GFX2_PATTERN
@@ -171,7 +171,7 @@ gfxui_on:
 
     copypointer  $fffe, irqsafe
     SetVector  blend_isr, $fffe
-	jsr vdp_mode_gfx2			    ;enable gfx2 mode
+	jsr vdp_gfx2_on			    ;enable gfx2 mode
     cli
     rts
     

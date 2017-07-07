@@ -1,3 +1,4 @@
+.include "common.inc"
 .include "kernel.inc"
 .include "sdcard.inc"
 .include "via.inc"

@@ -12,5 +12,16 @@
 	.endrepeat
 .endmacro
 
+.macro save
+	pha
+	phy
+	phx
+.endmacro
+
+.macro restore
+	plx
+	ply
+	pla
+.endmacro
 
 KEY_ESCAPE = 27

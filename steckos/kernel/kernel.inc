@@ -71,18 +71,6 @@ BANK3 = BANK_SEL1 | BANK_SEL0
     pla
 .endmacro 
 
-.macro save
-	pha
-	phy
-	phx
-.endmacro
-
-.macro restore
-	plx
-	ply
-	pla
-.endmacro
-
 .macro Copy src, trgt, len
 
 		ldx #len

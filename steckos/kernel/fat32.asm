@@ -7,7 +7,7 @@
 .import sd_read_block_data
 
 .export fat_mount
-.export fat_open, fat_isOpen, fat_chdir
+.export fat_open, fat_isOpen, fat_chdir, fat_get_root_and_pwd
 .export fat_read, fat_read_block, fat_find_first, fat_find_next, fat_write
 .export fat_close_all, fat_close, fat_getfilesize
 .export calc_dirptr_from_entry_nr
@@ -130,7 +130,20 @@ fat_update_direntry:
 		rts
 
 
-
+	;in:
+        ;   A/X - pointer to the result buffer
+		;	Y	- buffer size
+        ;out: 
+		;	A - errno, 0 - means no error
+fat_get_root_and_pwd:
+		sta	krn_ptr1
+		stx	krn_ptr1+1
+		
+		;TODO - cd .., save name until "/" ?!?
+		lda #0
+		sta	(krn_ptr1)
+		rts
+		
 	;in:
         ;   a/x - pointer to the file path
         ;out: 
