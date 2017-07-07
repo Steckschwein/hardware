@@ -140,8 +140,9 @@ fat_get_root_and_pwd:
 		stx	krn_ptr1+1
 		
 		;TODO - cd .., save name until "/" ?!?
+		ldx	#FD_INDEX_CURRENT_DIR
 		lda #0
-		sta	(krn_ptr1)
+		sta	(krn_ptr1)	; '0' term string
 		rts
 		
 	;in:

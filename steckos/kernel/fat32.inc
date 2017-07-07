@@ -130,13 +130,13 @@ DIR_Entry_Size      = .sizeof(F32DirEntry)
 
 .struct F32_fd
 	StartCluster	.word 2	; +4
-	FileSize	.word 2	; +4
-	Attr		.byte
+	FileSize		.word 2	; +4
+	Attr			.byte
 	CurrentCluster	.word 2
-	SeekPos		.word 2
-	DirEntryLBA	.word 2 ; LBA of the block where the dir entry of the file is located
-	DirEntryPos	.byte	; block offset within the block (DirEntryPos * DIR_Entry_Size)
-	Reserved	.byte 10;fill up to $20
+	SeekPos			.word 2
+	DirEntryLBA		.word 2 ; LBA of the block where the dir entry of the file is located
+	DirEntryPos		.byte	; block offset within the block (DirEntryPos * DIR_Entry_Size)
+	Reserved		.byte 10;fill up to $20
 .endstruct
 FD_Size = .sizeof(F32_fd)
 
