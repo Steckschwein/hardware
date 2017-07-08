@@ -132,24 +132,40 @@ fat_update_direntry:
 
 	;in:
         ;   A/X - pointer to the result buffer
-		;	Y	- buffer size
+		;	Y	- size of result buffer
         ;out: 
 		;	A - errno, 0 - means no error
 fat_get_root_and_pwd:
 		sta	krn_ptr1
 		stx	krn_ptr1+1
+		tya
+		eor	#$ff
+		sta	krn_ptr2		;save -size-1 for easy loop
 		
-		;TODO - cd .., save name until "/" ?!?
-		ldx	#FD_INDEX_CURRENT_DIR
-		lda #0
-		sta	(krn_ptr1)	; '0' term string
+		SetVector pattern, filenameptr
+		ldx #FD_INDEX_CURRENT_DIR
+		jsr fat_find_first
+		bne	@end
+		ldy #F32DirEntry::Name	;Name offset is 0
+@l1:	lda (dirptr),y
+		sta	(krn_ptr1),y	; '0' term string
+		inc krn_ptr2
+		beq @err
+		iny
+		cpy #$0b
+		bne	@l1
+		lda	#0
+@end:		
 		rts
-		
+@err:	lda #ERANGE
+		bra	@end		
+pattern:	.asciiz "."
+
 	;in:
-        ;   a/x - pointer to the file path
+        ;   A/X - pointer to the file path
         ;out: 
 		;	A - errno, 0 - means no error
-        ;   x - index into fd_area of the opened directory
+        ;   X - index into fd_area of the opened directory
 fat_chdir:
 		jsr fat_open			; change dir using temp dir to not clobber the current dir, maybe we will run into an error
 		bne	@l_err_exit			; exit on error
@@ -686,7 +702,6 @@ end_mount:
 		; out:
 		;   x - FD_INDEX_TEMP_DIR offset to fd area
 fat_open_rootdir:
-		;Copy root_dir_first_clus, fd_area + FD_INDEX_TEMP_DIR + FD_start_cluster, 3
 		Copy root_dir_first_clus, fd_area + FD_INDEX_TEMP_DIR + F32_fd::StartCluster, 3
 		ldx #FD_INDEX_TEMP_DIR
 		rts
@@ -780,6 +795,10 @@ fat_getfilesize:
 		pla
 		rts
 
+		; find first dir entry 
+		; in:
+		;   X 			- fd offset		
+		;	filenameptr	- with file name to search
 fat_find_first:
 		ldy #$00
 @l1:	lda (filenameptr),y
