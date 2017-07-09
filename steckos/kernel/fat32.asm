@@ -136,19 +136,35 @@ fat_update_direntry:
         ;out: 
 		;	A - errno, 0 - means no error
 fat_get_root_and_pwd:
-		sta	krn_ptr1
-		stx	krn_ptr1+1
+		sta	krn_ptr2
+		stx	krn_ptr2+1
 		tya
 		eor	#$ff
-		sta	krn_ptr2		;save -size-1 for easy loop
+		sta	krn_ptr3		;save -size-1 for easy loop
+
+
+@l1:	ldx #FD_INDEX_CURRENT_DIR
+		lda fd_area + F32_fd::StartCluster + 3, x
+		ora fd_area + F32_fd::StartCluster + 2, x
+		lda root_dir_first_clus +1
+		sta fd_area + F32_fd::StartCluster +1, x
+		lda root_dir_first_clus +0
+		sta fd_area + F32_fd::StartCluster +0, x
 		
-		SetVector pattern, filenameptr
-		ldx #FD_INDEX_CURRENT_DIR
-		jsr fat_find_first
+		bne @l2
+		Copy fd_area + F32_fd::StartCluster, cluster_nr, 3	;save cluster current dir for matcher
+		lda #<parent_dir
+		ldx #>parent_dir
+		jsr fat_chdir
+		bne	@err
+		jsr fat_find_first_intern
+		
+		
+		SetVector clusternr_matcher, krn_call_internal
 		bne	@end
 		ldy #F32DirEntry::Name	;Name offset is 0
-@l1:	lda (dirptr),y
-		sta	(krn_ptr1),y	; '0' term string
+@l2:	lda (dirptr),y
+		sta	(krn_ptr2),y	; '0' term string
 		inc krn_ptr2
 		beq @err
 		iny
@@ -158,9 +174,16 @@ fat_get_root_and_pwd:
 @end:		
 		rts
 @err:	lda #ERANGE
-		bra	@end		
-pattern:	.asciiz "."
+		bra	@end
 
+cluster_nr:
+		.res 4
+parent_dir:
+		.asciiz ".."
+clusternr_matcher:
+		sec
+		rts
+		
 	;in:
         ;   A/X - pointer to the file path
         ;out: 
@@ -294,7 +317,6 @@ fat_open_found:
 		beq lbl_fat_open_error
 		jsr fat_alloc_fd
 		bne end_open_err
-;		jmp end_open_err
 @l2:	        
 		;save 32 bit cluster number from dir entry
 		ldy #F32DirEntry::FstClusHI +1
@@ -359,7 +381,7 @@ fat_open_found:
 		lda #0 ; no error
 end_open_err:
 		ply
-		cmp	#$00	;restore z flag
+		cmp	#0			;restore z flag
 		rts
 
 inc_blkptr:
@@ -799,18 +821,22 @@ fat_getfilesize:
 		; in:
 		;   X 			- fd offset		
 		;	filenameptr	- with file name to search
+		; out:
+		;	C 			- carry = 1 if found and dirptr is set to the dir entry found, carry = 0 otherwise
 fat_find_first:
-		ldy #$00
+		ldy #0				; TODO FIXME should be part of the matcher, also duplicate code buffer is already prepared in matcher.asm
 @l1:	lda (filenameptr),y
 		beq @l2
 		sta filename_buf,y
-		
 		iny
 		cpy #8+1+3	+1		;?buffer overflow
 		bne @l1
 @l2:	lda	#0
 		sta filename_buf,y
-
+		SetVector filename_matcher, krn_call_internal	;setup the filename matcher
+		
+		; internal find first, assumes that (krn_call_internal) is already setup
+fat_find_first_intern:
 		SetVector sd_blktarget, read_blkptr
 		jsr calc_lba_addr
 		debug32 "lba:", lba_addr
@@ -830,9 +856,8 @@ ff_l4:
 		cmp #$0f
 		beq fat_find_next
 		
-		jsr matcher
+		jsr fat_find_first_matcher	; jmp indirect via (krn_call_internal), set to appropriate matcher strategy
 		bcs ff_end
-
 		; in:
 		;   x - directory fd index into fd_area
 fat_find_next:
@@ -852,7 +877,10 @@ fat_find_next:
 		bra ff_l3
 ff_end:
 		rts
-		
+
+fat_find_first_matcher:
+		jmp	(krn_call_internal)
+
 calc_dirptr_from_entry_nr:
 
 		stz dirptr

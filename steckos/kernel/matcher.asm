@@ -3,7 +3,9 @@
 ;	note:
 ;		*.*	- matches any file or directory with extension
 ;		*	- matches any file or directory without extension
-matcher:
+;	in:
+;		filename_buf the pattern to match the dir name via dirptr
+filename_matcher:
 				ldx #0
 matcher_test1:	lda filename_buf,x
 				cmp #'a'					; char [a-z] ?
@@ -13,9 +15,7 @@ matcher_test1:	lda filename_buf,x
 				and #$df					; uppercase
 				cmp (dirptr)				; match first byte?
 				bne matcher_FAIL
-				;beq matcher_prepare0		; yes, go on check the rest
-				;clc							; no, we can early exit
-				;rts
+				
 matcher_prepare0:
 				sta buffer,x
 				inx
@@ -66,12 +66,12 @@ matcher_quest:
 				LDA (dirptr),Y     			; Yes, so it will match anything
 				BEQ matcher_FAIL        	;  except the end of string
 matcher_REG:	
-				cmp #'a'				; char [a-z] ?
-				bcc matcher_cmp			; no, we have to go the long way
+				cmp #'a'					; char [a-z] ?
+				bcc matcher_cmp				; no, we have to go the long way
 				cmp #'z'+1
 				bcs matcher_cmp
-				and #$df				; uppercase
-matcher_cmp:			cmp (dirptr),y			; match first byte?
+				and #$df					; uppercase
+matcher_cmp:	cmp (dirptr),y				; match byte?
 				BNE matcher_FAIL        	; No, so no match
 				INX             			; Yes, keep checking
 				CMP #0						; Are we at end of string?
@@ -90,7 +90,6 @@ matcher_STLOOP:  			             	; We first try to match with * = ""
 				BCS matcher_FOUND       	; We found a match, return with C=1
 				INY             			; No match yet, try to grow * string
 				LDA (dirptr),Y     			; Are we at the end of string?
-;				cmp #' '
 				BNE matcher_STLOOP      	; Not yet, add a character
-matcher_FAIL:   		CLC            			; Yes, no match found, return with C=0
-matcher_EXIT:			RTS
+matcher_FAIL:   CLC            				; Yes, no match found, return with C=0
+matcher_EXIT:	RTS

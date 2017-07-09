@@ -2,8 +2,8 @@
 			jsr	test_suite
 main:		bra main
 
-.include "../../../bios/bios_call.inc"
-.include "../../../asmunit/asm_unit.asm"
+.include "bios_call.inc"
+.include "asm_unit.asm"
 
 dir_entry_size=11
 krn_tmp=$ee
@@ -182,7 +182,7 @@ l1:
     
 			phx
 			phy
-			jsr matcher	; check <name>.<ext> against 11 byte dir entry <name> <ext>
+			jsr filename_matcher	; check <name>.<ext> against 11 byte dir entry <name> <ext>
 			ply
 			plx
 			lda	#0
