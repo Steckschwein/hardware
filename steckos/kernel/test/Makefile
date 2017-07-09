@@ -8,7 +8,7 @@ all: matcher.test.prg
 
 .PHONY: clean
 clean:
-	rm -f *.o *.bin *.map *.txt
+	rm -f *.o *.prg *.map *.txt
 
 %.o: %.asm ../matcher.asm ../../../rom/bios/bios_call.inc
 	ca65 -t none $(DEBUG) $(CA65FLAGS) --cpu 65c02 -o $@ $(@:.o=.asm)
