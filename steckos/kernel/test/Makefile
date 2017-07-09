@@ -1,5 +1,4 @@
-OBJS=fat32.o sdcard.o textui.o t99xx.lib.o rtc.o spi.o uart.o via.o out.o key.o exec.o kernel.o
-CA65FLAGS=--include-dir ../../../asmunit --include-dir ../../asminc --include-dir ../kernel --include-dir ../../../rom/bios
+CA65FLAGS=--cpu 65c02 --include-dir ../../../asmunit --include-dir ../../asminc --include-dir ../kernel --include-dir ../../../rom/bios
 LDFLAGS=--config ../steckos.cfg
 
 .PHONY: all clean
@@ -11,7 +10,7 @@ clean:
 	rm -f *.o *.prg *.map *.txt
 
 %.o: %.asm ../matcher.asm ../../../rom/bios/bios_call.inc
-	ca65 -t none $(DEBUG) $(CA65FLAGS) --cpu 65c02 -o $@ $(@:.o=.asm)
+	ca65 -t none $(DEBUG) $(CA65FLAGS) -o $@ $(@:.o=.asm)
 	
 matcher.test.prg: matcher.test.o
 	ld65 --config ../../../rom/bios/bios.cfg matcher.test.o -o matcher.test.prg
