@@ -2,16 +2,17 @@
 			jsr	test_suite
 main:		bra main
 
-.include "bios_call.inc"
+.include "kernel_jumptable.inc"
+.include "zeropage.inc"
 .include "asm_unit.asm"
 
-dir_entry_size=11
-krn_tmp=$ee
+; define
+chrout=krn_chrout
 
-.include	"../matcher.asm"
+; required by matcher.asm
 buffer: .res 8+1+3,0
- 
-dirptr=$0
+.include	"../matcher.asm"
+
 test_dirs=13
 filename_buf=*;   pointer of input + size of results (input_X + test_dirs)
 
@@ -95,10 +96,8 @@ test_dir_tab:
 test_dir_tab_e:
 
 Println:
-    lda #13
-    jsr vdp_chrout
-    lda #10
-    jmp vdp_chrout
+    lda #$0a
+    jmp chrout
 
 .macro SetTestInput input
     lda #<(input+test_dirs)
@@ -168,7 +167,8 @@ test_suite:
     jsr test
     SetTestInput input_24
     jsr test
-    rts
+    
+	jmp (retvec)
     
 test:
 			jsr Println
@@ -204,11 +204,11 @@ _next:
 			cpx	#(test_dir_tab_e-test_dir_tab)
 			bne	l1
 			lda #' '
-			jsr vdp_chrout
+			jsr chrout
 			ldx #0
 testinput:	lda	filename_buf, x
 			beq	@oe
-			jsr vdp_chrout
+			jsr chrout
 			inx 	
 			bne testinput
 @oe:		rts

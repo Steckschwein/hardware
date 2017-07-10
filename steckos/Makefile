@@ -7,13 +7,11 @@ clean:
 	(cd tools; make clean)
 	(cd shell; make clean)
 	(cd libsrc; make clean)
-#	(cd kernel/test; make clean)
 	(cd kernel; make clean)
 	rm -rf dist/*
 
 build:
 	(cd kernel; make )
-#	(cd kernel/test; make )
 	(cd libsrc; make )
 	(cd shell; make )
 	(cd tools; make )

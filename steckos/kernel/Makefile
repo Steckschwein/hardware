@@ -6,10 +6,12 @@ LDFLAGS=--config steckos.cfg
 
 .PHONY: all clean
 all: kernel.bin loader.bin
+	(cd test; make )
 
 .PHONY: clean
 clean:
 	rm -f *.o *.bin *.map *.txt kernel_jumptable.inc version.inc
+	(cd test; make clean)
 
 %.o: %.asm $(ASM_INCLUDE)/vdp.inc zeropage.inc fat32.inc version.inc
 	ca65 --cpu $(CPU) --target none $(DEBUG) --include-dir $(ASM_INCLUDE)  $<
