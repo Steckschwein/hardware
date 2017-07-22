@@ -23,4 +23,4 @@ loader.bin: bios.bin
 	cl65 --target none --config loader.cfg loader.asm -o loader.bin
 
 transfer: loader.bin
-	../transfer.py -s 0x0300 loader.bin
+	../../transfer.py -s 0x0300 loader.bin
