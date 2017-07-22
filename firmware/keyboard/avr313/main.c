@@ -106,6 +106,12 @@ int __attribute__((OS_main noreturn)) main(void)
 
 			decode(tmp);
 		}
+
+		tmp = get_mousechar();
+		if (tmp != 0)
+		{
+			put_kbbuff(tmp);
+		}
 		
 	}
 	// return 0;

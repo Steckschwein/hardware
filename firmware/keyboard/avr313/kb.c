@@ -8,7 +8,6 @@
 
 
 
-
 void pull_line(unsigned char line)
 {
 	DDRC |= line;
@@ -24,6 +23,10 @@ void init_kb(void)
 	scan_inptr = scan_buffer;				   // Initialize buffer
 	scan_outptr = scan_buffer;
 	scan_buffcnt = 0;
+
+	mouse_inptr = mouse_buffer;				   // Initialize buffer
+	mouse_outptr = mouse_buffer;
+	mouse_buffcnt = 0;
 
 	kb_inptr =  kb_buffer;					  // Initialize buffer
 	kb_outptr = kb_buffer;
@@ -47,7 +50,8 @@ void init_kb(void)
 
 #ifndef USART
 	MCUCR 	= (1 << ISC01);					  // INT0 interrupt on falling edge
-	GIMSK	= (1 << INT0);					  // Enable INT0 interrupt
+	GIMSK	= (1 << INT0)					  // Enable INT0 interrupt
+		| (1 << INT1);					  // Enable INT1 interrupt
 #endif
 	
 	// PORTC  	= 3;
@@ -103,7 +107,6 @@ ISR (INT0_vect)
 		{
 			*scan_inptr++ = data;   // Put character into buffer, Increment pointer
 			scan_buffcnt++;
-
 #ifdef USE_IRQ
 		DDRC |= (1 << IRQ);		// pull IRQ line
 #endif
@@ -111,6 +114,35 @@ ISR (INT0_vect)
 			// Pointer wrapping
 			if (scan_inptr >= scan_buffer + SCAN_BUFF_SIZE)
 				scan_inptr = scan_buffer;
+		}
+	}
+}
+
+ISR (INT1_vect)
+{
+	static uint8_t data = 0;				  // Holds the received scan code
+	static uint8_t bitcount = 11;			  // 0 = neg.  1 = pos.
+
+	if(bitcount < 11 && bitcount > 2)		  // Bit 3 to 10 is data. Parity bit,
+	{										  // start and stop bits are ignored.
+		data = (data >> 1);
+		if(PIND & (1 << MOUSE_DATAPIN))
+			data = data | 0x80;				  // Store a '1'
+	}     
+
+	if(--bitcount == 0)						  // All bits received
+	{
+		bitcount = 11;
+
+		if (mouse_buffcnt < SCAN_BUFF_SIZE)			  // If buffer not full
+		{
+			*mouse_inptr++ = data;   // Put character into buffer, Increment pointer
+			mouse_buffcnt++;
+
+
+			// Pointer wrapping
+			if (mouse_inptr >= mouse_buffer + SCAN_BUFF_SIZE)
+				mouse_inptr = mouse_buffer;
 		}
 	}
 }
@@ -297,6 +329,29 @@ int get_scanchar(void)
 	// Decrement buffer count
     cli();
 	scan_buffcnt--;
+    sei();
+    
+    return byte;
+}
+int get_mousechar(void)
+{
+	uint8_t byte;
+
+	// Wait for data
+	if (mouse_buffcnt == 0)
+	{
+		return 0;
+	}
+
+	// Get byte - Increment pointer
+	byte = *mouse_outptr++;
+    
+	// Pointer wrapping
+	if (mouse_outptr >= mouse_buffer + SCAN_BUFF_SIZE)
+		mouse_outptr = mouse_buffer;
+	// Decrement buffer count
+    cli();
+	mouse_buffcnt--;
     sei();
     
     return byte;
