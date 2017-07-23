@@ -8,7 +8,7 @@
 
 
 
-void pull_line(unsigned char line)
+void __attribute__((naked)) pull_line(uint8_t line)
 {
 	DDRC |= line;
 	// PORTC &= ~line;
@@ -164,128 +164,90 @@ void decode(uint8_t sc)
 
 	if (!is_up)								  // Last data received was the up-key identifier
 	{
-		if(sc == 0xF0)						  // The up-key identifier
+		switch (sc)
 		{
-			is_up = 1;
-		}
-
-		else if(sc == 0x12 || sc == 0x59)	  // Left SHIFT or Right SHIFT
-		{
-			shift = 1;
-		}
-
-		else if (sc == 0x14)		// Left CTRL or Right CTRL
-		{
-			ctrl=1;
-		}
-
-		else if (sc == 0x11)     // Left ALT or Right ALT
-		{
-			alt=1;
-		}
-		else if (sc == 0xAA)     // Selftest ok
-		{
-		}
-
-/*
-		else if(sc == 0x05)					  // F1
-		{
-			if(mode == 0)
-				mode = 1;					  // Enter scan code mode
-			if(mode == 2)
-				mode = 3;					  // Leave scan code mode
-		}
-*/
-//        else if(sc == 0x05)
-            
-		else
-		{
-			if(mode == 0 || mode == 3)		  // If ASCII mode
-			{
-				
-				if (ctrl && alt && sc == 0x71) // CTRL ALT DEL
+			case 0xF0:
+				is_up = 1;
+				break;
+			case 0x12:
+			case 0x59:	
+				shift = 1;
+				break;
+			case 0x14:
+				ctrl = 1;
+				break;
+			case 0x11:
+				alt = 1;
+				break;
+			case 0xAA:
+				break;
+			default:
+				if(mode == 0 || mode == 3)		  // If ASCII mode
 				{
-					pull_line((1 << RESET_TRIG));
-					// DDRC = (1 << PC0);
-					// PORTC &= ~(1 << PC0);
-					// _delay_us(500);
-					// PORTC |= (1 << PC0);
-					// DDRC = (0 << PC0);
-					return;
-				}
+					
+					if (ctrl && alt && sc == 0x71) // CTRL ALT DEL
+					{
+						pull_line((1 << RESET_TRIG));
+						return;
+					}
 
 
-				offs=1;
-				if(shift)					  // If shift not pressed,
+					offs=1;
+					if(shift)					  // If shift not pressed,
+					{
+						offs=2;
+					}
+					else if (ctrl)
+					{
+						offs=3;
+					}
+					else if (alt)
+					{
+						offs=4;
+					}
+					
+					// do a table look-up
+					for(i = 0; (ch = pgm_read_byte(&scancodes[i][0])) != sc && ch; i++);
+					if (ch == sc)
+					{
+						ch = pgm_read_byte(&scancodes[i][offs]);
+						// if(ch & 0x80){ //escape sequence?
+						//     put_kbbuff(0x1b);   // put 2 byte to buffer
+						//     ch &= 0b01111111;
+						// }
+						put_kbbuff(ch);
+					}
+				}								  
+				else // Scan code mode
 				{
-					offs=2;
+			
 				}
-				else if (ctrl)
-				{
-					offs=3;
-				}
-				else if (alt)
-				{
-					offs=4;
-				}
-				
-				// do a table look-up
-				for(i = 0; (ch = pgm_read_byte(&scancodes[i][0])) != sc && ch; i++);
-				if (ch == sc)
-				{
-                    ch = pgm_read_byte(&scancodes[i][offs]);
-                    // if(ch & 0x80){ //escape sequence?
-                    //     put_kbbuff(0x1b);   // put 2 byte to buffer
-                    //     ch &= 0b01111111;
-                    // }
-                    put_kbbuff(ch);
-				}
-			}								  
-			else // Scan code mode
-			{
-                
-			}
+				break;
 		}
 	}
 	else
 	{
 		is_up = 0;							  // Two 0xF0 in a row not allowed
 
-		if(sc == 0x12 || sc == 0x59)		  // Left SHIFT or Right SHIFT
+		switch (sc)
 		{
-			shift = 0;
-		}
-		else if (sc == 0x14)		// Left CTRL or Right CTRL
-		{
-			ctrl=0;
-		}
-		else if (sc == 0x11)     // Left ALT or Right ALT
-		{
-			alt=0;
-		}
-		else if(sc == 0x05)					  // F1
-		{
-			if(mode == 1)
-				mode = 2;
-			if(mode == 3)
-				mode = 0;
-		}
-		else
-		{
-			if (sc == 0x84) // SYSRQ
-			{
+			case 0x12:
+			case 0x59:	
+				shift = 0;
+				break;
+			case 0x14:
+				ctrl = 0;
+				break;
+			case 0x11:
+				alt = 0;
+				break;
+			case 0xAA:
+				break;
+
+			case 0x84: // SYSRQ
 				pull_line((1 << NMI));
-				// DDRC = (1 << PC1);
-				// PORTC &= ~(1 << PC1);
-				// _delay_us(500);
-				// PORTC |= (1 << PC1);
-				// DDRC = (0 << PC1);
 				return;
-			}
 		}
-		// case 0x06 :						// F2
-		//   clr();
-		//   break;
 	}
 }
 
