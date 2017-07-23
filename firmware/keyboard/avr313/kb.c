@@ -46,10 +46,10 @@ void init_kb(void)
 		  | (1 << UCSZ0) // Select number of data bits (8)
 		  | (1 << UCSZ1)  
 		  | (1 << UCPOL); // Clock polarity to falling edge 
-#endif
+#else
+	MCUCR 	= (1 << ISC01)					  // INT0 interrupt on falling edge
+		| (1 << ISC10);					  // INT1 interrupt on falling edge
 
-#ifndef USART
-	MCUCR 	= (1 << ISC01);					  // INT0 interrupt on falling edge
 	GIMSK	= (1 << INT0)					  // Enable INT0 interrupt
 		| (1 << INT1);					  // Enable INT1 interrupt
 #endif
@@ -160,8 +160,6 @@ void decode(uint8_t sc)
 	// put_kbbuff(sc);
 	// return;
 
-	offs = 1;
-
 	if (!is_up)								  // Last data received was the up-key identifier
 	{
 		switch (sc)
@@ -192,7 +190,6 @@ void decode(uint8_t sc)
 					}
 
 
-					offs=1;
 					if(shift)					  // If shift not pressed,
 					{
 						offs=2;
@@ -204,6 +201,10 @@ void decode(uint8_t sc)
 					else if (alt)
 					{
 						offs=4;
+					}
+					else
+					{
+						offs=1;
 					}
 					
 					// do a table look-up
