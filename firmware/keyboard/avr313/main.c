@@ -107,11 +107,13 @@ int __attribute__((OS_main noreturn)) main(void)
 			decode(tmp);
 		}
 
+#ifdef MOUSE
 		tmp = get_mousechar();
 		if (tmp != 0)
 		{
 			put_kbbuff(tmp);
 		}
+#endif
 		
 	}
 }
