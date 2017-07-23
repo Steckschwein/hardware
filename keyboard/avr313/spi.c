@@ -22,7 +22,7 @@ ISR( SPI_STC_vect)
 	if (kb_buffcnt == 0)
 	{
 		// SPDR;   //read and forget
-        SPDR = 0;
+	        SPDR = 0;
 	}
 	else
 	{
