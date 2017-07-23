@@ -12,6 +12,9 @@ CFLAGS= -g -Os -Wall -mcall-prologues -mmcu=atmega8  -DF_CPU=$(CPUSPEED) -D__PRO
 #uncomment to use ATmega USART 
 #CFLAGS+=-DUSART
 
+#uncomment to use mouse on INT1
+#CFLAGS+=-DMOUSE
+
 #uncomment to trigger host system IRQ line at every keytroke
 #CFLAGS+=-DUSE_IRQ
 

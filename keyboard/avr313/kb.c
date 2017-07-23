@@ -24,9 +24,12 @@ void init_kb(void)
 	scan_outptr = scan_buffer;
 	scan_buffcnt = 0;
 
+#ifdef MOUSE
 	mouse_inptr = mouse_buffer;				   // Initialize buffer
 	mouse_outptr = mouse_buffer;
 	mouse_buffcnt = 0;
+#endif
+
 
 	kb_inptr =  kb_buffer;					  // Initialize buffer
 	kb_outptr = kb_buffer;
@@ -47,11 +50,17 @@ void init_kb(void)
 		  | (1 << UCSZ1)  
 		  | (1 << UCPOL); // Clock polarity to falling edge 
 #else
+#ifdef MOUSE
 	MCUCR 	= (1 << ISC01)					  // INT0 interrupt on falling edge
 		| (1 << ISC10);					  // INT1 interrupt on falling edge
 
 	GIMSK	= (1 << INT0)					  // Enable INT0 interrupt
 		| (1 << INT1);					  // Enable INT1 interrupt
+#else
+	MCUCR 	= (1 << ISC01);					  // INT0 interrupt on falling edge
+
+	GIMSK	= (1 << INT0);					  // Enable INT0 interrupt
+#endif
 #endif
 	
 	// PORTC  	= 3;
@@ -118,6 +127,7 @@ ISR (INT0_vect)
 	}
 }
 
+#ifdef MOUSE
 ISR (INT1_vect)
 {
 	static uint8_t data = 0;				  // Holds the received scan code
@@ -146,6 +156,7 @@ ISR (INT1_vect)
 		}
 	}
 }
+#endif
 #endif
 
 void decode(uint8_t sc)
@@ -296,6 +307,7 @@ int get_scanchar(void)
     
     return byte;
 }
+#ifdef MOUSE
 int get_mousechar(void)
 {
 	uint8_t byte;
@@ -319,3 +331,4 @@ int get_mousechar(void)
     
     return byte;
 }
+#endif

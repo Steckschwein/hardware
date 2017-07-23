@@ -26,11 +26,13 @@ int  get_mousechar(void);
  uint8_t *scan_outptr;
  uint8_t scan_buffcnt;
 
+#ifdef MOUSE
 #define MOUSE_BUFF_SIZE 12
  uint8_t mouse_buffer[SCAN_BUFF_SIZE];
  uint8_t *mouse_inptr;
  uint8_t *mouse_outptr;
  uint8_t mouse_buffcnt;
+#endif
 
 #define KB_BUFF_SIZE 8
  uint8_t kb_buffer[KB_BUFF_SIZE];
