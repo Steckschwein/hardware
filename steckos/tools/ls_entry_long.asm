@@ -47,12 +47,20 @@ dir_show_entry:
 		jsr krn_chrout
 		
 		ldy #F32DirEntry::FileSize + 2
-@l5:		dey
-		lda (dirptr),y
-		jsr krn_hexout
+;@l5:		dey
+		;lda (dirptr),y
+		;jsr krn_hexout
+;
+		;cpy #F32DirEntry::FileSize
+		;bne @l5
 
-		cpy #F32DirEntry::FileSize
-		bne @l5
+		ldy #F32DirEntry::FileSize +1
+		lda (dirptr),y
+		tax
+		ldy #F32DirEntry::FileSize 
+		lda (dirptr),y
+
+		jsr BINBCD16
 
 		lda #' '
 		jsr krn_chrout
@@ -172,3 +180,41 @@ decoutz:
 		jmp decout
  ; Lookup table for decimal to ASCII
 dec_tbl:			.byte 128,160,200
+
+BINBCD16: 
+                sta tmp0
+		stx tmp0+1
+	        SED             ; Switch to decimal mode
+                LDA #0          ; Ensure the result is clear
+                STA BCD+0
+                STA BCD+1
+                STA BCD+2
+                LDX #16         ; The number of source bits
+
+CNVBIT:         ASL tmp0+0       ; Shift out one bit
+                ROL tmp0+1
+                LDA BCD+0       ; And add into result
+                ADC BCD+0
+                STA BCD+0
+                LDA BCD+1       ; propagating any carry
+                ADC BCD+1
+                STA BCD+1
+                LDA BCD+2       ; ... thru whole result
+                ADC BCD+2
+                STA BCD+2
+                DEX             ; And repeat for next bit
+                BNE CNVBIT
+                CLD             ; Back to binary
+
+
+		lda BCD+2
+		jsr krn_hexout
+		lda BCD+1
+		jsr krn_hexout
+		lda BCD
+		jsr krn_hexout
+
+		rts
+
+;BIN:		.word 0
+BCD:		.res 3
