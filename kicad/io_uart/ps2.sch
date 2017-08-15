@@ -102,7 +102,7 @@ U 1 1 58E7EA4D
 P 6300 3000
 F 0 "P3" H 6300 3200 50  0000 C CNN
 F 1 "ISP" H 6300 2800 50  0000 C CNN
-F 2 "Pin_Headers:Pin_Header_Straight_2x03" H 6300 1800 60  0001 C CNN
+F 2 "Pin_Headers:Pin_Header_Angled_2x03" H 6300 1800 60  0001 C CNN
 F 3 "" H 6300 1800 60  0000 C CNN
 	1    6300 3000
 	1    0    0    -1  
