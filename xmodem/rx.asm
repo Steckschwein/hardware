@@ -1,7 +1,7 @@
 !src "../steckos/kernel/kernel_jumptable.inc"
 !src "../steckos/kernel/uart.inc"
 *=$1000
-dest = $d000
+dest = $db00
 
 loop:
 
@@ -30,7 +30,7 @@ end:
 	
 !align 255,0
 payload:
-!pseudopc $d000 {
+!pseudopc dest {
 
 ; XMODEM/CRC Receiver for the 65C02
 ;
