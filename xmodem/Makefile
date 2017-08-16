@@ -1,11 +1,12 @@
-OBJS=xmodem-receive.o
-TARGET=xmodem-receive.prg
+TARGET=xmodem-receive.prg hello.prg
 
-%.prg: $(OBJS)
-	cl65 --target none  --config ../steckos/kernel/steckos.cfg -o $@ $(OBJS)
+all: $(TARGET)
 
-%.o: %.asm
-	ca65 --cpu 65c02 -o $@ $<
+hello.prg:
+	acme -v -f cbm --cpu 65c02 -o hello.prg hello.asm
+%.prg: %.asm
+	acme -v -f plain --cpu 65c02 -o $@ $<
+
 
 all: $(TARGET) 
 
@@ -13,5 +14,5 @@ clean:
 	rm -f $(TARGET) $(OBJS)
 
 tx: $(TARGET)
-	../transfer.py $(TARGET)    
+	../transfer.py xmodem-receive.prg 
 
