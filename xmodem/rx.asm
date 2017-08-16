@@ -169,14 +169,7 @@ StartCrc:	lda	#'C'		; "C" start with CRC mode
                	bcs	GotByte		; byte received, process it
 		bcc	StartCrc	; resend "C"
 
-StartBlk:	
-                jsr krn_getkey
-                cmp #$03 ; CTRL-C?
-		bne +
-		jmp (retvec)
-+
-
-		lda	#$FF		; 
+StartBlk:	lda	#$FF		; 
 		sta	retry2		; set loop counter for ~3 sec delay
 		;lda	#$00		;
 		stz	crc		;
