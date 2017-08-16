@@ -98,6 +98,8 @@ blkno		=	$3c		; block number
 retry		=	$3d		; retry counter 
 retry2		=	$3e		; 2nd counter
 bflag		=	$3f		; block flag 
+
+retvec		=	$da
 ;
 ;
 ; non-zero page variables and buffers
@@ -167,7 +169,14 @@ StartCrc:	lda	#'C'		; "C" start with CRC mode
                	bcs	GotByte		; byte received, process it
 		bcc	StartCrc	; resend "C"
 
-StartBlk:	lda	#$FF		; 
+StartBlk:	
+                jsr krn_getkey
+                cmp #$03 ; CTRL-C?
+		bne +
+		jmp (retvec)
++
+
+		lda	#$FF		; 
 		sta	retry2		; set loop counter for ~3 sec delay
 		;lda	#$00		;
 		stz	crc		;
@@ -258,6 +267,7 @@ Done:		lda	#ACK		; last block, send ACK and exit.
 		jsr	Flush		; get leftover characters, if any
 		jsr	Print_Good	;
 		rts			;
+
 ;
 ;^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ;

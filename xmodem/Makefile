@@ -1,4 +1,4 @@
-TARGET=xmodem-receive.prg hello.prg
+TARGET=rx.prg hello.prg
 
 all: $(TARGET)
 
@@ -14,5 +14,5 @@ clean:
 	rm -f $(TARGET) $(OBJS)
 
 tx: $(TARGET)
-	../transfer.py xmodem-receive.prg 
+	../transfer.py rx.prg 
 
