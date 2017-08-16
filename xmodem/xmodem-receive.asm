@@ -147,10 +147,6 @@ ESC		=	$1b		; ESC to exit
 ;
 		jsr XModem
 
-		lda addr+1
-		jsr krn_hexout
-		lda addr
-		jsr krn_hexout
 		jmp (addr)
 
 
@@ -238,12 +234,10 @@ GoodCrc:	ldx	#$02		;
 		lda	Rbuff,x		; get target address from 1st 2 bytes of blk 1
 		sta	ptr		; save lo address
 		sta	addr
-		jsr krn_hexout
 		inx			;
 		lda	Rbuff,x		; get hi address
 		sta	ptr+1		; save it
 		sta	addr+1
-		jsr krn_hexout
 		inx			; point to first byte of data
 		dec	bflag		; set the flag so we won't get another address		
 CopyBlk:	ldy	#$00		; set offset to zero
