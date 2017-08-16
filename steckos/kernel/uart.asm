@@ -1,5 +1,6 @@
 .include "kernel.inc"
-.export  init_uart, uart_tx, uart_rx, uart_rx_nowait
+;.export  init_uart, uart_tx, uart_rx, uart_rx_nowait
+.export  init_uart, uart_tx, uart_rx
 .include "uart.inc"
 .segment "KERNEL"
 
