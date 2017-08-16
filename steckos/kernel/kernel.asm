@@ -381,6 +381,10 @@ krn_sd_write_block:    	jmp sd_write_block
 .export krn_sd_read_block
 krn_sd_read_block:    	jmp sd_read_block
 
+;.import uart_rx_nowait
+;.export krn_uart_rx_nowait
+;krn_uart_rx_nowait:    	jmp uart_rx_nowait
+
 .segment "VECTORS"
 ; ----------------------------------------------------------------------------------------------
 ; Interrupt vectors
