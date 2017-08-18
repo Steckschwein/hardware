@@ -21,7 +21,7 @@ KEY_CRSR_LEFT 	 	= $11
 
 BUF_SIZE		= 32
 
-buf 			= $e600
+;buf 			= $d600
 ;endbuf				= buf + BUF_SIZE*16
 bufptr			= $d0
 pathptr			= $d2
@@ -526,3 +526,5 @@ help:
 PATH:		        .asciiz "/bin/:/sbin/:/usr/bin/"
 BINEXT:			.asciiz ".PRG"
 tmpbuf:	.res 64,0
+.align 256
+buf: .res 32,0
