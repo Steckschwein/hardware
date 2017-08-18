@@ -34,8 +34,9 @@ main:
 		SetVector content, addr
 		jsr	gfxui_on
 		jsr	gfxui_blend_on
-@l:		jsr krn_keyin
-		beq @l
+
+		keyin
+
 		jsr	gfxui_blend_off
 		jsr	gfxui_off
     
