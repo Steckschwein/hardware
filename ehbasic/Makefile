@@ -1,4 +1,4 @@
-OBJ=ehbasic.prg
+OBJ=basic.prg
 ASM_INCLUDE=../steckos/asminc
 LIBS=../steckos/lib/steckschwein-kernel.lib
 #CA65 := ca65
@@ -18,8 +18,8 @@ clean:
 	$(CA65) --include-dir $(ASM_INCLUDE) --target none $(DEFINES)  $<
 
 
-ehbasic.prg: steck_mon.o 
-	$(LD65) $(LDFLAGS) steck_mon.o $(LIBS) -Ln ehbasic.lbl -o ehbasic.prg
+basic.prg: steck_mon.o 
+	$(LD65) $(LDFLAGS) steck_mon.o $(LIBS) -o basic.prg
 
 transfer: all
 	../transfer.py $(OBJ) 
