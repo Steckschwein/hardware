@@ -2,8 +2,9 @@
 .include    "zeropage.inc"
 .include    "debug.inc"
 
-clockspeed = 8
-user_isr 	        = $028e
+kernel_start = $e800
+clockspeed   = 8
+user_isr     = $028e
 
 .macro	printstring text
 			jsr krn_primm
@@ -18,6 +19,7 @@ user_isr 	        = $028e
 ;	jsr krn_chrout
 .endmacro
 
+memctl = $0230
 ROM_OFF = 1<<0
 BANK_SEL0 = 1<<1
 BANK_SEL1 = 1<<2

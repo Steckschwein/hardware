@@ -1,14 +1,10 @@
 .setcpu "65C02"
 .include "common.inc"
 .include "kernel.inc"
-.include "vdp.inc"
 
 .segment "CODE"
 
 ; 	system attribute has to be set on file system
-charset = $e800
-memctl = $0230
-dest = $f000
 
 ; .pages = (.payload_end - .payload) / 256 + 1
 
@@ -16,7 +12,7 @@ dest = $f000
 loop:
 
 @a:		lda payload
-@b:		sta dest
+@b:		sta kernel_start
 
 		inc @a+1
 		inc @b+1
@@ -36,35 +32,6 @@ loop:
 		bne loop
 
 end:
-		;display off
-		lda		#v_reg1_16k	;enable 16K ram, disable screen
-		sta 	a_vreg
-		vnops
-		lda	  	#v_reg1
-		sta   	a_vreg
-		
-
-		; copy 6x8 charset to vdp ram 
-		SetVector	charset, adrl	;load charset
-		lda	#<ADDRESS_GFX1_PATTERN
-		
-		ldy	#WRITE_ADDRESS + >ADDRESS_GFX1_PATTERN
-		ldx	#$08					
-
-		vdp_sreg
-		
-		ldy   #$00
-@l1:  	lda   (adrl),y
-
-		vnops
-
-		iny
-		sta   a_vram
-		bne   @l1
-		inc   adrh
-		dex
-		bne   @l1
-		
 
 		lda #$01
 		sta memctl
@@ -73,8 +40,6 @@ end:
 		; jump to reset vector
 		jmp ($fffc)
 
-m_vdp_nopslide
-		
 .align 256
 ; *=$1100
 payload:
