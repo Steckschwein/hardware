@@ -525,6 +525,7 @@ help:
 
 PATH:		        .asciiz "/bin/:/sbin/:/usr/bin/"
 BINEXT:			.asciiz ".PRG"
-tmpbuf:	.res 64,0
-.align 256
-buf: .res 32,0
+tmpbuf:
+;	.res 64,0
+;.align 256
+buf = tmpbuf + 64
