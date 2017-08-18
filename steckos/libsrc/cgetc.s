@@ -7,4 +7,7 @@
 		
 		.include	"../kernel/kernel_jumptable.inc"
 
-_cgetc = krn_keyin  ;krn_getkey
+_cgetc: 
+	jsr krn_getkey
+	bcc _cgetc
+	
