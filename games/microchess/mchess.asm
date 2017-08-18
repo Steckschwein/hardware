@@ -39,6 +39,7 @@
 ;
 .include "../../steckos/kernel/kernel.inc"
 .include "../../steckos/kernel/kernel_jumptable.inc"
+.include "../../steckos/asminc/common.inc"
 key = $09
 
 ;
@@ -898,7 +899,10 @@ KIN    	LDA   	#'?'
        	AND   	#$4F            ; MASK 0-7, AND ALPHA'S
        	RTS
 
-syskin		= krn_keyin
+syskin:
+		keyin
+		rts
+
 syshexout	= krn_hexout
 syschout 	= krn_chrout
 
