@@ -7,13 +7,15 @@
 .import vdp_nopslide
 .import vdp_fills, vdp_fill
 
-.code
-.scope
+.export vdp_gfx1_blank
+.export vdp_gfx1_on
 
-vdp_mode_gfx1_blank:		; 3 x 256 bytes
+.code
+
+vdp_gfx1_blank:		; 3 x 256 bytes
 	ldx	#$03
 	lda	#' '					;fill vram screen with blank
-	pha
+	sta tmp1
 	lda	#<ADDRESS_GFX1_SCREEN
 	ldy	#WRITE_ADDRESS + >ADDRESS_GFX1_SCREEN
 	jmp	vdp_fill
@@ -31,16 +33,14 @@ vdp_init_bytes_gfx1:
 ;
 ;	gfx mode 1 - 32x24 character mode, 16 colors with same color for 8 characters in a block
 ;
-vdp_mode_gfx1:
-	pha			;color value to stack
-	ldx	#$20
+vdp_gfx1_on:
+	sta tmp1									;TODO FIXME color value to stack
 	lda	#<ADDRESS_GFX1_COLOR
 	ldy	#WRITE_ADDRESS + >ADDRESS_GFX1_COLOR	;color vram
+	ldx	#$20		;32 colors
 	jsr	vdp_fills
 	lda	#<vdp_init_bytes_gfx1
 	sta ptr1
 	lda	#>vdp_init_bytes_gfx1
 	sta ptr1+1
 	jmp	vdp_init_reg
-
-.endscope

@@ -1,4 +1,4 @@
-; TODO FIXME conflicts with ehbasic zeropage locaitons - use steckschwein specific zeropage.s not the cc65....runtime/zeropage.s definition
+; TODO FIXME conflicts with ehbasic zeropage locations - use steckschwein specific zeropage.s not the cc65....runtime/zeropage.s definition
 tmp1=$e0
 tmp2=$e1
 ptr1=$e8
@@ -27,6 +27,14 @@ v_reg4 	= $84
 v_reg5 	= $85
 v_reg6 	= $86
 v_reg7  = $87
+
+SP_Y=0
+SP_X=1
+SP_N=2
+SP_C=3
+
+SPRITE_INVISIBLE=$bf
+SPRITE_OFF=$d0
 
 Transparent    =$00
 Black          =$01	;0	0	0		"black"

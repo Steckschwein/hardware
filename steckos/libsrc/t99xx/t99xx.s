@@ -1,5 +1,4 @@
 .include "vdp.inc"
-;.include "zeropage.inc"
 
 .export	vdp_display_off
 .export	vdp_init_reg
@@ -135,7 +134,7 @@ vdp_memcpy:
 ;  	x - amount of bytes to copy
 vdp_memcpys:
 		vdp_sreg
-		ldy   #$00
+		ldy   #0
 @0:		lda   (ptr1),y ;5
 		vnops
 		sta   a_vram    ;4
