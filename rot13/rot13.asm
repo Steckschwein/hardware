@@ -9,7 +9,7 @@ main:
 
 	ldx #$00
 @loop:
-	jsr krn_keyin
+	keyin
 	cmp #$0d
 	beq out
 	sta buf,x
