@@ -84,7 +84,10 @@ mainloop:
 
 		; put input into buffer until return is pressed
 inputloop:	
-		jsr krn_keyin
+;@l:		jsr krn_getkey
+		;bcc @l
+		keyin
+
 
 		cmp #KEY_RETURN ; return?
 		beq parse

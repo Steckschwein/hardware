@@ -1,15 +1,8 @@
 .include "kernel.inc"
 .include "via.inc"
 .import spi_r_byte, spi_deselect
-.export keyin, getkey
+.export getkey
 .segment "KERNEL"
-
-; Wait for key
-
-keyin:
-@l:	jsr getkey
-	bcc @l
-	rts
 
 ; Select Keyboard controller on SPI, get byte from buffer
 getkey:

@@ -8,7 +8,7 @@ all: version.inc shell.bin
 
 .PHONY: clean
 clean:
-	rm -f *.o *.bin *.map *.txt kernel_jumptable.inc version.inc
+	rm -f *.o *.bin *.map *.txt version.inc
 
 version.inc:
 	echo -n ".byte \"r`hg log -l1 | grep changeset | cut -d ':' -f2 | tr -d ' '`\"" > version.inc

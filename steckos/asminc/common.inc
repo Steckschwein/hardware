@@ -24,4 +24,10 @@
 	pla
 .endmacro
 
+.macro keyin
+	.local @l
+@l:     jsr krn_getkey
+        bcc @l
+.endmacro
+
 KEY_ESCAPE = 27

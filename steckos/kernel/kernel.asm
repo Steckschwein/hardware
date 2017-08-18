@@ -15,7 +15,7 @@ text_mode_40 = 1
 .import spi_r_byte, spi_rw_byte, spi_deselect, spi_select_rtc
 .import init_uart, uart_tx, uart_rx
 .import textui_init0, textui_update_screen, textui_chrout, textui_put
-.import keyin, getkey
+.import getkey
 .import textui_enable, textui_disable, vdp_display_off,  textui_blank, textui_update_crs_ptr, textui_crsxy, textui_scroll_up
 .import init_sdcard
 .import fat_mount, fat_open, fat_isOpen, fat_close, fat_close_all, fat_read, fat_find_first, fat_find_next, fat_chdir, fat_write
@@ -271,8 +271,7 @@ trampolin_code_end:
 .export krn_execv
 krn_execv:                  jmp execv
 
-.export krn_keyin
-krn_keyin:				    jmp keyin
+krn_xxx:				    jmp krn_xxx
 .export krn_mount		
 krn_mount: 				    jmp fat_mount 
 
