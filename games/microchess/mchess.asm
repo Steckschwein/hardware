@@ -792,9 +792,10 @@ POUT2	TYA					; scan the pieces for a location match
 		and   	#$01		; is board square white or blk?
 		bne	POUT25 		; white, print space
 		lda   	#$DB		; black, print *
-		.byte	$2c		; used to skip over LDA #$20
+;		.byte	$2c		; used to skip over LDA #$20
+		bra foo
 POUT25	LDA   	#$20		; ASCII space
-		JSR   	syschout	; PRINT ONE ASCII CHR - SPACE
+foo:		JSR   	syschout	; PRINT ONE ASCII CHR - SPACE
 		JSR   	syschout	; PRINT ONE ASCII CHR - SPACE
 POUT3	INY			; 
 	    TYA			; get row number
