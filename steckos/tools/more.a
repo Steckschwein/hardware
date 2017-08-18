@@ -90,7 +90,8 @@ display_rows = 24
 	cmp #display_rows-2
 	bne +
 	; +PrintString .more
-	jsr keyin
+-	jsr krn_getkey
+	bcc -
 	stz .rows
 +
 	rts
