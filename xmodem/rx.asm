@@ -1,36 +1,6 @@
 !src "../steckos/kernel/kernel_jumptable.inc"
 !src "../steckos/kernel/uart.inc"
-*=$1000
-dest = $db00
-
-loop:
-
-a:	lda payload
-b:	sta dest
-
-	inc a+1
-	inc b+1
-	bne loop
-
-	lda a+2
-	cmp #>payload_end
-	bne skip
-
-	lda a+1
-	cmp #<payload_end
-	bne skip
-	bra end
-skip:
-	inc a+2
-	inc b+2
-	bne loop
-
-end:
-	jmp dest
-	
-!align 255,0
-payload:
-!pseudopc dest {
+* = $d000;
 
 ; XMODEM/CRC Receiver for the 65C02
 ;
@@ -460,5 +430,3 @@ crchi:
 ;
 ; End of File
 ;
-}
-payload_end:
