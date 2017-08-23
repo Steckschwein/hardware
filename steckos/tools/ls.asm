@@ -1,3 +1,8 @@
+__LOADADDR__ = $1000
+.export __LOADADDR__
+.segment "LOADADDR"
+.word __LOADADDR__
+
 dir_attrib_mask		= $0a
 .segment "CODE"
 .include "common.inc"

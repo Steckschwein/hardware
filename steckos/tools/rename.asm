@@ -3,6 +3,14 @@
 .include "../kernel/kernel_jumptable.inc"
 .include "../kernel/fat32.inc"
 
+__LOADADDR__ = $1000
+.export __LOADADDR__
+.segment "LOADADDR"
+.word __LOADADDR__
+.segment "CODE"
+
+
+
 	; everything until <space> in the parameter string is the source file name
 	ldy #$00
 @loop:

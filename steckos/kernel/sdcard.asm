@@ -20,14 +20,14 @@ sd_check_card_status:
 	rts
 
 ;---------------------------------------------------------------------
-; Init SD Card 
+; Init SD Card
 ; Destructive: A, X, Y
 ;---------------------------------------------------------------------
 init_sdcard:
 	; 80 Taktzyklen
 	ldx #74
 
-	; set ALL CS lines and DO to HIGH 
+	; set ALL CS lines and DO to HIGH
 	lda #%11111110
 	sta via1portb
 
@@ -40,7 +40,7 @@ init_sdcard:
 	bne @l1
 
 	jsr sd_select_card
-	
+
 	jsr sd_param_init
 
 	; CMD0 needs CRC7 checksum to be correct
@@ -60,12 +60,12 @@ init_sdcard:
 	cmp #$01
 	beq @l3
 
-	; No Card     
+	; No Card
 	lda #$ff
 	sta errno
 	rts
 
-@l3:      
+@l3:
 	lda #$01
 	sta sd_cmd_param+2
 	lda #$aa
@@ -79,7 +79,7 @@ init_sdcard:
 	jsr sd_cmd
 
 	ldx #$00
-@l4:   
+@l4:
 	lda #$ff
 	phx
 	jsr spi_rw_byte
@@ -92,11 +92,11 @@ init_sdcard:
 	lda sd_cmd_result
 	cmp #$01
 	beq @l5
-	
+
 	; Invalid Card (or card we can't handle yet)
 	lda #$0f
 	sta errno
-	jsr sd_deselect_card 
+	jsr sd_deselect_card
 	rts
 @l5:
 
@@ -114,11 +114,11 @@ init_sdcard:
 	beq @l6
 
 	; Init failed
-	lda #$f1      
+	lda #$f1
 	sta errno
-	rts 
+	rts
 
-@l6:      
+@l6:
 	jsr sd_param_init
 
 	lda #$40
@@ -134,7 +134,7 @@ init_sdcard:
 	lda #$ff
 	jsr spi_r_byte
 
-	; jsr hexout  
+	; jsr hexout
 
 	cmp #$00
 	beq @l7
@@ -155,7 +155,7 @@ init_sdcard:
 	jsr sd_cmd
 
 	ldx #$00
-@l8:  
+@l8:
 	lda #$ff
 	phx
 	jsr spi_rw_byte
@@ -175,13 +175,13 @@ init_sdcard:
 	sta sd_cmd_param+2
 
 	jsr sd_busy_wait
-	
+
 	lda #cmd16
 	jsr sd_cmd
 
 	lda #$ff
 	jsr spi_rw_byte
-@l9:     
+@l9:
 	; SD card init successful
 	stz errno
 	rts
@@ -196,7 +196,7 @@ sd_cmd:
 
 	; transfer command byte
 	jsr spi_rw_byte
-	
+
 	; transfer parameter buffer
 	ldx #$00
 @l1:   lda sd_cmd_param,x
@@ -209,10 +209,10 @@ sd_cmd:
 
 	; send 8 clocks with DI 1
 	lda #$ff
-	jsr spi_rw_byte             
+	jsr spi_rw_byte
 
 	rts
-	
+
 ;---------------------------------------------------------------------
 ; Read block from SD Card to kernel data block buffer
 ;
@@ -224,7 +224,7 @@ sd_read_block_data:
 sd_wait_timeout:
 		stz errno
         	ldy #sd_cmd_response_retries 	; wait for command response.
-		stz krn_tmp				; use krn_tmp as loop var, not needed here		
+		stz krn_tmp				; use krn_tmp as loop var, not needed here
 @l:		jsr spi_r_byte
         	beq @x
 		dec krn_tmp
@@ -232,7 +232,7 @@ sd_wait_timeout:
         	dey
 		bne @l
 		sta errno
-        	;TODO FIXME error sd error codes 
+        	;TODO FIXME error sd error codes
 @x:
 		rts
 
@@ -271,9 +271,9 @@ sd_read_block:
 
 @exit:
 		jmp sd_deselect_card
-        
+
 halfblock:
-@l:		
+@l:
 		jsr spi_r_byte
 		sta (read_blkptr),y
 		iny
@@ -285,7 +285,7 @@ halfblock:
 ;---------------------------------------------------------------------
 sd_read_multiblock:
 		save
-        
+
 		jsr sd_select_card
 
 		lda #cmd18	; Send CMD18 command byte
@@ -297,12 +297,12 @@ sd_read_multiblock:
 		lda #$01
 		jsr spi_rw_byte
 
-		; wait for command response.         
+		; wait for command response.
 		jsr sd_wait_timeout
 		lda errno
         	beq @l1
 		jmp @exit
-@l1:	
+@l1:
 		jsr sd_wait_data_token
 
 		ldy #$00
@@ -310,14 +310,14 @@ sd_read_multiblock:
 		and #$fe        ; Takt ausschalten
 		tax             ; aufheben
 		ora #$01
-		sta sd_tmp 
-    
+		sta sd_tmp
+
 		; read 256 bytes twice, increase blkptr in between
 @l2a:
 		lda sd_tmp
 
 	.repeat 8
-		sta via1portb ; Takt An 
+		sta via1portb ; Takt An
 		stx via1portb ; Takt aus
 	.endrepeat
 
@@ -326,12 +326,12 @@ sd_read_multiblock:
 		iny
 		bne @l2a
 
-		inc read_blkptr+1             
+		inc read_blkptr+1
 
 @l2b:	lda sd_tmp
 
 	.repeat 8
-		sta via1portb ; Takt An 
+		sta via1portb ; Takt An
 		stx via1portb ; Takt aus
 	.endrepeat
 
@@ -340,15 +340,15 @@ sd_read_multiblock:
 		iny
 		bne @l2b
 
-		inc read_blkptr+1             
-		
+		inc read_blkptr+1
+
 		lda sd_tmp
-	; Read CRC bytes     
-	.repeat 16    
-		sta via1portb ; Takt An 
+	; Read CRC bytes
+	.repeat 16
+		sta via1portb ; Takt An
 		stx via1portb ; Takt aus
 	.endrepeat
-   
+
 		dec blocks
 		beq @l3
 		jmp @l1
@@ -379,13 +379,13 @@ sd_write_block:
 	; Send stopbit
 	lda #$01                ; send "crc" and stop bit
 	jsr spi_rw_byte
-	
+
 	jsr sd_wait_timeout
 	lda errno
         bne @exit
-;@l1:	
+;@l1:
     	;lda #$ff
-	;jsr spi_rw_byte             
+	;jsr spi_rw_byte
 	;bne @l1
 
 	lda #sd_data_token
@@ -436,7 +436,7 @@ sd_write_multiblock:
 	lda #$01
 	jsr spi_rw_byte
 
-	; wait for command response.         
+	; wait for command response.
 	jsr sd_wait_timeout
 	lda errno
        	bne @exit
@@ -493,7 +493,7 @@ sd_busy_wait:
         ;TODO FIXME
   ;      lda #$fa
    ;     sta errno
-@l2:    
+@l2:
         rts
 
 ;---------------------------------------------------------------------
@@ -524,7 +524,7 @@ sd_select_card:
 	bra sd_busy_wait
 
 ;---------------------------------------------------------------------
-; deselect sd card, puSH CS line to HI and generate few clock cycles 
+; deselect sd card, puSH CS line to HI and generate few clock cycles
 ; to allow card to deinit
 ;---------------------------------------------------------------------
 sd_deselect_card:

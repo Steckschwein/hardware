@@ -1,5 +1,9 @@
-.org $1000
-			jsr	test_suite
+__LOADADDR__ = $1000
+.export __LOADADDR__
+.segment "LOADADDR"
+.word __LOADADDR__
+.segment "CODE"
+		jsr	test_suite
 main:		bra main
 
 .include "kernel_jumptable.inc"

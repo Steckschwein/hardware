@@ -13,6 +13,13 @@
 .import vdp_mode_sprites_off
 .import vdp_bgcolor
 
+__LOADADDR__ = $1000
+.export __LOADADDR__
+.segment "LOADADDR"
+.word __LOADADDR__
+.segment "CODE"
+
+
 content = $2000	
 color=content+$1800
 
