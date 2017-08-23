@@ -1,9 +1,14 @@
-
 .include "../steckos/kernel/kernel.inc"
 .include "../steckos/kernel/kernel_jumptable.inc"
 .include "../steckos/asminc/via.inc"
 .include "../steckos/asminc/common.inc"
 .include "ym3812.inc"
+
+__LOADADDR__ = $1000
+.export __LOADADDR__
+.segment "LOADADDR"
+.word __LOADADDR__
+.segment "CODE"
 
 .macro dec16 word 
         lda word
@@ -11,7 +16,6 @@
         dec word+1
 :       dec word
 .endmacro
-
 
 
 CPU_CLOCK=clockspeed * 1000000

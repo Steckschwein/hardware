@@ -2,7 +2,7 @@ OBJS=imf.o ym3812.o
 TARGET=imf.prg
 
 %.prg: $(OBJS)
-	cl65 --target none  --config ../steckos/kernel/steckos.cfg -o $@ $(OBJS)
+	cl65 --target none  --config ../steckos/kernel/steckosapp.cfg -o $@ $(OBJS)
 
 %.o: %.asm
 	ca65 -o $@ $<

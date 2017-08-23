@@ -1,4 +1,9 @@
 .setcpu "65C02"
+__LOADADDR__ = $1000
+.export __LOADADDR__
+.segment "LOADADDR"
+.word __LOADADDR__
+.segment "CODE"
 
 ; minimal monitor for EhBASIC and 6502 simulator V1.05
 ; Modified to support the Replica 1 by Jeff Tranter <tranter@pobox.com>
