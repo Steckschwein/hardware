@@ -40,6 +40,12 @@
 .include "../../steckos/kernel/kernel.inc"
 .include "../../steckos/kernel/kernel_jumptable.inc"
 .include "../../steckos/asminc/common.inc"
+__LOADADDR__ = $1000
+.export __LOADADDR__
+.segment "LOADADDR"
+.word __LOADADDR__
+.segment "CODE"
+
 key = $09
 
 ;
