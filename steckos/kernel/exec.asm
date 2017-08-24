@@ -6,7 +6,7 @@
 .segment "KERNEL"
 
 .import fat_open, fat_read, fat_close, fat_read_block, hexout, sd_read_multiblock, inc_lba_address, calc_blocks
-
+.import textui_chrout
 .export execv
 
 ;		int execv(const char *path, char *const argv[]);
@@ -24,16 +24,13 @@ execv:
 
         SetVector sd_blktarget, read_blkptr
         jsr	fat_read_block
-		jsr fat_close			; close after read to free fd, regardless of error
 
-        lda sd_blktarget+1
-        sta krn_ptr1+1
-        pha
-        jsr hexout
         lda sd_blktarget
         sta krn_ptr1
         pha
-        jsr hexout
+		lda sd_blktarget+1
+        sta krn_ptr1+1
+        pha
 
         ldy #$00
 @l:
@@ -58,18 +55,14 @@ execv:
         adc #$01
         sta read_blkptr+1
 
-        ;jsr hexout
-        ;lda read_blkptr
-        ;jsr hexout
-
         jsr inc_lba_address
-        lda blocks
-        beq @l_exec_run
 
         dec blocks
         beq @l_exec_run
 
-        jsr sd_read_multiblock
+		jsr sd_read_multiblock
+
+		jsr fat_close			; close after read to free fd, regardless of error
 
         bra @l_exec_run
 		bne	@l_err_exit
@@ -77,16 +70,10 @@ execv:
 		;TODO FIXME check excecutable - SOS65 header ;)
 		;jmp	appstart
 
+		pla
+        sta krn_ptr1+1
         pla
         sta krn_ptr1
-        pla
-        sta krn_ptr1+1
-
-        lda krn_ptr1+1
-        jsr hexout
-
-        lda krn_ptr1
-        jsr hexout
 
         jmp (krn_ptr1)
 
