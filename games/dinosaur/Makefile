@@ -20,7 +20,7 @@ clean:
 	rm -f *.prg *.labels *.res DINOSAUR.HI
 
 %.prg: %.a ${ACME}/t9929.h.a ${ACME}/*.lib.a *.res 
-	acme -v -f plain --cpu 65c02 -o $@ $<
+	acme -v -f cbm --cpu 65c02 -o $@ $<
 
 dinosaur.hi:
 	dd if=/dev/zero of=DINOSAUR.HI bs=3 count=1
