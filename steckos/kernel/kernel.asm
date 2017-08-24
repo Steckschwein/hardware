@@ -37,12 +37,12 @@ kern_init:
 	inx
 	cpx #(trampolin_code_end - trampolin_code)
 	bne @copy
-    
+
 	jsr init_via1
 	jsr init_rtc
 
 	SetVector user_isr_default, user_isr
-    
+
 	jsr textui_init0
 
 	cli
@@ -50,7 +50,7 @@ kern_init:
 	jsr primm
 	.byte $d5,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$b8,$0a
 	.byte $b3," SteckOS Kernel "
-	.include "version.inc" 
+	.include "version.inc"
 	.byte $20,$b3,$0a
 	.byte $d4,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$be,$0a
 	.byte $00
@@ -63,33 +63,35 @@ kern_init:
 
 	jsr fat_mount
 	lda errno
-	debug "mnt"	
+	debug "mnt"
 	bne do_upload
-	
+
 	lda #<filename
 	ldx #>filename
-	jsr fat_open
-	debug "op2"
-	bne do_upload
-	
-	SetVector shell_addr, read_blkptr
-	jsr fat_read
-	debug "rd"
+	jsr execv
 
-	jsr fat_close
+;	jsr fat_open
+;	debug "op2"
+;	bne do_upload
 
-	ldx #$ff 
-	txs 
-	
-	jmp shell_addr    
+;	SetVector shell_addr, read_blkptr
+;	jsr fat_read
+;	debug "rd"
+
+;	jsr fat_close
+
+;	ldx #$ff
+;	txs
+
+;	jmp shell_addr    
 
 do_upload:
 	jsr init_uart
 	jsr upload
 
-	ldx #$ff 
-	txs 
-	
+	ldx #$ff
+	txs
+
 	jmp (startaddr)
 
 ;----------------------------------------------------------------------------------------------
@@ -103,7 +105,7 @@ do_irq:
 	bit	a_vreg
 	bpl @exit	   ; VDP IRQ flag set?
 	jsr	textui_update_screen
-    
+
 @exit:
 	jsr call_user_isr
 
@@ -132,10 +134,10 @@ do_nmi:
 	sta STATUS
 	tsx
 	stx SPNT
-	
+
 
 	jmp trampolin
-			
+
 
 do_reset:
 	; disable interrupt
@@ -158,7 +160,7 @@ upload:
 	save
 	crlf
 	printstring "Serial Upload"
-	
+
 	; load start address
 	jsr uart_rx
 	sta startaddr
@@ -175,11 +177,11 @@ upload:
 	jsr textui_chrout
 
 	jsr upload_ok
-	
+
 	; load number of bytes to be uploaded
 	jsr uart_rx
 	sta length
-		
+
 	jsr uart_rx
 	sta length+1
 
@@ -198,28 +200,28 @@ upload:
 
 	lda endaddr
 	jsr hexout
-	
+
 	lda #' '
 	jsr textui_chrout
 
 	lda startaddr
 	sta addr
 	lda startaddr+1
-	sta addr+1	
+	sta addr+1
 
 	jsr upload_ok
-	
+
 	sei	; disable interrupt while loading the actual data
 	ldy #$00
 @l1:
 	jsr uart_rx
 	sta (addr),y
 
-	iny	
+	iny
 	cpy #$00
 	bne @l2
 	inc addr+1
-@l2:	
+@l2:
 
 	; msb of current address equals msb of end address?
 	lda addr+1
@@ -231,7 +233,7 @@ upload:
 	bne @l1 ; no? read next byte
 
 	cli
-	; yes? write OK and jump to start addr	
+	; yes? write OK and jump to start addr
 
 	jsr upload_ok
 
@@ -251,7 +253,7 @@ upload_ok:
 	jsr uart_tx
 	rts
 
-filename:	.asciiz "shell.bin"
+filename:	.asciiz "shell.prg"
 
 ; trampolin code to enter ML monitor on NMI
 ; this code gets copied to $1000 and executed there
@@ -272,8 +274,8 @@ trampolin_code_end:
 krn_execv:                  jmp execv
 
 krn_xxx:				    jmp krn_xxx
-.export krn_mount		
-krn_mount: 				    jmp fat_mount 
+.export krn_mount
+krn_mount: 				    jmp fat_mount
 
 .export krn_open
 krn_open: 				    jmp fat_open
@@ -289,7 +291,7 @@ krn_close: 				    jmp fat_close
 krn_close_all: 			    jmp fat_close_all
 
 .export krn_read
-krn_read:    				jmp fat_read 
+krn_read:    				jmp fat_read
 
 .export krn_read_block
 krn_read_block:    			jmp fat_read_block
@@ -298,7 +300,7 @@ krn_read_block:    			jmp fat_read_block
 krn_find_first:			    jmp fat_find_first
 .export krn_find_next
 krn_find_next:			    jmp fat_find_next
-.export krn_textui_init	
+.export krn_textui_init
 krn_textui_init:		    jmp	textui_init0
 .export krn_textui_enable
 krn_textui_enable:		    jmp	textui_enable
