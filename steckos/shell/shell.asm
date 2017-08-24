@@ -1,8 +1,13 @@
 tmp0    = $a0
 tmp1    = $a1
 tmp5    = $a2
+__LOADADDR__ = $d800
+.export __LOADADDR__
+.segment "LOADADDR"
+.word __LOADADDR__
 
-.segment "OS"
+.segment "CODE"
+.org $d800
 
 .include "common.inc"
 .include "../kernel/kernel.inc"
