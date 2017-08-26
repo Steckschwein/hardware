@@ -9,14 +9,12 @@ user_isr     = $028e
 .macro	printstring text
 			jsr krn_primm
 			.byte text
-			.byte $0a,$0d,$00
+			.byte $0a,$00
 .endmacro
 
 .macro crlf
 	lda #$0a		;\n already does the carriage return
 	jsr krn_chrout
-;	lda #$0d
-;	jsr krn_chrout
 .endmacro
 
 memctl = $0230
