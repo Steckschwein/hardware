@@ -5,9 +5,11 @@ import serial
 import sys
 import os
 import struct
+import binascii
 
 
 import serial.tools.list_ports
+
 def main():
 	ports = list(serial.tools.list_ports.grep("^/dev/cu.usbserial*|/dev/tty*"))
 
@@ -33,11 +35,11 @@ def main():
 	args = parser.parse_args()
 
 
+
 	try:
 		with open(args.filename, 'r') as content_file:
 			content = content_file.read()
 
-		length = len(content)
 	except IOError:	
 		print "%s: file '%s' not found" % (sys.argv[0], args.filename, )
 		sys.exit(1)
@@ -59,7 +61,19 @@ def main():
 		sys.exit(1)
 		
 
-	startaddr=int(args.startaddr, 16)
+
+	if (args.filename[-3:].lower() == "prg"):
+		startaddr=int("%s%s" % (
+			binascii.hexlify(content[1]),
+			binascii.hexlify(content[0])
+		), 16)
+		tmp = content[2:]
+		content = tmp
+
+	else:
+		startaddr=int(args.startaddr, 16)
+
+	length = len(content)
 
 	print "Startaddress : 0x%04x (%d)" % (startaddr, startaddr)
 	print "Length    	: %d bytes" % (length)
