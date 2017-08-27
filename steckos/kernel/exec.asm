@@ -23,7 +23,10 @@ execv:
 @l0:	;SetVector appstart, read_blkptr
 
         SetVector sd_blktarget, read_blkptr
+		phx ; save x register for fat_close
         jsr	fat_read_block
+		plx
+		jsr fat_close			; close after read to free fd, regardless of error
 
         lda sd_blktarget
         sta krn_ptr1
@@ -62,11 +65,8 @@ execv:
 
 		jsr sd_read_multiblock
 
-		jsr fat_close			; close after read to free fd, regardless of error
-
-        bra @l_exec_run
-		bne	@l_err_exit
 @l_exec_run:
+
 		;TODO FIXME check excecutable - SOS65 header ;)
 		;jmp	appstart
 
@@ -74,7 +74,10 @@ execv:
         sta krn_ptr1+1
         pla
         sta krn_ptr1
-
+		; we came here using jsr, but will not rts.
+		; get return address from stack to prevent stack corruption
+		pla
+		pla
         jmp (krn_ptr1)
 
 @l_err_exit:
