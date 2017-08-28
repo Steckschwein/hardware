@@ -31,9 +31,17 @@ execv:
         lda sd_blktarget
         sta krn_ptr1
         pha
+
+		clc
+		adc #$fe
+		sta read_blkptr
+
 		lda sd_blktarget+1
         sta krn_ptr1+1
         pha
+
+        adc #$01
+        sta read_blkptr+1
 
         ldy #$00
 @l:
@@ -49,14 +57,6 @@ execv:
         iny
         cpy #$fe
         bne @l2
-
-        lda sd_blktarget
-        clc
-        adc #$fe
-        sta read_blkptr
-        lda sd_blktarget+1
-        adc #$01
-        sta read_blkptr+1
 
         jsr inc_lba_address
 
