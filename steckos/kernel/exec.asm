@@ -30,18 +30,14 @@ execv:
 
         lda sd_blktarget
         sta krn_ptr1
-        pha
-
 		clc
 		adc #$fe
 		sta read_blkptr
 
 		lda sd_blktarget+1
         sta krn_ptr1+1
-        pha
-
         adc #$01
-        sta read_blkptr+1
+		sta read_blkptr+1
 
         ldy #$00
 @l:
@@ -58,6 +54,8 @@ execv:
         cpy #$fe
         bne @l2
 
+		dec krn_ptr1+1
+
         jsr inc_lba_address
 
         dec blocks
@@ -66,14 +64,6 @@ execv:
 		jsr sd_read_multiblock
 
 @l_exec_run:
-
-		;TODO FIXME check excecutable - SOS65 header ;)
-		;jmp	appstart
-
-		pla
-        sta krn_ptr1+1
-        pla
-        sta krn_ptr1
 		; we came here using jsr, but will not rts.
 		; get return address from stack to prevent stack corruption
 		pla
