@@ -1,5 +1,5 @@
 .setcpu "65C02"
-__LOADADDR__ = $a000
+__LOADADDR__ = $b400
 .export __LOADADDR__
 .segment "LOADADDR"
 .word __LOADADDR__
