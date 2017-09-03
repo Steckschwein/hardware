@@ -29,32 +29,32 @@ execv:
 		jsr fat_close			; close after read to free fd, regardless of error
 
         lda sd_blktarget
-        sta adrl
+        sta krn_ptr1
 		clc
 		adc #$fe
 		sta read_blkptr
 
 		lda sd_blktarget+1
-        sta adrh
+        sta krn_ptr1+1
         adc #$01
 		sta read_blkptr+1
 
         ldy #$00
 @l:
         lda sd_blktarget+2,y
-        sta (addr),y
+        sta (krn_ptr1),y
         iny
         bne @l
 
-        inc addr+1
+        inc krn_ptr1+1
 @l2:
         lda sd_blktarget+$100+2,y
-        sta (addr),y
+        sta (krn_ptr1),y
         iny
         cpy #$fe
         bne @l2
 
-		dec addr+1
+		dec krn_ptr1+1
 
         jsr inc_lba_address
 
@@ -68,7 +68,7 @@ execv:
 		; get return address from stack to prevent stack corruption
 		pla
 		pla
-        jmp (addr)
+        jmp (krn_ptr1)
 
 @l_err_exit:
 		debug "exec"
