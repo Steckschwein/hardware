@@ -34,7 +34,7 @@ RES_vec:
 ;		CLD			; clear decimal mode
 ;		LDX	#$FF		; empty stack
 ;		TXS			; set the stack
-		
+
 ; set up vectors and interrupt code, copy them to page 2
  		LDY	#END_CODE-LAB_vec	; set index/count
 LAB_stlp:
@@ -42,7 +42,7 @@ LAB_stlp:
 		STA	VEC_IN-1,Y		; save to RAM
  		DEY				; decrement index/count
  		BNE	LAB_stlp		; loop if more to do
-    
+
 		JMP	LAB_COLD		; do EhBASIC cold start
 
 openfile:
@@ -64,21 +64,22 @@ openfile:
 @term:
 		lda #$00
 		sta (ssptr_l),y
-@open:	
+@open:
 		lda ssptr_l
 		ldx ssptr_h
 		jsr krn_open
-		;bne	io_error
+		lda errno
+		bne	io_error
 		rts
 io_error:
 		pha
 		jsr	krn_primm
 		.asciiz "io error: "
 		pla
-		jmp krn_hexout		
+		jmp krn_hexout
 
 bsave:
-		jsr openfile		
+		jsr openfile
 		bne io_error
 
 		lda Smemh
@@ -102,7 +103,7 @@ bsave:
 		jsr krn_write
 		bne io_error
 		jmp krn_close
-		
+
 bload:
 		jsr openfile
 		bne io_error
@@ -114,6 +115,8 @@ bload:
 		sta read_blkptr + 0
 
 		jsr krn_read
+		lda errno
+
 		bne io_error
 
 
@@ -127,11 +130,12 @@ bload:
 		sta Svarh
 
 		jsr krn_close
+		lda errno
 		bne io_error
-		
+
 		jsr krn_primm
 		.byte "Ok", $0a, $00
-		JMP   LAB_1319		
+		JMP   LAB_1319
 
 .ifdef UART
 uart_in:
@@ -141,7 +145,7 @@ uart_in:
 	lda uart1rxtx
 
 	;jsr krn_uart_rx
-        cmp #$00 
+        cmp #$00
         beq @l1
         sec
         rts
