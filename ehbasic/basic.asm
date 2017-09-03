@@ -76,7 +76,7 @@ ut1_ph		= ut1_pl+1	; utility pointer 1 high byte
 ut2_pl		= $73		; utility pointer 2 low byte
 ut2_ph		= ut2_pl+1	; utility pointer 2 high byte
 
-Temp_2		= ut1_pl	; temp byte for block move	
+Temp_2		= ut1_pl	; temp byte for block move
 
 FACt_1		= $75		; FAC temp mantissa1
 FACt_2		= FACt_1+1	; FAC temp mantissa2
@@ -433,13 +433,13 @@ Ibuffs		= IRQ_vec+$14
 					; start of input buffer after IRQ/NMI code
 Ibuffe		= Ibuffs+$47; end of input buffer
 
-Code_base       = $1000     ; *** RAM above code Patch ***
-Ram_base	= $3e00	; start of user RAM (set as needed, should be page aligned)
-Ram_top		= $e000	; end of user RAM+1 (set as needed, should be page aligned)
+Code_base       = __LOADADDR__     ; *** RAM above code Patch ***
+Ram_base	= $0600	; start of user RAM (set as needed, should be page aligned)
+Ram_top		= __LOADADDR__	; end of user RAM+1 (set as needed, should be page aligned)
 
 ; This start can be changed to suit your system
     ;*=$b000
-    
+
 ; For convenience, put jump here to reset location so it can be
 ; run from the load address.
 	JMP	RES_vec
@@ -466,13 +466,13 @@ LAB_2D13:
 	STA	Fnxjmp		    ; save for jump vector for functions
 
 ; copy block from LAB_2CEE to $00BC - $00D8
-	LDX	#StrTab-LAB_2CEE	; set byte count    
+	LDX	#StrTab-LAB_2CEE	; set byte count
 LAB_2D4E:
 	LDA	LAB_2CEE-1,X	; get byte from table
 	STA	LAB_IGBY-1,X	; save byte in page zero
 	DEX				    ; decrement count
 	BNE	LAB_2D4E		; loop if not all done
- 
+
 ; copy block from StrTab to $0000 - $0012
 
 LAB_GMEM:
@@ -483,7 +483,7 @@ TabLoop:
 	DEX				; decrement count
 	BNE	TabLoop		; loop if not all done
 
-    
+
 ; set-up start values
 	LDA	#$00			; clear A
 	STA	NmiBase		; clear NMI handler enabled flag
@@ -497,23 +497,23 @@ TabLoop:
 	STA	g_step		; save it
 	LDX	#des_sk		; descriptor stack start
 	STX	next_s		; set descriptor stack pointer
-    
-;	JSR	LAB_CRLF	; print CR/LF    
+
+;	JSR	LAB_CRLF	; print CR/LF
 	LDA	#<LAB_MSZM		; point to memory size message (low addr)
 	LDY	#>LAB_MSZM		; point to memory size message (high addr)
 	JSR	LAB_18C3		; print null terminated string from memory
 	JSR	LAB_INLN		; print "? " and get BASIC input
-; fix memory patch    
+; fix memory patch
    	 ;fake ram setting
     	;ldx #$00
 ;@l1:   	lda LAB_MSZM_INIT,x
     	;beq @l2
     	;sta Ibuffs,x
-    	;inx 
+    	;inx
     	;bne @l1
 ;@l2:    jsr LAB_1866        ;jump direclty to input scan
-; fix memory patch end 
- 
+; fix memory patch end
+
 	STX	Bpntrl		    ; set BASIC execute pointer low byte
 	STY	Bpntrh		    ; set BASIC execute pointer high byte
 
@@ -1049,7 +1049,7 @@ LAB_13AC:
 
 	CMP	#'*'			; compare with "*"
 	BCC	LAB_13EC		; if < go save byte then continue crunching
-	
+
 
 					; else crunch now
 LAB_13CC:
@@ -1103,7 +1103,7 @@ LAB_13D8:
 
 	; toupper and cmp again to be case insensitive in the tokenizer
 
-	; convert to lowercase, short version 
+	; convert to lowercase, short version
 	ORA #$20
 
  	CMP Ibuffs,X  ; compare with byte from input buffer
@@ -2404,7 +2404,7 @@ LAB_CRLF:
 	JSR	LAB_PRNA		; go print the character
 	LDA	#$0A			; load [LF]
 	BNE	LAB_PRNA		; go print the character and return, branch always
- 
+
 LAB_188B:
 	LDA	TPos			; get terminal position
 	CMP	Iclim   		; compare with input column limit
@@ -2481,7 +2481,7 @@ LAB_18CD:
 	BNE	LAB_18CD		; loop if not done yet
 
 	RTS
-    
+
 					; Print single format character
 ; print " "
 
@@ -2502,13 +2502,13 @@ LAB_18E3:
 LAB_PRNA:
 	CMP	#' '			; compare with " "
 	BCC	LAB_18F9		; branch if less (non printing)
-                        
+
                         ; else printable character
     PHA                 ; save the character
 
 ; don't check fit if terminal width byte is zero
 
-    
+
 	LDA	TWidth		    ; get terminal width
 	BNE	LAB_18F0		; branch if not zero (not infinite length)
 
@@ -2532,7 +2532,7 @@ LAB_18F7:
 LAB_18F9:
 
 	JSR	V_OUTP		    ; output byte via output vector
-    
+
 	CMP	#$0D			; compare with [CR]
 	BNE	LAB_188A		; branch if not [CR]
 
@@ -2540,7 +2540,7 @@ LAB_18F9:
 	STX	TempB			; save buffer index
 	LDX	Nullct		    ; get null count
 	BEQ	LAB_1886		; branch if no nulls
-    
+
 	LDA	#$00			; load [NULL]
 LAB_1880:
 	JSR	LAB_PRNA		; go print the character
@@ -4396,7 +4396,7 @@ LAB_20BE:
 
 	CMP	Asrch			; compare with terminator 2
 	BNE	LAB_20BE		; loop if not terminator 2
-    
+
 LAB_20CB:
 	CMP	#'"'			; compare with "
 	BEQ	LAB_20D0		; branch if " (carry set if = !)
@@ -4415,7 +4415,7 @@ LAB_20D0:
 LAB_20DC:
 	STX	Sendh			; save string end high byte
 	LDA	ssptr_h		; get string start high byte
-	
+
 
 	; bugfix http://forum.6502.org/viewtopic.php?p=48370#p48370
        .if   Ram_base < Code_base
@@ -4424,7 +4424,7 @@ LAB_20DC:
         CMP #>Code_base       ; compare with start of program memory
        .endif
 	BCS	LAB_RTST		; branch if not in utility area
-	
+
 					; string in utility area, move to string memory
 	TYA				; copy length to A
 	JSR	LAB_209C		; copy des_pl/h to des_2l/h and make string space A bytes
@@ -6317,7 +6317,7 @@ LAB_28C9:
 	BIT	expneg		; test exponent -ve flag
 	BPL	LAB_28DB		; if +ve go evaluate exponent
 
-					; else do exponent = -exponent 
+					; else do exponent = -exponent
 	LDA	#$00			; clear result
 	SEC				; set carry for subtract
 	SBC	expcnt		; subtract exponent byte
@@ -6550,7 +6550,7 @@ LAB_29F5:
 	STY	Sendl			; save output string index
 LAB_29F7:
 	LDY	#$00			; clear index (point to 100,000)
-	LDX	#$80			; 
+	LDX	#$80			;
 LAB_29FB:
 	LDA	FAC1_3		; get FAC1 mantissa3
 	CLC				; clear carry for add
@@ -6562,22 +6562,22 @@ LAB_29FB:
 	LDA	FAC1_1		; get FAC1 mantissa1
 	ADC	LAB_2A9A,Y		; add -ve MSB
 	STA	FAC1_1		; save FAC1 mantissa1
-	INX				; 
-	BCS	LAB_2A18		; 
+	INX				;
+	BCS	LAB_2A18		;
 
 	BPL	LAB_29FB		; not -ve so try again
 
-	BMI	LAB_2A1A		; 
+	BMI	LAB_2A1A		;
 
 LAB_2A18:
-	BMI	LAB_29FB		; 
+	BMI	LAB_29FB		;
 
 LAB_2A1A:
-	TXA				; 
-	BCC	LAB_2A21		; 
+	TXA				;
+	BCC	LAB_2A21		;
 
-	EOR	#$FF			; 
-	ADC	#$0A			; 
+	EOR	#$FF			;
+	ADC	#$0A			;
 LAB_2A21:
 	ADC	#'0'-1		; add "0"-1 to result
 	INY				; increment index ..
@@ -6600,9 +6600,9 @@ LAB_2A3B:
 	STY	Sendl			; save output string index
 	LDY	Cvaral		; get current var address low byte
 	TXA				; get character back
-	EOR	#$FF			; 
-	AND	#$80			; 
-	TAX				; 
+	EOR	#$FF			;
+	AND	#$80			;
+	TAX				;
 	CPY	#$12			; compare index with max
 	BNE	LAB_29FB		; loop if not max
 
@@ -7102,7 +7102,7 @@ NextB1:
 	BEQ	GoPr2			; if zero print whole string
 
 	BNE	GoPr1			; else go make output string
-	
+
 ; this is the exit code and is also used by HEX$()
 ; truncate string to remove leading "0"s
 
@@ -7257,7 +7257,7 @@ LAB_EXCH:
 CTRLC:
 	LDA	ccflag		; get [CTRL-C] check flag
 	BNE	LAB_FBA2	; exit if inhibited
-    
+
 	JSR	V_INPT		    ; scan input device
 	BCC	LAB_FBA0	    ; exit if buffer empty
 
@@ -7818,9 +7818,9 @@ StrTab:
 	.word   LAB_COLD	; initial cold start vector (cold start)
 
 	.byte	$00			; these bytes are not used by BASIC
-	.word	$0000			; 
-	.word	$0000			; 
-	.word	$0000			; 
+	.word	$0000			;
+	.word	$0000			;
+	.word	$0000			;
 
 	.byte	$4C			; JMP opcode
 	.word	LAB_FCER		; initial user function vector ("Function call" error)
@@ -8728,4 +8728,3 @@ LAB_IMSG:	.byte	" Extra ignored",$0D,$0A,$00
 LAB_REDO:	.byte	" Redo from start",$0D,$0A,$00
 
 AA_end_basic:
-
