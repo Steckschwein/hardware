@@ -118,14 +118,16 @@ bload:
 		bne io_error
 
 
+		phx
+		jsr krn_getfilesize
 		clc
-		lda Smeml
-		adc fd_area + F32_fd::FileSize + 0,x
+		adc Smeml
 		sta Svarl
 
-		lda Smemh
-		adc fd_area + F32_fd::FileSize + 1,x
+		txa
+		adc Smemh
 		sta Svarh
+		plx
 
 		jsr krn_close
 
