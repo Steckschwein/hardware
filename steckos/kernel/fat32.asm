@@ -795,14 +795,12 @@ fat_alloc_fd:
         ; out:
         ;   A - A = 0 on success, error code otherwise
 fat_close:
-		pha
 		lda fd_area + F32_fd::StartCluster +3, x
 		cmp #$ff	;#$ff means not open, carry is set...
 		bcs @l1
 		lda #$ff    ; otherwise mark as closed
 		sta fd_area + F32_fd::StartCluster +3, x
 @l1:	lda #0
-		pla
 		rts
 
 fat_close_all:
