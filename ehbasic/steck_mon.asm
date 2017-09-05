@@ -69,7 +69,6 @@ openfile:
 		lda ssptr_l
 		ldx ssptr_h
 		jsr krn_open
-		lda errno
 		bne	io_error
 		rts
 io_error:
@@ -116,8 +115,6 @@ bload:
 		sta read_blkptr + 0
 
 		jsr krn_read
-		lda errno
-
 		bne io_error
 
 
@@ -131,8 +128,6 @@ bload:
 		sta Svarh
 
 		jsr krn_close
-		lda errno
-		bne io_error
 
 		jsr krn_primm
 		.byte "Ok", $0a, $00
