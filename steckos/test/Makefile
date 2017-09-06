@@ -17,7 +17,7 @@ clean:
 	ca65 --include-dir $(ASM_INCLUDE) $(@:.o=.asm)
 
 %.prg: %.o ../lib/steckschwein-kernel.lib
-	ld65 -C ../lib/steckschwein-kernel.cfg $< $(LIBS) -o $@
+	ld65 -C ../kernel/steckosapp.cfg $< $(LIBS) -o $@
 
 ls.prg: ls.o ls_entry_short.o
 	cl65 --include-dir $(ASM_INCLUDE) --target none --config ../kernel/steckos.cfg ls.o ls_entry_short.o -o ls.prg
