@@ -16,26 +16,38 @@
 .import vdp_mc_on
 .import vdp_mc_set_pixel
 
+_x=$0
+_y=$1
+
 	sei
 	jsr	krn_textui_disable			;disable textui
 	jsr krn_display_off
 	lda #Cyan<<4|Black
-;	jsr vdp_gfx1_blank
-;	jsr	vdp_gfx1_on
 	lda	#Black
 	jsr vdp_mc_blank
 	jsr	vdp_mc_on
-	
-	SyncBlank
-	ldx #30
-	ldy #30
-	lda #White
-	jsr vdp_mc_set_pixel
-
 	cli
+
+	stz _x
+	stz _y
+@loop:
+	ldy _y
+	ldx _x
+	lda _y
+	and #$0f
+	SyncBlank
+	jsr vdp_mc_set_pixel
+	inc _x
+	lda _x
+	cmp #64
+	bne @loop
+	stz _x
+	inc _y
+	lda _y
+	cmp #48
+	bne @loop
 	
 	keyin
-	
 									;restore textui
 	sei
 	jsr	krn_display_off			
