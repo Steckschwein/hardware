@@ -18,7 +18,6 @@ clean:
 	ca65 --cpu $(CPU) $(CA65FLAGS) $(@:.o=.asm)
 
 %.prg: %.o ../lib/steckschwein-kernel.lib
-	#ld65 -C ../lib/steckschwein-kernel.cfg $< $(LIBS) -o $@
 	ld65 -C  ../kernel/steckosapp.cfg $< $(LIBS) -o $@
 
 ls.prg: ls.o ls_entry_short.o
@@ -27,4 +26,4 @@ ll.prg: ls.o ls_entry_long.o
 	cl65 $(CA65FLAGS) --target none --config ../kernel/steckosapp.cfg ls.o ls_entry_long.o -o ll.prg
 
 %: %.prg
-	../../transfer.py pwd.prg -s 0x1000	
+	../../transfer.py $< -s 0x1000	
