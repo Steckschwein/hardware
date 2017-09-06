@@ -445,8 +445,8 @@ Ram_top		= __LOADADDR__	; end of user RAM+1 (set as needed, should be page align
 ; For convenience, put jump here to reset location so it can be
 ; run from the load address.
 	JMP	RES_vec
-    ;extensions
-	.include "ext/gfx.asm"
+	
+	.include "ext/gfx.asm"		    ;extensions
 ; BASIC cold start entry point
 
 ; new page 2 initialisation, copy block to ccflag on

@@ -1,10 +1,7 @@
 .setcpu "65C02"
-__LOADADDR__ = $b400
-.export __LOADADDR__
-.segment "LOADADDR"
-.word __LOADADDR__
-.segment "CODE"
-.org __LOADADDR__
+
+.org $b400
+.include "appstart.inc"
 
 ; minimal monitor for EhBASIC and 6502 simulator V1.05
 ; Modified to support the Replica 1 by Jeff Tranter <tranter@pobox.com>

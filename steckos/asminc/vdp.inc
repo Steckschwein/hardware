@@ -1,7 +1,8 @@
+
 ; TODO FIXME conflicts with ehbasic zeropage locations - use steckschwein specific zeropage.s not the cc65....runtime/zeropage.s definition
 tmp1=$e0
 tmp2=$e1
-ptr1=$e8
+ptr1=$e2
 
 
 a_vdp		= $0220
@@ -92,7 +93,7 @@ vdp_nopslide:
 .endmacro
 
 .macro	SyncBlank
-	lda a_vreg
+	bit a_vreg
 @l:	bit	a_vreg
 	bpl @l	   ; wait until blank - irq flag set?
 .endmacro

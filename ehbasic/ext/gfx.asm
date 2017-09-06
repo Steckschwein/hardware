@@ -15,6 +15,7 @@
 .export GFX_MC_Plot
 .export GFX_2_Plot
 .export GFX_Off
+.export GFX_BgColor
 
 ;
 ;	within basic define extensions as follows
@@ -57,24 +58,25 @@ GFX_2_On:
 		rts
 
 GFX_2_Plot:
-		jsr GFX_Plot_Parse
+		jsr GFX_Plot_Prepare
 		jmp vdp_gfx2_set_pixel
 GFX_MC_Plot:
-		jsr GFX_Plot_Parse
+		jsr GFX_Plot_Prepare
 		jmp vdp_mc_set_pixel
-PLOT_XBYT:
-		.byte $00 ; set default
-PLOT_YBYT:
-		.byte $00 ; set default
 
-GFX_Plot_Parse:
-		SyncBlank
+GFX_Plot_Prepare:
 		JSR LAB_SCGB 	; scan for "," and get byte 
-		stx PLOT_XBYT 	; save plot x 
+		stx PLOT_XBYT	; save plot x 
 		JSR LAB_SCGB 	; scan for "," and get byte 
 		stx PLOT_YBYT	; save plot y
 		JSR LAB_SCGB 	; scan for "," and get byte 
 		txa				; color to A
 		ldx PLOT_XBYT
 		ldy PLOT_YBYT
+		SyncBlank		; sync
 		rts
+		
+PLOT_XBYT:
+               .byte $00 ; set default
+PLOT_YBYT:
+               .byte $00 ; set default

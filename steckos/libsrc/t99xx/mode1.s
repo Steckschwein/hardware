@@ -1,6 +1,6 @@
 .include "vdp.inc"
 
-; TODO FIXME conflicts with ehbasic zeropage locaitons - use steckschwein specific zeropage.s not the cc65....runtime/zeropage.s definition
+; TODO FIXME conflicts with ehbasic zeropage locations - use steckschwein specific zeropage.s not the cc65....runtime/zeropage.s definition
 ;.importzp ptr1
 
 .import	vdp_init_reg
