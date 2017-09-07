@@ -2,14 +2,9 @@
 .include "../kernel/kernel.inc"
 .include "../kernel/kernel_jumptable.inc"
 .include "../kernel/fat32.inc"
+.include "appstart.inc"
 
-__LOADADDR__ = $1000
-.export __LOADADDR__
-.segment "LOADADDR"
-.word __LOADADDR__
-.segment "CODE"
-
-
+appstart $1000
 
 	; everything until <space> in the parameter string is the source file name
 	ldy #$00
@@ -43,7 +38,7 @@ next:
         beq rename
 	cmp #'.'
 	bne @skip
-	
+
 	; found the dot. advance x to pos. 8, point y to the next byte and go again
 	iny
 	ldx #8
@@ -98,8 +93,8 @@ wrerror:
 	.asciiz "write error"
 	jmp (retvec)
 
-	
-filename: 
+
+filename:
 	.res 11
 	.byte $00
 normalizedfilename:

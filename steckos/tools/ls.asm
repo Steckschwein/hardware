@@ -1,22 +1,20 @@
-__LOADADDR__ = $1000
-.export __LOADADDR__
-.segment "LOADADDR"
-.word __LOADADDR__
 
 dir_attrib_mask		= $0a
-.segment "CODE"
 .include "common.inc"
 .include "../kernel/kernel.inc"
 .include "../kernel/kernel_jumptable.inc"
 .include "../kernel/fat32.inc"
+.include "appstart.inc"
 
 .export print_filename, cnt
 .import dir_show_entry
+
+appstart $1000
 main:
 
 		; lda #$04
 		; sta cnt
-		
+
 
 l1:
 		crlf
@@ -33,7 +31,7 @@ l1:
 		beq @l2_1
 		printstring "i/o error"
 		jmp (retvec)
-        
+
 @l2_1:		bcs @l4
 		bra @l5
 		; jsr .dir_show_entry
@@ -41,7 +39,7 @@ l1:
 		ldx #FD_INDEX_CURRENT_DIR
 		jsr krn_find_next
 		bcc @l5
-@l4:	
+@l4:
 		lda (dirptr)
 		cmp #$e5
 		beq @l3
@@ -52,7 +50,7 @@ l1:
 		bit #dir_attrib_mask ; Hidden attribute set, skip
 		bne @l3
 
-		
+
 		jsr dir_show_entry
 
 		jsr krn_getkey
@@ -74,7 +72,6 @@ print_filename:
 		cpy #$0b
 		bne @l1
 		rts
- 
+
 pattern:			.byte "*.*",$00
 cnt: 	.byte $04
-
