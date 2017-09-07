@@ -1,13 +1,13 @@
 ;
 ;	color - adjust colors
 ;
-__LOADADDR__ = $1000
-.include "appstart.inc"
-
 .include "common.inc"
 .include "vdp.inc"
 .include "zeropage.inc"
 .include "../kernel/kernel_jumptable.inc"
+
+.include "appstart.inc"
+appstart $1000
 
 .import vdp_gfx1_blank
 .import vdp_gfx1_on
@@ -15,6 +15,7 @@ __LOADADDR__ = $1000
 .import vdp_mc_blank
 .import vdp_mc_on
 .import vdp_mc_set_pixel
+
 
 _x=$0
 _y=$1

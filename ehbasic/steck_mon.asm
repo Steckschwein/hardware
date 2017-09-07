@@ -1,9 +1,5 @@
 .setcpu "65C02"
 
-__LOADADDR__ = $b400
-.include "appstart.inc"
-
-.code
 ; minimal monitor for EhBASIC and 6502 simulator V1.05
 ; Modified to support the Replica 1 by Jeff Tranter <tranter@pobox.com>
 ; Steckschwein
@@ -12,10 +8,14 @@ __LOADADDR__ = $b400
 ; running [F6] then start the code with the RESET [CTRL][SHIFT]R. Just selecting RUN
 ; will do nothing, you'll still have to do a reset to run the code.
 
+
 .include "../steckos/kernel/kernel.inc"
 .include "../steckos/kernel/kernel_jumptable.inc"
 .include "../steckos/kernel/fat32.inc"
 .include "../steckos/kernel/uart.inc"
+.include "appstart.inc"
+
+appstart $b400
 
 .include "basic.asm"
 .include "ext/gfx.asm"		    ;extensions
