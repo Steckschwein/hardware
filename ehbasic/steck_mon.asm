@@ -1,6 +1,6 @@
 .setcpu "65C02"
 
-.org $b400
+__LOADADDR__ = $b400
 .include "appstart.inc"
 
 .code

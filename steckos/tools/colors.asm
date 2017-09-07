@@ -1,10 +1,8 @@
 ;
 ;	color - adjust colors
 ;
-.org $1000
+__LOADADDR__ = $1000
 .include "appstart.inc"
-
-.code
 
 .include "common.inc"
 .include "vdp.inc"
