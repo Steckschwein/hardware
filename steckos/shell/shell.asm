@@ -287,9 +287,9 @@ helptxt1:
 
 
 cd:
-        	lda paramptr
-        	ldx paramptr+1
-        	jsr krn_chdir
+    	lda paramptr
+    	ldx paramptr+1
+    	jsr krn_chdir
 		beq @l2
         ;	debugptr "cderr:", paramptr
 		jmp errmsg
