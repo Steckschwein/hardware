@@ -2,6 +2,8 @@
 .include "vdp.inc"
 .include "zeropage.inc"
 .include "kernel_jumptable.inc"
+.include "appstart.inc"
+
 
 .importzp ptr2, ptr3
 .importzp tmp3, tmp4
@@ -13,14 +15,11 @@
 .import vdp_mode_sprites_off
 .import vdp_bgcolor
 
-__LOADADDR__ = $1000
-.export __LOADADDR__
-.segment "LOADADDR"
-.word __LOADADDR__
-.segment "CODE"
+
+	appstart $1000
 
 
-content = $2000	
+content = $2000
 color=content+$1800
 
 main:
@@ -35,8 +34,8 @@ main:
 	plx
 	jsr krn_close
 	lda errno
-	bne err	
-	
+	bne err
+
 		jsr	krn_textui_disable			;disable textui
 		SetVector content, addr
 		jsr	gfxui_on
@@ -46,7 +45,7 @@ main:
 
 		jsr	gfxui_blend_off
 		jsr	gfxui_off
-    
+
 	jsr	krn_display_off			;restore textui
 	jsr	krn_textui_init
 	jsr	krn_textui_enable
@@ -79,12 +78,12 @@ l3:
 	sta tmp3
 	stz tmp4
 	stz tmp5
-    
+
 @l:
 	bit tmp5    ;sync with isr
 	bpl @l
 	stz tmp5
-    
+
 	ldx	#12
 @l2:	lda ptr1
 	ldy ptr1+1
@@ -109,12 +108,12 @@ l3:
 	clc
 	adc #08
 	sta tmp1
-    
+
 	lda #((WRITE_ADDRESS)+>ADDRESS_GFX2_COLOR)
 	sta ptr1+1
 	lda #>color
 	sta @c+2
-    
+
 	ldx	#12
 @l3:
 	lda ptr2
@@ -133,7 +132,7 @@ l3:
 	inc ptr2+1
 	dex
 	bne  @l3
-    
+
 	lda tmp3
 	sta tmp4
 	sec
@@ -159,7 +158,7 @@ blend_isr:
     lda	#Black
 	jsr vdp_bgcolor
 	restore
-    
+
 @0:   rti
 
 gfxui_on:
@@ -170,7 +169,7 @@ gfxui_on:
     lda #Black<<4|Black
     jsr vdp_gfx2_blank
     ;jsr vdp_fill_name_table
-	
+
     SetVector  content, ptr1    ; only load the pattern data, leave colors black to blend them later
 	lda	#<ADDRESS_GFX2_PATTERN
 	ldy	#WRITE_ADDRESS + >ADDRESS_GFX2_PATTERN
@@ -182,7 +181,7 @@ gfxui_on:
 	jsr vdp_gfx2_on			    ;enable gfx2 mode
     cli
     rts
-    
+
 gfxui_off:
     sei
     copypointer  irqsafe, $fffe
