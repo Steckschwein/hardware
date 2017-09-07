@@ -15,7 +15,7 @@ tmp1    = $a1
 dir_show_entry:
 		pha
 		jsr print_filename
-	
+
 		lda #' '
 		jsr krn_chrout
 
@@ -40,12 +40,12 @@ dir_show_entry:
 		lda #'D'
 		bra @l4
 @l3:
-		lda #'F'	
+		lda #'F'
 @l4:
 		jsr krn_chrout
 		lda #' '
 		jsr krn_chrout
-		
+
 		ldy #F32DirEntry::FileSize + 2
 ;@l5:		dey
 		;lda (dirptr),y
@@ -57,7 +57,7 @@ dir_show_entry:
 		ldy #F32DirEntry::FileSize +1
 		lda (dirptr),y
 		tax
-		ldy #F32DirEntry::FileSize 
+		ldy #F32DirEntry::FileSize
 		lda (dirptr),y
 
 		jsr BINBCD16
@@ -65,11 +65,14 @@ dir_show_entry:
 		lda #' '
 		jsr krn_chrout
 
-		ldy #F32DirEntry::WrtDate 
+		ldy #F32DirEntry::WrtDate
 		lda (dirptr),y
 		and #%00011111
 		jsr decoutz
-	
+
+		lda #'.'
+		jsr krn_chrout
+
 		; month
 		iny
 		lda (dirptr),y
@@ -82,19 +85,23 @@ dir_show_entry:
 		lsr
 		lsr
 		lsr
-		
+
 		jsr decoutz
-		
+
+		lda #'.'
+		jsr krn_chrout
+
+
 		txa
-		clc 
+		clc
 		adc #80   	; add begin of msdos epoch (1980)
-		cmp #100	
+		cmp #100
 		bcc @l6		; greater than 100 (post-2000)
 		sec 		; yes, substract 100
 		sbc #100
 @l6:	jsr decoutz ; there we go
 
-	
+
 		lda #' '
 		jsr krn_chrout
 
@@ -105,7 +112,7 @@ dir_show_entry:
 		lsr
 		lsr
 		lsr
-	
+
 		jsr decoutz
 
 		lda #':'
@@ -118,9 +125,9 @@ dir_show_entry:
 		dey
 		lda (dirptr),y
 
-		.repeat 5	
+		.repeat 5
 		lsr tmp1
-		ror 
+		ror
 		.endrepeat
 
 		jsr decoutz
@@ -128,9 +135,9 @@ dir_show_entry:
 
         ; Bits 11–15: Hours, valid value range 0–23 inclusive.
         crlf
-	
+
 		pla
-		rts	
+		rts
 
 ;----------------------------------------------------------------------------------------------
 ; decout - output byte in A as decimal ASCII without leading zeros
@@ -176,12 +183,12 @@ decoutz:
 		lda #'0'
 		jsr krn_chrout
 		pla
-@l1:	
+@l1:
 		jmp decout
  ; Lookup table for decimal to ASCII
 dec_tbl:			.byte 128,160,200
 
-BINBCD16: 
+BINBCD16:
                 sta tmp0
 		stx tmp0+1
 	        SED             ; Switch to decimal mode
