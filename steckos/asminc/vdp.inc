@@ -93,9 +93,13 @@ vdp_nopslide:
 .endmacro
 
 .macro	SyncBlank
-	bit a_vreg
-@l:	bit	a_vreg
-	bpl @l	   ; wait until blank - irq flag set?
+	bit a_vreg	; maybe within blank, we clean flag by read to a_vreg
+	nop			; TODO FIXME - investigate, accessing the a_vreg too fast results in machine crash maybe due to bus contention
+	nop
+	nop
+	nop
+@l:	bit	a_vreg	; wait until blank - irq flag set?
+	bpl @l
 .endmacro
 
 .macro InBlank
