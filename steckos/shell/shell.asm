@@ -19,10 +19,10 @@ steckos_start 		= appstart
 
 KEY_RETURN 		= $0d
 KEY_BACKSPACE 		= $08
-KEY_CRSR_UP 		= $1E 
-KEY_CRSR_DOWN 	 	= $1F 
-KEY_CRSR_RIGHT 	 	= $10 
-KEY_CRSR_LEFT 	 	= $11 
+KEY_CRSR_UP 		= $1E
+KEY_CRSR_DOWN 	 	= $1F
+KEY_CRSR_RIGHT 	 	= $10
+KEY_CRSR_LEFT 	 	= $11
 
 BUF_SIZE		= 32
 
@@ -35,34 +35,10 @@ startaddr		= $d9
 
 ;---------------------------------------------------------------------------------------------------------
 ; init shell
-;  - init sd card (again)
-;  - mount sd card
 ;  - print welcome message
 ;---------------------------------------------------------------------------------------------------------
 
 init:
-	
-;	sei
-;	jsr krn_init_sdcard
-;	cli
-;	lda errno
-;	beq @l1
-;
-;	printstring "SD card init error"
-;
-;	bra hello
-
-
-;@l1:
-;	jsr krn_mount
-;	lda errno
-;	beq @l2
-
-;	printstring "SD card mount error"
-;	bra hello
-
-;@l2: 
-
 		SetVector mainloop, retvec
 		SetVector buf, bufptr
 
@@ -77,18 +53,18 @@ hello:
 
 mainloop:
 		; output prompt character
-		
+
 		crlf
 		lda #'>'
 		jsr krn_chrout
-		
+
 		; reset input buffer
 		lda #$00
 		tay
 		sta (bufptr)
 
 		; put input into buffer until return is pressed
-inputloop:	
+inputloop:
 ;@l:		jsr krn_getkey
 		;bcc @l
 		keyin
@@ -102,31 +78,7 @@ inputloop:
 
 		cmp #KEY_ESCAPE
 		beq escape
-		
-		cmp #KEY_CRSR_LEFT
-		bne @l1
-		jsr krn_primm
-		.asciiz "links"
-		bra inputloop
-@l1:
-		cmp #KEY_CRSR_RIGHT
-		bne @l2
-		jsr krn_primm
-		.asciiz "rechts"
-		bra inputloop
-@l2:
-		cmp #KEY_CRSR_UP
-		bne @l3
-		jsr krn_primm
-		.asciiz "hoch"
-		bra inputloop
-@l3:
-		cmp #KEY_CRSR_DOWN
-		bne @l4
-		jsr krn_primm
-		.asciiz "runter"
-		bra inputloop
-@l4:
+
 		sta (bufptr),y
 		iny
 
@@ -134,7 +86,7 @@ line_end:
 		jsr terminate
 		jsr krn_chrout
 
-		; prevent overflow of input buffer 
+		; prevent overflow of input buffer
 		cpy #BUF_SIZE
 		beq mainloop
 
@@ -164,28 +116,28 @@ parse:
 		copypointer bufptr, cmdptr
 
 		; find begin of command word
-foo:		lda (cmdptr)	; skip non alphanumeric stuff	
+@l1:	lda (cmdptr)	; skip non alphanumeric stuff
 		bne @l2
 		jmp mainloop
 @l2:
 		cmp #$20
 		bne @l3
 		inc cmdptr
-		bra foo
+		bra @l1
 @l3:
 		copypointer cmdptr, paramptr
 
 		; find begin of parameter (everything behind the command word, separated by space)
 		; first, fast forward until space or abort if null (no parameters then)
-@l4:		lda (paramptr)
+@l4:	lda (paramptr)
 		beq @l7
 		cmp #$20
 		beq @l5
 		inc paramptr
-		bra @l4	
+		bra @l4
 @l5:
 		; space found.. fast forward until non space or null
-@l6:		lda (paramptr)
+@l6:	lda (paramptr)
 		beq @l7
 		cmp #$20
 		bne @l7
@@ -196,13 +148,13 @@ foo:		lda (cmdptr)	; skip non alphanumeric stuff
 		SetVector buf, bufptr
 
 		jsr terminate
-	
+
 
 compare:
-		; compare 	
+		; compare
 		ldx #$00
-@l1:		ldy #$00
-@l2:		lda (cmdptr),y
+@l1:	ldy #$00
+@l2:	lda (cmdptr),y
 
 		; if not, there is a terminating null
 		; cmp #$00
@@ -212,7 +164,7 @@ compare:
 		beq cmdfound
 
 		; command string in buffer is terminated with $20 if there are cmd line arguments
-	
+
 @l3:
 		cmp #$20
 		bne @l4
@@ -249,7 +201,7 @@ compare:
 cmdfound:
 		inx
 
-		jmp (cmdlist,x) ; 65c02 FTW!!	
+		jmp (cmdlist,x) ; 65c02 FTW!!
 
 unknown:
 		lda (bufptr)
@@ -266,9 +218,9 @@ printbuf:
 		ldy #$01
 		sty crs_x
 		jsr krn_textui_update_crs_ptr
-		
+
 		ldy #$00
-@l1:		lda (bufptr),y
+@l1:	lda (bufptr),y
 		beq @l2
 		sta buf,y
 		jsr krn_chrout
@@ -280,24 +232,25 @@ printbuf:
 cmdlist:
 
 		.byte "cd"
-		.byte $00	
+		.byte $00
 		.word cd
-		
+
 		.byte "up",0
 		.word krn_upload
-	    
+
 		.byte "help"
-		.byte $00	
+		.byte $00
 		.word help
 .ifdef DEBUG
 		.byte "dump"
-		.byte $00	
+		.byte $00
 		.word dump
 .endif
-		
+
 		; End of list
 		.byte $ff
 
+.ifdef DEBUG
 
 atoi:
 		cmp #'9'+1
@@ -310,6 +263,7 @@ atoi:
 @l1:		sec
 		sbc #$30
 		rts
+.endif
 
 
 errmsg:
@@ -319,7 +273,7 @@ errmsg:
 		.asciiz "Error: "
 		pla
 		jsr krn_hexout
-		
+
 		jmp mainloop
 
 
@@ -349,9 +303,9 @@ run:
 		ldx cmdptr+1    ; cmdline in a/x
 		jsr krn_execv   ; return A with errorcode
 		bne @l1         ; error? try different path
-		jmp mainloop		
-		
-@l1:	
+		jmp mainloop
+
+@l1:
 		SetVector PATH, pathptr
 		stz tmp0
 @try_path:
@@ -369,7 +323,7 @@ run:
 		lda #$f0
 		jmp errmsg
 @check_path:    ;PATH end reached and nothing to prefix
-		cpy tmp0        
+		cpy tmp0
 		bne @cp_next_piece  ;end of path, no iny
 		lda #$f1        ;nothing found, "Invalid command"
 		jmp errmsg
@@ -453,7 +407,7 @@ dump:
 		bne @l3
 
 		printstring "parameter error"
-		
+
 		bra @l8
 @l3:
 
@@ -469,7 +423,7 @@ dump:
 
 		ldy #$00
 @l4:	lda (dumpvec_start),y
-		jsr krn_hexout 
+		jsr krn_hexout
 		lda #' '
 		jsr krn_chrout
 		iny
@@ -478,7 +432,7 @@ dump:
 
 		lda #' '
 		jsr krn_chrout
-		
+
 		ldy #$00
 @l5:	lda (dumpvec_start),y
 		cmp #$19
@@ -519,7 +473,7 @@ upload:
 		jsr upload
 		cli
 		; jump to new code
-		jmp (startaddr)	
+		jmp (startaddr)
 
 help:
 		crlf
