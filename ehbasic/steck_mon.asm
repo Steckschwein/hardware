@@ -3,6 +3,7 @@
 .org $b400
 .include "appstart.inc"
 
+.code
 ; minimal monitor for EhBASIC and 6502 simulator V1.05
 ; Modified to support the Replica 1 by Jeff Tranter <tranter@pobox.com>
 ; Steckschwein
@@ -17,6 +18,7 @@
 .include "../steckos/kernel/uart.inc"
 
 .include "basic.asm"
+.include "ext/gfx.asm"		    ;extensions
 
 ESC = $1B        ; Escape character
 CR  = $0D        ; Return character

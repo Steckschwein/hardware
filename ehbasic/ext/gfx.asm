@@ -10,6 +10,8 @@
 .import vdp_gfx2_on
 .import vdp_gfx2_set_pixel
 
+.import	vdp_bgcolor
+
 .export GFX_2_On
 .export GFX_MC_On
 .export GFX_MC_Plot
@@ -70,10 +72,11 @@ GFX_Plot_Prepare:
 		JSR LAB_SCGB 	; scan for "," and get byte 
 		stx PLOT_YBYT	; save plot y
 		JSR LAB_SCGB 	; scan for "," and get byte 
+		
 		txa				; color to A
 		ldx PLOT_XBYT
 		ldy PLOT_YBYT
-		SyncBlank		; sync
+		SyncBlank		; wait sync
 		rts
 		
 PLOT_XBYT:

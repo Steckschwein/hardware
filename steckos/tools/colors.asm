@@ -4,6 +4,8 @@
 .org $1000
 .include "appstart.inc"
 
+.code
+
 .include "common.inc"
 .include "vdp.inc"
 .include "zeropage.inc"
