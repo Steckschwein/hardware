@@ -4,12 +4,10 @@
         .import         __argc, __argv        
 
 MAXARGS  = 10                   ; Maximum number of arguments allowed
-REM      = $8f                  ; BASIC token-code
 NAME_LEN = 16                   ; Maximum length of command-name
 
 		.include		"../kernel/kernel_jumptable.inc"
-
-cmdptr  = $d6  ; TODO FIXME use include
+		.include		"../kernel/zeropage.inc"
 
 ; Get possible command-line arguments. Goes into the special INIT segment,
 ; which may be reused after the startup code is run
