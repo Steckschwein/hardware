@@ -4,8 +4,8 @@ LIBS=../lib/steckschwein-kernel.lib
 
 .PHONY: all clean
 
-all: ls.prg ll.prg rename.prg date.prg nvram.prg uname.prg hello.prg fibo.prg clear.prg setdate.prg view.prg keycode.prg
-#all: ls.prg ll.prg rename.prg view.prg keycode.prg
+#all: ls.prg ll.prg rename.prg date.prg nvram.prg uname.prg hello.prg fibo.prg clear.prg setdate.prg view.prg keycode.prg
+all: ls.prg ll.prg rename.prg view.prg keycode.prg
 
 clean:
 	rm -f *.prg *.s *.o
