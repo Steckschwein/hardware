@@ -1,20 +1,20 @@
 !src "../steckos/kernel/kernel_jumptable.inc"
 !src "../steckos/kernel/uart.inc"
-* = $d000;
+* = $0400;
 
 ; XMODEM/CRC Receiver for the 65C02
 ;
 ; By Daryl Rictor & Ross Archer  Aug 2002
 ;
 ; 21st century code for 20th century CPUs (tm?)
-; 
+;
 ; A simple file transfer program to allow upload from a console device
 ; to the SBC utilizing the x-modem/CRC transfer protocol.  Requires just
 ; under 1k of either RAM or ROM, 132 bytes of RAM for the receive buffer,
 ; and 8 bytes of zero page RAM for variable storage.
 ;
 ;**************************************************************************
-; This implementation of XMODEM/CRC does NOT conform strictly to the 
+; This implementation of XMODEM/CRC does NOT conform strictly to the
 ; XMODEM protocol standard in that it (1) does not accurately time character
 ; reception or (2) fall back to the Checksum mode.
 
@@ -30,7 +30,7 @@
 ;
 ; Files uploaded via XMODEM-CRC must be
 ; in .o64 format -- the first two bytes are the load address in
-; little-endian format:  
+; little-endian format:
 ;  FIRST BLOCK
 ;     offset(0) = lo(load start address),
 ;     offset(1) = hi(load start address)
@@ -42,11 +42,11 @@
 ;
 ; The TASS assembler and most Commodore 64-based tools generate this
 ; data format automatically and you can transfer their .obj/.o64 output
-; file directly.  
-;   
-; The only time you need to do anything special is if you have 
+; file directly.
+;
+; The only time you need to do anything special is if you have
 ; a raw memory image file (say you want to load a data
-; table into memory). For XMODEM you'll have to 
+; table into memory). For XMODEM you'll have to
 ; "insert" the start address bytes to the front of the file.
 ; Otherwise, XMODEM would have no idea where to start putting
 ; the data.
@@ -59,15 +59,15 @@
 addr		=	$36
 
 crc		=	$38		; CRC lo byte  (two byte variable)
-crch		=	$39		; CRC hi byte  
+crch		=	$39		; CRC hi byte
 
 ptr		=	$3a		; data pointer (two byte variable)
 ptrh		=	$3b		;   "    "
 
-blkno		=	$3c		; block number 
-retry		=	$3d		; retry counter 
+blkno		=	$3c		; block number
+retry		=	$3d		; retry counter
 retry2		=	$3e		; 2nd counter
-bflag		=	$3f		; block flag 
+bflag		=	$3f		; block flag
 
 retvec		=	$da
 ;
@@ -75,7 +75,7 @@ retvec		=	$da
 ; non-zero page variables and buffers
 ;
 ;
-Rbuff		=	$0300      	; temp 132 byte receive buffer 
+Rbuff		=	$0300      	; temp 132 byte receive buffer
 					;(place anywhere, page aligned)
 ;
 ;
@@ -110,7 +110,7 @@ ESC		=	$1b		; ESC to exit
 ; By Daryl Rictor, July 31, 2002
 ;
 ; v0.3  tested good minus CRC
-; v0.4  CRC fixed!!! init to $0000 rather than $FFFF as stated   
+; v0.4  CRC fixed!!! init to $0000 rather than $FFFF as stated
 ; v0.5  added CRC tables vs. generation at run time
 ; v 1.0 recode for use with SBC2
 ; v 1.1 added block 1 masking (block 257 would be corrupted)
@@ -122,28 +122,28 @@ ESC		=	$1b		; ESC to exit
 		jmp (addr)
 
 
-XModem:		
+XModem:
 		jsr	PrintMsg	; send prompt and info
-		
+
 		lda	#$01
 		sta	blkno		; set block # to 1
 		sta	bflag		; set flag to get address from block 1
 StartCrc:	lda	#'C'		; "C" start with CRC mode
 		jsr	Put_Chr		; send it
-		lda	#$FF	
+		lda	#$FF
 		sta	retry2		; set loop counter for ~3 sec delay
 		;lda	#$00
                	stz	crc
-		stz	crch		; init CRC value	
+		stz	crch		; init CRC value
 		jsr	GetByte		; wait for input
                	bcs	GotByte		; byte received, process it
 		bcc	StartCrc	; resend "C"
 
-StartBlk:	lda	#$FF		; 
+StartBlk:	lda	#$FF		;
 		sta	retry2		; set loop counter for ~3 sec delay
 		;lda	#$00		;
 		stz	crc		;
-		stz	crch		; init CRC value	
+		stz	crch		; init CRC value
 		jsr	GetByte		; get first byte of block
 		bcc	StartBlk	; timed out, keep waiting...
 GotByte:	cmp	#ESC		; quitting?
@@ -153,7 +153,7 @@ GotByte:	cmp	#ESC		; quitting?
 GotByte1:	cmp	#SOH		; start of block?
 		beq	BegBlk		; yes
 		cmp	#EOT		;
-		bne	BadCrc		; Not SOH or EOT, so flush buffer & send NAK	
+		bne	BadCrc		; Not SOH or EOT, so flush buffer & send NAK
 		jmp	Done		; EOT - all done!
 BegBlk:		ldx	#$00
 GetBlk:		lda	#$ff		; 3 sec window to receive characters
@@ -161,14 +161,14 @@ GetBlk:		lda	#$ff		; 3 sec window to receive characters
 GetBlk1:	jsr	GetByte		; get next character
 		bcc	BadCrc		; chr rcv error, flush and send NAK
 GetBlk2:	sta	Rbuff,x		; good char, save it in the rcv buffer
-		inx			; inc buffer pointer	
+		inx			; inc buffer pointer
 		cpx	#$84		; <01> <FE> <128 bytes> <CRCH> <CRCL>
 		bne	GetBlk		; get 132 characters
 		ldx	#$00		;
 		lda	Rbuff,x		; get block # from buffer
-		cmp	blkno		; compare to expected block #	
+		cmp	blkno		; compare to expected block #
 		beq	GoodBlk1	; matched!
-		jsr	Print_Err	; Unexpected block number - abort	
+		jsr	Print_Err	; Unexpected block number - abort
 		jsr	Flush		; mismatched - flush buffer and then do BRK
 ;		lda	#$FD		; put error code in "A" if desired
 		brk			; unexpected block # - fatal error - BRK or RTS
@@ -176,12 +176,12 @@ GoodBlk1:	eor	#$ff		; 1's comp of block #
 		inx			;
 		cmp	Rbuff,x		; compare with expected 1's comp of block #
 		beq	GoodBlk2 	; matched!
-		jsr	Print_Err	; Unexpected block number - abort	
+		jsr	Print_Err	; Unexpected block number - abort
 		jsr 	Flush		; mismatched - flush buffer and then do BRK
 ;		lda	#$FC		; put error code in "A" if desired
-		brk			; bad 1's comp of block#	
-GoodBlk2:	ldy	#$02		; 
-CalcCrc:	lda	Rbuff,y		; calculate the CRC for the 128 bytes of data	
+		brk			; bad 1's comp of block#
+GoodBlk2:	ldy	#$02		;
+CalcCrc:	lda	Rbuff,y		; calculate the CRC for the 128 bytes of data
 		jsr	UpdCrc		; could inline sub here for speed
 		iny			;
 		cpy	#$82		; 128 bytes
@@ -196,7 +196,7 @@ CalcCrc:	lda	Rbuff,y		; calculate the CRC for the 128 bytes of data
 BadCrc:		jsr	Flush		; flush the input port
 		lda	#NAK		;
 		jsr	Put_Chr		; send NAK to resend block
-		jmp	StartBlk	; start over, get the block again			
+		jmp	StartBlk	; start over, get the block again
 GoodCrc:	ldx	#$02		;
 		lda	blkno		; get the block number
 		cmp	#$01		; 1st block?
@@ -211,7 +211,7 @@ GoodCrc:	ldx	#$02		;
 		sta	ptr+1		; save it
 		sta	addr+1
 		inx			; point to first byte of data
-		dec	bflag		; set the flag so we won't get another address		
+		dec	bflag		; set the flag so we won't get another address
 CopyBlk:	ldy	#$00		; set offset to zero
 CopyBlk3:	lda	Rbuff,x		; get data byte from buffer
 		sta	(ptr),y		; save to target
@@ -239,14 +239,14 @@ Done:		lda	#ACK		; last block, send ACK and exit.
 ;					;
 GetByte:	;lda	#$00		; wait for chr input and cycle timing loop
 		stz	retry		; set low value of timing loop
-StartCrcLp:	jsr	Get_Chr		; get chr from serial port, don't wait 
+StartCrcLp:	jsr	Get_Chr		; get chr from serial port, don't wait
 		bcs	GetByte1	; got one, so exit
 		dec	retry		; no character received, so dec counter
 		bne	StartCrcLp	;
 		dec	retry2		; dec hi byte of counter
 		bne	StartCrcLp	; look for character again
 		clc			; if loop times out, CLC, else SEC and return
-GetByte1:	
+GetByte1:
 		rts			; with character in "A"
 ;
 Flush:		lda	#$70		; flush receive buffer
@@ -256,8 +256,8 @@ Flush1:		jsr	GetByte		; read the port
 		rts			; else done
 ;
 ;PrintMsg:	ldx	#$00		; PRINT starting message
-;PrtMsg1:	lda   	Msg,x		
-		;beq	PrtMsg2			
+;PrtMsg1:	lda   	Msg,x
+		;beq	PrtMsg2
 		;jsr	Put_Chr
 		;inx
 		;bne	PrtMsg1
@@ -309,13 +309,13 @@ GoodMsg:	!text 	"Upload Successful!"
 ; register if one was present.
 ;
 ; "Put_Chr" routine will write one byte to the output port.  Its alright
-; if this routine waits for the port to be ready.  its assumed that the 
+; if this routine waits for the port to be ready.  its assumed that the
 ; character was send upon return from this routine.
 ;
 ;
 ; input chr from ACIA (no waiting)
 ; TODO
-Get_Chr:		
+Get_Chr:
                 lda #$01        ; Maske fuer DataReady Bit
                 bit uart1lsr
                 beq +
@@ -334,7 +334,7 @@ Put_Chr	   	= krn_uart_tx
 ;=========================================================================
 ;
 ;
-;  CRC subroutines 
+;  CRC subroutines
 ;
 ;
 UpdCrc:		eor 	crc+1 		; Quick CRC computation with lookup tables
@@ -381,8 +381,8 @@ UpdCrc:		eor 	crc+1 		; Quick CRC computation with lookup tables
 ;		rts
 ;
 ; The following tables are used to calculate the CRC for the 128 bytes
-; in the xmodem data blocks.  You can use these tables if you plan to 
-; store this program in ROM.  If you choose to build them at run-time, 
+; in the xmodem data blocks.  You can use these tables if you plan to
+; store this program in ROM.  If you choose to build them at run-time,
 ; then just delete them and define the two labels: crclo & crchi.
 ;
 ; low byte CRC lookup table (should be page aligned)
@@ -404,7 +404,7 @@ crclo:
  !byte $4C,$6D,$0E,$2F,$C8,$E9,$8A,$AB,$44,$65,$06,$27,$C0,$E1,$82,$A3
  !byte $7D,$5C,$3F,$1E,$F9,$D8,$BB,$9A,$75,$54,$37,$16,$F1,$D0,$B3,$92
  !byte $2E,$0F,$6C,$4D,$AA,$8B,$E8,$C9,$26,$07,$64,$45,$A2,$83,$E0,$C1
- !byte $1F,$3E,$5D,$7C,$9B,$BA,$D9,$F8,$17,$36,$55,$74,$93,$B2,$D1,$F0 
+ !byte $1F,$3E,$5D,$7C,$9B,$BA,$D9,$F8,$17,$36,$55,$74,$93,$B2,$D1,$F0
 
 ; hi byte CRC lookup table (should be page aligned)
 ;		*= $7E00
@@ -425,7 +425,7 @@ crchi:
  !byte $D9,$C9,$F9,$E9,$99,$89,$B9,$A9,$58,$48,$78,$68,$18,$08,$38,$28
  !byte $CB,$DB,$EB,$FB,$8B,$9B,$AB,$BB,$4A,$5A,$6A,$7A,$0A,$1A,$2A,$3A
  !byte $FD,$ED,$DD,$CD,$BD,$AD,$9D,$8D,$7C,$6C,$5C,$4C,$3C,$2C,$1C,$0C
- !byte $EF,$FF,$CF,$DF,$AF,$BF,$8F,$9F,$6E,$7E,$4E,$5E,$2E,$3E,$0E,$1E 
+ !byte $EF,$FF,$CF,$DF,$AF,$BF,$8F,$9F,$6E,$7E,$4E,$5E,$2E,$3E,$0E,$1E
 ;
 ;
 ; End of File
