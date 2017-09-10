@@ -4,16 +4,20 @@
 #include <conio.h> 
 
 static unsigned char CHARS = 16;
+
 int main (int argc, const char* argv[])
 {
 	unsigned char buffer[200];
 	char c;
 	unsigned int i;
 	unsigned char p;
+	unsigned char *format = "%c ";
 	for(i=1;i<argc;i++){
-		if(strcmp(argv[i], "-x")){
+		if(strncmp(argv[i], "-x", 2) == 0){
+			format = "%02x ";
 			break;
-		}else if(strcmp(argv[i], "-c")){
+		}else if(strncmp(argv[i], "-c", 2) == 0){
+			format = "%c ";
 			break;
 		}
 	}	
@@ -26,7 +30,7 @@ int main (int argc, const char* argv[])
 			i+=CHARS;
 			cprintf("\n%08x ", i);
 			for(;p>0;p--)
-				cprintf("%c", buffer[CHARS-p]);
+				cprintf(format, buffer[CHARS-p]);
 			cprintf("\n");
 		}
 	}
