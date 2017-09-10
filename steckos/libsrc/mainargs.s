@@ -9,10 +9,10 @@ NAME_LEN = 16                   ; Maximum length of command-name
 		.include		"../kernel/kernel_jumptable.inc"
 		.include		"../kernel/zeropage.inc"
 
-; Get possible command-line arguments. Goes into the special INIT segment,
+; Get possible command-line arguments. Goes into the special ONCE segment,
 ; which may be reused after the startup code is run
 
-.segment        "INIT"
+.segment        "ONCE"
 
 initmainargs:
 ;        for testing purpose
@@ -90,7 +90,7 @@ done:   lda     #<argv
         stx     __argv + 1
         rts
 
-.segment        "INITBSS"
+.segment        "INIT"
 
 name:   .res    NAME_LEN + 1
 

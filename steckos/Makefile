@@ -15,7 +15,7 @@ build:
 	(cd libsrc; make )
 	(cd shell; make )
 	(cd tools; make )
-#	(cd test; make )
+	(cd test; make )
 
 dist: build
 	./mkdist.sh $(DIST_TARGET)
