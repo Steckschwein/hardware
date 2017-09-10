@@ -18,23 +18,20 @@
 
 	appstart $1000
 
-
 content = $2000
 color=content+$1800
 
 main:
-	lda paramptr
-	ldx paramptr+1
-	jsr krn_open
-	bne err
- 	phx
+		lda paramptr
+		ldx paramptr+1
+		jsr krn_open
+		bne err
+		phx
 
-	SetVector content, read_blkptr
-	jsr krn_read
-	plx
-	jsr krn_close
-	lda errno
-	bne err
+		SetVector content, read_blkptr
+		jsr krn_read
+		plx
+		jsr krn_close
 
 		jsr	krn_textui_disable			;disable textui
 		SetVector content, addr
@@ -46,19 +43,19 @@ main:
 		jsr	gfxui_blend_off
 		jsr	gfxui_off
 
-	jsr	krn_display_off			;restore textui
-	jsr	krn_textui_init
-	jsr	krn_textui_enable
-	cli
-	bra l2
+		jsr	krn_display_off			;restore textui
+		jsr	krn_textui_init
+		jsr	krn_textui_enable
+		cli
+		bra l2
 
 err:
-	jsr krn_primm
-	.asciiz "load error file "
-	copypointer	paramptr, msgptr
-	jsr krn_strout
+		jsr krn_primm
+		.asciiz "load error file "
+		copypointer	paramptr, msgptr
+		jsr krn_strout
 
-l2:	jmp (retvec)
+l2:		jmp (retvec)
 
 row=$100
 gfxui_blend_off:
@@ -193,8 +190,4 @@ m_vdp_nopslide
 irqsafe: .res 2, 0
 
 tmp0:	.res 1
-;tmp1:	.res 1
-;tmp2:	.res 1
-;tmp3:	.res 1
-;tmp4:	.res 1
 tmp5:	.res 1

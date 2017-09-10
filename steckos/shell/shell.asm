@@ -1,17 +1,13 @@
 tmp0    = $a0
 tmp1    = $a1
 tmp5    = $a2
-__LOADADDR__ = $d800
-.export __LOADADDR__
-.segment "LOADADDR"
-.word __LOADADDR__
-
-.segment "CODE"
-.org $d800
 
 .include "common.inc"
 .include "../kernel/kernel.inc"
 .include "../kernel/kernel_jumptable.inc"
+
+.include "appstart.inc"
+appstart $d800
 
 ; set attrib mask. hide volume label and hidden files
 dir_attrib_mask		= $0a
