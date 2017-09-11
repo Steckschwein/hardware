@@ -115,13 +115,6 @@ ESC		=	$1b		; ESC to exit
 ; v 1.0 recode for use with SBC2
 ; v 1.1 added block 1 masking (block 257 would be corrupted)
 
-;		*= 	$7B00		; Start of program (adjust to your needs)
-;
-		jsr XModem
-
-		jmp (addr)
-
-
 XModem:
 			jsr	PrintMsg	; send prompt and info
 
@@ -147,7 +140,9 @@ StartBlk:	lda	#$FF		;
 GotByte:	cmp	#ESC		; quitting?
             bne	GotByte1	; no
 ;		lda	#$FE		; Error code in "A" of desired
-            brk			; YES - do BRK or change to RTS if desired
+;            brk			; YES - do BRK or change to RTS if desired
+			jmp (retvec)
+
 GotByte1:	cmp	#SOH		; start of block?
 			beq	BegBlk		; yes
 			cmp	#EOT		;
@@ -169,7 +164,9 @@ GetBlk2:	sta	Rbuff,x		; good char, save it in the rcv buffer
 			jsr	Print_Err	; Unexpected block number - abort
 			jsr	Flush		; mismatched - flush buffer and then do BRK
 	;		lda	#$FD		; put error code in "A" if desired
-			brk			; unexpected block # - fatal error - BRK or RTS
+;			brk			; unexpected block # - fatal error - BRK or RTS
+			jmp (retvec)
+
 GoodBlk1:	eor	#$ff		; 1's comp of block #
 			inx			;
 			cmp	Rbuff,x		; compare with expected 1's comp of block #
@@ -177,7 +174,9 @@ GoodBlk1:	eor	#$ff		; 1's comp of block #
 			jsr	Print_Err	; Unexpected block number - abort
 			jsr 	Flush		; mismatched - flush buffer and then do BRK
 	;		lda	#$FC		; put error code in "A" if desired
-			brk			; bad 1's comp of block#
+;			brk			; bad 1's comp of block#
+			jmp (retvec)
+
 GoodBlk2:	ldy	#$02		;
 CalcCrc:	lda	Rbuff,y		; calculate the CRC for the 128 bytes of data
 			jsr	UpdCrc		; could inline sub here for speed
@@ -227,7 +226,10 @@ Done:		lda	#ACK		; last block, send ACK and exit.
 			jsr	Put_Chr		;
 			jsr	Flush		; get leftover characters, if any
 			jsr	Print_Good	;
-			rts			;
+;			rts			;
+
+			jmp (addr)
+
 
 ;
 ;^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
