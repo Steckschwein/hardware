@@ -123,113 +123,111 @@ ESC		=	$1b		; ESC to exit
 
 
 XModem:
-		jsr	PrintMsg	; send prompt and info
+			jsr	PrintMsg	; send prompt and info
 
-		lda	#$01
-		sta	blkno		; set block # to 1
-		sta	bflag		; set flag to get address from block 1
+			lda	#$01
+			sta	blkno		; set block # to 1
+			sta	bflag		; set flag to get address from block 1
 StartCrc:	lda	#'C'		; "C" start with CRC mode
-		jsr	Put_Chr		; send it
-		lda	#$FF
-		sta	retry2		; set loop counter for ~3 sec delay
-		;lda	#$00
-               	stz	crc
-		stz	crch		; init CRC value
-		jsr	GetByte		; wait for input
-               	bcs	GotByte		; byte received, process it
-		bcc	StartCrc	; resend "C"
+			jsr	Put_Chr		; send it
+			lda	#$FF
+			sta	retry2		; set loop counter for ~3 sec delay
+		 	stz	crc
+			stz	crch		; init CRC value
+			jsr	GetByte		; wait for input
+         	bcs	GotByte		; byte received, process it
+			bcc	StartCrc	; resend "C"
 
 StartBlk:	lda	#$FF		;
-		sta	retry2		; set loop counter for ~3 sec delay
-		;lda	#$00		;
-		stz	crc		;
-		stz	crch		; init CRC value
-		jsr	GetByte		; get first byte of block
-		bcc	StartBlk	; timed out, keep waiting...
+			sta	retry2		; set loop counter for ~3 sec delay
+			stz	crc		;
+			stz	crch		; init CRC value
+			jsr	GetByte		; get first byte of block
+			bcc	StartBlk	; timed out, keep waiting...
 GotByte:	cmp	#ESC		; quitting?
-                bne	GotByte1	; no
+            bne	GotByte1	; no
 ;		lda	#$FE		; Error code in "A" of desired
-                brk			; YES - do BRK or change to RTS if desired
+            brk			; YES - do BRK or change to RTS if desired
 GotByte1:	cmp	#SOH		; start of block?
-		beq	BegBlk		; yes
-		cmp	#EOT		;
-		bne	BadCrc		; Not SOH or EOT, so flush buffer & send NAK
-		jmp	Done		; EOT - all done!
+			beq	BegBlk		; yes
+			cmp	#EOT		;
+			bne	BadCrc		; Not SOH or EOT, so flush buffer & send NAK
+			jmp	Done		; EOT - all done!
 BegBlk:		ldx	#$00
 GetBlk:		lda	#$ff		; 3 sec window to receive characters
-		sta 	retry2		;
+			sta 	retry2		;
 GetBlk1:	jsr	GetByte		; get next character
-		bcc	BadCrc		; chr rcv error, flush and send NAK
+			bcc	BadCrc		; chr rcv error, flush and send NAK
 GetBlk2:	sta	Rbuff,x		; good char, save it in the rcv buffer
-		inx			; inc buffer pointer
-		cpx	#$84		; <01> <FE> <128 bytes> <CRCH> <CRCL>
-		bne	GetBlk		; get 132 characters
-		ldx	#$00		;
-		lda	Rbuff,x		; get block # from buffer
-		cmp	blkno		; compare to expected block #
-		beq	GoodBlk1	; matched!
-		jsr	Print_Err	; Unexpected block number - abort
-		jsr	Flush		; mismatched - flush buffer and then do BRK
-;		lda	#$FD		; put error code in "A" if desired
-		brk			; unexpected block # - fatal error - BRK or RTS
+			inx			; inc buffer pointer
+			cpx	#$84		; <01> <FE> <128 bytes> <CRCH> <CRCL>
+			bne	GetBlk		; get 132 characters
+			ldx	#$00		;
+			lda	Rbuff,x		; get block # from buffer
+			cmp	blkno		; compare to expected block #
+			beq	GoodBlk1	; matched!
+			jsr	Print_Err	; Unexpected block number - abort
+			jsr	Flush		; mismatched - flush buffer and then do BRK
+	;		lda	#$FD		; put error code in "A" if desired
+			brk			; unexpected block # - fatal error - BRK or RTS
 GoodBlk1:	eor	#$ff		; 1's comp of block #
-		inx			;
-		cmp	Rbuff,x		; compare with expected 1's comp of block #
-		beq	GoodBlk2 	; matched!
-		jsr	Print_Err	; Unexpected block number - abort
-		jsr 	Flush		; mismatched - flush buffer and then do BRK
-;		lda	#$FC		; put error code in "A" if desired
-		brk			; bad 1's comp of block#
+			inx			;
+			cmp	Rbuff,x		; compare with expected 1's comp of block #
+			beq	GoodBlk2 	; matched!
+			jsr	Print_Err	; Unexpected block number - abort
+			jsr 	Flush		; mismatched - flush buffer and then do BRK
+	;		lda	#$FC		; put error code in "A" if desired
+			brk			; bad 1's comp of block#
 GoodBlk2:	ldy	#$02		;
 CalcCrc:	lda	Rbuff,y		; calculate the CRC for the 128 bytes of data
-		jsr	UpdCrc		; could inline sub here for speed
-		iny			;
-		cpy	#$82		; 128 bytes
-		bne	CalcCrc		;
-		lda	Rbuff,y		; get hi CRC from buffer
-		cmp	crch		; compare to calculated hi CRC
-		bne	BadCrc		; bad crc, send NAK
-		iny			;
-		lda	Rbuff,y		; get lo CRC from buffer
-		cmp	crc		; compare to calculated lo CRC
-		beq	GoodCrc		; good CRC
+			jsr	UpdCrc		; could inline sub here for speed
+			iny			;
+			cpy	#$82		; 128 bytes
+			bne	CalcCrc		;
+			lda	Rbuff,y		; get hi CRC from buffer
+			cmp	crch		; compare to calculated hi CRC
+			bne	BadCrc		; bad crc, send NAK
+			iny			;
+			lda	Rbuff,y		; get lo CRC from buffer
+			cmp	crc		; compare to calculated lo CRC
+			beq	GoodCrc		; good CRC
 BadCrc:		jsr	Flush		; flush the input port
-		lda	#NAK		;
-		jsr	Put_Chr		; send NAK to resend block
-		jmp	StartBlk	; start over, get the block again
+			lda	#NAK		;
+			jsr	Put_Chr		; send NAK to resend block
+			jmp	StartBlk	; start over, get the block again
 GoodCrc:	ldx	#$02		;
-		lda	blkno		; get the block number
-		cmp	#$01		; 1st block?
-		bne	CopyBlk		; no, copy all 128 bytes
-		lda	bflag		; is it really block 1, not block 257, 513 etc.
-		beq	CopyBlk		; no, copy all 128 bytes
-		lda	Rbuff,x		; get target address from 1st 2 bytes of blk 1
-		sta	ptr		; save lo address
-		sta	addr
-		inx			;
-		lda	Rbuff,x		; get hi address
-		sta	ptr+1		; save it
-		sta	addr+1
-		inx			; point to first byte of data
-		dec	bflag		; set the flag so we won't get another address
+			lda	blkno		; get the block number
+			cmp	#$01		; 1st block?
+			bne	CopyBlk		; no, copy all 128 bytes
+			lda	bflag		; is it really block 1, not block 257, 513 etc.
+			beq	CopyBlk		; no, copy all 128 bytes
+			lda	Rbuff,x		; get target address from 1st 2 bytes of blk 1
+			sta	ptr		; save lo address
+			sta	addr
+			inx			;
+			lda	Rbuff,x		; get hi address
+			sta	ptr+1		; save it
+			sta	addr+1
+			inx			; point to first byte of data
+			dec	bflag		; set the flag so we won't get another address
 CopyBlk:	ldy	#$00		; set offset to zero
 CopyBlk3:	lda	Rbuff,x		; get data byte from buffer
-		sta	(ptr),y		; save to target
-		inc	ptr		; point to next address
-		bne	CopyBlk4	; did it step over page boundary?
-		inc	ptr+1		; adjust high address for page crossing
+			sta	(ptr),y		; save to target
+			inc	ptr		; point to next address
+			bne	CopyBlk4	; did it step over page boundary?
+			inc	ptr+1		; adjust high address for page crossing
 CopyBlk4:	inx			; point to next data byte
-		cpx	#$82		; is it the last byte
-		bne	CopyBlk3	; no, get the next one
+			cpx	#$82		; is it the last byte
+			bne	CopyBlk3	; no, get the next one
 IncBlk:		inc	blkno		; done.  Inc the block #
-		lda	#ACK		; send ACK
-		jsr	Put_Chr		;
-		jmp	StartBlk	; get next block
+			lda	#ACK		; send ACK
+			jsr	Put_Chr		;
+			jmp	StartBlk	; get next block
 Done:		lda	#ACK		; last block, send ACK and exit.
-		jsr	Put_Chr		;
-		jsr	Flush		; get leftover characters, if any
-		jsr	Print_Good	;
-		rts			;
+			jsr	Put_Chr		;
+			jsr	Flush		; get leftover characters, if any
+			jsr	Print_Good	;
+			rts			;
 
 ;
 ;^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -238,64 +236,43 @@ Done:		lda	#ACK		; last block, send ACK and exit.
 ;
 ;					;
 GetByte:	;lda	#$00		; wait for chr input and cycle timing loop
-		stz	retry		; set low value of timing loop
+			stz	retry		; set low value of timing loop
 StartCrcLp:	jsr	Get_Chr		; get chr from serial port, don't wait
-		bcs	GetByte1	; got one, so exit
-		dec	retry		; no character received, so dec counter
-		bne	StartCrcLp	;
-		dec	retry2		; dec hi byte of counter
-		bne	StartCrcLp	; look for character again
-		clc			; if loop times out, CLC, else SEC and return
+			bcs	GetByte1	; got one, so exit
+			dec	retry		; no character received, so dec counter
+			bne	StartCrcLp	;
+			dec	retry2		; dec hi byte of counter
+			bne	StartCrcLp	; look for character again
+			clc			; if loop times out, CLC, else SEC and return
 GetByte1:
-		rts			; with character in "A"
+			rts			; with character in "A"
 ;
 Flush:		lda	#$70		; flush receive buffer
-		sta	retry2		; flush until empty for ~1 sec.
+			sta	retry2		; flush until empty for ~1 sec.
 Flush1:		jsr	GetByte		; read the port
-		bcs	Flush		; if chr recvd, wait for another
-		rts			; else done
+			bcs	Flush		; if chr recvd, wait for another
+			rts			; else done
 ;
-;PrintMsg:	ldx	#$00		; PRINT starting message
-;PrtMsg1:	lda   	Msg,x
-		;beq	PrtMsg2
-		;jsr	Put_Chr
-		;inx
-		;bne	PrtMsg1
-;PrtMsg2:	rts
 PrintMsg:
-		jsr krn_primm
+			jsr krn_primm
 Msg:		!text	"Begin XMODEM/CRC transfer."
-		!BYTE  	CR, LF
-		!text	"Press <Esc> to abort..."
-		!BYTE  	CR, LF
-               	!byte   0
-		rts
+			!BYTE  	CR, LF
+			!text	"Press <Esc> to abort..."
+			!BYTE  	CR, LF
+         	!byte   0
+			rts
 ;
-Print_Err:	;ldx	#$00		; PRINT Error message
-;PrtErr1:	lda   	ErrMsg,x
-		;beq	PrtErr2
-		;jsr	Put_Chr
-		;inx
-		;bne	PrtErr1
-;PrtErr2:	rts
-		jsr krn_primm
+Print_Err:	jsr krn_primm
 ErrMsg:		!text 	"Upload Error!"
-		!BYTE  	CR, LF
-                !byte   0
-		rts
+			!BYTE  	CR, LF
+            !byte   0
+			rts
 ;
-Print_Good:	;ldx	#$00		; PRINT Good Transfer message
-;Prtgood1:	lda   	GoodMsg,x
-		;beq	Prtgood2
-		;jsr	Put_Chr
-		;inx
-		;bne	Prtgood1
-;Prtgood2:	rts
-		jsr krn_primm
+Print_Good:	jsr krn_primm
 GoodMsg:	!text 	"Upload Successful!"
-		!BYTE  	CR, LF
-                !byte   0
-		rts
+			!BYTE  	CR, LF
+        	!byte   0
+			rts
 ;
 ;
 ;======================================================================
@@ -316,15 +293,15 @@ GoodMsg:	!text 	"Upload Successful!"
 ; input chr from ACIA (no waiting)
 ; TODO
 Get_Chr:
-                lda #$01        ; Maske fuer DataReady Bit
-                bit uart1lsr
-                beq +
-                lda uart1rxtx
-		sec
-		rts
+            lda #$01        ; Maske fuer DataReady Bit
+            bit uart1lsr
+            beq +
+            lda uart1rxtx
+			sec
+			rts
 +
-		clc
-                rts
+			clc
+            rts
 
 ;
 ;
