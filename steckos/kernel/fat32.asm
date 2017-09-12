@@ -186,6 +186,7 @@ parent_dir:
 		.asciiz ".."
 clusternr_matcher:
 		sec
+		; TODO implement me
 		rts
 
 	;in:
@@ -297,8 +298,6 @@ pathFragment: .res 8+1+3+1; 12 chars + \0 for path fragment
 _fat_open:
 		phy
 
-		;debugptr "p", filenameptr
-
 		ldx #FD_INDEX_TEMP_DIR
 		jsr fat_find_first
 		ldx #FD_INDEX_TEMP_DIR
@@ -314,7 +313,6 @@ lbl_fat_open_error:
 fat_open_found:
 		ldy #F32DirEntry::Attr
 		lda (dirptr),y
-		debug "d"
 		bit #DIR_Attr_Mask_Dir 		; directory?
 		bne @l2						; go on, do not allocate fd, index (X) is already set to FD_INDEX_TEMP_DIR
 		bit #DIR_Attr_Mask_File ; Is file?

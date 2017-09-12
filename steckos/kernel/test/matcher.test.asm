@@ -3,7 +3,7 @@ __LOADADDR__ = $1000
 .segment "LOADADDR"
 .word __LOADADDR__
 .segment "CODE"
-		jsr	test_suite
+			jsr	test_suite
 main:		bra main
 
 .include "kernel_jumptable.inc"
@@ -18,7 +18,8 @@ buffer: .res 8+1+3,0
 .include	"../matcher.asm"
 
 test_dirs=13
-filename_buf=*;   pointer of input + size of results (input_X + test_dirs)
+expected_result: .res 32;   pointer of input + size of results (input_X + test_dirs)
+filename_buf: .res 32;
 
 dir_1:	     .byte "A       TXT"
 dir_2:	     .byte "LL      PRG"	;2
@@ -108,6 +109,7 @@ Println:
 	sta matcher_prepareinput+1
 	sta matcher_test1+1
 	sta testinput+1
+	sta filenameptr
 	
     lda #<input
     sta a5+1
@@ -116,6 +118,7 @@ Println:
 	sta matcher_prepareinput+2
 	sta matcher_test1+2
 	sta testinput+2
+	sta filenameptr+1
 	
     lda #>input
     sta a5+2
@@ -194,7 +197,7 @@ l1:
 ;			jsr hexout
 ;a50:		lda test_input, y
 ;			jsr hexout
-a5:			cmp	filename_buf, y
+a5:			cmp	expected_result, y
 			bne	_failed
 			jsr	_test_ok
 			bra _next
@@ -209,10 +212,10 @@ _next:
 			bne	l1
 			lda #' '
 			jsr chrout
-			ldx #0
-testinput:	lda	filename_buf, x
+			ldy	#0
+testinput:	lda	expected_result, y
 			beq	@oe
 			jsr chrout
-			inx 	
+			iny
 			bne testinput
 @oe:		rts
