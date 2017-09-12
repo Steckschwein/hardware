@@ -224,10 +224,21 @@ fat_chdir:
 .endmacro
 
         ;in:
-        ;   a/x - pointer to the file path
+        ;   A/X - pointer to the file name
+fat_mkdir:
+		rts
+		
+        ;in:
+        ;   A/X - pointer to the file name
+fat_rmdir:
+		rts
+
+        ;in:
+        ;   A/X - pointer to the file path
+		;	  Y - flags, 0 - "ro", 1 - "rw"
         ;out:
         ;   X - index into fd_area of the opened file
-        ;   A - errno, 0 - means no error
+        ;   A - errno, Z=0 no error, Z=1 error and A contains error number
 fat_open:
 		sta krn_ptr1
 		stx krn_ptr1+1			    ; save path arg given in a/x
