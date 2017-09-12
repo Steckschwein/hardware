@@ -63,9 +63,6 @@ fat_read:
 _fat_read:
 		debug "fr"
 		jsr calc_lba_addr
-;		debug32s "fr lba:", lba_addr
-;		debug24s "fr bc:", blocks
-;		debug32s "fr fs: ", fd_area + (FD_Entry_Size*2) + FD_file_size ;1st file entry
 		stz errno
 		jsr sd_read_multiblock
 ;		jsr sd_read_block
@@ -73,6 +70,8 @@ _fat_read:
 		rts
 
 
+		;in:
+		;	X - offset into fd_area
 fat_write:
 		stz errno
 
@@ -226,6 +225,8 @@ fat_chdir:
         ;in:
         ;   A/X - pointer to the file name
 fat_mkdir:
+		;	
+		;	
 		rts
 		
         ;in:
@@ -461,7 +462,7 @@ calc_lba_addr:
 		;sectors_per_cluster -> is a power of 2 value, therefore cluster << n, where n ist the number of bit set in sectors_per_cluster
 		lda sectors_per_cluster
 @lm:	lsr
-		beq @lme    ; 1 sec/cluster nothing at all
+		beq @lme    ; 1 sector/cluster therefore skip multiply
 		tax
 		asl lba_addr +0
 		rol lba_addr +1
@@ -481,7 +482,6 @@ calc_lba_addr:
 calc_end:
 		plx
 		pla
-
 		rts
 
 file_not_open:
@@ -490,14 +490,14 @@ file_not_open:
 		bra calc_end
 
 
-
 inc_lba_address:
+		; TODO FIXME check whether the end of the cluster is reached, answer error
 		inc32 lba_addr
 		rts
 
 ;vol->LbaFat + (cluster_nr>>7);// div 128 -> 4 (32bit) * 128 cluster numbers per block (512 bytes)
 calc_fat_lba_addr:
-		;instead of shift right 7 times in a loop, we copy over the hole byte (same as >>8) - and simple shift left once (<<1)
+		;instead of shift right 7 times in a loop, we copy over the hole byte (same as >>8) - and simply shift left 1 bit (<<1)
 		lda fd_area + F32_fd::CurrentCluster	+0,	x
 		asl
 		lda fd_area + F32_fd::CurrentCluster	+1,x
@@ -849,30 +849,33 @@ fat_find_first:
 		SetVector filename_matcher, krn_call_internal	;setup the filename matcher
 
 		; internal find first, assumes that (krn_call_internal) is already setup
+		; in:
+		;   X - directory fd index into fd_area
 fat_find_first_intern:
-		SetVector sd_blktarget, read_blkptr
 		jsr calc_lba_addr
 		debug32 "lba:", lba_addr
+		SetVector sd_blktarget, read_blkptr
 
-ff_l3:	SetVector sd_blktarget, dirptr
+ff_l3:	SetVector sd_blktarget, dirptr	; dirptr to begin of target buffer
 		jsr sd_read_block
 		dec read_blkptr+1	; set read_blkptr to origin address
 
 ff_l4:
 		lda (dirptr)
-		bne @l5				; first byte of dir entry is $00?
+		bne @l5				; first byte of dir entry is $00 (end of directory)?
 		clc
 		rts   				; we are at the end, C=0 and return
 @l5:
 		ldy #F32DirEntry::Attr		; else check if long filename entry
 		lda (dirptr),y 		; we are only going to filter those here (or maybe not?)
-		cmp #$0f
+		cmp #DIR_Attr_Mask_LongFilename
 		beq fat_find_next
 
 		jsr fat_find_first_matcher	; jmp indirect via (krn_call_internal), set to appropriate matcher strategy
 		bcs ff_end
+		
 		; in:
-		;   x - directory fd index into fd_area
+		;   X - directory fd index into fd_area
 fat_find_next:
 		lda dirptr
 		clc
@@ -883,10 +886,9 @@ fat_find_next:
 @l6:
 		lda dirptr+1 	; end of block?
 		cmp #>(sd_blktarget + sd_blocksize)
-		bcc ff_l4			; no, show entr
+		bcc ff_l4			; no, process entry
 		; increment lba address to read next block
 		jsr inc_lba_address
-		; TODO FIXME check whether the end of the cluster is reached
 		bra ff_l3
 ff_end:
 		rts
