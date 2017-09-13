@@ -5,19 +5,7 @@
 .segment "KERNEL"
 .import spi_rw_byte, spi_r_byte
 .export init_sdcard, sd_read_block, sd_read_multiblock, sd_write_block, sd_write_multiblock, sd_select_card, sd_deselect_card
-.export sd_read_block_data
 
-;---------------------------------------------------------------------
-; check sd card presence and state of the read only switch
-; set appropriate bits in sd_card_status
-;---------------------------------------------------------------------
-sd_check_card_status:
-	lda via1portb
-	and #%01100000
-	asl
-
-	sta sd_card_status
-	rts
 
 ;---------------------------------------------------------------------
 ; Init SD Card
@@ -194,31 +182,25 @@ init_sdcard:
 ;---------------------------------------------------------------------
 sd_cmd:
 
-	; transfer command byte
-	jsr spi_rw_byte
+		; transfer command byte
+		jsr spi_rw_byte
 
-	; transfer parameter buffer
-	ldx #$00
-@l1:   lda sd_cmd_param,x
-	phx
-	jsr spi_rw_byte
-	plx
-	inx
-	cpx #$05
-	bne @l1
+		; transfer parameter buffer
+		ldx #$00
+@l1: 	lda sd_cmd_param,x
+		phx
+		jsr spi_rw_byte
+		plx
+		inx
+		cpx #$05
+		bne @l1
 
-	; send 8 clocks with DI 1
-	lda #$ff
-	jsr spi_rw_byte
+		; send 8 clocks with DI 1
+		lda #$ff
+		jsr spi_rw_byte
 
-	rts
+		rts
 
-;---------------------------------------------------------------------
-; Read block from SD Card to kernel data block buffer
-;
-sd_read_block_data:
-        ;SetVector
-        jmp sd_read_block
 
 
 sd_wait_timeout:
@@ -255,22 +237,37 @@ sd_read_block:
 		lda errno
        	bne @exit
 @l1:
+
+
+;		ldy #$00
+
+;		jsr halfblock
+
+;		inc read_blkptr+1
+;		jsr halfblock
+;;		dec read_blkptr+1
+
+;		jsr spi_r_byte		; Read 2 CRC bytes
+;		jsr spi_r_byte
+
+		jsr fullblock
+
+@exit:
+		jmp sd_deselect_card
+
+fullblock:
 		; wait for sd card data token
 		jsr sd_wait_data_token
-
 		ldy #$00
-
 		jsr halfblock
 
 		inc read_blkptr+1
 		jsr halfblock
-;		dec read_blkptr+1
+		;		dec read_blkptr+1
 
 		jsr spi_r_byte		; Read 2 CRC bytes
-		jsr spi_r_byte
-
-@exit:
-		jmp sd_deselect_card
+		jmp spi_r_byte
+		;rts
 
 halfblock:
 @l:
@@ -300,58 +297,32 @@ sd_read_multiblock:
 		; wait for command response.
 		jsr sd_wait_timeout
 		lda errno
-        	beq @l1
-		jmp @exit
+    	beq @l1
+		bra @exit
 @l1:
-		jsr sd_wait_data_token
+;		jsr sd_wait_data_token
 
-		ldy #$00
-		lda via1portb   ; Port laden
-		and #$fe        ; Takt ausschalten
-		tax             ; aufheben
-		ora #$01
-		sta sd_tmp
+;		ldy #$00
+;		lda via1portb   ; Port laden
+;		and #$fe        ; Takt ausschalten
+;		tax             ; aufheben
+;		ora #$01
+;		sta sd_tmp
 
-		; read 256 bytes twice, increase blkptr in between
-@l2a:
-		lda sd_tmp
 
-	.repeat 8
-		sta via1portb ; Takt An
-		stx via1portb ; Takt aus
-	.endrepeat
-
-		lda via1sr
-		sta (read_blkptr),y
-		iny
-		bne @l2a
-
+		jsr fullblock
 		inc read_blkptr+1
 
-@l2b:	lda sd_tmp
-
-	.repeat 8
-		sta via1portb ; Takt An
-		stx via1portb ; Takt aus
-	.endrepeat
-
-		lda via1sr
-		sta (read_blkptr),y
-		iny
-		bne @l2b
-
-		inc read_blkptr+1
-
-		lda sd_tmp
+;		lda sd_tmp
 	; Read CRC bytes
-	.repeat 16
-		sta via1portb ; Takt An
-		stx via1portb ; Takt aus
-	.endrepeat
+;	.repeat 16
+;		sta via1portb ; Takt An
+;		stx via1portb ; Takt aus
+;	.endrepeat
 
 		dec blocks
 		beq @l3
-		jmp @l1
+		bra @l1
 @l3:
 		jsr sd_busy_wait
 
