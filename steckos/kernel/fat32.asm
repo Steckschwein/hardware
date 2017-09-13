@@ -519,7 +519,6 @@ file_not_open:
 
 
 inc_lba_address:
-		; TODO FIXME check whether the end of the cluster is reached, answer error
 		inc32 lba_addr
 		rts
 
@@ -915,8 +914,11 @@ fat_find_next:
 		lda dirptr+1 	; end of block?
 		cmp #>(sd_blktarget + sd_blocksize)
 		bcc ff_l4			; no, process entry
-		; increment lba address to read next block
-		jsr inc_lba_address
+		; TODO FIXME check whether the end of the cluster is reached - check whether sector_nr/block_nr reaches volume->SectorsPerCluster
+		; lda startcluster
+		; ora SectorsPerCluster
+		; cmp lba...
+		jsr inc_lba_address	; increment lba address to read next block
 		bra ff_l3
 ff_end:
 		rts

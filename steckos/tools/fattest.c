@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -35,6 +36,8 @@
 unsigned char block_fat[BLOCK_SIZE];
 unsigned char block_data[BLOCK_SIZE];
 
+extern int errno;
+
 struct PartitionEntry{
 	unsigned char Bootflag;
 	unsigned int TypeCode;
@@ -67,20 +70,24 @@ struct F32_fd{
 int readBlock(unsigned char *buf, FILE *fd, unsigned long int lba_addr){
 	unsigned long int offset = (lba_addr << 9);//  fileOffset => lba_addr * 512
 	fpos_t pos;
-	int s = fseek(fd, offset, SEEK_SET);
-	if(s != 0)
+	int s = fgetpos (fd, &pos);
+//	printf("lba: $%x offset: %d $%x pos: $%x\n", lba_addr, s, offset, pos);
+	s = fseeko(fd, offset, SEEK_SET);
+	if(s != 0){
+		fprintf(stderr, "Error opening file: %s\n", strerror(errno));
 		return s;
-//	fgetpos (fd, &pos);
-//	printf("offset: %d $%x pos: $%x\n", s, offset, pos);
+	}
 	int n = fread(buf, 1, BLOCK_SIZE, fd);
 	return n;
 }
 
 int writeBlock(unsigned char *buf, FILE *fd, unsigned long int lba_addr){
-	unsigned long int offset = (lba_addr << 9);//  fileOffset => * 512
-	int s = fseek(fd, offset, SEEK_SET);
-	if(s != 0)
+	unsigned long int offset = (lba_addr << 9);//  fileOffset => lba_addr * 512
+	int s = fseeko(fd, offset, SEEK_SET);
+	if(s != 0){
+		fprintf(stderr, "Error opening file: %s\n", strerror(errno));
 		return s;
+	}
 	int n = fwrite(buf, 1, BLOCK_SIZE, fd);
 	return n;
 }
@@ -243,6 +250,24 @@ unsigned long int nextClusterNumber(char *block_fat, unsigned long int cln){
 	return nextCluster;
 }
 
+int show_dir(FILE *fd, struct F32_Volume *vol, unsigned long int dir_cln){
+	unsigned long int data_lba_addr = calcDataLbaAddress(vol, dir_cln);
+	unsigned int e=0;
+	for(int i=0;i<vol->SecPerClus;i++){//
+		unsigned int n = readBlock(block_data, fd, data_lba_addr);
+		if(n != BLOCK_SIZE){
+			printf("Error: %d\n",n);return 1;
+		}
+//		dumpBuffer(block_data);
+		int r = dumpDirEntries(block_data, &e);		
+		if(r == 0)//0 - eod
+			break;
+		inc32(&data_lba_addr);
+	}	
+	printf("dir entries: %d\n", e);
+}
+
+
 void error(FILE *f1, FILE *f2, int error){
 	printf("Error: %d\n",error);
 	fclose(f1);
@@ -281,7 +306,7 @@ int main(int argc, char* argv[]){
 		fprintf(stderr, "cannot open...");
 		return 1;
 	}
-	fd_out = fopen("/cygdrive/d/temp/output.dat", "w");
+	fd_out = fopen("output.dat", "w");
 	if(fd_out==NULL){
 		fprintf(stderr, "cannot open...");
 		return 1;
@@ -318,23 +343,14 @@ int main(int argc, char* argv[]){
 	printf("lba_cluster: $%x ($%x + ($%x * $%x))\n", vol.LbaCluster, vol.LbaFat, vol.FATSz32, vol.NumFATs);
 	
 	//FIXME works easily, cause we have 512 Bytes/Sektor and 512 byte per sd-card block otherwise we have to do more calculation
-	unsigned int e=0;
 	unsigned long int dirCln = vol.RootClus;
-	printf("Reading Root-Dir (cnr $%x)...\n", dirCln);
-	data_lba_addr = calcDataLbaAddress(&vol, dirCln);
-	for(int i=0;i<vol.SecPerClus;i++){//
-		n = readBlock(block_data, fd, data_lba_addr);
-		if(n != BLOCK_SIZE){
-			printf("Error: %d\n",n);return 1;
-		}
-//		dumpBuffer(block_data);
-		int r = dumpDirEntries(block_data, &e);		
-		if(r == 0)//0 - eod
-			break;
-		inc32(&data_lba_addr);
-	}	
-	printf("dir entries: %d\n", e);
+	printf("Reading Root-Dir (cln: $%x)...\n", dirCln);
+	unsigned int e=0;
+    printf("Reading Root-Dir (cnr $%x)...\n", dirCln);
 	
+	show_dir(fd, &vol, dirCln);
+	
+	// ###################### buffered read poc - fat_read for files with unlimited size (at least fat32 file size). uses only two 512 byte buffers (block_data/block_fat)
 	unsigned int r=-1;
 	struct F32_fd fileFound;
 	data_lba_addr = calcDataLbaAddress(&vol, dirCln);
@@ -356,11 +372,11 @@ int main(int argc, char* argv[]){
 	}
 	printf("file '%s' found\n", fileFound.filename);
 	
+	
 	unsigned long int ts = currentTimeMillis();
 	
 	unsigned long int cln = fileFound.startCluster;
-	printf("fat cln: $%x $%x bn: $%x\n", cln, (cln << 2 & (BLOCK_SIZE-1)), (cln >> 7));	
-	printf("data:\n");
+	printf("fat cln: $%x boffs: $%x bnr: $%x\n", cln, (cln << 2 & (BLOCK_SIZE-1)), (cln >> 7));
 	unsigned long int blocks = fileFound.size >> 9; //(div BLOCK_SIZE);
 	if((fileFound.size & 0x1ff) != 0){
 		blocks++;
@@ -368,15 +384,15 @@ int main(int argc, char* argv[]){
 		
 	for(;!isEnd(cln);){
 		data_lba_addr = calcDataLbaAddress(&vol, cln);
-		printf("data cluster nr $%x, $%x blocks to read:\n", cln, blocks);
-		//vol.SecPerClus <=> BLOCK_SIZE :)
+		printf("data cluster nr $%x, $%x blocks to read, lba $%x\n", cln, blocks, data_lba_addr);
+		//vol.SecPerClus <=> BLOCK_SIZE :) FTW!
 		for(unsigned int i=0;blocks > 0 && i<vol.SecPerClus;i++,blocks--){
 			n = readBlock(block_data, fd, data_lba_addr);
 			if(n != BLOCK_SIZE){
 				error(fd, fd_out, n);
 				return 1;
 			}
-			//dumpBuffer(block_data);
+			dumpBuffer(block_data);
 			n = fwrite(block_data, sizeof(char), BLOCK_SIZE, fd_out);
 			if(n != BLOCK_SIZE){
 				error(fd, fd_out, n);
