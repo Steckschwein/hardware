@@ -281,7 +281,6 @@ helptxt1:
 .endif
 		.byte $00
 
-
 cd:
     	lda paramptr
     	ldx paramptr+1

@@ -8,6 +8,7 @@
 
 .export fat_mount
 .export fat_open, fat_isOpen, fat_chdir, fat_get_root_and_pwd
+.export fat_mkdir, fat_rmdir
 .export fat_read, fat_read_block, fat_find_first, fat_find_next, fat_write
 .export fat_close_all, fat_close, fat_getfilesize
 .export calc_dirptr_from_entry_nr, inc_lba_address, calc_blocks
@@ -188,32 +189,6 @@ clusternr_matcher:
 		; TODO implement me
 		rts
 
-	;in:
-        ;   A/X - pointer to the file path
-        ;out:
-		;	A - errno, 0 - means no error
-        ;   X - index into fd_area of the opened directory
-fat_chdir:
-		jsr fat_open			; change dir using temp dir to not clobber the current dir, maybe we will run into an error
-		bne	@l_err_exit			; exit on error
-		lda	fd_area + F32_fd::Attr, x
-		bit #DIR_Attr_Mask_Dir		; check that there is no error and we have a directory
-		beq	@l_err
-
-		phx
-		ldx #FD_INDEX_TEMP_DIR  ; the temp dir fd is now set to the last dir of the path and we proofed that it's valid with the code above
-		ldy #FD_INDEX_CURRENT_DIR
-		jsr	fat_clone_fd        ; therefore we can simply clone the temp dir to current dir fd - FTW!
-		plx
-		lda #0                  ; ok
-		rts
-@l_err:
-		lda	#EINVAL				; TODO FIXME error code for "Not a directory"
-@l_err_exit:
-		debug "cd"
-		rts
-
-
 .macro _open
 		stz	pathFragment, x	;\0 terminate the current path fragment
 		;debugstr "_o", pathFragment
@@ -222,16 +197,69 @@ fat_chdir:
 		bne @l_exit
 .endmacro
 
+		;in:
+        ;   A/X - pointer to the file path
+        ;out:
+		;	A - Z=0 on success, Z=1 and A with errno otherwise
+        ;   X - index into fd_area of the opened directory - !!! ATTENTION !!! X is exactly the FD_INDEX_TEMP_DIR on success
+fat_opendir:
+		jsr fat_open			; change dir using temp dir to not clobber the current dir, maybe we will run into an error
+		bne	@l_exit			; exit on error
+		lda	fd_area + F32_fd::Attr, x
+		bit #DIR_Attr_Mask_Dir		; check that there is no error and we have a directory
+		bne	@l_ok
+		lda	#EINVAL				; TODO FIXME error code for "Not a directory"
+		bra @l_exit
+@l_ok:	lda #0                  ; ok
+@l_exit:
+		debug "od"
+		rts
+
+		;in:
+        ;   A/X - pointer to the file path
+        ;out:
+		;	A - Z=0 on success, Z=1 and A with errno otherwise
+        ;   X - index into fd_area of the opened directory
+fat_chdir:
+		jsr fat_opendir
+		bne	@l_exit
+		phx
+		ldx #FD_INDEX_TEMP_DIR  ; the temp dir fd is now set to the last dir of the path and we proofed that it's valid with the code above
+		ldy #FD_INDEX_CURRENT_DIR
+		jsr	fat_clone_fd        ; therefore we can simply clone the temp dir to current dir fd - FTW!
+		plx
+		lda #0                  ; ok
+@l_exit:
+		debug "chdir"
+		rts
+
+        ;in:
+        ;   A/X - pointer to the file name
+fat_rmdir:
+		jsr fat_opendir
+		bne	@l_exit
+		
+		lda	#DIR_Entry_Deleted			; ($e5)
+		sta (dirptr)					; mark dir entry as deleted
+		debug "rmdir"
+		ldy #0
+@l0:	lda (dirptr), y
+		iny 
+		cpy #11
+		bne @l0
+		;TODO FIXME write back the current block
+		
+		lda #0                  ; ok
+@l_exit:
+		debug "rmdir"
+		rts
+
+		
         ;in:
         ;   A/X - pointer to the file name
 fat_mkdir:
 		;	
 		;	
-		rts
-		
-        ;in:
-        ;   A/X - pointer to the file name
-fat_rmdir:
 		rts
 
         ;in:
@@ -279,7 +307,7 @@ fat_open:
 		sta pathFragment, x
 		iny
 		inx
-		cpx	#8+1+3		+1		; buffer overflow ? - 8.3 file support only
+		cpx	#8+1+3		+1		; buffer overflow ? - only 8.3 file support yet
 		bne	@l_parse_1
 		lda #EINVAL
 		bra @l_exit
@@ -287,7 +315,7 @@ fat_open:
 		_open
 		iny
 		bne	@l3
-		;TODO FIXME handle overflow - <path argument> too large
+		;TODO FIXME handle overflow - <path argument> too large - only 8.3 file support yet
 		lda	#EINVAL
 		bra @l_exit
 @l_exit_noerr:
@@ -306,7 +334,7 @@ pathFragment: .res 8+1+3+1; 12 chars + \0 for path fragment
         ;   filenameptr - ptr to the filename
         ;out:
         ;   X - index into fd_area of the opened file
-		;   A - A = 0 on success, error code otherwise
+		;   A - Z=0 on success, Z=1 and A with error code otherwise
 _fat_open:
 		phy
 
@@ -318,7 +346,7 @@ _fat_open:
 		jmp end_open_err
 
 lbl_fat_open_error:
-		lda #EINVAL ; TODO FIXME
+		lda #EINVAL ; TODO FIXME error code
 		jmp end_open_err
 
 ; found.
@@ -326,8 +354,8 @@ fat_open_found:
 		ldy #F32DirEntry::Attr
 		lda (dirptr),y
 		bit #DIR_Attr_Mask_Dir 		; directory?
-		bne @l2						; go on, do not allocate fd, index (X) is already set to FD_INDEX_TEMP_DIR
-		bit #DIR_Attr_Mask_File ; Is file?
+		bne @l2						; go on, do not allocate fd, use index (X) which is already set to FD_INDEX_TEMP_DIR
+		bit #DIR_Attr_Mask_File 	; is file?
 		beq lbl_fat_open_error
 		jsr fat_alloc_fd
 		bne end_open_err

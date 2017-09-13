@@ -2,6 +2,7 @@
 .define	__DEBUG_INC "__DEBUG_INC"
 
 .import _debugout, _debugout32		
+
 .macro debug msg
 .ifdef DEBUG
 		jsr	_debugout

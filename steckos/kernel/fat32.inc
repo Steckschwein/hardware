@@ -120,11 +120,12 @@ FAT_EOC			= $0ffffff8	; end of cluster chain marker
 	FstClusLO	.word
 	FileSize	.byte 4
 .endstruct
+
 DIR_Attr_Mask_Dir   		= 1<<4;
 DIR_Attr_Mask_File  		= 1<<5;
 DIR_Attr_Mask_LongFilename	= 1<<0 | 1<<1 | 1<<2 | 1<<3;
-DIR_Entry_Size      = .sizeof(F32DirEntry)
-
+DIR_Entry_Size      		= .sizeof(F32DirEntry)
+DIR_Entry_Deleted			= $e5
 ;--------------------------------------------------------------------------------------
 ; File descriptor struct
 ;--------------------------------------------------------------------------------------

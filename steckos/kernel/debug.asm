@@ -64,8 +64,8 @@ _debugout:
 @PSIX1:	inc     msgptr  		;
 		bne     @PSIX2      	;
 		inc     msgptr+1        ; account for page crossing
-@PSIX2:	lda	#$0a
-		jsr krn_chrout
+@PSIX2:	lda		#$0a			; line feed
+		jsr 	krn_chrout
 
 		lda 	dbg_status
 		pha
