@@ -201,6 +201,20 @@ sd_cmd:
 
 		rts
 
+;---------------------------------------------------------------------
+; Send SD Card block Command
+; cmd byte in A
+; block lba in lba_addr
+;---------------------------------------------------------------------
+sd_block_cmd:
+		;lda #cmd18	; Send CMD18 command byte
+		jsr spi_rw_byte
+
+		jsr sd_send_lba
+
+		; Send stopbit
+		lda #$01
+		jmp spi_rw_byte
 
 
 sd_wait_timeout:
@@ -226,12 +240,13 @@ sd_read_block:
 		jsr sd_select_card
 
 		lda #cmd17
-		jsr spi_rw_byte         ; send CMD17 command byte
-		jsr sd_send_lba         ; send 32 Bit block address
+		jsr sd_block_cmd
+;		jsr spi_rw_byte         ; send CMD17 command byte
+;		jsr sd_send_lba         ; send 32 Bit block address
 
 		; Send stopbit
-		lda #$01                ; send "crc" and stop bit
-		jsr spi_rw_byte
+;		lda #$01                ; send "crc" and stop bit
+;		jsr spi_rw_byte
 
 		jsr sd_wait_timeout
 		lda errno
@@ -308,14 +323,7 @@ sd_read_multiblock:
 		jsr sd_select_card
 
 		lda #cmd18	; Send CMD18 command byte
-		jsr spi_rw_byte
-
-		jsr sd_send_lba
-
-		; Send stopbit
-		lda #$01
-		jsr spi_rw_byte
-
+		jsr sd_block_cmd
 		; wait for command response.
 		jsr sd_wait_timeout
 		lda errno
@@ -366,12 +374,7 @@ sd_write_block:
 	jsr sd_select_card
 
 	lda #cmd24
-	jsr spi_rw_byte         ; send CMD24 command byte
-	jsr sd_send_lba         ; send 32 Bit block address
-
-	; Send stopbit
-	lda #$01                ; send "crc" and stop bit
-	jsr spi_rw_byte
+	jsr sd_block_cmd
 
 	jsr sd_wait_timeout
 	lda errno
@@ -421,13 +424,7 @@ sd_write_multiblock:
 	jsr sd_select_card
 
 	lda #cmd25	; Send CMD25 command byte
-	jsr spi_rw_byte
-
-	jsr sd_send_lba
-
-	; Send stopbit
-	lda #$01
-	jsr spi_rw_byte
+	jsr sd_block_cmd
 
 	; wait for command response.
 	jsr sd_wait_timeout
