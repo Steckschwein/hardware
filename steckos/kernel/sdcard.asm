@@ -221,21 +221,21 @@ sd_block_cmd:
 ;
 ; Z = 1, A = 1 when error (timeout)
 ;---------------------------------------------------------------------
-sd_wait_timeout:
-        ldy #sd_cmd_response_retries 	; wait for command response.
-		stz krn_tmp				; use krn_tmp as loop var, not needed here
-@l:		jsr spi_r_byte
-        beq @x
-		dec krn_tmp
-		bne @l
-        dey
-		bne @l
+;sd_wait_timeout:
+;        ldy #sd_cmd_response_retries 	; wait for command response.
+;		stz krn_tmp				; use krn_tmp as loop var, not needed here
+;@l:		jsr spi_r_byte
+;        beq @x
+;		dec krn_tmp
+;		bne @l
+;        dey
+;		bne @l
 
-		lda #$01
-		rts
-@x:
-		lda #$00
-		rts
+;		lda #$01
+;		rts
+;@x:
+;		lda #$00
+;		rts
 
 ;---------------------------------------------------------------------
 ; Read block from SD Card
@@ -247,7 +247,9 @@ sd_read_block:
 		lda #cmd17
 		jsr sd_block_cmd
 
-		jsr sd_wait_timeout
+		lda #$00
+		jsr sd_wait
+;		jsr sd_wait_timeout
        	bne @exit
 @l1:
 
@@ -281,7 +283,10 @@ sd_deselect_card:
 
 fullblock:
 		; wait for sd card data token
-		jsr sd_wait_data_token
+		lda #sd_data_token
+		jsr sd_wait
+
+		;jsr sd_wait_data_token
 		ldy #$00
 		jsr halfblock
 
@@ -311,7 +316,9 @@ sd_read_multiblock:
 		lda #cmd18	; Send CMD18 command byte
 		jsr sd_block_cmd
 		; wait for command response.
-		jsr sd_wait_timeout
+		lda #$00
+		jsr sd_wait
+		;jsr sd_wait_timeout
 		bne @exit
 @l1:
 
@@ -342,7 +349,9 @@ sd_write_block:
 		lda #cmd24
 		jsr sd_block_cmd
 
-		jsr sd_wait_timeout
+		lda #$00
+		jsr sd_wait
+		;jsr sd_wait_timeout
 	    bne @exit
 
 		lda #sd_data_token
@@ -388,7 +397,9 @@ sd_write_multiblock:
 		jsr sd_block_cmd
 
 		; wait for command response.
-		jsr sd_wait_timeout
+		lda #$00
+		jsr sd_wait
+		;jsr sd_wait_timeout
        	bne @exit
 
 @block:
@@ -449,14 +460,16 @@ sd_busy_wait:
 
 ;---------------------------------------------------------------------
 ; wait for sd card data token
-; Z = 1, A = 1 when error (timeout)
+; in: A - value to wait for
+; out: Z = 1, A = 1 when error (timeout)
 ;---------------------------------------------------------------------
-sd_wait_data_token:
+sd_wait:
+		sta sd_tmp
 		ldy #sd_data_token_retries
 		stz	krn_tmp				; use krn_tmp as loop var, not needed here
 @l1:
 		jsr spi_r_byte
-		cmp #sd_data_token
+		cmp sd_tmp
 		beq @l2
 		dec	krn_tmp
 		bne	@l1
@@ -467,6 +480,27 @@ sd_wait_data_token:
 		rts
 @l2:	lda #$00
 		rts
+
+;---------------------------------------------------------------------
+; wait for sd card data token
+; Z = 1, A = 1 when error (timeout)
+;---------------------------------------------------------------------
+;sd_wait_data_token:
+;		ldy #sd_data_token_retries
+;		stz	krn_tmp				; use krn_tmp as loop var, not needed here
+;@l1:
+;		jsr spi_r_byte
+;		cmp #sd_data_token
+;		beq @l2
+;		dec	krn_tmp
+;		bne	@l1
+;		dey
+;		bne @l1
+;
+;		lda #$01
+;		rts
+;@l2:	lda #$00
+;		rts
 
 ;---------------------------------------------------------------------
 ; select sd card, pull CS line to low
