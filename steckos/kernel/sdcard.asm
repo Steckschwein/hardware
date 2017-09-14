@@ -519,13 +519,14 @@ sd_select_card:
 ; clear sd card parameter buffer
 ;---------------------------------------------------------------------
 sd_param_init:
-	stz sd_cmd_param
-	stz sd_cmd_param+1
-	stz sd_cmd_param+2
-	stz sd_cmd_param+3
-	stz sd_cmd_chksum
-	inc sd_cmd_chksum
-	rts
+		ldx #$03
+@l:
+		stz sd_cmd_param,x
+		dex
+		bpl @l
+		lda #$01
+		sta sd_cmd_chksum
+		rts
 
 sd_send_lba:
 		; Send lba_addr in reverse order
