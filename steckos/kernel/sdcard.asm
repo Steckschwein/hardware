@@ -528,12 +528,13 @@ sd_param_init:
 	rts
 
 sd_send_lba:
-	; Send lba_addr in reverse order
-	lda lba_addr + 3
-	jsr spi_rw_byte
-	lda lba_addr + 2
-	jsr spi_rw_byte
-	lda lba_addr + 1
-	jsr spi_rw_byte
-	lda lba_addr + 0
-	jmp spi_rw_byte
+		; Send lba_addr in reverse order
+		ldx #$03
+@l:
+		lda lba_addr,x
+		phx
+		jsr spi_rw_byte
+		plx
+		dex
+		bpl @l
+		rts
