@@ -241,29 +241,12 @@ sd_read_block:
 
 		lda #cmd17
 		jsr sd_block_cmd
-;		jsr spi_rw_byte         ; send CMD17 command byte
-;		jsr sd_send_lba         ; send 32 Bit block address
-
-		; Send stopbit
-;		lda #$01                ; send "crc" and stop bit
-;		jsr spi_rw_byte
 
 		jsr sd_wait_timeout
 		lda errno
        	bne @exit
 @l1:
 
-
-;		ldy #$00
-
-;		jsr halfblock
-
-;		inc read_blkptr+1
-;		jsr halfblock
-;;		dec read_blkptr+1
-
-;		jsr spi_r_byte		; Read 2 CRC bytes
-;		jsr spi_r_byte
 
 		jsr fullblock
 
@@ -282,7 +265,7 @@ sd_deselect_card:
 			sta via1portb
 
 			ldx #$04
-		@l1:
+@l1:
 			phx
 			jsr spi_r_byte
 			plx
@@ -300,7 +283,6 @@ fullblock:
 
 		inc read_blkptr+1
 		jsr halfblock
-		;		dec read_blkptr+1
 
 		jsr spi_r_byte		; Read 2 CRC bytes
 		jmp spi_r_byte
@@ -327,8 +309,9 @@ sd_read_multiblock:
 		; wait for command response.
 		jsr sd_wait_timeout
 		lda errno
-    	beq @l1
-		bra @exit
+		bne @exit
+;    	beq @l1
+;		bra @exit
 @l1:
 ;		jsr sd_wait_data_token
 
@@ -351,9 +334,10 @@ sd_read_multiblock:
 ;	.endrepeat
 
 		dec blocks
-		beq @l3
-		bra @l1
-@l3:
+		bne @l1
+;		beq @l3
+;		bra @l1
+;@l3:
 		jsr sd_busy_wait
 
         ; all blocks read, send cmd12 to end transmission
