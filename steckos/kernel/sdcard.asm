@@ -434,20 +434,22 @@ sd_write_multiblock:
 		rts
 ;---------------------------------------------------------------------
 ; wait while sd card is busy
+; Z = 1, A = 1 when error (timeout)
 ;---------------------------------------------------------------------
 sd_busy_wait:
 @l1:    lda #$ff
         jsr spi_rw_byte
         cmp #$ff
         bne @l1
-        ;TODO FIXME
-  ;      lda #$fa
-   ;     sta errno
-@l2:
+
+		lda #$01
+		rts
+@l2:	lda #$00
         rts
 
 ;---------------------------------------------------------------------
 ; wait for sd card data token
+; Z = 1, A = 1 when error (timeout)
 ;---------------------------------------------------------------------
 sd_wait_data_token:
 		ldy #sd_data_token_retries
