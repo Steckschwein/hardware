@@ -177,25 +177,6 @@ struct fat_page{
 	unsigned long int cluster_nr;
 };
 
-unsigned long int findFreeCluser(FILE *fd, struct F32_Volume *vol){
-	unsigned long int cluster = 0;
-	unsigned int fbnr = 0;
-	unsigned int i;
-	l1: 
-	for(;fbnr<vol->FATSz32;fbnr++){
-		unsigned int n = readBlock(block_fat, fd, vol->LbaFat + fbnr);
-		for (i=0;i<BLOCK_SIZE;i+=4){//+4 -> 32 bit cluster nr
-			if(block_fat[i] == 0x0 && block_fat[i+1] == 0x0 && block_fat[i+2] == 0x0 && block_fat[i+3] == 0x0){//free cluster is marked with 0 0 0 0
-				cluster = i;
-				break;
-			}
-		}		
-		break;
-	}	
-	printf("free cluster: block: $%x ix: $%x\n", fbnr, i);
-	dumpBuffer(block_fat);
-	return cluster;
-}
 
 void map(unsigned char *buf, struct PartitionEntry *p){
 	p->Bootflag = buf[BS_Partition0+PE_Bootflag];
@@ -250,6 +231,32 @@ unsigned long int nextClusterNumber(char *block_fat, unsigned long int cln){
 	return nextCluster;
 }
 
+unsigned int findFreeCluser(FILE *fd, struct F32_Volume *vol){
+	unsigned char found = 0;
+	unsigned int fbnr;
+	unsigned int boffs;
+	
+	for(fbnr = 0;found == 0 && fbnr<vol->FATSz32;fbnr++){//fat size in sectors == amount of blocks
+		unsigned int n = readBlock(block_fat, fd, vol->LbaFat + fbnr);
+		printf("search cluster, block: $%x\n", fbnr);
+		for (boffs=0;boffs<BLOCK_SIZE;boffs+=4){//+4 -> 32 bit cluster nr
+			if((block_fat[boffs+0]
+			|	block_fat[boffs+1]
+			|	block_fat[boffs+2]
+			|	block_fat[boffs+3]) == 0x0){//free cluster is marked with 0 0 0 0
+				printf("free cluster at block: $%x ix: $%x\n", fbnr, boffs);
+				dumpBuffer(block_fat);
+				found=1;
+				break;
+			}
+		}
+//		fgetc(stdin);
+//		break;
+	}
+	dumpBuffer(block_fat);
+	return boffs;
+}
+
 int show_dir(FILE *fd, struct F32_Volume *vol, unsigned long int dir_cln){
 	unsigned long int data_lba_addr = calcDataLbaAddress(vol, dir_cln);
 	unsigned int e=0;
@@ -267,6 +274,7 @@ int show_dir(FILE *fd, struct F32_Volume *vol, unsigned long int dir_cln){
 	printf("dir entries: %d\n", e);
 }
 
+//int mkdir(FILE *fd, )
 
 void error(FILE *f1, FILE *f2, int error){
 	printf("Error: %d\n",error);
@@ -287,16 +295,16 @@ int main(int argc, char* argv[]){
 	//dir entry
 	//char filename[12] = "TESTDIR    \0";
 	
-	char filename[12] = "32767   DAT\0";
+//	char filename[12] = "32767   DAT\0";
 	//char filename[12] = "32K     DAT\0";
 	//char filename[12] = "32769   DAT\0";
 	//char filename[12] = "511BYTE DAT\0";
-//	char filename[12] = "512BYTE DAT\0";
+//	char filename[12] = "512     DAT\0";
 //	char filename[12] = "513BYTE DAT\0";
 	//char filename[12] = "2048K   DAT\0";
 //	char filename[12] = "1024K   DAT\0";
-//	char filename[12] = "96K     DAT\0";
-	//char filename[12] = "8192K   DAT\0";
+	//char filename[12] = "96K     DAT\0";
+	char filename[12] = "8192K   DAT\0";
 	//char filename[12] = "65536K  DAT\0";
 /*	char filename[12] = "TEST    BIN\0";
 	char filename[12] = "PIC1    CFG\0";
@@ -350,7 +358,7 @@ int main(int argc, char* argv[]){
 	
 	show_dir(fd, &vol, dirCln);
 	
-	// ###################### buffered read poc - fat_read for files with unlimited size (at least fat32 file size). uses only two 512 byte buffers (block_data/block_fat)
+	// ###################### find_first/find_next
 	unsigned int r=-1;
 	struct F32_fd fileFound;
 	data_lba_addr = calcDataLbaAddress(&vol, dirCln);
@@ -372,9 +380,9 @@ int main(int argc, char* argv[]){
 	}
 	printf("file '%s' found\n", fileFound.filename);
 	
-	
+	// ###################### buffered read poc - fat_read for files with unlimited size (at least fat32 file size). uses only two 512 byte buffers (block_data/block_fat)
+	/*
 	unsigned long int ts = currentTimeMillis();
-	
 	unsigned long int cln = fileFound.startCluster;
 	printf("fat cln: $%x boffs: $%x bnr: $%x\n", cln, (cln << 2 & (BLOCK_SIZE-1)), (cln >> 7));
 	unsigned long int blocks = fileFound.size >> 9; //(div BLOCK_SIZE);
@@ -382,27 +390,29 @@ int main(int argc, char* argv[]){
 		blocks++;
 	}
 		
-	for(;!isEnd(cln);){
+	l1: for(;!isEnd(cln) && blocks>0;){
 		data_lba_addr = calcDataLbaAddress(&vol, cln);
 		printf("data cluster nr $%x, $%x blocks to read, lba $%x\n", cln, blocks, data_lba_addr);
 		//vol.SecPerClus <=> BLOCK_SIZE :) FTW!
-		for(unsigned int i=0;blocks > 0 && i<vol.SecPerClus;i++,blocks--){
+		for(unsigned int i=0;i<vol.SecPerClus;i++){
 			n = readBlock(block_data, fd, data_lba_addr);
 			if(n != BLOCK_SIZE){
 				error(fd, fd_out, n);
 				return 1;
 			}
-			dumpBuffer(block_data);
+			//dumpBuffer(block_data);
 			n = fwrite(block_data, sizeof(char), BLOCK_SIZE, fd_out);
 			if(n != BLOCK_SIZE){
 				error(fd, fd_out, n);
 				return 1;
 			}
+			if(--blocks == 0)
+				goto l1;
 			
 			inc32(&data_lba_addr);
 		}
 		//
-		fat_lba_addr_n = calcFatLbaAddress(&vol, cln);
+		fat_lba_addr_n = calcFatLbaAddress(&vol, cln);//lba address of cluster within fat
 		if(fat_lba_addr != fat_lba_addr_n){
 			printf("read fat block at fat lba: $%x\n", fat_lba_addr_n);
 			int n = readBlock(block_fat, fd, fat_lba_addr_n);
@@ -411,13 +421,16 @@ int main(int argc, char* argv[]){
 				return 1;
 			}
 			fat_lba_addr = fat_lba_addr_n;
-			//dumpBuffer(block_fat);
+			dumpBuffer(block_fat);
 		}
 		cln = nextClusterNumber(block_fat, cln);
 	}
 	
 	ts = currentTimeMillis() - ts;
 	printf("read %ld bytes took %ldms\n", fileFound.size, ts);
+	*/
+	
+	unsigned int boffs = findFreeCluser(fd, &vol);
 	
 	fclose(fd);
 	fclose(fd_out);
