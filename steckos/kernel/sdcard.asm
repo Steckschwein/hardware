@@ -310,34 +310,13 @@ sd_read_multiblock:
 		jsr sd_wait_timeout
 		lda errno
 		bne @exit
-;    	beq @l1
-;		bra @exit
 @l1:
-;		jsr sd_wait_data_token
-
-;		ldy #$00
-;		lda via1portb   ; Port laden
-;		and #$fe        ; Takt ausschalten
-;		tax             ; aufheben
-;		ora #$01
-;		sta sd_tmp
-
 
 		jsr fullblock
 		inc read_blkptr+1
 
-;		lda sd_tmp
-	; Read CRC bytes
-;	.repeat 16
-;		sta via1portb ; Takt An
-;		stx via1portb ; Takt aus
-;	.endrepeat
-
 		dec blocks
 		bne @l1
-;		beq @l3
-;		bra @l1
-;@l3:
 		jsr sd_busy_wait
 
         ; all blocks read, send cmd12 to end transmission
@@ -354,47 +333,43 @@ sd_read_multiblock:
 ; Write block to SD Card
 ;---------------------------------------------------------------------
 sd_write_block:
-	save
-	jsr sd_select_card
+		save
+		jsr sd_select_card
 
-	lda #cmd24
-	jsr sd_block_cmd
+		lda #cmd24
+		jsr sd_block_cmd
 
-	jsr sd_wait_timeout
-	lda errno
-        bne @exit
-;@l1:
-    	;lda #$ff
-	;jsr spi_rw_byte
-	;bne @l1
+		jsr sd_wait_timeout
+		lda errno
+	    bne @exit
 
-	lda #sd_data_token
-	jsr spi_rw_byte
+		lda #sd_data_token
+		jsr spi_rw_byte
 
-	ldy #$00
+		ldy #$00
 @l2:	lda (write_blkptr),y
-	phy
-	jsr spi_rw_byte
-	ply
-	iny
-	bne @l2
+		phy
+		jsr spi_rw_byte
+		ply
+		iny
+		bne @l2
 
-	inc write_blkptr+1
+		inc write_blkptr+1
 
-	ldy #$00
+		ldy #$00
 @l3:	lda (write_blkptr),y
-	phy
-	jsr spi_rw_byte
-	ply
-	iny
-	bne @l3
+		phy
+		jsr spi_rw_byte
+		ply
+		iny
+		bne @l3
 
-	; Send fake CRC bytes
-	lda #$00
-	jsr spi_rw_byte
-	lda #$00
-	jsr spi_rw_byte
-	inc write_blkptr+1
+		; Send fake CRC bytes
+		lda #$00
+		jsr spi_rw_byte
+		lda #$00
+		jsr spi_rw_byte
+		inc write_blkptr+1
 @exit:
         restore
         jmp sd_deselect_card
@@ -403,48 +378,48 @@ sd_write_block:
 ; Write multiple blocks to SD Card
 ;---------------------------------------------------------------------
 sd_write_multiblock:
-	save
+		save
 
-	jsr sd_select_card
+		jsr sd_select_card
 
-	lda #cmd25	; Send CMD25 command byte
-	jsr sd_block_cmd
+		lda #cmd25	; Send CMD25 command byte
+		jsr sd_block_cmd
 
-	; wait for command response.
-	jsr sd_wait_timeout
-	lda errno
+		; wait for command response.
+		jsr sd_wait_timeout
+		lda errno
        	bne @exit
 
 @block:
-	lda #sd_data_token
-	jsr spi_rw_byte
+		lda #sd_data_token
+		jsr spi_rw_byte
 
-	ldy #$00
+		ldy #$00
 @l2:	lda (write_blkptr),y
-	phy
-	jsr spi_rw_byte
-	ply
-	iny
-	bne @l2
+		phy
+		jsr spi_rw_byte
+		ply
+		iny
+		bne @l2
 
-	inc 	write_blkptr+1
+		inc 	write_blkptr+1
 
-	ldy #$00
+		ldy #$00
 @l3:	lda (write_blkptr),y
-	phy
-	jsr spi_rw_byte
-	ply
-	iny
-	bne @l3
+		phy
+		jsr spi_rw_byte
+		ply
+		iny
+		bne @l3
 
-	; Send fake CRC bytes
-	lda #$00
-	jsr spi_rw_byte
-	lda #$00
-	jsr spi_rw_byte
+		; Send fake CRC bytes
+		lda #$00
+		jsr spi_rw_byte
+		lda #$00
+		jsr spi_rw_byte
 
-	dec blocks
-	bne @block
+		dec blocks
+		bne @block
 
         ; all blocks read, send cmd12 to end transmission
         ; jsr sd_param_init
@@ -454,8 +429,8 @@ sd_write_multiblock:
         jsr sd_busy_wait
 
 @exit:
-	restore
-	rts
+		restore
+		rts
 ;---------------------------------------------------------------------
 ; wait while sd card is busy
 ;---------------------------------------------------------------------
