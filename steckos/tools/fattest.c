@@ -117,7 +117,7 @@ int match(char *s, char *s2){
 	return 1;
 }
 
-unsigned int findDirEntry(char* block_data, char *filename, struct F32_fd *fileFound){
+unsigned int findDirEntry(char *filename, struct F32_fd *fileFound){
 	for(int n = 0;n<DIR_ENTRIES_PER_BLOCK;n++){
 		int offs = n*32;
 		if(block_data[offs] == 0)//end of dir
@@ -231,30 +231,29 @@ unsigned long int nextClusterNumber(char *block_fat, unsigned long int cln){
 	return nextCluster;
 }
 
-unsigned int findFreeCluser(FILE *fd, struct F32_Volume *vol){
+unsigned long int findFreeCluser(FILE *fd, struct F32_Volume *vol){
 	unsigned char found = 0;
 	unsigned int fbnr;
 	unsigned int boffs;
+	unsigned long int cluster = 0;
 	
 	for(fbnr = 0;found == 0 && fbnr<vol->FATSz32;fbnr++){//fat size in sectors == amount of blocks
 		unsigned int n = readBlock(block_fat, fd, vol->LbaFat + fbnr);
-		printf("search cluster, block: $%x\n", fbnr);
+		//printf("search cluster, block: $%x\r", fbnr);
 		for (boffs=0;boffs<BLOCK_SIZE;boffs+=4){//+4 -> 32 bit cluster nr
 			if((block_fat[boffs+0]
 			|	block_fat[boffs+1]
 			|	block_fat[boffs+2]
 			|	block_fat[boffs+3]) == 0x0){//free cluster is marked with 0 0 0 0
-				printf("free cluster at block: $%x ix: $%x\n", fbnr, boffs);
+				cluster = (fbnr << 7) + (boffs >> 2);
+				printf("free cluster $%x at block: $%x boffs: $%x\n", cluster, fbnr, boffs);
 				dumpBuffer(block_fat);
 				found=1;
 				break;
 			}
 		}
-//		fgetc(stdin);
-//		break;
 	}
-	dumpBuffer(block_fat);
-	return boffs;
+	return cluster;
 }
 
 int show_dir(FILE *fd, struct F32_Volume *vol, unsigned long int dir_cln){
@@ -367,7 +366,7 @@ int main(int argc, char* argv[]){
 		if(n != BLOCK_SIZE){
 			printf("Error: %d\n",n); return 1;
 		}
-		r = findDirEntry(block_data, filename, &fileFound);
+		r = findDirEntry(filename, &fileFound);
 		if(r == 0 || r== 2)//0 - eod or 2 - found
 			break;
 		inc32(&data_lba_addr);
@@ -430,7 +429,9 @@ int main(int argc, char* argv[]){
 	printf("read %ld bytes took %ldms\n", fileFound.size, ts);
 	*/
 	
-	unsigned int boffs = findFreeCluser(fd, &vol);
+	unsigned long int clnr = findFreeCluser(fd, &vol);
+	
+	//findDirEntry();
 	
 	fclose(fd);
 	fclose(fd_out);
