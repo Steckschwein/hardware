@@ -443,7 +443,7 @@ sd_write_multiblock:
 	iny
 	bne @l2
 
-	inc write_blkptr+1
+	inc 	write_blkptr+1
 
 	ldy #$00
 @l3:	lda (write_blkptr),y
