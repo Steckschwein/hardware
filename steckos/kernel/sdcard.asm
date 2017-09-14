@@ -252,8 +252,30 @@ sd_read_block:
 
 		jsr fullblock
 
-@exit:
-		jmp sd_deselect_card
+@exit: ; fall through to sd_deselect_card
+
+
+		;---------------------------------------------------------------------
+		; deselect sd card, puSH CS line to HI and generate few clock cycles
+		; to allow card to deinit
+		;---------------------------------------------------------------------
+sd_deselect_card:
+			pha
+			phx
+			; set CS line to HI
+			lda #%01111110
+			sta via1portb
+
+			ldx #$04
+		@l1:
+			phx
+			jsr spi_r_byte
+			plx
+			dex
+			bne @l1
+			plx
+			pla
+			rts
 
 fullblock:
 		; wait for sd card data token
@@ -494,27 +516,7 @@ sd_select_card:
 	sta via1portb
 	bra sd_busy_wait
 
-;---------------------------------------------------------------------
-; deselect sd card, puSH CS line to HI and generate few clock cycles
-; to allow card to deinit
-;---------------------------------------------------------------------
-sd_deselect_card:
-	pha
-	phx
-	; set CS line to HI
-	lda #%01111110
-	sta via1portb
 
-	ldx #$04
-@l1:
-	phx
-	jsr spi_r_byte
-	plx
-	dex
-	bne @l1
-	plx
-	pla
-	rts
 
 ;---------------------------------------------------------------------
 ; clear sd card parameter buffer
