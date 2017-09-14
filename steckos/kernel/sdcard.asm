@@ -216,26 +216,6 @@ sd_block_cmd:
 		lda #$01
 		jmp spi_rw_byte
 
-;---------------------------------------------------------------------
-; wait for sd card to become ready
-;
-; Z = 1, A = 1 when error (timeout)
-;---------------------------------------------------------------------
-;sd_wait_timeout:
-;        ldy #sd_cmd_response_retries 	; wait for command response.
-;		stz krn_tmp				; use krn_tmp as loop var, not needed here
-;@l:		jsr spi_r_byte
-;        beq @x
-;		dec krn_tmp
-;		bne @l
-;        dey
-;		bne @l
-
-;		lda #$01
-;		rts
-;@x:
-;		lda #$00
-;		rts
 
 ;---------------------------------------------------------------------
 ; Read block from SD Card
@@ -481,26 +461,6 @@ sd_wait:
 @l2:	lda #$00
 		rts
 
-;---------------------------------------------------------------------
-; wait for sd card data token
-; Z = 1, A = 1 when error (timeout)
-;---------------------------------------------------------------------
-;sd_wait_data_token:
-;		ldy #sd_data_token_retries
-;		stz	krn_tmp				; use krn_tmp as loop var, not needed here
-;@l1:
-;		jsr spi_r_byte
-;		cmp #sd_data_token
-;		beq @l2
-;		dec	krn_tmp
-;		bne	@l1
-;		dey
-;		bne @l1
-;
-;		lda #$01
-;		rts
-;@l2:	lda #$00
-;		rts
 
 ;---------------------------------------------------------------------
 ; select sd card, pull CS line to low
