@@ -216,20 +216,25 @@ sd_block_cmd:
 		lda #$01
 		jmp spi_rw_byte
 
-
+;---------------------------------------------------------------------
+; wait for sd card to become ready
+;
+; Z = 1, A = 1 when error (timeout)
+;---------------------------------------------------------------------
 sd_wait_timeout:
-		stz errno
-        	ldy #sd_cmd_response_retries 	; wait for command response.
+        ldy #sd_cmd_response_retries 	; wait for command response.
 		stz krn_tmp				; use krn_tmp as loop var, not needed here
 @l:		jsr spi_r_byte
-        	beq @x
+        beq @x
 		dec krn_tmp
 		bne @l
-        	dey
+        dey
 		bne @l
-		sta errno
-        	;TODO FIXME error sd error codes
+
+		lda #$01
+		rts
 @x:
+		lda #$00
 		rts
 
 ;---------------------------------------------------------------------
@@ -243,7 +248,6 @@ sd_read_block:
 		jsr sd_block_cmd
 
 		jsr sd_wait_timeout
-		lda errno
        	bne @exit
 @l1:
 
@@ -308,7 +312,6 @@ sd_read_multiblock:
 		jsr sd_block_cmd
 		; wait for command response.
 		jsr sd_wait_timeout
-		lda errno
 		bne @exit
 @l1:
 
@@ -340,7 +343,6 @@ sd_write_block:
 		jsr sd_block_cmd
 
 		jsr sd_wait_timeout
-		lda errno
 	    bne @exit
 
 		lda #sd_data_token
@@ -387,7 +389,6 @@ sd_write_multiblock:
 
 		; wait for command response.
 		jsr sd_wait_timeout
-		lda errno
        	bne @exit
 
 @block:
@@ -459,10 +460,11 @@ sd_wait_data_token:
 		bne	@l1
 		dey
 		bne @l1
-		;TODO FIXME check card state here, may be was removed
-;       lda #$e0
-        sta errno
-@l2:	rts
+
+		lda #$01
+		rts
+@l2:	lda #$00
+		rts
 
 ;---------------------------------------------------------------------
 ; select sd card, pull CS line to low
