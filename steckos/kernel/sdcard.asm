@@ -426,7 +426,7 @@ sd_write_multiblock:
 
 
 ;---------------------------------------------------------------------
-; wait for sd card data token
+; wait for sd card whatever
 ; in: A - value to wait for
 ; out: Z = 1, A = 1 when error (timeout)
 ;---------------------------------------------------------------------
