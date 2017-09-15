@@ -423,20 +423,7 @@ sd_write_multiblock:
 @exit:
 		restore
 		rts
-;---------------------------------------------------------------------
-; wait while sd card is busy
-; Z = 1, A = 1 when error (timeout)
-;---------------------------------------------------------------------
-sd_busy_wait:
-@l1:    lda #$ff
-        jsr spi_rw_byte
-        cmp #$ff
-        bne @l1
 
-		lda #$01
-		rts
-@l2:	lda #$00
-        rts
 
 ;---------------------------------------------------------------------
 ; wait for sd card data token
@@ -466,10 +453,23 @@ sd_wait:
 ; select sd card, pull CS line to low
 ;---------------------------------------------------------------------
 sd_select_card:
-	lda #sd_card_sel
-	sta via1portb
-	bra sd_busy_wait
+		lda #sd_card_sel
+		sta via1portb
+; fall through to sd_busy_wait
+;---------------------------------------------------------------------
+; wait while sd card is busy
+; Z = 1, A = 1 when error (timeout)
+;---------------------------------------------------------------------
+sd_busy_wait:
+@l1:    lda #$ff
+        jsr spi_rw_byte
+        cmp #$ff
+        bne @l1
 
+		lda #$01
+		rts
+@l2:	lda #$00
+        rts
 
 
 ;---------------------------------------------------------------------
