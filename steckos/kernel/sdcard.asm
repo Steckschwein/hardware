@@ -355,6 +355,8 @@ sd_write_block:
 		iny
 		bne @l3
 
+
+
 		; Send fake CRC bytes
 		lda #$00
 		jsr spi_rw_byte
@@ -370,6 +372,10 @@ sd_write_block:
 ;---------------------------------------------------------------------
 sd_write_multiblock:
 		save
+
+		; TODO
+		; 1. make this work
+		; 2. use SET_WR_BLOCK_ERASE_COUNT (ACMD23) to pre-erase number of blocks
 
 		jsr sd_select_card
 
@@ -410,6 +416,9 @@ sd_write_multiblock:
 		lda #$00
 		jsr spi_rw_byte
 
+		inc write_blkptr+1
+
+
 		dec blocks
 		bne @block
 
@@ -422,7 +431,7 @@ sd_write_multiblock:
 
 @exit:
 		restore
-		rts
+		jmp sd_deselect_card
 
 
 ;---------------------------------------------------------------------
