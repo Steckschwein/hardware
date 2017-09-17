@@ -4,7 +4,10 @@
 .include "via.inc"
 .segment "KERNEL"
 .import spi_rw_byte, spi_r_byte
-.export init_sdcard, sd_read_block, sd_read_multiblock, sd_write_block, sd_write_multiblock, sd_select_card, sd_deselect_card
+.export init_sdcard, sd_read_block, sd_read_multiblock, sd_write_block, sd_select_card, sd_deselect_card
+.ifdef MULTIBLOCK_WRITE
+.export sd_write_multiblock
+.endif
 
 
 ;---------------------------------------------------------------------
@@ -369,7 +372,8 @@ sd_write_block:
 
 ;---------------------------------------------------------------------
 ; Write multiple blocks to SD Card
-;---------------------------------------------------------------------
+;---------------------------------------------------------------------#
+.ifdef MULTIBLOCK_WRITE
 sd_write_multiblock:
 		save
 
@@ -432,7 +436,7 @@ sd_write_multiblock:
 @exit:
 		restore
 		jmp sd_deselect_card
-
+.endif
 
 ;---------------------------------------------------------------------
 ; wait for sd card whatever
