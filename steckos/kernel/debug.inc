@@ -10,6 +10,14 @@
 .endif
 .endmacro
 
+.macro debug16 msg, ptr
+.ifdef DEBUG
+		jsr	_debugout16
+		.word ptr
+		.asciiz msg
+.endif
+.endmacro
+
 .macro debug32 msg, ptr
 .ifdef DEBUG
 		jsr	_debugout32

@@ -7,12 +7,14 @@ appstart $1000
 
     	lda paramptr
     	ldx paramptr+1
-		
-    	jsr krn_rmdir
+    	
+		;TODO -p support by using krn_opendir and call krn_mkdir on "does not exist error"
+		;
+		jsr krn_mkdir
 		bne @errmsg
 		
 		jsr krn_primm
-		.byte $0a," rmdir ok",$00
+		.byte $0a," mkdir ok",$00
 @exit:
 		jmp (retvec)
 		

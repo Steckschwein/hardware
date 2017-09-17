@@ -264,25 +264,24 @@ fat_mkdir:
 		jsr __fat_opendir
 		beq	@err_dir_exists
 		cmp	#ENOENT			;no such file or directory
-		bne @err_unknown
+		bne @l_exit
 
-		jsr fat_find_free_cluster
-		bne @err_unknown
+		jsr __fat_find_free_cluster
+		bne @l_exit
 
-		
 		; new dir entry
 		jsr __rtc_systime_update		
 		lda __rtc_systime_t+time_t::tm_hour
 		lda __rtc_systime_t+time_t::tm_min
 		lda __rtc_systime_t+time_t::tm_sec
-		sta @new_dir_entry+F32DirEntry::CrtTime
-		sta @new_dir_entry+F32DirEntry::WrtTime
+		sta @dir_entry_template+F32DirEntry::CrtTime
+		sta @dir_entry_template+F32DirEntry::WrtTime
 
 		lda __rtc_systime_t+time_t::tm_year
 		lda __rtc_systime_t+time_t::tm_mon
 		lda __rtc_systime_t+time_t::tm_mday
-		sta @new_dir_entry+F32DirEntry::CrtTime
-		sta @new_dir_entry+F32DirEntry::WrtTime
+		sta @dir_entry_template+F32DirEntry::CrtTime
+		sta @dir_entry_template+F32DirEntry::WrtTime
 		
 @err_unknown:
 		lda #EUNKNOWN		;unknown
@@ -293,8 +292,8 @@ fat_mkdir:
 		debug "mkdir"
 		rts
 		
-@new_dir_entry:		
-; TODO FIXME struct init not implement yet - @see http://www.cc65.org/doc/ca65-15.html#ss15.4
+@dir_entry_template:
+; TODO FIXME struct init not implemented yet - @see http://www.cc65.org/doc/ca65-15.html#ss15.4
 ;		.tag F32DirEntry
 		.byte "           "		;name
 		.byte 1<<4 				;attr, type dir
@@ -307,37 +306,57 @@ fat_mkdir:
 		.word 0					;write date
 		.word 0					;clnr low
 		.dword 0				;file size
+		
 
-		;
-		;
-fat_find_free_cluster:
-
+__fat_find_free_cluster:
+		;TODO improve, use a previously saved lba_addr and/or found cluster number
 		SetVector	block_fat, read_blkptr
-		copy32		fat_begin_lba, lba_addr
-		
-		
+		copy32		fat_lba_begin, lba_addr
+
+@next_block:
 		debug32 "f_lba" lba_addr
-		jsr	sd_read_block					; read fat block
+		jsr	sd_read_block		; read fat block
 		ldx	#0
-@l1:	lda	block_fat+0,x
+@l1:	lda	block_fat+0,x					
 		ora block_fat+1,x
 		ora block_fat+2,x
 		ora block_fat+3,x
-		beq	@l_found
+		beq	@l_found_lb			; find cluster entry with 00 00 00 00
 		lda	block_fat+100+0,x
 		ora block_fat+100+1,x
 		ora block_fat+100+2,x
 		ora block_fat+100+3,x
-		beq	@l_found
+		beq	@l_found_hb
 		inx
 		inx 
 		inx 
 		inx
 		bne @l1
-		jsr inc_lba_address
+		jsr inc_lba_address		; inc lba_addr, next fat block
+		lda lba_addr+1
+		cmp	fat2_lba_begin+1
+		bne @next_block 
+		lda lba_addr+0
+		cmp	fat2_lba_begin+0
+		bne	@next_block
+		lda #ENOSPC				; ENOSPC - No space left on device
+		rts
+								
+@l_found_hb:					; calculate the cluster number upon current lba_addr and block offset (X)
+		txa
+		clc
+		adc #$80				; adjust for 2nd page
+		tax
+@l_found_lb:
+		txa
+		lsr						; div 4
+		lsr
+		sta fat_clnr_temp+0		
 		
-		
-@l_found:
+		;lda	lba_addr+
+		sta fat_clnr_temp+1
+		sta fat_clnr_temp+2
+		sta fat_clnr_temp+3
 		rts
 		
         ;in:
@@ -620,17 +639,17 @@ calc_fat_lba_addr:
 		rol
 		and	#$01;only bit 0
 		sta lba_addr+3
-		; add fat_begin_lba and lba_addr
+		; add fat_lba_begin and lba_addr
 		clc
-		lda fat_begin_lba+0
+		lda fat_lba_begin+0
 		adc lba_addr +0
 		sta lba_addr +0
-		lda fat_begin_lba+1
+		lda fat_lba_begin+1
 		adc lba_addr +1
 		sta lba_addr +1
-		lda fat_begin_lba+2
+		lda fat_lba_begin+2
 
-		lda fat_begin_lba+3
+		lda fat_lba_begin+3
 		adc lba_addr +3
 		sta lba_addr +3
 		rts
@@ -758,39 +777,35 @@ fat_mount:
 		sta sectors_per_cluster
 
 		; cluster_begin_lba = Partition_LBA_Begin + Number_of_Reserved_Sectors + (Number_of_FATs * Sectors_Per_FAT) -  (2 * sec/cluster);
-		; fat_begin_lba		= Partition_LBA_Begin + Number_of_Reserved_Sectors
-		
-		; add number of reserved sectors to fat_begin_lba. store in cluster_begin_lba
+		; fat_lba_begin		= Partition_LBA_Begin + Number_of_Reserved_Sectors
+		; fat2_lba_begin	= Partition_LBA_Begin + Number_of_Reserved_Sectors + Sectors_Per_FAT
+	
+		; add number of reserved sectors to fat_lba_begin. store in cluster_begin_lba
 		clc
 
 		lda lba_addr + 0
 		adc sd_blktarget + VolumeID::RsvdSecCnt + 0
 		sta cluster_begin_lba + 0
-		sta fat_begin_lba + 0
+		sta fat_lba_begin + 0
 		lda lba_addr + 1
 		adc sd_blktarget + VolumeID::RsvdSecCnt + 1
 		sta cluster_begin_lba + 1
-		sta fat_begin_lba + 1
-
+		sta fat_lba_begin + 1
 		lda lba_addr + 2
 		adc #$00
 		sta cluster_begin_lba + 2
-		sta fat_begin_lba + 2
-
+		sta fat_lba_begin + 2
 		lda lba_addr + 3
 		adc #$00
 		sta cluster_begin_lba + 3
-		sta fat_begin_lba + 3
-
+		sta fat_lba_begin + 3
 
 		; Number of FATs. Must be 2
-		; lda sd_blktarget + BPB_NumFATs
 		; add sectors_per_fat * 2 to cluster_begin_lba
-
-		ldy #$02
-@l7:		clc
+		ldy sd_blktarget + VolumeID::NumFATs
+@l7:	clc
 		ldx #$00
-@l8:		ror ; get carry flag back
+@l8:	ror ; get carry flag back
 		lda sd_blktarget + VolumeID::FATSz32,x ; sectors per fat
 		adc cluster_begin_lba,x
 		sta cluster_begin_lba,x
@@ -800,10 +815,25 @@ fat_mount:
 		bne @l8
 		dey
 		bne @l7
+	
+		; calc fat end or begin or fat2
+		clc
+		lda sd_blktarget + VolumeID::FATSz32+0 ; sectors per fat
+		adc fat_lba_begin	+0
+		sta fat2_lba_begin	+0
+		lda sd_blktarget + VolumeID::FATSz32+1
+		adc fat_lba_begin	+1
+		sta fat2_lba_begin	+1
+		; TODO FIXME - we assume 16bit are sufficient for now since fat is placed at the beginning of the device
 
 		; cluster_begin_lba_m2 -> cluster_begin_lba - (BPB_RootClus*sec/cluster)
-		;debug8s "sec/cl:", sectors_per_cluster
-		;debug32s "clb1:", cluster_begin_lba
+		debug16 "sec/cl:", sectors_per_cluster
+		debug32 "cl_lba", cluster_begin_lba
+		debug32 "lba", sd_blktarget + VolumeID::LBABegin
+		debug32 "r_sec", sd_blktarget + VolumeID::RsvdSecCnt
+		debug32 "f_sec", sd_blktarget + VolumeID::FATSz32
+		debug32 "f_lba", fat_lba_begin
+		debug32 "f2_lba", fat2_lba_begin
 
 		;TODO FIXME we assume 2 here insteasd of using the value in BPB_RootClus
 		; cluster_begin_lba_m2 -> cluster_begin_lba - (2*sec/cluster) -> sec/cluster << 1

@@ -35,8 +35,6 @@ _debugout_restore:
 		
 
 _debugout32:
-		jsr _debugout_enter
-		
 _debugout:
 		jsr _debugout_enter
 		
@@ -46,11 +44,11 @@ _debugout:
 		pla
 		sta     msgptr+1       	; Get the high part of "return" address
                                 ; (data start address)
-;		ldy 	#03				; 32bit value
-;@l1:	lda		(msgptr),y
-;		jsr 	krn_hexout
-;		dey
-;		bpl		@l1
+		ldy 	#03				; 32bit value
+@l1:	lda		(msgptr),y
+		jsr 	krn_hexout
+		dey
+		bpl		@l1
 		
 @PSINB:							; Note: actually we're pointing one short
 		inc     msgptr          ; update the pointer
