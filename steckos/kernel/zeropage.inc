@@ -40,9 +40,9 @@ blocks			= $0288		; 3 bytes - blocks to read, 4GB -> 4294967296 >> 9 = 8388608 (
 
 krn_call_internal	= $028c		; jmp vector internally used
 
-trampolin	= $0291
+trampolin		= $0290
 
 
-errno		= $290
+errno		= $0292
 ;TODO FIXME rename
 ;__oserror 	= errno

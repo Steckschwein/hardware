@@ -314,7 +314,7 @@ __fat_find_free_cluster:
 		copy32		fat_lba_begin, lba_addr
 
 @next_block:
-		debug32 "f_lba" lba_addr
+;		debug32 "f_lba" lba_addr
 		jsr	sd_read_block		; read fat block
 		ldx	#0
 @l1:	lda	block_fat+0,x					
@@ -746,7 +746,6 @@ fat_mount:
 		; Read FAT Volume ID at LBABegin and Check signature
 		jsr sd_read_block
 
-
 		jsr fat_check_signature
 		lda errno
 		beq @l4
@@ -767,7 +766,7 @@ fat_mount:
 		lda sd_blktarget + VolumeID::BytsPerSec + 1
 		cmp #$02
 		beq @l6
-@l5:		lda #fat_invalid_sector_size
+@l5:	lda #fat_invalid_sector_size
 		sta errno
 		jmp end_mount
 @l6:
@@ -827,13 +826,13 @@ fat_mount:
 		; TODO FIXME - we assume 16bit are sufficient for now since fat is placed at the beginning of the device
 
 		; cluster_begin_lba_m2 -> cluster_begin_lba - (BPB_RootClus*sec/cluster)
-		debug16 "sec/cl:", sectors_per_cluster
+		debug8 "sec/cl", sectors_per_cluster
 		debug32 "cl_lba", cluster_begin_lba
-		debug32 "lba", sd_blktarget + VolumeID::LBABegin
-		debug32 "r_sec", sd_blktarget + VolumeID::RsvdSecCnt
+		debug32 "lba", lba_addr
+		debug16 "r_sec", sd_blktarget + VolumeID::RsvdSecCnt
 		debug32 "f_sec", sd_blktarget + VolumeID::FATSz32
-		debug32 "f_lba", fat_lba_begin
-		debug32 "f2_lba", fat2_lba_begin
+		debug16 "f_lba", fat_lba_begin
+		debug16 "f2_lba", fat2_lba_begin
 
 		;TODO FIXME we assume 2 here insteasd of using the value in BPB_RootClus
 		; cluster_begin_lba_m2 -> cluster_begin_lba - (2*sec/cluster) -> sec/cluster << 1
@@ -991,7 +990,7 @@ fat_find_first:
 		;   X - directory fd index into fd_area
 fat_find_first_intern:
 		jsr calc_lba_addr
-		debug32 "lba:", lba_addr
+		debug32 "lba", lba_addr
 		SetVector sd_blktarget, read_blkptr
 
 ff_l3:	SetVector sd_blktarget, dirptr	; dirptr to begin of target buffer

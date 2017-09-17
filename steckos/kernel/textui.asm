@@ -151,7 +151,7 @@ textui_update_screen:
 		and	#STATUS_BUFFER_DIRTY
 		beq	@l1	;exit if not dirty
 		
-		SetVector	screen_buffer, adrl    ; copy back buffer to video ram
+		SetVector	screen_buffer, addr    ; copy back buffer to video ram
 		lda	#<ADDRESS_GFX1_SCREEN
 		ldy	#WRITE_ADDRESS + >ADDRESS_GFX1_SCREEN
 		ldx	#$04
