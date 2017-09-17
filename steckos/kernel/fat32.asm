@@ -1,10 +1,13 @@
 .include "common.inc"
 .include "kernel.inc"
 .include "fat32.inc"
+.include "rtc.inc"
 .include "errno.inc"	; from ca65 api
 
 .import sd_read_block, sd_read_multiblock, sd_write_block, sd_write_multiblock, sd_select_card, sd_deselect_card
 .import sd_read_block_data
+
+.import __rtc_systime_update, __rtc_systime_t
 
 .export fat_mount
 .export fat_open, fat_isOpen, fat_chdir, fat_get_root_and_pwd
@@ -33,6 +36,14 @@
 		sta dest,x
 		dex
 		bpl @l
+.endmacro
+
+.macro _open
+		stz	pathFragment, x	;\0 terminate the current path fragment
+		;debugstr "_o", pathFragment
+		jsr	_fat_open
+		debug "o_"
+		bne @l_exit
 .endmacro
 
 .segment "KERNEL"
@@ -189,22 +200,14 @@ clusternr_matcher:
 		; TODO implement me
 		rts
 
-.macro _open
-		stz	pathFragment, x	;\0 terminate the current path fragment
-		;debugstr "_o", pathFragment
-		jsr	_fat_open
-		debug "o_"
-		bne @l_exit
-.endmacro
-
 		;in:
         ;   A/X - pointer to the file path
         ;out:
 		;	A - Z=0 on success, Z=1 and A with errno otherwise
         ;   X - index into fd_area of the opened directory - !!! ATTENTION !!! X is exactly the FD_INDEX_TEMP_DIR on success
-fat_opendir:
-		jsr fat_open			; change dir using temp dir to not clobber the current dir, maybe we will run into an error
-		bne	@l_exit			; exit on error
+__fat_opendir:
+		jsr fat_open				; change dir using temp dir to not clobber the current dir, maybe we will run into an error
+		bne	@l_exit					; exit on error
 		lda	fd_area + F32_fd::Attr, x
 		bit #DIR_Attr_Mask_Dir		; check that there is no error and we have a directory
 		bne	@l_ok
@@ -221,7 +224,7 @@ fat_opendir:
 		;	A - Z=0 on success, Z=1 and A with errno otherwise
         ;   X - index into fd_area of the opened directory
 fat_chdir:
-		jsr fat_opendir
+		jsr __fat_opendir
 		bne	@l_exit
 		phx
 		ldx #FD_INDEX_TEMP_DIR  ; the temp dir fd is now set to the last dir of the path and we proofed that it's valid with the code above
@@ -236,7 +239,7 @@ fat_chdir:
         ;in:
         ;   A/X - pointer to the file name
 fat_rmdir:
-		jsr fat_opendir
+		jsr __fat_opendir
 		bne	@l_exit
 		
 		lda	#DIR_Entry_Deleted			; ($e5)
@@ -258,16 +261,92 @@ fat_rmdir:
         ;in:
         ;   A/X - pointer to the file name
 fat_mkdir:
-		;	
-		;	
-		rts
+		jsr __fat_opendir
+		beq	@err_dir_exists
+		cmp	#ENOENT			;no such file or directory
+		bne @err_unknown
 
+		jsr fat_find_free_cluster
+		bne @err_unknown
+
+		
+		; new dir entry
+		jsr __rtc_systime_update		
+		lda __rtc_systime_t+time_t::tm_hour
+		lda __rtc_systime_t+time_t::tm_min
+		lda __rtc_systime_t+time_t::tm_sec
+		sta @new_dir_entry+F32DirEntry::CrtTime
+		sta @new_dir_entry+F32DirEntry::WrtTime
+
+		lda __rtc_systime_t+time_t::tm_year
+		lda __rtc_systime_t+time_t::tm_mon
+		lda __rtc_systime_t+time_t::tm_mday
+		sta @new_dir_entry+F32DirEntry::CrtTime
+		sta @new_dir_entry+F32DirEntry::WrtTime
+		
+@err_unknown:
+		lda #EUNKNOWN		;unknown
+		bra @l_exit
+@err_dir_exists:
+		lda	#EEXIST
+@l_exit:
+		debug "mkdir"
+		rts
+		
+@new_dir_entry:		
+; TODO FIXME struct init not implement yet - @see http://www.cc65.org/doc/ca65-15.html#ss15.4
+;		.tag F32DirEntry
+		.byte "           "		;name
+		.byte 1<<4 				;attr, type dir
+		.res 2
+		.word 0					;create time
+		.word 0					;create date
+		.res 2	
+		.word 0					;clnr high
+		.word 0					;write time
+		.word 0					;write date
+		.word 0					;clnr low
+		.dword 0				;file size
+
+		;
+		;
+fat_find_free_cluster:
+
+		SetVector	block_fat, read_blkptr
+		copy32		fat_begin_lba, lba_addr
+		
+		
+		debug32 "f_lba" lba_addr
+		jsr	sd_read_block					; read fat block
+		ldx	#0
+@l1:	lda	block_fat+0,x
+		ora block_fat+1,x
+		ora block_fat+2,x
+		ora block_fat+3,x
+		beq	@l_found
+		lda	block_fat+100+0,x
+		ora block_fat+100+1,x
+		ora block_fat+100+2,x
+		ora block_fat+100+3,x
+		beq	@l_found
+		inx
+		inx 
+		inx 
+		inx
+		bne @l1
+		jsr inc_lba_address
+		
+		
+@l_found:
+		rts
+		
         ;in:
         ;   A/X - pointer to the file path
 		;	  Y - flags, 0 - "ro", 1 - "rw"
         ;out:
         ;   X - index into fd_area of the opened file
         ;   A - errno, Z=0 no error, Z=1 error and A contains error number
+		;	Note: regardless of return value, dirptr points the last visited directory entry. furthermore lba_addr is set to the corresponding block
 fat_open:
 		sta krn_ptr1
 		stx krn_ptr1+1			    ; save path arg given in a/x
@@ -529,36 +608,38 @@ calc_fat_lba_addr:
 		asl
 		lda fd_area + F32_fd::CurrentCluster	+1,x
 		rol
-		sta lba_addr_fat+0
+		sta lba_addr+0
 		lda fd_area + F32_fd::CurrentCluster	+2,x
 		rol
-		sta lba_addr_fat+1
+		sta lba_addr+1
 		lda fd_area + F32_fd::CurrentCluster	+3,x
 		rol
-		sta lba_addr_fat+2
+		sta lba_addr+2
 		lda fd_area + F32_fd::CurrentCluster	+3,x
 		rol
 		rol
 		and	#$01;only bit 0
-		sta lba_addr_fat+3
-		; add fat_begin_lba and lba_addr_fat
+		sta lba_addr+3
+		; add fat_begin_lba and lba_addr
 		clc
 		lda fat_begin_lba+0
-		adc lba_addr_fat +0
-		sta lba_addr_fat +0
+		adc lba_addr +0
+		sta lba_addr +0
 		lda fat_begin_lba+1
-		adc lba_addr_fat +1
-		sta lba_addr_fat +1
+		adc lba_addr +1
+		sta lba_addr +1
 		lda fat_begin_lba+2
 
 		lda fat_begin_lba+3
-		adc lba_addr_fat +3
-		sta lba_addr_fat +3
+		adc lba_addr +3
+		sta lba_addr +3
 		rts
-
+		
 		; check whether the EOC (end of cluster chain) cluster number is reached
-		; @return Z = 1 if EOC detected
-fat_cln_end:
+		;
+		; out:
+		;	Z = 1 if EOC detected, Z=0 otherwise
+is_fat_cln_end:
 		lda fd_area + F32_fd::CurrentCluster+3, x
 		and	#<(FAT_EOC>>24)
 		cmp	#<(FAT_EOC>>24)
@@ -610,13 +691,13 @@ fat_next_cln_hi:
 ;---------------------------------------------------------------------
 fat_mount:
 		save
+		
 		; set lba_addr to $00000000 since we want to read the bootsector
 		.repeat 4, i
 			stz lba_addr + i
 		.endrepeat
 
 		SetVector sd_blktarget, read_blkptr
-
 		jsr sd_read_block
 
 		jsr fat_check_signature
@@ -677,7 +758,8 @@ fat_mount:
 		sta sectors_per_cluster
 
 		; cluster_begin_lba = Partition_LBA_Begin + Number_of_Reserved_Sectors + (Number_of_FATs * Sectors_Per_FAT) -  (2 * sec/cluster);
-
+		; fat_begin_lba		= Partition_LBA_Begin + Number_of_Reserved_Sectors
+		
 		; add number of reserved sectors to fat_begin_lba. store in cluster_begin_lba
 		clc
 
@@ -709,7 +791,6 @@ fat_mount:
 @l7:		clc
 		ldx #$00
 @l8:		ror ; get carry flag back
-		;lda sd_blktarget + BPB_FATSz32,x ; sectors per fat
 		lda sd_blktarget + VolumeID::FATSz32,x ; sectors per fat
 		adc cluster_begin_lba,x
 		sta cluster_begin_lba,x

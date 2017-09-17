@@ -4,14 +4,12 @@ sectors_per_cluster 	= $030b ; sectors per cluster, 1 byte
 root_dir_first_clus 	= $030c ; first cluster of root dir, 4 bytes
 filename_buf			= $0310 ; file name buffer, 11 bytes
 
-fd_area                         = $0320 ; File descriptor area until $0400
+fd_area					= $0320 ; File descriptor area until $0400
 
-sd_blktarget 			= $0400
+sd_blktarget			= $0400
+block_data				= sd_blktarget
+block_fat               = $0600
 sd_blocksize			= $200
-
-;TODO FIXME needs clarification
-block_fat                   = $d800
-block_data                  = $da00
 
 ; TODO FIXME replace with errno.inc from cc65 api
 fat_bad_block_signature		= $01
@@ -79,8 +77,8 @@ PartType_FAT32_LBA	= $0c
 ;--------------------------------------------------------------------------------------
 .struct VolumeID
 	Reserved	.byte 11
-	BytsPerSec	.word ; 12
-	SecPerClus	.byte ; 13
+	BytsPerSec	.word ; 12	; 512 usually
+	SecPerClus	.byte ; 13	; power of 2
 	RsvdSecCnt	.word ; 14	; Number of reserved sectors. Should be 32 for FAT32
 	NumFATs		.byte ; 16
 	Reserved2	.byte 4 ; 17
@@ -93,7 +91,7 @@ PartType_FAT32_LBA	= $0c
         			; Bits 8-15: reserved
 				; https://www.win.tue.nl/~aeb/linux/fs/fat/fat-1.html
 	Reserved3	.byte 12
-	FATSz32		.dword
+	FATSz32		.dword		; sectors per FAT
 	Reserved4	.byte 4
 	RootClus	.dword
 .endstruct
@@ -104,7 +102,7 @@ PartType_FAT32_LBA	= $0c
 ;BS_VolLab		= 43
 ;BS_FilSysType	= 54	; One of the strings “FAT12 ”, “FAT16 ”, or “FAT ”.
 
-FAT_EOC			= $0ffffff8	; end of cluster chain marker
+FAT_EOC			= $0fffffff	; end of cluster chain marker
 
 ;--------------------------------------------------------------------------------------
 ; FAT32 Directory Entry
@@ -113,7 +111,10 @@ FAT_EOC			= $0ffffff8	; end of cluster chain marker
 	Name		.byte 8
 	Ext			.byte 3
 	Attr		.byte 
-	Reserved	.byte 8
+	Reserved	.byte 2
+	CrtTime		.word
+	CrtDate		.word
+	Reserved2	.byte 2
 	FstClusHI	.word
 	WrtTime		.word
 	WrtDate		.word
