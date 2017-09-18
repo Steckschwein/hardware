@@ -10,7 +10,7 @@ __LOADADDR__ = $1000
 .word __LOADADDR__
 .segment "CODE"
 
-.macro dec16 word 
+.macro dec16 word
         lda word
         bne :+
         dec word+1
@@ -34,14 +34,14 @@ main:
 ;		copypointer paramptr, filenameptr
 
  		ldy #$00
-@l1:	
+@l1:
 		lda (paramptr),y
  		beq @l2
-	
+
  		iny
  		bra @l1
 @l2:
- 		dey 
+ 		dey
  		lda (paramptr),y
  		and #%11011111
  		cmp #'F'
@@ -49,13 +49,13 @@ main:
  		jmp error
 @l3:
 
-		dey 
+		dey
 		lda (paramptr),y
 		and #%11011111
 		cmp #'L'
 		bne @l4
 
-		dey 
+		dey
 		lda (paramptr),y
 		and #%11011111
 		cmp #'W'
@@ -76,16 +76,15 @@ main:
 
 		SetVector imf_data, read_blkptr
 
-		jsr krn_read    
-		lda errno
+		jsr krn_read
  		beq @l6
  		jmp error
 @l6:
 
 		jsr krn_getfilesize
-		
+
 		clc
-		adc #<imf_data 
+		adc #<imf_data
  		sta imf_end
 
 		txa
@@ -107,16 +106,16 @@ play:
 		ldx temponr
 		lda tempo+0,x
 
-		sta via1t1cl  
+		sta via1t1cl
 		lda tempo+1,x
 		sta via1t1ch            ; set high byte of count
 
 		lda #%11000000
 		sta via1ier             ; enable VIA1 T1 interrupt
 
-		lda #%01000000		; T1 continuous, PB7 disabled  
+		lda #%01000000		; T1 continuous, PB7 disabled
 		ora via1acr
-		sta via1acr 
+		sta via1acr
 
 		copypointer $fffe, old_isr
 		SetVector player_isr, $fffe
@@ -136,7 +135,7 @@ loop:
 		bra loop
 
 
-exit:   
+exit:
 	  	jsr init_opl2
 
 		jsr krn_primm
@@ -146,7 +145,7 @@ exit:
 		sei
 
 		lda #%01000000
-		sta via1ier	
+		sta via1ier
 
 
 		copypointer old_isr, $fffe
@@ -166,14 +165,14 @@ player_isr:
 		bit via1ifr		; Interrupt from VIA?
 		bpl @isr_end
 
-		bit via1t1cl	; Acknowledge timer interrupt by reading channel low	
+		bit via1t1cl	; Acknowledge timer interrupt by reading channel low
 
 
-		; delay counter zero? 
-		lda delayh    
+		; delay counter zero?
+		lda delayh
 		clc
 		adc delayl
-		beq @l1	
+		beq @l1
 
 		; if no, 16bit decrement and exit routine
 		dec16 delayh
@@ -190,7 +189,7 @@ player_isr:
 
 		jsr opl2_delay_register
 
-		sta opl_data		
+		sta opl_data
 
 		iny
 		lda (imf_ptr),y
@@ -231,11 +230,11 @@ error:
 	jsr krn_hexout
 	jsr krn_primm
 	.asciiz "load error"
-end:	
+end:
 	jmp (retvec)
 
 tempo:
- 	; tempo is one of 280Hz (DN2), 560Hz (imf), 700Hz (.wlf) 
+ 	; tempo is one of 280Hz (DN2), 560Hz (imf), 700Hz (.wlf)
 	.word (CPU_CLOCK/280)
 	.word (CPU_CLOCK/560)
 	.word (CPU_CLOCK/700)
@@ -247,4 +246,4 @@ old_isr:	.word $ffff
 imf_end:	.word $ffff
 ;delayl:		.word $0000
 ;delayh = delayl + 1
-imf_data = $1230	
+imf_data = $1230
