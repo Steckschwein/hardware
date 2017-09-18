@@ -322,19 +322,19 @@ __fat_find_free_cluster:
 		m_memset	fat_clnr_tmp, 0, 4
 		
 @next_block:
-		debug32 "f_lba", lba_addr
+;		debug32 "f_lba", lba_addr
 ;		debug32 "fr_cl_tmp", fat_clnr_tmp
 		jsr	sd_read_block		; read fat block
 		bne @exit
 		dec read_blkptr+1		; TODO FIXME clarification with TW - sd_read_block increments block ptr highbyte
 		
 		ldx	#0
-@l1:	lda	block_fat+0,x					
+@l1:	lda	block_fat+0,x		; 1st page find cluster entry with 00 00 00 00
 		ora block_fat+1,x
 		ora block_fat+2,x
 		ora block_fat+3,x
-		beq	@l_found_lb			; find cluster entry with 00 00 00 00
-		lda	block_fat+$100+0,x
+		beq	@l_found_lb			
+		lda	block_fat+$100+0,x	; 2nd page find cluster entry with 00 00 00 00
 		ora block_fat+$100+1,x
 		ora block_fat+$100+2,x
 		ora block_fat+$100+3,x
@@ -353,22 +353,38 @@ __fat_find_free_cluster:
 		bne	@next_block
 		lda #ENOSPC				; ENOSPC - No space left on device
 		bra @exit
-
 @l_found_hb:
-		debug32 "f_high", lba_addr
-@l_found_lb:				
-		debug32 "f_lba", lba_addr
-;		lda	#$80
-;		jsr @add_fat_clnr_tmp	; TODO maybe impr. performance here - lazy impl. we increment cluster number instead of calc them at the end
-								; to calc them we have to (lba_addr - fat_lba_begin) * 512 / 4 + (X / 2) => (lba_addr - fat_lba_begin) << 7 | (X>>2)
-								; adjust cluster number if found with block offset
-;		txa						; we have to add fat_clnr_tmp + (X>>2)
-;		lsr
-;		lsr						; X>>2
-;		jsr	@add_fat_clnr_tmp
+		lda #$40				; cluster nr found in 2nd page, adjust with $40 clusters
+		sta fat_clnr_tmp+0
+@l_found_lb:
+		txa
+		lsr
+		lsr
+		adc fat_clnr_tmp		; add the offset X>>2
+		sta fat_clnr_tmp
+;		debug32 "fr_cl", fat_clnr_tmp
+;		m_memcpy lba_addr, safe_lba TODO fat lba address, reuse them at next search
+		; to calc them we have to (lba_addr - fat_lba_begin) * 512 / 4 + (X / 2) => (lba_addr - fat_lba_begin) << 7 | (X>>2)
+		sec						; blocks = lba_addr - fat_begin_lba
+		lda lba_addr+0
+		sbc fat_lba_begin+0
+		sta blocks+0
+		lda lba_addr+1
+		sbc fat_lba_begin+1
+;		sta blocks+1
+;		stz blocks+2
+;		lda blocks+1
+		lsr						; clnr = blocks * 128
+		sta fat_clnr_tmp+2
+		lda blocks+0
+		ror
+		sta fat_clnr_tmp+1
 		lda #0
+		ror
+		adc fat_clnr_tmp+0
+		sta fat_clnr_tmp+0										
 @exit:
-		debug32 "fr_cl", fat_clnr_tmp
+		debug32 "free_cl", fat_clnr_tmp
 		rts
 		
 @add_fat_clnr_tmp:
