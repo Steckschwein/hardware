@@ -2,7 +2,8 @@ CPU=65c02
 OBJS=fat32.o sdcard.o textui.o t99xx.lib.o rtc.o spi.o uart.o via.o out.o key.o exec.o kernel.o debug.o
 ASM_INCLUDE=../asminc
 LDFLAGS=--config steckos.cfg
-DEBUG=
+#DEBUG=DEBUG
+
 
 .PHONY: all clean
 all: kernel.bin loader.bin

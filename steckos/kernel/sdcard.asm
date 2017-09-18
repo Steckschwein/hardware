@@ -238,7 +238,8 @@ sd_read_block:
 
 
 		jsr fullblock
-
+		lda	#0
+		
 @exit: ; fall through to sd_deselect_card
 
 

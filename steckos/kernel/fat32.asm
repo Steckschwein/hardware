@@ -263,14 +263,17 @@ fat_rmdir:
 fat_mkdir:
 		jsr __fat_opendir
 		beq	@err_dir_exists
-		cmp	#ENOENT			;no such file or directory
+		cmp	#ENOENT			;error must be no such file or directory, otherwise we wont create a new one
 		bne @l_exit
 
 		jsr __fat_find_free_cluster
 		bne @l_exit
 
 		; new dir entry
-		jsr __rtc_systime_update		
+		jsr __rtc_systime_update
+		;debug32 "rtc0", __rtc_systime_t
+		;debug32 "rtc1", __rtc_systime_t+4
+		
 		lda __rtc_systime_t+time_t::tm_hour
 		lda __rtc_systime_t+time_t::tm_min
 		lda __rtc_systime_t+time_t::tm_sec
@@ -309,23 +312,32 @@ fat_mkdir:
 		
 
 __fat_find_free_cluster:
-		;TODO improve, use a previously saved lba_addr and/or found cluster number
 		SetVector	block_fat, read_blkptr
-		copy32		fat_lba_begin, lba_addr
-
+		
+		;TODO improve, use a previously saved lba_addr and/or found cluster number
+		m_memcpy	fat_lba_begin, lba_addr, 2	; init lba_addr with fat_block
+		stz lba_addr+2;16 bit fat address
+		stz lba_addr+3
+		
+		m_memset	fat_clnr_tmp, 0, 4
+		
 @next_block:
-;		debug32 "f_lba" lba_addr
+		debug32 "f_lba", lba_addr
+;		debug32 "fr_cl_tmp", fat_clnr_tmp
 		jsr	sd_read_block		; read fat block
+		bne @exit
+		dec read_blkptr+1		; TODO FIXME clarification with TW - sd_read_block increments block ptr highbyte
+		
 		ldx	#0
 @l1:	lda	block_fat+0,x					
 		ora block_fat+1,x
 		ora block_fat+2,x
 		ora block_fat+3,x
 		beq	@l_found_lb			; find cluster entry with 00 00 00 00
-		lda	block_fat+100+0,x
-		ora block_fat+100+1,x
-		ora block_fat+100+2,x
-		ora block_fat+100+3,x
+		lda	block_fat+$100+0,x
+		ora block_fat+$100+1,x
+		ora block_fat+$100+2,x
+		ora block_fat+$100+3,x
 		beq	@l_found_hb
 		inx
 		inx 
@@ -340,23 +352,35 @@ __fat_find_free_cluster:
 		cmp	fat2_lba_begin+0
 		bne	@next_block
 		lda #ENOSPC				; ENOSPC - No space left on device
+		bra @exit
+
+@l_found_hb:
+		debug32 "f_high", lba_addr
+@l_found_lb:				
+		debug32 "f_lba", lba_addr
+;		lda	#$80
+;		jsr @add_fat_clnr_tmp	; TODO maybe impr. performance here - lazy impl. we increment cluster number instead of calc them at the end
+								; to calc them we have to (lba_addr - fat_lba_begin) * 512 / 4 + (X / 2) => (lba_addr - fat_lba_begin) << 7 | (X>>2)
+								; adjust cluster number if found with block offset
+;		txa						; we have to add fat_clnr_tmp + (X>>2)
+;		lsr
+;		lsr						; X>>2
+;		jsr	@add_fat_clnr_tmp
+		lda #0
+@exit:
+		debug32 "fr_cl", fat_clnr_tmp
 		rts
-								
-@l_found_hb:					; calculate the cluster number upon current lba_addr and block offset (X)
-		txa
-		clc
-		adc #$80				; adjust for 2nd page
-		tax
-@l_found_lb:
-		txa
-		lsr						; div 4
-		lsr
-		sta fat_clnr_temp+0		
 		
-		;lda	lba_addr+
-		sta fat_clnr_temp+1
-		sta fat_clnr_temp+2
-		sta fat_clnr_temp+3
+@add_fat_clnr_tmp:
+		clc
+		adc	fat_clnr_tmp+0		; add to clnr
+		bcc @add_ex
+		inc fat_clnr_tmp+1
+		bne @add_ex
+		inc fat_clnr_tmp+2
+		bne @add_ex
+		inc fat_clnr_tmp+3
+@add_ex:
 		rts
 		
         ;in:

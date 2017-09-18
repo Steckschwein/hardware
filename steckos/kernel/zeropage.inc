@@ -36,7 +36,7 @@ write_blkptr 	= $fb
 sd_tmp	     	= $fd
 
 lba_addr 		= $0280		; 4 bytes
-blocks			= $0288		; 3 bytes - blocks to read, 4GB -> 4294967296 >> 9 = 8388608 ($800000) max blocks/file 
+blocks			= $0288		; 3 bytes blocks to read, 3 bytes sufficient to address 4GB -> 4294967296 >> 9 = 8388608 ($800000) max blocks/file 
 
 krn_call_internal	= $028c		; jmp vector internally used
 

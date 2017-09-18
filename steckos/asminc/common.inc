@@ -5,6 +5,26 @@
 			sta addr+1
 .endmacro
 
+.macro m_memcpy src, dest, n
+		.local @l
+		ldx #n
+@l:
+		lda src,x
+		sta dest,x
+		dex
+		bpl @l
+.endmacro
+
+.macro m_memset dest, value, n
+		.local @l
+		ldx #n
+@l:
+		lda #value
+		sta dest,x
+		dex
+		bpl @l
+.endmacro
+
 .macro copypointer fromptr, toptr 
 	.repeat 2, i
 		lda fromptr+i
