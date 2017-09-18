@@ -268,7 +268,8 @@ fat_mkdir:
 
 		jsr __fat_find_free_cluster
 		bne @l_exit
-
+		jsr __fat_mark_free_cluster
+		
 		; new dir entry
 		jsr __rtc_systime_update
 		;debug32 "rtc0", __rtc_systime_t
@@ -285,6 +286,9 @@ fat_mkdir:
 		lda __rtc_systime_t+time_t::tm_mday
 		sta @dir_entry_template+F32DirEntry::CrtTime
 		sta @dir_entry_template+F32DirEntry::WrtTime
+		
+		lda #0
+		bra @l_exit
 		
 @err_unknown:
 		lda #EUNKNOWN		;unknown
@@ -310,65 +314,80 @@ fat_mkdir:
 		.word 0					;clnr low
 		.dword 0				;file size
 		
-
+		; in:
+		;	Y - offset in block
+		; 	read_blkptr - points to block_fat either 1st or 2nd page
+__fat_mark_free_cluster:
+		debugdump "block", block_fat+$190
+		lda #$ff
+		sta (read_blkptr), y
+		iny
+		sta (read_blkptr), y
+		iny
+		sta (read_blkptr), y
+		iny
+		lda #$0f
+		sta (read_blkptr), y
+		debugdump "block", block_fat+$190		
+		rts
+		
 __fat_find_free_cluster:
 		SetVector	block_fat, read_blkptr
 		
 		;TODO improve, use a previously saved lba_addr and/or found cluster number
 		m_memcpy	fat_lba_begin, lba_addr, 2	; init lba_addr with fat_block
-		stz lba_addr+2;16 bit fat address
+		stz lba_addr+2			; TODO FIXME we assume that 16 bit are sufficient for fat lba address
 		stz lba_addr+3
-		
-		m_memset	fat_clnr_tmp, 0, 4
-		
 @next_block:
 ;		debug32 "f_lba", lba_addr
-;		debug32 "fr_cl_tmp", fat_clnr_tmp
 		jsr	sd_read_block		; read fat block
 		bne @exit
 		dec read_blkptr+1		; TODO FIXME clarification with TW - sd_read_block increments block ptr highbyte
 		
-		ldx	#0
-@l1:	lda	block_fat+0,x		; 1st page find cluster entry with 00 00 00 00
-		ora block_fat+1,x
-		ora block_fat+2,x
-		ora block_fat+3,x
-		beq	@l_found_lb			
-		lda	block_fat+$100+0,x	; 2nd page find cluster entry with 00 00 00 00
-		ora block_fat+$100+1,x
-		ora block_fat+$100+2,x
-		ora block_fat+$100+3,x
+		ldy	#0
+@l1:	lda	block_fat+0,y		; 1st page find cluster entry with 00 00 00 00
+		ora block_fat+1,y
+		ora block_fat+2,y
+		ora block_fat+3,y
+		beq	@l_found_lb			; branch with A=0
+		lda	block_fat+$100+0,y	; 2nd page find cluster entry with 00 00 00 00
+		ora block_fat+$100+1,y
+		ora block_fat+$100+2,y
+		ora block_fat+$100+3,y
 		beq	@l_found_hb
-		inx
-		inx 
-		inx 
-		inx
+		iny
+		iny 
+		iny 
+		iny
 		bne @l1
 		jsr inc_lba_address		; inc lba_addr, next fat block
-		lda lba_addr+1
-		cmp	fat2_lba_begin+1
+		lda lba_addr+1			; end of fat reached?
+		cmp	fat2_lba_begin+1	; cmp with fat2_begin_lba
 		bne @next_block 
 		lda lba_addr+0
 		cmp	fat2_lba_begin+0
-		bne	@next_block
-		lda #ENOSPC				; ENOSPC - No space left on device
+		bne	@next_block			;
+		lda #ENOSPC				; end reached, answer ENOSPC - No space left on device
 		bra @exit
 @l_found_hb:
+		SetVector (block_fat+$100), read_blkptr	; set read_blkptr to 2nd page of fat_buffer
 		lda #$40				; cluster nr found in 2nd page, adjust with $40 clusters
+@l_found_lb:					; A=0 see above
 		sta fat_clnr_tmp+0
-@l_found_lb:
-		txa
+		tya
+		lsr						; offset Y>>2 (div 4, 32 bit clnr)
 		lsr
-		lsr
-		adc fat_clnr_tmp		; add the offset X>>2
-		sta fat_clnr_tmp
-;		debug32 "fr_cl", fat_clnr_tmp
-;		m_memcpy lba_addr, safe_lba TODO fat lba address, reuse them at next search
-		; to calc them we have to (lba_addr - fat_lba_begin) * 512 / 4 + (X / 2) => (lba_addr - fat_lba_begin) << 7 | (X>>2)
+		adc fat_clnr_tmp+0		; add to clnr base
+		sta fat_clnr_tmp+0		; safe to 
+
+		;m_memcpy lba_addr, safe_lba TODO FIXME fat lba address, reuse them at next search
+
+		; to calc them we have to (lba_addr - fat_lba_begin) * 512 / 4 + (Y / 2) => (lba_addr - fat_lba_begin) << 7 | (X>>2)
 		sec						; blocks = lba_addr - fat_begin_lba
 		lda lba_addr+0
 		sbc fat_lba_begin+0
-		sta blocks+0
+		;sta blocks+0
+		sta krn_tmp
 		lda lba_addr+1
 		sbc fat_lba_begin+1
 ;		sta blocks+1
@@ -376,27 +395,17 @@ __fat_find_free_cluster:
 ;		lda blocks+1
 		lsr						; clnr = blocks * 128
 		sta fat_clnr_tmp+2
-		lda blocks+0
+		;lda blocks+0
+		lda krn_tmp
 		ror
 		sta fat_clnr_tmp+1
 		lda #0
 		ror
 		adc fat_clnr_tmp+0
-		sta fat_clnr_tmp+0										
+		sta fat_clnr_tmp+0
+		lda #0					; exit found
 @exit:
 		debug32 "free_cl", fat_clnr_tmp
-		rts
-		
-@add_fat_clnr_tmp:
-		clc
-		adc	fat_clnr_tmp+0		; add to clnr
-		bcc @add_ex
-		inc fat_clnr_tmp+1
-		bne @add_ex
-		inc fat_clnr_tmp+2
-		bne @add_ex
-		inc fat_clnr_tmp+3
-@add_ex:
 		rts
 		
         ;in:

@@ -6,6 +6,8 @@
 .export	_debugout8
 .export	_debugout16
 .export	_debugout32
+.export _debugdump
+
 .import	krn_chrout, krn_hexout, krn_primm
 
 dbg_acc			= $0293
@@ -40,6 +42,10 @@ _debugout_enter:
 		jmp krn_chrout
 _debugout_restore:
 		
+_debugdump:
+		jsr 	_debugout_enter
+		lda 	#$20
+		bra		_debugout0		
 _debugout32:
 		jsr 	_debugout_enter
 		lda 	#3
@@ -66,11 +72,10 @@ _debugout0:
 						
 		ldy		#2
 		lda 	(dbg_ptr),y
-		tax
+		sta 	dbg_ptr2+1
 		dey
 		lda 	(dbg_ptr),y
 		sta		dbg_ptr2			; read debug address
-		stx 	dbg_ptr2+1
 
 		ldy 	dbg_bytes			; bytes hex out
 		bmi		@PSINB
@@ -82,6 +87,8 @@ _debugout0:
 		jsr 	krn_chrout
 @l1:	lda		(dbg_ptr2),y
 		jsr 	krn_hexout
+		lda 	#' '
+		jsr 	krn_chrout
 		dey
 		bpl		@l1
 		lda		#' '
@@ -91,7 +98,7 @@ _debugout0:
 		lda		#2
 		adc		dbg_ptr			; +2 cause of saved debug ptr
 		sta 	dbg_ptr
-		bne     @PSINB
+		bcc     @PSINB
 		inc     dbg_ptr+1		
 		
 @PSINB:							; Note: actually we're pointing one short
