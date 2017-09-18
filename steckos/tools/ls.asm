@@ -27,8 +27,8 @@ l1:
 @l2:
 		ldx #FD_INDEX_CURRENT_DIR
 		jsr krn_find_first
-		lda errno
-		beq @l2_1
+		bcs @l2_1
+
 		printstring "i/o error"
 		jmp (retvec)
 
