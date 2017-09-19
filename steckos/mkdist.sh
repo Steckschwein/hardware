@@ -6,7 +6,7 @@ TOOLS="clear.prg ls.prg ll.prg rename.prg date.prg nvram.prg setdate.prg keycode
 rm -r dist/*
 mkdir -p dist/BIN
 cp kernel/loader.bin dist/LOADER.BIN
-cp shell/shell.bin dist/SHELL.BIN
+cp shell/shell.prg dist/SHELL.PRG
 
 for n in $TOOLS ; do
 	un=`echo $n | awk '{print toupper($0)}'`
