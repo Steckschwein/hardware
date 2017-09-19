@@ -44,7 +44,7 @@ _debugout_restore:
 		
 _debugdump:
 		jsr 	_debugout_enter
-		lda 	#$20
+		lda 	#$1f
 		bra		_debugout0		
 _debugout32:
 		jsr 	_debugout_enter

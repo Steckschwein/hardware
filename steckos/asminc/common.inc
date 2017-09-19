@@ -7,7 +7,7 @@
 
 .macro m_memcpy src, dest, n
 		.local @l
-		ldx #n
+		ldx #n-1
 @l:
 		lda src,x
 		sta dest,x
@@ -15,12 +15,20 @@
 		bpl @l
 .endmacro
 
+.macro m_memcpy2ptr src, ptr, n
+		.local @l
+		ldy #n-1
+@l:		lda src,y
+		sta (ptr),y
+		dey
+		bpl @l
+.endmacro
+
 .macro m_memset dest, value, n
 		.local @l
-		ldx #n
-@l:
+		ldx #n-1
 		lda #value
-		sta dest,x
+@l:		sta dest,x
 		dex
 		bpl @l
 .endmacro

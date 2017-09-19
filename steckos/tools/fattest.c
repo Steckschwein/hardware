@@ -368,6 +368,8 @@ int mkdir(FILE *fd, struct F32_Volume *vol, unsigned long cd_clnr, unsigned long
 	
 	//create dir entries for . and .. in new directory
 	strncpy(entry.Name,".          ",11);
+	entry.FstClusHI = (clnr >> 16);
+	entry.FstClusLO = (clnr & 0xffff);
 	memcpy(&block_data[0* sizeof(F32DirEntry)], &entry, sizeof(F32DirEntry));
 	
 	strncpy(entry.Name,"..         ",11);
@@ -375,8 +377,8 @@ int mkdir(FILE *fd, struct F32_Volume *vol, unsigned long cd_clnr, unsigned long
 	entry.FstClusLO = (cd_clnr & 0xffff);
 	memcpy(&block_data[1* sizeof(F32DirEntry)], &entry, sizeof(F32DirEntry));	
 	
-	memset(&block_data[2* sizeof(F32DirEntry)], 0, BLOCK_SIZE-2*sizeof(F32DirEntry));	
 	dumpBuffer("new dir data", block_data);
+	memset(&block_data[2* sizeof(F32DirEntry)], 0, sizeof(F32DirEntry));
 	
 	unsigned long newdir_data_lba_addr = calcDataLbaAddress(vol, clnr);
 	writeBlock("new dir data", block_data, fd, newdir_data_lba_addr);

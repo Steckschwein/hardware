@@ -211,11 +211,11 @@ __fat_opendir:
 		lda	fd_area + F32_fd::Attr, x
 		bit #DIR_Attr_Mask_Dir		; check that there is no error and we have a directory
 		bne	@l_ok
-		lda	#EINVAL				; TODO FIXME error code for "Not a directory"
+		lda	#EINVAL					; TODO FIXME error code for "Not a directory"
 		bra @l_exit
 @l_ok:	lda #0                  ; ok
 @l_exit:
-		debug "od"
+		debug "f_od"
 		rts
 
 		;in:
@@ -233,7 +233,7 @@ fat_chdir:
 		plx
 		lda #0                  ; ok
 @l_exit:
-		debug "chdir"
+		debug "f_cd"
 		rts
 
         ;in:
@@ -254,7 +254,7 @@ fat_rmdir:
 		
 		lda #0                  ; ok
 @l_exit:
-		debug "rmdir"
+		debug "f_rmd"
 		rts
 
 		
@@ -263,40 +263,26 @@ fat_rmdir:
 fat_mkdir:
 		jsr __fat_opendir
 		beq	@err_dir_exists
-		cmp	#ENOENT			;error must be no such file or directory, otherwise we wont create a new one
+		cmp	#ENOENT			;error must be no such file or directory, otherwise a file with same name already exists
 		bne @l_exit
 
-		jsr __fat_find_free_cluster				; find free cluster
+		m_memcpy lba_addr, fat_lba_tmp, 4			; save lba_addr which points to the block the current dir entry resides (dirptr)
+		debug32 "ltmp", fat_lba_tmp
+		jsr __fat_find_free_cluster					; find free cluster
 		bne @l_exit
 		
-		jsr @__fat_mark_free_cluster			; mark cluster in block with EOC - TODO cluster chain support
-		jsr @__fat_write_block_fat				; write the updated fat block for both FATs to the device
+		jsr __fat_mark_free_cluster					; mark cluster in block with EOC - TODO cluster chain support
+		jsr __fat_write_fat_blocks					; write the updated fat block for 1st and 2nd FAT to the device
 		bne @l_exit
 		
-		; new dir entry
-		jsr __rtc_systime_update				; update systime struct
-		;debug32 "rtc0", __rtc_systime_t
-		;debug32 "rtc1", __rtc_systime_t+4
+		jsr __fat_prepare_dir_entry					; prepare dir entry
+		m_memcpy fat_lba_tmp, lba_addr, 4			; restore lba_addr of dirptr
+		debug32 "lba", lba_addr			
+		jsr __fat_write_dir_entry					; create dir entry at current dirptr
+		bne @l_exit
 		
-		lda __rtc_systime_t+time_t::tm_hour
-		lda __rtc_systime_t+time_t::tm_min
-		lda __rtc_systime_t+time_t::tm_sec
-		lda #<(14<<11 | 1<<5 | 33)
-		sta @dir_entry_template+F32DirEntry::CrtTime+0
-		sta @dir_entry_template+F32DirEntry::WrtTime+0
-		lda #>(14<<11 | 1<<5 | 33)
-		sta @dir_entry_template+F32DirEntry::CrtTime+1
-		sta @dir_entry_template+F32DirEntry::WrtTime+1
-
-		lda __rtc_systime_t+time_t::tm_year
-		lda __rtc_systime_t+time_t::tm_mon
-		lda __rtc_systime_t+time_t::tm_mday
-		lda #<((2017-1980) <<9 | 9 <<5 | 19)
-		sta @dir_entry_template+F32DirEntry::CrtDate+0
-		sta @dir_entry_template+F32DirEntry::WrtDate+0
-		lda #>((2017-1980) <<9 | 9 <<5 | 19)
-		sta @dir_entry_template+F32DirEntry::CrtDate+1
-		sta @dir_entry_template+F32DirEntry::WrtDate+1
+		;TODO FIXME file/dir
+		
 		
 		lda #0
 		bra @l_exit
@@ -307,30 +293,111 @@ fat_mkdir:
 @err_dir_exists:
 		lda	#EEXIST
 @l_exit:
-		debug "mkdir"
+		debug "f_mkd"
+		rts
+
+		; in 
+		;	dirptr - set to current dir entry within block_data
+__fat_write_dir_entry:
+		;TODO FIXME normalize file name
+		;debugdump "name", pathFragment
+		ldx #0
+@l0:	lda pathFragment, x
+		beq @l1
+		toupper
+		sta dir_entry_template+F32DirEntry::Name,x
+		inx
+		cpx #11
+		bne @l0
+@l1:	
+		debugdump "dir", dir_entry_template
+		m_memcpy2ptr dir_entry_template, dirptr, .sizeof(F32DirEntry)	; copy new entry to block buffer
+
+		;TODO FIXME duplicate code here! - @see fat_find_next:
+		lda dirptr														; create the end of directory entry
+		clc
+		adc #DIR_Entry_Size
+		sta dirptr
+		bcc @l2
+		inc dirptr+1
+@l2:
+		debug16 "dptr", dirptr
+		lda dirptr+1 													; end of block? :/ edge-case, we have to create the end-of-directory entry at the next block
+		cmp #>(block_data + sd_blocksize)
+		bne @l_eod														; no, write one block only
+		
+		SetVector block_data, write_blkptr								
+;		jsr sd_write_block												; write the current block with the updated dir entry first
+;		bne @err_exit
+		m_memset block_data, 0, .sizeof(F32DirEntry)					; fill the new dir block with 0 to mark eod
+		jsr inc_lba_address												; increment lba address to write the next block
+		debug32 "eod", lba_addr
+		debugdump "eod", block_data
+@l_eod:
+		SetVector block_data, write_blkptr
+;		jmp sd_write_block												; write the updated dir entry to device
+@err_exit:
+		debug "f_wde"
+		rts
+
+__fat_prepare_dir_entry:
+		; fill new dir entry
+		m_memset dir_entry_template, 0, .sizeof(F32DirEntry)
+		m_memset dir_entry_template, $20, .sizeof(F32DirEntry::Name) + .sizeof(F32DirEntry::Ext)
+		
+		lda #DIR_Attr_Mask_Dir ; TODO distinct dir/file
+		sta dir_entry_template+F32DirEntry::Attr
+		
+		jsr __rtc_systime_update				; update systime struct
+		;debug32 "rtc0", __rtc_systime_t
+		;debug32 "rtc1", __rtc_systime_t+4
+		lda __rtc_systime_t+time_t::tm_hour
+		lda __rtc_systime_t+time_t::tm_min
+		lda __rtc_systime_t+time_t::tm_sec
+		lda #<(14<<11 | 1<<5 | 33)
+		sta dir_entry_template+F32DirEntry::CrtTime+0
+		sta dir_entry_template+F32DirEntry::WrtTime+0
+		lda #>(14<<11 | 1<<5 | 33)
+		sta dir_entry_template+F32DirEntry::CrtTime+1
+		sta dir_entry_template+F32DirEntry::WrtTime+1
+
+		lda __rtc_systime_t+time_t::tm_year
+		lda __rtc_systime_t+time_t::tm_mon
+		lda __rtc_systime_t+time_t::tm_mday
+		lda #<((2017-1980) <<9 | 9 <<5 | 19) ;TODO FIXME
+		sta dir_entry_template+F32DirEntry::CrtDate+0
+		sta dir_entry_template+F32DirEntry::WrtDate+0
+		lda #>((2017-1980) <<9 | 9 <<5 | 19) ;TODO FIXME
+		sta dir_entry_template+F32DirEntry::CrtDate+1
+		sta dir_entry_template+F32DirEntry::WrtDate+1
+		
+;		stz dir_entry_template+F32DirEntry::CrtTimeMillis		;ms to 0
+		
+;		debug16 "cdt", dir_entry_template+F32DirEntry::CrtTime
+;		debug16 "cdd", dir_entry_template+F32DirEntry::CrtDate
+		
+		lda fat_clnr_tmp+3
+		sta dir_entry_template+F32DirEntry::FstClusHI+1
+		lda fat_clnr_tmp+2
+		sta dir_entry_template+F32DirEntry::FstClusHI+0
+		lda fat_clnr_tmp+1
+		sta dir_entry_template+F32DirEntry::FstClusLO+1
+		lda fat_clnr_tmp+0
+		sta dir_entry_template+F32DirEntry::FstClusLO+0
+
+;		m_memset dir_entry_template+F32DirEntry::FileSize, 0, 4
 		rts
 		
-@dir_entry_template:
+dir_entry_template:
 ; TODO FIXME struct init not implemented yet - @see http://www.cc65.org/doc/ca65-15.html#ss15.4
-;		.tag F32DirEntry
-		.byte "           "		;name
-		.byte 1<<4 				;attr, type dir
-		.res 2
-		.word 0					;create time
-		.word 0					;create date
-		.res 2	
-		.word 0					;clnr high
-		.word 0					;write time
-		.word 0					;write date
-		.word 0					;clnr low
-		.dword 0				;file size
+		.tag F32DirEntry
 		
-@__fat_write_block_fat:
+__fat_write_fat_blocks:
 		debug32 "f_lba", lba_addr			; lba_addr is already setup by __fat_find_free_cluster
 		SetVector	block_fat, write_blkptr
 		lda #0
 ;		jsr sd_write_block
-		bne @l_exit				
+		bne @err_exit
 		clc									; calc fat2 lba_addr = lba_addr + VolumeID::FATSz32
 		.repeat 4, i
 			lda lba_addr + i
@@ -339,12 +406,13 @@ fat_mkdir:
 		.endrepeat
 		debug32 "f2_lba", lba_addr
 ;		jsr sd_write_block
+@err_exit:
 		rts
 			
 		; in:
 		;	Y - offset in block
 		; 	read_blkptr - points to block_fat either 1st or 2nd page
-@__fat_mark_free_cluster:
+__fat_mark_free_cluster:
 ;		debugdump "block", block_fat+$190
 		lda #$ff
 		sta (read_blkptr), y
@@ -358,9 +426,15 @@ fat_mkdir:
 ;		debugdump "block", block_fat+$190		
 		rts
 		
+		; in:
+		;	-
+		; out:
+		;	Z=0 on success
+		;		lba_addr points to fat block with found clouster
+		;		fat_clnr_tmp - the found cluster
+		;	Z=1 on error, A=error code
 __fat_find_free_cluster:
 		SetVector	block_fat, read_blkptr
-		
 		;TODO improve, use a previously saved lba_addr and/or found cluster number
 		stz lba_addr+3
 		stz lba_addr+2			; TODO FIXME we assume that 16 bit are sufficient for fat lba address
@@ -402,7 +476,7 @@ __fat_find_free_cluster:
 @l_found_hb:
 		SetVector (block_fat+$100), read_blkptr	; set read_blkptr to 2nd page of fat_buffer
 		lda #$40				; cluster nr found in 2nd page, adjust with $40 clusters
-@l_found_lb:					; A=0 see above
+@l_found_lb:					; A=0 here, see above
 		sta fat_clnr_tmp+0
 		tya
 		lsr						; offset Y>>2 (div 4, 32 bit clnr)
@@ -425,7 +499,7 @@ __fat_find_free_cluster:
 		ror
 		sta fat_clnr_tmp+1
 		lda #0
-		ror
+		ror						; add clnr offset within block, already saved in fat_clnr_tmp+0 s.above
 		adc fat_clnr_tmp+0
 		sta fat_clnr_tmp+0
 		lda #0					; exit found
@@ -439,7 +513,7 @@ __fat_find_free_cluster:
         ;out:
         ;   X - index into fd_area of the opened file
         ;   A - errno, Z=0 no error, Z=1 error and A contains error number
-		;	Note: regardless of return value, dirptr points the last visited directory entry. furthermore lba_addr is set to the corresponding block
+		;	Note: regardless of return value, dirptr points the last visited directory entry. furthermore lba_addr is set to the corresponding block where the dir entry resides
 fat_open:
 		sta krn_ptr1
 		stx krn_ptr1+1			    ; save path arg given in a/x
