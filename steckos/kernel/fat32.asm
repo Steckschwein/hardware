@@ -268,7 +268,18 @@ fat_mkdir:
 
 		jsr __fat_find_free_cluster
 		bne @l_exit
+		
 		jsr __fat_mark_free_cluster
+		
+		debug32 "f_lba", lba_addr			; lba_addr is already setup by __fat_find_free_cluster
+		SetVector	block_fat, write_blkptr
+		lda #0
+;		jsr sd_write_block
+		bne @l_exit
+		clc
+		lda lba_addr+0
+		;adc 
+		
 		
 		; new dir entry
 		jsr __rtc_systime_update
@@ -335,9 +346,12 @@ __fat_find_free_cluster:
 		SetVector	block_fat, read_blkptr
 		
 		;TODO improve, use a previously saved lba_addr and/or found cluster number
-		m_memcpy	fat_lba_begin, lba_addr, 2	; init lba_addr with fat_block
-		stz lba_addr+2			; TODO FIXME we assume that 16 bit are sufficient for fat lba address
 		stz lba_addr+3
+		stz lba_addr+2			; TODO FIXME we assume that 16 bit are sufficient for fat lba address
+		lda fat_lba_begin+1		; init lba_addr with fat_begin lba addr
+		sta lba_addr+1
+		lda fat_lba_begin+0		; init lba_addr with fat_begin lba addr
+		sta lba_addr+0
 @next_block:
 ;		debug32 "f_lba", lba_addr
 		jsr	sd_read_block		; read fat block
@@ -382,20 +396,15 @@ __fat_find_free_cluster:
 
 		;m_memcpy lba_addr, safe_lba TODO FIXME fat lba address, reuse them at next search
 
-		; to calc them we have to (lba_addr - fat_lba_begin) * 512 / 4 + (Y / 2) => (lba_addr - fat_lba_begin) << 7 | (X>>2)
+		; to calc them we have to clnr = (lba_addr - fat_lba_begin) * 512 / 4 + (Y / 4) => (lba_addr - fat_lba_begin) << 7 + (Y>>2)
 		sec						; blocks = lba_addr - fat_begin_lba
 		lda lba_addr+0
 		sbc fat_lba_begin+0
-		;sta blocks+0
 		sta krn_tmp
 		lda lba_addr+1
 		sbc fat_lba_begin+1
-;		sta blocks+1
-;		stz blocks+2
-;		lda blocks+1
 		lsr						; clnr = blocks * 128
 		sta fat_clnr_tmp+2
-		;lda blocks+0
 		lda krn_tmp
 		ror
 		sta fat_clnr_tmp+1
@@ -635,7 +644,8 @@ calc_lba_addr:
 		.endrepeat
 
 		;sectors_per_cluster -> is a power of 2 value, therefore cluster << n, where n ist the number of bit set in sectors_per_cluster
-		lda sectors_per_cluster
+		lda volumeID+VolumeID::SecPerClus
+		;lda sectors_per_cluster
 @lm:	lsr
 		beq @lme    ; 1 sector/cluster therefore skip multiply
 		tax
@@ -807,22 +817,21 @@ fat_mount:
 		lda sd_blktarget + VolumeID::MirrorFlags
 		jsr krn_hexout
 .endif
-
-
+		m_memcpy	sd_blktarget, volumeID, .sizeof(VolumeID)
+		
 		; Bytes per Sector, must be 512 = $0200
-		lda sd_blktarget + VolumeID::BytsPerSec
+		lda	volumeID+VolumeID::BytsPerSec+0
 		bne @l5
-		lda sd_blktarget + VolumeID::BytsPerSec + 1
+		lda	volumeID+VolumeID::BytsPerSec+1
 		cmp #$02
 		beq @l6
 @l5:	lda #fat_invalid_sector_size
 		sta errno
 		jmp end_mount
 @l6:
-
 		; Sectors per Cluster. Valid: 1,2,4,8,16,32,64,128
-		lda sd_blktarget + VolumeID::SecPerClus
-		sta sectors_per_cluster
+;		lda volumeID+VolumeID::SecPerClus
+;		sta sectors_per_cluster
 
 		; cluster_begin_lba = Partition_LBA_Begin + Number_of_Reserved_Sectors + (Number_of_FATs * Sectors_Per_FAT) -  (2 * sec/cluster);
 		; fat_lba_begin		= Partition_LBA_Begin + Number_of_Reserved_Sectors
@@ -864,9 +873,9 @@ fat_mount:
 		dey
 		bne @l7
 	
-		; calc fat end or begin or fat2
+		; calc begin of 2nd fat (end of 1st fat)
 		clc
-		lda sd_blktarget + VolumeID::FATSz32+0 ; sectors per fat
+		lda sd_blktarget + VolumeID::FATSz32+0 ; sectors/blocks per fat
 		adc fat_lba_begin	+0
 		sta fat2_lba_begin	+0
 		lda sd_blktarget + VolumeID::FATSz32+1
@@ -875,7 +884,7 @@ fat_mount:
 		; TODO FIXME - we assume 16bit are sufficient for now since fat is placed at the beginning of the device
 
 		; cluster_begin_lba_m2 -> cluster_begin_lba - (BPB_RootClus*sec/cluster)
-		debug8 "sec/cl", sectors_per_cluster
+		debug8 "sec/cl", volumeID+VolumeID::SecPerClus
 		debug32 "cl_lba", cluster_begin_lba
 		debug32 "lba", lba_addr
 		debug16 "r_sec", sd_blktarget + VolumeID::RsvdSecCnt
@@ -885,7 +894,8 @@ fat_mount:
 
 		;TODO FIXME we assume 2 here insteasd of using the value in BPB_RootClus
 		; cluster_begin_lba_m2 -> cluster_begin_lba - (2*sec/cluster) -> sec/cluster << 1
-		lda sectors_per_cluster ; max sec/cluster can be 128, with 2 (BPB_RootClus) * 128 wie may subtract max 256
+		lda volumeID+VolumeID::SecPerClus ; max sec/cluster can be 128, with 2 (BPB_RootClus) * 128 wie may subtract max 256
+		;lda sectors_per_cluster
 		asl
 		sta lba_addr        ;   used as tmp
 		stz lba_addr +1     ;   safe carry

@@ -1,8 +1,9 @@
+volumeID				= $02b0 ; address of VolumeID struct $30 bytes - sizeof(VolumeID)
 cluster_begin_lba 		= $0300 ; begin of cluster area, 4 bytes
 fat_lba_begin			= $0304	; begin of fat area, 2 bytes  - TODO FIXME we assume 16bit are sufficient since fat is placed at the beginning of the device
 fat2_lba_begin			= $0306	; end of first fat and begin of 2nd fat (mirror) area, 2 bytes - TODO FIXME we assume 16bit ...
 fat_clnr_tmp			= $0308 ; 4 bytes
-sectors_per_cluster 	= $030f ; sectors per cluster, 1 byte
+;sectors_per_cluster 	= $030f ; sectors per cluster, 1 byte
 
 root_dir_first_clus 	= $0310 ; first cluster of root dir, 4 bytes
 filename_buf			= $0314 ; file name buffer, 11 bytes
@@ -156,4 +157,3 @@ FD_Entries_Max = ($3ff - fd_area) / FD_Entry_Size
 
 FD_INDEX_CURRENT_DIR = 0                            ; current dir always go to fd #0
 FD_INDEX_TEMP_DIR    = FD_Entry_Size    ; temp dir always go to fd #1
-

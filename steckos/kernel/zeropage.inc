@@ -42,7 +42,6 @@ krn_call_internal	= $028c		; jmp vector internally used
 
 trampolin		= $0290
 
-
 errno		= $0292
 ;TODO FIXME rename
 ;__oserror 	= errno
