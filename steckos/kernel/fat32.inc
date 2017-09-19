@@ -3,7 +3,6 @@ cluster_begin_lba 		= $0300 ; begin of cluster area, 4 bytes
 fat_lba_begin			= $0304	; begin of fat area, 2 bytes  - TODO FIXME we assume 16bit are sufficient since fat is placed at the beginning of the device
 fat2_lba_begin			= $0306	; end of first fat and begin of 2nd fat (mirror) area, 2 bytes - TODO FIXME we assume 16bit ...
 fat_clnr_tmp			= $0308 ; 4 bytes
-;sectors_per_cluster 	= $030f ; sectors per cluster, 1 byte
 
 root_dir_first_clus 	= $0310 ; first cluster of root dir, 4 bytes
 filename_buf			= $0314 ; file name buffer, 11 bytes
@@ -82,8 +81,8 @@ PartType_FAT32_LBA	= $0c
 .struct VolumeID
 	Reserved	.byte 11
 	BytsPerSec	.word ; 12	; 512 usually
-	SecPerClus	.byte ; 13	; power of 2
-	RsvdSecCnt	.word ; 14	; Number of reserved sectors. Should be 32 for FAT32
+	SecPerClus	.byte ; 13	; Sectors per Cluster as power of 2. valid are: 1,2,4,8,16,32,64,128
+	RsvdSecCnt	.word ; 14	; number of reserved sectors
 	NumFATs		.byte ; 16
 	Reserved2	.byte 4 ; 17
 	Media		.byte	; 21 ; For removable media, 0xF0 is frequently used. 
@@ -111,19 +110,20 @@ FAT_EOC			= $0fffffff	; end of cluster chain marker
 ;--------------------------------------------------------------------------------------
 ; FAT32 Directory Entry
 ;--------------------------------------------------------------------------------------
-.struct F32DirEntry
-	Name		.byte 8
-	Ext			.byte 3
-	Attr		.byte 
-	Reserved	.byte 2
-	CrtTime		.word
-	CrtDate		.word
-	Reserved2	.byte 2
-	FstClusHI	.word
-	WrtTime		.word
-	WrtDate		.word
-	FstClusLO	.word
-	FileSize	.byte 4
+.struct F32DirEntry		; https://en.wikipedia.org/wiki/Design_of_the_FAT_file_system
+	Name			.byte 8
+	Ext				.byte 3
+	Attr			.byte 
+	Reserved		.byte
+	CrtTimeMillis	.byte 
+	CrtTime			.word	; hours as 0-23 bit 15-11, minutes as 0-59 bit 10-5, seconds/2 as 0-29 bit 4-0
+	CrtDate			.word	; year 0-119 (0=1980...127=2107) bit 15-9, month 1-12 bit 8-5, day 1-31 bit 4-0
+	Reserved2		.byte 2
+	FstClusHI		.word
+	WrtTime			.word	; hours as 0-23 bit 15-11, minutes as 0-59 bit 10-5, seconds/2 as 0-29 bit 4-0
+	WrtDate			.word	; year 0-119 (0=1980...127=2107) bit 15-9, month 1-12 bit 8-5, day 1-31 bit 4-0
+	FstClusLO		.word
+	FileSize		.byte 4
 .endstruct
 
 DIR_Attr_Mask_Dir   		= 1<<4;
