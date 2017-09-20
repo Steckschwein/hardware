@@ -239,7 +239,7 @@ sd_read_block:
 
 		jsr fullblock
 		lda	#0
-		
+
 @exit: ; fall through to sd_deselect_card
 
 
@@ -369,6 +369,7 @@ sd_write_block:
 		inc write_blkptr+1
 @exit:
         restore
+		lda #$00
         jmp sd_deselect_card
 
 ;---------------------------------------------------------------------
