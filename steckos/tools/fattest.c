@@ -330,6 +330,12 @@ int mkdir(FILE *fd, struct F32_Volume *vol, unsigned long cd_clnr, unsigned long
 	if(clnr == -1)
 		return 1;
 	
+	unsigned long fat_lba_addr = calcFatLbaAddress(vol, clnr);//lba address of cluster within fat
+	dumpBuffer("mkdir fat block", block_fat);
+	unsigned long eoc = EOC;
+	memcpy(&block_fat[boffs_fat], &eoc, 4);
+	dumpBuffer("mkdir fat block", block_fat);
+
 	//create dir entry
 	F32DirEntry entry;
 	time_t now = time(NULL);// get current time
@@ -343,17 +349,7 @@ int mkdir(FILE *fd, struct F32_Volume *vol, unsigned long cd_clnr, unsigned long
 	entry.FileSize = 0;
 	memcpy(&block_data[boffs_data], &entry, sizeof(F32DirEntry));
 	dumpBuffer("updated block with dir entry", block_data);
-	
-	unsigned long fat_lba_addr = calcFatLbaAddress(vol, clnr);//lba address of cluster within fat
-	printf("read fat block at fat lba: $%x\n", fat_lba_addr);
-	int n = readBlock("mkdir read fat block", block_fat, fd, fat_lba_addr);
-	if(n != BLOCK_SIZE){
-		return -1;
-	}
-	dumpBuffer("mkdir fat block", block_fat);
-	unsigned long eoc = EOC;
-	memcpy(&block_fat[boffs_fat], &eoc, 4);
-	dumpBuffer("mkdir fat block", block_fat);
+		
 /*	
 	fat_lba_addr = calcFatLbaAddress(vol, 0x10118);//lba address of cluster within fat
 	printf("test fat block at fat lba: $%x\n", fat_lba_addr);
@@ -373,6 +369,10 @@ int mkdir(FILE *fd, struct F32_Volume *vol, unsigned long cd_clnr, unsigned long
 	memcpy(&block_data[0* sizeof(F32DirEntry)], &entry, sizeof(F32DirEntry));
 	
 	strncpy(entry.Name,"..         ",11);
+	if(cd_clnr == vol->RootClus){// if root cl nr, set to cl nr 0
+		cd_clnr = 0;
+		printf("parent dir (..) set to root clnr\n");
+	}
 	entry.FstClusHI = (cd_clnr >> 16);
 	entry.FstClusLO = (cd_clnr & 0xffff);
 	memcpy(&block_data[1* sizeof(F32DirEntry)], &entry, sizeof(F32DirEntry));	
@@ -479,8 +479,9 @@ int main(int argc, char* argv[]){
 	
 	
 	// ###################### poc dump list directory
-	unsigned long dirCln = vol.RootClus;//0xb1ea;//0xb1e9;//vol.RootClus;//0x7005; // 
-	printf("Reading Root-Dir (cln: $%x)...\n", dirCln);
+	unsigned long dirCln = vol.RootClus;
+	//unsigned long dirCln = 0x3940;//0xb1e9;//vol.RootClus;//0x7005; // 
+	printf("Reading Dir (cln: $%x)...\n", dirCln);
 	show_dir(fd, &vol, dirCln);
 	
 	// ###################### find_first/find_next
