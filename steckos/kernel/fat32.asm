@@ -270,6 +270,11 @@ fat_mkdir:
 		debug32 "ltmp", fat_lba_tmp
 		jsr __fat_find_free_cluster					; find free cluster
 		bne @l_exit
+
+		jsr fat_alloc_fd							; alloc new fd - TODO use them for fopen and "rw+" mode
+		bne @l_exit
+		stx krn_tmp									; save fd
+		debug "nd fd"
 		
 		jsr __fat_mark_free_cluster					; mark cluster in block with EOC - TODO cluster chain support
 		jsr __fat_write_fat_blocks					; write the updated fat block for 1st and 2nd FAT to the device
@@ -277,16 +282,16 @@ fat_mkdir:
 		
 		jsr __fat_prepare_dir_entry					; prepare dir entry
 		m_memcpy fat_lba_tmp, lba_addr, 4			; restore lba_addr of dirptr
-		debug32 "lba", lba_addr			
+		debug32 "lba_dir", lba_addr			
 		jsr __fat_write_dir_entry					; create dir entry at current dirptr
 		bne @l_exit
 		
-		;TODO FIXME file/dir
-		
-		
-		lda #0
+		ldx krn_tmp
+		debug "nd fd"
+		jsr __fat_write_newdir_entry
 		bra @l_exit
-		
+;		lda #0
+;		bra @l_exit
 @err_unknown:
 		lda #EUNKNOWN		;unknown
 		bra @l_exit
@@ -296,6 +301,51 @@ fat_mkdir:
 		debug "f_mkd"
 		rts
 
+		; create the "." and ".." entry of the new directory
+		; in 
+		;	X - index to fd
+__fat_write_newdir_entry:
+		;TODO FIXME distinct file/dir
+		;TODO FIXME we reuse the temp dir fd entry for lba calculation
+		lda fat_clnr_tmp+3
+		sta fd_area+F32_fd::StartCluster+3, x
+		lda fat_clnr_tmp+2
+		sta fd_area+F32_fd::StartCluster+2, x
+		lda fat_clnr_tmp+1
+		sta fd_area+F32_fd::StartCluster+1, x
+		lda fat_clnr_tmp+0
+		sta fd_area+F32_fd::StartCluster+0, x
+		jsr calc_lba_addr
+		debug32 "lba_data", lba_addr
+
+		m_memset dir_entry_template, $20, .sizeof(F32DirEntry::Name) + .sizeof(F32DirEntry::Ext)		; erase name
+		m_memcpy dir_entry_template, block_data, .sizeof(F32DirEntry)									; copy dir entry to block buffer
+		m_memcpy dir_entry_template, block_data+1*.sizeof(F32DirEntry), .sizeof(F32DirEntry)			; copy dir entry to block buffer
+		lda #'.'
+		sta block_data+F32DirEntry::Name																; 1st entry "."
+		sta block_data+1*.sizeof(F32DirEntry)+F32DirEntry::Name+0										; 2nd entry ".."
+		sta block_data+1*.sizeof(F32DirEntry)+F32DirEntry::Name+1
+		
+		ldx #FD_INDEX_TEMP_DIR																			; due to fat_opendir/fat_open the temp dir fd contains the directory entry for "..", we use them FTW!
+		lda fd_area+F32_fd::StartCluster+3,x
+		sta block_data+1*.sizeof(F32DirEntry)+F32DirEntry::FstClusHI+1
+		lda fd_area+F32_fd::StartCluster+2,x
+		sta block_data+1*.sizeof(F32DirEntry)+F32DirEntry::FstClusHI+0
+		lda fd_area+F32_fd::StartCluster+1,x
+		sta block_data+1*.sizeof(F32DirEntry)+F32DirEntry::FstClusLO+1
+		lda fd_area+F32_fd::StartCluster+0,x
+		sta block_data+1*.sizeof(F32DirEntry)+F32DirEntry::FstClusLO+0
+		
+		m_memset block_data+2*.sizeof(F32DirEntry), 0, .sizeof(F32DirEntry)								; 3rd entry "end of dir"
+		debugdump "ndir0", block_data
+		debugdump "ndir1", block_data+$20
+		debugdump "ndir2", block_data+$40
+		
+		SetVector block_data, write_blkptr
+		lda #0; FIXME err handling
+		jsr sd_write_block
+		rts
+		
 		; in 
 		;	dirptr - set to current dir entry within block_data
 __fat_write_dir_entry:
@@ -327,15 +377,17 @@ __fat_write_dir_entry:
 		bne @l_eod														; no, write one block only
 		
 		SetVector block_data, write_blkptr								
-;		jsr sd_write_block												; write the current block with the updated dir entry first
-;		bne @err_exit
+		lda #0; FIXME err handling
+		jsr sd_write_block												; write the current block with the updated dir entry first
+		bne @err_exit
 		m_memset block_data, 0, .sizeof(F32DirEntry)					; fill the new dir block with 0 to mark eod
 		jsr inc_lba_address												; increment lba address to write the next block
 		debug32 "eod", lba_addr
 		debugdump "eod", block_data
 @l_eod:
 		SetVector block_data, write_blkptr
-;		jmp sd_write_block												; write the updated dir entry to device
+		lda #0; FIXME err handling
+		jsr sd_write_block												; write the updated dir entry to device
 @err_exit:
 		debug "f_wde"
 		rts
@@ -345,7 +397,7 @@ __fat_prepare_dir_entry:
 		m_memset dir_entry_template, 0, .sizeof(F32DirEntry)
 		m_memset dir_entry_template, $20, .sizeof(F32DirEntry::Name) + .sizeof(F32DirEntry::Ext)
 		
-		lda #DIR_Attr_Mask_Dir ; TODO distinct dir/file
+		lda #DIR_Attr_Mask_Dir ; TODO distinct dir/file via param
 		sta dir_entry_template+F32DirEntry::Attr
 		
 		jsr __rtc_systime_update				; update systime struct
@@ -395,8 +447,8 @@ dir_entry_template:
 __fat_write_fat_blocks:
 		debug32 "f_lba", lba_addr			; lba_addr is already setup by __fat_find_free_cluster
 		SetVector	block_fat, write_blkptr
-		lda #0
-;		jsr sd_write_block
+		lda #0; FIXME err handling
+		jsr sd_write_block
 		bne @err_exit
 		clc									; calc fat2 lba_addr = lba_addr + VolumeID::FATSz32
 		.repeat 4, i
@@ -405,7 +457,8 @@ __fat_write_fat_blocks:
 			sta lba_addr + i
 		.endrepeat
 		debug32 "f2_lba", lba_addr
-;		jsr sd_write_block
+		lda #0; FIXME err handling
+		jsr sd_write_block
 @err_exit:
 		rts
 			
@@ -1058,7 +1111,7 @@ fat_init_fdarea_with_x:
 		;
 		; out:
 		;       X - with index to fd_area
-		;		A - errno if one, 0 otherwise
+		;		Z=0 on success, Z=1 and A=errno
 fat_alloc_fd:
 		ldx #(2*FD_Entry_Size)	; skip 2 entries, they're reserverd for current and temp dir
 @l1:	lda fd_area + F32_fd::StartCluster +3, x
