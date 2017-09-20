@@ -263,7 +263,7 @@ fat_rmdir:
 fat_mkdir:
 		jsr __fat_opendir
 		beq	@err_dir_exists
-		cmp	#ENOENT			;error must be no such file or directory, otherwise a file with same name already exists
+		cmp	#ENOENT									; we expect 'no such file or directory' error, otherwise a file with same name already exists
 		bne @l_exit
 
 		m_memcpy lba_addr, fat_lba_tmp, 4			; save lba_addr which points to the block the current dir entry resides (dirptr)
@@ -271,9 +271,9 @@ fat_mkdir:
 		jsr __fat_find_free_cluster					; find free cluster
 		bne @l_exit
 
-		jsr fat_alloc_fd							; alloc new fd - TODO use them for fopen and "rw+" mode
-		bne @l_exit
-		stx krn_tmp									; save fd
+		jsr fat_alloc_fd							; alloc new fd - TODO use them for fopen and "rw+" mode - we alloc here already, cause fat_alloc_fd may fail				
+		bne @l_exit									; and we want to avoid an error in between the different block writes
+		stx fat_fd_tmp								; save fd
 		debug "nd fd"
 		
 		jsr __fat_mark_free_cluster					; mark cluster in block with EOC - TODO cluster chain support
@@ -286,19 +286,14 @@ fat_mkdir:
 		jsr __fat_write_dir_entry					; create dir entry at current dirptr
 		bne @l_exit
 		
-		ldx krn_tmp
+		ldx fat_fd_tmp
 		debug "nd fd"
 		jsr __fat_write_newdir_entry
-		bra @l_exit
-;		lda #0
-;		bra @l_exit
-@err_unknown:
-		lda #EUNKNOWN		;unknown
 		bra @l_exit
 @err_dir_exists:
 		lda	#EEXIST
 @l_exit:
-		debug "f_mkd"
+		debug "mkdir"
 		rts
 
 		; create the "." and ".." entry of the new directory
@@ -306,7 +301,7 @@ fat_mkdir:
 		;	X - index to fd
 __fat_write_newdir_entry:
 		;TODO FIXME distinct file/dir
-		;TODO FIXME we reuse the temp dir fd entry for lba calculation
+		;TODO FIXME we reuse a fd entry to so we can simply call calc_lba_addr
 		lda fat_clnr_tmp+3
 		sta fd_area+F32_fd::StartCluster+3, x
 		lda fat_clnr_tmp+2
@@ -317,7 +312,8 @@ __fat_write_newdir_entry:
 		sta fd_area+F32_fd::StartCluster+0, x
 		jsr calc_lba_addr
 		debug32 "lba_data", lba_addr
-
+		jsr fat_close 																					; free the tmp file
+		
 		m_memset dir_entry_template, $20, .sizeof(F32DirEntry::Name) + .sizeof(F32DirEntry::Ext)		; erase name
 		m_memcpy dir_entry_template, block_data, .sizeof(F32DirEntry)									; copy dir entry to block buffer
 		m_memcpy dir_entry_template, block_data+1*.sizeof(F32DirEntry), .sizeof(F32DirEntry)			; copy dir entry to block buffer
@@ -326,25 +322,42 @@ __fat_write_newdir_entry:
 		sta block_data+1*.sizeof(F32DirEntry)+F32DirEntry::Name+0										; 2nd entry ".."
 		sta block_data+1*.sizeof(F32DirEntry)+F32DirEntry::Name+1
 		
-		ldx #FD_INDEX_TEMP_DIR																			; due to fat_opendir/fat_open the temp dir fd contains the directory entry for "..", we use them FTW!
-		lda fd_area+F32_fd::StartCluster+3,x
-		sta block_data+1*.sizeof(F32DirEntry)+F32DirEntry::FstClusHI+1
-		lda fd_area+F32_fd::StartCluster+2,x
-		sta block_data+1*.sizeof(F32DirEntry)+F32DirEntry::FstClusHI+0
+		ldx #FD_INDEX_TEMP_DIR																			; due to fat_opendir/fat_open the temp dir fd contains the directory entry for ".." - FTW!
+		debug32 "cd_cln", fd_area + 1*FD_Entry_Size + F32_fd::StartCluster
+		lda fd_area+F32_fd::StartCluster + 3, x														; if the current dir (parent) is the root dir, set clnr=0
+		ora fd_area+F32_fd::StartCluster + 2, x
+		ora fd_area+F32_fd::StartCluster + 1, x
+		bne	@l1
+		lda fd_area+F32_fd::StartCluster+0,x
+		cmp volumeID+VolumeID::RootClus+0
+		bne @l1
+		debug "root_cl"
+		lda #0
+@l1:	sta block_data+1*.sizeof(F32DirEntry)+F32DirEntry::FstClusLO+0
 		lda fd_area+F32_fd::StartCluster+1,x
 		sta block_data+1*.sizeof(F32DirEntry)+F32DirEntry::FstClusLO+1
-		lda fd_area+F32_fd::StartCluster+0,x
-		sta block_data+1*.sizeof(F32DirEntry)+F32DirEntry::FstClusLO+0
+		lda fd_area+F32_fd::StartCluster+2,x
+		sta block_data+1*.sizeof(F32DirEntry)+F32DirEntry::FstClusHI+0
+		lda fd_area+F32_fd::StartCluster+3,x
+		sta block_data+1*.sizeof(F32DirEntry)+F32DirEntry::FstClusHI+1
 		
 		m_memset block_data+2*.sizeof(F32DirEntry), 0, .sizeof(F32DirEntry)								; 3rd entry "end of dir"
+		
 		debugdump "ndir0", block_data
 		debugdump "ndir1", block_data+$20
 		debugdump "ndir2", block_data+$40
 		
 		SetVector block_data, write_blkptr
-		lda #0; FIXME err handling
-		jsr sd_write_block
+		jsr __fat_write_block_tweak
 		rts
+		
+__fat_write_block_tweak:
+		lda #0; FIXME err handling sd_write_block
+.ifndef FAT_TEST		
+		jmp sd_write_block
+.endif
+		rts
+		
 		
 		; in 
 		;	dirptr - set to current dir entry within block_data
@@ -377,8 +390,7 @@ __fat_write_dir_entry:
 		bne @l_eod														; no, write one block only
 		
 		SetVector block_data, write_blkptr								
-		lda #0; FIXME err handling
-		jsr sd_write_block												; write the current block with the updated dir entry first
+		jsr __fat_write_block_tweak										; write the current block with the updated dir entry first
 		bne @err_exit
 		m_memset block_data, 0, .sizeof(F32DirEntry)					; fill the new dir block with 0 to mark eod
 		jsr inc_lba_address												; increment lba address to write the next block
@@ -386,8 +398,7 @@ __fat_write_dir_entry:
 		debugdump "eod", block_data
 @l_eod:
 		SetVector block_data, write_blkptr
-		lda #0; FIXME err handling
-		jsr sd_write_block												; write the updated dir entry to device
+		jsr __fat_write_block_tweak										; write the updated dir entry to device
 @err_exit:
 		debug "f_wde"
 		rts
@@ -447,8 +458,7 @@ dir_entry_template:
 __fat_write_fat_blocks:
 		debug32 "f_lba", lba_addr			; lba_addr is already setup by __fat_find_free_cluster
 		SetVector	block_fat, write_blkptr
-		lda #0; FIXME err handling
-		jsr sd_write_block
+		jsr __fat_write_block_tweak
 		bne @err_exit
 		clc									; calc fat2 lba_addr = lba_addr + VolumeID::FATSz32
 		.repeat 4, i
@@ -457,8 +467,7 @@ __fat_write_fat_blocks:
 			sta lba_addr + i
 		.endrepeat
 		debug32 "f2_lba", lba_addr
-		lda #0; FIXME err handling
-		jsr sd_write_block
+		jsr __fat_write_block_tweak
 @err_exit:
 		rts
 			
@@ -506,7 +515,7 @@ __fat_find_free_cluster:
 		ora block_fat+1,y
 		ora block_fat+2,y
 		ora block_fat+3,y
-		beq	@l_found_lb			; branch with A=0
+		beq	@l_found_lb			; branch, A=0 here
 		lda	block_fat+$100+0,y	; 2nd page find cluster entry with 00 00 00 00
 		ora block_fat+$100+1,y
 		ora block_fat+$100+2,y

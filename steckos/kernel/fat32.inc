@@ -8,7 +8,9 @@ fat_lba_tmp				= $030c	; 4 bytes
 
 root_dir_first_clus 	= $0310 ; first cluster of root dir, 4 bytes
 filename_buf			= $0314 ; file name buffer, 11 bytes
-					;	= $031f ; UNUSED
+
+fat_fd_tmp				= $031f ; internallly used fd
+					
 fd_area					= $0320 ; File descriptor area until $0400
 
 sd_blktarget			= $0400
@@ -147,10 +149,7 @@ DIR_Entry_Deleted			= $e5
 	DirEntryPos		.byte	; block offset within the block (DirEntryPos * DIR_Entry_Size)
 	Reserved		.byte 10;fill up to $20
 .endstruct
-FD_Size = .sizeof(F32_fd)
-
-
-FD_Entry_Size = .sizeof(F32_fd)  
+FD_Entry_Size = .sizeof(F32_fd)
 FD_Entries_Max = ($3ff - fd_area) / FD_Entry_Size
 
 ;FD_start_cluster = $00  ; 32 Bit cluster nr
