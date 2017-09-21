@@ -359,7 +359,8 @@ __fat_write_newdir_entry:
 		
 		m_memset block_data, 0, 2*.sizeof(F32DirEntry)													;erase the "." and ".." entries
 		
-		ldx volumeID+VolumeID::SecPerClus																; fill up the VolumeID::SecPerClus - 1 reamining blocks of the cluster with empty dir entries
+		ldx volumeID+VolumeID::SecPerClus																; fill up (VolumeID::SecPerClus - 1) reamining blocks of the cluster with empty dir entries
+		dex
 @l_erase2:
 		jsr inc_lba_address																				; next block
 		debug32 "e_dir_cl", lba_addr
