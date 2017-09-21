@@ -83,7 +83,7 @@ PartType_FAT32_LBA	= $0c
 ; FAT32 Volume ID
 ;--------------------------------------------------------------------------------------
 .struct VolumeID
-	Reserved	.byte 11
+	Reserved	.byte 11	; TODO FIXME unused, we can skip on mount and free 11 bytes
 	BytsPerSec	.word ; 12	; 512 usually
 	SecPerClus	.byte ; 13	; Sectors per Cluster as power of 2. valid are: 1,2,4,8,16,32,64,128
 	RsvdSecCnt	.word ; 14	; number of reserved sectors
@@ -99,8 +99,14 @@ PartType_FAT32_LBA	= $0c
 				; https://www.win.tue.nl/~aeb/linux/fs/fat/fat-1.html
 	Reserved3	.byte 12
 	FATSz32		.dword		; sectors per FAT
-	Reserved4	.byte 4
+	ExtFlags	.dword
+	Version		.dword
 	RootClus	.dword
+	FSInfoSec	.word
+.endstruct
+
+.struct FSInfoEntry
+	
 .endstruct
 
 ; TODO: do we need these?

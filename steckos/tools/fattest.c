@@ -66,8 +66,8 @@ struct F32_Volume{
 };
 
 struct F32_FSInfo{
-	unsigned sig1;
-	unsigned sig2;
+	unsigned long FreeClus;
+	unsigned long LastClus;
 };
 
 typedef struct {
@@ -250,8 +250,8 @@ void buildVolumeData(unsigned char *buf, unsigned long lba_begin, struct F32_Vol
 }
 
 void buildFSInfo(unsigned char *buf, struct F32_FSInfo *p_fsInfo){
-	//p_fsInfo
-	
+	p_fsInfo->FreeClus = _32(buf,0x1e8);
+	p_fsInfo->LastClus = _32(buf,0x1ec);
 }
 
 void inc32(unsigned long *lba_addr){
@@ -483,7 +483,10 @@ int main(int argc, char* argv[]){
 			printf("%d\n",n);
 			return 1;
 		}
-//		dumpBuffer(block_data);
+		dumpBuffer("fs info", block_data);
+		buildFSInfo(block_data, &fsInfo);
+		printf("LastClus: $%x (%ld)\n", fsInfo.LastClus, fsInfo.LastClus);
+		printf("FreeClus: $%x (%ld)\n", fsInfo.FreeClus, fsInfo.FreeClus);
 	}
 	
 	
