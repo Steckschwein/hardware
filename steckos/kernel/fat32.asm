@@ -489,6 +489,7 @@ __fat_write_fat_blocks:
 			sta lba_addr + i
 		.endrepeat
 		debug32 "f2_lba", lba_addr
+		SetVector	block_fat, write_blkptr
 		jsr __fat_write_block_tweak
 @err_exit:
 		rts
