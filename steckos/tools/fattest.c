@@ -386,7 +386,7 @@ int mkdir(FILE *fd, struct F32_Volume *vol, unsigned long cd_clnr, unsigned long
 	
 	//erase all remaining blocks of this directory
 	memset(&block_data, 0, BLOCK_SIZE);
-	for(int i=2;i<=vol->SecPerClus;i++){
+	for(int i=1;i<=vol->SecPerClus;i++){
 		inc32(&newdir_data_lba_addr);
 		writeBlock("erase dir block", block_data, fd, newdir_data_lba_addr);
 	}

@@ -311,8 +311,8 @@ __fat_write_newdir_entry:
 		lda fat_clnr_tmp+0
 		sta fd_area+F32_fd::StartCluster+0, x
 		jsr calc_lba_addr
-		debug32 "lba_data", lba_addr
-		jsr fat_close 																					; free the tmp file
+		debug32 "lba_data", lba_addr		
+		jsr fat_close 						 															; free the tmp file
 		
 		m_memset dir_entry_template, $20, .sizeof(F32DirEntry::Name) + .sizeof(F32DirEntry::Ext)		; erase name
 		m_memcpy dir_entry_template, block_data, .sizeof(F32DirEntry)									; copy dir entry to block buffer
@@ -324,7 +324,7 @@ __fat_write_newdir_entry:
 		
 		ldx #FD_INDEX_TEMP_DIR																			; due to fat_opendir/fat_open the temp dir fd contains the directory entry for ".." - FTW!
 		debug32 "cd_cln", fd_area + 1*FD_Entry_Size + F32_fd::StartCluster
-		lda fd_area+F32_fd::StartCluster + 3, x														; if the current dir (parent) is the root dir, set clnr=0
+		lda fd_area+F32_fd::StartCluster + 3, x															; if the current dir (parent) is the root dir, set clnr=0
 		ora fd_area+F32_fd::StartCluster + 2, x
 		ora fd_area+F32_fd::StartCluster + 1, x
 		bne	@l1
@@ -341,14 +341,34 @@ __fat_write_newdir_entry:
 		lda fd_area+F32_fd::StartCluster+3,x
 		sta block_data+1*.sizeof(F32DirEntry)+F32DirEntry::FstClusHI+1
 		
-		m_memset block_data+2*.sizeof(F32DirEntry), 0, .sizeof(F32DirEntry)								; 3rd entry "end of dir"
+		ldx #$80																						; all other dir entries to 0
+@l_erase:
+		stz block_data+2*.sizeof(F32DirEntry), x
+		stz block_data+$080, x
+		stz block_data+$100, x
+		stz block_data+$180, x
+		dex 
+		bpl @l_erase
 		
-		debugdump "ndir0", block_data
-		debugdump "ndir1", block_data+$20
-		debugdump "ndir2", block_data+$40
+		;debugdump "ndir0", block_data
+		;debugdump "ndir1", block_data+$20
+		;debugdump "ndir2", block_data+$40
 		
 		SetVector block_data, write_blkptr
 		jsr __fat_write_block_tweak
+		
+		m_memset block_data, 0, 2*.sizeof(F32DirEntry)													;erase the "." and ".." entries
+		
+		ldx volumeID+VolumeID::SecPerClus																; fill up the VolumeID::SecPerClus - 1 reamining blocks of the cluster with empty dir entries
+@l_erase2:
+		jsr inc_lba_address																				; next block
+		debug32 "e_dir_cl", lba_addr
+		SetVector block_data, write_blkptr
+		jsr __fat_write_block_tweak
+		bne @l_exit
+		dex 
+		bne @l_erase2																					; write until VolumeID::SecPerClus - 1
+@l_exit:
 		rts
 		
 __fat_write_block_tweak:
@@ -417,10 +437,10 @@ __fat_prepare_dir_entry:
 		lda __rtc_systime_t+time_t::tm_hour
 		lda __rtc_systime_t+time_t::tm_min
 		lda __rtc_systime_t+time_t::tm_sec
-		lda #<(14<<11 | 1<<5 | 33)
+		lda #<(14<<11 | 1<<5 | 33>>1)
 		sta dir_entry_template+F32DirEntry::CrtTime+0
 		sta dir_entry_template+F32DirEntry::WrtTime+0
-		lda #>(14<<11 | 1<<5 | 33)
+		lda #>(14<<11 | 1<<5 | 33>>1)
 		sta dir_entry_template+F32DirEntry::CrtTime+1
 		sta dir_entry_template+F32DirEntry::WrtTime+1
 
@@ -430,6 +450,7 @@ __fat_prepare_dir_entry:
 		lda #<((2017-1980) <<9 | 9 <<5 | 19) ;TODO FIXME
 		sta dir_entry_template+F32DirEntry::CrtDate+0
 		sta dir_entry_template+F32DirEntry::WrtDate+0
+		sta dir_entry_template+F32DirEntry::LstModDate+0
 		lda #>((2017-1980) <<9 | 9 <<5 | 19) ;TODO FIXME
 		sta dir_entry_template+F32DirEntry::CrtDate+1
 		sta dir_entry_template+F32DirEntry::WrtDate+1
