@@ -61,6 +61,7 @@ struct F32_Volume{
 	unsigned long RootClus;
 	
 	unsigned long LbaFat;
+	unsigned long LbaFat2;
 	unsigned long LbaCluster;
 };
 
@@ -72,10 +73,10 @@ struct F32_FSInfo{
 typedef struct {
 	unsigned char Name[11];
 	unsigned char Attr;
-	unsigned char Reserved1[2];
+	unsigned char Reserved[2];
 	unsigned short CrtTime;
 	unsigned short CrtDate;
-	unsigned char Reserved2[2];
+	unsigned short LstModDate;
 	unsigned short FstClusHI;
 	unsigned short WrtTime;
 	unsigned short WrtDate;
@@ -240,6 +241,7 @@ void buildVolumeData(unsigned char *buf, unsigned long lba_begin, struct F32_Vol
 	p->FSInfoSec	= _16(buf, BPB_FSInfo);
 	
 	p->LbaFat = lba_begin + p->RsvdSecCnt;
+	p->LbaFat2 = lba_begin + p->RsvdSecCnt + p->FATSz32;
 	//align LbaCluster upon root cluster cause 
 	//lba_addr = cluster_lba + (cluster# - BPB_RootClus) * Sektoren/Cluster and therefore
 	//lba_addr = cluster_lba - (BPB_RootClus * Sektoren/Cluster) + (cluster# * Sektoren/Cluster)
@@ -258,6 +260,9 @@ void inc32(unsigned long *lba_addr){
 
 unsigned long calcFatLbaAddress(struct F32_Volume *vol, unsigned long cluster_nr){
 	return vol->LbaFat + (cluster_nr>>7);// div 128 -> 4 (32bit) * 128 cluster numbers per block (512 bytes)
+}
+unsigned long calcFat2LbaAddress(struct F32_Volume *vol, unsigned long cluster_nr){
+	return vol->LbaFat2 + (cluster_nr>>7);// div 128 -> 4 (32bit) * 128 cluster numbers per block (512 bytes)
 }
 
 unsigned long calcDataLbaAddress(struct F32_Volume *vol, unsigned long cluster_nr){
@@ -330,7 +335,6 @@ int mkdir(FILE *fd, struct F32_Volume *vol, unsigned long cd_clnr, unsigned long
 	if(clnr == -1)
 		return 1;
 	
-	unsigned long fat_lba_addr = calcFatLbaAddress(vol, clnr);//lba address of cluster within fat
 	dumpBuffer("mkdir fat block", block_fat);
 	unsigned long eoc = EOC;
 	memcpy(&block_fat[boffs_fat], &eoc, 4);
@@ -344,23 +348,19 @@ int mkdir(FILE *fd, struct F32_Volume *vol, unsigned long cd_clnr, unsigned long
 	entry.Attr = 1<<4;
 	entry.FstClusHI = (clnr >> 16);
 	entry.CrtTime = entry.WrtTime = (ts->tm_hour << 11) | (ts->tm_min << 5) | (ts->tm_sec);
-	entry.CrtDate = entry.WrtDate = ((ts->tm_year - 80) << 9) | (ts->tm_mon + 1 << 5) | (ts->tm_mday);
+	unsigned int date = ((ts->tm_year - 80) << 9) | (ts->tm_mon + 1 << 5) | (ts->tm_mday);
+	entry.CrtDate = entry.WrtDate = date;
+	entry.LstModDate = date;
 	entry.FstClusLO = (clnr & 0xffff);
 	entry.FileSize = 0;
 	memcpy(&block_data[boffs_data], &entry, sizeof(F32DirEntry));
 	dumpBuffer("updated block with dir entry", block_data);
 		
-/*	
-	fat_lba_addr = calcFatLbaAddress(vol, 0x10118);//lba address of cluster within fat
-	printf("test fat block at fat lba: $%x\n", fat_lba_addr);
-	n = readBlock(block_fat, fd, fat_lba_addr);
-	if(n != BLOCK_SIZE){
-		return -1;
-	}
-	dumpBuffer("test fat block", block_fat);
-*/
 	writeBlock("update dir entry", block_data, fd, cd_data_lba_addr);
+	unsigned long fat_lba_addr = calcFatLbaAddress(vol, clnr);//lba address of cluster within fat
+	unsigned long fat2_lba_addr = calcFat2LbaAddress(vol, clnr);//lba address of cluster within fat
 	writeBlock("update fat block", block_fat, fd, fat_lba_addr);
+	writeBlock("update fat block", block_fat, fd, fat2_lba_addr);
 	
 	//create dir entries for . and .. in new directory
 	strncpy(entry.Name,".          ",11);
@@ -378,10 +378,18 @@ int mkdir(FILE *fd, struct F32_Volume *vol, unsigned long cd_clnr, unsigned long
 	memcpy(&block_data[1* sizeof(F32DirEntry)], &entry, sizeof(F32DirEntry));	
 	
 	dumpBuffer("new dir data", block_data);
-	memset(&block_data[2* sizeof(F32DirEntry)], 0, sizeof(F32DirEntry));
 	
+	//erase all remaining dir entries within the 1st block
+	memset(&block_data[2* sizeof(F32DirEntry)], 0, BLOCK_SIZE - 2*sizeof(F32DirEntry));
 	unsigned long newdir_data_lba_addr = calcDataLbaAddress(vol, clnr);
 	writeBlock("new dir data", block_data, fd, newdir_data_lba_addr);
+	
+	//erase all remaining blocks of this directory
+	memset(&block_data, 0, BLOCK_SIZE);
+	for(int i=2;i<=vol->SecPerClus;i++){
+		inc32(&newdir_data_lba_addr);
+		writeBlock("erase dir block", block_data, fd, newdir_data_lba_addr);
+	}
 }
 
 
@@ -457,7 +465,8 @@ int main(int argc, char* argv[]){
 	printf("FATs: %d\n", vol.NumFATs);
 	printf("Sectors per FAT: $%x (%ld)\n", vol.FATSz32, vol.FATSz32);
 	printf("Root-Dir Cluster: %ld\n", vol.RootClus);	
-	printf("lba_fat: $%x ($%x + $%x)\n", vol.LbaFat, pe.LBABegin, vol.RsvdSecCnt);
+	printf("lba_fat : $%x ($%x + $%x)\n", vol.LbaFat, pe.LBABegin, vol.RsvdSecCnt);
+	printf("lba_fat2: $%x ($%x + $%x)\n", vol.LbaFat2, vol.LbaFat, vol.FATSz32);
 	printf("lba_cluster: $%x ($%x + ($%x * $%x))\n", vol.LbaCluster, vol.LbaFat, vol.FATSz32, vol.NumFATs);
 	printf("FSInfoSec: %x\n", vol.FSInfoSec);
 	
