@@ -99,14 +99,15 @@ PartType_FAT32_LBA	= $0c
 				; https://www.win.tue.nl/~aeb/linux/fs/fat/fat-1.html
 	Reserved3	.byte 12
 	FATSz32		.dword		; sectors per FAT
-	ExtFlags	.dword
-	Version		.dword
+	ExtFlags	.word
+	Version		.word
 	RootClus	.dword
 	FSInfoSec	.word
 .endstruct
 
 .struct FSInfoEntry
-	
+	FreeClus	.dword	; ($01e8) amount of free clusters
+	LastClus	.dword  ; ($01ec) last known cluster number
 .endstruct
 
 ; TODO: do we need these?

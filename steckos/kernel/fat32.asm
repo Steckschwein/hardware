@@ -354,8 +354,7 @@ __fat_write_newdir_entry:
 		;debugdump "ndir1", block_data+$20
 		;debugdump "ndir2", block_data+$40
 		
-		SetVector block_data, write_blkptr
-		jsr __fat_write_block_tweak
+		jsr __fat_write_block_data_tweak
 		
 		m_memset block_data, 0, 2*.sizeof(F32DirEntry)													;erase the "." and ".." entries
 		
@@ -363,16 +362,22 @@ __fat_write_newdir_entry:
 		dex
 @l_erase2:
 		jsr inc_lba_address																				; next block
-		debug32 "e_dir_cl", lba_addr
-		SetVector block_data, write_blkptr
-		jsr __fat_write_block_tweak
+		jsr __fat_write_block_data_tweak
 		bne @l_exit
-		dex 
+		dex
 		bne @l_erase2																					; write until VolumeID::SecPerClus - 1
 @l_exit:
 		rts
-		
-__fat_write_block_tweak:
+
+__fat_write_block_fat_tweak:		
+		lda #>block_fat
+		bra	__fat_write_block
+__fat_write_block_data_tweak:
+		lda #>block_data
+__fat_write_block:
+		sta write_blkptr+1
+		stz write_blkptr	;page aligned
+		debug32 "wb_lba", lba_addr
 		lda #0; FIXME err handling sd_write_block
 .ifndef FAT_TEST		
 		jmp sd_write_block
@@ -410,16 +415,14 @@ __fat_write_dir_entry:
 		cmp #>(block_data + sd_blocksize)
 		bne @l_eod														; no, write one block only
 		
-		SetVector block_data, write_blkptr								
-		jsr __fat_write_block_tweak										; write the current block with the updated dir entry first
+		jsr __fat_write_block_data_tweak								; write the current block with the updated dir entry first
 		bne @err_exit
 		m_memset block_data, 0, .sizeof(F32DirEntry)					; fill the new dir block with 0 to mark eod
 		jsr inc_lba_address												; increment lba address to write the next block
 		debug32 "eod", lba_addr
 		debugdump "eod", block_data
 @l_eod:
-		SetVector block_data, write_blkptr
-		jsr __fat_write_block_tweak										; write the updated dir entry to device
+		jsr __fat_write_block_data_tweak								; write the updated dir entry to device
 @err_exit:
 		debug "f_wde"
 		rts
@@ -478,19 +481,16 @@ dir_entry_template:
 		.tag F32DirEntry
 		
 __fat_write_fat_blocks:
-		debug32 "f_lba", lba_addr			; lba_addr is already setup by __fat_find_free_cluster
-		SetVector	block_fat, write_blkptr
-		jsr __fat_write_block_tweak
+		jsr __fat_write_block_fat_tweak			; lba_addr is already setup by __fat_find_free_cluster
 		bne @err_exit
-		clc									; calc fat2 lba_addr = lba_addr + VolumeID::FATSz32
+		clc										; calc fat2 lba_addr = lba_addr + VolumeID::FATSz32
 		.repeat 4, i
 			lda lba_addr + i
 			adc volumeID + VolumeID::FATSz32 + i
 			sta lba_addr + i
 		.endrepeat
-		debug32 "f2_lba", lba_addr
-		SetVector	block_fat, write_blkptr
-		jsr __fat_write_block_tweak
+		debug32 "f2", lba_addr
+		jsr __fat_write_block_fat_tweak
 @err_exit:
 		rts
 			
