@@ -25,9 +25,10 @@ CR  = $0D        ; Return character
 LF  = $0A        ; Line feed character
 
 ; put the IRQ and MNI code in RAM so that it can be changed
-IRQ_vec	= VEC_SV+2		; IRQ code vector
+IRQ_vec	= VEC_SV+2		; IRQ code vector	(VEC_SV = ccflag+$0b)
 NMI_vec	= IRQ_vec+$0A	; NMI code vector
-
+; NOTE: ccflag + $18 -> $02a8
+					
 ; reset vector points here
 
 RES_vec:

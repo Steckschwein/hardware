@@ -5,6 +5,18 @@
 			sta addr+1
 .endmacro
 
+.macro inc32 val
+		.local @l1
+		inc val + 0
+		bne @l1
+		inc val + 1
+		bne @l1
+		inc val + 2
+		bne @l1
+		inc val + 3
+@l1:
+.endmacro
+
 .macro m_memcpy src, dest, n
 		.local @l
 		ldx #n-1

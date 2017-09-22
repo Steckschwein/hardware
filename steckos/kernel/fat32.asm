@@ -16,27 +16,6 @@
 .export fat_close_all, fat_close, fat_getfilesize
 .export calc_dirptr_from_entry_nr, inc_lba_address, calc_blocks
 
-.macro inc32 val
-		.local @l1
-		inc val + 0
-		bne @l1
-		inc val + 1
-		bne @l1
-		inc val + 2
-		bne @l1
-		inc val + 3
-@l1:
-.endmacro
-
-.macro copy32 src, dest
-		.local @l
-		ldx #$03
-@l:
-		lda src,x
-		sta dest,x
-		dex
-		bpl @l
-.endmacro
 
 .macro _open
 		stz	pathFragment, x	;\0 terminate the current path fragment
@@ -151,19 +130,19 @@ fat_update_direntry:
         ;out:
 		;	A - errno, 0 - means no error
 fat_get_root_and_pwd:
-		sta	krn_ptr2
-		stx	krn_ptr2+1
+		sta	krn_ptr1
+		stx	krn_ptr1+1
 		tya
 		eor	#$ff
-		sta	krn_ptr3		;save -size-1 for easy loop
+		;sta	krn_ptr3		;save -size-1 for easy loop
 
 
 @l1:	ldx #FD_INDEX_CURRENT_DIR
 		lda fd_area + F32_fd::StartCluster + 3, x
 		ora fd_area + F32_fd::StartCluster + 2, x
-		lda root_dir_first_clus +1
+		lda volumeID+VolumeID::RootClus +1
 		sta fd_area + F32_fd::StartCluster +1, x
-		lda root_dir_first_clus +0
+		lda volumeID+VolumeID::RootClus +0
 		sta fd_area + F32_fd::StartCluster +0, x
 
 		bne @l2
@@ -179,8 +158,8 @@ fat_get_root_and_pwd:
 		bne	@end
 		ldy #F32DirEntry::Name	;Name offset is 0
 @l2:	lda (dirptr),y
-		sta	(krn_ptr2),y	; '0' term string
-		inc krn_ptr2
+		sta	(krn_ptr1),y	; '0' term string
+		inc krn_ptr1
 		beq @err
 		iny
 		cpy #$0b
@@ -278,6 +257,7 @@ fat_mkdir:
 		
 		jsr __fat_mark_free_cluster					; mark cluster in block with EOC - TODO cluster chain support
 		jsr __fat_write_fat_blocks					; write the updated fat block for 1st and 2nd FAT to the device
+		jsr __fat_update_fsinfo						; update the fsinfo sector/block
 		bne @l_exit
 		
 		jsr __fat_prepare_dir_entry					; prepare dir entry
@@ -296,6 +276,13 @@ fat_mkdir:
 		debug "mkdir"
 		rts
 
+__fat_update_fsinfo:
+;		TODO
+;		m_memcpy volumeID+VolumeID::FSInfoSec, lba_addr, 4
+		SetVector block_fat, read_blkptr
+;		jsr	sd_read_block
+		rts
+		
 		; create the "." and ".." entry of the new directory
 		; in 
 		;	X - index to fd
@@ -713,11 +700,10 @@ fat_open_found:
 		ora fd_area + F32_fd::StartCluster + 0, x
 		bne @l3
 
-		lda root_dir_first_clus +1
+		lda volumeID+VolumeID::RootClus +1
 		sta fd_area + F32_fd::StartCluster +1, x
-		lda root_dir_first_clus +0
+		lda volumeID+VolumeID::RootClus +0
 		sta fd_area + F32_fd::StartCluster +0, x
-
 @l3:
 		ldy #F32DirEntry::FileSize + 3
 		lda (dirptr),y
@@ -818,8 +804,10 @@ calc_lba_addr:
 			sta lba_addr + i
 		.endrepeat
 
+;		debug32 "lba0", lba_addr
 		;SecPerClus is a power of 2 value, therefore cluster << n, where n ist the number of bit set in VolumeID::SecPerClus
 		lda volumeID+VolumeID::SecPerClus
+		debug8 "scl", volumeID+VolumeID::SecPerClus
 @lm:	lsr
 		beq @lme    ; 1 sector/cluster therefore skip multiply
 		tax
@@ -830,6 +818,9 @@ calc_lba_addr:
 		txa
 		bra @lm
 @lme:
+;		debug32 "clbla", cluster_begin_lba
+;		debug32 "lba1", lba_addr
+		
 		; add cluster_begin_lba and lba_addr
 		clc
 		.repeat 4, i
@@ -837,7 +828,7 @@ calc_lba_addr:
 			adc lba_addr + i
 			sta lba_addr + i
 		.endrepeat
-
+		debug32 "lba", lba_addr
 calc_end:
 		plx
 		pla
@@ -973,7 +964,7 @@ fat_mount:
 		jmp end_mount
 
 @l2:
-		copy32 part0 + PartitionEntry::LBABegin, lba_addr
+		m_memcpy part0 + PartitionEntry::LBABegin, lba_addr, 4
 
 		SetVector sd_blktarget, read_blkptr
 		; Read FAT Volume ID at LBABegin and Check signature
@@ -1011,11 +1002,11 @@ fat_mount:
 		clc
 
 		lda lba_addr + 0
-		adc sd_blktarget + VolumeID::RsvdSecCnt + 0
+		adc volumeID + VolumeID::RsvdSecCnt + 0
 		sta cluster_begin_lba + 0
 		sta fat_lba_begin + 0
 		lda lba_addr + 1
-		adc sd_blktarget + VolumeID::RsvdSecCnt + 1
+		adc volumeID + VolumeID::RsvdSecCnt + 1
 		sta cluster_begin_lba + 1
 		sta fat_lba_begin + 1
 		lda lba_addr + 2
@@ -1029,11 +1020,11 @@ fat_mount:
 
 		; Number of FATs. Must be 2
 		; add sectors_per_fat * 2 to cluster_begin_lba
-		ldy sd_blktarget + VolumeID::NumFATs
+		ldy volumeID + VolumeID::NumFATs
 @l7:	clc
 		ldx #$00
 @l8:	ror ; get carry flag back
-		lda sd_blktarget + VolumeID::FATSz32,x ; sectors per fat
+		lda volumeID + VolumeID::FATSz32,x ; sectors per fat
 		adc cluster_begin_lba,x
 		sta cluster_begin_lba,x
 		inx
@@ -1056,13 +1047,14 @@ fat_mount:
 
 		; cluster_begin_lba_m2 -> cluster_begin_lba - (VolumeID::RootClus*VolumeID::SecPerClus)
 		debug8 "sec/cl", volumeID+VolumeID::SecPerClus
-		debug32 "cl_lba", cluster_begin_lba
-		debug32 "lba", lba_addr
+		debug32 "s_lba", lba_addr
 		debug16 "r_sec", volumeID + VolumeID::RsvdSecCnt
-		debug32 "f_sec", volumeID + VolumeID::FATSz32
 		debug16 "f_lba", fat_lba_begin
+		debug32 "f_sec", volumeID + VolumeID::FATSz32
 		debug16 "f2_lba", fat2_lba_begin
-
+		debug16 "fs info", volumeID+VolumeID::FSInfoSec
+		debug32 "cl_lba", cluster_begin_lba
+		
 		;TODO FIXME we assume 2 here insteasd of using the value in VolumeID::RootClus
 		; cluster_begin_lba_m2 -> cluster_begin_lba - (2*sec/cluster) => cluster_begin_lba - (sec/cluster << 1)
 		lda volumeID+VolumeID::SecPerClus ; max sec/cluster can be 128, with 2 (BPB_RootClus) * 128 wie may subtract max 256
@@ -1089,12 +1081,10 @@ fat_mount:
 		; init file descriptor area
 		jsr fat_init_fdarea
 
-		Copy sd_blktarget + VolumeID::RootClus, root_dir_first_clus, 3
 		; now we have the lba address of the first sector of the first cluster
-
 end_mount:
 		restore
-		Copy root_dir_first_clus, fd_area + FD_INDEX_CURRENT_DIR + F32_fd::StartCluster, 3
+		Copy volumeID+VolumeID::RootClus, fd_area + FD_INDEX_CURRENT_DIR + F32_fd::StartCluster, 3
 		ldx #FD_INDEX_CURRENT_DIR
 		rts
 
@@ -1102,7 +1092,7 @@ end_mount:
 		; out:
 		;   x - FD_INDEX_TEMP_DIR offset to fd area
 fat_open_rootdir:
-		Copy root_dir_first_clus, fd_area + FD_INDEX_TEMP_DIR + F32_fd::StartCluster, 3
+		Copy volumeID+VolumeID::RootClus, fd_area + FD_INDEX_TEMP_DIR + F32_fd::StartCluster, 3
 		ldx #FD_INDEX_TEMP_DIR
 		rts
 
@@ -1218,7 +1208,6 @@ fat_find_first:
 		;   X - directory fd index into fd_area
 fat_find_first_intern:
 		jsr calc_lba_addr
-		debug32 "lba", lba_addr
 		SetVector sd_blktarget, read_blkptr
 
 ff_l3:	SetVector sd_blktarget, dirptr	; dirptr to begin of target buffer

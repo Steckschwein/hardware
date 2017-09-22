@@ -1,6 +1,8 @@
 ; INIT0/SHELL
 
 appstart	= $1000
+
+; shell related - TODO FIXME away from kernel stuff, conflicts with basic, but after basic stuff we dont care about shell zp only if we want to return to shell one day !!!
 cmdptr		= $d6
 paramptr	= $d8
 retvec 		= $da
@@ -20,28 +22,33 @@ msgptr  	= $e6		; 2 bytes
 ; kernel pointer (internally used)
 krn_ptr1    	= $e8	; 2 bytes
 krn_ptr2    	= $ea	; 2 bytes
-krn_ptr3    	= $ec	; 2 bytes
+;krn_ptr3    	= $??	; 2 bytes
 
-krn_tmp     	= $ee		; 16 bit tmp
+krn_tmp     	= $ec		; 16 bit tmp
 krn_tmp1		= krn_tmp	; single byte alias tmp1
 krn_tmp2		= krn_tmp+1	; single byte alias tmp2
 
 ; FAT32
-filenameptr 	= $f0   ; 2 byte
-dirptr 	    	= $f2 	; 2 byte
+filenameptr 		= $ee   ; 2 byte
+dirptr 	    		= $f0 	; 2 byte
 
 ; SDCARD/storage block pointer
-read_blkptr  	= $f9
-write_blkptr 	= $fb
-sd_tmp	     	= $fd
+read_blkptr  		= $f2
+write_blkptr 		= $f4
+sd_tmp	     		= $f6
 
-lba_addr 		= $0280		; 4 bytes
-blocks			= $0284		; 3 bytes blocks to read, 3 bytes sufficient to address 4GB -> 4294967296 >> 9 = 8388608 ($800000) max blocks/file 
-
-krn_call_internal	= $028e		; jmp vector internally used
-
-trampolin		= $0290
-
-errno		= $0292
+lba_addr 			= $0280		; 4 bytes
+blocks				= $0284		; 3 bytes blocks to read, 3 bytes sufficient to address 4GB -> 4294967296 >> 9 = 8388608 ($800000) max blocks/file 
+errno				= $0287
 ;TODO FIXME rename
 ;__oserror 	= errno
+
+krn_call_internal	= $0288		; jmp vector internally used
+trampolin			= $028a
+
+dbg_acc			= $02f9 ; basic uses $0290 - $02f8
+dbg_xreg		= $02fa
+dbg_yreg		= $02fb
+dbg_status		= $02fc
+dbg_bytes		= $02fd
+dbg_savept		= $02fe

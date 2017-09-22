@@ -1,23 +1,3 @@
-volumeID				= $02b0 ; address of VolumeID struct $30 bytes - sizeof(VolumeID)
-cluster_begin_lba 		= $0300 ; begin of cluster area, 4 bytes
-fat_lba_begin			= $0304	; begin of fat area, 2 bytes  - TODO FIXME we assume 16bit are sufficient since fat is placed at the beginning of the device
-fat2_lba_begin			= $0306	; end of first fat and begin of 2nd fat (mirror) area, 2 bytes - TODO FIXME we assume 16bit ...
-
-fat_clnr_tmp			= $0308 ; 4 bytes
-fat_lba_tmp				= $030c	; 4 bytes
-
-root_dir_first_clus 	= $0310 ; first cluster of root dir, 4 bytes
-filename_buf			= $0314 ; file name buffer, 11 bytes
-
-fat_fd_tmp				= $031f ; internallly used fd
-					
-fd_area					= $0320 ; File descriptor area until $0400
-
-sd_blktarget			= $0400
-block_data				= sd_blktarget
-block_fat               = $0600
-sd_blocksize			= $200
-
 ; TODO FIXME replace with errno.inc from cc65 api
 fat_bad_block_signature		= $01
 fat_invalid_partition_type	= $02
@@ -77,8 +57,6 @@ PartType_FAT32_LBA	= $0c
 
 ;BS_VolLab2		= 71
 
-
-
 ;--------------------------------------------------------------------------------------
 ; FAT32 Volume ID
 ;--------------------------------------------------------------------------------------
@@ -117,6 +95,22 @@ PartType_FAT32_LBA	= $0c
 ;BS_FilSysType	= 54	; One of the strings “FAT12 ”, “FAT16 ”, or “FAT ”.
 
 FAT_EOC			= $0fffffff	; end of cluster chain marker
+
+volumeID				= $0300 ; address of VolumeID
+cluster_begin_lba 		= volumeID + .sizeof(VolumeID) ; begin of cluster area, 4 bytes
+fat_lba_begin			= cluster_begin_lba + 4; (2 byte) begin of fat area - TODO FIXME we assume 16bit are sufficient since fat is placed at the beginning of the device
+fat2_lba_begin			= fat_lba_begin + 2	; (2 byte) end of first fat and begin of 2nd fat (mirror) area - TODO FIXME we assume 16bit ...
+fat_clnr_tmp			= fat2_lba_begin + 2 ; (4 byte)
+fat_lba_tmp				= fat_clnr_tmp+4 ; (4 byte)
+fat_fd_tmp				= fat_lba_tmp+4; (1 byte); internallly used fd
+filename_buf			= fat_fd_tmp+1 ; (11 byte) file name buffer
+					
+fd_area					= $0380 ; File descriptor area until $0400
+sd_blktarget			= $0400
+block_data				= sd_blktarget
+block_fat               = $0600
+sd_blocksize			= $200
+
 
 ;--------------------------------------------------------------------------------------
 ; FAT32 Directory Entry
@@ -163,5 +157,5 @@ FD_Entries_Max = ($3ff - fd_area) / FD_Entry_Size
 ;FD_file_size = $04              ; 32 Bit file size
 ;FD_file_attr = $08              ; 8 Bit fat32 Attributes
 
-FD_INDEX_CURRENT_DIR = 0                            ; current dir always go to fd #0
-FD_INDEX_TEMP_DIR    = FD_Entry_Size    ; temp dir always go to fd #1
+FD_INDEX_CURRENT_DIR = 0		 	; current dir always go to fd #0
+FD_INDEX_TEMP_DIR = FD_Entry_Size	; temp dir always go to fd #1
