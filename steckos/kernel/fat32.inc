@@ -151,7 +151,7 @@ DIR_Entry_Deleted			= $e5
 	Reserved		.byte 10;fill up to $20
 .endstruct
 FD_Entry_Size = .sizeof(F32_fd)
-FD_Entries_Max = ($3ff - fd_area) / FD_Entry_Size
+FD_Entries_Max = ($0400 - fd_area) / FD_Entry_Size
 
 ;FD_start_cluster = $00  ; 32 Bit cluster nr
 ;FD_file_size = $04              ; 32 Bit file size

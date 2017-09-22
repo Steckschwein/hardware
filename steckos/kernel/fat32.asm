@@ -279,8 +279,9 @@ fat_mkdir:
 __fat_update_fsinfo:
 ;		TODO
 ;		m_memcpy volumeID+VolumeID::FSInfoSec, lba_addr, 4
-		SetVector block_fat, read_blkptr
+;		SetVector block_fat, read_blkptr
 ;		jsr	sd_read_block
+		lda #0
 		rts
 		
 		; create the "." and ".." entry of the new directory
@@ -357,14 +358,15 @@ __fat_write_newdir_entry:
 		rts
 
 __fat_write_block_fat_tweak:		
+		debug32 "wb_f_lba", lba_addr
 		lda #>block_fat
 		bra	__fat_write_block
 __fat_write_block_data_tweak:
+		debug32 "wb_d_lba", lba_addr
 		lda #>block_data
 __fat_write_block:
 		sta write_blkptr+1
 		stz write_blkptr	;page aligned
-		debug32 "wb_lba", lba_addr
 		lda #0; FIXME err handling sd_write_block
 .ifndef FAT_TEST		
 		jmp sd_write_block
@@ -476,7 +478,6 @@ __fat_write_fat_blocks:
 			adc volumeID + VolumeID::FATSz32 + i
 			sta lba_addr + i
 		.endrepeat
-		debug32 "f2", lba_addr
 		jsr __fat_write_block_fat_tweak
 @err_exit:
 		rts
