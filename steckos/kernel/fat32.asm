@@ -249,13 +249,13 @@ fat_mkdir:
 		debug32 "ltmp", fat_lba_tmp
 		jsr __fat_find_free_cluster					; find free cluster
 		bne @l_exit
+		jsr __fat_mark_free_cluster					; mark cluster in block with EOC - TODO cluster chain support
 
 		jsr fat_alloc_fd							; alloc new fd - TODO use them for fopen and "rw+" mode - we alloc here already, cause fat_alloc_fd may fail				
 		bne @l_exit									; and we want to avoid an error in between the different block writes
 		stx fat_fd_tmp								; save fd
 		debug "nd fd"
 		
-		jsr __fat_mark_free_cluster					; mark cluster in block with EOC - TODO cluster chain support
 		jsr __fat_write_fat_blocks					; write the updated fat block for 1st and 2nd FAT to the device
 		jsr __fat_update_fsinfo						; update the fsinfo sector/block
 		bne @l_exit
@@ -289,7 +289,7 @@ __fat_update_fsinfo:
 		;	X - index to fd
 __fat_write_newdir_entry:
 		;TODO FIXME distinct file/dir
-		;TODO FIXME we reuse a fd entry to so we can simply call calc_lba_addr
+		;TODO FIXME we reuse the fd entry so we can simply call calc_lba_addr
 		lda fat_clnr_tmp+3
 		sta fd_area+F32_fd::StartCluster+3, x
 		lda fat_clnr_tmp+2
@@ -348,6 +348,7 @@ __fat_write_newdir_entry:
 		
 		ldx volumeID+VolumeID::SecPerClus																; fill up (VolumeID::SecPerClus - 1) reamining blocks of the cluster with empty dir entries
 		dex
+		debug32 "er_d", lba_addr
 @l_erase2:
 		jsr inc_lba_address																				; next block
 		jsr __fat_write_block_data_tweak
@@ -357,18 +358,23 @@ __fat_write_newdir_entry:
 @l_exit:
 		rts
 
-__fat_write_block_fat_tweak:		
+;__fat_read_block_tweak:		
+__fat_write_block_fat_tweak:
 		debug32 "wb_f_lba", lba_addr
+.ifdef FAT_DUMP_FAT_WRITE
+		debugdump "w_fat", block_fat
+.endif
 		lda #>block_fat
 		bra	__fat_write_block
 __fat_write_block_data_tweak:
-		debug32 "wb_d_lba", lba_addr
+;		debug32 "wb_d_lba", lba_addr
 		lda #>block_data
 __fat_write_block:
 		sta write_blkptr+1
 		stz write_blkptr	;page aligned
+		
 		lda #0; FIXME err handling sd_write_block
-.ifndef FAT_TEST		
+.ifndef FAT_NOWRITE
 		jmp sd_write_block
 .endif
 		rts
@@ -388,7 +394,7 @@ __fat_write_dir_entry:
 		cpx #11
 		bne @l0
 @l1:	
-		debugdump "dir", dir_entry_template
+		;debugdump "dir", dir_entry_template
 		m_memcpy2ptr dir_entry_template, dirptr, .sizeof(F32DirEntry)	; copy new entry to block buffer
 
 		;TODO FIXME duplicate code here! - @see fat_find_next:
@@ -507,7 +513,6 @@ __fat_mark_free_cluster:
 		;		fat_clnr_tmp - the found cluster
 		;	Z=1 on error, A=error code
 __fat_find_free_cluster:
-		SetVector	block_fat, read_blkptr
 		;TODO improve, use a previously saved lba_addr and/or found cluster number
 		stz lba_addr+3
 		stz lba_addr+2			; TODO FIXME we assume that 16 bit are sufficient for fat lba address
@@ -515,8 +520,10 @@ __fat_find_free_cluster:
 		sta lba_addr+1
 		lda fat_lba_begin+0		; init lba_addr with fat_begin lba addr
 		sta lba_addr+0
+		
+		SetVector	block_fat, read_blkptr
 @next_block:
-;		debug32 "f_lba", lba_addr
+		debug32 "f_lba", lba_addr
 		jsr	sd_read_block		; read fat block
 		bne @exit
 		dec read_blkptr+1		; TODO FIXME clarification with TW - sd_read_block increments block ptr highbyte
@@ -545,40 +552,45 @@ __fat_find_free_cluster:
 		cmp	fat2_lba_begin+0
 		bne	@next_block			;
 		lda #ENOSPC				; end reached, answer ENOSPC - No space left on device
-		bra @exit
+@exit:	debug32 "free_cl", fat_clnr_tmp
+		rts		
 @l_found_hb:
-		SetVector (block_fat+$100), read_blkptr	; set read_blkptr to 2nd page of fat_buffer
-		lda #$40				; cluster nr found in 2nd page, adjust with $40 clusters
-@l_found_lb:					; A=0 here, see above
+		lda #>(block_fat+$100)	; set read_blkptr to begin 2nd page of fat_buffer - @see __fat_mark_free_cluster
+		sta read_blkptr+1
+		lda #$40				; adjust clnr with +$40 clusters since it was found in 2nd page
+@l_found_lb:					; A=0 here, if called from above
+		debug32 "fc_lba", lba_addr
 		sta fat_clnr_tmp+0
 		tya
 		lsr						; offset Y>>2 (div 4, 32 bit clnr)
 		lsr
+		;clc not necessary since y is multiple of 4
 		adc fat_clnr_tmp+0		; add to clnr base
-		sta fat_clnr_tmp+0		; safe to 
+		sta fat_clnr_tmp+0		; safe to
 
+		debug32 "fc_tmp2", fat_clnr_tmp		
 		;m_memcpy lba_addr, safe_lba TODO FIXME fat lba address, reuse them at next search
 
-		; to calc them we have to clnr = (lba_addr - fat_lba_begin) * 512 / 4 + (Y / 4) => (lba_addr - fat_lba_begin) << 7 + (Y>>2)
-		sec						; blocks = lba_addr - fat_begin_lba
+		; to calc them we have to clnr = (block number * 512) / 4 + (Y / 4) => (lba_addr - fat_lba_begin) << 7 + (Y>>2)
+		; to avoid the <<7, we simply <<8 and do one ror
+		sec
 		lda lba_addr+0
 		sbc fat_lba_begin+0
 		sta krn_tmp
 		lda lba_addr+1
-		sbc fat_lba_begin+1
-		lsr						; clnr = blocks * 128
+		sbc fat_lba_begin+1		; now we have 16bit blocknumber
+		lsr						; clnr = blocks<<7
 		sta fat_clnr_tmp+2
 		lda krn_tmp
 		ror
 		sta fat_clnr_tmp+1
 		lda #0
-		ror						; add clnr offset within block, already saved in fat_clnr_tmp+0 s.above
+		ror						; clnr += offset within block - already saved in fat_clnr_tmp+0 s.above
 		adc fat_clnr_tmp+0
 		sta fat_clnr_tmp+0
 		lda #0					; exit found
-@exit:
-		debug32 "free_cl", fat_clnr_tmp
-		rts
+		sta fat_clnr_tmp+3		; TODO FIXME 16bit block limit
+		bra @exit
 		
         ;in:
         ;   A/X - pointer to the file path

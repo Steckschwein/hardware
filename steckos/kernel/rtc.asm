@@ -93,7 +93,7 @@ __rtc_systime_update:
 ; dec = (((BCD>>4)*10) + (BCD&0xf))
 BCD2dec:tax
 		and     #%00001111
-		sta     krn_tmp1
+		sta     krn_tmp
 		txa
 		and     #%11110000      ; highbyte => 10a = 8a + 2a
 		lsr                     ; 2a
@@ -101,7 +101,7 @@ BCD2dec:tax
 		lsr						; 
 		lsr                     ; 8a
 		adc     krn_tmp2        ; = *10
-		adc     krn_tmp1
+		adc     krn_tmp
 		rts
 
 ;----------------------------------------------------------------------------

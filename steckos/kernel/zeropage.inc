@@ -25,8 +25,8 @@ krn_ptr2    	= $ea	; 2 bytes
 ;krn_ptr3    	= $??	; 2 bytes
 
 krn_tmp     	= $ec		; 16 bit tmp
-krn_tmp1		= krn_tmp	; single byte alias tmp1
-krn_tmp2		= krn_tmp+1	; single byte alias tmp2
+krn_tmp2		= krn_tmp+1	; single byte alias tmp1
+krn_tmp3		= krn_tmp+2	; single byte alias tmp2
 
 ; FAT32
 filenameptr 		= $ee   ; 2 byte
@@ -39,12 +39,12 @@ sd_tmp	     		= $f6
 
 lba_addr 			= $0280		; 4 bytes
 blocks				= $0284		; 3 bytes blocks to read, 3 bytes sufficient to address 4GB -> 4294967296 >> 9 = 8388608 ($800000) max blocks/file 
-errno				= $0287
+errno				= $0288
 ;TODO FIXME rename
 ;__oserror 	= errno
 
-krn_call_internal	= $0288		; jmp vector internally used
-trampolin			= $028a
+krn_call_internal	= $028a		; jmp vector internally used
+trampolin			= $028c
 
 dbg_acc			= $02f9 ; basic uses $0290 - $02f8
 dbg_xreg		= $02fa

@@ -28,12 +28,14 @@ _debugout_enter:
 		
 		stz dbg_bytes
 		jsr krn_primm
-		.asciiz "AXY "
+		.asciiz "AXYP "
 		lda dbg_acc
 		jsr krn_hexout
 		lda dbg_xreg 
 		jsr krn_hexout
 		lda dbg_yreg
+		jsr krn_hexout
+		lda dbg_status
 		jsr krn_hexout
 		lda	#' '
 		jmp krn_chrout

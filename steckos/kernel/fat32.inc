@@ -97,15 +97,15 @@ PartType_FAT32_LBA	= $0c
 FAT_EOC			= $0fffffff	; end of cluster chain marker
 
 volumeID				= $0300 ; address of VolumeID
-cluster_begin_lba 		= volumeID + .sizeof(VolumeID) ; begin of cluster area, 4 bytes
+cluster_begin_lba 		= volumeID + .sizeof(VolumeID) ; begin of cluster area (4 byte)
 fat_lba_begin			= cluster_begin_lba + 4; (2 byte) begin of fat area - TODO FIXME we assume 16bit are sufficient since fat is placed at the beginning of the device
 fat2_lba_begin			= fat_lba_begin + 2	; (2 byte) end of first fat and begin of 2nd fat (mirror) area - TODO FIXME we assume 16bit ...
 fat_clnr_tmp			= fat2_lba_begin + 2 ; (4 byte)
-fat_lba_tmp				= fat_clnr_tmp+4 ; (4 byte)
-fat_fd_tmp				= fat_lba_tmp+4; (1 byte); internallly used fd
-filename_buf			= fat_fd_tmp+1 ; (11 byte) file name buffer
+fat_lba_tmp				= fat_clnr_tmp + 4 ; (4 byte)
+fat_fd_tmp				= fat_lba_tmp + 4; (1 byte); internallly used fd
+filename_buf			= fat_fd_tmp + 1 ; (11 byte) file name buffer
 					
-fd_area					= $0380 ; File descriptor area until $0400
+fd_area					= $0360 ; File descriptor area until $0400
 sd_blktarget			= $0400
 block_data				= sd_blktarget
 block_fat               = $0600
