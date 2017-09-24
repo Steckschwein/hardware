@@ -1,5 +1,4 @@
 !src "../steckos/kernel/kernel_jumptable.inc"
-!src "../steckos/kernel/uart.inc"
 * = $0400;
 
 ; XMODEM/CRC Receiver for the 65C02
