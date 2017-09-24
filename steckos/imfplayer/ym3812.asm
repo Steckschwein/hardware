@@ -1,6 +1,6 @@
 .setcpu "65c02"
 
-.include "../steckos/kernel/kernel.inc"
+.include "../kernel/kernel.inc"
 .include "ym3812.inc"
 .export init_opl2, opl2_delay_data, opl2_delay_register
 ;----------------------------------------------------------------------------------------------	

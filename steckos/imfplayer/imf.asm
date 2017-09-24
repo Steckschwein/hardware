@@ -1,7 +1,7 @@
-.include "../steckos/kernel/kernel.inc"
-.include "../steckos/kernel/kernel_jumptable.inc"
-.include "../steckos/asminc/via.inc"
-.include "../steckos/asminc/common.inc"
+.include "../kernel/kernel.inc"
+.include "../kernel/kernel_jumptable.inc"
+.include "../asminc/via.inc"
+.include "../asminc/common.inc"
 .include "ym3812.inc"
 
 __LOADADDR__ = $1000
