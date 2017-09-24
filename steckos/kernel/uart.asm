@@ -7,19 +7,19 @@
 ; init UART
 ;----------------------------------------------------------------------------------------------
 init_uart:
-		lda #%10000000
-		sta uart1lcr
+;		lda #%10000000
+;		sta uart1lcr
 
-		; 115200 baud
-		lda #$01
+		; 115200 baud0
+;		lda #$01
 		; 19200 baud
 ;		lda #$06
-		sta uart1dll
-		stz uart1dlh
+;		sta uart1dll
+;		stz uart1dlh
 
 		; 8N1
-		lda #%00000011
-		sta uart1lcr
+;		lda #%00000011
+;		sta uart1lcr
 
 		lda #%00000111	; Enable FIFO, reset tx/rx FIFO
 		sta uart1fcr
