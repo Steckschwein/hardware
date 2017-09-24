@@ -60,7 +60,7 @@ PartType_FAT32_LBA	= $0c
 ;--------------------------------------------------------------------------------------
 ; FAT32 Volume ID
 ;--------------------------------------------------------------------------------------
-.struct VolumeID
+.struct VolumeID	
 	Reserved	.byte 11	; TODO FIXME unused, we can skip on mount and free 11 bytes
 	BytsPerSec	.word ; 12	; 512 usually
 	SecPerClus	.byte ; 13	; Sectors per Cluster as power of 2. valid are: 1,2,4,8,16,32,64,128
@@ -80,13 +80,14 @@ PartType_FAT32_LBA	= $0c
 	ExtFlags	.word
 	Version		.word
 	RootClus	.dword
-	FSInfoSec	.word
+	FSInfoSec	.word ; (2 byte)
 .endstruct
 
-.struct FSInfoEntry
-	FreeClus	.dword	; ($01e8) amount of free clusters
-	LastClus	.dword  ; ($01ec) last known cluster number
-.endstruct
+;--------------------------------------------------------------------------------------
+; FAT32 FSInfo Sector Offsets
+;--------------------------------------------------------------------------------------
+FSInfo_FreeClus	= $01e8	; amount of free clusters
+FSInfo_LastClus	= $01ec ; last known cluster number
 
 ;--------------------------------------------------------------------------------------
 ; FAT32 Directory Entry
@@ -119,11 +120,11 @@ DIR_Entry_Deleted			= $e5
 .struct F32_fd
 	StartCluster	.word 2	; +4
 	FileSize		.word 2	; +4
-	Attr			.byte
-	CurrentCluster	.word 2
-	SeekPos			.word 2
-	DirEntryLBA		.word 2 ; LBA of the block where the dir entry of the file is located
-	DirEntryPos		.byte	; block offset within the block (DirEntryPos * DIR_Entry_Size)
+	Attr			.byte	; +1
+	CurrentCluster	.word 2	; +4
+	SeekPos			.word 2	; +4
+	DirEntryLBA		.word 2 ; +4 LBA of the block where the dir entry of the file is located
+	DirEntryPos		.byte	; +1 block offset within the block (DirEntryPos * DIR_Entry_Size)
 	Reserved		.byte 10;fill up to $20
 .endstruct
 FD_Entry_Size = .sizeof(F32_fd)
@@ -146,7 +147,8 @@ fat2_lba_begin			= fat_lba_begin + 2	; (2 byte) end of first fat and begin of 2n
 fat_lba_tmp				= fat2_lba_begin + 4 ; (4 byte)
 fat_fd_tmp				= fat_lba_tmp + 4; (1 byte); internallly used fd
 fat_dir_entry_tmp		= fat_fd_tmp + 1 ;(32 byte); internallly used during mkdir, rmdir, fopen r+
-filename_buf			= fat_dir_entry_tmp + .sizeof(F32DirEntry) ; (11 byte) file name buffer
+fat_fsinfo_lba			= fat_dir_entry_tmp + .sizeof(F32DirEntry) ; (4 bytes)
+filename_buf			= fat_fsinfo_lba + 4 ; (11 byte) file name buffer
 
 fd_area					= $0380 ; File descriptor area until $0400
 sd_blktarget			= $0400

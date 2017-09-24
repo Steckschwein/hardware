@@ -277,13 +277,21 @@ fat_mkdir:
 @l_exit:
 		debug "mkdir"
 		rts
-
+		
+		;TODO check valid fsinfo block
+		;TODO check whether clnr is maintained, test 0xFFFFFFFF ?
+		;TODO improve calc, currently fixed to cluster-=1
 __fat_update_fsinfo:
-;		TODO
-;		m_memcpy volumeID+VolumeID::FSInfoSec, lba_addr, 4
-;		SetVector block_fat, read_blkptr
-;		jsr	sd_read_block
-		lda #0
+		m_memcpy fat_fsinfo_lba, lba_addr, 4
+		SetVector block_fat, read_blkptr
+		jsr	sd_read_block
+		bne @l_exit
+		debug32 "fi_fcl", block_fat+FSInfo_FreeClus
+		_dec32 block_fat+FSInfo_FreeClus
+@l_write:
+		debug32 "fi_fcl", block_fat+FSInfo_FreeClus
+		jmp __fat_write_block_fat_tweak		
+@l_exit:
 		rts
 		
 		; create the "." and ".." entry of the new directory
@@ -387,7 +395,7 @@ __fat_write_dir_entry:
 		bne @l0
 @l1:	
 		;debugdump "dir", fat_dir_entry_tmp
-		m_memcpy2ptr fat_dir_entry_tmp, dirptr, .sizeof(F32DirEntry)	; copy new entry to block buffer
+		m_memcpy2ptr fat_dir_entry_tmp, dirptr, .sizeof(F32DirEntry)	; copy new entry to block buffer (block_data)
 
 		;TODO FIXME duplicate code here! - @see fat_find_next:
 		lda dirptr														; create the end of directory entry
@@ -414,6 +422,7 @@ __fat_write_dir_entry:
 		debug "f_wde"
 		rts
 
+		;
 __fat_prepare_dir_entry:
 		m_memset fat_dir_entry_tmp, 0, .sizeof(F32DirEntry)
 		m_memset fat_dir_entry_tmp, $20, .sizeof(F32DirEntry::Name) + .sizeof(F32DirEntry::Ext)
@@ -811,7 +820,7 @@ calc_lba_addr:
 ;		debug32 "lba0", lba_addr
 		;SecPerClus is a power of 2 value, therefore cluster << n, where n ist the number of bit set in VolumeID::SecPerClus
 		lda volumeID+VolumeID::SecPerClus
-		debug8 "scl", volumeID+VolumeID::SecPerClus
+		;debug8 "scl", volumeID+VolumeID::SecPerClus
 @lm:	lsr
 		beq @lme    ; 1 sector/cluster therefore skip multiply
 		tax
@@ -1002,9 +1011,8 @@ fat_mount:
 		; fat_lba_begin		= Partition_LBA_Begin + Number_of_Reserved_Sectors
 		; fat2_lba_begin	= Partition_LBA_Begin + Number_of_Reserved_Sectors + Sectors_Per_FAT
 	
-		; add number of reserved sectors to fat_lba_begin. store in cluster_begin_lba
+		; add number of reserved sectors to calculate fat_lba_begin. also store in cluster_begin_lba for further calculation
 		clc
-
 		lda lba_addr + 0
 		adc volumeID + VolumeID::RsvdSecCnt + 0
 		sta cluster_begin_lba + 0
@@ -1023,7 +1031,7 @@ fat_mount:
 		sta fat_lba_begin + 3
 
 		; Number of FATs. Must be 2
-		; add sectors_per_fat * 2 to cluster_begin_lba
+		; cluster_begin_lba = fat_lba_begin + (sectors_per_fat * VolumeID::NumFATs (2))
 		ldy volumeID + VolumeID::NumFATs
 @l7:	clc
 		ldx #$00
@@ -1046,9 +1054,21 @@ fat_mount:
 		sta fat2_lba_begin	+0
 		lda volumeID + VolumeID::FATSz32+1
 		adc fat_lba_begin	+1
-		sta fat2_lba_begin	+1
+		sta fat2_lba_begin	+1		
 		
-
+		; calc fs_info lba address
+		clc
+		lda lba_addr+0
+		adc volumeID+VolumeID::FSInfoSec+0
+		sta fat_fsinfo_lba+0
+		lda lba_addr+1
+		adc volumeID+VolumeID::FSInfoSec+1
+		sta fat_fsinfo_lba+1
+		lda #0
+		sta fat_fsinfo_lba+3
+		adc #0				; 0 + C
+		sta fat_fsinfo_lba+2
+		
 		; cluster_begin_lba_m2 -> cluster_begin_lba - (VolumeID::RootClus*VolumeID::SecPerClus)
 		debug8 "sec/cl", volumeID+VolumeID::SecPerClus
 		debug32 "s_lba", lba_addr
@@ -1056,7 +1076,8 @@ fat_mount:
 		debug16 "f_lba", fat_lba_begin
 		debug32 "f_sec", volumeID + VolumeID::FATSz32
 		debug16 "f2_lba", fat2_lba_begin
-		debug16 "fs info", volumeID+VolumeID::FSInfoSec
+		debug16 "fi_sec", volumeID+VolumeID::FSInfoSec
+		debug32 "fi_lba", fat_fsinfo_lba
 		debug32 "cl_lba", cluster_begin_lba
 		
 		;TODO FIXME we assume 2 here insteasd of using the value in VolumeID::RootClus

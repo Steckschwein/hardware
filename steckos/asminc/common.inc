@@ -17,6 +17,23 @@
 @l1:
 .endmacro
 
+; Decrement the 32 bit value at memory location val by one.
+; 	A = ??, X & Y are unchanged.
+.macro _dec32 val
+		.local @l2,@l1,@l0
+		lda val+0
+		bne @l0
+		lda val+1
+		bne @l1
+		lda val+2
+		bne @l2
+		dec val+3
+@l2:	dec val+2
+@l1:	dec val+1
+@l0:	dec val+0
+.endmacro
+
+
 .macro m_memcpy src, dest, n
 		.local @l
 		ldx #n-1
