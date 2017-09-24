@@ -8,6 +8,7 @@ clean:
 	(cd shell; make clean)
 	(cd libsrc; make clean)
 	(cd kernel; make clean)
+	(cd ehbasic; make clean)
 	rm -rf dist/*
 
 build:
@@ -15,6 +16,7 @@ build:
 	(cd libsrc; make )
 	(cd shell; make )
 	(cd tools; make )
+	(cd ehbasic; make )
 	(cd test; make )
 
 dist: build

@@ -28,5 +28,6 @@ for n in $TOOLS_USRBIN ; do
 done
 
 cp tools/xmodem/rx.prg dist/BIN/RX.PRG
+cp ehbasic/basic.prg dist/USR/BIN/BASIC.PRG
 
 cp -a dist/* $TARGET &&  umount $TARGET

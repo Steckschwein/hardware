@@ -9,10 +9,10 @@
 ; will do nothing, you'll still have to do a reset to run the code.
 
 
-.include "../steckos/kernel/kernel.inc"
-.include "../steckos/kernel/kernel_jumptable.inc"
-.include "../steckos/kernel/fat32.inc"
-.include "../steckos/kernel/uart.inc"
+.include "../kernel/kernel.inc"
+.include "../kernel/kernel_jumptable.inc"
+.include "../kernel/fat32.inc"
+.include "../kernel/uart.inc"
 .include "appstart.inc"
 
 appstart $b400
