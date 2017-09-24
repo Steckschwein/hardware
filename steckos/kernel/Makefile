@@ -2,8 +2,14 @@ CPU=65c02
 OBJS=fat32.o sdcard.o textui.o t99xx.lib.o rtc.o spi.o uart.o via.o out.o key.o exec.o kernel.o debug.o
 ASM_INCLUDE=../asminc
 LDFLAGS=--config steckos.cfg
-#DEBUG=-DDEBUG
 
+#DEBUG=-DDEBUG 
+# do not write anything (metadata)
+#DEBUG += -DFAT_NOWRITE 
+# dump fat blocks on write
+#DEBUG += -DFAT_DUMP_FAT_WRITE
+# debug rtc updates by kernel
+#DEBUG += -DDEBUG_RTC	
 
 .PHONY: all clean
 all: kernel.bin loader.bin
