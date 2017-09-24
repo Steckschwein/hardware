@@ -422,6 +422,17 @@ __fat_write_dir_entry:
 		debug "f_wde"
 		rts
 
+__fat_rtc_high_word:
+		lsr
+		ror	krn_tmp2
+		lsr 
+		ror	krn_tmp2
+		lsr 
+		ror	krn_tmp2
+		ora krn_tmp
+		tax
+		rts
+		
 		; out
 		;	A/X with time from rtc struct in fat format
 __fat_rtc_time:
@@ -431,15 +442,8 @@ __fat_rtc_time:
 		asl
 		asl
 		sta krn_tmp
-		lda rtc_systime_t+time_t::tm_min
-		lsr
-		ror	krn_tmp2
-		lsr 
-		ror	krn_tmp2
-		lsr 
-		ror	krn_tmp2
-		ora krn_tmp
-		tax
+		lda rtc_systime_t+time_t::tm_min								; minutes 0..59
+		jsr __fat_rtc_high_word
 		lda rtc_systime_t+time_t::tm_sec								; seconds/2
 		lsr
 		ora krn_tmp2
@@ -457,14 +461,7 @@ __fat_rtc_date:
 		sta krn_tmp
 		lda rtc_systime_t+time_t::tm_mon								; month  (0..11), adjust +1
 		inc
-		lsr
-		ror	krn_tmp2
-		lsr 
-		ror	krn_tmp2
-		lsr 
-		ror	krn_tmp2
-		ora krn_tmp
-		tax
+		jsr __fat_rtc_high_word		
 		lda rtc_systime_t+time_t::tm_mday								; day of month (1..31)
 		ora krn_tmp2
 		debug "rdate"
