@@ -229,16 +229,18 @@ fat_rmdir:
 		iny 
 		cpy #11
 		bne @l0
-		;TODO FIXME write back the current block
+		;TODO FIXME write back updated block_data
 		
 		lda #0                  ; ok
 @l_exit:
-		debug "f_rmd"
+		debug "rmdir"
 		rts
 
 		
-        ;in:
-        ;   A/X - pointer to the file name
+        ; in:
+        ; 	A/X - pointer to the file name
+		; out:
+		;	Z=0 on success, Z=1 on error, A=error code
 fat_mkdir:
 		jsr __fat_opendir
 		beq	@err_dir_exists
@@ -688,7 +690,7 @@ fat_open:
 		rts
 @l_openfile:
 		_open				; return with x as offset to fd_area
-		; TODO FIXME 		if opened "path" is a directory, alloc a new fd to save them
+		; TODO FIXME 		if opened "path" is a directory, alloc a new fd to save them - fopendir ?!?
 		bra @l_exit_noerr
 pathFragment: .res 8+1+3+1; 12 chars + \0 for path fragment
 
