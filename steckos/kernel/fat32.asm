@@ -422,10 +422,52 @@ __fat_write_dir_entry:
 		debug "f_wde"
 		rts
 
-		
+		; out
+		;	A/X with time from rtc struct in fat format
 __fat_rtc_time:
+		stz krn_tmp2
+		lda rtc_systime_t+time_t::tm_hour								; hour
+		asl
+		asl
+		asl
+		sta krn_tmp
+		lda rtc_systime_t+time_t::tm_min
+		lsr
+		ror	krn_tmp2
+		lsr 
+		ror	krn_tmp2
+		lsr 
+		ror	krn_tmp2
+		ora krn_tmp
+		tax
+		lda rtc_systime_t+time_t::tm_sec								; seconds/2
+		lsr
+		ora krn_tmp2
+		debug "rtime"
 		rts
+		
+		; out
+		;	A/X with date from rtc struct in fat format
 __fat_rtc_date:
+		stz krn_tmp2
+		lda rtc_systime_t+time_t::tm_year								; years since 1900
+		sec
+		sbc	#80															; fat year is 1980..2107 (bit 15-9)
+		asl
+		sta krn_tmp
+		lda rtc_systime_t+time_t::tm_mon								; month  (0..11), adjust +1
+		inc
+		lsr
+		ror	krn_tmp2
+		lsr 
+		ror	krn_tmp2
+		lsr 
+		ror	krn_tmp2
+		ora krn_tmp
+		tax
+		lda rtc_systime_t+time_t::tm_mday								; day of month (1..31)
+		ora krn_tmp2
+		debug "rdate"
 		rts
 		
 		;
@@ -436,34 +478,21 @@ __fat_prepare_dir_entry:
 		lda #DIR_Attr_Mask_Dir ; TODO distinct dir/file via param
 		sta fat_dir_entry_tmp+F32DirEntry::Attr
 		
-		jsr __rtc_systime_update				; update systime struct
+		jsr __rtc_systime_update									; update systime struct
 		jsr __fat_rtc_time
-		lda rtc_systime_t+time_t::tm_hour
-		lda rtc_systime_t+time_t::tm_min
-		lda rtc_systime_t+time_t::tm_sec
-		lda #<(14<<11 | 1<<5 | 33>>1)
 		sta fat_dir_entry_tmp+F32DirEntry::CrtTime+0
 		sta fat_dir_entry_tmp+F32DirEntry::WrtTime+0
-		lda #>(14<<11 | 1<<5 | 33>>1)
-		sta fat_dir_entry_tmp+F32DirEntry::CrtTime+1
-		sta fat_dir_entry_tmp+F32DirEntry::WrtTime+1
+		stx fat_dir_entry_tmp+F32DirEntry::CrtTime+1
+		stx fat_dir_entry_tmp+F32DirEntry::WrtTime+1
 
 		jsr __fat_rtc_date
-		lda rtc_systime_t+time_t::tm_year
-		lda rtc_systime_t+time_t::tm_mon
-		lda rtc_systime_t+time_t::tm_mday
-		lda #<((2017-1980) <<9 | 9 <<5 | 19) ;TODO FIXME
 		sta fat_dir_entry_tmp+F32DirEntry::CrtDate+0
 		sta fat_dir_entry_tmp+F32DirEntry::WrtDate+0
 		sta fat_dir_entry_tmp+F32DirEntry::LstModDate+0
-		lda #>((2017-1980) <<9 | 9 <<5 | 19) ;TODO FIXME
-		sta fat_dir_entry_tmp+F32DirEntry::CrtDate+1
-		sta fat_dir_entry_tmp+F32DirEntry::WrtDate+1
+		stx fat_dir_entry_tmp+F32DirEntry::CrtDate+1
+		stx fat_dir_entry_tmp+F32DirEntry::WrtDate+1
 		
-		stz fat_dir_entry_tmp+F32DirEntry::CrtTimeMillis		;ms to 0
-		
-;		debug16 "cdt", fat_dir_entry_tmp+F32DirEntry::CrtTime
-;		debug16 "cdd", fat_dir_entry_tmp+F32DirEntry::CrtDate
+		stz fat_dir_entry_tmp+F32DirEntry::CrtTimeMillis			;ms to 0, not supported by rtc
 		
 		ldx fat_fd_tmp
 		lda fd_area+F32_fd::StartCluster+3, x
