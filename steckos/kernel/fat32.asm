@@ -247,14 +247,15 @@ fat_mkdir:
 
 		m_memcpy lba_addr, fat_lba_tmp, 4			; save lba_addr which points to the block the current dir entry resides (dirptr)
 		debug32 "ltmp", fat_lba_tmp
-		jsr __fat_find_free_cluster					; find free cluster
-		bne @l_exit
-		jsr __fat_mark_free_cluster					; mark cluster in block with EOC - TODO cluster chain support
-
+		
 		jsr fat_alloc_fd							; alloc new fd - TODO use them for fopen and "rw+" mode - we alloc here already, cause fat_alloc_fd may fail				
 		bne @l_exit									; and we want to avoid an error in between the different block writes
 		stx fat_fd_tmp								; save fd
 		debug "nd fd"
+		
+		jsr __fat_find_free_cluster					; find free cluster
+		bne @l_exit
+		jsr __fat_mark_free_cluster					; mark cluster in block with EOC - TODO cluster chain support
 		
 		jsr __fat_write_fat_blocks					; write the updated fat block for 1st and 2nd FAT to the device
 		jsr __fat_update_fsinfo						; update the fsinfo sector/block
@@ -265,10 +266,11 @@ fat_mkdir:
 		debug32 "lba_dir", lba_addr			
 		jsr __fat_write_dir_entry					; create dir entry at current dirptr
 		bne @l_exit
-		
+
+		jsr __fat_write_newdir_entry
 		ldx fat_fd_tmp
 		debug "nd fd"
-		jsr __fat_write_newdir_entry
+		jsr fat_close						 															; free the tmp file
 		bra @l_exit
 @err_dir_exists:
 		lda	#EEXIST
@@ -286,21 +288,11 @@ __fat_update_fsinfo:
 		
 		; create the "." and ".." entry of the new directory
 		; in 
-		;	X - index to fd
+		;	-
 __fat_write_newdir_entry:
-		;TODO FIXME distinct file/dir
-		;TODO FIXME we reuse the fd entry so we can simply call calc_lba_addr
-		lda fat_clnr_tmp+3
-		sta fd_area+F32_fd::StartCluster+3, x
-		lda fat_clnr_tmp+2
-		sta fd_area+F32_fd::StartCluster+2, x
-		lda fat_clnr_tmp+1
-		sta fd_area+F32_fd::StartCluster+1, x
-		lda fat_clnr_tmp+0
-		sta fd_area+F32_fd::StartCluster+0, x
+		ldx fat_fd_tmp
 		jsr calc_lba_addr
 		debug32 "lba_data", lba_addr		
-		jsr fat_close 						 															; free the tmp file
 		
 		m_memset fat_dir_entry_tmp, $20, .sizeof(F32DirEntry::Name) + .sizeof(F32DirEntry::Ext)		; erase name
 		m_memcpy fat_dir_entry_tmp, block_data, .sizeof(F32DirEntry)									; copy dir entry to block buffer
@@ -458,16 +450,18 @@ __fat_prepare_dir_entry:
 ;		debug16 "cdt", fat_dir_entry_tmp+F32DirEntry::CrtTime
 ;		debug16 "cdd", fat_dir_entry_tmp+F32DirEntry::CrtDate
 		
-		lda fat_clnr_tmp+3
+		ldx fat_fd_tmp
+		lda fd_area+F32_fd::StartCluster+3, x
 		sta fat_dir_entry_tmp+F32DirEntry::FstClusHI+1
-		lda fat_clnr_tmp+2
+		lda fd_area+F32_fd::StartCluster+2, x
 		sta fat_dir_entry_tmp+F32DirEntry::FstClusHI+0
-		lda fat_clnr_tmp+1
+		lda fd_area+F32_fd::StartCluster+1, x
 		sta fat_dir_entry_tmp+F32DirEntry::FstClusLO+1
-		lda fat_clnr_tmp+0
+		lda fd_area+F32_fd::StartCluster+0, x
 		sta fat_dir_entry_tmp+F32DirEntry::FstClusLO+0
-
-;		m_memset fat_dir_entry_tmp+F32DirEntry::FileSize, 0, 4
+		
+		; TODO fixme file/dir
+		m_memset fat_dir_entry_tmp+F32DirEntry::FileSize, 0, 4
 		rts
 		
 __fat_write_fat_blocks:
@@ -506,7 +500,7 @@ __fat_mark_free_cluster:
 		;	Z=0 on success
 		;		Y=offset in block_fat of found cluster
 		;		lba_addr with fat block where the found clouster resides
-		;		fat_clnr_tmp - the found cluster
+		;		updated fd_area+F32_fd::StartCluster, x with the found cluster
 		;	Z=1 on error, A=error code
 __fat_find_free_cluster:
 		;TODO improve, use a previously saved lba_addr and/or found cluster number
@@ -548,23 +542,24 @@ __fat_find_free_cluster:
 		cmp	fat2_lba_begin+0
 		bne	@next_block			;
 		lda #ENOSPC				; end reached, answer ENOSPC - No space left on device
-@exit:	debug32 "free_cl", fat_clnr_tmp
+@exit:	debug32 "free_cl", fd_area+F32_fd::StartCluster+$40 ;(almost the 3rd entry)
 		rts		
 @l_found_hb:
 		lda #>(block_fat+$100)	; set read_blkptr to begin 2nd page of fat_buffer - @see __fat_mark_free_cluster
 		sta read_blkptr+1
 		lda #$40				; adjust clnr with +$40 clusters since it was found in 2nd page
 @l_found_lb:					; A=0 here, if called from above
+		ldx fat_fd_tmp
 		debug32 "fc_lba", lba_addr
-		sta fat_clnr_tmp+0
+		sta fd_area+F32_fd::StartCluster+0, x
 		tya
 		lsr						; offset Y>>2 (div 4, 32 bit clnr)
-		lsr
-		;clc not necessary since y is multiple of 4
-		adc fat_clnr_tmp+0		; add to clnr base
-		sta fat_clnr_tmp+0		; safe to
+		lsr		
+		adc fd_area+F32_fd::StartCluster+0, x	; C=0 always here, y is multiple of 4 and 2 lsr
+		sta fd_area+F32_fd::StartCluster+0, x	; safe clnr
 
-		debug32 "fc_tmp2", fat_clnr_tmp		
+		debug32 "fc_tmp2", fd_area+F32_fd::StartCluster+$40 ;(almost the 3rd entry)
+		
 		;m_memcpy lba_addr, safe_lba TODO FIXME fat lba address, reuse them at next search
 
 		; to calc them we have to clnr = (block number * 512) / 4 + (Y / 4) => (lba_addr - fat_lba_begin) << 7 + (Y>>2)
@@ -572,20 +567,20 @@ __fat_find_free_cluster:
 		sec
 		lda lba_addr+0
 		sbc fat_lba_begin+0
-		tax						; save A
+		sta krn_tmp				; save A
 		lda lba_addr+1
 		sbc fat_lba_begin+1		; now we have 16bit blocknumber
 		lsr						; clnr = blocks<<7
-		sta fat_clnr_tmp+2
-		txa 					; restore A
+		sta fd_area+F32_fd::StartCluster+2, x
+		lda krn_tmp				; restore A
 		ror
-		sta fat_clnr_tmp+1
+		sta fd_area+F32_fd::StartCluster+1, x
 		lda #0
-		ror						; clnr += offset within block - already saved in fat_clnr_tmp+0 s.above
-		adc fat_clnr_tmp+0
-		sta fat_clnr_tmp+0
+		ror						; clnr += offset within block - already saved in F32_fd::StartCluster+0, x s.above
+		adc fd_area+F32_fd::StartCluster+0, x
+		sta fd_area+F32_fd::StartCluster+0, x
 		lda #0					; exit found
-		sta fat_clnr_tmp+3		; TODO FIXME 16bit block limit
+		sta fd_area+F32_fd::StartCluster+3, x
 		bra @exit
 		
         ;in:
