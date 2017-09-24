@@ -13,8 +13,8 @@ for n in $TOOLS ; do
 	cp tools/$n dist/BIN/$un
 done
 
-for i in {0..9} ; do 
-	echo foobar > dist/FILE$i.DAT
-done
+#^for i in {0..9} ; do 
+#	echo foobar > dist/FILE$i.DAT
+#done
 
 cp -a dist/* $TARGET &&  umount $TARGET
