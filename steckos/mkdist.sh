@@ -29,5 +29,6 @@ done
 
 cp tools/xmodem/rx.prg dist/BIN/RX.PRG
 cp ehbasic/basic.prg dist/USR/BIN/BASIC.PRG
+cp imfplayer/imf.prg dist/USR/BIN/IMF.PRG
 
 cp -a dist/* $TARGET &&  umount $TARGET

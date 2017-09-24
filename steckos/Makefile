@@ -9,6 +9,7 @@ clean:
 	(cd libsrc; make clean)
 	(cd kernel; make clean)
 	(cd ehbasic; make clean)
+	(cd imfplayer; make clean)
 	rm -rf dist/*
 
 build:
@@ -17,6 +18,7 @@ build:
 	(cd shell; make )
 	(cd tools; make )
 	(cd ehbasic; make )
+	(cd imfplayer; make )
 	(cd test; make )
 
 dist: build
