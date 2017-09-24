@@ -11,3 +11,7 @@
  ;       tm_yday
   ;      tm_isdst
 .endstruct
+
+;----------------------------------------------------------------------------
+; last known timestamp with date set to 1970-01-01
+rtc_systime_t = $0300

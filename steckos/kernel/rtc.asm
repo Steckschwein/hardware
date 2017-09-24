@@ -7,7 +7,7 @@
 ;kernel api
 .export	rtc_systime
 ;kernel internal
-.export __rtc_systime_update, __rtc_systime_t
+.export __rtc_systime_update
 
 .segment "KERNEL"
 
@@ -41,7 +41,7 @@ rtc_systime:
 		stx krn_ptr1+1
 		jsr __rtc_systime_update
 		ldy	#.sizeof(time_t)
-@cp:	lda	__rtc_systime_t, y
+@cp:	lda	rtc_systime_t, y
 		sta (krn_ptr1), y
 		dey
 		bne @cp
@@ -60,34 +60,37 @@ __rtc_systime_update:
 
 		jsr spi_r_byte     ;seconds
 		jsr BCD2dec
-		sta __rtc_systime_t+time_t::tm_sec
+		sta rtc_systime_t+time_t::tm_sec
 
 		jsr spi_r_byte     ;minute
 		jsr BCD2dec
-		sta __rtc_systime_t+time_t::tm_min
+		sta rtc_systime_t+time_t::tm_min
 
 		jsr spi_r_byte     ;hour
 		jsr BCD2dec
-		sta __rtc_systime_t+time_t::tm_hour
+		sta rtc_systime_t+time_t::tm_hour
 
 		jsr spi_r_byte     ;week day
-		sta __rtc_systime_t+time_t::tm_wday
+		sta rtc_systime_t+time_t::tm_wday
 		
 		jsr spi_r_byte     					;day of month
 		jsr BCD2dec
-		sta __rtc_systime_t+time_t::tm_mday
+		sta rtc_systime_t+time_t::tm_mday
 
 		jsr spi_r_byte     					;month
 		dec                     			;dc1306 gives 1-12, but 0-11 expected
 		jsr BCD2dec
-		sta __rtc_systime_t+time_t::tm_mon
+		sta rtc_systime_t+time_t::tm_mon
 
 		jsr spi_r_byte   					;year value - rtc year 2000+year register
 		jsr BCD2dec
 		clc
 		adc #100            				;time_t year starts from 1900
-		sta __rtc_systime_t+time_t::tm_year
-
+		sta rtc_systime_t+time_t::tm_year
+.ifdef DEBUG_RTC
+		debug32 "rtc0", rtc_systime_t
+		debug32 "rtc1", rtc_systime_t+4
+.endif
 		jmp spi_deselect
 	
 ; dec = (((BCD>>4)*10) + (BCD&0xf))
@@ -103,7 +106,3 @@ BCD2dec:tax
 		adc     krn_tmp2        ; = *10
 		adc     krn_tmp
 		rts
-
-;----------------------------------------------------------------------------
-; last known timestamp with date set to 1970-01-01
-__rtc_systime_t: .tag time_t

@@ -7,7 +7,7 @@
 .import sd_read_block, sd_read_multiblock, sd_write_block, sd_write_multiblock, sd_select_card, sd_deselect_card
 .import sd_read_block_data
 
-.import __rtc_systime_update, __rtc_systime_t
+.import __rtc_systime_update
 
 .export fat_mount
 .export fat_open, fat_isOpen, fat_chdir, fat_get_root_and_pwd
@@ -422,6 +422,12 @@ __fat_write_dir_entry:
 		debug "f_wde"
 		rts
 
+		
+__fat_rtc_time:
+		rts
+__fat_rtc_date:
+		rts
+		
 		;
 __fat_prepare_dir_entry:
 		m_memset fat_dir_entry_tmp, 0, .sizeof(F32DirEntry)
@@ -431,11 +437,10 @@ __fat_prepare_dir_entry:
 		sta fat_dir_entry_tmp+F32DirEntry::Attr
 		
 		jsr __rtc_systime_update				; update systime struct
-		;debug32 "rtc0", __rtc_systime_t
-		;debug32 "rtc1", __rtc_systime_t+4
-		lda __rtc_systime_t+time_t::tm_hour
-		lda __rtc_systime_t+time_t::tm_min
-		lda __rtc_systime_t+time_t::tm_sec
+		jsr __fat_rtc_time
+		lda rtc_systime_t+time_t::tm_hour
+		lda rtc_systime_t+time_t::tm_min
+		lda rtc_systime_t+time_t::tm_sec
 		lda #<(14<<11 | 1<<5 | 33>>1)
 		sta fat_dir_entry_tmp+F32DirEntry::CrtTime+0
 		sta fat_dir_entry_tmp+F32DirEntry::WrtTime+0
@@ -443,9 +448,10 @@ __fat_prepare_dir_entry:
 		sta fat_dir_entry_tmp+F32DirEntry::CrtTime+1
 		sta fat_dir_entry_tmp+F32DirEntry::WrtTime+1
 
-		lda __rtc_systime_t+time_t::tm_year
-		lda __rtc_systime_t+time_t::tm_mon
-		lda __rtc_systime_t+time_t::tm_mday
+		jsr __fat_rtc_date
+		lda rtc_systime_t+time_t::tm_year
+		lda rtc_systime_t+time_t::tm_mon
+		lda rtc_systime_t+time_t::tm_mday
 		lda #<((2017-1980) <<9 | 9 <<5 | 19) ;TODO FIXME
 		sta fat_dir_entry_tmp+F32DirEntry::CrtDate+0
 		sta fat_dir_entry_tmp+F32DirEntry::WrtDate+0
@@ -454,7 +460,7 @@ __fat_prepare_dir_entry:
 		sta fat_dir_entry_tmp+F32DirEntry::CrtDate+1
 		sta fat_dir_entry_tmp+F32DirEntry::WrtDate+1
 		
-;		stz fat_dir_entry_tmp+F32DirEntry::CrtTimeMillis		;ms to 0
+		stz fat_dir_entry_tmp+F32DirEntry::CrtTimeMillis		;ms to 0
 		
 ;		debug16 "cdt", fat_dir_entry_tmp+F32DirEntry::CrtTime
 ;		debug16 "cdd", fat_dir_entry_tmp+F32DirEntry::CrtDate
@@ -994,8 +1000,8 @@ fat_mount:
 		.asciiz "MF: "
 		lda sd_blktarget + VolumeID::MirrorFlags
 		jsr krn_hexout
-.endif
-		m_memcpy	sd_blktarget, volumeID, .sizeof(VolumeID)
+.endif	
+		m_memcpy	sd_blktarget+11, volumeID, .sizeof(VolumeID) ; +11 skip first 11 bytes, we are not interested in
 		
 		; Bytes per Sector, must be 512 = $0200
 		lda	volumeID+VolumeID::BytsPerSec+0

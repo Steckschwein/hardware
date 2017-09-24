@@ -60,20 +60,19 @@ PartType_FAT32_LBA	= $0c
 ;--------------------------------------------------------------------------------------
 ; FAT32 Volume ID
 ;--------------------------------------------------------------------------------------
-.struct VolumeID	
-	Reserved	.byte 11	; TODO FIXME unused, we can skip on mount and free 11 bytes
+.struct VolumeID
 	BytsPerSec	.word ; 12	; 512 usually
 	SecPerClus	.byte ; 13	; Sectors per Cluster as power of 2. valid are: 1,2,4,8,16,32,64,128
 	RsvdSecCnt	.word ; 14	; number of reserved sectors
 	NumFATs		.byte ; 16
-	Reserved2	.byte 4 ; 17
+	Reserved	.byte 4 ; 17
 	Media		.byte	; 21 ; For removable media, 0xF0 is frequently used. 
 				; The legal values for this field are 
 				; 0xF0, 0xF8, 0xF9, 0xFA, 0xFB, 0xFC, 0xFD, 0xFE, and 0xFF. 
 	MirrorFlags	.word   ; Bits 0-3: number of active FAT (if bit 7 is 1)
-        			; Bits 4-6: reserved
-        			; Bit 7: one: single active FAT; zero: all FATs are updated at runtime
-        			; Bits 8-15: reserved
+					; Bits 4-6: reserved
+					; Bit 7: one: single active FAT; zero: all FATs are updated at runtime
+					; Bits 8-15: reserved
 				; https://www.win.tue.nl/~aeb/linux/fs/fat/fat-1.html
 	Reserved3	.byte 12
 	FATSz32		.dword		; sectors per FAT
@@ -140,7 +139,7 @@ FD_INDEX_TEMP_DIR = FD_Entry_Size	; temp dir always go to fd #1
 
 FAT_EOC			= $0fffffff	; end of cluster chain marker
 
-volumeID				= $0300 ; address of VolumeID
+volumeID				= $0308 ; address of VolumeID
 cluster_begin_lba 		= volumeID + .sizeof(VolumeID) ; begin of cluster area (4 byte)
 fat_lba_begin			= cluster_begin_lba + 4; (2 byte) begin of fat area - TODO FIXME we assume 16bit are sufficient since fat is placed at the beginning of the device
 fat2_lba_begin			= fat_lba_begin + 2	; (2 byte) end of first fat and begin of 2nd fat (mirror) area - TODO FIXME we assume 16bit ...

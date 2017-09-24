@@ -45,10 +45,3 @@ errno				= $0288
 
 krn_call_internal	= $028a		; jmp vector internally used
 trampolin			= $028c
-
-dbg_acc			= $02f9 ; basic uses $0290 - $02f8
-dbg_xreg		= $02fa
-dbg_yreg		= $02fb
-dbg_status		= $02fc
-dbg_bytes		= $02fd
-dbg_savept		= $02fe
