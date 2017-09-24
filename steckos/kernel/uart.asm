@@ -1,6 +1,5 @@
 .include "kernel.inc"
-;.export  init_uart, uart_tx, uart_rx, uart_rx_nowait
-.export  init_uart, uart_tx, uart_rx
+.export  init_uart, uart_tx, uart_rx, uart_rx_nowait
 .include "uart.inc"
 .segment "KERNEL"
 
@@ -10,12 +9,12 @@
 init_uart:
 		lda #%10000000
 		sta uart1lcr
-			
+
 		; 115200 baud
 		lda #$01
 		; 19200 baud
 ;		lda #$06
-		sta uart1dll	
+		sta uart1dll
 		stz uart1dlh
 
 		; 8N1
@@ -23,26 +22,26 @@ init_uart:
 		sta uart1lcr
 
 		lda #%00000111	; Enable FIFO, reset tx/rx FIFO
-		sta uart1fcr	
+		sta uart1fcr
 
-		stz uart1ier	; polled mode (so far) 
+		stz uart1ier	; polled mode (so far)
 		stz uart1mcr	; reset DTR, RTS
 
 		rts
 ;----------------------------------------------------------------------------------------------
 
 ;----------------------------------------------------------------------------------------------
-; send byte in A 
+; send byte in A
 ;----------------------------------------------------------------------------------------------
 uart_tx:
 		pha
 
 		lda #$20
-@l:			
+@l:
 		bit uart1lsr
 		beq @l
 
-		pla 
+		pla
 
 		sta uart1rxtx
 
@@ -50,7 +49,7 @@ uart_tx:
 ;----------------------------------------------------------------------------------------------
 
 ;----------------------------------------------------------------------------------------------
-; receive byte, wait until received, store in A 
+; receive byte, wait until received, store in A
 ;----------------------------------------------------------------------------------------------
 uart_rx:
 		lda #$01        ; Maske fuer DataReady Bit
@@ -64,15 +63,14 @@ uart_rx:
 ;----------------------------------------------------------------------------------------------
 ; receive byte, no wait, set carry and store in A when received
 ;----------------------------------------------------------------------------------------------
-;uart_rx_nowait:
-;                lda #$01        ; Maske fuer DataReady Bit
-;                bit uart1lsr
-;                beq @l
-;                lda uart1rxtx
-;                sec
-;                rts
-;@l:
-;                clc
-;                rts
+uart_rx_nowait:
+                lda #$01        ; Maske fuer DataReady Bit
+                bit uart1lsr
+                beq @l
+                lda uart1rxtx
+                sec
+                rts
+@l:
+                clc
+                rts
 ;----------------------------------------------------------------------------------------------
-

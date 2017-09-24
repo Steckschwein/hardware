@@ -294,16 +294,18 @@ GoodMsg:	!text 	"Upload Successful!"
 ;
 ; input chr from ACIA (no waiting)
 ; TODO
-Get_Chr:
-            lda #$01        ; Maske fuer DataReady Bit
-            bit uart1lsr
-            beq +
-            lda uart1rxtx
-			sec
-			rts
-+
-			clc
-            rts
+;Get_Chr:
+;            lda #$01        ; Maske fuer DataReady Bit
+;            bit uart1lsr
+;            beq +
+;            lda uart1rxtx
+;			sec
+;			rts
+;+
+;			clc
+;            rts
+
+Get_Chr		= krn_uart_rx_nowait
 
 ;
 ;

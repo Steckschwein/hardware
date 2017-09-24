@@ -13,7 +13,7 @@ text_mode_40 = 1
 .import init_via1
 .import init_rtc
 .import spi_r_byte, spi_rw_byte, spi_deselect, spi_select_rtc
-.import init_uart, uart_tx, uart_rx
+.import init_uart, uart_tx, uart_rx, uart_rx_nowait
 .import textui_init0, textui_update_screen, textui_chrout, textui_put
 .import getkey
 .import textui_enable, textui_disable, vdp_display_off,  textui_blank, textui_update_crs_ptr, textui_crsxy, textui_scroll_up
@@ -85,7 +85,7 @@ kern_init:
 ;	ldx #$ff
 ;	txs
 
-;	jmp shell_addr    
+;	jmp shell_addr
 
 do_upload:
 	jsr init_uart
@@ -280,7 +280,9 @@ krn_mkdir: 				    jmp fat_mkdir
 
 krn_execv:                  jmp execv
 
-krn_xxx:				    jmp krn_xxx
+.export krn_uart_rx_nowait
+krn_uart_rx_nowait:		    jmp uart_rx_nowait
+
 .export krn_mount
 krn_mount: 				    jmp fat_mount
 
