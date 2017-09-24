@@ -1,4 +1,4 @@
-TARGET=rx.prg hello.prg
+TARGET=rx.prg 
 
 all: $(TARGET)
 
