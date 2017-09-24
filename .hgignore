@@ -14,3 +14,5 @@ syntax: glob
 **.o
 *.bak
 *~
+*.d
+*.s
