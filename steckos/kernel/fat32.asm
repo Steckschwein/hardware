@@ -302,9 +302,9 @@ __fat_write_newdir_entry:
 		debug32 "lba_data", lba_addr		
 		jsr fat_close 						 															; free the tmp file
 		
-		m_memset dir_entry_template, $20, .sizeof(F32DirEntry::Name) + .sizeof(F32DirEntry::Ext)		; erase name
-		m_memcpy dir_entry_template, block_data, .sizeof(F32DirEntry)									; copy dir entry to block buffer
-		m_memcpy dir_entry_template, block_data+1*.sizeof(F32DirEntry), .sizeof(F32DirEntry)			; copy dir entry to block buffer
+		m_memset fat_dir_entry_tmp, $20, .sizeof(F32DirEntry::Name) + .sizeof(F32DirEntry::Ext)		; erase name
+		m_memcpy fat_dir_entry_tmp, block_data, .sizeof(F32DirEntry)									; copy dir entry to block buffer
+		m_memcpy fat_dir_entry_tmp, block_data+1*.sizeof(F32DirEntry), .sizeof(F32DirEntry)			; copy dir entry to block buffer
 		lda #'.'
 		sta block_data+F32DirEntry::Name																; 1st entry "."
 		sta block_data+1*.sizeof(F32DirEntry)+F32DirEntry::Name+0										; 2nd entry ".."
@@ -389,13 +389,13 @@ __fat_write_dir_entry:
 @l0:	lda pathFragment, x
 		beq @l1
 		toupper
-		sta dir_entry_template+F32DirEntry::Name,x
+		sta fat_dir_entry_tmp+F32DirEntry::Name,x
 		inx
 		cpx #11
 		bne @l0
 @l1:	
-		;debugdump "dir", dir_entry_template
-		m_memcpy2ptr dir_entry_template, dirptr, .sizeof(F32DirEntry)	; copy new entry to block buffer
+		;debugdump "dir", fat_dir_entry_tmp
+		m_memcpy2ptr fat_dir_entry_tmp, dirptr, .sizeof(F32DirEntry)	; copy new entry to block buffer
 
 		;TODO FIXME duplicate code here! - @see fat_find_next:
 		lda dirptr														; create the end of directory entry
@@ -423,12 +423,11 @@ __fat_write_dir_entry:
 		rts
 
 __fat_prepare_dir_entry:
-		; fill new dir entry
-		m_memset dir_entry_template, 0, .sizeof(F32DirEntry)
-		m_memset dir_entry_template, $20, .sizeof(F32DirEntry::Name) + .sizeof(F32DirEntry::Ext)
+		m_memset fat_dir_entry_tmp, 0, .sizeof(F32DirEntry)
+		m_memset fat_dir_entry_tmp, $20, .sizeof(F32DirEntry::Name) + .sizeof(F32DirEntry::Ext)
 		
 		lda #DIR_Attr_Mask_Dir ; TODO distinct dir/file via param
-		sta dir_entry_template+F32DirEntry::Attr
+		sta fat_dir_entry_tmp+F32DirEntry::Attr
 		
 		jsr __rtc_systime_update				; update systime struct
 		;debug32 "rtc0", __rtc_systime_t
@@ -437,43 +436,39 @@ __fat_prepare_dir_entry:
 		lda __rtc_systime_t+time_t::tm_min
 		lda __rtc_systime_t+time_t::tm_sec
 		lda #<(14<<11 | 1<<5 | 33>>1)
-		sta dir_entry_template+F32DirEntry::CrtTime+0
-		sta dir_entry_template+F32DirEntry::WrtTime+0
+		sta fat_dir_entry_tmp+F32DirEntry::CrtTime+0
+		sta fat_dir_entry_tmp+F32DirEntry::WrtTime+0
 		lda #>(14<<11 | 1<<5 | 33>>1)
-		sta dir_entry_template+F32DirEntry::CrtTime+1
-		sta dir_entry_template+F32DirEntry::WrtTime+1
+		sta fat_dir_entry_tmp+F32DirEntry::CrtTime+1
+		sta fat_dir_entry_tmp+F32DirEntry::WrtTime+1
 
 		lda __rtc_systime_t+time_t::tm_year
 		lda __rtc_systime_t+time_t::tm_mon
 		lda __rtc_systime_t+time_t::tm_mday
 		lda #<((2017-1980) <<9 | 9 <<5 | 19) ;TODO FIXME
-		sta dir_entry_template+F32DirEntry::CrtDate+0
-		sta dir_entry_template+F32DirEntry::WrtDate+0
-		sta dir_entry_template+F32DirEntry::LstModDate+0
+		sta fat_dir_entry_tmp+F32DirEntry::CrtDate+0
+		sta fat_dir_entry_tmp+F32DirEntry::WrtDate+0
+		sta fat_dir_entry_tmp+F32DirEntry::LstModDate+0
 		lda #>((2017-1980) <<9 | 9 <<5 | 19) ;TODO FIXME
-		sta dir_entry_template+F32DirEntry::CrtDate+1
-		sta dir_entry_template+F32DirEntry::WrtDate+1
+		sta fat_dir_entry_tmp+F32DirEntry::CrtDate+1
+		sta fat_dir_entry_tmp+F32DirEntry::WrtDate+1
 		
-;		stz dir_entry_template+F32DirEntry::CrtTimeMillis		;ms to 0
+;		stz fat_dir_entry_tmp+F32DirEntry::CrtTimeMillis		;ms to 0
 		
-;		debug16 "cdt", dir_entry_template+F32DirEntry::CrtTime
-;		debug16 "cdd", dir_entry_template+F32DirEntry::CrtDate
+;		debug16 "cdt", fat_dir_entry_tmp+F32DirEntry::CrtTime
+;		debug16 "cdd", fat_dir_entry_tmp+F32DirEntry::CrtDate
 		
 		lda fat_clnr_tmp+3
-		sta dir_entry_template+F32DirEntry::FstClusHI+1
+		sta fat_dir_entry_tmp+F32DirEntry::FstClusHI+1
 		lda fat_clnr_tmp+2
-		sta dir_entry_template+F32DirEntry::FstClusHI+0
+		sta fat_dir_entry_tmp+F32DirEntry::FstClusHI+0
 		lda fat_clnr_tmp+1
-		sta dir_entry_template+F32DirEntry::FstClusLO+1
+		sta fat_dir_entry_tmp+F32DirEntry::FstClusLO+1
 		lda fat_clnr_tmp+0
-		sta dir_entry_template+F32DirEntry::FstClusLO+0
+		sta fat_dir_entry_tmp+F32DirEntry::FstClusLO+0
 
-;		m_memset dir_entry_template+F32DirEntry::FileSize, 0, 4
+;		m_memset fat_dir_entry_tmp+F32DirEntry::FileSize, 0, 4
 		rts
-		
-dir_entry_template:
-; TODO FIXME struct init not implemented yet - @see http://www.cc65.org/doc/ca65-15.html#ss15.4
-		.tag F32DirEntry
 		
 __fat_write_fat_blocks:
 		jsr __fat_write_block_fat_tweak			; lba_addr is already setup by __fat_find_free_cluster
@@ -509,7 +504,8 @@ __fat_mark_free_cluster:
 		;	-
 		; out:
 		;	Z=0 on success
-		;		lba_addr points to fat block with found clouster
+		;		Y=offset in block_fat of found cluster
+		;		lba_addr with fat block where the found clouster resides
 		;		fat_clnr_tmp - the found cluster
 		;	Z=1 on error, A=error code
 __fat_find_free_cluster:
@@ -576,12 +572,12 @@ __fat_find_free_cluster:
 		sec
 		lda lba_addr+0
 		sbc fat_lba_begin+0
-		sta krn_tmp
+		tax						; save A
 		lda lba_addr+1
 		sbc fat_lba_begin+1		; now we have 16bit blocknumber
 		lsr						; clnr = blocks<<7
 		sta fat_clnr_tmp+2
-		lda krn_tmp
+		txa 					; restore A
 		ror
 		sta fat_clnr_tmp+1
 		lda #0
