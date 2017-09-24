@@ -88,30 +88,6 @@ PartType_FAT32_LBA	= $0c
 	LastClus	.dword  ; ($01ec) last known cluster number
 .endstruct
 
-; TODO: do we need these?
-;BS_BootSig		= 38
-;BS_VolID		= 39
-;BS_VolLab		= 43
-;BS_FilSysType	= 54	; One of the strings “FAT12 ”, “FAT16 ”, or “FAT ”.
-
-FAT_EOC			= $0fffffff	; end of cluster chain marker
-
-volumeID				= $0300 ; address of VolumeID
-cluster_begin_lba 		= volumeID + .sizeof(VolumeID) ; begin of cluster area (4 byte)
-fat_lba_begin			= cluster_begin_lba + 4; (2 byte) begin of fat area - TODO FIXME we assume 16bit are sufficient since fat is placed at the beginning of the device
-fat2_lba_begin			= fat_lba_begin + 2	; (2 byte) end of first fat and begin of 2nd fat (mirror) area - TODO FIXME we assume 16bit ...
-fat_clnr_tmp			= fat2_lba_begin + 2 ; (4 byte)
-fat_lba_tmp				= fat_clnr_tmp + 4 ; (4 byte)
-fat_fd_tmp				= fat_lba_tmp + 4; (1 byte); internallly used fd
-filename_buf			= fat_fd_tmp + 1 ; (11 byte) file name buffer
-					
-fd_area					= $0360 ; File descriptor area until $0400
-sd_blktarget			= $0400
-block_data				= sd_blktarget
-block_fat               = $0600
-sd_blocksize			= $200
-
-
 ;--------------------------------------------------------------------------------------
 ; FAT32 Directory Entry
 ;--------------------------------------------------------------------------------------
@@ -152,10 +128,28 @@ DIR_Entry_Deleted			= $e5
 .endstruct
 FD_Entry_Size = .sizeof(F32_fd)
 FD_Entries_Max = ($0400 - fd_area) / FD_Entry_Size
-
-;FD_start_cluster = $00  ; 32 Bit cluster nr
-;FD_file_size = $04              ; 32 Bit file size
-;FD_file_attr = $08              ; 8 Bit fat32 Attributes
-
 FD_INDEX_CURRENT_DIR = 0		 	; current dir always go to fd #0
 FD_INDEX_TEMP_DIR = FD_Entry_Size	; temp dir always go to fd #1
+
+; TODO: do we need these?
+;BS_BootSig		= 38
+;BS_VolID		= 39
+;BS_VolLab		= 43
+;BS_FilSysType	= 54	; One of the strings “FAT12 ”, “FAT16 ”, or “FAT ”.
+
+FAT_EOC			= $0fffffff	; end of cluster chain marker
+
+volumeID				= $0300 ; address of VolumeID
+cluster_begin_lba 		= volumeID + .sizeof(VolumeID) ; begin of cluster area (4 byte)
+fat_lba_begin			= cluster_begin_lba + 4; (2 byte) begin of fat area - TODO FIXME we assume 16bit are sufficient since fat is placed at the beginning of the device
+fat2_lba_begin			= fat_lba_begin + 2	; (2 byte) end of first fat and begin of 2nd fat (mirror) area - TODO FIXME we assume 16bit ...
+fat_lba_tmp				= fat2_lba_begin + 4 ; (4 byte)
+fat_fd_tmp				= fat_lba_tmp + 4; (1 byte); internallly used fd
+fat_dir_entry_tmp		= fat_fd_tmp + 1 ;(32 byte); internallly used during mkdir, rmdir, fopen r+
+filename_buf			= fat_dir_entry_tmp + .sizeof(F32DirEntry) ; (11 byte) file name buffer
+
+fd_area					= $0380 ; File descriptor area until $0400
+sd_blktarget			= $0400
+block_data				= sd_blktarget
+block_fat               = $0600
+sd_blocksize			= $200
