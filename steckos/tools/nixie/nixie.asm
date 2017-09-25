@@ -5,9 +5,12 @@
 .include	"../../kernel/kernel_jumptable.inc"
 
 .import		vdp_bgcolor
-.import		vdp_mode_gfx2
-.import		vdp_mode_gfx2_blank
+.import		vdp_gfx2_on
+.import		vdp_gfx2_blank
 .import		vdp_memcpys
+
+.include "appstart.inc"
+appstart $1000
 
 CHAR_BLANK=$ff
 
@@ -18,11 +21,11 @@ main:
 			jsr	krn_display_off
 
 			lda	#Black<<4|Black
-			jsr	vdp_mode_gfx2_blank
+			jsr	vdp_gfx2_blank
 			jsr	init_digits
 			jsr	init_screen
 			
-			jsr	vdp_mode_gfx2
+			jsr	vdp_gfx2_on
 			
 			copypointer	$fffe, irqsave
 			SetVector	isr, $fffe

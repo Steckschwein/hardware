@@ -63,22 +63,38 @@ public class reorggfx {
 
 	private static int reorgBank(byte[] inb, byte[] b, int ix, int startRow, int rows) {
 		int bytesPerLine = 32 * 8;
-		int zeroOffs = (5 * 8 * 6 + 2 * 8) * 9 + 5 * 8 * 3;
-		int one2sixOffs = 0;
-		int seven29Offs = (5 * 8 * 6 + 2 * 8) * 9;
+		int zero2fiveOffs = 0;
+		int six2NineOffs = bytesPerLine * 9;
 		for (int i = startRow; i < (startRow + rows); i++) {
-			int offs = zeroOffs + (i * bytesPerLine); // zero
-			ix = cut(inb, offs, 5 * 8 * 1, b, ix);
-			offs = one2sixOffs + (i * bytesPerLine); // 1-6
+			int offs = zero2fiveOffs + (i * bytesPerLine); // 0-5
 			ix = cut(inb, offs, 5 * 8 * 6, b, ix);
-			offs = seven29Offs + (i * bytesPerLine);// 7-9
-			ix = cut(inb, offs, 5 * 8 * 3, b, ix);
+			offs = six2NineOffs + (i * bytesPerLine);// 6-9
+			ix = cut(inb, offs, 5 * 8 * 4, b, ix);
 		}
 		for (int i = 0; i < 7; i++)
 			b[ix++] = 0;// blank
 
 		return ix;
 	}
+
+	// private static int reorgBank(byte[] inb, byte[] b, int ix, int startRow, int rows) {
+	// int bytesPerLine = 32 * 8;
+	// int zeroOffs = (5 * 8 * 6 + 2 * 8) * 9 + 5 * 8 * 3;
+	// int one2sixOffs = 0;
+	// int seven29Offs = (5 * 8 * 6 + 2 * 8) * 9;
+	// for (int i = startRow; i < (startRow + rows); i++) {
+	// int offs = zeroOffs + (i * bytesPerLine); // zero
+	// ix = cut(inb, offs, 5 * 8 * 1, b, ix);
+	// offs = one2sixOffs + (i * bytesPerLine); // 1-6
+	// ix = cut(inb, offs, 5 * 8 * 6, b, ix);
+	// offs = seven29Offs + (i * bytesPerLine);// 7-9
+	// ix = cut(inb, offs, 5 * 8 * 3, b, ix);
+	// }
+	// for (int i = 0; i < 7; i++)
+	// b[ix++] = 0;// blank
+	//
+	// return ix;
+	// }
 
 	private static int cut(byte[] inb, int offs, int l, byte[] b, int ix) {
 		for (int i = 0; i < l; i++) {
