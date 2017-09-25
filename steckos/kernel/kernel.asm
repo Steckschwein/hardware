@@ -42,6 +42,7 @@ kern_init:
 
 	jsr init_via1
 	jsr init_rtc
+	jsr init_uart
 
 	SetVector user_isr_default, user_isr
 
@@ -87,7 +88,6 @@ kern_init:
 ;	jmp shell_addr
 
 do_upload:
-	jsr init_uart
 	jsr upload
 
 	ldx #$ff
