@@ -224,6 +224,7 @@ sd_block_cmd:
 ; Read block from SD Card
 ;---------------------------------------------------------------------
 sd_read_block:
+		save
 		jsr sd_select_card
 
 		lda #cmd17
@@ -240,7 +241,7 @@ sd_read_block:
 		lda	#0
 
 @exit: ; fall through to sd_deselect_card
-
+		restore
 
 		;---------------------------------------------------------------------
 		; deselect sd card, puSH CS line to HI and generate few clock cycles
