@@ -59,9 +59,8 @@ kern_init:
 
 
 	jsr init_sdcard
-	lda errno
-	debug "init"
 	bne do_upload
+
 
 	jsr fat_mount
 	lda errno

@@ -53,7 +53,7 @@ init_sdcard:
 
 	; No Card
 	lda #$ff
-	sta errno
+;	sta errno
 	rts
 
 @l3:
@@ -85,10 +85,12 @@ init_sdcard:
 	beq @l5
 
 	; Invalid Card (or card we can't handle yet)
-	lda #$0f
-	sta errno
 	jsr sd_deselect_card
+
+	lda #$0f
+;	sta errno
 	rts
+
 @l5:
 
 	jsr sd_param_init
@@ -105,8 +107,10 @@ init_sdcard:
 	beq @l6
 
 	; Init failed
+	jsr sd_deselect_card
+
 	lda #$f1
-	sta errno
+;	sta errno
 	rts
 
 @l6:
@@ -134,7 +138,7 @@ init_sdcard:
 	beq @l5
 
 	lda #$42
-	sta errno
+;	sta errno
 	rts
 @l7:
 
@@ -174,7 +178,8 @@ init_sdcard:
 	jsr spi_rw_byte
 @l9:
 	; SD card init successful
-	stz errno
+;	stz errno
+	lda #$00
 	rts
 
 
