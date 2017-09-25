@@ -26,13 +26,13 @@ main
 	
 -	ldx tmp3
 	ldy tmp4
-	jsr vdp_gfx2_set_pixel
+;	jsr vdp_gfx2_set_pixel
 	inc tmp3
-	bne	-
+;	bne	-
 	inc	tmp4
-	bne	-
+;	bne	-
 	
--	bra -
+;-	bra -
 	
     jsr	vdp_mode_gfx2_load_bitmap
 
@@ -214,12 +214,12 @@ vdp_gfx2_blend_on
 	
 !align 255,0
 .pattern
-;!bin "test/BRUNI_TRUDI.TIAP"
+!bin "test/BRUNI_TRUDI.TIAP"
 ;!bin "test/DIGITS_0-9_2.TIAP"
 ;!bin "VESPA.TIAP"
 ;!bin "test/GIRL_02.TIAP"
 .color
-;!bin "test/BRUNI_TRUDI.TIAC"
+!bin "test/BRUNI_TRUDI.TIAC"
 ;!bin "test/DIGITS_0-9_2.TIAC"
 ;!bin "VESPA.TIAC"
 ;!bin "test/GIRL_02.TIAC"

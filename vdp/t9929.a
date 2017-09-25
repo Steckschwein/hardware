@@ -1,8 +1,8 @@
 *=$1000
 
-!source "../bios/bios_call.inc"
+;!source "../bios/bios_call.inc"
 !source <defs.h.a>
-!source <via.h.a>
+;!source <via.h.a>
 !source <t9929.h.a>
 
 txtptr   =$f2
