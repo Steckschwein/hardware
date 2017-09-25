@@ -53,7 +53,6 @@ init_sdcard:
 
 	; No Card
 	lda #$ff
-;	sta errno
 	rts
 
 @l3:
@@ -88,7 +87,6 @@ init_sdcard:
 	jsr sd_deselect_card
 
 	lda #$0f
-;	sta errno
 	rts
 
 @l5:
@@ -110,7 +108,6 @@ init_sdcard:
 	jsr sd_deselect_card
 
 	lda #$f1
-;	sta errno
 	rts
 
 @l6:
@@ -138,7 +135,6 @@ init_sdcard:
 	beq @l5
 
 	lda #$42
-;	sta errno
 	rts
 @l7:
 
@@ -178,7 +174,6 @@ init_sdcard:
 	jsr spi_rw_byte
 @l9:
 	; SD card init successful
-;	stz errno
 	lda #$00
 	rts
 
@@ -229,7 +224,6 @@ sd_block_cmd:
 ; Read block from SD Card
 ;---------------------------------------------------------------------
 sd_read_block:
-        stz errno
 		jsr sd_select_card
 
 		lda #cmd17
