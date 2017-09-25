@@ -76,7 +76,7 @@ def main():
 	length = len(content)
 
 	print "Startaddress : 0x%04x (%d)" % (startaddr, startaddr)
-	print "Length    	: %d bytes" % (length)
+	print "Length    	: 0x%04x (%d) bytes" % (length, length)
 
 	ser.flushOutput()
 
