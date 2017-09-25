@@ -124,8 +124,10 @@ DIR_Entry_Deleted			= $e5
 	SeekPos			.word 2	; +4
 	DirEntryLBA		.word 2 ; +4 LBA of the block where the dir entry of the file is located
 	DirEntryPos		.byte	; +1 block offset within the block (DirEntryPos * DIR_Entry_Size)
-	Reserved		.byte 10;fill up to $20
+	openFlags		.byte 	; +1 flags during open
+	Reserved		.byte 9	;fill up to $20
 .endstruct
+
 FD_Entry_Size = .sizeof(F32_fd)
 FD_Entries_Max = ($0400 - fd_area) / FD_Entry_Size
 FD_INDEX_CURRENT_DIR = 0		 	; current dir always go to fd #0

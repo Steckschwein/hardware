@@ -180,7 +180,7 @@ clusternr_matcher:
 		rts
 
 		;in:
-        ;   A/X - pointer to the file path
+        ;   A/X - pointer to string with the file path
         ;out:
 		;	A - Z=0 on success, Z=1 and A with errno otherwise
         ;   X - index into fd_area of the opened directory - !!! ATTENTION !!! X is exactly the FD_INDEX_TEMP_DIR on success
@@ -190,6 +190,7 @@ __fat_opendir:
 		lda	fd_area + F32_fd::Attr, x
 		bit #DIR_Attr_Mask_Dir		; check that there is no error and we have a directory
 		bne	@l_ok
+		jsr fat_close				; not a directory, so we opened a file. just close them immediately and free the allocated fd
 		lda	#EINVAL					; TODO FIXME error code for "Not a directory"
 		bra @l_exit
 @l_ok:	lda #0                  ; ok
@@ -198,7 +199,7 @@ __fat_opendir:
 		rts
 
 		;in:
-        ;   A/X - pointer to the file path
+        ;   A/X - pointer to string with the file path
         ;out:
 		;	A - Z=0 on success, Z=1 and A with errno otherwise
         ;   X - index into fd_area of the opened directory
@@ -229,7 +230,8 @@ fat_rmdir:
 		iny 
 		cpy #11
 		bne @l0
-		;TODO FIXME write back updated block_data
+		;TODO implement fat/fat2 update, free the unused cluster(s)
+		;TODO write back updated block_data
 		
 		lda #0                  ; ok
 @l_exit:
@@ -243,11 +245,11 @@ fat_rmdir:
 		;	Z=0 on success, Z=1 on error, A=error code
 fat_mkdir:
 		jsr __fat_opendir
-		beq	@err_dir_exists
+		beq	@err_exists
 		cmp	#ENOENT									; we expect 'no such file or directory' error, otherwise a file with same name already exists
 		bne @l_exit
 
-		m_memcpy lba_addr, fat_lba_tmp, 4			; save lba_addr which points to the block the current dir entry resides (dirptr)
+		m_memcpy lba_addr, fat_lba_tmp, 4			; found..., save lba_addr pointing to the block the current dir entry resides (dirptr)
 		debug32 "ltmp", fat_lba_tmp
 		
 		jsr fat_alloc_fd							; alloc new fd - TODO use them for fopen and "rw+" mode - we alloc here already, cause fat_alloc_fd may fail				
@@ -274,7 +276,7 @@ fat_mkdir:
 		debug "nd fd"
 		jsr fat_close						 															; free the tmp file
 		bra @l_exit
-@err_dir_exists:
+@err_exists:
 		lda	#EEXIST
 @l_exit:
 		debug "mkdir"
@@ -627,7 +629,7 @@ __fat_find_free_cluster:
 		bra @exit
 		
         ;in:
-        ;   A/X - pointer to the file path
+        ;   A/X - pointer to string with the file path
 		;	  Y - flags, 0 - "ro", 1 - "rw"
         ;out:
         ;   X - index into fd_area of the opened file
@@ -636,6 +638,7 @@ __fat_find_free_cluster:
 fat_open:
 		sta krn_ptr1
 		stx krn_ptr1+1			    ; save path arg given in a/x
+;		sty 						; save flags
 
 		ldx #FD_INDEX_CURRENT_DIR   ; clone current dir fd to temp dir fd
 		ldy #FD_INDEX_TEMP_DIR
@@ -648,15 +651,14 @@ fat_open:
 		bne	@l2
 		iny
 		bne @l1
-		lda #EINVAL
-		rts
-@l2:		;	starts with / ? - cd root
+		bra @l_err_einval
+@l2:	;	starts with / ? - cd root
 		cmp	#'/'
 		bne	@l31
 		jsr fat_open_rootdir
 		iny
         lda	(krn_ptr1), y		;end of input?
-		beq	@l_exit_noerr       ;yes, so it was just the '/'
+		beq	@l_exit				;yes, so it was just the '/', exit with A=0
 @l31:
 		SetVector   pathFragment, filenameptr	; filenameptr to path fragment
 @l3:	;	parse path fragments and change dirs accordingly
@@ -674,24 +676,21 @@ fat_open:
 		inx
 		cpx	#8+1+3		+1		; buffer overflow ? - only 8.3 file support yet
 		bne	@l_parse_1
-		lda #EINVAL
-		bra @l_exit
+		bra @l_err_einval
 @l_open:
 		_open
 		iny
 		bne	@l3
 		;TODO FIXME handle overflow - <path argument> too large - only 8.3 file support yet
+@l_err_einval:
 		lda	#EINVAL
-		bra @l_exit
-@l_exit_noerr:
-		lda #0
 @l_exit:
 		debug	"fe"
 		rts
 @l_openfile:
-		_open				; return with x as offset to fd_area
-		; TODO FIXME 		if opened "path" is a directory, alloc a new fd to save them - fopendir ?!?
-		bra @l_exit_noerr
+		_open				; return with X as offset into fd_area with new allocated file descriptor
+		lda #0
+		bra @l_exit
 pathFragment: .res 8+1+3+1; 12 chars + \0 for path fragment
 
 
