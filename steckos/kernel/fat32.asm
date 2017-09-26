@@ -193,7 +193,7 @@ __fat_opendir:
 		jsr fat_close				; not a directory, so we opened a file. just close them immediately and free the allocated fd
 		lda	#EINVAL					; TODO FIXME error code for "Not a directory"
 		bra @l_exit
-@l_ok:	lda #0                  ; ok
+@l_ok:	lda #EOK					; ok
 @l_exit:
 		debug "f_od"
 		rts
@@ -207,11 +207,11 @@ fat_chdir:
 		jsr __fat_opendir
 		bne	@l_exit
 		phx
-		ldx #FD_INDEX_TEMP_DIR  ; the temp dir fd is now set to the last dir of the path and we proofed that it's valid with the code above
+		ldx #FD_INDEX_TEMP_DIR  		; the temp dir fd is now set to the last dir of the path and we proofed that it's valid with the code above
 		ldy #FD_INDEX_CURRENT_DIR
-		jsr	fat_clone_fd        ; therefore we can simply clone the temp dir to current dir fd - FTW!
+		jsr	fat_clone_fd        		; therefore we can simply clone the temp dir to current dir fd - FTW!
 		plx
-		lda #0                  ; ok
+		lda #EOK						; ok
 @l_exit:
 		debug "f_cd"
 		rts
@@ -233,7 +233,7 @@ fat_rmdir:
 		;TODO implement fat/fat2 update, free the unused cluster(s)
 		;TODO write back updated block_data
 		
-		lda #0                  ; ok
+		lda #EOK						; ok
 @l_exit:
 		debug "rmdir"
 		rts
@@ -363,7 +363,7 @@ __fat_write_newdir_entry:
 		rts
 
 __fat_read_block_tweak:																					; TODO FIXME sd_read_block currently does not answer any errors, A is saved/restored
-		lda #0
+		lda #EOK
 		jmp sd_read_block
 		
 __fat_write_block_fat_tweak:
@@ -380,7 +380,7 @@ __fat_write_block:
 		sta write_blkptr+1
 		stz write_blkptr	;page aligned
 		
-		lda #0; FIXME err handling sd_write_block
+		lda #EOK; FIXME err handling sd_write_block
 .ifndef FAT_NOWRITE
 		jmp sd_write_block
 .endif
@@ -692,7 +692,7 @@ fat_open:
 		rts
 @l_openfile:
 		_open				; return with X as offset into fd_area with new allocated file descriptor
-		lda #0
+		lda #EOK
 		bra @l_exit
 pathFragment: .res 8+1+3+1; 12 chars + \0 for path fragment
 
@@ -786,7 +786,7 @@ fat_open_found:
 		jsr calc_dir_entry_nr
 		sta fd_area + F32_fd::DirEntryPos + 0, x
 
-		lda #0 ; no error
+		lda #EOK ; no error
 end_open_err:
 		ply
 		cmp	#0			;restore z flag
@@ -1133,7 +1133,7 @@ fat_mount:
 
 		; now we have the lba address of the first sector of the first cluster
 		Copy volumeID+VolumeID::RootClus, fd_area + FD_INDEX_CURRENT_DIR + F32_fd::StartCluster, 3
-		lda #0	; ok, no error
+		lda #EOK	; ok, no error
 end_mount:
 		debug "f_mnt"
 		rts
@@ -1201,7 +1201,7 @@ fat_alloc_fd:
 		; Too many open files, no free file descriptor found
 		lda #EMFILE
 		rts
-@l2:	lda #0
+@l2:	lda #EOK
 		rts
 
         ; in:
@@ -1214,7 +1214,7 @@ fat_close:
 		bcs @l1
 		lda #$ff    ; otherwise mark as closed
 		sta fd_area + F32_fd::StartCluster +3, x
-@l1:	lda #0
+@l1:	lda #EOK
 		rts
 
 fat_close_all:
