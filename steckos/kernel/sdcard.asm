@@ -242,6 +242,12 @@ sd_block_cmd:
 
 ;---------------------------------------------------------------------
 ; Read block from SD Card
+;in:
+;	A - sd card cmd byte (cmd17, cmd18, cmd24, cmd25)
+;   block lba in lba_addr
+;
+;out:
+;	A - A = 0 on success, error code otherwise
 ;---------------------------------------------------------------------
 sd_read_block:
 		jsr sd_select_card
@@ -311,6 +317,13 @@ halfblock:
 
 ;---------------------------------------------------------------------
 ; Read multiple blocks from SD Card
+;in:
+;	A - sd card cmd byte (cmd17, cmd18, cmd24, cmd25)
+;   block lba in lba_addr
+;   block count in blocks
+;
+;out:
+;	A - A = 0 on success, error code otherwise
 ;---------------------------------------------------------------------
 sd_read_multiblock:
 		phx
@@ -344,7 +357,14 @@ sd_read_multiblock:
 
 ;---------------------------------------------------------------------
 ; Write block to SD Card
+;in:
+;	A - sd card cmd byte (cmd17, cmd18, cmd24, cmd25)
+;   block lba in lba_addr
+;
+;out:
+;	A - A = 0 on success, error code otherwise
 ;---------------------------------------------------------------------
+
 sd_write_block:
 		phx
 		phy
