@@ -241,27 +241,26 @@ fat_mkdir:
 		bne @l_exit
 
 		m_memcpy lba_addr, fat_lba_tmp, 4			; found..., save lba_addr pointing to the block the current dir entry resides (dirptr)
-		debug32 "ltmp", fat_lba_tmp
-		
+		debug32 "ltmp", fat_lba_tmp		
 		jsr fat_alloc_fd							; alloc new fd - TODO use them for fopen and "rw+" mode - we alloc a new fd here already, right before any fat writes
 		bne @l_exit									; and we want to avoid an error in between the different block writes
 		stx fat_file_fd_tmp							; save fd
-
-		jsr __fat_find_free_cluster					; find free cluster
-		bne @l_exit_close
-		jsr __fat_mark_free_cluster					; mark cluster in block with EOC - TODO cluster chain support
 		
+		jsr __fat_find_free_cluster					; find free cluster, stored in fd_area for fd with fat_file_fd_tmp
+		bne @l_exit_close
+		jsr __fat_mark_free_cluster					; mark cluster in block with EOC - TODO cluster chain support		
 		jsr __fat_write_fat_blocks					; write the updated fat block for 1st and 2nd FAT to the device
+		bne @l_exit_close
 		jsr __fat_update_fsinfo						; update the fsinfo sector/block
 		bne @l_exit_close
-
+		
 		jsr __fat_prepare_dir_entry					; prepare dir entry, expects cluster number set in fd_area of newly allocated fd (fat_file_fd_tmp)
 		m_memcpy fat_lba_tmp, lba_addr, 4			; restore lba_addr of dirptr
 		debug32 "lba_dir", lba_addr			
 		jsr __fat_write_dir_entry					; create dir entry at current dirptr
 		bne @l_exit_close
 		
-		jsr __fat_write_newdir_entry				;
+		jsr __fat_write_newdir_entry				; write the data of the newly created directory fd (fat_file_fd_tmp) with prepared data in fat_dir_entry_tmp
 @l_exit_close:
 		pha 
 		ldx fat_file_fd_tmp
@@ -298,9 +297,9 @@ __fat_write_newdir_entry:
 		jsr calc_lba_addr
 		debug32 "lba_data", lba_addr
 		
-		m_memset fat_dir_entry_tmp, $20, .sizeof(F32DirEntry::Name) + .sizeof(F32DirEntry::Ext)		; erase name
+		m_memset fat_dir_entry_tmp, $20, .sizeof(F32DirEntry::Name) + .sizeof(F32DirEntry::Ext)			; erase name
 		m_memcpy fat_dir_entry_tmp, block_data, .sizeof(F32DirEntry)									; copy dir entry to block buffer
-		m_memcpy fat_dir_entry_tmp, block_data+1*.sizeof(F32DirEntry), .sizeof(F32DirEntry)			; copy dir entry to block buffer
+		m_memcpy fat_dir_entry_tmp, block_data+1*.sizeof(F32DirEntry), .sizeof(F32DirEntry)				; copy dir entry to block buffer
 		lda #'.'
 		sta block_data+F32DirEntry::Name																; 1st entry "."
 		sta block_data+1*.sizeof(F32DirEntry)+F32DirEntry::Name+0										; 2nd entry ".."
@@ -684,14 +683,12 @@ fat_open:
 		lda	#EINVAL
 		bra @l_exit
 @l_exit_open:
-		debug "exo"
 		cmp #ENOENT
 		bne @l_exit
 		ldy #O_CREAT
 		cpy fat_file_mode_tmp
 		bne @l_exit				; Z=1 here, A still with error code 
-		debug "crt"
-		
+;		jsr __fat_prepare_dir_entry
 		
 @l_exit:
 		debug8	"fe", fat_file_mode_tmp
@@ -1205,7 +1202,11 @@ fat_alloc_fd:
 		; Too many open files, no free file descriptor found
 		lda #EMFILE
 		rts
-@l2:	lda #EOK
+@l2:	lda #0
+		sta fd_area+F32_fd::StartCluster+3,x		; erase cluster nr from a previous allocation
+		sta fd_area+F32_fd::StartCluster+2,x
+		sta fd_area+F32_fd::StartCluster+1,x
+		sta fd_area+F32_fd::StartCluster+0,x
 		rts
 
         ; in:
