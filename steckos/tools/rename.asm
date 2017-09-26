@@ -55,8 +55,7 @@ rename:
 	SetVector filename, filenameptr
 	ldx #FD_INDEX_CURRENT_DIR
 	jsr krn_find_first
-	lda errno
-	beq @go
+	bcs @go
 	printstring "i/o error"
 
 	jmp (retvec)
@@ -76,13 +75,8 @@ rename:
 
 	; just write back the block. lba_address still contains the right address
 	jsr krn_sd_write_block
-	lda errno
-
-	cmp #$00
 	bne wrerror
-
 	jmp (retvec)
-
 
 error:
 	jsr krn_primm
