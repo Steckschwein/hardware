@@ -329,28 +329,22 @@ __fat_write_newdir_entry:
 		lda fd_area+F32_fd::StartCluster+3,x
 		sta block_data+1*.sizeof(F32DirEntry)+F32DirEntry::FstClusHI+1
 		
-		ldx #$80																						; all other dir entries to 0
+		ldx #$80																						
 @l_erase:
-		stz block_data+2*.sizeof(F32DirEntry), x
-		stz block_data+$080, x
+		stz block_data+2*.sizeof(F32DirEntry), x														; leave "." and ".." entries
+		stz block_data+$080, x																			; all other dir entries set to 0
 		stz block_data+$100, x
 		stz block_data+$180, x
 		dex 
 		bpl @l_erase
-		
-		;debugdump "ndir0", block_data
-		;debugdump "ndir1", block_data+$20
-		;debugdump "ndir2", block_data+$40
-		
 		jsr __fat_write_block_data
 		
-		m_memset block_data, 0, 2*.sizeof(F32DirEntry)													;erase the "." and ".." entries
-		
+		m_memset block_data, 0, 2*.sizeof(F32DirEntry)													; now erase the "." and ".." entries too
 		ldx volumeID+VolumeID::SecPerClus																; fill up (VolumeID::SecPerClus - 1) reamining blocks of the cluster with empty dir entries
 		dex
 		debug32 "er_d", lba_addr
 @l_erase2:
-		jsr inc_lba_address																				; next block
+		jsr inc_lba_address																				; next block within cluster
 		jsr __fat_write_block_data
 		bne @l_exit
 		dex
@@ -1170,7 +1164,7 @@ fat_init_fdarea:
 		ldx #$00
 fat_init_fdarea_with_x:
 		lda #$ff
-@l1:		sta fd_area + F32_fd::StartCluster + 3 , x
+@l1:	sta fd_area + F32_fd::StartCluster + 3 , x
 		inx
 		cpx #(FD_Entry_Size*FD_Entries_Max)
 		bne @l1
@@ -1252,18 +1246,17 @@ fat_find_first:
 		; in:
 		;   X - directory fd index into fd_area
 fat_find_first_intern:
+		lda volumeID+VolumeID::SecPerClus
+		sta blocks
 		jsr calc_lba_addr
 		SetVector sd_blktarget, read_blkptr
 
 ff_l3:	SetVector sd_blktarget, dirptr	; dirptr to begin of target buffer
 		jsr sd_read_block
 		dec read_blkptr+1	; set read_blkptr to origin address
-
 ff_l4:
 		lda (dirptr)
-		bne @l5				; first byte of dir entry is $00 (end of directory)?
-		clc
-		rts   				; we are at the end, C=0 and return
+		beq ff_eod				; first byte of dir entry is $00 (end of directory)?
 @l5:
 		ldy #F32DirEntry::Attr		; else check if long filename entry
 		lda (dirptr),y 		; we are only going to filter those here (or maybe not?)
@@ -1286,12 +1279,12 @@ fat_find_next:
 		lda dirptr+1 	; end of block?
 		cmp #>(sd_blktarget + sd_blocksize)
 		bcc ff_l4			; no, process entry
-		; TODO FIXME check whether the end of the cluster is reached - check whether sector_nr/block_nr reaches volume->SectorsPerCluster
-		; lda startcluster
-		; ora SectorsPerCluster
-		; cmp lba...
+		dec blocks			; end of cluster reached?
+		beq ff_eod			; TODO FIXME cluster chain support, dir may go on in next cluster ;)
 		jsr inc_lba_address	; increment lba address to read next block
 		bra ff_l3
+ff_eod:
+		clc					; we are at the end, C=0 and return
 ff_end:
 		rts
 
