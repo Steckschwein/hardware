@@ -25,13 +25,12 @@ main:
 		lda paramptr
 		ldx paramptr+1
 		jsr krn_open
-		bne err
-		phx
-
+		bne @err
+		
+		stx tmp1						; save fd
 		SetVector content, read_blkptr
 		jsr krn_read
-		plx
-		jsr krn_close
+		bne @err_close
 
 		jsr	krn_textui_disable			;disable textui
 		SetVector content, addr
@@ -49,7 +48,10 @@ main:
 		cli
 		bra l2
 
-err:
+@err_close:
+		ldx tmp1
+		jsr krn_close
+@err:
 		jsr krn_primm
 		.asciiz "load error file "
 		copypointer	paramptr, msgptr

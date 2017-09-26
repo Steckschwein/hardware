@@ -185,7 +185,7 @@ clusternr_matcher:
 		;in:
         ;   A/X - pointer to string with the file path
         ;out:
-		;	A - Z=0 on success, Z=1 and A with errno otherwise
+		;	Z=0 on success, Z=1 and A with errno otherwise
         ;   X - index into fd_area of the opened directory - !!! ATTENTION !!! X is exactly the FD_INDEX_TEMP_DIR on success
 __fat_opendir:
 		jsr fat_open				; change dir using temp dir to not clobber the current dir, maybe we will run into an error
@@ -204,7 +204,7 @@ __fat_opendir:
 		;in:
         ;   A/X - pointer to string with the file path
         ;out:
-		;	A - Z=0 on success, Z=1 and A with errno otherwise
+		;	Z=0 on success, Z=1 and A with errno otherwise
         ;   X - index into fd_area of the opened directory
 fat_chdir:
 		jsr __fat_opendir
@@ -225,14 +225,10 @@ fat_rmdir:
 		jsr __fat_opendir
 		bne	@l_exit
 		
+		
 		lda	#DIR_Entry_Deleted			; ($e5)
 		sta (dirptr)					; mark dir entry as deleted
 		debug "rmdir"
-		ldy #0
-@l0:	lda (dirptr), y
-		iny 
-		cpy #11
-		bne @l0
 		;TODO implement fat/fat2 update, free the unused cluster(s)
 		;TODO write back updated block_data
 		
@@ -245,7 +241,7 @@ fat_rmdir:
         ; in:
         ; 	A/X - pointer to the file name
 		; out:
-		;	Z=0 on success, Z=1 on error, A=error code
+		;   Z=0 on success, Z=1 and A with error code otherwise
 fat_mkdir:
 		jsr __fat_opendir
 		beq	@err_exists
@@ -255,7 +251,7 @@ fat_mkdir:
 		m_memcpy lba_addr, fat_lba_tmp, 4			; found..., save lba_addr pointing to the block the current dir entry resides (dirptr)
 		debug32 "ltmp", fat_lba_tmp
 		
-		jsr fat_alloc_fd							; alloc new fd - TODO use them for fopen and "rw+" mode - we alloc here already, cause fat_alloc_fd may fail				
+		jsr fat_alloc_fd							; alloc new fd - TODO use them for fopen and "rw+" mode - we alloc a new fd here already, right before any fat writes
 		bne @l_exit									; and we want to avoid an error in between the different block writes
 		stx fat_fd_tmp								; save fd
 		debug "nd fd"
@@ -276,8 +272,7 @@ fat_mkdir:
 
 		jsr __fat_write_newdir_entry
 		ldx fat_fd_tmp
-		debug "nd fd"
-		jsr fat_close						 															; free the tmp file
+		jsr fat_close						 															; free the allocated file descriptor
 		bra @l_exit
 @err_exists:
 		lda	#EEXIST
@@ -704,7 +699,7 @@ pathFragment: .res 8+1+3+1; 12 chars + \0 for path fragment
         ;   filenameptr - ptr to the filename
         ;out:
         ;   X - index into fd_area of the opened file
-		;   A - Z=0 on success, Z=1 and A with error code otherwise
+		;   Z=0 on success, Z=1 and A with error code otherwise
 _fat_open:
 		phy
 
@@ -1183,10 +1178,9 @@ fat_init_fdarea_with_x:
 		bne @l1
 		rts
 
-		;
 		; out:
-		;       X - with index to fd_area
-		;		Z=0 on success, Z=1 and A=errno
+		;	X - with index to fd_area
+		;   Z=0 on success, Z=1 and A with error code otherwise
 fat_alloc_fd:
 		ldx #(2*FD_Entry_Size)	; skip 2 entries, they're reserverd for current and temp dir
 @l1:	lda fd_area + F32_fd::StartCluster +3, x
@@ -1210,7 +1204,7 @@ fat_alloc_fd:
         ; in:
         ;   X - offset into fd_area
         ; out:
-        ;   A - A = 0 on success, error code otherwise
+        ;   Z=0 on success, Z=1 and A with error code otherwise
 fat_close:
 		lda fd_area + F32_fd::StartCluster +3, x
 		cmp #$ff	;#$ff means not open, carry is set...
