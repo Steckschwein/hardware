@@ -3,6 +3,7 @@
 .include "fat32.inc"
 .include "rtc.inc"
 .include "errno.inc"	; from ca65 api
+.include "fcntl.inc"	; from ca65 api
 
 .import sd_read_block, sd_read_multiblock, sd_write_block, sd_write_multiblock, sd_select_card, sd_deselect_card
 .import sd_read_block_data
@@ -16,14 +17,6 @@
 
 .export fat_close_all, fat_close, fat_getfilesize
 .export calc_dirptr_from_entry_nr, inc_lba_address, calc_blocks
-
-
-.macro _open
-		stz	filename_buf, x	;\0 terminate the current path fragment
-		jsr	_fat_open
-		;debugdump "o_", filename_buf
-		bne @l_exit
-.endmacro
 
 .segment "KERNEL"
 
@@ -253,24 +246,27 @@ fat_mkdir:
 		jsr fat_alloc_fd							; alloc new fd - TODO use them for fopen and "rw+" mode - we alloc a new fd here already, right before any fat writes
 		bne @l_exit									; and we want to avoid an error in between the different block writes
 		stx fat_file_fd_tmp							; save fd
-		
+
 		jsr __fat_find_free_cluster					; find free cluster
-		bne @l_exit
+		bne @l_exit_close
 		jsr __fat_mark_free_cluster					; mark cluster in block with EOC - TODO cluster chain support
 		
 		jsr __fat_write_fat_blocks					; write the updated fat block for 1st and 2nd FAT to the device
 		jsr __fat_update_fsinfo						; update the fsinfo sector/block
-		bne @l_exit
-		
-		jsr __fat_prepare_dir_entry					; prepare dir entry
+		bne @l_exit_close
+
+		jsr __fat_prepare_dir_entry					; prepare dir entry, expects cluster number set in fd_area of newly allocated fd (fat_file_fd_tmp)
 		m_memcpy fat_lba_tmp, lba_addr, 4			; restore lba_addr of dirptr
 		debug32 "lba_dir", lba_addr			
 		jsr __fat_write_dir_entry					; create dir entry at current dirptr
-		bne @l_exit
-
-		jsr __fat_write_newdir_entry
+		bne @l_exit_close
+		
+		jsr __fat_write_newdir_entry				;
+@l_exit_close:
+		pha 
 		ldx fat_file_fd_tmp
-		jsr fat_close						 															; free the allocated file descriptor
+		jsr fat_close						 		; free the allocated file descriptor
+		pla 
 		bra @l_exit
 @err_exists:
 		lda	#EEXIST
@@ -300,7 +296,7 @@ __fat_update_fsinfo:
 __fat_write_newdir_entry:
 		ldx fat_file_fd_tmp
 		jsr calc_lba_addr
-		debug32 "lba_data", lba_addr		
+		debug32 "lba_data", lba_addr
 		
 		m_memset fat_dir_entry_tmp, $20, .sizeof(F32DirEntry::Name) + .sizeof(F32DirEntry::Ext)		; erase name
 		m_memcpy fat_dir_entry_tmp, block_data, .sizeof(F32DirEntry)									; copy dir entry to block buffer
@@ -338,6 +334,7 @@ __fat_write_newdir_entry:
 		dex 
 		bpl @l_erase
 		jsr __fat_write_block_data
+		bne @l_exit
 		
 		m_memset block_data, 0, 2*.sizeof(F32DirEntry)													; now erase the "." and ".." entries too
 		ldx volumeID+VolumeID::SecPerClus																; fill up (VolumeID::SecPerClus - 1) reamining blocks of the cluster with empty dir entries
@@ -409,7 +406,7 @@ __fat_write_dir_entry:
 		debug32 "eod", lba_addr
 		debugdump "eod", block_data
 @l_eod:
-		jsr __fat_write_block_data								; write the updated dir entry to device
+		jsr __fat_write_block_data										; write the updated dir entry to device
 @err_exit:
 		debug "f_wde"
 		rts
@@ -615,6 +612,7 @@ __fat_find_free_cluster:
 		lda #0					; exit found
 		sta fd_area+F32_fd::StartCluster+3, x
 		bra @exit
+
 		
         ; in:
         ;   A/X - pointer to string with the file path
@@ -630,6 +628,12 @@ __fat_find_free_cluster:
         ;   X - index into fd_area of the opened file
         ;   A - errno, Z=0 no error, Z=1 error and A contains error number
 		;	Note: regardless of return value, dirptr points the last visited directory entry. furthermore lba_addr is set to the corresponding block where the dir entry resides
+.macro _open
+		stz	filename_buf, x	;\0 terminate the current path fragment
+		jsr	_fat_open
+		;debugdump "o_", filename_buf
+		bne @l_exit_open
+.endmacro
 fat_open:
 		sta krn_ptr1
 		stx krn_ptr1+1			    ; save path arg given in a/x
@@ -646,8 +650,8 @@ fat_open:
 		bne	@l2
 		iny
 		bne @l1
-		bra @l_err_einval
-@l2:	;	starts with / ? - cd root
+		bra @l_err_einval		; overflow, >255 chars
+@l2:	;	starts with '/' ? - we simply cd root first
 		cmp	#'/'
 		bne	@l31
 		jsr fat_open_rootdir
@@ -655,8 +659,8 @@ fat_open:
         lda	(krn_ptr1), y		;end of input?
 		beq	@l_exit				;yes, so it was just the '/', exit with A=0
 @l31:
-		SetVector   filename_buf, filenameptr	; filenameptr to path fragment
-@l3:	;	parse path fragments and change dirs accordingly
+		SetVector   filename_buf, filenameptr	; filenameptr to filename_buf
+@l3:	;	parse input path fragments into filename_buf try to change dirs accordingly
 		ldx #0
 @l_parse_1:
 		lda	(krn_ptr1), y
@@ -678,11 +682,22 @@ fat_open:
 		bne	@l3					;overflow - <path argument> exceeds 255 chars
 @l_err_einval:
 		lda	#EINVAL
+		bra @l_exit
+@l_exit_open:
+		debug "exo"
+		cmp #ENOENT
+		bne @l_exit
+		ldy #O_CREAT
+		cpy fat_file_mode_tmp
+		bne @l_exit				; Z=1 here, A still with error code 
+		debug "crt"
+		
+		
 @l_exit:
-		debug	"fe"
+		debug8	"fe", fat_file_mode_tmp
 		rts
 @l_openfile:
-		_open				; return with X as offset into fd_area with new allocated file descriptor
+		_open					; return with X as offset into fd_area with new allocated file descriptor
 		lda #EOK
 		bra @l_exit
 		
