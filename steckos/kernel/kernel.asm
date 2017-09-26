@@ -62,9 +62,7 @@ kern_init:
 	jsr init_sdcard
 	bne do_upload
 
-
 	jsr fat_mount
-	lda errno
 	debug "mnt"
 	bne do_upload
 

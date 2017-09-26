@@ -807,9 +807,8 @@ fat_check_signature:
 		asl ; $aa
 		cmp sd_blktarget + BootSector::Signature + 1
 		beq @l2
-@l1:		lda #fat_bad_block_signature
-		sta errno
-@l2:		rts
+@l1:	lda #fat_bad_block_signature
+@l2:	rts
 
 
 calc_blocks: ;blocks = filesize / BLOCKSIZE -> filesize >> 9 (div 512) +1 if filesize LSB is not 0
@@ -979,8 +978,6 @@ fat_next_cln_hi:
 ; Mount FAT32 on Partition 0
 ;---------------------------------------------------------------------
 fat_mount:
-		save
-		
 		; set lba_addr to $00000000 since we want to read the bootsector
 		.repeat 4, i
 			stz lba_addr + i
@@ -990,11 +987,8 @@ fat_mount:
 		jsr sd_read_block
 
 		jsr fat_check_signature
-
-		lda errno
 		beq @l1
 		jmp end_mount
-
 @l1:
 		part0 = sd_blktarget + BootSector::Partitions + PartTable::Partition_0
 
@@ -1003,12 +997,9 @@ fat_mount:
 		beq @l2
 		cmp #PartType_FAT32_LBA
 		beq @l2
-
 		; type code not PartType_FAT32 or PartType_FAT32_LBA
 		lda #fat_invalid_partition_type
-		sta errno
 		jmp end_mount
-
 @l2:
 		m_memcpy part0 + PartitionEntry::LBABegin, lba_addr, 4
 
@@ -1017,7 +1008,6 @@ fat_mount:
 		jsr sd_read_block
 
 		jsr fat_check_signature
-		lda errno
 		beq @l4
 		jmp end_mount
 @l4:
@@ -1037,7 +1027,6 @@ fat_mount:
 		cmp #$02
 		beq @l6
 @l5:	lda #fat_invalid_sector_size
-		sta errno
 		jmp end_mount
 @l6:
 		; cluster_begin_lba = Partition_LBA_Begin + Number_of_Reserved_Sectors + (Number_of_FATs * Sectors_Per_FAT) -  (2 * sec/cluster);
@@ -1140,10 +1129,10 @@ fat_mount:
 		jsr fat_init_fdarea
 
 		; now we have the lba address of the first sector of the first cluster
-end_mount:
-		restore
 		Copy volumeID+VolumeID::RootClus, fd_area + FD_INDEX_CURRENT_DIR + F32_fd::StartCluster, 3
-		ldx #FD_INDEX_CURRENT_DIR
+		lda #0	; ok, no error
+end_mount:
+		debug "f_mnt"
 		rts
 
 		;
