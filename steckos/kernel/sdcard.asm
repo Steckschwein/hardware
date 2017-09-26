@@ -206,8 +206,12 @@ sd_cmd:
 
 ;---------------------------------------------------------------------
 ; Send SD Card block Command
-; cmd byte in A
-; block lba in lba_addr
+;in:
+;	A - sd card cmd byte (cmd17, cmd18, cmd24, cmd25)
+;   block lba in lba_addr
+;
+;out:
+;	A - A = 0 on success, error code otherwise
 ;---------------------------------------------------------------------
 sd_block_cmd:
 		;lda #cmd18	; Send CMD18 command byte
@@ -217,31 +221,44 @@ sd_block_cmd:
 
 		; Send stopbit
 		lda #$01
-		jmp spi_rw_byte
+		jsr spi_rw_byte
+
+		; wait for cmd response
+		; first byte with bit 7 clear is our response
+		; command response time is 0-8 bytes for sd card
+		; read max. 8 bytes
+		ldy #$08
+@l:		dey
+		beq @sd_block_cmd_timeout ; y already 0? then invalid response or timeout
+		jsr spi_r_byte
+		bit #80	; bit 7 clear
+		bne @l  ; no, next byte
+		cmp #$00 ; got cmd response, check if $00 to set z flag accordingly
+		rts
+@sd_block_cmd_timeout:
+		lda #$1f ; make up error code distinct from possible sd card responses to mark timeout
+		rts
 
 
 ;---------------------------------------------------------------------
 ; Read block from SD Card
 ;---------------------------------------------------------------------
 sd_read_block:
-		save
 		jsr sd_select_card
 
 		lda #cmd17
 		jsr sd_block_cmd
 
-		lda #$00
-		jsr sd_wait
-;		jsr sd_wait_timeout
+;		lda #$00
+;		jsr sd_wait
+;		jsr sd_wait_timeout0
        	bne @exit
 @l1:
 
 
 		jsr fullblock
-		lda	#0
 
 @exit: ; fall through to sd_deselect_card
-		restore
 
 		;---------------------------------------------------------------------
 		; deselect sd card, puSH CS line to HI and generate few clock cycles
@@ -263,14 +280,15 @@ sd_deselect_card:
 			bne @l1
 			plx
 			pla
+
 			rts
 
 fullblock:
 		; wait for sd card data token
 		lda #sd_data_token
 		jsr sd_wait
+		bne @exit
 
-		;jsr sd_wait_data_token
 		ldy #$00
 		jsr halfblock
 
@@ -278,8 +296,10 @@ fullblock:
 		jsr halfblock
 
 		jsr spi_r_byte		; Read 2 CRC bytes
-		jmp spi_r_byte
-		;rts
+		jsr spi_r_byte
+		lda #$00
+@exit:
+		rts
 
 halfblock:
 @l:
@@ -293,20 +313,18 @@ halfblock:
 ; Read multiple blocks from SD Card
 ;---------------------------------------------------------------------
 sd_read_multiblock:
-		save
+		phx
+		phy
 
 		jsr sd_select_card
 
 		lda #cmd18	; Send CMD18 command byte
 		jsr sd_block_cmd
-		; wait for command response.
-		lda #$00
-		jsr sd_wait
-		;jsr sd_wait_timeout
 		bne @exit
 @l1:
 
 		jsr fullblock
+		bne @exit
 		inc read_blkptr+1
 
 		dec blocks
@@ -320,22 +338,20 @@ sd_read_multiblock:
 
         jsr sd_busy_wait
 @exit:
-        restore
+        ply
+		plx
         jmp sd_deselect_card
 
 ;---------------------------------------------------------------------
 ; Write block to SD Card
 ;---------------------------------------------------------------------
 sd_write_block:
-		save
+		phx
+		phy
 		jsr sd_select_card
 
 		lda #cmd24
 		jsr sd_block_cmd
-
-		lda #$00
-		jsr sd_wait
-		;jsr sd_wait_timeout
 	    bne @exit
 
 		lda #sd_data_token
@@ -367,9 +383,11 @@ sd_write_block:
 		lda #$00
 		jsr spi_rw_byte
 		inc write_blkptr+1
-@exit:
-        restore
 		lda #$00
+
+@exit:
+		ply
+		plx
         jmp sd_deselect_card
 
 ;---------------------------------------------------------------------
