@@ -11,8 +11,9 @@
 
 .export fat_mount
 .export fat_open, fat_isOpen, fat_chdir, fat_get_root_and_pwd
-.export fat_mkdir, fat_rmdir
-.export fat_read, fat_read_block, fat_find_first, fat_find_next, fat_write
+.export fat_mkdir, fat_rmdir, fat_read_block
+.export fat_read, fat_find_first, fat_find_next, fat_write
+
 .export fat_close_all, fat_close, fat_getfilesize
 .export calc_dirptr_from_entry_nr, inc_lba_address, calc_blocks
 
@@ -42,8 +43,11 @@ fat_read_block:
 		jsr calc_blocks
 		jsr calc_lba_addr
 		jsr sd_read_block
-		lda errno
+		; lda errno
+		; TODO FIXME error handling sd_read_block, errno is not set anymore, we assume EOK here!
+		lda #EOK
 		rts
+		
 		;in:
 		;	X - offset into fd_area
 		;out:
@@ -57,9 +61,8 @@ _fat_read:
 		stz errno
 		jsr sd_read_multiblock
 ;		jsr sd_read_block
-		lda errno
+		lda errno ; TODO get rid off errno here
 		rts
-
 
 		;in:
 		;	X - offset into fd_area
