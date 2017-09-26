@@ -288,7 +288,7 @@ fat_mkdir:
 __fat_update_fsinfo:
 		m_memcpy fat_fsinfo_lba, lba_addr, 4
 		SetVector block_fat, read_blkptr
-		jsr	sd_read_block
+		jsr	__fat_read_block_tweak
 		bne @l_exit
 		debug32 "fi_fcl", block_fat+FSInfo_FreeClus
 		_dec32 block_fat+FSInfo_FreeClus
@@ -362,7 +362,10 @@ __fat_write_newdir_entry:
 @l_exit:
 		rts
 
-;__fat_read_block_tweak:		
+__fat_read_block_tweak:																					; TODO FIXME sd_read_block currently does not answer any errors, A is saved/restored
+		lda #0
+		jmp sd_read_block
+		
 __fat_write_block_fat_tweak:
 		debug32 "wb_f_lba", lba_addr
 .ifdef FAT_DUMP_FAT_WRITE
@@ -559,7 +562,7 @@ __fat_find_free_cluster:
 		SetVector	block_fat, read_blkptr
 @next_block:
 		debug32 "f_lba", lba_addr
-		jsr	sd_read_block		; read fat block
+		jsr	__fat_read_block_tweak ; read fat block
 		bne @exit
 		dec read_blkptr+1		; TODO FIXME clarification with TW - sd_read_block increments block ptr highbyte
 		
@@ -586,7 +589,7 @@ __fat_find_free_cluster:
 		lda lba_addr+0
 		cmp	fat2_lba_begin+0
 		bne	@next_block			;
-		lda #ENOSPC				; end reached, answer ENOSPC - No space left on device
+		lda #ENOSPC				; end reached, answer ENOSPC () - "No space left on device"
 @exit:	debug32 "free_cl", fd_area+F32_fd::StartCluster+$40 ;(almost the 3rd entry)
 		rts		
 @l_found_hb:
