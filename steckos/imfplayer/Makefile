@@ -13,5 +13,4 @@ clean:
 	rm -f $(TARGET) $(OBJS)
 
 imfplayer: $(TARGET)
-	../transfer.py $(TARGET)    
-
+	../../transfer.py $(TARGET)    
