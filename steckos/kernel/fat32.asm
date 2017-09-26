@@ -19,10 +19,9 @@
 
 
 .macro _open
-		stz	pathFragment, x	;\0 terminate the current path fragment
-		;debugstr "_o", pathFragment
+		stz	filename_buf, x	;\0 terminate the current path fragment
 		jsr	_fat_open
-		debug "o_"
+		;debugdump "o_", filename_buf
 		bne @l_exit
 .endmacro
 
@@ -253,8 +252,7 @@ fat_mkdir:
 		
 		jsr fat_alloc_fd							; alloc new fd - TODO use them for fopen and "rw+" mode - we alloc a new fd here already, right before any fat writes
 		bne @l_exit									; and we want to avoid an error in between the different block writes
-		stx fat_fd_tmp								; save fd
-		debug "nd fd"
+		stx fat_file_fd_tmp							; save fd
 		
 		jsr __fat_find_free_cluster					; find free cluster
 		bne @l_exit
@@ -271,7 +269,7 @@ fat_mkdir:
 		bne @l_exit
 
 		jsr __fat_write_newdir_entry
-		ldx fat_fd_tmp
+		ldx fat_file_fd_tmp
 		jsr fat_close						 															; free the allocated file descriptor
 		bra @l_exit
 @err_exists:
@@ -300,7 +298,7 @@ __fat_update_fsinfo:
 		; in 
 		;	-
 __fat_write_newdir_entry:
-		ldx fat_fd_tmp
+		ldx fat_file_fd_tmp
 		jsr calc_lba_addr
 		debug32 "lba_data", lba_addr		
 		
@@ -387,11 +385,12 @@ __fat_write_block:
 		
 		; in 
 		;	dirptr - set to current dir entry within block_data
+		;	filename_buf - contains the last path fragment which was inspected during path walk and which was not found
 __fat_write_dir_entry:
 		;TODO FIXME normalize file name
-		;debugdump "name", pathFragment
+		debugdump "name", filename_buf
 		ldx #0
-@l0:	lda pathFragment, x
+@l0:	lda filename_buf, x
 		beq @l1
 		toupper
 		sta fat_dir_entry_tmp+F32DirEntry::Name,x
@@ -399,7 +398,7 @@ __fat_write_dir_entry:
 		cpx #11
 		bne @l0
 @l1:	
-		;debugdump "dir", fat_dir_entry_tmp
+		debugdump "dir", fat_dir_entry_tmp
 		m_memcpy2ptr fat_dir_entry_tmp, dirptr, .sizeof(F32DirEntry)	; copy new entry to block buffer (block_data)
 
 		;TODO FIXME duplicate code here! - @see fat_find_next:
@@ -496,7 +495,7 @@ __fat_prepare_dir_entry:
 		
 		stz fat_dir_entry_tmp+F32DirEntry::CrtTimeMillis			;ms to 0, not supported by rtc
 		
-		ldx fat_fd_tmp
+		ldx fat_file_fd_tmp
 		lda fd_area+F32_fd::StartCluster+3, x
 		sta fat_dir_entry_tmp+F32DirEntry::FstClusHI+1
 		lda fd_area+F32_fd::StartCluster+2, x
@@ -550,11 +549,11 @@ __fat_mark_free_cluster:
 		;	Z=1 on error, A=error code
 __fat_find_free_cluster:
 		;TODO improve, use a previously saved lba_addr and/or found cluster number
-		stz lba_addr+3
+		stz lba_addr+3			; init lba_addr with fat_begin lba addr
 		stz lba_addr+2			; TODO FIXME we assume that 16 bit are sufficient for fat lba address
-		lda fat_lba_begin+1		; init lba_addr with fat_begin lba addr
+		lda fat_lba_begin+1		
 		sta lba_addr+1
-		lda fat_lba_begin+0		; init lba_addr with fat_begin lba addr
+		lda fat_lba_begin+0		
 		sta lba_addr+0
 		
 		SetVector	block_fat, read_blkptr
@@ -595,7 +594,7 @@ __fat_find_free_cluster:
 		sta read_blkptr+1
 		lda #$40				; adjust clnr with +$40 clusters since it was found in 2nd page
 @l_found_lb:					; A=0 here, if called from above
-		ldx fat_fd_tmp
+		ldx fat_file_fd_tmp
 		debug32 "fc_lba", lba_addr
 		sta fd_area+F32_fd::StartCluster+0, x
 		tya
@@ -629,17 +628,24 @@ __fat_find_free_cluster:
 		sta fd_area+F32_fd::StartCluster+3, x
 		bra @exit
 		
-        ;in:
+        ; in:
         ;   A/X - pointer to string with the file path
-		;	  Y - flags, 0 - "ro", 1 - "rw"
-        ;out:
+		;	  Y - file mode constant
+		;		O_RDONLY        = $01
+		;		O_WRONLY        = $02
+		;		O_RDWR          = $03
+		;		O_CREAT         = $10
+		;		O_TRUNC         = $20
+		;		O_APPEND        = $40
+		;		O_EXCL          = $80
+        ; out:
         ;   X - index into fd_area of the opened file
         ;   A - errno, Z=0 no error, Z=1 error and A contains error number
 		;	Note: regardless of return value, dirptr points the last visited directory entry. furthermore lba_addr is set to the corresponding block where the dir entry resides
 fat_open:
 		sta krn_ptr1
 		stx krn_ptr1+1			    ; save path arg given in a/x
-;		sty 						; save flags
+		sty fat_file_mode_tmp		; save flags
 
 		ldx #FD_INDEX_CURRENT_DIR   ; clone current dir fd to temp dir fd
 		ldy #FD_INDEX_TEMP_DIR
@@ -661,7 +667,7 @@ fat_open:
         lda	(krn_ptr1), y		;end of input?
 		beq	@l_exit				;yes, so it was just the '/', exit with A=0
 @l31:
-		SetVector   pathFragment, filenameptr	; filenameptr to path fragment
+		SetVector   filename_buf, filenameptr	; filenameptr to path fragment
 @l3:	;	parse path fragments and change dirs accordingly
 		ldx #0
 @l_parse_1:
@@ -672,7 +678,7 @@ fat_open:
 		cmp	#'/'
 		beq	@l_open
 
-		sta pathFragment, x
+		sta filename_buf, x
 		iny
 		inx
 		cpx	#8+1+3		+1		; buffer overflow ? - only 8.3 file support yet
@@ -681,8 +687,7 @@ fat_open:
 @l_open:
 		_open
 		iny
-		bne	@l3
-		;TODO FIXME handle overflow - <path argument> too large - only 8.3 file support yet
+		bne	@l3					;overflow - <path argument> exceeds 255 chars
 @l_err_einval:
 		lda	#EINVAL
 @l_exit:
@@ -692,9 +697,7 @@ fat_open:
 		_open				; return with X as offset into fd_area with new allocated file descriptor
 		lda #EOK
 		bra @l_exit
-pathFragment: .res 8+1+3+1; 12 chars + \0 for path fragment
-
-
+		
         ;in:
         ;   filenameptr - ptr to the filename
         ;out:
@@ -1102,6 +1105,7 @@ fat_mount:
 		debug16 "fi_sec", volumeID+VolumeID::FSInfoSec
 		debug32 "fi_lba", fat_fsinfo_lba
 		debug32 "cl_lba", cluster_begin_lba
+		debug16 "fbuf", filename_buf
 		
 		;TODO FIXME we assume 2 here insteasd of using the value in VolumeID::RootClus
 		; cluster_begin_lba_m2 -> cluster_begin_lba - (2*sec/cluster) => cluster_begin_lba - (sec/cluster << 1)
@@ -1246,8 +1250,8 @@ fat_find_first:
 		iny
 		cpy #8+1+3	+1		;?buffer overflow
 		bne @l1
-@l2:	lda	#0
-		sta filename_buf,y
+		lda	#0
+@l2:	sta filename_buf,y
 		SetVector filename_matcher, krn_call_internal	;setup the filename matcher
 
 		; internal find first, assumes that (krn_call_internal) is already setup

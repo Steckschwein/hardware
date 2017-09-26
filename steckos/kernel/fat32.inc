@@ -145,11 +145,13 @@ volumeID				= $0308 ; address of VolumeID
 cluster_begin_lba 		= volumeID + .sizeof(VolumeID) ; begin of cluster area (4 byte)
 fat_lba_begin			= cluster_begin_lba + 4; (2 byte) begin of fat area - TODO FIXME we assume 16bit are sufficient since fat is placed at the beginning of the device
 fat2_lba_begin			= fat_lba_begin + 2	; (2 byte) end of first fat and begin of 2nd fat (mirror) area - TODO FIXME we assume 16bit ...
-fat_lba_tmp				= fat2_lba_begin + 4 ; (4 byte)
-fat_fd_tmp				= fat_lba_tmp + 4; (1 byte); internallly used fd
-fat_dir_entry_tmp		= fat_fd_tmp + 1 ;(32 byte); internallly used during mkdir, rmdir, fopen r+
-fat_fsinfo_lba			= fat_dir_entry_tmp + .sizeof(F32DirEntry) ; (4 bytes)
-filename_buf			= fat_fsinfo_lba + 4 ; (11 byte) file name buffer
+fat_fsinfo_lba			= fat2_lba_begin + 2; (4 byte)
+fat_lba_tmp				= fat_fsinfo_lba + 4; (4 byte)
+fat_file_fd_tmp			= fat_lba_tmp + 4; (1 byte); internallly used fd
+fat_file_mode_tmp		= fat_file_fd_tmp + 1; (1 byte) internallly used file mode
+fat_dir_entry_tmp		= fat_file_mode_tmp + 1 ; (32 byte); internallly used during mkdir, rmdir, fopen r+
+ 
+filename_buf			= fat_dir_entry_tmp + .sizeof(F32DirEntry) ; (13 byte, 8.3 + \0) file name buffer
 
 fd_area					= $0380 ; File descriptor area until $0400
 sd_blktarget			= $0400
