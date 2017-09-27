@@ -174,15 +174,7 @@ sd_cmd:
 		inx
 		cpx #$05
 		bne @l1
-
-		ldy #$08
-@l:		dey
-		beq sd_block_cmd_timeout ; y already 0? then invalid response or timeout
-		jsr spi_r_byte
-		bit #80	; bit 7 clear
-		bne @l  ; no, next byte
-		cmp #$00 ; got cmd response, check if $00 to set z flag accordingly
-		rts
+		bra sd_cmd_response_wait
 
 		; send 8 clocks with DI 1
 ;		lda #$ff
@@ -213,6 +205,7 @@ sd_block_cmd:
 		; first byte with bit 7 clear is our response
 		; command response time is 0-8 bytes for sd card
 		; read max. 8 bytes
+sd_cmd_response_wait:
 		ldy #$08
 @l:		dey
 		beq sd_block_cmd_timeout ; y already 0? then invalid response or timeout
