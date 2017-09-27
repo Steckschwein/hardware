@@ -476,6 +476,7 @@ __fat_prepare_dir_entry:
 		sta fat_dir_entry_tmp+F32DirEntry::LstModDate+0
 		stx fat_dir_entry_tmp+F32DirEntry::CrtDate+1
 		stx fat_dir_entry_tmp+F32DirEntry::WrtDate+1
+		stx fat_dir_entry_tmp+F32DirEntry::LstModDate+1
 		
 		stz fat_dir_entry_tmp+F32DirEntry::CrtTimeMillis			;ms to 0, not supported by rtc
 		
