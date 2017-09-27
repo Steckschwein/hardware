@@ -41,6 +41,7 @@ init_sdcard:
 	; send CMD0 - init SD card to SPI mode
 	lda #cmd0
 	jsr sd_cmd
+	debug "CMD0"
 
 	cmp #$01
 	beq @l3
@@ -62,6 +63,8 @@ init_sdcard:
 
 	lda #cmd8
 	jsr sd_cmd
+	debug "CMD8"
+
 	cmp #$01
 	beq @l5
 
@@ -83,8 +86,7 @@ init_sdcard:
 
 	; Init failed
 	jsr sd_deselect_card
-
-	lda #$f1
+;	lda #$f1
 	rts
 
 @l6:
@@ -99,12 +101,7 @@ init_sdcard:
 	jsr sd_busy_wait
 	lda #acmd41
 	jsr sd_cmd
-
-
-;	lda #$ff
-;	jsr spi_r_byte
-
-	; jsr hexout
+	debug "ACMD41"
 
 	cmp #$00
 	beq @l7
@@ -116,25 +113,24 @@ init_sdcard:
 	jsr sd_param_init
 	lda #cmd1
 	jsr sd_cmd
+	debug "CMD1"
 	rts
 @l7:
 
 	stz sd_cmd_param
 
-;	jsr sd_busy_wait
-
 	lda #cmd58
 	jsr sd_cmd
-
-	ldx #$00
+	debug "CMD58"
+	sta sd_cmd_result
+	ldx #$01
 @l8:
-	lda #$ff
 	phx
-	jsr spi_rw_byte
+	jsr spi_r_byte
 	plx
 	sta sd_cmd_result,x
 	inx
-	cpx #$05
+	cpx #$04
 	bne @l8
 
 	bit sd_cmd_result+1
@@ -146,11 +142,11 @@ init_sdcard:
 	lda #$02
 	sta sd_cmd_param+2
 
-	jsr sd_busy_wait
+;	jsr sd_busy_wait
 
 	lda #cmd16
 	jsr sd_cmd
-
+	debug "CMD16"
 ;	lda #$ff
 ;	jsr spi_rw_byte
 @l9:
