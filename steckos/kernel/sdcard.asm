@@ -42,17 +42,12 @@ init_sdcard:
 	lda #cmd0
 	jsr sd_cmd
 
-	; get result
-	lda #$ff
-	jsr spi_rw_byte
-
-	; jsr hexout
-
 	cmp #$01
 	beq @l3
 
 	; No Card
-	lda #$ff
+	;lda #$ff
+
 	rts
 
 @l3:
@@ -67,26 +62,13 @@ init_sdcard:
 
 	lda #cmd8
 	jsr sd_cmd
-
-	ldx #$00
-@l4:
-	lda #$ff
-	phx
-	jsr spi_rw_byte
-	plx
-	sta sd_cmd_result,x
-	inx
-	cpx #$05
-	bne @l4
-
-	lda sd_cmd_result
 	cmp #$01
 	beq @l5
 
 	; Invalid Card (or card we can't handle yet)
 	jsr sd_deselect_card
 
-	lda #$0f
+;	lda #$0f
 	rts
 
 @l5:
@@ -95,11 +77,6 @@ init_sdcard:
 	jsr sd_busy_wait
 	lda #cmd55
 	jsr sd_cmd
-
-	lda #$ff
-	jsr spi_rw_byte
-
-	; jsr hexout
 
 	cmp #$01
 	beq @l6
@@ -123,8 +100,9 @@ init_sdcard:
 	lda #acmd41
 	jsr sd_cmd
 
-	lda #$ff
-	jsr spi_r_byte
+
+;	lda #$ff
+;	jsr spi_r_byte
 
 	; jsr hexout
 
@@ -134,13 +112,16 @@ init_sdcard:
 	cmp #$01
 	beq @l5
 
-	lda #$42
+;	lda #$42
+	jsr sd_param_init
+	lda #cmd1
+	jsr sd_cmd
 	rts
 @l7:
 
 	stz sd_cmd_param
 
-	jsr sd_busy_wait
+;	jsr sd_busy_wait
 
 	lda #cmd58
 	jsr sd_cmd
@@ -170,8 +151,8 @@ init_sdcard:
 	lda #cmd16
 	jsr sd_cmd
 
-	lda #$ff
-	jsr spi_rw_byte
+;	lda #$ff
+;	jsr spi_rw_byte
 @l9:
 	; SD card init successful
 	lda #$00
@@ -198,11 +179,20 @@ sd_cmd:
 		cpx #$05
 		bne @l1
 
-		; send 8 clocks with DI 1
-		lda #$ff
-		jsr spi_rw_byte
-
+		ldy #$08
+@l:		dey
+		beq sd_block_cmd_timeout ; y already 0? then invalid response or timeout
+		jsr spi_r_byte
+		bit #80	; bit 7 clear
+		bne @l  ; no, next byte
+		cmp #$00 ; got cmd response, check if $00 to set z flag accordingly
 		rts
+
+		; send 8 clocks with DI 1
+;		lda #$ff
+;		jsr spi_rw_byte
+
+;		rts
 
 ;---------------------------------------------------------------------
 ; Send SD Card block Command
@@ -229,13 +219,13 @@ sd_block_cmd:
 		; read max. 8 bytes
 		ldy #$08
 @l:		dey
-		beq @sd_block_cmd_timeout ; y already 0? then invalid response or timeout
+		beq sd_block_cmd_timeout ; y already 0? then invalid response or timeout
 		jsr spi_r_byte
 		bit #80	; bit 7 clear
 		bne @l  ; no, next byte
 		cmp #$00 ; got cmd response, check if $00 to set z flag accordingly
 		rts
-@sd_block_cmd_timeout:
+sd_block_cmd_timeout:
 		lda #$1f ; make up error code distinct from possible sd card responses to mark timeout
 		rts
 
