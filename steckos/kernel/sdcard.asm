@@ -324,14 +324,14 @@ sd_read_multiblock:
 
 		dec blocks
 		bne @l1
-		jsr sd_busy_wait
+;		jsr sd_busy_wait
 
         ; all blocks read, send cmd12 to end transmission
         ; jsr sd_param_init
         lda #cmd12
         jsr sd_cmd
 
-        jsr sd_busy_wait
+;        jsr sd_busy_wait
 @exit:
         ply
 		plx
@@ -453,7 +453,7 @@ sd_write_multiblock:
         lda #cmd12
         jsr sd_cmd
 
-        jsr sd_busy_wait
+;        jsr sd_busy_wait
 
 @exit:
 		restore
