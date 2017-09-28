@@ -161,7 +161,9 @@ init_sdcard:
 ; parameters in sd_cmd_param
 ;---------------------------------------------------------------------
 sd_cmd:
-
+		pha
+		jsr sd_busy_wait
+		pla
 		; transfer command byte
 		jsr spi_rw_byte
 
@@ -175,12 +177,6 @@ sd_cmd:
 		cpx #$05
 		bne @l1
 		bra sd_cmd_response_wait
-
-		; send 8 clocks with DI 1
-;		lda #$ff
-;		jsr spi_rw_byte
-
-;		rts
 
 ;---------------------------------------------------------------------
 ; Send SD Card block Command
