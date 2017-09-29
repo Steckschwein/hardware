@@ -180,7 +180,7 @@ clusternr_matcher:
 		;	Z=0 on success, Z=1 and A with errno otherwise
         ;   X - index into fd_area of the opened directory - !!! ATTENTION !!! X is exactly the FD_INDEX_TEMP_DIR on success
 __fat_opendir:
-		jsr fat_open				; change dir using temp dir to not clobber the current dir, maybe we will run into an error
+		jsr __fat_open_path			; change dir using temp dir to not clobber the current dir, maybe we will run into an error
 		bne	@l_exit					; exit on error
 		lda	fd_area + F32_fd::Attr, x
 		bit #DIR_Attr_Mask_Dir		; check that there is no error and we have a directory
@@ -613,7 +613,7 @@ __fat_find_free_cluster:
 		sta fd_area+F32_fd::StartCluster+3, x
 		bra @exit
 
-		
+
         ; in:
         ;   A/X - pointer to string with the file path
 		;	  Y - file mode constant
@@ -627,17 +627,31 @@ __fat_find_free_cluster:
         ; out:
         ;   X - index into fd_area of the opened file
         ;   A - errno, Z=0 no error, Z=1 error and A contains error number
+fat_open:
+		sty fat_file_mode_tmp		; save flags
+		jmp __fat_open_path
+;		cmp #ENOENT
+;		bne @l_exit
+;		ldy #O_CREAT
+;		cpy fat_file_mode_tmp
+;		bne @l_exit				; Z=1 here, A still with error code 
+;		jsr __fat_prepare_dir_entry
+		
+        ; in:
+        ;   A/X - pointer to string with the file path
+        ; out:
+        ;   X - index into fd_area of the opened file
+        ;   A - errno, Z=0 no error, Z=1 error and A contains error number
 		;	Note: regardless of return value, dirptr points the last visited directory entry. furthermore lba_addr is set to the corresponding block where the dir entry resides
 .macro _open
 		stz	filename_buf, x	;\0 terminate the current path fragment
-		jsr	_fat_open
+		jsr	__fat_open
 		;debugdump "o_", filename_buf
-		bne @l_exit_open
+		bne @l_exit
 .endmacro
-fat_open:
+__fat_open_path:
 		sta krn_ptr1
 		stx krn_ptr1+1			    ; save path arg given in a/x
-		sty fat_file_mode_tmp		; save flags
 
 		ldx #FD_INDEX_CURRENT_DIR   ; clone current dir fd to temp dir fd
 		ldy #FD_INDEX_TEMP_DIR
@@ -682,15 +696,6 @@ fat_open:
 		bne	@l3					;overflow - <path argument> exceeds 255 chars
 @l_err_einval:
 		lda	#EINVAL
-		bra @l_exit
-@l_exit_open:
-		cmp #ENOENT
-		bne @l_exit
-		ldy #O_CREAT
-		cpy fat_file_mode_tmp
-		bne @l_exit				; Z=1 here, A still with error code 
-;		jsr __fat_prepare_dir_entry
-		
 @l_exit:
 		debug8	"fe", fat_file_mode_tmp
 		rts
@@ -704,7 +709,7 @@ fat_open:
         ;out:
         ;   X - index into fd_area of the opened file
 		;   Z=0 on success, Z=1 and A with error code otherwise
-_fat_open:
+__fat_open:
 		phy
 
 		ldx #FD_INDEX_TEMP_DIR
