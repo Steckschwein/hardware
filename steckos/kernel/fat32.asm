@@ -255,6 +255,7 @@ fat_mkdir:
 		jsr __fat_update_fsinfo						; update the fsinfo sector/block
 		bne @l_exit_close
 		
+		lda #DIR_Attr_Mask_Dir						; set type directory 
 		jsr __fat_prepare_dir_entry					; prepare dir entry, expects cluster number set in fd_area of newly allocated fd (fat_file_fd_tmp)
 		m_memcpy fat_lba_tmp, lba_addr, 4			; restore lba_addr of dirptr
 		debug32 "lba_dir", lba_addr			
@@ -459,14 +460,15 @@ __fat_rtc_date:
 		debug "rdate"
 		rts
 		
-		;
+		;	A - attribute flag for new directory entry
+		;	X - file descriptor
 __fat_prepare_dir_entry:
 		phx
-		m_memset fat_dir_entry_tmp, 0, .sizeof(F32DirEntry)
-		m_memset fat_dir_entry_tmp, $20, .sizeof(F32DirEntry::Name) + .sizeof(F32DirEntry::Ext)
+		sta fat_dir_entry_tmp+F32DirEntry::Attr						; store attribute
 		
-		lda #DIR_Attr_Mask_Dir ; TODO distinct dir/file via param
-		sta fat_dir_entry_tmp+F32DirEntry::Attr
+		offset=.sizeof(F32DirEntry::Name) + .sizeof(F32DirEntry::Ext) + .sizeof(F32DirEntry::Attr)
+		m_memset fat_dir_entry_tmp+offset, 0, .sizeof(F32DirEntry) - offset	;
+		m_memset fat_dir_entry_tmp, $20, .sizeof(F32DirEntry::Name) + .sizeof(F32DirEntry::Ext)
 		
 		jsr __rtc_systime_update									; update systime struct
 		jsr __fat_rtc_time
@@ -485,7 +487,8 @@ __fat_prepare_dir_entry:
 		
 		; stz fat_dir_entry_tmp+F32DirEntry::CrtTimeMillis			;ms to 0, ms not supported by rtc
 		
-		ldx fat_file_fd_tmp
+		plx
+;		ldx fat_file_fd_tmp
 		lda fd_area+F32_fd::StartCluster+3, x
 		sta fat_dir_entry_tmp+F32DirEntry::FstClusHI+1
 		lda fd_area+F32_fd::StartCluster+2, x
@@ -497,7 +500,6 @@ __fat_prepare_dir_entry:
 		
 		; TODO fixme file/dir
 		; m_memset fat_dir_entry_tmp+F32DirEntry::FileSize, 0, 4
-		plx
 		rts
 		
 __fat_write_fat_blocks:
@@ -652,6 +654,7 @@ fat_open:
 		jsr fat_alloc_fd							; alloc new fd for the new file we want to create
 		bne @l_exit									; and we want to avoid an error in between the different block writes
 ;		stx fat_file_fd_tmp							; save fd
+		lda #DIR_Attr_Mask_File						; set to regular file
 		jsr __fat_prepare_dir_entry
 		debug32 "lba_dir", lba_addr			
 		jsr __fat_write_dir_entry					; create dir entry at current dirptr
