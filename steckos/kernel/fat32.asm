@@ -256,6 +256,7 @@ fat_mkdir:
 		bne @l_exit_close
 		
 		lda #DIR_Attr_Mask_Dir						; set type directory 
+		ldx fat_file_fd_tmp							; load fd
 		jsr __fat_prepare_dir_entry					; prepare dir entry, expects cluster number set in fd_area of newly allocated fd (fat_file_fd_tmp)
 		m_memcpy fat_lba_tmp, lba_addr, 4			; restore lba_addr of dirptr
 		debug32 "lba_dir", lba_addr			
