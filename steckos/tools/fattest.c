@@ -121,11 +121,13 @@ int writeBlock(unsigned char *msg, unsigned char *buf, FILE *fd, unsigned long l
 		fprintf(stderr, "writeBlock($%x): Error seek file (%x): %s\n", lba_addr, offset, strerror(errno));
 		return s;
 	}
-	int n = fwrite(buf, 1, BLOCK_SIZE, fd);
+	int n;
+/*	n = fwrite(buf, 1, BLOCK_SIZE, fd);
 	if(n != BLOCK_SIZE){
 		fprintf(stderr, "writeBlock($%x): Error writing to file : %s\n", lba_addr, strerror(errno));
 		return n;
 	}
+*/	
 	printf("writeBlock($%x): %s\n", lba_addr, msg);
 	return n;
 }
@@ -411,7 +413,7 @@ int main(int argc, char* argv[]){
 	unsigned long fat_lba_addr_n=0;
 
 	FILE* res = fopen(".", "r+");
-	fprintf(stdout, "fopen(): %x %s\n", res, strerror(errno));
+	fprintf(stdout, "fopen(%x): %x %s\n", res, errno, strerror(errno));
 	
 	return 0;
 	

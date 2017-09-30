@@ -12,6 +12,8 @@
 
 .export fat_mount
 .export fat_open, fat_isOpen, fat_chdir, fat_get_root_and_pwd
+.export __fat_open_path
+
 .export fat_mkdir, fat_rmdir, fat_read_block
 .export fat_read, fat_find_first, fat_find_next, fat_write
 
@@ -180,7 +182,7 @@ clusternr_matcher:
 		;	Z=0 on success, Z=1 and A with errno otherwise
         ;   X - index into fd_area of the opened directory - !!! ATTENTION !!! X is exactly the FD_INDEX_TEMP_DIR on success
 __fat_opendir:
-		jsr __fat_open_path			; change dir using temp dir to not clobber the current dir, maybe we will run into an error
+		jsr __fat_open_path			
 		bne	@l_exit					; exit on error
 		lda	fd_area + F32_fd::Attr, x
 		bit #DIR_Attr_Mask_Dir		; check that there is no error and we have a directory
@@ -215,8 +217,7 @@ fat_chdir:
         ;   A/X - pointer to the file name
 fat_rmdir:
 		jsr __fat_opendir
-		bne	@l_exit
-		
+		bne	@l_exit		
 		
 		lda	#DIR_Entry_Deleted			; ($e5)
 		sta (dirptr)					; mark dir entry as deleted
@@ -371,6 +372,7 @@ __fat_write_block:
 		;	dirptr - set to current dir entry within block_data
 		;	filename_buf - contains the last path fragment which was inspected during path walk and which was not found
 __fat_write_dir_entry:
+		phx
 		;TODO FIXME normalize file name
 		debugdump "name", filename_buf
 		ldx #0
@@ -408,6 +410,8 @@ __fat_write_dir_entry:
 		jsr __fat_write_block_data										; write the updated dir entry to device
 @err_exit:
 		debug "f_wde"
+		plx
+		cmp #EOK
 		rts
 
 __fat_rtc_high_word:
@@ -457,6 +461,7 @@ __fat_rtc_date:
 		
 		;
 __fat_prepare_dir_entry:
+		phx
 		m_memset fat_dir_entry_tmp, 0, .sizeof(F32DirEntry)
 		m_memset fat_dir_entry_tmp, $20, .sizeof(F32DirEntry::Name) + .sizeof(F32DirEntry::Ext)
 		
@@ -478,7 +483,7 @@ __fat_prepare_dir_entry:
 		stx fat_dir_entry_tmp+F32DirEntry::WrtDate+1
 		stx fat_dir_entry_tmp+F32DirEntry::LstModDate+1
 		
-		stz fat_dir_entry_tmp+F32DirEntry::CrtTimeMillis			;ms to 0, not supported by rtc
+		; stz fat_dir_entry_tmp+F32DirEntry::CrtTimeMillis			;ms to 0, ms not supported by rtc
 		
 		ldx fat_file_fd_tmp
 		lda fd_area+F32_fd::StartCluster+3, x
@@ -491,7 +496,8 @@ __fat_prepare_dir_entry:
 		sta fat_dir_entry_tmp+F32DirEntry::FstClusLO+0
 		
 		; TODO fixme file/dir
-		m_memset fat_dir_entry_tmp+F32DirEntry::FileSize, 0, 4
+		; m_memset fat_dir_entry_tmp+F32DirEntry::FileSize, 0, 4
+		plx
 		rts
 		
 __fat_write_fat_blocks:
@@ -628,14 +634,41 @@ __fat_find_free_cluster:
         ;   X - index into fd_area of the opened file
         ;   A - errno, Z=0 no error, Z=1 error and A contains error number
 fat_open:
-		sty fat_file_mode_tmp		; save flags
-		jmp __fat_open_path
-;		cmp #ENOENT
-;		bne @l_exit
-;		ldy #O_CREAT
-;		cpy fat_file_mode_tmp
-;		bne @l_exit				; Z=1 here, A still with error code 
-;		jsr __fat_prepare_dir_entry
+		sty fat_file_mode_tmp			; save open flag
+		jsr __fat_open_path
+		bne	@l_error					; 
+		lda	fd_area + F32_fd::Attr, x	; 
+		bit #DIR_Attr_Mask_File			; regular file or directory?
+		beq	@l_err_dir
+		bra @l_ok
+@l_error:
+		cmp #ENOENT					; no such file or directory ?
+		bne @l_exit					; other error, then exit
+		ldy fat_file_mode_tmp		; check if we should create a new file
+		cpy #O_CREAT
+		bne @l_exit					; Z=1 here, A still with error code #ENOENT
+
+		debug "r+"
+		jsr fat_alloc_fd							; alloc new fd for the new file we want to create
+		bne @l_exit									; and we want to avoid an error in between the different block writes
+;		stx fat_file_fd_tmp							; save fd
+		jsr __fat_prepare_dir_entry
+		debug32 "lba_dir", lba_addr			
+		jsr __fat_write_dir_entry					; create dir entry at current dirptr
+		beq @l_ok									; exit, ok
+		pha 										; save error
+;		ldx fat_file_fd_tmp
+		jsr fat_close						 		; free the allocated file descriptor
+		pla 
+		bra @l_exit
+@l_err_dir:
+		lda	#EINVAL					; TODO FIXME error code for "Is a directory"
+		bra @l_exit
+@l_ok:
+		lda #EOK					; ok
+@l_exit:
+		debug "fopen"
+		rts
 		
         ; in:
         ;   A/X - pointer to string with the file path
@@ -654,11 +687,10 @@ __fat_open_path:
 		stx krn_ptr1+1			    ; save path arg given in a/x
 
 		ldx #FD_INDEX_CURRENT_DIR   ; clone current dir fd to temp dir fd
-		ldy #FD_INDEX_TEMP_DIR
+		ldy #FD_INDEX_TEMP_DIR		; we use temp dir to not clobber the current dir, maybe we will run into an error
 		jsr fat_clone_fd
 
-		ldy	#0
-		;	trim wildcard at the beginning
+		ldy	#0						;	trim wildcard at the beginning
 @l1:	lda (krn_ptr1), y
 		cmp	#' '
 		bne	@l2
@@ -710,7 +742,7 @@ __fat_open_path:
         ;   X - index into fd_area of the opened file
 		;   Z=0 on success, Z=1 and A with error code otherwise
 __fat_open:
-		phy
+		phy		
 
 		ldx #FD_INDEX_TEMP_DIR
 		jsr fat_find_first

@@ -1,28 +1,23 @@
-.include 	"common.inc"
-.include	"kernel.inc"
-.include 	"errno.inc"
-.include 	"fat32.inc"
+.include "common.inc"
+.include "kernel.inc"
+.include "errno.inc"
+.include "fat32.inc"
+.include "fcntl.inc"	; from ca65 api
 
 .segment "KERNEL"
 
 .import fat_open, fat_read, fat_close, fat_read_block, hexout, sd_read_multiblock, inc_lba_address, calc_blocks
-.import textui_chrout
+
 .export execv
 
-;		int execv(const char *path, char *const argv[]);
+        ; in:
+        ;   A/X - pointer to string with the file path
 execv:
-		jsr fat_open	        ; a/x - pointer to filename
+		ldy	#O_RDONLY
+		jsr fat_open			   	; a/x - pointer to filename
 		bne @l_err_exit
 
-		lda	fd_area + F32_fd::Attr, x
-		bit #DIR_Attr_Mask_File		; check that whether it's a regular file
-		bne	@l0
-		lda	#EINVAL				; TODO FIXME error code for "Is a directory"
-		bra @l_err_exit
-
-@l0:	;SetVector appstart, read_blkptr
-
-        SetVector sd_blktarget, read_blkptr
+		SetVector sd_blktarget, read_blkptr
 		phx ; save x register for fat_close
         jsr	fat_read_block
 		plx
@@ -69,7 +64,7 @@ execv:
 		pla
 		pla
         jmp (krn_ptr1)
-
+		
 @l_err_exit:
 		debug "exec"
 		rts
