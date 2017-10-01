@@ -664,7 +664,11 @@ fat_open:
 		jsr __fat_prepare_dir_entry
 		debug32 "lba_dir", lba_addr			
 		jsr __fat_write_dir_entry					; create dir entry at current dirptr
-		beq @l_exit									; fine, exit with A=0 (EOK)
+		bne @l_exit_close
+		ldx fat_file_fd_tmp							
+		lda #EOK									; fine, exit with A=0 (EOK)
+		bra @l_exit
+@l_exit_close:
 		pha 										; save error
 		ldx fat_file_fd_tmp
 		jsr fat_close						 		; free the allocated file descriptor
@@ -674,7 +678,7 @@ fat_open:
 		lda	#ENOENT
 		bra @l_exit		
 @l_err_dir:
-		lda	#EINVAL					; TODO FIXME error code for "Is a directory"
+		lda	#EINVAL									; TODO FIXME error code for "Is a directory"
 @l_exit:
 		debug "fopen"
 		rts
