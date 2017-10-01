@@ -14,7 +14,7 @@
         ;   A/X - pointer to string with the file path
 execv:
 		ldy	#O_RDONLY
-		jsr fat_open			   	; a/x - pointer to filename
+		jsr fat_open			   	; A/X - pointer to filename
 		bne @l_err_exit
 
 		SetVector sd_blktarget, read_blkptr

@@ -70,21 +70,6 @@ kern_init:
 	ldx #>filename
 	jsr execv
 
-;	jsr fat_open
-;	debug "op2"
-;	bne do_upload
-
-;	SetVector shell_addr, read_blkptr
-;	jsr fat_read
-;	debug "rd"
-
-;	jsr fat_close
-
-;	ldx #$ff
-;	txs
-
-;	jmp shell_addr
-
 do_upload:
 	jsr upload
 
@@ -372,10 +357,6 @@ krn_textui_scroll_up:      jmp textui_scroll_up
 
 .export krn_getcwd
 krn_getcwd:      		jmp fat_get_root_and_pwd
-
-.import calc_dirptr_from_entry_nr
-.export krn_calc_dirptr_from_entry_nr
-krn_calc_dirptr_from_entry_nr:    	jmp calc_dirptr_from_entry_nr
 
 .export krn_getfilesize
 krn_getfilesize:      	jmp fat_getfilesize

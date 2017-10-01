@@ -5,6 +5,12 @@
 
 .include "appstart.inc"
 appstart $1000
+
+		lda (paramptr)	; empty string?
+		bne @l_touch
+		lda #$99
+		bra @errmsg		
+@l_touch:
     	lda paramptr
     	ldx paramptr+1
 		ldy #O_CREAT
