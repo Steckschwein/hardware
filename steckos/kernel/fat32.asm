@@ -460,7 +460,7 @@ __fat_rtc_date:
 		sbc	#80															; fat year is 1980..2107 (bit 15-9)
 		asl
 		sta krn_tmp
-		lda rtc_systime_t+time_t::tm_mon								; month  (0..11), adjust +1
+		lda rtc_systime_t+time_t::tm_mon								; month from rtc is (0..11), adjust +1
 		inc
 		jsr __fat_rtc_high_word		
 		lda rtc_systime_t+time_t::tm_mday								; day of month (1..31)

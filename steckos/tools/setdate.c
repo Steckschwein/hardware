@@ -6,14 +6,16 @@
 #include "../include/rtc.h"
 
 unsigned char DS1306(unsigned char v){
-	return ((v / 10)<<4) | (v % 10);
+	unsigned char r = ((v / 10)<<4) | (v % 10);
+	// cprintf("$%x\n", r);
+	return r;
 }
 
 void set_clock(struct tm *tm)
 {   
 	if(tm->tm_year<100 || tm->tm_year > 199){
 		cprintf("invalid year, range 2000<=year<=2099, but was %d\n", tm->tm_year+1900);
-		tm->tm_year = 2016 - 1900;//fallback set hard to 2016
+		tm->tm_year = 2017 - 1900;//fallback set hard to 2016
 	}	
     spi_select_rtc();
 	spi_write(0x80);//write, start with seconds
@@ -21,10 +23,13 @@ void set_clock(struct tm *tm)
     spi_write(DS1306(tm->tm_sec));//seconds
     spi_write(DS1306(tm->tm_min));//minutes
 	spi_write(DS1306(tm->tm_hour) | 1<<7);//set clock, also 24h mode (bit 7)
-	spi_write(1); //sunday
+	
+	spi_write(0x84);//write, start with day of month
     spi_write(DS1306(tm->tm_mday));//day
-	spi_write(DS1306(tm->tm_mon+1)); // ansi tm struct 0..11, correct DS1306 specific 1..12
-	spi_write(DS1306(tm->tm_year-100)); // ansi tm struct year - 1900, correct DS1306 specific (year - 100)
+	// TODO FIXME month must not be coded in bcd, check whether this is an DS1306 issue
+	//spi_write(DS1306(tm->tm_mon+1)); // ansi tm struct 0..11, correct DS1306 specific 1..12
+	spi_write(tm->tm_mon+1);
+	spi_write(DS1306(tm->tm_year-100)); // ansi tm struct year - 1900, correct DS1306 specific year 2000..
 	spi_deselect();
 } 
 
@@ -54,7 +59,7 @@ int main (int argc, char *argv[]){
 		tm->tm_min   = substr2int(datestr, i, 2);i+=2;
 		tm->tm_sec   = substr2int(datestr, i, 2);i+=2;
 		//parse date from input
-//		cprintf ("\n%d.%d.%d %d:%d:%d\n", tm->tm_mday, tm->tm_mon, tm->tm_year, tm->tm_hour, tm->tm_min, tm->tm_sec);
+		// cprintf ("\n%d.%d.%d %d:%d:%d\n", tm->tm_mday, tm->tm_mon, tm->tm_year, tm->tm_hour, tm->tm_min, tm->tm_sec);
 		set_clock(tm);
 		t = _systime();
 		cprintf("\nset to %s\n", asctime(localtime(&t)));
