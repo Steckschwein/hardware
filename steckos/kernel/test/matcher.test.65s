@@ -1,6 +1,6 @@
 	*=$1000
 	
-test_in=input_1
+test_in=input_21
 test_dirs=13
 test_input=test_in + test_dirs; address of input + size of results
 
@@ -8,55 +8,97 @@ test_input=test_in + test_dirs; address of input + size of results
 dirptr=$0
 DIRE=dirptr
 MASK=$2
-SUCH=$4
+filenameptr=$4
+krn_ptr1=$6
 
 fd_area						= $0320 ; File descriptor area until $0350 
 FD_Entries_Max = 16
 FD_Entry_Size = 9 ; 9 byte per fd entry
-krn_tmp=$ee
 TMP1=$f0
+krn_tmp=$f0
 TMP2=$f1
+krn_tmp1=$f1
 TMP3=$f2
+krn_tmp2=$f2
 
-	jmp	test_suite
-
+	jmp test_suite
+	
+fat_dir_entry_tmp:
+	.rs 11
+	
+vdp_chrout:
 chrout:
 	sta $e001
 	rts
 
 	.include "../../../asmunit/asm_unit.asm"
 	.include "../matcher.asm"
+	.include "../util.asm"
 	
 buffer:			.rs 8+1+3
 filename_buf: 	.rs 32
 
-
-vdp_chrout:
-	sta	$e001
-	rts
-
 	
 test_suite
+
+	lda 	#<usr_input
+	sta 	filenameptr
+	lda 	#>usr_input
+	sta 	filenameptr+1
+	
+	lda 	#<buffer
+	sta 	MASK
+	lda 	#>buffer
+	sta 	MASK+1
+	
+	jsr 	string_fat_name
+	jsr 	string_fat_mask
+
+	lda #'['
+	jsr chrout
+	ldy #0
+l_out_l0:
+	lda fat_dir_entry_tmp,y
+	beq l_out_le
+	jsr chrout
+	iny 
+	cpy #8+3
+	bne l_out_l0
+	lda #']'
+	jsr chrout	
+l_out_le:
+	rts
+
+usr_input:
+;	.db "  ",0
+;	.db "2.dat",0
+	.db "  2.dat ",0
+;	.db " ls.prg ",0
+;	.db "ls*  ",0
+;	.db "ls.*  ",0	
+	.db "l*.prg  ",0
+;	.db "*.*  ",0
+
+	.db "l*p*.p*g  ",0 	; TODO ?!?
+	.db "..",0		; TODO ?!?
+	.db ".",0		; TODO ?!?
+	.db "*..*  ",0 		; TODO ?!?
+	.db "  2...da ",0	; TODO ?!?
+	
 	lda #<test_in
 	sta $10
 	lda #>test_in
 	sta $10+1
-	
-	ldx #2
-	lda $10, x
-	sta $4
-ll1:	dec $4
-	bpl ll1
-	
+		
 
     lda #<test_input
     sta matcher_prepareinput+1
     sta matcher_test1+1
-    sta SUCH
+    sta filenameptr
     lda #>test_input
     sta matcher_prepareinput+2
     sta matcher_test1+2
-    sta SUCH+1
+;    sta SUCH+1
     
     lda #<test_in
     sta a5+1
@@ -64,11 +106,11 @@ ll1:	dec $4
     sta a5+2
     
     lda #<buffer
-    sta MASK
+ ;   sta MASK
     lda #>buffer
-    sta MASK+1
+  ;  sta MASK+1
 
-    jsr MACH_MASKE
+   ; jsr MACH_MASKE
     
     jsr test
 	
@@ -87,8 +129,8 @@ l1:
 		
 	phx
 	phy
-	;jsr matcher	; check <name>.<ext> against 11 byte dir entry <name> <ext>
-	jsr VERGLEICHE_MASKE
+	jsr filename_matcher	; check <name>.<ext> against 11 byte dir entry <name> <ext>
+	;jsr VERGLEICHE_MASKE
 	ply
 	plx		
 	lda	#0
@@ -116,7 +158,7 @@ MACH_MASKE:
   STY   TMP1      ; Stringposition SUCH
   STY   TMP2      ; Stringposition MASK
 MACH_MASKE_1  
-  LDA   (SUCH),Y
+  LDA   (filenameptr),Y
   beq	SUCH_ENDE
   cpy   #13      ; Zu viele Zeichen in der Suche?
   iny
@@ -131,7 +173,7 @@ SUCH_ENDE:
 ZEICHEN:
   LDY   TMP1
   INC   TMP1
-  LDA   (SUCH),Y
+  LDA   (filenameptr),Y
   CMP   #'*'      ; '*' -> Egal bis zum Ende des Abschnits
   BNE   NOE1
   LDA   #'?'      ; '?' ausbreiten

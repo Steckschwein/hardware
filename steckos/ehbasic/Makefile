@@ -20,4 +20,4 @@ basic.prg: steck_mon.o
 	$(LD65) $(LDFLAGS) steck_mon.o $(LIBS) -o basic.prg
 
 transfer: all
-	../transfer.py $(OBJ) 
+	../../transfer.py $(OBJ) 

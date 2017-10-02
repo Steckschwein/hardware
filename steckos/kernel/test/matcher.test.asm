@@ -1,13 +1,10 @@
-__LOADADDR__ = $1000
-.export __LOADADDR__
-.segment "LOADADDR"
-.word __LOADADDR__
-.segment "CODE"
-			jsr	test_suite
-main:		bra main
-
 .include "kernel_jumptable.inc"
 .include "zeropage.inc"
+
+.include "appstart.inc"
+appstart $1000
+			jmp	test_suite
+
 .include "asm_unit.asm"
 
 ; define
@@ -126,6 +123,9 @@ Println:
 .endmacro
 
 test_suite:
+    SetTestInput input_21
+    jmp test
+	
     SetTestInput input_1
     jsr test
     SetTestInput input_2

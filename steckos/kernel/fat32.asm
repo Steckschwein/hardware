@@ -7,12 +7,12 @@
 
 .import sd_read_block, sd_read_multiblock, sd_write_block, sd_write_multiblock, sd_select_card, sd_deselect_card
 .import sd_read_block_data
-
 .import __rtc_systime_update
+.import string_fat_name
+.import string_fat_mask
 
 .export fat_mount
 .export fat_open, fat_isOpen, fat_chdir, fat_get_root_and_pwd
-.export __fat_open_path
 
 .export fat_mkdir, fat_rmdir, fat_read_block
 .export fat_read, fat_find_first, fat_find_next, fat_write
@@ -61,7 +61,7 @@ _fat_read:
 		; in:
 		;	X - offset into fd_area
 		; out:
-		; 	Z=0 on success, Z=1 and A=error code otherwise
+		;   Z - Z=1 on success (A=0), Z=0 and A=error code otherwise
 fat_write:
 		stx fat_file_fd_tmp									; save fd
 		
@@ -189,7 +189,7 @@ clusternr_matcher:
 		;in:
         ;   A/X - pointer to string with the file path
         ;out:
-		;	Z=0 on success, Z=1 and A with errno otherwise
+		;   Z - Z=1 on success (A=0), Z=0 and A=error code otherwise
         ;   X - index into fd_area of the opened directory - !!! ATTENTION !!! X is exactly the FD_INDEX_TEMP_DIR on success
 __fat_opendir:
 		jsr __fat_open_path			
@@ -208,7 +208,7 @@ __fat_opendir:
 		;in:
         ;   A/X - pointer to string with the file path
         ;out:
-		;	Z=0 on success, Z=1 and A with errno otherwise
+		;   Z - Z=1 on success (A=0), Z=0 and A=error code otherwise
         ;   X - index into fd_area of the opened directory
 fat_chdir:
 		jsr __fat_opendir
@@ -242,21 +242,23 @@ fat_rmdir:
 
 		
         ; in:
-        ; 	A/X - pointer to the file name
+        ; 	A/X - pointer to the directory name
 		; out:
-		;   Z=0 on success, Z=1 and A with error code otherwise
+		;   Z - Z=1 on success (A=0), Z=0 and A=error code otherwise
 fat_mkdir:
 		jsr __fat_opendir
 		beq	@err_exists
 		cmp	#ENOENT									; we expect 'no such file or directory' error, otherwise a file with same name already exists
 		bne @l_exit
 
-		m_memcpy lba_addr, fat_lba_tmp, 4			; found..., save lba_addr pointing to the block the current dir entry resides (dirptr)
-		debug32 "ltmp", fat_lba_tmp		
+		jsr string_fat_name							; build fat name upon input string (filenameptr)
+		bne @l_exit
 		jsr fat_alloc_fd							; alloc new fd - TODO use them for fopen and "rw+" mode - we alloc a new fd here already, right before any fat writes
 		bne @l_exit									; and we want to avoid an error in between the different block writes
 		stx fat_file_fd_tmp							; save fd
-		
+
+		m_memcpy lba_addr, fat_lba_tmp, 4			; found..., save lba_addr pointing to the block the current dir entry resides (dirptr)
+		debug32 "ltmp", fat_lba_tmp				
 		jsr __fat_find_free_cluster					; find free cluster, stored in fd_area for fd with fat_file_fd_tmp
 		bne @l_exit_close
 		jsr __fat_mark_free_cluster					; mark cluster in block with EOC - TODO cluster chain support		
@@ -264,12 +266,12 @@ fat_mkdir:
 		bne @l_exit_close
 		jsr __fat_update_fsinfo						; update the fsinfo sector/block
 		bne @l_exit_close
+		m_memcpy fat_lba_tmp, lba_addr, 4			; restore lba_addr of dirptr
+		debug32 "lba_dir", lba_addr			
 		
 		lda #DIR_Attr_Mask_Dir						; set type directory 
 		ldx fat_file_fd_tmp							; load fd
 		jsr __fat_prepare_dir_entry					; prepare dir entry, expects cluster number set in fd_area of newly allocated fd (fat_file_fd_tmp)
-		m_memcpy fat_lba_tmp, lba_addr, 4			; restore lba_addr of dirptr
-		debug32 "lba_dir", lba_addr			
 		jsr __fat_write_dir_entry					; create dir entry at current dirptr
 		bne @l_exit_close
 		
@@ -294,10 +296,10 @@ __fat_update_fsinfo:
 		SetVector block_fat, read_blkptr
 		jsr	sd_read_block
 		bne @l_exit
-		debug32 "fi_fcl", block_fat+FSInfo_FreeClus
+;		debug32 "fi_fcl", block_fat+FSInfo_FreeClus
 		_dec32 block_fat+FSInfo_FreeClus
 @l_write:
-		debug32 "fi_fcl", block_fat+FSInfo_FreeClus
+;		debug32 "fi_fcl", block_fat+FSInfo_FreeClus
 		jmp __fat_write_block_fat		
 @l_exit:
 		rts
@@ -362,9 +364,9 @@ __fat_write_newdir_entry:
 		rts
 
 __fat_write_block_fat:
-		debug32 "wb_f_lba", lba_addr
 .ifdef FAT_DUMP_FAT_WRITE
-		debugdump "w_fat", block_fat
+		debug32 "wb_lba", lba_addr
+		debugdump "wb_dat", block_fat
 .endif
 		lda #>block_fat
 		bra	__fat_write_block
@@ -376,26 +378,17 @@ __fat_write_block:
 		stz write_blkptr	;page aligned
 .ifndef FAT_NOWRITE
 		jmp sd_write_block
-.endif
+.else
+		lda #EOK
 		rts
+.endif
 		
 		
 		; in 
 		;	dirptr - set to current dir entry within block_data
 		;	filename_buf - contains the last path fragment which was inspected during path walk and which was not found
 __fat_write_dir_entry:
-		;TODO FIXME normalize file name
-		;debugdump "name", filename_buf
-		ldx #0
-@l0:	lda filename_buf, x
-		beq @l1
-		toupper
-		sta fat_dir_entry_tmp+F32DirEntry::Name,x
-		inx
-		cpx #11
-		bne @l0
-@l1:	
-		;debugdump "dir", fat_dir_entry_tmp
+		debugdump "f_wde", fat_dir_entry_tmp
 		m_memcpy2ptr fat_dir_entry_tmp, dirptr, .sizeof(F32DirEntry)	; copy new entry to block buffer (block_data)
 
 		;TODO FIXME duplicate code here! - @see fat_find_next:
@@ -472,9 +465,8 @@ __fat_rtc_date:
 __fat_prepare_dir_entry:
 		sta fat_dir_entry_tmp+F32DirEntry::Attr						; store attribute
 		
-		offset=.sizeof(F32DirEntry::Name) + .sizeof(F32DirEntry::Ext) + .sizeof(F32DirEntry::Attr)
-		m_memset fat_dir_entry_tmp+offset, 0, .sizeof(F32DirEntry) - offset	;
-		m_memset fat_dir_entry_tmp, $20, .sizeof(F32DirEntry::Name) + .sizeof(F32DirEntry::Ext)
+		stz fat_dir_entry_tmp+F32DirEntry::Reserved					; unused
+		stz fat_dir_entry_tmp+F32DirEntry::CrtTimeMillis			; ms to 0, ms not supported by rtc
 		
 		jsr __rtc_systime_update									; update systime struct
 		jsr __fat_rtc_time
@@ -491,8 +483,6 @@ __fat_prepare_dir_entry:
 		stx fat_dir_entry_tmp+F32DirEntry::WrtDate+1
 		stx fat_dir_entry_tmp+F32DirEntry::LstModDate+1
 		
-		; stz fat_dir_entry_tmp+F32DirEntry::CrtTimeMillis			;ms to 0, ms not supported by rtc
-		
 		ldx fat_file_fd_tmp
 		lda fd_area+F32_fd::StartCluster+3, x
 		sta fat_dir_entry_tmp+F32DirEntry::FstClusHI+1
@@ -503,8 +493,10 @@ __fat_prepare_dir_entry:
 		lda fd_area+F32_fd::StartCluster+0, x
 		sta fat_dir_entry_tmp+F32DirEntry::FstClusLO+0
 		
-		; TODO fixme file/dir
-		; m_memset fat_dir_entry_tmp+F32DirEntry::FileSize, 0, 4
+		stz fat_dir_entry_tmp+F32DirEntry::FileSize+3
+		stz fat_dir_entry_tmp+F32DirEntry::FileSize+2
+		stz fat_dir_entry_tmp+F32DirEntry::FileSize+1
+		stz fat_dir_entry_tmp+F32DirEntry::FileSize+0		
 		rts
 		
 __fat_write_fat_blocks:
@@ -540,11 +532,11 @@ __fat_mark_free_cluster:
 		; in:
 		;	fat_file_fd_tmp - file descriptor
 		; out:
-		;	Z=0 on success
+		;	Z=1 on success
 		;		Y=offset in block_fat of found cluster
 		;		lba_addr with fat block where the found clouster resides
 		;		updated fd_area+F32_fd::StartCluster, x with the found cluster
-		;	Z=1 on error, A=error code
+		;	Z=0 on error, A=error code
 __fat_find_free_cluster:
 		;TODO improve, use a previously saved lba_addr and/or found cluster number
 		stz lba_addr+3			; init lba_addr with fat_begin lba addr
@@ -639,7 +631,7 @@ __fat_find_free_cluster:
 		;		O_EXCL          = $80
         ; out:
         ;   X - index into fd_area of the opened file
-        ;   A - errno, Z=0 no error, Z=1 error and A contains error number
+		;   Z - Z=1 on success (A=0), Z=0 and A=error code otherwise
 fat_open:
 		sty fat_file_mode_tmp			; save open flag
 		jsr __fat_open_path
@@ -657,6 +649,9 @@ fat_open:
 		beq @l_err_enoent			; nothing set, exit with ENOENT
 
 		debug "r+"
+		
+		jsr string_fat_name							; build fat name upon input string (filenameptr)
+		bne @l_exit
 		jsr fat_alloc_fd							; alloc new fd for the new file we want to create
 		bne @l_exit									; and we want to avoid an error in between the different block writes
 		stx fat_file_fd_tmp							; save fd
@@ -687,8 +682,9 @@ fat_open:
         ;   A/X - pointer to string with the file path
         ; out:
         ;   X - index into fd_area of the opened file
-        ;   A - errno, Z=0 no error, Z=1 error and A contains error number
-		;	Note: regardless of return value, dirptr points the last visited directory entry. furthermore lba_addr is set to the corresponding block where the dir entry resides
+		;   Z - Z=1 on success (A=0), Z=0 and A=error code otherwise
+		;	Note: regardless of return value, the dirptr points the last visited directory entry and the corresponding lba_addr is set to the block where the dir entry resides.
+		;		  furthermore the filenameptr points to the last inspected path fragment of the given input path
 .macro _open
 		stz	filename_buf, x	;\0 terminate the current path fragment
 		jsr	__fat_open
@@ -742,7 +738,7 @@ __fat_open_path:
 @l_err_einval:
 		lda	#EINVAL
 @l_exit:
-		debug8	"fe", fat_file_mode_tmp
+		debug	"fop"
 		rts
 @l_openfile:
 		_open					; return with X as offset into fd_area with new allocated file descriptor
@@ -753,7 +749,7 @@ __fat_open_path:
         ;   filenameptr - ptr to the filename
         ;out:
         ;   X - index into fd_area of the opened file
-		;   Z=0 on success, Z=1 and A with error code otherwise
+		;   Z - Z=1 on success (A=0), Z=0 and A=error code otherwise
 __fat_open:
 		phy		
 
@@ -1235,7 +1231,7 @@ fat_init_fdarea_with_x:
 
 		; out:
 		;	X - with index to fd_area
-		;   Z=0 on success, Z=1 and A with error code otherwise
+		;   Z - Z=1 on success (A=0), Z=0 and A=error code otherwise
 fat_alloc_fd:
 		ldx #(2*FD_Entry_Size)	; skip 2 entries, they're reserverd for current and temp dir
 @l1:	lda fd_area + F32_fd::StartCluster +3, x
@@ -1263,7 +1259,7 @@ fat_alloc_fd:
         ; in:
         ;   X - offset into fd_area
         ; out:
-        ;   Z=0 on success, Z=1 and A with error code otherwise
+		;   Z - Z=1 on success (A=0), Z=0 and A=error code otherwise
 fat_close:
 		lda fd_area + F32_fd::StartCluster +3, x
 		cmp #$ff	;#$ff means not open, carry is set...
@@ -1323,14 +1319,16 @@ ff_l3:	SetVector sd_blktarget, dirptr	; dirptr to begin of target buffer
 		dec read_blkptr+1	; set read_blkptr to origin address
 ff_l4:
 		lda (dirptr)
-		beq ff_eod				; first byte of dir entry is $00 (end of directory)?
+		beq ff_eod						; first byte of dir entry is $00 (end of directory)?
 @l5:
-		ldy #F32DirEntry::Attr		; else check if long filename entry
-		lda (dirptr),y 		; we are only going to filter those here (or maybe not?)
+		ldy #F32DirEntry::Attr			; else check if long filename entry
+		lda (dirptr),y 					; we are only going to filter those here (or maybe not?)
 		cmp #DIR_Attr_Mask_LongFilename
 		beq fat_find_next
 
-		jsr fat_find_first_matcher	; jmp indirect via (krn_call_internal), set to appropriate matcher strategy
+		jsr fat_find_first_matcher		; jmp indirect via (krn_call_internal), set to appropriate matcher strategy
+		;debugdump "ff", filename_buf
+		;debugdump "fb", buffer
 		bcs ff_end
 		
 		; in:

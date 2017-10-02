@@ -13,6 +13,7 @@
 .include "../kernel/kernel_jumptable.inc"
 .include "../kernel/fat32.inc"
 .include "../kernel/uart.inc"
+.include "fcntl.inc"
 .include "appstart.inc"
 
 appstart $b400
@@ -47,6 +48,7 @@ LAB_stlp:
 		JMP	LAB_COLD		; do EhBASIC cold start
 
 openfile:
+		sty @mode			; save file open mode
 		jsr LAB_EVEX
 		lda Dtypef
 		bne @go
@@ -68,9 +70,10 @@ openfile:
 @open:
 		lda ssptr_l
 		ldx ssptr_h
-		jsr krn_open
-		bne	io_error
-		rts
+		ldy @mode
+		jmp krn_open
+@mode:	.res 1
+
 io_error:
 		pha
 		jsr	krn_primm
@@ -79,6 +82,7 @@ io_error:
 		jmp krn_hexout
 
 bsave:
+		lda #O_WRONLY
 		jsr openfile
 		bne io_error
 
@@ -96,7 +100,6 @@ bsave:
 		sbc Smemh
 		sta fd_area + F32_fd::FileSize + 1,x
 
-		;lda #$00
 		stz fd_area + F32_fd::FileSize + 2,x
 		stz fd_area + F32_fd::FileSize + 3,x
 
@@ -105,6 +108,7 @@ bsave:
 		jmp krn_close
 
 bload:
+		lda #O_RDONLY
 		jsr openfile
 		bne io_error
 
@@ -116,7 +120,6 @@ bload:
 
 		jsr krn_read
 		bne io_error
-
 
 		phx
 		jsr krn_getfilesize
