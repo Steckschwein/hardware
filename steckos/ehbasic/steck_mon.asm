@@ -48,7 +48,7 @@ LAB_stlp:
 		JMP	LAB_COLD		; do EhBASIC cold start
 
 openfile:
-		sty @mode			; save file open mode
+		sta @mode			; save file open mode
 		jsr LAB_EVEX
 		lda Dtypef
 		bne @go
