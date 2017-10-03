@@ -69,21 +69,21 @@ _debugout:
 		lda		#$ff
 _debugout0:
 		sta		dbg_bytes
-		pla						; Get the low part of "return" address
-                                ; (data start address)
+		pla							; Get the low part of "return" address
+									; (data start address)
 		sta     msgptr
 		pla
-		sta     msgptr+1       ; Get the high part of "return" address
-                                ; (data start address)
+		sta     msgptr+1      	 	; Get the high part of "return" address
+									; (data start address)
 						
-		ldy		#2
+		ldy		#2					; 2 byte address argument
 		lda 	(msgptr),y
 		sta 	krn_ptr1+1
 		dey
 		lda 	(msgptr),y
-		sta		krn_ptr1			; read debug address
+		sta		krn_ptr1			; address is setup in krn_ptr1
 
-		ldy 	dbg_bytes			; bytes hex out
+		ldy 	dbg_bytes			; bytes to output
 		bmi		@PSINB
 		lda		krn_ptr1+1
 		jsr 	krn_hexout

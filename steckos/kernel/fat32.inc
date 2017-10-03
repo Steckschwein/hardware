@@ -78,7 +78,7 @@ PartType_FAT32_LBA	= $0c
 	FATSz32		.dword		; sectors per FAT
 	ExtFlags	.word
 	Version		.word
-	RootClus	.dword
+	RootClus	.dword		; (4 byte)
 	FSInfoSec	.word ; (2 byte)
 .endstruct
 
