@@ -125,8 +125,11 @@ fat_write:
 		dey
 		sta (dirptr),y
 		
+		debugdump "fw_fd", fd_area + 2*.sizeof(F32_fd) ; offset fd
+		
 		jsr __fat_write_block_data
 @l_exit:
+		debug16 "fw_dp", dirptr
 		debug "fwrite"
 		rts
 
@@ -256,6 +259,7 @@ fat_mkdir:
 		jsr fat_alloc_fd							; alloc new fd - TODO use them for fopen and "rw+" mode - we alloc a new fd here already, right before any fat writes
 		bne @l_exit									; and we want to avoid an error in between the different block writes
 		stx fat_file_fd_tmp							; save fd
+		jsr __fat_update_fd							; update dir lba addr and dir entry number within fd
 
 		m_memcpy lba_addr, fat_lba_tmp, 4			; found..., save lba_addr pointing to the block the current dir entry resides (dirptr)
 		debug32 "ltmp", fat_lba_tmp				
@@ -364,14 +368,14 @@ __fat_write_newdir_entry:
 		rts
 
 __fat_write_block_fat:
+		debug32 "wbf_lba", lba_addr
 .ifdef FAT_DUMP_FAT_WRITE
-		debug32 "wb_lba", lba_addr
-		debugdump "wb_dat", block_fat
+		debugdump "wbf", block_fat
 .endif
 		lda #>block_fat
 		bra	__fat_write_block
 __fat_write_block_data:
-;		debug32 "wb_d_lba", lba_addr
+		debug32 "wbd_lba", lba_addr
 		lda #>block_data
 __fat_write_block:
 		sta write_blkptr+1
@@ -386,7 +390,6 @@ __fat_write_block:
 		
 		; in 
 		;	dirptr - set to current dir entry within block_data
-		;	filename_buf - contains the last path fragment which was inspected during path walk and which was not found
 __fat_write_dir_entry:
 		debugdump "f_wde", fat_dir_entry_tmp
 		m_memcpy2ptr fat_dir_entry_tmp, dirptr, .sizeof(F32DirEntry)	; copy new entry to block buffer (block_data)
@@ -655,13 +658,15 @@ fat_open:
 		jsr fat_alloc_fd							; alloc new fd for the new file we want to create
 		bne @l_exit									; and we want to avoid an error in between the different block writes
 		stx fat_file_fd_tmp							; save fd
+		jsr __fat_update_fd							; update dir lba addr and dir entry number within fd
 		lda #DIR_Attr_Mask_File						; set to regular file
 		jsr __fat_prepare_dir_entry
-		debug32 "lba_dir", lba_addr			
+		debug32 "lba_dir", lba_addr
 		jsr __fat_write_dir_entry					; create dir entry at current dirptr
 		bne @l_exit_close
-		ldx fat_file_fd_tmp							
-		lda #EOK									; fine, exit with A=0 (EOK)
+
+		ldx fat_file_fd_tmp							; newly opened file descriptor to X
+		lda #EOK									; and exit with A=0 (EOK)
 		bra @l_exit
 @l_exit_close:
 		pha 										; save error
@@ -822,18 +827,8 @@ fat_open_found:
 		lda (dirptr),y
 		sta fd_area + F32_fd::Attr, x
 
-	 	lda lba_addr + 3
-		sta fd_area + F32_fd::DirEntryLBA + 3, x
-	 	lda lba_addr + 2
-		sta fd_area + F32_fd::DirEntryLBA + 2, x
-	 	lda lba_addr + 1
-		sta fd_area + F32_fd::DirEntryLBA + 1, x
-	 	lda lba_addr + 0
-		sta fd_area + F32_fd::DirEntryLBA + 0, x
-
-		jsr calc_dir_entry_nr
-		sta fd_area + F32_fd::DirEntryPos + 0, x
-
+		jsr __fat_update_fd
+		
 		lda #EOK ; no error
 end_open_err:
 		ply
@@ -880,6 +875,7 @@ calc_blocks: ;blocks = filesize / BLOCKSIZE -> filesize >> 9 (div 512) +1 if fil
 		inc blocks+1
 		bne @l2
 		inc blocks+2
+		debug16 "cbl", blocks
 @l2:	rts
 
 ; calculate LBA address of first block from cluster number found in file descriptor entry
@@ -900,10 +896,8 @@ calc_lba_addr:
 			sta lba_addr + i
 		.endrepeat
 
-;		debug32 "lba0", lba_addr
 		;SecPerClus is a power of 2 value, therefore cluster << n, where n ist the number of bit set in VolumeID::SecPerClus
 		lda volumeID+VolumeID::SecPerClus
-		;debug8 "scl", volumeID+VolumeID::SecPerClus
 @lm:	lsr
 		beq @lme    ; 1 sector/cluster therefore skip multiply
 		tax
@@ -913,10 +907,7 @@ calc_lba_addr:
 		rol lba_addr +3
 		txa
 		bra @lm
-@lme:
-;		debug32 "clbla", cluster_begin_lba
-;		debug32 "lba1", lba_addr
-		
+@lme:		
 		; add cluster_begin_lba and lba_addr
 		clc
 		.repeat 4, i
@@ -924,7 +915,7 @@ calc_lba_addr:
 			adc lba_addr + i
 			sta lba_addr + i
 		.endrepeat
-		debug32 "lba", lba_addr
+		debug32 "c_lba", lba_addr
 calc_end:
 		plx
 		pla
@@ -1229,6 +1220,23 @@ fat_init_fdarea_with_x:
 		bne @l1
 		rts
 
+		; update the dir entry position and dir lba_addr of the given file descriptor
+		; in:
+		;	X - file descriptor
+__fat_update_fd:
+	 	lda lba_addr + 3
+		sta fd_area + F32_fd::DirEntryLBA + 3, x
+	 	lda lba_addr + 2
+		sta fd_area + F32_fd::DirEntryLBA + 2, x
+	 	lda lba_addr + 1
+		sta fd_area + F32_fd::DirEntryLBA + 1, x
+	 	lda lba_addr + 0
+		sta fd_area + F32_fd::DirEntryLBA + 0, x
+
+		jsr calc_dir_entry_nr
+		sta fd_area + F32_fd::DirEntryPos + 0, x
+		rts
+	
 		; out:
 		;	X - with index to fd_area
 		;   Z - Z=1 on success (A=0), Z=0 and A=error code otherwise

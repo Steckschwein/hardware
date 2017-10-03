@@ -50,7 +50,7 @@ _debugout_restore:
 		
 _debugdump:
 		jsr 	_debugout_enter
-		lda 	#12
+		lda 	#32
 		bra		_debugout0		
 _debugout32:
 		jsr 	_debugout_enter
