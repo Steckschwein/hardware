@@ -65,13 +65,10 @@ _fat_read:
 fat_write:
 		stx fat_file_fd_tmp									; save fd
 
-		lda fd_area+F32_fd::StartCluster+3,x				; TODO FIXME fat_alloc_fd - check whether start cluster is 0 or root cluster - @see check also __fat_write_newdir_entry
-		ora fd_area+F32_fd::StartCluster+2,x
-		ora fd_area+F32_fd::StartCluster+1,x
-		ora fd_area+F32_fd::StartCluster+0,x
-		bne	@l_write										; start cluster is <> 0, we can directly update dir entry and write data afterwards
+		jsr __fat_isroot									; check whether fd start cluster is root cluster - @see fat_alloc_fd, fat_open)
+		bne	@l_write										; if not, we can directly update dir entry and write data afterwards
 
-		jsr __fat_find_free_cluster							; otherwise start cluster is 0, we try to find a free cluster, fat_file_fd_tmp has to be set
+		jsr __fat_find_free_cluster							; otherwise start cluster is root, we try to find a free cluster, fat_file_fd_tmp has to be set
 		bne @l_exit
 		jsr __fat_mark_free_cluster							; mark cluster in block with EOC - TODO cluster chain support		
 		jsr __fat_write_fat_blocks							; write the updated fat block for 1st and 2nd FAT to the device
@@ -340,19 +337,17 @@ __fat_write_newdir_entry:
 		sta block_data+F32DirEntry::Name																; 1st entry "."
 		sta block_data+1*.sizeof(F32DirEntry)+F32DirEntry::Name+0										; 2nd entry ".."
 		sta block_data+1*.sizeof(F32DirEntry)+F32DirEntry::Name+1
-		
-		ldx #FD_INDEX_TEMP_DIR																			; due to fat_opendir/fat_open the temp dir fd contains the directory entry for ".." - FTW!
-		debug32 "cd_cln", fd_area + 1*FD_Entry_Size + F32_fd::StartCluster
-		lda fd_area+F32_fd::StartCluster + 3, x															; if the current dir (parent) is the root dir, set clnr=0
-		ora fd_area+F32_fd::StartCluster + 2, x
-		ora fd_area+F32_fd::StartCluster + 1, x
+				
+		ldx #FD_INDEX_TEMP_DIR																			; due to fat_opendir/fat_open the fd of temp dir (FD_INDEX_TEMP_DIR) contains the last visited directory ("..") - FTW!
+		debug32 "cd_cln", fd_area + FD_INDEX_TEMP_DIR + F32_fd::StartCluster
+		jsr __fat_isroot																				; if the current dir (parent) is the root dir, set clnr=0
 		bne	@l1
-		lda fd_area+F32_fd::StartCluster+0,x
-		cmp volumeID+VolumeID::RootClus+0
-		bne @l1
 		debug "root_cl"
-		lda #0
-@l1:	sta block_data+1*.sizeof(F32DirEntry)+F32DirEntry::FstClusLO+0
+		jsr __fat_set_fd_rootcluster
+		bra @l2
+		
+@l1:	lda fd_area+F32_fd::StartCluster+0,x
+		sta block_data+1*.sizeof(F32DirEntry)+F32DirEntry::FstClusLO+0
 		lda fd_area+F32_fd::StartCluster+1,x
 		sta block_data+1*.sizeof(F32DirEntry)+F32DirEntry::FstClusLO+1
 		lda fd_area+F32_fd::StartCluster+2,x
@@ -360,6 +355,7 @@ __fat_write_newdir_entry:
 		lda fd_area+F32_fd::StartCluster+3,x
 		sta block_data+1*.sizeof(F32DirEntry)+F32DirEntry::FstClusHI+1
 		
+@l2:
 		ldx #$80																						
 @l_erase:
 		stz block_data+2*.sizeof(F32DirEntry), x														; leave "." and ".." entries
@@ -978,6 +974,27 @@ calc_fat_lba_addr:
 		adc lba_addr +3
 		sta lba_addr +3
 		rts
+
+		; check whether cluster of fd is the root cluster number as given in VolumeID::RootClus
+		; in:
+		;	X - file descriptor
+		; out:
+		;	Z=1 if it is the root cluster, Z=0 otherwise
+__fat_isroot:
+		lda fd_area+F32_fd::StartCluster+3,x				; check whether start cluster is root cluster as initial set by fat_alloc_fd
+		cmp volumeID+VolumeID::RootClus+3
+		bne	@l_exit
+		lda fd_area+F32_fd::StartCluster+2,x
+		cmp volumeID+VolumeID::RootClus+2		
+		bne	@l_exit
+		lda fd_area+F32_fd::StartCluster+1,x
+		cmp volumeID+VolumeID::RootClus+1
+		bne	@l_exit
+		lda fd_area+F32_fd::StartCluster+0,x
+		cmp volumeID+VolumeID::RootClus+0
+@l_exit:
+		debug "isroot"
+		rts
 		
 		; check whether the EOC (end of cluster chain) cluster number is reached
 		;
@@ -1149,6 +1166,7 @@ fat_mount:
 		
 		; cluster_begin_lba_m2 -> cluster_begin_lba - (VolumeID::RootClus*VolumeID::SecPerClus)
 		debug8 "sec/cl", volumeID+VolumeID::SecPerClus
+		debug32 "r_cl", volumeID+VolumeID::RootClus
 		debug32 "s_lba", lba_addr
 		debug16 "r_sec", volumeID + VolumeID::RsvdSecCnt
 		debug16 "f_lba", fat_lba_begin
@@ -1250,7 +1268,21 @@ __fat_set_fd_lba:
 		jsr calc_dir_entry_nr
 		sta fd_area + F32_fd::DirEntryPos, x
 		rts
-	
+
+		; set the start cluster to root cluster of the given file descriptor from volumeID::RootClus
+		; in:
+		;	X - file descriptor
+__fat_set_fd_rootcluster:
+		lda volumeID+VolumeID::RootClus+3
+		sta fd_area+F32_fd::StartCluster+3,x
+		lda volumeID+VolumeID::RootClus+2
+		sta fd_area+F32_fd::StartCluster+2,x
+		lda volumeID+VolumeID::RootClus+1
+		sta fd_area+F32_fd::StartCluster+1,x
+		lda volumeID+VolumeID::RootClus+0
+		sta fd_area+F32_fd::StartCluster+0,x
+		rts
+		
 		; out:
 		;	X - with index to fd_area
 		;   Z - Z=1 on success (A=0), Z=0 and A=error code otherwise
@@ -1271,11 +1303,8 @@ fat_alloc_fd:
 		; Too many open files, no free file descriptor found
 		lda #EMFILE
 		rts
-@l2:	lda #0
-		sta fd_area+F32_fd::StartCluster+3,x		; erase cluster nr from a previous allocation
-		sta fd_area+F32_fd::StartCluster+2,x
-		sta fd_area+F32_fd::StartCluster+1,x
-		sta fd_area+F32_fd::StartCluster+0,x
+@l2:	jsr __fat_set_fd_rootcluster			; init start cluster nr with root cluster
+		lda #EOK
 		rts
 
         ; in:
