@@ -39,7 +39,7 @@ sd_tmp	     		= $f6
 
 lba_addr 			= $0280		; 4 bytes
 blocks				= $0284		; 3 bytes blocks to read, 3 bytes sufficient to address 4GB -> 4294967296 >> 9 = 8388608 ($800000) max blocks/file 
-errno				= $0288
+;errno				= $0288
 ;TODO FIXME rename
 ;__oserror 	= errno
 

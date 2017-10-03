@@ -22,24 +22,21 @@
 
 .segment "KERNEL"
 
-		;	read one block, updates the seek position within FD
+		;	read one block, TODO - updates the seek position within FD
 		;in:
 		;	X	- offset into fd_area
 		;out:
-		;	A - A = 0 on success, error code otherwise
-		;	@deprecated errno - error number
+		;   Z - Z=1 on success (A=0), Z=0 and A=error code otherwise
 fat_read_block:
-;		lda fd_area + F32_fd::SeekPos+0,x
-;		lda fd_area + F32_fd::SeekPos+1,x
-;		lda	#1
-;		sta blocks		; just one block
-;		bra _fat_read
+		jsr fat_isOpen
+		beq @l_err_exit
+
 		jsr calc_blocks
 		jsr calc_lba_addr
 		jsr sd_read_block
-		; lda errno
-		; TODO FIXME error handling sd_read_block, errno is not set anymore, we assume EOK here!
-		lda #EOK
+		rts
+@l_err_exit:
+		lda #EINVAL
 		rts
 		
 		;in:
@@ -48,14 +45,16 @@ fat_read_block:
 		;	A - A = 0 on success, error code otherwise
 		;	@deprecated errno - error number
 fat_read:
+		jsr fat_isOpen
+		beq @l_err_exit
+
 		jsr calc_blocks
-_fat_read:
-		debug "fr"
 		jsr calc_lba_addr
-		stz errno
 		jsr sd_read_multiblock
 ;		jsr sd_read_block
-		lda errno ; TODO get rid off errno here
+		rts
+@l_err_exit:
+		lda #EINVAL
 		rts
 
 		; in:
@@ -65,9 +64,13 @@ _fat_read:
 fat_write:
 		stx fat_file_fd_tmp									; save fd
 
+		jsr fat_isOpen
+		beq @l_not_open
+
 		lda	fd_area + F32_fd::Attr, x
 		bit #DIR_Attr_Mask_File								; regular file?
 		bne @l_isfile
+@l_not_open:
 		lda #EINVAL
 		bra @l_exit		
 @l_isfile:
@@ -341,20 +344,13 @@ __fat_write_newdir_entry:
 		m_memcpy fat_dir_entry_tmp, block_data+1*.sizeof(F32DirEntry), .sizeof(F32DirEntry)				; copy dir entry to block buffer
 		lda #'.'
 		sta block_data+F32DirEntry::Name																; 1st entry "."
+		
 		sta block_data+1*.sizeof(F32DirEntry)+F32DirEntry::Name+0										; 2nd entry ".."
 		sta block_data+1*.sizeof(F32DirEntry)+F32DirEntry::Name+1
 				
 		ldx #FD_INDEX_TEMP_DIR																			; due to fat_opendir/fat_open the fd of temp dir (FD_INDEX_TEMP_DIR) contains the last visited directory ("..") - FTW!
 		debug32 "cd_cln", fd_area + FD_INDEX_TEMP_DIR + F32_fd::StartCluster
-;		jsr __fat_isroot																				; if the current dir (parent) is the root dir, set clnr=0
-;		bne	@l1
-;		debug "root_cl"
-;		stz block_data+1*.sizeof(F32DirEntry)+F32DirEntry::FstClusLO+0									; if root cl, 0 has to be written, fat flaw...
-;		stz block_data+1*.sizeof(F32DirEntry)+F32DirEntry::FstClusLO+1
-;		stz block_data+1*.sizeof(F32DirEntry)+F32DirEntry::FstClusHI+0
-;		stz block_data+1*.sizeof(F32DirEntry)+F32DirEntry::FstClusHI+1		
-;		bra @l2
-@l1:	lda fd_area+F32_fd::StartCluster+0,x
+		lda fd_area+F32_fd::StartCluster+0,x
 		sta block_data+1*.sizeof(F32DirEntry)+F32DirEntry::FstClusLO+0
 		lda fd_area+F32_fd::StartCluster+1,x
 		sta block_data+1*.sizeof(F32DirEntry)+F32DirEntry::FstClusLO+1
@@ -362,7 +358,7 @@ __fat_write_newdir_entry:
 		sta block_data+1*.sizeof(F32DirEntry)+F32DirEntry::FstClusHI+0
 		lda fd_area+F32_fd::StartCluster+3,x
 		sta block_data+1*.sizeof(F32DirEntry)+F32DirEntry::FstClusHI+1
-@l2:
+		
 		ldx #$80																						
 @l_erase:
 		stz block_data+2*.sizeof(F32DirEntry), x														; all dir entries, but "." and ".." (+2), are set to 0
@@ -814,19 +810,6 @@ fat_open_found:
 		lda (dirptr),y
 		sta fd_area + F32_fd::StartCluster + 0, x
 
-		; cluster no = 0? - its root dir, set to root dir first cluster
-;		jsr	__fat_isroot
-;		lda fd_area + F32_fd::StartCluster + 3, x
-;		ora fd_area + F32_fd::StartCluster + 2, x
-;		ora fd_area + F32_fd::StartCluster + 1, x
-;		ora fd_area + F32_fd::StartCluster + 0, x
-
-;		bne @l3
-;		lda volumeID+VolumeID::RootClus +1
-;		sta fd_area + F32_fd::StartCluster +1, x
-;		lda volumeID+VolumeID::RootClus +0
-;		sta fd_area + F32_fd::StartCluster +0, x
-@l3:
 		ldy #F32DirEntry::FileSize + 3
 		lda (dirptr),y
 		sta fd_area + F32_fd::FileSize + 3, x
@@ -1246,10 +1229,10 @@ fat_clone_fd:
 		; in:
 		;	x - offset to fd_area
 		; out:
-		;	carry - C=0 if file is open, C=1 otherwise
+		;	Z=0 if file is open, Z=1 otherwise
 fat_isOpen:
 		lda fd_area + F32_fd::StartCluster +3, x
-		cmp #$ff	;#$ff means not open, carry is set...
+		cmp #$ff		;#$ff means not open
 		rts
 
 fat_init_fdarea:
