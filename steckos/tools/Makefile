@@ -9,7 +9,7 @@ all: ls.prg ll.prg rename.prg date.prg nvram.prg uname.prg hello.prg fibo.prg cl
 
 
 clean:
-	rm -f *.prg *.s *.o
+	rm -f *.prg *.s *.o	
 	(cd xmodem; make clean)
   
 %.o: %.c

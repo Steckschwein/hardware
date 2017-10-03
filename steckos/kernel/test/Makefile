@@ -1,22 +1,21 @@
-CA65FLAGS=--cpu 65c02 --include-dir ../../../asmunit --include-dir ../../asminc --include-dir ../kernel --include-dir ../
+CA65FLAGS=--cpu 65c02 --include-dir ../../../asmunit --include-dir ../../asminc --include-dir ../
 LDFLAGS=--config ../steckosapp.cfg
 
 .PHONY: all clean
 
-all: matcher.test.prg
+all: matcher.test.prg iotest.prg
 
-.PHONY: clean
 clean:
-	rm -f *.o *.prg *.map *.txt
+	rm -f *.prg *.s *.o
 
-%.o: %.asm ../matcher.asm
-	ca65 -t none $(DEBUG) $(CA65FLAGS) -o $@ $(@:.o=.asm)
+%.o: %.asm
+	ca65 $(CA65FLAGS) $(@:.o=.asm)
 	
 %.prg: %.o
-	ld65 $(LDFLAGS) matcher.test.o -o matcher.test.prg
+	ld65 $< $(LDFLAGS) -o $@
 
 test.longrun: longrun.test.prg
 	../../../transfer.py longrun.test.prg
-	
-matcher.test: matcher.test.prg
-	../../../transfer.py matcher.test.prg
+		
+%: %.prg
+	../../../transfer.py $<

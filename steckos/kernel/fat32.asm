@@ -132,7 +132,6 @@ fat_write:
 		dey
 		sta (dirptr),y
 		
-;		debugdump "fw_dir", $0500 
 		jsr __fat_write_block_data							; lba_addr is already set from read, see above
 @l_exit:
 		debug16 "fwrite", dirptr
@@ -282,7 +281,7 @@ fat_mkdir:
 		jsr fat_alloc_fd							; alloc new fd - TODO use them for fopen and "rw+" mode - we alloc a new fd here already, right before any fat writes
 		bne @l_exit									; and we want to avoid an error in between the different block writes
 		stx fat_file_fd_tmp							; save fd
-		jsr __fat_set_fd_lba							; update dir lba addr and dir entry number within fd
+		jsr __fat_set_fd_lba						; update dir lba addr and dir entry number within fd
 
 		m_memcpy lba_addr, fat_lba_tmp, 4			; found..., save lba_addr pointing to the block the current dir entry resides (dirptr)
 		debug32 "slba", fat_lba_tmp				
@@ -969,24 +968,15 @@ calc_fat_lba_addr:
 		; out:
 		;	Z=1 if it is the root cluster, Z=0 otherwise
 __fat_isroot:
-		lda fd_area+F32_fd::StartCluster+3,x
+		lda fd_area+F32_fd::StartCluster+3,x				; check whether start cluster is the root dir cluster nr (0x00000000) as initial set by fat_alloc_fd
 		ora fd_area+F32_fd::StartCluster+2,x
 		ora fd_area+F32_fd::StartCluster+1,x
-		ora fd_area+F32_fd::StartCluster+0,x		
-;		lda fd_area+F32_fd::StartCluster+3,x				; check whether start cluster is root cluster as initial set by fat_alloc_fd
-;		cmp volumeID+VolumeID::RootClus+3
-;		bne	@l_exit
-;		lda fd_area+F32_fd::StartCluster+2,x
-;		cmp volumeID+VolumeID::RootClus+2		
-;		bne	@l_exit
-;		lda fd_area+F32_fd::StartCluster+1,x
-;		cmp volumeID+VolumeID::RootClus+1
-;		bne	@l_exit
-;		lda fd_area+F32_fd::StartCluster+0,x
-;		cmp volumeID+VolumeID::RootClus+0
-		
-@l_exit:
+		ora fd_area+F32_fd::StartCluster+0,x
+.ifdef DEBUG
+		beq @l
 		debug "isroot"
+@l:
+.endif
 		rts
 		
 		; check whether the EOC (end of cluster chain) cluster number is reached
