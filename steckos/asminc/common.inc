@@ -62,6 +62,30 @@
 		bpl @l
 .endmacro
 
+.macro m_memclr dest, n
+;		.assert n<=128, "count > $80, error, but must not!"
+		.local @l
+		ldx #n-1
+@l:		stz dest,x
+		dex
+		bpl @l
+
+.endmacro
+
+.macro pushn addr, n
+	.repeat n, i
+		lda addr+i
+		pha
+	.endrepeat
+.endmacro
+
+.macro popn addr, n
+	.repeat n, i
+		pla
+		lda addr+(n-i)
+	.endrepeat
+.endmacro
+
 .macro saveptr ptr
 	lda ptr
 	pha

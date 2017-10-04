@@ -78,13 +78,8 @@ fat_write:
 		bne	@l_write										; if not, we can directly update dir entry and write data afterwards
 
 		saveptr write_blkptr								; save the write ptr
-		
-		jsr __fat_find_free_cluster							; otherwise start cluster is root, we try to find a free cluster, fat_file_fd_tmp has to be set
-		bne @l_exit
-		jsr __fat_mark_free_cluster							; mark cluster in block with EOC - TODO cluster chain support		
-		jsr __fat_write_fat_blocks							; write the updated fat block for 1st and 2nd FAT to the device
-		bne @l_exit
-		jsr __fat_update_fsinfo								; update the fsinfo sector/block
+
+		jsr __fat_reserve_cluster							; otherwise start cluster is root, we try to find a free cluster, fat_file_fd_tmp has to be set
 		bne @l_exit
 
 		restoreptr write_blkptr								; restore write ptr
@@ -288,13 +283,8 @@ fat_mkdir:
 		jsr __fat_set_fd_lba						; update dir lba addr and dir entry number within fd
 
 		m_memcpy lba_addr, fat_lba_tmp, 4			; found..., save lba_addr pointing to the block the current dir entry resides (dirptr)
-		debug32 "slba", fat_lba_tmp				
-		jsr __fat_find_free_cluster					; find free cluster, stored in fd_area for fd with fat_file_fd_tmp
-		bne @l_exit_close
-		jsr __fat_mark_free_cluster					; mark cluster in block with EOC - TODO cluster chain support		
-		jsr __fat_write_fat_blocks					; write the updated fat block for 1st and 2nd FAT to the device
-		bne @l_exit_close
-		jsr __fat_update_fsinfo						; update the fsinfo sector/block
+		debug32 "slba", fat_lba_tmp
+		jsr __fat_reserve_cluster					; find free cluster, stored in fd_area for fd with fat_file_fd_tmp
 		bne @l_exit_close
 		m_memcpy fat_lba_tmp, lba_addr, 4			; restore lba_addr of dirptr
 		debug32 "rlba", lba_addr			
@@ -533,7 +523,22 @@ __fat_write_fat_blocks:
 		jsr __fat_write_block_fat
 @err_exit:
 		rts
-			
+
+		; find and reserve next free cluster and maintains the fsinfo block
+		; in:
+		;	fat_file_fd_tmp - the file descriptor into fd_area where the found cluster should be stored
+		; out:
+		;	Z=1 on success, Z=0 otherwise and A=error code
+__fat_reserve_cluster:
+		jsr __fat_find_free_cluster					; find free cluster, stored in fd_area for the fd given within fat_file_fd_tmp
+		bne @l_err_exit
+		jsr __fat_mark_free_cluster					; mark cluster in block with EOC - TODO cluster chain support		
+		jsr __fat_write_fat_blocks					; write the updated fat block for 1st and 2nd FAT to the device
+		bne @l_err_exit
+		jmp __fat_update_fsinfo						; update the fsinfo sector/block
+@l_err_exit:
+		rts
+		
 		; in:
 		;	Y - offset in block
 		; 	read_blkptr - points to block_fat either 1st or 2nd page
@@ -1190,8 +1195,8 @@ fat_mount:
 		; init file descriptor area
 		jsr fat_init_fdarea
 
-		; now we have the lba address of the first sector of the first cluster
-		Copy volumeID+VolumeID::RootClus, fd_area + FD_INDEX_CURRENT_DIR + F32_fd::StartCluster, 3
+		; set cd to root directory which is cluster number 0 on fat32 - Note: the RootClus offset is compensated within calc_lba_addr
+		m_memclr fd_area + FD_INDEX_CURRENT_DIR + F32_fd::StartCluster, 4
 		lda #EOK	; ok, no error
 end_mount:
 		debug "f_mnt"
@@ -1200,8 +1205,8 @@ end_mount:
 		;
 		; out:
 		;   x - FD_INDEX_TEMP_DIR offset to fd area
-fat_open_rootdir:
-		Copy volumeID+VolumeID::RootClus, fd_area + FD_INDEX_TEMP_DIR + F32_fd::StartCluster, 3
+fat_open_rootdir:		
+		m_memclr fd_area + FD_INDEX_TEMP_DIR + F32_fd::StartCluster, 4 	; temp directory to cluster number 0 - Note: the RootClus offset is compensated within calc_lba_addr
 		ldx #FD_INDEX_TEMP_DIR
 		rts
 
