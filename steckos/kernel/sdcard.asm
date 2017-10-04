@@ -180,7 +180,7 @@ sd_cmd:
 		inx
 		cpx #$05
 		bne @l1
-		bra sd_cmd_response_wait
+;		bra sd_cmd_response_wait
 
 ;---------------------------------------------------------------------
 ; Send SD Card block Command
@@ -191,18 +191,18 @@ sd_cmd:
 ;out:
 ;	A - A = 0 on success, error code otherwise
 ;---------------------------------------------------------------------
-sd_block_cmd:
-		pha
-		jsr sd_busy_wait
-		pla
+;sd_block_cmd:
+;		pha
+;		jsr sd_busy_wait
+;		pla
 		;lda #cmd18	; Send CMD18 command byte
-		jsr spi_rw_byte
+;		jsr spi_rw_byte
 
-		jsr sd_send_lba
+;		jsr sd_send_lba
 
 		; Send stopbit
-		lda #$01
-		jsr spi_rw_byte
+;		lda #$01
+;		jsr spi_rw_byte
 
 		; wait for cmd response
 		; first byte with bit 7 clear is our response
@@ -234,12 +234,10 @@ sd_block_cmd_timeout:
 sd_read_block:
 		jsr sd_select_card
 
+		jsr sd_cmd_lba
 		lda #cmd17
-		jsr sd_block_cmd
+		jsr sd_cmd
 
-;		lda #$00
-;		jsr sd_wait
-;		jsr sd_wait_timeout0
        	bne @exit
 @l1:
 
@@ -313,8 +311,9 @@ sd_read_multiblock:
 
 		jsr sd_select_card
 
+		jsr sd_cmd_lba
 		lda #cmd18	; Send CMD18 command byte
-		jsr sd_block_cmd
+		jsr sd_cmd
 		bne @exit
 @l1:
 
@@ -352,8 +351,9 @@ sd_write_block:
 		phy
 		jsr sd_select_card
 
+		jsr sd_cmd_lba
 		lda #cmd24
-		jsr sd_block_cmd
+		jsr sd_cmd
 	    bne @exit
 
 		lda #sd_data_token
@@ -405,8 +405,9 @@ sd_write_multiblock:
 
 		jsr sd_select_card
 
+		jsr sd_cmd_lba
 		lda #cmd25	; Send CMD25 command byte
-		jsr sd_block_cmd
+		jsr sd_cmd
 
 		; wait for command response.
 		lda #$00
@@ -520,14 +521,39 @@ sd_param_init:
 		sta sd_cmd_chksum
 		rts
 
-sd_send_lba:
-		; Send lba_addr in reverse order
+;sd_send_lba:
+;		; Send lba_addr in reverse order
+;		ldx #$03
+;@l:
+;		lda lba_addr,x
+;		phx
+;		jsr spi_rw_byte
+;		plx
+;		dex
+;		bpl @l
+;		rts
+
+sd_cmd_lba:
 		ldx #$03
+		ldy #$00
 @l:
+		debug "cmd_lba"
 		lda lba_addr,x
-		phx
-		jsr spi_rw_byte
-		plx
+		sta sd_cmd_param,y
+		iny
 		dex
 		bpl @l
+
+;		lda lba_addr+3
+;		sta sd_cmd_param+0
+
+;		lda lba_addr+2
+;		sta sd_cmd_param+1
+
+;		lda lba_addr+1
+;		sta sd_cmd_param+2
+
+;		lda lba_addr+0
+;		sta sd_cmd_param+3
+
 		rts
