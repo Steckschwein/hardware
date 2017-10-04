@@ -72,11 +72,13 @@ fat_write:
 		bne @l_isfile
 @l_not_open:
 		lda #EINVAL
-		bra @l_exit		
+		jmp @l_exit		
 @l_isfile:
 		jsr __fat_isroot									; check whether fd start cluster is root cluster - @see fat_alloc_fd, fat_open)
 		bne	@l_write										; if not, we can directly update dir entry and write data afterwards
 
+		saveptr write_blkptr								; save the write ptr
+		
 		jsr __fat_find_free_cluster							; otherwise start cluster is root, we try to find a free cluster, fat_file_fd_tmp has to be set
 		bne @l_exit
 		jsr __fat_mark_free_cluster							; mark cluster in block with EOC - TODO cluster chain support		
@@ -84,6 +86,8 @@ fat_write:
 		bne @l_exit
 		jsr __fat_update_fsinfo								; update the fsinfo sector/block
 		bne @l_exit
+
+		restoreptr write_blkptr								; restore write ptr
 		ldx fat_file_fd_tmp									; restore fd, go on with writing data
 @l_write:
 		jsr calc_lba_addr									; calc lba and blocks of file payload

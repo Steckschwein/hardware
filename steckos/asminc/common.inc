@@ -62,6 +62,20 @@
 		bpl @l
 .endmacro
 
+.macro saveptr ptr
+	lda ptr
+	pha
+	lda ptr+1
+	pha
+.endmacro 
+
+.macro restoreptr ptr
+	pla
+	sta ptr+1
+	pla
+	sta ptr
+.endmacro 
+
 .macro copypointer fromptr, toptr 
 	.repeat 2, i
 		lda fromptr+i
