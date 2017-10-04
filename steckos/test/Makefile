@@ -2,7 +2,7 @@ CPU=65c02
 CA65FLAGS=--include-dir ../asminc --include-dir ../kernel
 LIBS=../lib/steckschwein-kernel.lib
 
-all: mainarg.prg coniotst.prg time-test.prg iotest.prg
+all: mainarg.prg coniotst.prg time-test.prg 
 
 .PHONY: clean
 
