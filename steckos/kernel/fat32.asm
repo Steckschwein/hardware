@@ -289,8 +289,8 @@ fat_mkdir:
 		m_memcpy fat_lba_tmp, lba_addr, 4			; restore lba_addr of dirptr
 		debug32 "rlba", lba_addr			
 		
-		lda #DIR_Attr_Mask_Dir						; set type directory 
 		ldx fat_file_fd_tmp							; load fd
+		lda #DIR_Attr_Mask_Dir						; set type directory 
 		jsr __fat_prepare_dir_entry					; prepare dir entry, expects cluster number set in fd_area of newly allocated fd (fat_file_fd_tmp)
 		jsr __fat_write_dir_entry					; create dir entry at current dirptr
 		bne @l_exit_close
@@ -384,7 +384,6 @@ __fat_write_block_fat:
 		lda #>block_fat
 		bra	__fat_write_block
 __fat_write_block_data:
-		debug32 "wbd_lba", lba_addr
 		lda #>block_data
 __fat_write_block:
 		sta write_blkptr+1
@@ -397,31 +396,43 @@ __fat_write_block:
 .endif
 		
 		
-		; in 
+		; write new dir entry to dirptr and set new end of directory marker
+		; in:
 		;	dirptr - set to current dir entry within block_data
-__fat_write_dir_entry:
+		; out:
+		;	Z=1 on success, Z=0 otherwise, A=error code
+__fat_write_dir_entry:		
+		debug16 "lsd_pt", dirptr
 		debugdump "f_wde", fat_dir_entry_tmp
 		m_memcpy2ptr fat_dir_entry_tmp, dirptr, .sizeof(F32DirEntry)	; copy new entry to block buffer (block_data)
 
 		;TODO FIXME duplicate code here! - @see fat_find_next:
+		lda dirptr+1
+		sta krn_ptr1+1
 		lda dirptr														; create the end of directory entry
 		clc
 		adc #DIR_Entry_Size
-		sta dirptr
+		sta krn_ptr1
 		bcc @l2
-		inc dirptr+1
+		inc krn_ptr1+1
 @l2:
-		debug16 "eod_dptr", dirptr
-		lda dirptr+1 													; end of block? :/ edge-case, we have to create the end-of-directory entry at the next block
+		lda krn_ptr1+1 													; end of block? :/ edge-case, we have to create the end-of-directory entry at the next block
 		cmp #>(block_data + sd_blocksize)
 		bne @l_eod														; no, write one block only
 		
 		jsr __fat_write_block_data										; write the current block with the updated dir entry first
 		bne @l_exit
-		m_memset block_data, 0, .sizeof(F32DirEntry)					; fill the new dir block with 0 to mark eod
+		ldx #$80
+@l_erase:																; fill the new dir block with 0 to mark eod
+		stz block_data+$000, x
+		stz block_data+$080, x
+		stz block_data+$100, x
+		stz block_data+$180, x
+		dex
+		bpl @l_erase
 		jsr inc_lba_address												; increment lba address to write to next block
 		debug32 "eod", lba_addr
-		;debugdump "eod", block_data
+		;TODO FIXME test end of cluster, if so reserve a new one, update cluster chain for directory ;)
 @l_eod:
 		jsr __fat_write_block_data										; write the updated dir entry to device
 @l_exit:
@@ -475,7 +486,9 @@ __fat_rtc_date:
 		
 		;	A - attribute flag for new directory entry
 __fat_prepare_dir_entry:
+		ldy #F32DirEntry::Attr
 		sta fat_dir_entry_tmp+F32DirEntry::Attr						; store attribute
+		;sta (dirptr), y
 		
 		stz fat_dir_entry_tmp+F32DirEntry::Reserved					; unused
 		stz fat_dir_entry_tmp+F32DirEntry::CrtTimeMillis			; ms to 0, ms not supported by rtc
@@ -682,9 +695,9 @@ fat_open:
 		bne @l_exit									; and we want to avoid an error in between the different block writes
 		stx fat_file_fd_tmp							; save fd
 		jsr __fat_set_fd_lba						; update dir lba addr and dir entry number within fd
-		lda #DIR_Attr_Mask_File						; set to regular file
+		
+		lda #DIR_Attr_Mask_File						; create as regular file
 		jsr __fat_prepare_dir_entry
-		debug32 "lba_dir", lba_addr
 		jsr __fat_write_dir_entry					; create dir entry at current dirptr
 		bne @l_exit_close
 
