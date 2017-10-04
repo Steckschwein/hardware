@@ -43,7 +43,6 @@ fat_read_block:
 		;	X - offset into fd_area
 		;out:
 		;	A - A = 0 on success, error code otherwise
-		;	@deprecated errno - error number
 fat_read:
 		jsr fat_isOpen
 		beq @l_err_exit
@@ -1236,20 +1235,18 @@ fat_mount:
 		; init file descriptor area
 		jsr fat_init_fdarea
 
-		; set cd to root directory which is cluster number 0 on fat32 - Note: the RootClus offset is compensated within calc_lba_addr
-		m_memclr fd_area + FD_INDEX_CURRENT_DIR + F32_fd::StartCluster, 4
-		lda #EOK	; ok, no error
+		; alloc file descriptor for current dir. which is cluster number 0 on fat32 - Note: the RootClus offset is compensated within calc_lba_addr
+		ldx #FD_INDEX_CURRENT_DIR
+		jsr __fat_alloc_fd
 end_mount:
 		debug "f_mnt"
 		rts
 
-		;
 		; out:
 		;   x - FD_INDEX_TEMP_DIR offset to fd area
-fat_open_rootdir:		
-		m_memclr fd_area + FD_INDEX_TEMP_DIR + F32_fd::StartCluster, 4 	; temp directory to cluster number 0 - Note: the RootClus offset is compensated within calc_lba_addr
-		ldx #FD_INDEX_TEMP_DIR
-		rts
+fat_open_rootdir:
+		ldx #FD_INDEX_TEMP_DIR					; set temp directory to cluster number 0 - Note: the RootClus offset is compensated within calc_lba_addr
+		jmp __fat_alloc_fd
 
 		; clone source file descriptor with offset x into fd_area to target fd with y
 		; in:
@@ -1306,11 +1303,11 @@ __fat_set_fd_lba:
 		;	X - with index to fd_area
 		;   Z - Z=1 on success (A=0), Z=0 and A=error code otherwise
 fat_alloc_fd:
-		ldx #(2*FD_Entry_Size)	; skip 2 entries, they're reserverd for current and temp dir
+		ldx #(2*FD_Entry_Size)							; skip 2 entries, they're reserverd for current and temp dir
 @l1:	lda fd_area + F32_fd::StartCluster +3, x
 
 		cmp #$ff	;#$ff means unused, return current x as offset
-		beq @l2
+		beq __fat_alloc_fd
 
 		txa ; 2 cycles
 		adc #FD_Entry_Size; carry must be clear from cmp #$ff above
@@ -1322,7 +1319,8 @@ fat_alloc_fd:
 		; Too many open files, no free file descriptor found
 		lda #EMFILE
 		rts
-@l2:	stz fd_area+F32_fd::StartCluster+3,x	; init start cluster nr with root dir cluster which is 0 - @see Note in calc_lba_addr
+__fat_alloc_fd:									; also internally used
+		stz fd_area+F32_fd::StartCluster+3,x	; init start cluster nr with root dir cluster which is 0 - @see Note in calc_lba_addr
 		stz fd_area+F32_fd::StartCluster+2,x
 		stz fd_area+F32_fd::StartCluster+1,x
 		stz fd_area+F32_fd::StartCluster+0,x		
@@ -1434,7 +1432,6 @@ fat_find_first_matcher:
 		jmp	(krn_call_internal)
 
 calc_dirptr_from_entry_nr:
-
 		stz dirptr
 
 		lsr
@@ -1447,28 +1444,26 @@ calc_dirptr_from_entry_nr:
 		clc
 		adc #>sd_blktarget
 		sta dirptr+1
-
 		rts
 
+		; in:
+		;	dirptr to block_data
+		; out:
+		;	A with dirptr div 32
 calc_dir_entry_nr:
-		phx
-
 		lda dirptr
 		sta krn_tmp
 
 		lda dirptr+1
 		sec
-		sbc #>sd_blktarget
-
-		ldx #$03
+		sbc #>block_data
 		clc
-@l:
 		rol krn_tmp
 		rol
-		dex
-		bne @l
-
-		plx
+		rol krn_tmp
+		rol
+		rol krn_tmp
+		rol
 		rts
 
 .include "matcher.asm"
