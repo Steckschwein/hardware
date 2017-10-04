@@ -10,19 +10,6 @@ fat_file_not_open		= $08
 fat_file_not_dir		= $10
 fat_file_too_large		= $11
 
-; SD card error codes
-sd_no_card			= $ff
-sd_invalid_card			= $0f
-sd_init_failed			= $f1
-
-; these correspond exactly to sd card R1 response error codes
-sd_parameter_error		= $40
-sd_address_error		= $20
-sd_erase_sequence_error		= $10
-sd_cmd_crc_error		= $08
-sd_cmd_illegal_error		= $04
-sd_erase_reset_error		= $02
-sd_idle_state			= $01
 
 ;--------------------------------------------------------------------------------------
 ; partition entry
@@ -31,7 +18,7 @@ sd_idle_state			= $01
 	Bootflag	.byte
 	CHSBegin	.byte 3
 	TypeCode	.byte
-	CHSEnd		.byte 3	
+	CHSEnd		.byte 3
 	LBABegin	.dword
 	NumSectors	.dword
 .endstruct
@@ -66,9 +53,9 @@ PartType_FAT32_LBA	= $0c
 	RsvdSecCnt	.word ; 14	; number of reserved sectors
 	NumFATs		.byte ; 16
 	Reserved	.byte 4 ; 17
-	Media		.byte	; 21 ; For removable media, 0xF0 is frequently used. 
-				; The legal values for this field are 
-				; 0xF0, 0xF8, 0xF9, 0xFA, 0xFB, 0xFC, 0xFD, 0xFE, and 0xFF. 
+	Media		.byte	; 21 ; For removable media, 0xF0 is frequently used.
+				; The legal values for this field are
+				; 0xF0, 0xF8, 0xF9, 0xFA, 0xFB, 0xFC, 0xFD, 0xFE, and 0xFF.
 	MirrorFlags	.word   ; Bits 0-3: number of active FAT (if bit 7 is 1)
 					; Bits 4-6: reserved
 					; Bit 7: one: single active FAT; zero: all FATs are updated at runtime
@@ -94,9 +81,9 @@ FSInfo_LastClus	= $01ec ; last known cluster number
 .struct F32DirEntry		; https://en.wikipedia.org/wiki/Design_of_the_FAT_file_system
 	Name			.byte 8
 	Ext				.byte 3
-	Attr			.byte 
+	Attr			.byte
 	Reserved		.byte
-	CrtTimeMillis	.byte 
+	CrtTimeMillis	.byte
 	CrtTime			.word	; hours as 0-23 bit 15-11, minutes as 0-59 bit 10-5, seconds/2 as 0-29 bit 4-0
 	CrtDate			.word	; year 0-119 (0=1980...127=2107) bit 15-9, month 1-12 bit 8-5, day 1-31 bit 4-0
 	LstModDate		.word	; -""-
