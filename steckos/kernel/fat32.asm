@@ -275,8 +275,10 @@ fat_mkdir:
 		cmp	#ENOENT									; we expect 'no such file or directory' error, otherwise a file with same name already exists
 		bne @l_exit
 
-		jsr string_fat_name							; build fat name upon input string (filenameptr)
+		copypointer dirptr, krn_ptr1
+		jsr string_fat_name							; build fat name upon input string (filenameptr) and store them directly to current dirptr!
 		bne @l_exit
+		
 		jsr fat_alloc_fd							; alloc new fd - TODO use them for fopen and "rw+" mode - we alloc a new fd here already, right before any fat writes
 		bne @l_exit									; and we want to avoid an error in between the different block writes
 		stx fat_file_fd_tmp							; save fd
@@ -295,7 +297,7 @@ fat_mkdir:
 		jsr __fat_write_dir_entry					; create dir entry at current dirptr
 		bne @l_exit_close
 		
-		jsr __fat_write_newdir_entry				; write the data of the newly created directory fd (fat_file_fd_tmp) with prepared data in fat_dir_entry_tmp
+		jsr __fat_write_newdir_entry				; write the data of the newly created directory fd (fat_file_fd_tmp) with prepared data from dirptr
 @l_exit_close:
 		pha 
 		ldx fat_file_fd_tmp
@@ -325,19 +327,28 @@ __fat_update_fsinfo:
 		rts
 		
 		; create the "." and ".." entry of the new directory
-		; in 
-		;	-
+		; in: 
+		;	dirptr - set to current dir entry within block_data
+		;	fat_file_fd_tmp - the file descriptor into fd_area where the found cluster should be stored
 __fat_write_newdir_entry:
-		ldx fat_file_fd_tmp
-		jsr calc_lba_addr
-		debug32 "lba_data", lba_addr
+		ldy #F32DirEntry::Attr																			; copy from (dirptr), start with F32DirEntry::Attr, the name is skipped and overwritten below
+@l_dir_cp:
+		lda (dirptr), y
+		sta block_data, y																				; 1st dir entry
+		sta block_data+1*.sizeof(F32DirEntry), y														; 2nd dir entry
+		iny
+		cpy #.sizeof(F32DirEntry)
+		bne @l_dir_cp
 		
-		m_memset fat_dir_entry_tmp, $20, .sizeof(F32DirEntry::Name) + .sizeof(F32DirEntry::Ext)			; erase name
-		m_memcpy fat_dir_entry_tmp, block_data, .sizeof(F32DirEntry)									; copy dir entry to block buffer
-		m_memcpy fat_dir_entry_tmp, block_data+1*.sizeof(F32DirEntry), .sizeof(F32DirEntry)				; copy dir entry to block buffer
+		ldx #.sizeof(F32DirEntry::Name) + .sizeof(F32DirEntry::Ext)	-1									; erase name and build the "." and ".." entries
+		lda #$20
+@l_clr_name:
+		sta block_data, x																				; 1st dir entry
+		sta block_data+1*.sizeof(F32DirEntry), x														; 2nd dir entry
+		dex
+		bne @l_clr_name
 		lda #'.'
 		sta block_data+F32DirEntry::Name																; 1st entry "."
-		
 		sta block_data+1*.sizeof(F32DirEntry)+F32DirEntry::Name+0										; 2nd entry ".."
 		sta block_data+1*.sizeof(F32DirEntry)+F32DirEntry::Name+1
 				
@@ -360,6 +371,9 @@ __fat_write_newdir_entry:
 		stz block_data+$180, x
 		dex 
 		bpl @l_erase
+		
+		ldx fat_file_fd_tmp
+		jsr calc_lba_addr
 		jsr __fat_write_block_data
 		bne @l_exit
 		
@@ -401,10 +415,8 @@ __fat_write_block:
 		;	dirptr - set to current dir entry within block_data
 		; out:
 		;	Z=1 on success, Z=0 otherwise, A=error code
-__fat_write_dir_entry:		
+__fat_write_dir_entry:
 		debug16 "lsd_pt", dirptr
-		debugdump "f_wde", fat_dir_entry_tmp
-		m_memcpy2ptr fat_dir_entry_tmp, dirptr, .sizeof(F32DirEntry)	; copy new entry to block buffer (block_data)
 
 		;TODO FIXME duplicate code here! - @see fat_find_next:
 		lda dirptr+1
@@ -422,8 +434,9 @@ __fat_write_dir_entry:
 		
 		jsr __fat_write_block_data										; write the current block with the updated dir entry first
 		bne @l_exit
-		ldx #$80
-@l_erase:																; fill the new dir block with 0 to mark eod
+		
+		ldx #$80														; fill the new dir block with 0 to mark eod
+@l_erase:																
 		stz block_data+$000, x
 		stz block_data+$080, x
 		stz block_data+$100, x
@@ -434,6 +447,7 @@ __fat_write_dir_entry:
 		debug32 "eod", lba_addr
 		;TODO FIXME test end of cluster, if so reserve a new one, update cluster chain for directory ;)
 @l_eod:
+		;TODO FIXME erase the rest of the block, currently 0 is assumed
 		jsr __fat_write_block_data										; write the updated dir entry to device
 @l_exit:
 		debug "f_wde"
@@ -484,44 +498,73 @@ __fat_rtc_date:
 		debug "rdate"
 		rts
 		
+		; in:
 		;	A - attribute flag for new directory entry
+		;	dirptr of the directory entry to prepare
 __fat_prepare_dir_entry:
-		ldy #F32DirEntry::Attr
-		sta fat_dir_entry_tmp+F32DirEntry::Attr						; store attribute
-		;sta (dirptr), y
-		
-		stz fat_dir_entry_tmp+F32DirEntry::Reserved					; unused
-		stz fat_dir_entry_tmp+F32DirEntry::CrtTimeMillis			; ms to 0, ms not supported by rtc
+		ldy #F32DirEntry::Attr										; store attribute
+		sta (dirptr), y
+
+		lda #0
+		ldy #F32DirEntry::Reserved									; unused
+		sta (dirptr), y												
+	
+		ldy #F32DirEntry::CrtTimeMillis
+		sta (dirptr), y												; ms to 0, ms not supported by rtc
 		
 		jsr __rtc_systime_update									; update systime struct
 		jsr __fat_rtc_time
-		sta fat_dir_entry_tmp+F32DirEntry::CrtTime+0
-		sta fat_dir_entry_tmp+F32DirEntry::WrtTime+0
-		stx fat_dir_entry_tmp+F32DirEntry::CrtTime+1
-		stx fat_dir_entry_tmp+F32DirEntry::WrtTime+1
+		
+		ldy #F32DirEntry::CrtTime
+		sta (dirptr), y
+		ldy #F32DirEntry::WrtTime
+		sta (dirptr), y
+
+		txa
+		ldy #F32DirEntry::CrtTime+1
+		sta (dirptr), y
+		ldy #F32DirEntry::WrtTime+1
+		sta (dirptr), y
 
 		jsr __fat_rtc_date
-		sta fat_dir_entry_tmp+F32DirEntry::CrtDate+0
-		sta fat_dir_entry_tmp+F32DirEntry::WrtDate+0
-		sta fat_dir_entry_tmp+F32DirEntry::LstModDate+0
-		stx fat_dir_entry_tmp+F32DirEntry::CrtDate+1
-		stx fat_dir_entry_tmp+F32DirEntry::WrtDate+1
-		stx fat_dir_entry_tmp+F32DirEntry::LstModDate+1
+		ldy #F32DirEntry::CrtDate+0
+		sta (dirptr), y
+		ldy #F32DirEntry::WrtDate+0
+		sta (dirptr), y
+		ldy #F32DirEntry::LstModDate+0
+		sta (dirptr), y
+		txa
+		ldy #F32DirEntry::CrtDate+1
+		sta (dirptr), y
+		ldy #F32DirEntry::WrtDate+1
+		sta (dirptr), y
+		ldy #F32DirEntry::LstModDate+1
+		sta (dirptr), y
 		
 		ldx fat_file_fd_tmp
 		lda fd_area+F32_fd::StartCluster+3, x
-		sta fat_dir_entry_tmp+F32DirEntry::FstClusHI+1
+		ldy #F32DirEntry::FstClusHI+1
+		sta (dirptr), y
 		lda fd_area+F32_fd::StartCluster+2, x
-		sta fat_dir_entry_tmp+F32DirEntry::FstClusHI+0
+		ldy #F32DirEntry::FstClusHI+0
+		sta (dirptr), y
 		lda fd_area+F32_fd::StartCluster+1, x
-		sta fat_dir_entry_tmp+F32DirEntry::FstClusLO+1
+		ldy #F32DirEntry::FstClusLO+1
+		sta (dirptr), y
 		lda fd_area+F32_fd::StartCluster+0, x
-		sta fat_dir_entry_tmp+F32DirEntry::FstClusLO+0
-		
-		stz fat_dir_entry_tmp+F32DirEntry::FileSize+3
-		stz fat_dir_entry_tmp+F32DirEntry::FileSize+2
-		stz fat_dir_entry_tmp+F32DirEntry::FileSize+1
-		stz fat_dir_entry_tmp+F32DirEntry::FileSize+0		
+		ldy #F32DirEntry::FstClusLO+0
+		sta (dirptr), y
+
+		;TODO FIXME set to 0 in fat_alloc_fd, align code with fat_write
+		lda #0
+		ldy #F32DirEntry::FileSize+3
+		sta (dirptr), y
+		ldy #F32DirEntry::FileSize+2
+		sta (dirptr), y
+		ldy #F32DirEntry::FileSize+1
+		sta (dirptr), y
+		ldy #F32DirEntry::FileSize+0
+		sta (dirptr), y
 		rts
 		
 __fat_write_fat_blocks:
@@ -689,6 +732,7 @@ fat_open:
 		beq @l_err_enoent			; nothing set, exit with ENOENT
 
 		debug "r+"
+		copypointer dirptr, krn_ptr1
 		jsr string_fat_name							; build fat name upon input string (filenameptr)
 		bne @l_exit
 		jsr fat_alloc_fd							; alloc new fd for the new file we want to create

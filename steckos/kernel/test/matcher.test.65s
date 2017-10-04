@@ -21,10 +21,12 @@ krn_tmp1=$f1
 TMP3=$f2
 krn_tmp2=$f2
 
+EINVAL=$01
+
 	jmp test_suite
 	
-fat_dir_entry_tmp:
-	.rs 11
+;fat_dir_entry_tmp:
+;	.rs 11
 	
 vdp_chrout:
 chrout:
@@ -40,25 +42,28 @@ filename_buf: 	.rs 32
 
 	
 test_suite
-
 	lda 	#<usr_input
 	sta 	filenameptr
 	lda 	#>usr_input
 	sta 	filenameptr+1
 	
-	lda 	#<buffer
-	sta 	MASK
-	lda 	#>buffer
-	sta 	MASK+1
+;	lda 	#<buffer
+;	sta 	MASK
+;	lda 	#>buffer
+;	sta 	MASK+1
 	
-	jsr 	string_fat_name
+;	jsr 	string_fat_name
+	lda 	#<buffer
+	sta 	krn_ptr1
+	lda 	#>buffer
+	sta 	krn_ptr1+1
 	jsr 	string_fat_mask
 
 	lda #'['
 	jsr chrout
 	ldy #0
 l_out_l0:
-	lda fat_dir_entry_tmp,y
+	lda buffer,y
 	beq l_out_le
 	jsr chrout
 	iny 
@@ -72,7 +77,7 @@ l_out_le:
 usr_input:
 ;	.db "  ",0
 ;	.db "2.dat",0
-	.db "  2.dat ",0
+;	.db "  2.dat ",0
 ;	.db " ls.prg ",0
 ;	.db "ls*  ",0
 ;	.db "ls.*  ",0	

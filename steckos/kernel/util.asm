@@ -5,7 +5,6 @@
 .export string_fat_name
 .export string_fat_mask
 
-
 	; trim string, remove leading and trailing white space
 	; in:
 	;	filenameptr with input string to trim
@@ -38,9 +37,11 @@ l_st_ex:
 
 	; build 11 byte fat file name (8.3) as used within dir entries 
 	; in:
-	;	filenameptr with input string to convert to fat file name mask
+	;	krn_ptr1 pointer to result of fat file name mask
+	;	filenameptr pointer to input string to convert to fat file name mask
 	; out:
 	;	fat_dir_entry_tmp with the mask build upon input string
+	;	
 	;	
 string_fat_mask:
 	jsr string_trim					; trim input
@@ -48,7 +49,8 @@ string_fat_mask:
 	beq __tfm_exit					; empty input	
 
 	stz krn_tmp
-	ldx #0
+;	ldx #0
+	stz krn_tmp2
 __tfn_mask_input:
 	ldy krn_tmp
 	lda (filenameptr), y
@@ -72,12 +74,18 @@ __tfn_mask_fill_blank:
 __tfn_mask_fill:
 	clc
 __tfn_mask_fill_l1:
-	sta fat_dir_entry_tmp, x
-	inx
+	;sta fat_dir_entry_tmp, x
+	;inx
+	ldy krn_tmp2
+	sta (krn_ptr1), y
+	iny
+	sty krn_tmp2
 	bcs __tfn_mask_input			; C=1, then go on next char
-	cpx #8
+	;cpx #8
+	cpy #8
 	beq __tfn_mask_extension		; go on with extension
-	cpx #8+3
+	;cpx #8+3
+	cpy #8+3
 	bne __tfn_mask_fill_l1
 __tfm_exit:	
 	rts
@@ -88,9 +96,14 @@ __tfn_mask_char:
 	bcs __tfn_mask_char_l1
 	and #$df			; uppercase
 __tfn_mask_char_l1:	
-	sta fat_dir_entry_tmp, x
-	inx
-	cpx #8+3
+	;sta fat_dir_entry_tmp, x
+	;inx
+	;cpx #8+3
+	ldy krn_tmp2
+	sta (krn_ptr1), y
+	iny 
+	sty krn_tmp2
+	cpy #8+3
 	bne __tfn_mask_input
 	rts
 __tfn_mask_extension:
@@ -106,6 +119,7 @@ __tfn_mask_extension:
 	; build 11 byte fat file name (8.3) as used within dir entries 
 	; in:
 	;	filenameptr with input string to convert to fat file name mask
+	;	krn_ptr1 with pointer where the fat file name mask should be stored
 	; out:
 	;	Z=1 on success and fat_dir_entry_tmp with the mask build upon input string
 	;   Z=0 on error, the input string contains invalid chars not allowed within a dos 8.3. file name

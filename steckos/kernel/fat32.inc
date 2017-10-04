@@ -149,8 +149,7 @@ fat_fsinfo_lba			= fat2_lba_begin + 2; (4 byte)
 fat_lba_tmp				= fat_fsinfo_lba + 4; (4 byte)
 fat_file_fd_tmp			= fat_lba_tmp + 4; (1 byte); internallly used fd
 fat_file_mode_tmp		= fat_file_fd_tmp + 1; (1 byte) internallly used file mode
-fat_dir_entry_tmp		= fat_file_mode_tmp + 1 ; (32 byte); internallly used during mkdir, rmdir, fopen r+
-filename_buf			= fat_dir_entry_tmp + .sizeof(F32DirEntry) ; (13 byte, 8.3 + \0) file name buffer
+filename_buf			= fat_file_mode_tmp + 1 ; (13 byte, 8.3 + \0) file name buffer
 
 fd_area					= $0380 ; File descriptor area until $0400
 sd_blktarget			= $0400
