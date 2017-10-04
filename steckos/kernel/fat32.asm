@@ -134,43 +134,27 @@ fat_write:
 		; in:
 		;	dirptr
 __fat_set_direntry_timedate:
-;		lda #0
-;		ldy #F32DirEntry::Reserved									; unused
-;		sta (dirptr), y
-
-;		ldy #F32DirEntry::CrtTimeMillis
-;		sta (dirptr), y												; ms to 0, ms not supported by rtc
 
 		jsr __rtc_systime_update									; update systime struct
 		jsr __fat_rtc_time
 
-;		ldy #F32DirEntry::CrtTime
-;		sta (dirptr), y
 		ldy #F32DirEntry::WrtTime
 		sta (dirptr), y
 
 		txa
-;		ldy #F32DirEntry::CrtTime+1
-;		sta (dirptr), y
 		ldy #F32DirEntry::WrtTime+1
 		sta (dirptr), y
 
 		jsr __fat_rtc_date
-;		ldy #F32DirEntry::CrtDate+0
-;		sta (dirptr), y
 		ldy #F32DirEntry::WrtDate+0
 		sta (dirptr), y
 		ldy #F32DirEntry::LstModDate+0
 		sta (dirptr), y
 		txa
-;		ldy #F32DirEntry::CrtDate+1
-;		sta (dirptr), y
 		ldy #F32DirEntry::WrtDate+1
 		sta (dirptr), y
 		ldy #F32DirEntry::LstModDate+1
 		sta (dirptr), y
-
-
 
 		rts
 
