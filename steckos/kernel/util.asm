@@ -49,7 +49,6 @@ string_fat_mask:
 	beq __tfm_exit					; empty input	
 
 	stz krn_tmp
-;	ldx #0
 	stz krn_tmp2
 __tfn_mask_input:
 	ldy krn_tmp
@@ -74,17 +73,13 @@ __tfn_mask_fill_blank:
 __tfn_mask_fill:
 	clc
 __tfn_mask_fill_l1:
-	;sta fat_dir_entry_tmp, x
-	;inx
 	ldy krn_tmp2
 	sta (krn_ptr1), y
 	iny
 	sty krn_tmp2
 	bcs __tfn_mask_input			; C=1, then go on next char
-	;cpx #8
 	cpy #8
 	beq __tfn_mask_extension		; go on with extension
-	;cpx #8+3
 	cpy #8+3
 	bne __tfn_mask_fill_l1
 __tfm_exit:	
@@ -96,9 +91,6 @@ __tfn_mask_char:
 	bcs __tfn_mask_char_l1
 	and #$df			; uppercase
 __tfn_mask_char_l1:	
-	;sta fat_dir_entry_tmp, x
-	;inx
-	;cpx #8+3
 	ldy krn_tmp2
 	sta (krn_ptr1), y
 	iny 
