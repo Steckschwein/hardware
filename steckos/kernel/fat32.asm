@@ -1318,20 +1318,6 @@ __fat_set_fd_lba:
 		sta fd_area + F32_fd::DirEntryPos, x
 		rts
 
-		; set the start cluster to root cluster of the given file descriptor from volumeID::RootClus
-		; in:
-		;	X - file descriptor
-__fat_set_fd_rootcluster:
-		lda volumeID+VolumeID::RootClus+3
-		sta fd_area+F32_fd::StartCluster+3,x
-		lda volumeID+VolumeID::RootClus+2
-		sta fd_area+F32_fd::StartCluster+2,x
-		lda volumeID+VolumeID::RootClus+1
-		sta fd_area+F32_fd::StartCluster+1,x
-		lda volumeID+VolumeID::RootClus+0
-		sta fd_area+F32_fd::StartCluster+0,x
-		rts
-		
 		; out:
 		;	X - with index to fd_area
 		;   Z - Z=1 on success (A=0), Z=0 and A=error code otherwise
@@ -1352,7 +1338,7 @@ fat_alloc_fd:
 		; Too many open files, no free file descriptor found
 		lda #EMFILE
 		rts
-@l2:	;jsr __fat_set_fd_rootcluster			; init start cluster nr with root cluster
+@l2:	; init start cluster nr with root dir cluster which is 0
 		stz fd_area+F32_fd::StartCluster+3,x
 		stz fd_area+F32_fd::StartCluster+2,x
 		stz fd_area+F32_fd::StartCluster+1,x
