@@ -116,24 +116,30 @@ fat_write:
 		lda fd_area + F32_fd::DirEntryPos , x				; setup dirptr
 		jsr calc_dirptr_from_entry_nr
 	
-		jsr __fat_set_direntry_cluster						; set cluster number to direntry entry (dirptr) - TODO FIXME only necessary on first write
-		
-		lda fd_area + F32_fd::FileSize+3 , x
-		ldy #F32DirEntry::FileSize+3
-		sta (dirptr),y
-		lda fd_area + F32_fd::FileSize+2 , x
-		dey
-		sta (dirptr),y
-		lda fd_area + F32_fd::FileSize+1 , x
-		dey
-		sta (dirptr),y
-		lda fd_area + F32_fd::FileSize+0 , x
-		dey
-		sta (dirptr),y
+		jsr __fat_set_direntry_cluster						; set cluster number of direntry entry via dirptr - TODO FIXME only necessary on first write
+		jsr __fat_set_direntry_filesize						; set filesize of directory entry via dirptr
 		
 		jsr __fat_write_block_data							; lba_addr is already set from read, see above
 @l_exit:
 		debug16 "fwrite", dirptr
+		rts
+
+		; copy cluster number from file descriptor to direntry given as dirptr
+		; in:
+		;	dirptr
+__fat_set_direntry_filesize:
+		ldy #F32DirEntry::FileSize+3
+		lda fd_area + F32_fd::FileSize+3 , x
+		sta (dirptr),y
+		lda fd_area + F32_fd::FileSize+2 , x
+		ldy #F32DirEntry::FileSize+2
+		sta (dirptr),y
+		lda fd_area + F32_fd::FileSize+1 , x
+		ldy #F32DirEntry::FileSize+1
+		sta (dirptr),y
+		ldy #F32DirEntry::FileSize+0
+		lda fd_area + F32_fd::FileSize+0 , x
+		sta (dirptr),y
 		rts
 
 		; copy cluster number from file descriptor to direntry given as dirptr
@@ -279,7 +285,7 @@ fat_mkdir:
 		jsr string_fat_name							; build fat name upon input string (filenameptr) and store them directly to current dirptr!
 		bne @l_exit
 		
-		jsr fat_alloc_fd							; alloc new fd - TODO use them for fopen and "rw+" mode - we alloc a new fd here already, right before any fat writes
+		jsr fat_alloc_fd							; alloc new fd - try to alloc fd here already, right before any fat writes which may fail
 		bne @l_exit									; and we want to avoid an error in between the different block writes
 		stx fat_file_fd_tmp							; save fd
 		jsr __fat_set_fd_lba						; update dir lba addr and dir entry number within fd
@@ -542,30 +548,8 @@ __fat_prepare_dir_entry:
 		sta (dirptr), y
 		
 		ldx fat_file_fd_tmp
-		lda fd_area+F32_fd::StartCluster+3, x
-		ldy #F32DirEntry::FstClusHI+1
-		sta (dirptr), y
-		lda fd_area+F32_fd::StartCluster+2, x
-		ldy #F32DirEntry::FstClusHI+0
-		sta (dirptr), y
-		lda fd_area+F32_fd::StartCluster+1, x
-		ldy #F32DirEntry::FstClusLO+1
-		sta (dirptr), y
-		lda fd_area+F32_fd::StartCluster+0, x
-		ldy #F32DirEntry::FstClusLO+0
-		sta (dirptr), y
-
-		;TODO FIXME set to 0 in fat_alloc_fd, align code with fat_write
-		lda #0
-		ldy #F32DirEntry::FileSize+3
-		sta (dirptr), y
-		ldy #F32DirEntry::FileSize+2
-		sta (dirptr), y
-		ldy #F32DirEntry::FileSize+1
-		sta (dirptr), y
-		ldy #F32DirEntry::FileSize+0
-		sta (dirptr), y
-		rts
+		jsr __fat_set_direntry_cluster
+		jmp __fat_set_direntry_filesize
 		
 __fat_write_fat_blocks:
 		jsr __fat_write_block_fat				; lba_addr is already setup by __fat_find_free_cluster
@@ -1338,11 +1322,14 @@ fat_alloc_fd:
 		; Too many open files, no free file descriptor found
 		lda #EMFILE
 		rts
-@l2:	; init start cluster nr with root dir cluster which is 0
-		stz fd_area+F32_fd::StartCluster+3,x
+@l2:	stz fd_area+F32_fd::StartCluster+3,x	; init start cluster nr with root dir cluster which is 0 - @see Note in calc_lba_addr
 		stz fd_area+F32_fd::StartCluster+2,x
 		stz fd_area+F32_fd::StartCluster+1,x
-		stz fd_area+F32_fd::StartCluster+0,x
+		stz fd_area+F32_fd::StartCluster+0,x		
+		stz fd_area+F32_fd::FileSize+3,x		; init file size with 0, it's maintained during open
+		stz fd_area+F32_fd::FileSize+2,x
+		stz fd_area+F32_fd::FileSize+1,x
+		stz fd_area+F32_fd::FileSize+0,x
 		lda #EOK
 		rts
 
