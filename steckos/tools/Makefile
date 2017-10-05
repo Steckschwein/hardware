@@ -4,7 +4,7 @@ LDFLAGS=--config ../steckos-c-app.cfg ../lib/steckschwein-kernel.lib
 
 .PHONY: all clean
 
-all: ls.prg ll.prg rename.prg date.prg nvram.prg uname.prg hello.prg fibo.prg clear.prg setdate.prg view.prg echo.prg od.prg rmdir.prg mkdir.prg keycode.prg touch.prg du.prg cp.prg
+all: ls.prg ll.prg stat.prg rename.prg date.prg nvram.prg uname.prg hello.prg fibo.prg clear.prg setdate.prg view.prg echo.prg od.prg rmdir.prg mkdir.prg keycode.prg touch.prg du.prg cp.prg
 	(cd xmodem; make )
 
 
@@ -26,6 +26,9 @@ ls.prg: ls.o ls_entry_short.o
 	cl65 $(CA65FLAGS) --target none --config ../kernel/steckosapp.cfg ls.o ls_entry_short.o -o ls.prg
 ll.prg: ls.o ls_entry_long.o
 	cl65 $(CA65FLAGS) --target none --config ../kernel/steckosapp.cfg ls.o ls_entry_long.o -o ll.prg
+stat.prg: ls.o ls_entry_stat.o
+	cl65 $(CA65FLAGS) --target none --config ../kernel/steckosapp.cfg ls.o ls_entry_stat.o -o stat.prg
+
 
 %: %.prg
 	../../transfer.py $< -s 0x1000	
