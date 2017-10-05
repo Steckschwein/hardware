@@ -2,11 +2,9 @@
 .ifdef DEBUG_UTIL
 	debug_enabled=1
 .endif
-
-.include	"zeropage.inc"
+.include	"kernel.inc"
 .include	"fat32.inc"
 .include	"errno.inc"
-.include	"debug.inc"
 .segment "KERNEL"
 .export string_fat_name
 .export string_fat_mask
@@ -46,7 +44,7 @@ l_1:
 		lda	(filenameptr),	y
 		beq	l_2
 		cmp	#' '+1			
-		bcc	l_1					; 0..32 skip control chars and ' '
+		bcc	l_1					; skip all chars within 0..32
 l_2:	ldy	krn_tmp2
 		sta	(filenameptr), y
 		cmp	#0					; was end of string?
@@ -70,21 +68,21 @@ l_st_ex:
 	;	Z=1 if input was empty string, Z=0 otherwise
 string_fat_mask:
 	jsr string_trim					; trim input
-	bcs __tfm_exit					; overflow
-	beq __tfm_exit					; empty input	
+	bcs __tfm_exit					; C=1, overflow
+	beq __tfm_exit					; Z=1, empty input	
 
 	stz krn_tmp
-	stz krn_tmp2
+	ldy #0
 __tfn_mask_input:
+	sty krn_tmp2
 	ldy krn_tmp
 	lda (filenameptr), y
 	beq __tfn_mask_fill_blank
 	inc krn_tmp
-__tfn_mask_dot:
 	cmp #'.'
 	bne __tfn_mask_qm
 	ldy krn_tmp2
-	beq __tfn_mask_char_l2			; first position, capture the "."
+	beq __tfn_mask_char_l2			; first position, we capture the "."
 	cpy #8							; reached from here from first fill (the name) ?
 	beq __tfn_mask_input
 	cpy #1							; 2nd position?
@@ -107,28 +105,25 @@ __tfn_mask_fill:
 	clc
 __tfn_mask_fill_l1:
 	ldy krn_tmp2
+__tfn_mask_fill_l2:	
 	sta (krn_ptr2), y
 	iny
-	sty krn_tmp2
 	bcs __tfn_mask_input			; C=1, then go on next char
 	cpy #8
 	beq __tfn_mask_input		; go on with extension
 	cpy #8+3
-	bne __tfn_mask_fill_l1
+	bne __tfn_mask_fill_l2
 __tfm_exit:	
 	rts
 __tfn_mask_char:
-	cmp #'a'			; char [a-z] ?
+	cmp #$60 ; Is lowercase?
 	bcc __tfn_mask_char_l1
-	cmp #'z'+1
-	bcs __tfn_mask_char_l1
-	and #$df			; uppercase
-__tfn_mask_char_l1:	
+	and	#$DF
+__tfn_mask_char_l1:
 	ldy krn_tmp2
 __tfn_mask_char_l2:
 	sta (krn_ptr2), y
 	iny 
-	sty krn_tmp2
 	cpy #8+3
 	bne __tfn_mask_input
 	rts

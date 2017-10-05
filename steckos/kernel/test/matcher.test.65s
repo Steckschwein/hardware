@@ -48,7 +48,6 @@ test_suite
 	lda 	#>usr_input
 	sta 	filenameptr+1
 	
-;	jsr 	string_fat_name
 	lda 	#<fat_dirname_mask
 	sta 	krn_ptr2
 	lda 	#>fat_dirname_mask
@@ -89,14 +88,14 @@ usr_input:
 ;	.db "l*.prg  ",0
 ;	.db "*.*  ",0
 
-	.db "..dat",0		
-	.db ".dat",0		
-	.db "..",0		; TODO ?!?
+;	.db "..dat",0		
+;	.db ".dat",0
+;	.db "..",0		; TODO ?!?
 	.db ".",0		; TODO ?!?
 	
-	.db "l*p*.p*g  ",0 	; TODO ?!?
-	.db "*..*  ",0 		; TODO ?!?
-	.db "  2...da ",0	; TODO ?!?
+;	.db "l*p*.p*g  ",0 	; TODO ?!?
+;	.db "*..*  ",0 		; TODO ?!?
+;	.db "  2...da ",0	; TODO ?!?
 	
 	lda #<test_in
 	sta $10
