@@ -15,7 +15,7 @@ tmp1    = $a1
 dir_show_entry:
 		pha
 		jsr krn_primm
-		.byte "File: ",$00
+		.byte "Name: ",$00
 		jsr print_filename
 		crlf
 
@@ -26,8 +26,6 @@ dir_show_entry:
 		tax
 		ldy #F32DirEntry::FileSize
 		lda (dirptr),y
-
-
 		jsr BINBCD16
 
 		jsr krn_primm
@@ -48,9 +46,36 @@ dir_show_entry:
 
 		crlf
 
+		jsr krn_primm
+		.byte "Attribute: "
+		.byte "--ADVSHR",$00
+		crlf
 
 		jsr krn_primm
-		.byte "Created : ",$00
+		.byte "           ",$00
+
+		ldy #F32DirEntry::Attr
+		lda (dirptr),y
+		ldx #$07
+@l:
+		rol
+		bcc @skip
+		pha
+		lda #'1'
+		bra @out
+@skip:
+		pha
+		lda #'0'
+@out:
+		jsr krn_chrout
+		pla
+		dex
+		bpl @l
+		crlf
+
+
+		jsr krn_primm
+		.byte "Created  : ",$00
 		ldy #F32DirEntry::CrtDate
 		jsr print_fat_date
 
@@ -62,7 +87,7 @@ dir_show_entry:
 		crlf
 
 		jsr krn_primm
-		.byte "Modified: ",$00
+		.byte "Modified : ",$00
 		ldy #F32DirEntry::WrtDate
 		jsr print_fat_date
 
