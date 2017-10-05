@@ -1,5 +1,3 @@
-.ifdef DEBUG
-
 .include "zeropage.inc"
 
 .export	_debugout
@@ -50,7 +48,7 @@ _debugout_restore:
 		
 _debugdump:
 		jsr 	_debugout_enter
-		lda 	#32
+		lda 	#11
 		bra		_debugout0		
 _debugout32:
 		jsr 	_debugout_enter
@@ -134,4 +132,3 @@ _debugout0:
 		ldy		dbg_yreg
 		plp
 		jmp     (msgptr)           ; return to byte following final NULL
-.endif

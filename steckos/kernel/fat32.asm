@@ -1,3 +1,10 @@
+; define the debug enable category
+;.ifdef DEBUG_FAT32
+.define DEBUG_ENABLED true
+debug_enabled=1
+;.endif
+
+
 .include "common.inc"
 .include "kernel.inc"
 .include "fat32.inc"
@@ -10,6 +17,7 @@
 .import __rtc_systime_update
 .import string_fat_name
 .import string_fat_mask
+.import dirname_mask_matcher
 
 .export fat_mount
 .export fat_open, fat_isOpen, fat_chdir, fat_get_root_and_pwd
@@ -130,7 +138,7 @@ fat_write:
 		debug16 "fwrite", dirptr
 		rts
 
-		; copy cluster number from file descriptor to direntry given as dirptr
+		; write new timestamp to direntry entry given as dirptr
 		; in:
 		;	dirptr
 __fat_set_direntry_timedate:
@@ -312,7 +320,7 @@ fat_mkdir:
 		cmp	#ENOENT									; we expect 'no such file or directory' error, otherwise a file with same name already exists
 		bne @l_exit
 
-		copypointer dirptr, krn_ptr1
+		copypointer dirptr, krn_ptr2
 		jsr string_fat_name							; build fat name upon input string (filenameptr) and store them directly to current dirptr!
 		bne @l_exit
 
@@ -571,7 +579,6 @@ __fat_prepare_dir_entry:
 		ldy #F32DirEntry::CrtDate+1
 		sta (dirptr),y
 
-
 		ldx fat_file_fd_tmp
 		jsr __fat_set_direntry_cluster
 		jmp __fat_set_direntry_filesize
@@ -741,7 +748,7 @@ fat_open:
 		beq @l_err_enoent			; nothing set, exit with ENOENT
 
 		debug "r+"
-		copypointer dirptr, krn_ptr1
+		copypointer dirptr, krn_ptr2
 		jsr string_fat_name							; build fat name upon input string (filenameptr)
 		bne @l_exit
 		jsr fat_alloc_fd							; alloc new fd for the new file we want to create
@@ -1406,6 +1413,11 @@ fat_find_first:
 @l2:	sta filename_buf,y
 		SetVector filename_matcher, krn_call_internal	;setup the filename matcher
 
+;		SetVector fat_dirname_mask, krn_ptr2
+;		jsr	string_fat_mask
+;		debugdump "msk", fat_dirname_mask
+;		SetVector dirname_mask_matcher, krn_call_internal
+		
 		; internal find first, assumes that (krn_call_internal) is already setup
 		; in:
 		;   X - directory fd index into fd_area

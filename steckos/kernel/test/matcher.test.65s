@@ -10,6 +10,7 @@ DIRE=dirptr
 MASK=$2
 filenameptr=$4
 krn_ptr1=$6
+krn_ptr2=$8
 
 fd_area						= $0320 ; File descriptor area until $0350 
 FD_Entries_Max = 16
@@ -39,7 +40,7 @@ chrout:
 	
 buffer:			.rs 8+1+3
 filename_buf: 	.rs 32
-
+fat_dirname_mask: 	.rs 11
 	
 test_suite
 	lda 	#<usr_input
@@ -47,23 +48,19 @@ test_suite
 	lda 	#>usr_input
 	sta 	filenameptr+1
 	
-;	lda 	#<buffer
-;	sta 	MASK
-;	lda 	#>buffer
-;	sta 	MASK+1
-	
 ;	jsr 	string_fat_name
-	lda 	#<buffer
-	sta 	krn_ptr1
-	lda 	#>buffer
-	sta 	krn_ptr1+1
+	lda 	#<fat_dirname_mask
+	sta 	krn_ptr2
+	lda 	#>fat_dirname_mask
+	sta 	krn_ptr2+1
+	
 	jsr 	string_fat_mask
 
 	lda #'['
 	jsr chrout
 	ldy #0
 l_out_l0:
-	lda buffer,y
+	lda fat_dirname_mask,y
 	beq l_out_le
 	jsr chrout
 	iny 
@@ -72,21 +69,32 @@ l_out_l0:
 	lda #']'
 	jsr chrout	
 l_out_le:
+
+	lda 	#<dir_9
+	sta 	dirptr
+	lda 	#>dir_9
+	sta 	dirptr+1	
+	jsr 	dirname_mask_matcher
+
 	rts
 
 usr_input:
-;	.db "  ",0
+;	.db "  ",0	
 ;	.db "2.dat",0
 ;	.db "  2.dat ",0
 ;	.db " ls.prg ",0
+;	.db "*.dat",0
 ;	.db "ls*  ",0
 ;	.db "ls.*  ",0	
-	.db "l*.prg  ",0
+;	.db "l*.prg  ",0
 ;	.db "*.*  ",0
 
-	.db "l*p*.p*g  ",0 	; TODO ?!?
+	.db "..dat",0		
+	.db ".dat",0		
 	.db "..",0		; TODO ?!?
 	.db ".",0		; TODO ?!?
+	
+	.db "l*p*.p*g  ",0 	; TODO ?!?
 	.db "*..*  ",0 		; TODO ?!?
 	.db "  2...da ",0	; TODO ?!?
 	

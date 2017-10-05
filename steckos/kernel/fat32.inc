@@ -107,12 +107,12 @@ DIR_Entry_Deleted			= $e5
 	StartCluster	.word 2	; +4
 	FileSize		.word 2	; +4
 	Attr			.byte	; +1
-	CurrentCluster	.word 2	; +4
-	SeekPos			.word 2	; +4
 	DirEntryLBA		.word 2 ; +4 LBA of the block where the dir entry of the file is located
 	DirEntryPos		.byte	; +1 block offset within the block (DirEntryPos * DIR_Entry_Size)
-	openFlags		.byte 	; +1 flags during open
-	Reserved		.byte 9	;fill up to $20
+	CurrentCluster	.word 2	; +4
+;	SeekPos			.word 2	; +4
+;	openFlags		.byte 	; +1 flags during open
+;	Reserved		.byte 9	;fill up to $20
 .endstruct
 
 FD_Entry_Size = .sizeof(F32_fd)
@@ -137,6 +137,7 @@ fat_lba_tmp				= fat_fsinfo_lba + 4; (4 byte)
 fat_file_fd_tmp			= fat_lba_tmp + 4; (1 byte); internallly used fd
 fat_file_mode_tmp		= fat_file_fd_tmp + 1; (1 byte) internallly used file mode
 filename_buf			= fat_file_mode_tmp + 1 ; (13 byte, 8.3 + \0) file name buffer
+fat_dirname_mask		= filename_buf + 13; (11 byte, fat32 name and ext)
 
 fd_area					= $0380 ; File descriptor area until $0400
 sd_blktarget			= $0400

@@ -341,17 +341,17 @@ run:
 		iny
 		inx
 		bne @cp_loop
-@l3:		lda tmp1
+@l3:	lda tmp1
 		bne	@l4
 		ldy #0
-@l5:		lda	BINEXT,y
+@l5:	lda	APPEXT,y
 		beq @l4
 		sta tmpbuf,x
 		inx
 		iny
 		bne	@l5
-@l4:		stz tmpbuf,x
-;        debugstr "t:", tmpbuf
+@l4:	stz tmpbuf,x
+;        debugdump "t:", tmpbuf
 		lda #<tmpbuf
 		ldx #>tmpbuf    ; cmdline in a/x
 		jsr krn_execv   ; return A with errorcode
@@ -477,8 +477,8 @@ help:
 		jsr krn_strout
 		jmp mainloop
 
-PATH:		        .asciiz "/bin/:/sbin/:/usr/bin/"
-BINEXT:			.asciiz ".PRG"
+PATH:		.asciiz "/bin/:/sbin/:/usr/bin/"
+APPEXT:		.asciiz ".PRG"
 tmpbuf:
 ;	.res 64,0
 ;.align 256

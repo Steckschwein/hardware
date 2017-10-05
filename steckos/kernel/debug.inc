@@ -52,11 +52,11 @@ dbg_savept			= $02fe
 .endmacro
 
 .macro debugdump msg, addr, n
-.ifdef DEBUG
-		jsr	_debugdump
-		.word addr
-		.asciiz msg
-.endif
+	.if .defined(debug_enabled)
+			jsrss _debugdump
+			.word addr
+			.asciiz msg
+	.endif
 .endmacro
 
 .endif
