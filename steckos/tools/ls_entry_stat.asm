@@ -19,14 +19,15 @@ dir_show_entry:
 		jsr print_filename
 		crlf
 
+		jsr krn_primm
+		.byte "Size: ",$00
 		ldy #F32DirEntry::FileSize +1
 		lda (dirptr),y
 		tax
 		ldy #F32DirEntry::FileSize
 		lda (dirptr),y
 
-		jsr krn_primm
-		.byte "Size: ",$00
+
 		jsr BINBCD16
 
 		jsr krn_primm
