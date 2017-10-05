@@ -1,9 +1,7 @@
-; define the debug enable category
-;.ifdef DEBUG_FAT32
-.define DEBUG_ENABLED true
-debug_enabled=1
-;.endif
-
+; enable debug for this module
+.ifdef DEBUG_FAT32
+	debug_enabled=1
+.endif
 
 .include "common.inc"
 .include "kernel.inc"
@@ -1415,7 +1413,7 @@ fat_find_first:
 
 ;		SetVector fat_dirname_mask, krn_ptr2
 ;		jsr	string_fat_mask
-;		debugdump "msk", fat_dirname_mask
+		debugdump "msk", fat_dirname_mask
 ;		SetVector dirname_mask_matcher, krn_call_internal
 		
 		; internal find first, assumes that (krn_call_internal) is already setup

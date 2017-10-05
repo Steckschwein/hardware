@@ -1,3 +1,8 @@
+; enable debug for this module
+.ifdef DEBUG_RTC
+	debug_enabled=1
+.endif
+
 .include "kernel.inc"
 .include "rtc.inc"
 .include "via.inc"

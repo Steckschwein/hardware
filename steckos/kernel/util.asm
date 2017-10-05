@@ -1,12 +1,16 @@
+; enable debug for this module
+.ifdef DEBUG_UTIL
+	debug_enabled=1
+.endif
+
 .include	"zeropage.inc"
 .include	"fat32.inc"
 .include	"errno.inc"
+.include	"debug.inc"
 .segment "KERNEL"
 .export string_fat_name
 .export string_fat_mask
 .export dirname_mask_matcher
-
-debug_enabled=1
 
 		; in:
 		;	dirptr pointer to dir entry

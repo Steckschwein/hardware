@@ -13,14 +13,14 @@ dbg_bytes			= $02fd
 dbg_savept			= $02fe
 
 .macro debug msg
-.ifdef DEBUG
+.if .defined(debug_enabled)
 		jsr	_debugout
 		.asciiz msg
 .endif
 .endmacro
 
 .macro debug8 msg, ptr
-.ifdef DEBUG
+.if .defined(debug_enabled)
 		jsr	_debugout8
 		.word ptr
 		.asciiz msg
@@ -28,7 +28,7 @@ dbg_savept			= $02fe
 .endmacro
 
 .macro debug16 msg, ptr
-.ifdef DEBUG
+.if .defined(debug_enabled)
 		jsr	_debugout16
 		.word ptr
 		.asciiz msg
@@ -36,7 +36,7 @@ dbg_savept			= $02fe
 .endmacro
 
 .macro debug32p msg, ptr
-.ifdef DEBUG
+.if .defined(debug_enabled)
 		jsr	_debugout32p
 		.word ptr
 		.asciiz msg
@@ -44,7 +44,7 @@ dbg_savept			= $02fe
 .endmacro
 
 .macro debug32 msg, addr
-.ifdef DEBUG
+.if .defined(debug_enabled)
 		jsr	_debugout32
 		.word addr
 		.asciiz msg
@@ -52,11 +52,11 @@ dbg_savept			= $02fe
 .endmacro
 
 .macro debugdump msg, addr, n
-	.if .defined(debug_enabled)
-			jsrss _debugdump
-			.word addr
-			.asciiz msg
-	.endif
+.if .defined(debug_enabled)
+		jsr _debugdump
+		.word addr
+		.asciiz msg
+.endif
 .endmacro
 
 .endif
