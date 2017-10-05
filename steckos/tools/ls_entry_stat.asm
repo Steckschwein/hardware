@@ -15,7 +15,7 @@ tmp1    = $a1
 dir_show_entry:
 		pha
 		jsr krn_primm
-		.byte $0a,$0d,"File: ",$00
+		.byte "File: ",$00
 		jsr print_filename
 		crlf
 
