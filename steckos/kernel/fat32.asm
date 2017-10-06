@@ -202,56 +202,15 @@ __fat_set_direntry_cluster:
         ;   A/X - pointer to the result buffer
 		;	Y	- size of result buffer
         ;out:
-		;	A - errno, 0 - means no error
+		;   Z - Z=1 on success (A=0), Z=0 and A=error code otherwise
 fat_get_root_and_pwd:
 		sta	krn_ptr1
 		stx	krn_ptr1+1
 		tya
 		eor	#$ff
 		;sta	krn_ptr3		;save -size-1 for easy loop
-
-
-@l1:	ldx #FD_INDEX_CURRENT_DIR
-		lda fd_area + F32_fd::StartCluster + 3, x
-		ora fd_area + F32_fd::StartCluster + 2, x
-		lda volumeID+VolumeID::RootClus +1
-		sta fd_area + F32_fd::StartCluster +1, x
-		lda volumeID+VolumeID::RootClus +0
-		sta fd_area + F32_fd::StartCluster +0, x
-
-		bne @l2
-		Copy fd_area + F32_fd::StartCluster, cluster_nr, 3	;save cluster current dir for matcher
-		lda #<parent_dir
-		ldx #>parent_dir
-		jsr fat_chdir
-		bne	@err
-		jsr fat_find_first_intern
-
-
-		SetVector clusternr_matcher, krn_call_internal
-		bne	@end
-		ldy #F32DirEntry::Name	;Name offset is 0
-@l2:	lda (dirptr),y
-		sta	(krn_ptr1),y	; '0' term string
-		inc krn_ptr1
-		beq @err
-		iny
-		cpy #$0b
-		bne	@l1
-		lda	#0
-@end:
 		rts
-@err:	lda #ERANGE
-		bra	@end
-
-cluster_nr:
-		.res 4
-parent_dir:
-		.asciiz ".."
-clusternr_matcher:
-		sec
-		; TODO implement me
-		rts
+		
 
 		;in:
         ;   A/X - pointer to string with the file path
@@ -1395,7 +1354,7 @@ fat_getfilesize:
 
 		; find first dir entry
 		; in:
-		;   X 			- fd offset
+		;   X - directory fd index into fd_area
 		;	filenameptr	- with file name to search
 		; out:
 		;	C 			- carry = 1 if found and dirptr is set to the dir entry found, carry = 0 otherwise
@@ -1403,12 +1362,7 @@ fat_find_first:
 		SetVector fat_dirname_mask, krn_ptr2									; build fat dir entry mask from user input
 		jsr	string_fat_mask
 		debugdump "msk", fat_dirname_mask
-		SetVector dirname_mask_matcher, krn_call_internal						; set callback to dirname matcher
 		
-		; internal find first, assumes that (krn_call_internal) is already setup
-		; in:
-		;   X - directory fd index into fd_area
-fat_find_first_intern:
 		lda volumeID+VolumeID::SecPerClus
 		sta blocks
 		jsr calc_lba_addr
@@ -1426,9 +1380,7 @@ ff_l4:
 		cmp #DIR_Attr_Mask_LongFilename
 		beq fat_find_next
 
-		jsr fat_find_first_matcher		; jmp indirect via (krn_call_internal), set to appropriate matcher strategy
-		;debugdump "ff", filename_buf
-		;debugdump "fb", buffer
+		jsr dirname_mask_matcher		; call matcher
 		bcs ff_end
 
 		; in:
@@ -1452,9 +1404,6 @@ ff_eod:
 		clc					; we are at the end, C=0 and return
 ff_end:
 		rts
-
-fat_find_first_matcher:
-		jmp	(krn_call_internal)
 
 calc_dirptr_from_entry_nr:
 		stz dirptr

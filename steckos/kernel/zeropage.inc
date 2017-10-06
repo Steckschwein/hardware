@@ -43,5 +43,4 @@ blocks				= $0284		; 3 bytes blocks to read, 3 bytes sufficient to address 4GB -
 ;TODO FIXME rename
 ;__oserror 	= errno
 
-krn_call_internal	= $028a		; jmp vector internally used
 trampolin			= $028c

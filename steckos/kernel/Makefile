@@ -1,17 +1,18 @@
 CPU=65c02
-OBJS=fat32.o sdcard.o textui.o t99xx.lib.o rtc.o spi.o uart.o via.o out.o key.o exec.o kernel.o util.o debug.o
+OBJS=fat32.o sdcard.o textui.o t99xx.lib.o rtc.o spi.o uart.o via.o out.o key.o exec.o util.o kernel.o debug.o
 ASM_INCLUDE=../asminc
 LDFLAGS=--config steckos.cfg
 
+# enable debug
 #DEBUG += -DDEBUG_SDCARD
 #
 #DEBUG += -DDEBUG_RTC
 # debug util
 #DEBUG += -DDEBUG_UTIL
 # debug fat32
-#DEBUG += -DDEBUG_FAT32
+# DEBUG += -DDEBUG_FAT32
 # dump fat blocks on write
-#DEBUG += -DFAT_DUMP_FAT_WRITE
+# DEBUG += -DFAT_DUMP_FAT_WRITE
 # do not write anything (metadata)
 #DEBUG += -DFAT_NOWRITE 
 # debug rtc updates by kernel
@@ -23,7 +24,7 @@ all: kernel.bin loader.bin
 clean:
 	rm -f *.o *.bin *.map *.txt kernel_jumptable.inc version.inc
 
-%.o: %.asm $(ASM_INCLUDE)/vdp.inc zeropage.inc fat32.inc version.inc matcher.asm
+%.o: %.asm $(ASM_INCLUDE)/vdp.inc zeropage.inc fat32.inc version.inc ../asminc/common.inc
 	ca65 --cpu $(CPU) --target none $(DEBUG) --include-dir $(ASM_INCLUDE)  $<
 
 version.inc:
@@ -44,13 +45,3 @@ test.bin: test.o
 
 test: test.bin
 	../../transfer.py test.bin -s 0x1000
-
-
-matcher.test.o: matcher.asm ../../bios/bios_call.inc
-	ca65 -t none --cpu 65c02 -o $@ $(@:.o=.asm)
-	
-matcher.test.bin: matcher.test.o
-	ld65 --config ../../bios/bios.cfg matcher.test.o -o matcher.test.bin
-
-test.matcher: matcher.test.bin
-	../../transfer.py matcher.test.bin
