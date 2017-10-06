@@ -1400,21 +1400,10 @@ fat_getfilesize:
 		; out:
 		;	C 			- carry = 1 if found and dirptr is set to the dir entry found, carry = 0 otherwise
 fat_find_first:
-		ldy #0				; TODO FIXME should be part of the matcher, also duplicate code buffer is already prepared in matcher.asm
-@l1:	lda (filenameptr),y
-		beq @l2
-		sta filename_buf,y
-		iny
-		cpy #8+1+3	+1		;?buffer overflow
-		bne @l1
-		lda	#0
-@l2:	sta filename_buf,y
-		SetVector filename_matcher, krn_call_internal	;setup the filename matcher
-
-;		SetVector fat_dirname_mask, krn_ptr2
-;		jsr	string_fat_mask
+		SetVector fat_dirname_mask, krn_ptr2									; build fat dir entry mask from user input
+		jsr	string_fat_mask
 		debugdump "msk", fat_dirname_mask
-;		SetVector dirname_mask_matcher, krn_call_internal
+		SetVector dirname_mask_matcher, krn_call_internal						; set callback to dirname matcher
 		
 		; internal find first, assumes that (krn_call_internal) is already setup
 		; in:
@@ -1501,6 +1490,3 @@ calc_dir_entry_nr:
 		rol krn_tmp
 		rol
 		rts
-
-.include "matcher.asm"
-buffer: .res 8+1+3,0
