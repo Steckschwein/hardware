@@ -1480,8 +1480,8 @@ calc_dir_entry_nr:
 		sta krn_tmp
 
 		lda dirptr+1
-		sec
-		sbc #>block_data
+		and #$01		; div 32, just bit 0 of high byte must be taken into account. dirptr must be $0200 aligned
+		.assert >block_data & $01 = 0, error, "block_data must be $0200 aligned!"
 		clc
 		rol krn_tmp
 		rol
