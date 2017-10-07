@@ -20,125 +20,125 @@
 ; Destructive: A, X, Y
 ;---------------------------------------------------------------------
 init_sdcard:
-	; 80 Taktzyklen
-	ldx #74
+			; 80 Taktzyklen
+			ldx #74
 
-	; set ALL CS lines and DO to HIGH
-	lda #%11111110
-	sta via1portb
+			; set ALL CS lines and DO to HIGH
+			lda #%11111110
+			sta via1portb
 
-	tay
-	iny
+			tay
+			iny
 
 @l1:
-	sty via1portb
-	sta via1portb
-	dex
-	bne @l1
+			sty via1portb
+			sta via1portb
+			dex
+			bne @l1
 
-	jsr sd_select_card
+			jsr sd_select_card
 
-	jsr sd_param_init
+			jsr sd_param_init
 
-	; CMD0 needs CRC7 checksum to be correct
-	lda #$95
-	sta sd_cmd_chksum
+			; CMD0 needs CRC7 checksum to be correct
+			lda #$95
+			sta sd_cmd_chksum
 
-	; send CMD0 - init SD card to SPI mode
-	lda #cmd0
-	jsr sd_cmd
+			; send CMD0 - init SD card to SPI mode
+			lda #cmd0
+			jsr sd_cmd
 .ifdef DEBUG_SD_INIT
-	debug "CMD0"
+			debug "CMD0"
 .endif
-	cmp #$01
-	bne @exit
+			cmp #$01
+			bne @exit
 
-	lda #$01
-	sta sd_cmd_param+2
-	lda #$aa
-	sta sd_cmd_param+3
-	lda #$87
-	sta sd_cmd_chksum
+			lda #$01
+			sta sd_cmd_param+2
+			lda #$aa
+			sta sd_cmd_param+3
+			lda #$87
+			sta sd_cmd_chksum
 
 
-	lda #cmd8
-	jsr sd_cmd
+			lda #cmd8
+			jsr sd_cmd
 .ifdef DEBUG_SD_INIT
-	debug "CMD8"
+			debug "CMD8"
 .endif
 
-	cmp #$01
-	bne @exit
-	; Invalid Card (or card we can't handle yet)
+			cmp #$01
+			bne @exit
+			; Invalid Card (or card we can't handle yet)
 
 @l5:
-	jsr sd_param_init
-	lda #cmd55
-	jsr sd_cmd
+			jsr sd_param_init
+			lda #cmd55
+			jsr sd_cmd
 
-	cmp #$01
-	bne @exit
-	; Init failed
+			cmp #$01
+			bne @exit
+			; Init failed
 
 
-	lda #$40
-	sta sd_cmd_param
+			lda #$40
+			sta sd_cmd_param
 
-	lda #acmd41
-	jsr sd_cmd
+			lda #acmd41
+			jsr sd_cmd
 .ifdef DEBUG_SD_INIT
-	debug "ACMD41"
+			debug "ACMD41"
 .endif
 
-	cmp #$00
-	beq @l7
+			cmp #$00
+			beq @l7
 
-	cmp #$01
-	beq @l5
+			cmp #$01
+			beq @l5
 
-	rts
+			rts
 @l7:
 
-	stz sd_cmd_param
+			stz sd_cmd_param
 
-	lda #cmd58
-	jsr sd_cmd
+			lda #cmd58
+			jsr sd_cmd
 .ifdef DEBUG_SD_INIT
-	debug "CMD58"
+			debug "CMD58"
 .endif
-	; read result. we need to check bit 30 of a 32bit result
-	jsr spi_r_byte
-;	sta krn_tmp
-	;pha
-	; read the other 3 bytes and trash them
-;	jsr spi_r_byte
-;	jsr spi_r_byte
-;	jsr spi_r_byte
-	; or don't read them at all. the next busy_wait will take care of everything
+			; read result. we need to check bit 30 of a 32bit result
+			jsr spi_r_byte
+		;	sta krn_tmp
+			;pha
+			; read the other 3 bytes and trash them
+		;	jsr spi_r_byte
+		;	jsr spi_r_byte
+		;	jsr spi_r_byte
+			; or don't read them at all. the next busy_wait will take care of everything
 
-	;pla
-	and #%01000000
-	bne @l9
+			;pla
+			and #%01000000
+			bne @l9
 
-	jsr sd_param_init
+			jsr sd_param_init
 
-	; Set block size to 512 bytes
-	lda #$02
-	sta sd_cmd_param+2
+			; Set block size to 512 bytes
+			lda #$02
+			sta sd_cmd_param+2
 
-	lda #cmd16
-	jsr sd_cmd
+			lda #cmd16
+			jsr sd_cmd
 .ifdef DEBUG_SD_INIT
-	debug "CMD16"
+			debug "CMD16"
 .endif
 
 @exit_ok:
 @l9:
 	; SD card init successful
-	lda #$00
+			lda #$00
 @exit:
-	jmp sd_deselect_card
-;	rts
+			jmp sd_deselect_card
+;			rts
 
 
 ;---------------------------------------------------------------------
@@ -150,21 +150,21 @@ init_sdcard:
 ;   A - SD Card R1 status byte in
 ;---------------------------------------------------------------------
 sd_cmd:
-		pha
-		jsr sd_busy_wait
-		pla
-		; transfer command byte
-		jsr spi_rw_byte
+			pha
+			jsr sd_busy_wait
+			pla
+			; transfer command byte
+			jsr spi_rw_byte
 
-		; transfer parameter buffer
-		ldx #$00
-@l1: 	lda sd_cmd_param,x
-		phx
-		jsr spi_rw_byte
-		plx
-		inx
-		cpx #$05
-		bne @l1
+			; transfer parameter buffer
+			ldx #$00
+@l1:	 	lda sd_cmd_param,x
+			phx
+			jsr spi_rw_byte
+			plx
+			inx
+			cpx #$05
+			bne @l1
 
 ;---------------------------------------------------------------------
 ; wait for card response for command
@@ -172,20 +172,20 @@ sd_cmd:
 ; http://elm-chan.org/docs/mmc/mmc_e.html
 ; out:
 ; A - response of card, for error codes see sdcard.inc. $1F if no valid response within NCR
-; Z=1 - no error 
+; Z=1 - no error
 ;---------------------------------------------------------------------
 sd_cmd_response_wait:
-		ldy #$08
-@l:		dey
-		beq sd_block_cmd_timeout ; y already 0? then invalid response or timeout
-		jsr spi_r_byte
-		bit #80	; bit 7 clear
-		bne @l  ; no, next byte
-		cmp #$00 ; got cmd response, check if $00 to set z flag accordingly
-		rts
+			ldy #$08
+@l:			dey
+			beq sd_block_cmd_timeout ; y already 0? then invalid response or timeout
+			jsr spi_r_byte
+			bit #80	; bit 7 clear
+			bne @l  ; no, next byte
+			cmp #$00 ; got cmd response, check if $00 to set z flag accordingly
+			rts
 sd_block_cmd_timeout:
-		lda #$1f ; make up error code distinct from possible sd card responses to mark timeout
-		rts
+			lda #$1f ; make up error code distinct from possible sd card responses to mark timeout
+			rts
 
 
 ;---------------------------------------------------------------------
@@ -198,24 +198,22 @@ sd_block_cmd_timeout:
 ;	A - A = 0 on success, error code otherwise
 ;---------------------------------------------------------------------
 sd_read_block:
-		jsr sd_select_card
+			jsr sd_select_card
 
-		jsr sd_cmd_lba
-		lda #cmd17
-		jsr sd_cmd
+			jsr sd_cmd_lba
+			lda #cmd17
+			jsr sd_cmd
 
-       	bne @exit
+		   	bne @exit
 @l1:
+			jsr fullblock
 
+@exit: 		; fall through to sd_deselect_card
 
-		jsr fullblock
-
-@exit: ; fall through to sd_deselect_card
-
-		;---------------------------------------------------------------------
-		; deselect sd card, puSH CS line to HI and generate few clock cycles
-		; to allow card to deinit
-		;---------------------------------------------------------------------
+;---------------------------------------------------------------------
+; deselect sd card, puSH CS line to HI and generate few clock cycles
+; to allow card to deinit
+;---------------------------------------------------------------------
 sd_deselect_card:
 			pha
 			phx
@@ -236,30 +234,30 @@ sd_deselect_card:
 			rts
 
 fullblock:
-		; wait for sd card data token
-		lda #sd_data_token
-		jsr sd_wait
-		bne @exit
+			; wait for sd card data token
+			lda #sd_data_token
+			jsr sd_wait
+			bne @exit
 
-		ldy #$00
-		jsr halfblock
+			ldy #$00
+			jsr halfblock
 
-		inc read_blkptr+1
-		jsr halfblock
+			inc read_blkptr+1
+			jsr halfblock
 
-		jsr spi_r_byte		; Read 2 CRC bytes
-		jsr spi_r_byte
-		lda #$00
+			jsr spi_r_byte		; Read 2 CRC bytes
+			jsr spi_r_byte
+			lda #$00
 @exit:
-		rts
+			rts
 
 halfblock:
 @l:
-		jsr spi_r_byte
-		sta (read_blkptr),y
-		iny
-		bne @l
-		rts
+			jsr spi_r_byte
+			sta (read_blkptr),y
+			iny
+			bne @l
+			rts
 
 ;---------------------------------------------------------------------
 ; Read multiple blocks from SD Card
@@ -272,33 +270,33 @@ halfblock:
 ;	A - A = 0 on success, error code otherwise
 ;---------------------------------------------------------------------
 sd_read_multiblock:
-		phx
-		phy
+			phx
+			phy
 
-		jsr sd_select_card
+			jsr sd_select_card
 
-		jsr sd_cmd_lba
-		lda #cmd18	; Send CMD18 command byte
-		jsr sd_cmd
-		bne @exit
+			jsr sd_cmd_lba
+			lda #cmd18	; Send CMD18 command byte
+			jsr sd_cmd
+			bne @exit
 @l1:
 
-		jsr fullblock
-		bne @exit
-		inc read_blkptr+1
+			jsr fullblock
+			bne @exit
+			inc read_blkptr+1
 
-		dec blocks
-		bne @l1
+			dec blocks
+			bne @l1
 
-        ; all blocks read, send cmd12 to end transmission
-        ; jsr sd_param_init
-        lda #cmd12
-        jsr sd_cmd
+	        ; all blocks read, send cmd12 to end transmission
+	        ; jsr sd_param_init
+	        lda #cmd12
+	        jsr sd_cmd
 
 @exit:
-        ply
-		plx
-        jmp sd_deselect_card
+	        ply
+			plx
+	        jmp sd_deselect_card
 
 ;---------------------------------------------------------------------
 ; Write block to SD Card
@@ -309,120 +307,116 @@ sd_read_multiblock:
 ;out:
 ;	A - A = 0 on success, error code otherwise
 ;---------------------------------------------------------------------
-
 sd_write_block:
-		phx
-		phy
-		jsr sd_select_card
+			phx
+			phy
+			jsr sd_select_card
 
-		jsr sd_cmd_lba
-		lda #cmd24
-		jsr sd_cmd
-	    bne @exit
+			jsr sd_cmd_lba
+			lda #cmd24
+			jsr sd_cmd
+		    bne @exit
 
-		lda #sd_data_token
-		jsr spi_rw_byte
+			lda #sd_data_token
+			jsr spi_rw_byte
 
-		ldy #$00
-@l2:	lda (write_blkptr),y
-		phy
-		jsr spi_rw_byte
-		ply
-		iny
-		bne @l2
+			ldy #$00
+@l2:		lda (write_blkptr),y
+			phy
+			jsr spi_rw_byte
+			ply
+			iny
+			bne @l2
 
-		inc write_blkptr+1
+			inc write_blkptr+1
 
-		ldy #$00
-@l3:	lda (write_blkptr),y
-		phy
-		jsr spi_rw_byte
-		ply
-		iny
-		bne @l3
+			ldy #$00
+@l3:		lda (write_blkptr),y
+			phy
+			jsr spi_rw_byte
+			ply
+			iny
+			bne @l3
 
 
 
-		; Send fake CRC bytes
-		lda #$00
-		jsr spi_rw_byte
-		lda #$00
-		jsr spi_rw_byte
-		inc write_blkptr+1
-		lda #$00
+			; Send fake CRC bytes
+			lda #$00
+			jsr spi_rw_byte
+			lda #$00
+			jsr spi_rw_byte
+			inc write_blkptr+1
+			lda #$00
 
 @exit:
-		ply
-		plx
-        jmp sd_deselect_card
+			ply
+			plx
+	        jmp sd_deselect_card
 
 ;---------------------------------------------------------------------
 ; Write multiple blocks to SD Card
 ;---------------------------------------------------------------------#
 .ifdef MULTIBLOCK_WRITE
 sd_write_multiblock:
-		save
+			save
 
-		; TODO
-		; 1. make this work
-		; 2. use SET_WR_BLOCK_ERASE_COUNT (ACMD23) to pre-erase number of blocks
+			; TODO
+			; 1. make this work
+			; 2. use SET_WR_BLOCK_ERASE_COUNT (ACMD23) to pre-erase number of blocks
 
-		jsr sd_select_card
+			jsr sd_select_card
 
-		jsr sd_cmd_lba
-		lda #cmd25	; Send CMD25 command byte
-		jsr sd_cmd
+			jsr sd_cmd_lba
+			lda #cmd25	; Send CMD25 command byte
+			jsr sd_cmd
 
-		; wait for command response.
-		lda #$00
-		jsr sd_wait
-		;jsr sd_wait_timeout
-       	bne @exit
+			; wait for command response.
+			lda #$00
+			jsr sd_wait
+	       	bne @exit
 
 @block:
-		lda #sd_data_token
-		jsr spi_rw_byte
+			lda #sd_data_token
+			jsr spi_rw_byte
 
-		ldy #$00
-@l2:	lda (write_blkptr),y
-		phy
-		jsr spi_rw_byte
-		ply
-		iny
-		bne @l2
+			ldy #$00
+@l2:		lda (write_blkptr),y
+			phy
+			jsr spi_rw_byte
+			ply
+			iny
+			bne @l2
 
-		inc 	write_blkptr+1
+			inc 	write_blkptr+1
 
-		ldy #$00
-@l3:	lda (write_blkptr),y
-		phy
-		jsr spi_rw_byte
-		ply
-		iny
-		bne @l3
+			ldy #$00
+@l3:		lda (write_blkptr),y
+			phy
+			jsr spi_rw_byte
+			ply
+			iny
+			bne @l3
 
-		; Send fake CRC bytes
-		lda #$00
-		jsr spi_rw_byte
-		lda #$00
-		jsr spi_rw_byte
+			; Send fake CRC bytes
+			lda #$00
+			jsr spi_rw_byte
+			lda #$00
+			jsr spi_rw_byte
 
-		inc write_blkptr+1
+			inc write_blkptr+1
 
 
-		dec blocks
-		bne @block
+			dec blocks
+			bne @block
 
-        ; all blocks read, send cmd12 to end transmission
-        ; jsr sd_param_init
-        lda #cmd12
-        jsr sd_cmd
-
-;        jsr sd_busy_wait
+	        ; all blocks read, send cmd12 to end transmission
+	        ; jsr sd_param_init
+	        lda #cmd12
+	        jsr sd_cmd
 
 @exit:
-		restore
-		jmp sd_deselect_card
+			restore
+			jmp sd_deselect_card
 .endif
 
 ;---------------------------------------------------------------------
@@ -431,59 +425,59 @@ sd_write_multiblock:
 ; out: Z = 1, A = 1 when error (timeout)
 ;---------------------------------------------------------------------
 sd_wait:
-		sta sd_tmp
-		ldy #sd_data_token_retries
-		stz	krn_tmp				; use krn_tmp as loop var, not needed here
+			sta sd_tmp
+			ldy #sd_data_token_retries
+			stz	krn_tmp				; use krn_tmp as loop var, not needed here
 @l1:
-		jsr spi_r_byte
-		cmp sd_tmp
-		beq @l2
-		dec	krn_tmp
-		bne	@l1
-		dey
-		bne @l1
+			jsr spi_r_byte
+			cmp sd_tmp
+			beq @l2
+			dec	krn_tmp
+			bne	@l1
+			dey
+			bne @l1
 
-		lda #$01
-		rts
-@l2:	lda #$00
-		rts
+			lda #$01
+			rts
+@l2:		lda #$00
+			rts
 
 
 ;---------------------------------------------------------------------
 ; select sd card, pull CS line to low
 ;---------------------------------------------------------------------
 sd_select_card:
-		lda #sd_card_sel
-		sta via1portb
+			lda #sd_card_sel
+			sta via1portb
 ; fall through to sd_busy_wait
 ;---------------------------------------------------------------------
 ; wait while sd card is busy
 ; Z = 1, A = 1 when error (timeout)
 ;---------------------------------------------------------------------
 sd_busy_wait:
-@l1:    lda #$ff
-        jsr spi_rw_byte
-        cmp #$ff
-        bne @l1
+@l1:    	lda #$ff
+	        jsr spi_rw_byte
+	        cmp #$ff
+	        bne @l1
 
-		lda #$01
-		rts
-@l2:	lda #$00
-        rts
+			lda #$01
+			rts
+@l2:		lda #$00
+        	rts
 
 
 ;---------------------------------------------------------------------
 ; clear sd card parameter buffer
 ;---------------------------------------------------------------------
 sd_param_init:
-		ldx #$03
+			ldx #$03
 @l:
-		stz sd_cmd_param,x
-		dex
-		bpl @l
-		lda #$01
-		sta sd_cmd_chksum
-		rts
+			stz sd_cmd_param,x
+			dex
+			bpl @l
+			lda #$01
+			sta sd_cmd_chksum
+			rts
 
 ;---------------------------------------------------------------------
 ; write lba_addr in correct order into sd_cmd_param
@@ -493,13 +487,13 @@ sd_param_init:
 ;   sd_cmd_param
 ;---------------------------------------------------------------------
 sd_cmd_lba:
-		ldx #$03
-		ldy #$00
+			ldx #$03
+			ldy #$00
 @l:
-		debug "cmd_lba"
-		lda lba_addr,x
-		sta sd_cmd_param,y
-		iny
-		dex
-		bpl @l
-		rts
+			debug "cmd_lba"
+			lda lba_addr,x
+			sta sd_cmd_param,y
+			iny
+			dex
+			bpl @l
+			rts
