@@ -30,7 +30,8 @@ init_sdcard:
 	tay
 	iny
 
-@l1:	sty via1portb
+@l1:
+	sty via1portb
 	sta via1portb
 	dex
 	bne @l1
@@ -50,12 +51,8 @@ init_sdcard:
 	debug "CMD0"
 .endif
 	cmp #$01
-	beq @l3
+	bne @exit
 
-	jmp sd_deselect_card
-;	rts
-
-@l3:
 	lda #$01
 	sta sd_cmd_param+2
 	lda #$aa
@@ -71,11 +68,8 @@ init_sdcard:
 .endif
 
 	cmp #$01
-	beq @l5
-
+	bne @exit
 	; Invalid Card (or card we can't handle yet)
-	jmp sd_deselect_card
-;	rts
 
 @l5:
 	jsr sd_param_init
@@ -83,13 +77,9 @@ init_sdcard:
 	jsr sd_cmd
 
 	cmp #$01
-	beq @l6
-
+	bne @exit
 	; Init failed
-	jmp sd_deselect_card
-;	rts
 
-@l6:
 
 	lda #$40
 	sta sd_cmd_param
@@ -142,10 +132,13 @@ init_sdcard:
 	debug "CMD16"
 .endif
 
+@exit_ok:
 @l9:
 	; SD card init successful
 	lda #$00
-	rts
+@exit:
+	jmp sd_deselect_card
+;	rts
 
 
 ;---------------------------------------------------------------------
@@ -173,6 +166,14 @@ sd_cmd:
 		cpx #$05
 		bne @l1
 
+;---------------------------------------------------------------------
+; wait for card response for command
+; read max. 8 bytes (The response is sent back within command response time (NCR), 0 to 8 bytes for SDC, 1 to 8 bytes for MMC. )
+; http://elm-chan.org/docs/mmc/mmc_e.html
+; out:
+; A - response of card, for error codes see sdcard.inc. $1F if no valid response within NCR
+; Z=1 - no error 
+;---------------------------------------------------------------------
 sd_cmd_response_wait:
 		ldy #$08
 @l:		dey
