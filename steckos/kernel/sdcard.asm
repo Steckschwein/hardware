@@ -126,22 +126,9 @@ init_sdcard:
 ;	jsr spi_r_byte
 	; or don't read them at all. the next busy_wait will take care of everything
 
-;@l8:
-;	phx
-;	jsr spi_r_byte
-;	plx
-;	sta sd_cmd_result,x
-;	inx
-;	cpx #$04
-;	bne @l8
-.import krn_hexout
-	jsr krn_hexout
 	;pla
 	and #%01000000
 	bne @l9
-;	bit sd_cmd_result+1
-;	bit krn_tmp
-;	bvs @l9
 
 	jsr sd_param_init
 
