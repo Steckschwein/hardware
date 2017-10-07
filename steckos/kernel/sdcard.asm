@@ -52,12 +52,8 @@ init_sdcard:
 	cmp #$01
 	beq @l3
 
-	; No Card
-	;lda #$ff
-
-	jsr sd_deselect_card
-
-	rts
+	jmp sd_deselect_card
+;	rts
 
 @l3:
 	lda #$01
@@ -67,7 +63,6 @@ init_sdcard:
 	lda #$87
 	sta sd_cmd_chksum
 
-;jsr sd_busy_wait
 
 	lda #cmd8
 	jsr sd_cmd
@@ -79,10 +74,8 @@ init_sdcard:
 	beq @l5
 
 	; Invalid Card (or card we can't handle yet)
-	jsr sd_deselect_card
-
-;	lda #$0f
-	rts
+	jmp sd_deselect_card
+;	rts
 
 @l5:
 
@@ -94,18 +87,13 @@ init_sdcard:
 	beq @l6
 
 	; Init failed
-	jsr sd_deselect_card
-;	lda #$f1
-	rts
+	jmp sd_deselect_card
+;	rts
 
 @l6:
-;	jsr sd_param_init
 
 	lda #$40
 	sta sd_cmd_param
-
-;	lda #$10
-	;sta sd_cmd_param+1
 
 	lda #acmd41
 	jsr sd_cmd
@@ -149,15 +137,12 @@ init_sdcard:
 	lda #$02
 	sta sd_cmd_param+2
 
-;	jsr sd_busy_wait
-
 	lda #cmd16
 	jsr sd_cmd
 .ifdef DEBUG_SD_INIT
 	debug "CMD16"
 .endif
-;	lda #$ff
-;	jsr spi_rw_byte
+
 @l9:
 	; SD card init successful
 	lda #$00
