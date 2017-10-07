@@ -18,11 +18,10 @@ acmd23	= $40 + 23	; SET_WR_BLOCK_ERASE_COUNT - Define number of blocks to pre-er
 sd_card_sel         = %01111100
 
 sd_data_token = $fe
-sd_card_status 		= $0298
+;sd_card_status 		= $0298
 ; SD CArd command parameter/result buffer
 sd_cmd_param 		= $02a0
 sd_cmd_chksum		= sd_cmd_param+4
-sd_cmd_result 		= $02a5
 
 sd_cmd_response_retries = $08
 sd_data_token_retries = $08 ; increase, card specific and must be larger for "huge" cards

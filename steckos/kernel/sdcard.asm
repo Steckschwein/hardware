@@ -78,7 +78,6 @@ init_sdcard:
 ;	rts
 
 @l5:
-
 	jsr sd_param_init
 	lda #cmd55
 	jsr sd_cmd
@@ -120,11 +119,12 @@ init_sdcard:
 	; read result. we need to check bit 30 of a 32bit result
 	jsr spi_r_byte
 ;	sta krn_tmp
-	pha
+	;pha
 	; read the other 3 bytes and trash them
-	jsr spi_r_byte
-	jsr spi_r_byte
-	jsr spi_r_byte
+;	jsr spi_r_byte
+;	jsr spi_r_byte
+;	jsr spi_r_byte
+	; or don't read them at all. the next busy_wait will take care of everything
 
 ;@l8:
 ;	phx
@@ -134,8 +134,9 @@ init_sdcard:
 ;	inx
 ;	cpx #$04
 ;	bne @l8
-
-	pla
+.import krn_hexout
+	jsr krn_hexout
+	;pla
 	and #%01000000
 	bne @l9
 ;	bit sd_cmd_result+1
