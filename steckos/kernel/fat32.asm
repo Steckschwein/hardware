@@ -13,7 +13,7 @@
 .import sd_read_block, sd_read_multiblock, sd_write_block, sd_write_multiblock, sd_select_card, sd_deselect_card
 .import sd_read_block_data
 .import __rtc_systime_update
-.import string_fat_name
+.import string_fat_name, fat_name_string, put_char
 .import string_fat_mask
 .import dirname_mask_matcher
 
@@ -24,7 +24,7 @@
 .export fat_read, fat_find_first, fat_find_next, fat_write
 
 .export fat_close_all, fat_close, fat_getfilesize
-.export calc_dirptr_from_entry_nr, inc_lba_address, calc_blocks
+.export inc_lba_address
 
 .segment "KERNEL"
 
@@ -77,16 +77,14 @@ fat_write:
 		bne @l_isfile
 @l_not_open:
 		lda #EINVAL
-		jmp @l_exit
+		bra @l_exit
 @l_isfile:
-		jsr __fat_isroot									; check whether fd start cluster is root cluster - @see fat_alloc_fd, fat_open)
+		jsr __fat_isroot									; check whether the start cluster of the file is the root cluster - @see fat_alloc_fd, fat_open)
 		bne	@l_write										; if not, we can directly update dir entry and write data afterwards
 
-		saveptr write_blkptr								; save the write ptr
-
+		saveptr write_blkptr								; 
 		jsr __fat_reserve_cluster							; otherwise start cluster is root, we try to find a free cluster, fat_file_fd_tmp has to be set
 		bne @l_exit
-
 		restoreptr write_blkptr								; restore write ptr
 		ldx fat_file_fd_tmp									; restore fd, go on with writing data
 @l_write:
@@ -104,6 +102,23 @@ fat_write:
 		bne @l
 .endif
 		ldx fat_file_fd_tmp									; restore fd
+		jsr __fat_read_direntry
+		
+		jsr __fat_set_direntry_cluster						; set cluster number of direntry entry via dirptr - TODO FIXME only necessary on first write
+		jsr __fat_set_direntry_filesize						; set filesize of directory entry via dirptr
+		jsr __fat_set_direntry_timedate						; set time and date
+
+		jsr __fat_write_block_data							; lba_addr is already set from read, see above
+@l_exit:
+		debug16 "fwrite", dirptr
+		rts
+
+		; read the block with the directory entry of the given file descriptor, dirptr is adjusted accordingly
+		; in:
+		;	X - file descriptor of the file the directory entry should be read
+		; out:
+		;	dirptr pointing to the corresponding directory entry of type F32DirEntry
+__fat_read_direntry:
 		lda fd_area + F32_fd::DirEntryLBA+3 , x				; set lba addr of dir entry...
 		sta lba_addr+3
 		lda fd_area + F32_fd::DirEntryLBA+2 , x
@@ -113,29 +128,19 @@ fat_write:
 		lda fd_area + F32_fd::DirEntryLBA+0 , x
 		sta lba_addr+0
 
+		stx fat_file_fd_tmp									; save fd
 		SetVector block_data, read_blkptr
 		jsr sd_read_block									; and read the block with the dir entry
 		bne @l_exit
 
 		ldx fat_file_fd_tmp
 		lda fd_area + F32_fd::DirEntryPos , x				; setup dirptr
-		jsr calc_dirptr_from_entry_nr
-
-
-
-
-		jsr __fat_set_direntry_cluster						; set cluster number of direntry entry via dirptr - TODO FIXME only necessary on first write
-		jsr __fat_set_direntry_filesize						; set filesize of directory entry via dirptr
-		jsr __fat_set_direntry_timedate						; set time and date
-
-
-
-
-		jsr __fat_write_block_data							; lba_addr is already set from read, see above
+		jsr set_dirptr_from_entry_nr
+		lda #EOK
 @l_exit:
-		debug16 "fwrite", dirptr
+		debug32 "rd_dir", lba_addr
 		rts
-
+		
 		; write new timestamp to direntry entry given as dirptr
 		; in:
 		;	dirptr
@@ -146,9 +151,8 @@ __fat_set_direntry_timedate:
 
 		ldy #F32DirEntry::WrtTime
 		sta (dirptr), y
-
 		txa
-		ldy #F32DirEntry::WrtTime+1
+		iny ; #F32DirEntry::WrtTime+1
 		sta (dirptr), y
 
 		jsr __fat_rtc_date
@@ -204,12 +208,30 @@ __fat_set_direntry_cluster:
         ;out:
 		;   Z - Z=1 on success (A=0), Z=0 and A=error code otherwise
 fat_get_root_and_pwd:
-		sta	krn_ptr1
-		stx	krn_ptr1+1
-		tya
-		eor	#$ff
+		sta	krn_ptr2
+		stx	krn_ptr2+1
+		debug16 "p2i", krn_ptr2
+;		tya
+;		eor	#$ff
 		;sta	krn_ptr3		;save -size-1 for easy loop
+
+		ldx #FD_INDEX_CURRENT_DIR
+		jsr __fat_isroot
+		beq @l_exit
+@l_rd_dir:
+		jsr __fat_read_direntry
+		bne @l_exit
+		
+		stz krn_tmp2
+		lda #'/'
+		jsr put_char
+		jsr fat_name_string
+		lda #0
+		jsr put_char
+		lda #EOK
+@l_exit:
 		rts
+		
 		
 
 		;in:
@@ -730,16 +752,17 @@ fat_open:
 @l_err_enoent:
 		lda	#ENOENT
 		bra @l_exit
-@l_err_dir:
+@l_err_dir:											; was directory, we must not free any fd
 		lda	#EINVAL									; TODO FIXME error code for "Is a directory"
 @l_exit:
 		debug "fopen"
 		rts
 
+		; open a path to a file or directory.
         ; in:
         ;   A/X - pointer to string with the file path
         ; out:
-        ;   X - index into fd_area of the opened file
+        ;   X - index into fd_area of the opened file. if a directory was opened then X == FD_INDEX_TEMP_DIR
 		;   Z - Z=1 on success (A=0), Z=0 and A=error code otherwise
 		;	Note: regardless of return value, the dirptr points the last visited directory entry and the corresponding lba_addr is set to the block where the dir entry resides.
 		;		  furthermore the filenameptr points to the last inspected path fragment of the given input path
@@ -827,10 +850,10 @@ fat_open_found:
 		ldy #F32DirEntry::Attr
 		lda (dirptr),y
 		bit #DIR_Attr_Mask_Dir 		; directory?
-		bne @l2						; go on, do not allocate fd, use index (X) which is already set to FD_INDEX_TEMP_DIR
+		bne @l2						; do not allocate a new fd, use index (X) which is already set to FD_INDEX_TEMP_DIR and just update the fd data
 		bit #DIR_Attr_Mask_File 	; is file?
 		beq lbl_fat_open_error
-		jsr fat_alloc_fd
+		jsr fat_alloc_fd			; yes, we allocate a new fd for the regular file
 		bne end_open_err
 @l2:
 		;save 32 bit cluster number from dir entry
@@ -1011,11 +1034,6 @@ __fat_isroot:
 		ora fd_area+F32_fd::StartCluster+2,x
 		ora fd_area+F32_fd::StartCluster+1,x
 		ora fd_area+F32_fd::StartCluster+0,x
-.ifdef DEBUG
-		beq @l
-		debug "isroot"
-@l:
-.endif
 		rts
 
 		; check whether the EOC (end of cluster chain) cluster number is reached
@@ -1361,7 +1379,6 @@ fat_getfilesize:
 fat_find_first:
 		SetVector fat_dirname_mask, krn_ptr2									; build fat dir entry mask from user input
 		jsr	string_fat_mask
-		debugdump "msk", fat_dirname_mask
 		
 		lda volumeID+VolumeID::SecPerClus
 		sta blocks
@@ -1405,7 +1422,7 @@ ff_eod:
 ff_end:
 		rts
 
-calc_dirptr_from_entry_nr:
+set_dirptr_from_entry_nr:
 		stz dirptr
 
 		lsr
@@ -1416,7 +1433,7 @@ calc_dirptr_from_entry_nr:
 		ror dirptr
 
 		clc
-		adc #>sd_blktarget
+		adc #>block_data
 		sta dirptr+1
 		rts
 

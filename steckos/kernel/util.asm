@@ -6,7 +6,7 @@
 .include	"fat32.inc"
 .include	"errno.inc"
 .segment "KERNEL"
-.export string_fat_name
+.export string_fat_name, fat_name_string, put_char
 .export string_fat_mask
 .export dirname_mask_matcher
 
@@ -126,6 +126,43 @@ __tfn_mask_char_l2:
 	iny 
 	cpy #8+3
 	bne __tfn_mask_input
+	rts
+
+	; fat name to string by reference
+	; in:
+	;	krn_ptr2	- pointer to result string
+	;	krn_tmp2	- offset from krn_ptr2 (result string)
+	; out:
+	;	
+fat_name_string:
+	ldy #0
+@l0:
+	cpy #11
+	beq @l_exit
+	sty krn_tmp
+	lda	(dirptr), y
+	cmp #' '
+	beq @l_skip
+	jsr put_char
+@l_skip:
+	ldy krn_tmp
+	iny
+	cpy #8
+	bne @l0
+	lda #'.'
+	phy 
+	jsr put_char
+	ply
+	bra @l0
+@l_exit:
+	rts
+
+put_char:
+	ldy krn_tmp2
+	sta (krn_ptr2), y
+	inc krn_tmp2
+	debug8 "t2", krn_tmp2
+	debug16 "p2", krn_ptr2
 	rts
 	
 	; build 11 byte fat file name (8.3) as used within dir entries 
