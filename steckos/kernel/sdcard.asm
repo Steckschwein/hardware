@@ -117,19 +117,30 @@ init_sdcard:
 .ifdef DEBUG_SD_INIT
 	debug "CMD58"
 .endif
-	sta sd_cmd_result
-	ldx #$01
-@l8:
-	phx
+	; read result. we need to check bit 30 of a 32bit result
 	jsr spi_r_byte
-	plx
-	sta sd_cmd_result,x
-	inx
-	cpx #$04
-	bne @l8
+;	sta krn_tmp
+	pha
+	; read the other 3 bytes and trash them
+	jsr spi_r_byte
+	jsr spi_r_byte
+	jsr spi_r_byte
 
-	bit sd_cmd_result+1
-	bvs @l9
+;@l8:
+;	phx
+;	jsr spi_r_byte
+;	plx
+;	sta sd_cmd_result,x
+;	inx
+;	cpx #$04
+;	bne @l8
+
+	pla
+	and #%01000000
+	bne @l9
+;	bit sd_cmd_result+1
+;	bit krn_tmp
+;	bvs @l9
 
 	jsr sd_param_init
 
