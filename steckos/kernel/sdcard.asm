@@ -47,11 +47,11 @@ init_sdcard:
 			; send CMD0 - init SD card to SPI mode
 			lda #cmd0
 			jsr sd_cmd
-.ifdef DEBUG_SD_INIT
 			debug "CMD0"
-.endif
 			cmp #$01
-			bne @exit
+			beq @l2
+			jmp @exit
+@l2:
 
 			lda #$01
 			sta sd_cmd_param+2
@@ -63,13 +63,12 @@ init_sdcard:
 
 			lda #cmd8
 			jsr sd_cmd
-.ifdef DEBUG_SD_INIT
 			debug "CMD8"
-.endif
-.import krn_hexout
 
 			cmp #$01
-			bne @exit
+			beq @l3
+			jmp @exit
+@l3:
 			; Invalid Card (or card we can't handle yet)
 			; card must respond with $000001aa, otherwise we can't use it
 			;
@@ -101,9 +100,7 @@ init_sdcard:
 
 			lda #acmd41
 			jsr sd_cmd
-.ifdef DEBUG_SD_INIT
-			debug32 "ACMD41" sd_cmd_param
-.endif
+			debug32 "ACMD41", sd_cmd_param
 
 			cmp #$00
 			beq @l7
@@ -123,11 +120,10 @@ init_sdcard:
 
 			lda #cmd58
 			jsr sd_cmd
-.ifdef DEBUG_SD_INIT
 			debug "CMD58"
-.endif
 			; read result. we need to check bit 30 of a 32bit result
 			jsr spi_r_byte
+			debug "CMD58_r"
 		;	sta krn_tmp
 			;pha
 			; read the other 3 bytes and trash them
@@ -148,9 +144,7 @@ init_sdcard:
 
 			lda #cmd16
 			jsr sd_cmd
-.ifdef DEBUG_SD_INIT
 			debug "CMD16"
-.endif
 
 @exit_ok:
 @l9:
