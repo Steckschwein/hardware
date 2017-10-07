@@ -66,13 +66,31 @@ init_sdcard:
 .ifdef DEBUG_SD_INIT
 			debug "CMD8"
 .endif
+.import krn_hexout
 
 			cmp #$01
 			bne @exit
 			; Invalid Card (or card we can't handle yet)
+			; card must respond with $000001aa, otherwise we can't use it
+			;
+			jsr spi_r_byte
+			jsr spi_r_byte
+
+
+			jsr spi_r_byte
+			cmp #$01
+			bne @exit
+
+			jsr spi_r_byte
+			cmp #$aa
+			bne @exit
+
+			; init card using ACMD41 and parameter $40000000
+			jsr sd_param_init
+			lda #$40
+			sta sd_cmd_param
 
 @l5:
-			jsr sd_param_init
 			lda #cmd55
 			jsr sd_cmd
 
@@ -81,13 +99,10 @@ init_sdcard:
 			; Init failed
 
 
-			lda #$40
-			sta sd_cmd_param
-
 			lda #acmd41
 			jsr sd_cmd
 .ifdef DEBUG_SD_INIT
-			debug "ACMD41"
+			debug32 "ACMD41" sd_cmd_param
 .endif
 
 			cmp #$00
@@ -96,7 +111,12 @@ init_sdcard:
 			cmp #$01
 			beq @l5
 
-			rts
+			cmp sd_cmd_param
+			beq @exit		; acmd41 with $40000000 and $00000000 failed, TODO: try CMD1
+
+			jsr sd_param_init
+			bra @l5
+
 @l7:
 
 			stz sd_cmd_param
@@ -490,7 +510,6 @@ sd_cmd_lba:
 			ldx #$03
 			ldy #$00
 @l:
-			debug "cmd_lba"
 			lda lba_addr,x
 			sta sd_cmd_param,y
 			iny
