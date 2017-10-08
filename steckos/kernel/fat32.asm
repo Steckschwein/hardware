@@ -73,8 +73,8 @@ fat_write:
 		beq @l_not_open
 
 		lda	fd_area + F32_fd::Attr, x
-		bit #DIR_Attr_Mask_File								; regular file?
-		bne @l_isfile
+		bit #DIR_Attr_Mask_Dir							; regular file?
+		beq @l_isfile
 @l_not_open:
 		lda #EINVAL
 		bra @l_exit
@@ -735,8 +735,8 @@ fat_open:
 		jsr __fat_open_path
 		bne	@l_error					;
 		lda	fd_area + F32_fd::Attr, x	;
-		bit #DIR_Attr_Mask_File			; regular file or directory?
-		beq	@l_err_dir
+		bit #DIR_Attr_Mask_Dir			; regular file or directory?
+		bne	@l_err_dir
 		lda #EOK					; ok
 		bra @l_exit
 @l_error:
@@ -755,7 +755,8 @@ fat_open:
 		stx fat_file_fd_tmp							; save fd
 		jsr __fat_set_fd_lba						; update dir lba addr and dir entry number within fd
 
-		lda #DIR_Attr_Mask_File						; create as regular file
+		lda #$00
+		;lda #DIR_Attr_Mask_Dir						; create as regular file
 		jsr __fat_prepare_dir_entry
 		jsr __fat_write_dir_entry					; create dir entry at current dirptr
 		bne @l_exit_close
@@ -871,8 +872,8 @@ fat_open_found:
 		lda (dirptr),y
 		bit #DIR_Attr_Mask_Dir 		; directory?
 		bne @l2						; do not allocate a new fd, use index (X) which is already set to FD_INDEX_TEMP_DIR and just update the fd data
-		bit #DIR_Attr_Mask_File 	; is file?
-		beq lbl_fat_open_error
+;		bit #DIR_Attr_Mask_File 	; is file?
+;		beq lbl_fat_open_error
 		jsr fat_alloc_fd			; yes, we allocate a new fd for the regular file
 		bne end_open_err
 @l2:
