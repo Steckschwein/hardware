@@ -14,8 +14,6 @@ main:
 
 		; lda #$04
 		; sta cnt
-
-
 l1:
 		crlf
 		SetVector pattern, filenameptr

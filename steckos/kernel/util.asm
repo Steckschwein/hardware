@@ -155,11 +155,11 @@ l_skip:
 	bra l_next_y
 
 put_char:
-	ldy krn_tmp2
-	sta (krn_ptr2), y
-	inc krn_tmp2
-	debug8 "t2", krn_tmp2
-	debug16 "p2", krn_ptr2
+	ldy krn_tmp3
+	sta (krn_ptr3), y
+	inc krn_tmp3
+	debug8 "t3", krn_tmp3
+	debug16 "p3", krn_ptr3
 l_exit:
 	rts
 	

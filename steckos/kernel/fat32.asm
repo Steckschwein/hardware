@@ -214,19 +214,23 @@ __fat_set_direntry_cluster:
         ;out:
 		;   Z - Z=1 on success (A=0), Z=0 and A=error code otherwise
 fat_get_root_and_pwd:
-		sta	krn_ptr2
-		stx	krn_ptr2+1
-		debug16 "p2i", krn_ptr2
+		sta	krn_ptr3
+		stx	krn_ptr3+1
+		debug16 "p2i", krn_ptr3
 ;		tya
 ;		eor	#$ff
-		;sta	krn_ptr3		;save -size-1 for easy loop
-
-		stz krn_tmp2
-		ldx #FD_INDEX_CURRENT_DIR
+		;sta	krn_ptr3			;save -size-1 for easy loop
+		stz krn_tmp3
+		ldy #FD_INDEX_CURRENT_DIR	; start from current directory
+		ldx #FD_INDEX_TEMP_DIR
+		jsr fat_clone_fd
+		ldx #FD_INDEX_TEMP_DIR
 @l_rd_dir:
 		jsr __fat_isroot
+		debugdump "rtfd", fd_area+FD_INDEX_TEMP_DIR
 		beq @l_inverse
 		jsr __fat_read_direntry
+		debug8 "rde", krn_tmp3
 		bne @l_err_exit
 		jsr fat_name_string
 		;append
@@ -235,8 +239,10 @@ fat_get_root_and_pwd:
 		ldx #>@l_dotdot
 		ldy #FD_INDEX_TEMP_DIR
 		jsr __fat_opendir
-;		beq @l_rd_dir
-		bra @l_exit
+		beq @l_rd_dir
+@l_exit:
+		debug "fcwd"
+		rts
 @l_err_exit:
 		lda #EIO
 		bra @l_exit
@@ -244,13 +250,12 @@ fat_get_root_and_pwd:
 		lda #0
 		jsr put_char
 		lda #EOK
-@l_exit:
-		debug "fcwd"
-		rts
+		bra @l_exit
 @l_dotdot:
 		.asciiz ".."
 
 
+		; open directory by given path starting from current directory
 		;in:
         ;   A/X - pointer to string with the file path
         ;out:
@@ -258,6 +263,13 @@ fat_get_root_and_pwd:
         ;   X - index into fd_area of the opened directory - !!! ATTENTION !!! X is exactly the FD_INDEX_TEMP_DIR on success
 __fat_opendir_cd:
 		ldy #FD_INDEX_CURRENT_DIR   ; clone current dir fd to temp dir fd
+		; open directory by given path starting from directory given as file descriptor
+		;in:
+        ;   A/X - pointer to string with the file path
+		;	Y 	- the file descriptor of the base directory which should be used, defaults to current directory (FD_INDEX_CURRENT_DIR)
+        ;out:
+		;   Z - Z=1 on success (A=0), Z=0 and A=error code otherwise
+        ;   X - index into fd_area of the opened directory - !!! ATTENTION !!! X is exactly the FD_INDEX_TEMP_DIR on success
 __fat_opendir:
 		jsr __fat_open_path
 		bne	@l_exit					; exit on error
@@ -798,7 +810,7 @@ __fat_open_path:
 		stx krn_ptr1+1			    ; save path arg given in a/x
 
 		ldx #FD_INDEX_TEMP_DIR		; we use temp dir to not clobber the current dir, maybe we will run into an error
-		jsr fat_clone_fd			; Y set above or given as param
+		jsr fat_clone_fd			; Y is given as param
 
 		ldy	#0						; trim wildcard at the beginning
 @l1:	lda (krn_ptr1), y
@@ -1407,6 +1419,7 @@ fat_find_first:
 
 ff_l3:	SetVector sd_blktarget, dirptr	; dirptr to begin of target buffer
 		jsr sd_read_block
+		bne ff_end
 		dec read_blkptr+1	; set read_blkptr to origin address
 ff_l4:
 		lda (dirptr)
