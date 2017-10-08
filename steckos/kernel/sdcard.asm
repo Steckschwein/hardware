@@ -72,14 +72,17 @@ init_sdcard:
 			; Invalid Card (or card we can't handle yet)
 			; card must respond with $000001aa, otherwise we can't use it
 			;
+			; screw this
 			jsr spi_r_byte
+			; and that
 			jsr spi_r_byte
 
-
+			; is this $01? we're done if not
 			jsr spi_r_byte
 			cmp #$01
 			bne @exit
 
+			; is this $aa? we're done if not
 			jsr spi_r_byte
 			cmp #$aa
 			bne @exit
