@@ -20,8 +20,8 @@ crs_ptr 	= $e4
 msgptr  	= $e6		; 2 bytes
 
 ; kernel pointer (internally used)
-krn_ptr1    	= $e8	; 2 bytes
-krn_ptr2    	= $ea	; 2 bytes
+krn_ptr1    	= $e8	; 2 bytes			; 
+krn_ptr2    	= $ea	; 2 bytes			; 
 ;krn_ptr3    	= $??	; 2 bytes
 
 krn_tmp     	= $ec		; 16 bit tmp

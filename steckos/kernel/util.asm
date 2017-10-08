@@ -1,5 +1,4 @@
-; enable debug for this module
-.ifdef DEBUG_UTIL
+.ifdef DEBUG_UTIL		; enable debug for this module
 	debug_enabled=1
 .endif
 .include	"kernel.inc"
@@ -136,26 +135,24 @@ __tfn_mask_char_l2:
 	;	
 fat_name_string:
 	ldy #0
-@l0:
+l_next:
 	cpy #11
-	beq @l_exit
+	beq l_exit
+l_next_y:
 	sty krn_tmp
 	lda	(dirptr), y
 	cmp #' '
-	beq @l_skip
+	beq l_skip
 	jsr put_char
-@l_skip:
 	ldy krn_tmp
+l_skip:
 	iny
 	cpy #8
-	bne @l0
+	bne l_next
 	lda #'.'
-	phy 
 	jsr put_char
-	ply
-	bra @l0
-@l_exit:
-	rts
+	ldy #8
+	bra l_next_y
 
 put_char:
 	ldy krn_tmp2
@@ -163,6 +160,7 @@ put_char:
 	inc krn_tmp2
 	debug8 "t2", krn_tmp2
 	debug16 "p2", krn_ptr2
+l_exit:
 	rts
 	
 	; build 11 byte fat file name (8.3) as used within dir entries 

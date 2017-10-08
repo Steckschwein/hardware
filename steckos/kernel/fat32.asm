@@ -215,23 +215,34 @@ fat_get_root_and_pwd:
 ;		eor	#$ff
 		;sta	krn_ptr3		;save -size-1 for easy loop
 
-		ldx #FD_INDEX_CURRENT_DIR
-		jsr __fat_isroot
-		beq @l_exit
-@l_rd_dir:
-		jsr __fat_read_direntry
-		bne @l_exit
-		
 		stz krn_tmp2
-		lda #'/'
-		jsr put_char
+		ldx #FD_INDEX_CURRENT_DIR
+@l_rd_dir:
+		jsr __fat_isroot
+		beq @l_inverse
+		jsr __fat_read_direntry
+		bne @l_err_exit
 		jsr fat_name_string
+		;append
+		;cd ..
+		lda #<@l_dotdot
+		ldx #>@l_dotdot
+		ldy #FD_INDEX_TEMP_DIR
+		jsr __fat_opendir
+;		beq @l_rd_dir
+		bra @l_exit
+@l_err_exit:
+		lda #EIO
+		bra @l_exit
+@l_inverse:
 		lda #0
 		jsr put_char
 		lda #EOK
 @l_exit:
+		debug "fcwd"
 		rts
-		
+@l_dotdot:
+		.asciiz ".."
 		
 
 		;in:
@@ -239,6 +250,8 @@ fat_get_root_and_pwd:
         ;out:
 		;   Z - Z=1 on success (A=0), Z=0 and A=error code otherwise
         ;   X - index into fd_area of the opened directory - !!! ATTENTION !!! X is exactly the FD_INDEX_TEMP_DIR on success
+__fat_opendir_cd:
+		ldy #FD_INDEX_CURRENT_DIR   ; clone current dir fd to temp dir fd
 __fat_opendir:
 		jsr __fat_open_path
 		bne	@l_exit					; exit on error
@@ -259,11 +272,11 @@ __fat_opendir:
 		;   Z - Z=1 on success (A=0), Z=0 and A=error code otherwise
         ;   X - index into fd_area of the opened directory
 fat_chdir:
-		jsr __fat_opendir
+		jsr __fat_opendir_cd
 		bne	@l_exit
 		phx
-		ldx #FD_INDEX_TEMP_DIR  		; the temp dir fd is now set to the last dir of the path and we proofed that it's valid with the code above
-		ldy #FD_INDEX_CURRENT_DIR
+		ldy #FD_INDEX_TEMP_DIR  		; the temp dir fd is now set to the last dir of the path and we proofed that it's valid with the code above
+		ldx #FD_INDEX_CURRENT_DIR
 		jsr	fat_clone_fd        		; therefore we can simply clone the temp dir to current dir fd - FTW!
 		plx
 		lda #EOK						; ok
@@ -274,7 +287,7 @@ fat_chdir:
         ;in:
         ;   A/X - pointer to the file name
 fat_rmdir:
-		jsr __fat_opendir
+		jsr __fat_opendir_cd
 		bne	@l_exit
 
 		lda	#DIR_Entry_Deleted			; ($e5)
@@ -294,7 +307,7 @@ fat_rmdir:
 		; out:
 		;   Z - Z=1 on success (A=0), Z=0 and A=error code otherwise
 fat_mkdir:
-		jsr __fat_opendir
+		jsr __fat_opendir_cd
 		beq	@err_exists
 		cmp	#ENOENT									; we expect 'no such file or directory' error, otherwise a file with same name already exists
 		bne @l_exit
@@ -712,6 +725,7 @@ __fat_find_free_cluster:
 		;   Z - Z=1 on success (A=0), Z=0 and A=error code otherwise
 fat_open:
 		sty fat_file_mode_tmp			; save open flag
+		ldy #FD_INDEX_CURRENT_DIR   ; clone current dir fd to temp dir fd
 		jsr __fat_open_path
 		bne	@l_error					;
 		lda	fd_area + F32_fd::Attr, x	;
@@ -758,9 +772,10 @@ fat_open:
 		debug "fopen"
 		rts
 
-		; open a path to a file or directory.
+		; open a path to a file or directory starting from current directory
         ; in:
         ;   A/X - pointer to string with the file path
+		;	Y	- file descriptor of fd_area denoting the start directory. usually FD_INDEX_CURRENT_DIR is used
         ; out:
         ;   X - index into fd_area of the opened file. if a directory was opened then X == FD_INDEX_TEMP_DIR
 		;   Z - Z=1 on success (A=0), Z=0 and A=error code otherwise
@@ -776,11 +791,10 @@ __fat_open_path:
 		sta krn_ptr1
 		stx krn_ptr1+1			    ; save path arg given in a/x
 
-		ldx #FD_INDEX_CURRENT_DIR   ; clone current dir fd to temp dir fd
-		ldy #FD_INDEX_TEMP_DIR		; we use temp dir to not clobber the current dir, maybe we will run into an error
-		jsr fat_clone_fd
+		ldx #FD_INDEX_TEMP_DIR		; we use temp dir to not clobber the current dir, maybe we will run into an error
+		jsr fat_clone_fd			; Y set above or given as param
 
-		ldy	#0						;	trim wildcard at the beginning
+		ldy	#0						; trim wildcard at the beginning
 @l1:	lda (krn_ptr1), y
 		cmp	#' '
 		bne	@l2
@@ -1256,15 +1270,15 @@ fat_open_rootdir:
 		ldx #FD_INDEX_TEMP_DIR					; set temp directory to cluster number 0 - Note: the RootClus offset is compensated within calc_lba_addr
 		jmp __fat_alloc_fd
 
-		; clone source file descriptor with offset x into fd_area to target fd with y
+		; clone source file descriptor with offset y into fd_area to target fd with x
 		; in:
-		;   x - source offset into fd_area
-		;   y - target offset into fd_area
+		;   y - source file descriptor (offset into fd_area)
+		;   x - target file descriptor (offset into fd_area)
 fat_clone_fd:
 		lda #FD_Entry_Size
 		sta krn_tmp
-@l1:	lda fd_area, x
-		sta fd_area, y
+@l1:	lda fd_area, y
+		sta fd_area, x
 		inx
 		iny
 		dec krn_tmp
