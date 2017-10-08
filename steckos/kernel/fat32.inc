@@ -96,6 +96,8 @@ FSInfo_LastClus	= $01ec ; last known cluster number
 
 DIR_Attr_Mask_Dir   		= 1<<4;
 DIR_Attr_Mask_File  		= 1<<5;
+DIR_Attr_Mask_Archive  		= 1<<6;
+
 DIR_Attr_Mask_LongFilename	= 1<<0 | 1<<1 | 1<<2 | 1<<3;
 DIR_Entry_Size      		= .sizeof(F32DirEntry)
 DIR_Entry_Deleted			= $e5

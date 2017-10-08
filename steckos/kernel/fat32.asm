@@ -82,7 +82,7 @@ fat_write:
 		jsr __fat_isroot									; check whether the start cluster of the file is the root cluster - @see fat_alloc_fd, fat_open)
 		bne	@l_write										; if not, we can directly update dir entry and write data afterwards
 
-		saveptr write_blkptr								; 
+		saveptr write_blkptr								;
 		jsr __fat_reserve_cluster							; otherwise start cluster is root, we try to find a free cluster, fat_file_fd_tmp has to be set
 		bne @l_exit
 		restoreptr write_blkptr								; restore write ptr
@@ -103,10 +103,16 @@ fat_write:
 .endif
 		ldx fat_file_fd_tmp									; restore fd
 		jsr __fat_read_direntry
-		
+
 		jsr __fat_set_direntry_cluster						; set cluster number of direntry entry via dirptr - TODO FIXME only necessary on first write
 		jsr __fat_set_direntry_filesize						; set filesize of directory entry via dirptr
 		jsr __fat_set_direntry_timedate						; set time and date
+
+		; set archive bit
+		ldy #F32DirEntry::Attr
+		lda #DIR_Attr_Mask_Archive
+		ora (dirptr),y
+		sta (dirptr),y
 
 		jsr __fat_write_block_data							; lba_addr is already set from read, see above
 @l_exit:
@@ -140,7 +146,7 @@ __fat_read_direntry:
 @l_exit:
 		debug32 "rd_dir", lba_addr
 		rts
-		
+
 		; write new timestamp to direntry entry given as dirptr
 		; in:
 		;	dirptr
@@ -243,7 +249,7 @@ fat_get_root_and_pwd:
 		rts
 @l_dotdot:
 		.asciiz ".."
-		
+
 
 		;in:
         ;   A/X - pointer to string with the file path
@@ -1393,7 +1399,7 @@ fat_getfilesize:
 fat_find_first:
 		SetVector fat_dirname_mask, krn_ptr2									; build fat dir entry mask from user input
 		jsr	string_fat_mask
-		
+
 		lda volumeID+VolumeID::SecPerClus
 		sta blocks
 		jsr calc_lba_addr
