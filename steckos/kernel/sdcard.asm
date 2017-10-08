@@ -63,12 +63,12 @@ init_sdcard:
 
 			lda #cmd8
 			jsr sd_cmd
-			debug "CMD8"
+			debug32 "CMD8", sd_cmd_param
+
+			jsr sd_param_init
 
 			cmp #$01
-			beq @l3
-			jmp @exit
-@l3:
+			bne @l5
 			; Invalid Card (or card we can't handle yet)
 			; card must respond with $000001aa, otherwise we can't use it
 			;
@@ -80,7 +80,11 @@ init_sdcard:
 			; is this $01? we're done if not
 			jsr spi_r_byte
 			cmp #$01
-			bne @exit
+			beq @l3
+			jmp @exit
+@l3:
+
+;			bne @exit
 
 			; is this $aa? we're done if not
 			jsr spi_r_byte
@@ -88,7 +92,6 @@ init_sdcard:
 			bne @exit
 
 			; init card using ACMD41 and parameter $40000000
-			jsr sd_param_init
 			lda #$40
 			sta sd_cmd_param
 
@@ -118,6 +121,8 @@ init_sdcard:
 			bra @l5
 
 @l7:
+			cmp sd_cmd_param
+			beq @cmd16		; acmd41 with $40000000 and $00000000 failed, TODO: try CMD1
 
 			stz sd_cmd_param
 
@@ -138,12 +143,14 @@ init_sdcard:
 			;pla
 			and #%01000000
 			bne @l9
-
+@cmd16:
 			jsr sd_param_init
 
 			; Set block size to 512 bytes
 			lda #$02
 			sta sd_cmd_param+2
+
+			debug32 "cmd16p", sd_cmd_param
 
 			lda #cmd16
 			jsr sd_cmd
@@ -192,7 +199,7 @@ sd_cmd:
 ; Z=1 - no error
 ;---------------------------------------------------------------------
 sd_cmd_response_wait:
-			ldy #$08
+			ldy #sd_cmd_response_retries
 @l:			dey
 			beq sd_block_cmd_timeout ; y already 0? then invalid response or timeout
 			jsr spi_r_byte
@@ -201,6 +208,7 @@ sd_cmd_response_wait:
 			cmp #$00 ; got cmd response, check if $00 to set z flag accordingly
 			rts
 sd_block_cmd_timeout:
+			debug "sd_block_cmd_timeout"
 			lda #$1f ; make up error code distinct from possible sd card responses to mark timeout
 			rts
 
