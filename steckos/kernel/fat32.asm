@@ -755,8 +755,7 @@ fat_open:
 		stx fat_file_fd_tmp							; save fd
 		jsr __fat_set_fd_lba						; update dir lba addr and dir entry number within fd
 
-		lda #$00
-		;lda #DIR_Attr_Mask_Dir						; create as regular file
+		lda #DIR_Attr_Mask_Archive				    ; create as regular file with archive bit set
 		jsr __fat_prepare_dir_entry
 		jsr __fat_write_dir_entry					; create dir entry at current dirptr
 		bne @l_exit_close
