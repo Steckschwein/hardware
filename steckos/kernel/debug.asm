@@ -8,14 +8,17 @@
 
 .import	krn_chrout, krn_hexout, krn_primm
 
+.segment "KERNEL"
+
 dbg_acc				= $02f9 ; basic uses $0290 - $02f8
 dbg_xreg			= $02fa
 dbg_yreg			= $02fb
 dbg_status			= $02fc
 dbg_bytes			= $02fd
 dbg_savept			= $02fe
+dbg_return			= $028e
 
-.segment "KERNEL"
+__dbg_ptr=$0
 
 _debugout_enter:
 		sta dbg_acc
@@ -26,9 +29,9 @@ _debugout_enter:
 		sta dbg_status
 		cld
 		
-		lda 	krn_ptr1
+		lda 	__dbg_ptr
 		sta 	dbg_savept
-		lda 	krn_ptr1+1
+		lda 	__dbg_ptr+1
 		sta 	dbg_savept+1
 		
 		stz dbg_bytes
@@ -69,27 +72,31 @@ _debugout0:
 		sta		dbg_bytes
 		pla							; Get the low part of "return" address
 									; (data start address)
-		sta     msgptr
+		sta     dbg_return
+		sta 	__dbg_ptr
 		pla
-		sta     msgptr+1      	 	; Get the high part of "return" address
-									; (data start address)
-						
-		ldy		#2					; 2 byte address argument
-		lda 	(msgptr),y
-		sta 	krn_ptr1+1
-		dey
-		lda 	(msgptr),y
-		sta		krn_ptr1			; address is setup in krn_ptr1
+		sta     dbg_return+1  	 	; Get the high part of "return" address
+		sta 	__dbg_ptr+1			; (data start address)
 
 		ldy 	dbg_bytes			; bytes to output
 		bmi		@PSINB
-		lda		krn_ptr1+1
+
+		ldy		#2					; 2 byte address argument
+		lda 	(__dbg_ptr),y
+		tax
+		dey
+		lda 	(__dbg_ptr),y
+		sta		__dbg_ptr			; address is setup in __dbg_ptr
+		stx		__dbg_ptr+1
+
+		ldy 	dbg_bytes			; bytes to output
+		lda		__dbg_ptr+1
 		jsr 	krn_hexout
-		lda		krn_ptr1
+		lda		__dbg_ptr
 		jsr 	krn_hexout
 		lda		#' '
 		jsr 	krn_chrout
-@l1:	lda		(krn_ptr1),y
+@l1:	lda		(__dbg_ptr),y
 		jsr 	krn_hexout
 		lda 	#' '
 		jsr 	krn_chrout
@@ -99,31 +106,38 @@ _debugout0:
 		jsr 	krn_chrout
 
 		clc 
-		lda		#2
-		adc		msgptr			; +2 cause of saved debug ptr
-		sta 	msgptr
-		bcc     @PSINB
-		inc     msgptr+1		
-		
+		lda		dbg_return		; restore address for message argument
+		adc		#2				; +2 - 16bit debug address argument
+								; Note: actually we're pointing one short
+		sta 	__dbg_ptr		;
+		lda 	dbg_return+1
+		adc 	#0
+		sta		__dbg_ptr+1	
+
 @PSINB:							; Note: actually we're pointing one short
-		inc     msgptr         ; update the pointer
+		inc     __dbg_ptr       ; update the pointer
 		bne     @PSICHO         ; if not, we're pointing to next character
-		inc     msgptr+1		; account for page crossing
+		inc     __dbg_ptr+1		; account for page crossing
 		
-@PSICHO:lda     (msgptr)	    ; Get the next string character
+@PSICHO:lda     (__dbg_ptr)	    ; Get the next string character
 		beq     @PSIX1          ; don't print the final NULL
 		jsr     krn_chrout		; write it out
 		bra     @PSINB          ; back around
-@PSIX1:	inc     msgptr  		;
+@PSIX1:	inc     __dbg_ptr  		;
 		bne     @PSIX2      	;
-		inc     msgptr+1        ; account for page crossing
+		inc     __dbg_ptr+1     ; account for page crossing
 @PSIX2:	lda		#$0a			; line feed
 		jsr 	krn_chrout
 
-		lda 	dbg_savept
-		sta 	krn_ptr1
+		lda		__dbg_ptr		; __dbg_ptr points to instruction after msg, adjust ret vector
+		sta 	dbg_return
+		lda		__dbg_ptr+1
+		sta 	dbg_return+1
+		
+		lda 	dbg_savept		; restore
+		sta 	__dbg_ptr
 		lda 	dbg_savept+1
-		sta 	krn_ptr1+1
+		sta 	__dbg_ptr+1
 
 		lda 	dbg_status
 		pha
@@ -131,4 +145,5 @@ _debugout0:
 		ldx		dbg_xreg
 		ldy		dbg_yreg
 		plp
-		jmp     (msgptr)           ; return to byte following final NULL
+		
+		jmp     (dbg_return)           ; return to byte following final NULL

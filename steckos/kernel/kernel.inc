@@ -4,7 +4,7 @@
 
 kernel_start = $e800
 clockspeed   = 8
-user_isr     = $028e
+user_isr     = $028a
 
 .macro	printstring text
 			jsr krn_primm

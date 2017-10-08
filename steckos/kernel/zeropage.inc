@@ -2,7 +2,7 @@
 
 appstart	= $1000
 
-; shell related - TODO FIXME away from kernel stuff, conflicts with basic, but after basic stuff we dont care about shell zp only if we want to return to shell one day !!!
+; shell related - TODO FIXME away from kernel stuff, conflicts with basic. but after basic start, we dont care about shell zp. maybe if we want to return to shell one day !!!
 cmdptr		= $d6
 paramptr	= $d8
 retvec 		= $da
@@ -12,35 +12,33 @@ addr 		= $e0
 adrl 		= addr
 adrh 		= addr+1
 ; TEXTUI
-crs_x		= $e2
-crs_y   	= $e3
-crs_ptr 	= $e4
+crs_ptr 	= $e2
+crs_x		= $028c
+crs_y   	= $028d
 
 ; OUT
-msgptr  	= $e6		; 2 bytes
+msgptr  	= $e4		; 2 bytes
 
 ; kernel pointer (internally used)
-krn_ptr1    	= $e8	; 2 bytes			; 
-krn_ptr2    	= $ea	; 2 bytes			; 
-;krn_ptr3    	= $??	; 2 bytes
+krn_ptr1    	= $e6	; 2 bytes			; 
+krn_ptr2    	= $e8	; 2 bytes			; 
+krn_ptr3    	= $ea	; 2 bytes
 
 krn_tmp     	= $ec		; 16 bit tmp
 krn_tmp2		= krn_tmp+1	; single byte alias tmp1
 krn_tmp3		= krn_tmp+2	; single byte alias tmp2
+krn_tmp4		= krn_tmp+3	; single byte alias tmp2
 
 ; FAT32
-filenameptr 		= $ee   ; 2 byte
-dirptr 	    		= $f0 	; 2 byte
+filenameptr 		= $f0   ; 2 byte
+dirptr 	    		= $f2 	; 2 byte
 
 ; SDCARD/storage block pointer
-read_blkptr  		= $f2
-write_blkptr 		= $f4
-sd_tmp	     		= $f6
+read_blkptr  		= $f4
+write_blkptr 		= $f6
+sd_tmp	     		= $f8
 
 lba_addr 			= $0280		; 4 bytes
 blocks				= $0284		; 3 bytes blocks to read, 3 bytes sufficient to address 4GB -> 4294967296 >> 9 = 8388608 ($800000) max blocks/file 
-;errno				= $0288
-;TODO FIXME rename
-;__oserror 	= errno
 
-trampolin			= $028c
+trampolin			= $0288
