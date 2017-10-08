@@ -1300,7 +1300,7 @@ fat_clone_fd:
 		inx
 		iny
 		dec krn_tmp
-		bpl @l1
+		bne @l1
 		rts
 
 		; in:
@@ -1349,18 +1349,16 @@ fat_alloc_fd:
 		cmp #$ff	;#$ff means unused, return current x as offset
 		beq __fat_alloc_fd
 
-		txa ; 2 cycles
+		txa
 		adc #FD_Entry_Size; carry must be clear from cmp #$ff above
-		tax ; 2 cycles
+		tax
 
 		cpx #(FD_Entry_Size*FD_Entries_Max)
 		bne @l1
-
-		; Too many open files, no free file descriptor found
-		lda #EMFILE
+		lda #EMFILE								; Too many open files, no free file descriptor found
 		rts
-__fat_alloc_fd:									; also internally used
-		stz fd_area+F32_fd::StartCluster+3,x	; init start cluster nr with root dir cluster which is 0 - @see Note in calc_lba_addr
+__fat_alloc_fd:									
+		stz fd_area+F32_fd::StartCluster+3,x	; init start cluster with root dir cluster which is 0 - @see Note in calc_lba_addr
 		stz fd_area+F32_fd::StartCluster+2,x
 		stz fd_area+F32_fd::StartCluster+1,x
 		stz fd_area+F32_fd::StartCluster+0,x
