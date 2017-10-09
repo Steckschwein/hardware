@@ -1,5 +1,6 @@
 .include "common.inc"
 .include "vdp.inc"
+.include "fcntl.inc"
 .include "zeropage.inc"
 .include "kernel_jumptable.inc"
 .include "appstart.inc"
@@ -24,6 +25,7 @@ color=content+$1800
 main:
 		lda paramptr
 		ldx paramptr+1
+		ldy #O_RDONLY
 		jsr krn_open
 		bne @err
 		
