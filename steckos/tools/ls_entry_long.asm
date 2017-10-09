@@ -140,8 +140,16 @@ dir_show_entry:
 		dec cnt
 		bne @l
 		keyin
+		cmp #13
+		beq @lx
+
 		lda #23
 		sta cnt
+		bra @l
+@lx:
+		lda #1
+		sta cnt
+
 @l:
 
 		pla
