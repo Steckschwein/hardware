@@ -2,6 +2,7 @@
 .include "../kernel/kernel_jumptable.inc"
 .include "../asminc/via.inc"
 .include "../asminc/common.inc"
+.include "fcntl.inc"
 .include "ym3812.inc"
 
 __LOADADDR__ = $1000
@@ -65,9 +66,9 @@ main:
 		sta temponr
 
 @l4:
-	     	lda paramptr
-     		ldx paramptr +1
-
+		lda paramptr
+		ldx paramptr +1
+		ldy #O_RDONLY
  		jsr krn_open
  		beq @l5
 		jmp error
