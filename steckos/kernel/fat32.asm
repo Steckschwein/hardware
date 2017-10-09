@@ -141,7 +141,20 @@ __fat_read_direntry:
 
 		ldx fat_file_fd_tmp
 		lda fd_area + F32_fd::DirEntryPos , x				; setup dirptr
-		jsr set_dirptr_from_entry_nr
+@set_dirptr_from_entry_nr:
+		stz dirptr
+
+		lsr
+		ror dirptr
+		ror
+		ror dirptr
+		ror
+		ror dirptr
+
+		clc
+		adc #>block_data
+		sta dirptr+1
+		
 		lda #EOK
 @l_exit:
 		debug32 "rd_dir", lba_addr
@@ -230,14 +243,20 @@ fat_get_root_and_pwd:
 		jsr __fat_isroot
 		debugdump "rtfd", fd_area+FD_INDEX_TEMP_DIR
 		beq @l_inverse
+;		m_memcpy
 		
-		lda #<@l_dot
-		ldx #>@l_dot
-		ldy #FD_INDEX_TEMP_DIR
-		jsr __fat_opendir
-		bne @l_exit
-		jsr __fat_read_direntry
-;		debug8 "rde", krn_tmp3
+		; 1: current dir
+		; is root?
+		; nein
+		;   clnr (start cluster) of cd
+		;   opendir ".."
+		;	find entry with clnr
+		; 	name
+		; ja
+		;	/
+		;	ende
+		; loop 1		
+		debug8 "rde", krn_tmp3
 		bne @l_exit
 		jsr fat_name_string			;append
 		lda #<@l_dotdot
@@ -254,9 +273,7 @@ fat_get_root_and_pwd:
 		lda #EOK
 		bra @l_exit
 @l_dotdot:
-		.byte "."	
-@l_dot:
-		.byte ".", 0
+		.byte "..", 0
 
 		; open directory by given path starting from current directory
 		;in:
@@ -746,9 +763,9 @@ __fat_find_free_cluster:
 		;   Z - Z=1 on success (A=0), Z=0 and A=error code otherwise
 fat_open:
 		sty fat_file_mode_tmp			; save open flag
-		ldy #FD_INDEX_CURRENT_DIR   ; clone current dir fd to temp dir fd
+		ldy #FD_INDEX_CURRENT_DIR   	; use current dir fd as start directory
 		jsr __fat_open_path
-		bne	@l_error					;
+		bne	@l_error
 		lda	fd_area + F32_fd::Attr, x	;
 		bit #DIR_Attr_Mask_Dir			; regular file or directory?
 		bne	@l_err_dir
@@ -1338,7 +1355,25 @@ __fat_set_fd_lba:
 	 	lda lba_addr + 0
 		sta fd_area + F32_fd::DirEntryLBA + 0, x
 
-		jsr calc_dir_entry_nr
+		; in:
+		;	dirptr to block_data
+		; out:
+		;	A with dirptr div 32
+@calc_dir_entry_nr:
+		lda dirptr
+		sta krn_tmp
+
+		lda dirptr+1
+		and #$01		; div 32, just bit 0 of high byte must be taken into account. dirptr must be $0200 aligned
+		.assert >block_data & $01 = 0, error, "block_data must be $0200 aligned!"
+		clc
+		rol krn_tmp
+		rol
+		rol krn_tmp
+		rol
+		rol krn_tmp
+		rol
+		
 		sta fd_area + F32_fd::DirEntryPos, x
 		rts
 
@@ -1412,26 +1447,27 @@ fat_getfilesize:
 fat_find_first:
 		SetVector fat_dirname_mask, krn_ptr2									; build fat dir entry mask from user input
 		jsr	string_fat_mask
+		SetVector dirname_mask_matcher, fat_matcher
 
 		lda volumeID+VolumeID::SecPerClus
 		sta blocks
 		jsr calc_lba_addr
-		SetVector sd_blktarget, read_blkptr
+		SetVector block_data, read_blkptr
 
-ff_l3:	SetVector sd_blktarget, dirptr	; dirptr to begin of target buffer
+ff_l3:	SetVector block_data, dirptr	; dirptr to begin of target buffer
 		jsr sd_read_block
 		bne ff_end
-		dec read_blkptr+1	; set read_blkptr to origin address
+		dec read_blkptr+1				; set read_blkptr to origin address
 ff_l4:
 		lda (dirptr)
-		beq ff_eod						; first byte of dir entry is $00 (end of directory)?
+		beq ff_eod						; first byte of dir entry is $00 (end of directory)
 @l5:
 		ldy #F32DirEntry::Attr			; else check if long filename entry
 		lda (dirptr),y 					; we are only going to filter those here (or maybe not?)
 		cmp #DIR_Attr_Mask_LongFilename
 		beq fat_find_next
 
-		jsr dirname_mask_matcher		; call matcher
+		jsr __fat_matcher				; call matcher strategy
 		bcs ff_end
 
 		; in:
@@ -1440,12 +1476,13 @@ fat_find_next:
 		lda dirptr
 		clc
 		adc #DIR_Entry_Size
-		sta dirptr
+		sta dirptr		
 		bcc @l6
 		inc dirptr+1
 @l6:
-		lda dirptr+1 	; end of block?
-		cmp #>(sd_blktarget + sd_blocksize)
+		lda dirptr+1
+		cmp #>(sd_blktarget + sd_blocksize)	; end of block reached?
+		sta dirptr+1 		; save
 		bcc ff_l4			; no, process entry
 		dec blocks			; end of cluster reached?
 		beq ff_eod			; TODO FIXME cluster chain support, dir may go on in next cluster ;)
@@ -1456,37 +1493,5 @@ ff_eod:
 ff_end:
 		rts
 
-set_dirptr_from_entry_nr:
-		stz dirptr
-
-		lsr
-		ror dirptr
-		ror
-		ror dirptr
-		ror
-		ror dirptr
-
-		clc
-		adc #>block_data
-		sta dirptr+1
-		rts
-
-		; in:
-		;	dirptr to block_data
-		; out:
-		;	A with dirptr div 32
-calc_dir_entry_nr:
-		lda dirptr
-		sta krn_tmp
-
-		lda dirptr+1
-		and #$01		; div 32, just bit 0 of high byte must be taken into account. dirptr must be $0200 aligned
-		.assert >block_data & $01 = 0, error, "block_data must be $0200 aligned!"
-		clc
-		rol krn_tmp
-		rol
-		rol krn_tmp
-		rol
-		rol krn_tmp
-		rol
-		rts
+__fat_matcher:
+		jmp	(fat_matcher)
