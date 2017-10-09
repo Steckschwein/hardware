@@ -2,11 +2,12 @@
 .include "../kernel/kernel.inc"
 .include "../kernel/kernel_jumptable.inc"
 .include "../kernel/fat32.inc"
+.include "../asminc/common.inc"
 
 
 tmp0    = $a0
 tmp1    = $a1
-
+tmp2	= $a2
 
 
 .import print_filename
@@ -136,6 +137,13 @@ dir_show_entry:
         ; Bits 11–15: Hours, valid value range 0–23 inclusive.
         crlf
 
+		dec cnt
+		bne @l
+		keyin
+		lda #23
+		sta cnt
+@l:
+
 		pla
 		rts
 
@@ -225,3 +233,4 @@ CNVBIT:         ASL tmp0+0       ; Shift out one bit
 
 ;BIN:		.word 0
 BCD:		.res 3
+cnt:		.byte 23
