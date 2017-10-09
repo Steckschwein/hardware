@@ -221,6 +221,7 @@ fat_get_root_and_pwd:
 ;		eor	#$ff
 		;sta	krn_ptr3			;save -size-1 for easy loop
 		stz krn_tmp3
+		
 		ldy #FD_INDEX_CURRENT_DIR	; start from current directory
 		ldx #FD_INDEX_TEMP_DIR
 		jsr fat_clone_fd
@@ -229,31 +230,33 @@ fat_get_root_and_pwd:
 		jsr __fat_isroot
 		debugdump "rtfd", fd_area+FD_INDEX_TEMP_DIR
 		beq @l_inverse
+		
+		lda #<@l_dot
+		ldx #>@l_dot
+		ldy #FD_INDEX_TEMP_DIR
+		jsr __fat_opendir
+		bne @l_exit
 		jsr __fat_read_direntry
-		debug8 "rde", krn_tmp3
-		bne @l_err_exit
-		jsr fat_name_string
-		;append
-		;cd ..
+;		debug8 "rde", krn_tmp3
+		bne @l_exit
+		jsr fat_name_string			;append
 		lda #<@l_dotdot
 		ldx #>@l_dotdot
 		ldy #FD_INDEX_TEMP_DIR
-		jsr __fat_opendir
+		jsr __fat_opendir			; cd ..
 		beq @l_rd_dir
 @l_exit:
 		debug "fcwd"
 		rts
-@l_err_exit:
-		lda #EIO
-		bra @l_exit
 @l_inverse:
 		lda #0
 		jsr put_char
 		lda #EOK
 		bra @l_exit
 @l_dotdot:
-		.asciiz ".."
-
+		.byte "."	
+@l_dot:
+		.byte ".", 0
 
 		; open directory by given path starting from current directory
 		;in:
