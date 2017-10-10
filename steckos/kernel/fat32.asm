@@ -15,7 +15,8 @@
 .import __rtc_systime_update
 .import string_fat_name, fat_name_string, put_char
 .import string_fat_mask
-.import dirname_mask_matcher
+.import dirname_mask_matcher, cluster_nr_matcher
+.import path_inverse
 
 .export fat_mount
 .export fat_open, fat_isOpen, fat_chdir, fat_get_root_and_pwd
@@ -67,7 +68,7 @@ fat_read:
 		; out:
 		;   Z - Z=1 on success (A=0), Z=0 and A=error code otherwise
 fat_write:
-		stx fat_file_fd_tmp									; save fd
+		stx fat_tmp_fd									; save fd
 
 		jsr fat_isOpen
 		beq @l_not_open
@@ -83,10 +84,10 @@ fat_write:
 		bne	@l_write										; if not, we can directly update dir entry and write data afterwards
 
 		saveptr write_blkptr								;
-		jsr __fat_reserve_cluster							; otherwise start cluster is root, we try to find a free cluster, fat_file_fd_tmp has to be set
+		jsr __fat_reserve_cluster							; otherwise start cluster is root, we try to find a free cluster, fat_tmp_fd has to be set
 		bne @l_exit
 		restoreptr write_blkptr								; restore write ptr
-		ldx fat_file_fd_tmp									; restore fd, go on with writing data
+		ldx fat_tmp_fd									; restore fd, go on with writing data
 @l_write:
 		jsr calc_lba_addr									; calc lba and blocks of file payload
 		jsr calc_blocks
@@ -101,7 +102,7 @@ fat_write:
 		dec blocks
 		bne @l
 .endif
-		ldx fat_file_fd_tmp									; restore fd
+		ldx fat_tmp_fd										; restore fd
 		jsr __fat_read_direntry
 
 		jsr __fat_set_direntry_cluster						; set cluster number of direntry entry via dirptr - TODO FIXME only necessary on first write
@@ -134,12 +135,12 @@ __fat_read_direntry:
 		lda fd_area + F32_fd::DirEntryLBA+0 , x
 		sta lba_addr+0
 
-		stx fat_file_fd_tmp									; save fd
+		stx fat_tmp_fd									; save fd
 		SetVector block_data, read_blkptr
 		jsr sd_read_block									; and read the block with the dir entry
 		bne @l_exit
 
-		ldx fat_file_fd_tmp
+		ldx fat_tmp_fd
 		lda fd_area + F32_fd::DirEntryPos , x				; setup dirptr
 @set_dirptr_from_entry_nr:
 		stz dirptr
@@ -227,54 +228,46 @@ __fat_set_direntry_cluster:
         ;out:
 		;   Z - Z=1 on success (A=0), Z=0 and A=error code otherwise
 fat_get_root_and_pwd:
-		sta	krn_ptr3
-		stx	krn_ptr3+1
-		debug16 "p2i", krn_ptr3
+		sta	fat_tmp_dw2
+		stx	fat_tmp_dw2+1
 ;		tya
 ;		eor	#$ff
 		;sta	krn_ptr3			;save -size-1 for easy loop
+		SetVector block_fat, krn_ptr3	;use 512 byte fat block as temp space, TODO FIXME 
 		stz krn_tmp3
 		
 		ldy #FD_INDEX_CURRENT_DIR	; start from current directory
 		ldx #FD_INDEX_TEMP_DIR
 		jsr fat_clone_fd
-		ldx #FD_INDEX_TEMP_DIR
 @l_rd_dir:
+		lda #'/'
+		jsr put_char
+		ldx #FD_INDEX_TEMP_DIR
 		jsr __fat_isroot
-		debugdump "rtfd", fd_area+FD_INDEX_TEMP_DIR
 		beq @l_inverse
-;		m_memcpy
-		
-		; 1: current dir
-		; is root?
-		; nein
-		;   clnr (start cluster) of cd
-		;   opendir ".."
-		;	find entry with clnr
-		; 	name
-		; ja
-		;	/
-		;	ende
-		; loop 1		
-		debug8 "rde", krn_tmp3
-		bne @l_exit
-		jsr fat_name_string			;append
+		m_memcpy fd_area+FD_INDEX_TEMP_DIR+F32_fd::StartCluster, fat_tmp_dw, 4
 		lda #<@l_dotdot
 		ldx #>@l_dotdot
 		ldy #FD_INDEX_TEMP_DIR
-		jsr __fat_opendir			; cd ..
-		beq @l_rd_dir
-@l_exit:
-		debug "fcwd"
-		rts
+		jsr __fat_opendir
+		bne @l_exit
+		SetVector cluster_nr_matcher, fat_vec_matcher
+		ldx #FD_INDEX_TEMP_DIR
+		jsr __fat_find_first
+		bcc @l_exit
+		jsr fat_name_string			;append
+		bra @l_rd_dir
 @l_inverse:
+		copypointer fat_tmp_dw2, krn_ptr2
+		jsr path_inverse
+		iny
 		lda #0
-		jsr put_char
-		lda #EOK
-		bra @l_exit
+		sta (krn_ptr2),y
+@l_exit:
+		rts
 @l_dotdot:
-		.byte "..", 0
-
+		.asciiz ".."
+		
 		; open directory by given path starting from current directory
 		;in:
         ;   A/X - pointer to string with the file path
@@ -356,26 +349,26 @@ fat_mkdir:
 
 		jsr fat_alloc_fd							; alloc new fd - try to alloc fd here already, right before any fat writes which may fail
 		bne @l_exit									; and we want to avoid an error in between the different block writes
-		stx fat_file_fd_tmp							; save fd
+		stx fat_tmp_fd								; save fd
 		jsr __fat_set_fd_lba						; update dir lba addr and dir entry number within fd
 
-		m_memcpy lba_addr, fat_lba_tmp, 4			; found..., save lba_addr pointing to the block the current dir entry resides (dirptr)
-		debug32 "slba", fat_lba_tmp
-		jsr __fat_reserve_cluster					; find free cluster, stored in fd_area for fd with fat_file_fd_tmp
+		m_memcpy lba_addr, fat_tmp_dw, 4			; found..., save lba_addr pointing to the block the current dir entry resides (dirptr)
+		debug32 "slba", fat_tmp_dw
+		jsr __fat_reserve_cluster					; find free cluster, stored in fd_area for fd with fat_tmp_fd
 		bne @l_exit_close
-		m_memcpy fat_lba_tmp, lba_addr, 4			; restore lba_addr of dirptr
+		m_memcpy fat_tmp_dw, lba_addr, 4			; restore lba_addr of dirptr
 		debug32 "rlba", lba_addr
 
-		ldx fat_file_fd_tmp							; load fd
+		ldx fat_tmp_fd								; load fd
 		lda #DIR_Attr_Mask_Dir						; set type directory
-		jsr __fat_prepare_dir_entry					; prepare dir entry, expects cluster number set in fd_area of newly allocated fd (fat_file_fd_tmp)
+		jsr __fat_prepare_dir_entry					; prepare dir entry, expects cluster number set in fd_area of newly allocated fd (fat_tmp_fd)
 		jsr __fat_write_dir_entry					; create dir entry at current dirptr
 		bne @l_exit_close
 
-		jsr __fat_write_newdir_entry				; write the data of the newly created directory fd (fat_file_fd_tmp) with prepared data from dirptr
+		jsr __fat_write_newdir_entry				; write the data of the newly created directory fd (fat_tmp_fd) with prepared data from dirptr
 @l_exit_close:
 		pha
-		ldx fat_file_fd_tmp
+		ldx fat_tmp_fd
 		jsr fat_close						 		; free the allocated file descriptor
 		pla
 		bra @l_exit
@@ -404,7 +397,7 @@ __fat_update_fsinfo:
 		; create the "." and ".." entry of the new directory
 		; in:
 		;	dirptr - set to current dir entry within block_data
-		;	fat_file_fd_tmp - the file descriptor into fd_area where the found cluster should be stored
+		;	fat_tmp_fd - the file descriptor into fd_area where the found cluster should be stored
 __fat_write_newdir_entry:
 		ldy #F32DirEntry::Attr																			; copy from (dirptr), start with F32DirEntry::Attr, the name is skipped and overwritten below
 @l_dir_cp:
@@ -447,7 +440,7 @@ __fat_write_newdir_entry:
 		dex
 		bpl @l_erase
 
-		ldx fat_file_fd_tmp
+		ldx fat_tmp_fd
 		jsr calc_lba_addr
 		jsr __fat_write_block_data
 		bne @l_exit
@@ -609,7 +602,7 @@ __fat_prepare_dir_entry:
 		ldy #F32DirEntry::CrtDate+1
 		sta (dirptr),y
 
-		ldx fat_file_fd_tmp
+		ldx fat_tmp_fd
 		jsr __fat_set_direntry_cluster
 		jmp __fat_set_direntry_filesize
 
@@ -628,11 +621,11 @@ __fat_write_fat_blocks:
 
 		; find and reserve next free cluster and maintains the fsinfo block
 		; in:
-		;	fat_file_fd_tmp - the file descriptor into fd_area where the found cluster should be stored
+		;	fat_tmp_fd - the file descriptor into fd_area where the found cluster should be stored
 		; out:
 		;	Z=1 on success, Z=0 otherwise and A=error code
 __fat_reserve_cluster:
-		jsr __fat_find_free_cluster					; find free cluster, stored in fd_area for the fd given within fat_file_fd_tmp
+		jsr __fat_find_free_cluster					; find free cluster, stored in fd_area for the fd given within fat_tmp_fd
 		bne @l_err_exit
 		jsr __fat_mark_free_cluster					; mark cluster in block with EOC - TODO cluster chain support
 		jsr __fat_write_fat_blocks					; write the updated fat block for 1st and 2nd FAT to the device
@@ -659,12 +652,12 @@ __fat_mark_free_cluster:
 		rts
 
 		; in:
-		;	fat_file_fd_tmp - file descriptor
+		;	fat_tmp_fd - file descriptor
 		; out:
 		;	Z=1 on success
 		;		Y=offset in block_fat of found cluster
 		;		lba_addr with fat block where the found cluster resides
-		;		the found cluster is stored within fd_area+F32_fd::StartCluster, x (fat_file_fd_tmp) with the found cluster number
+		;		the found cluster is stored within fd_area+F32_fd::StartCluster, x (fat_tmp_fd) with the found cluster number
 		;	Z=0 on error, A=error code
 __fat_find_free_cluster:
 		;TODO improve, use a previously saved lba_addr and/or found cluster number
@@ -713,7 +706,7 @@ __fat_find_free_cluster:
 		sta read_blkptr+1
 		lda #$40				; adjust clnr with +$40 clusters since it was found in 2nd page
 @l_found_lb:					; A=0 here, if called from above
-		ldx fat_file_fd_tmp
+		ldx fat_tmp_fd
 		debug32 "fc_lba", lba_addr
 		sta fd_area+F32_fd::StartCluster+0, x
 		tya
@@ -762,7 +755,7 @@ __fat_find_free_cluster:
         ;   X - index into fd_area of the opened file
 		;   Z - Z=1 on success (A=0), Z=0 and A=error code otherwise
 fat_open:
-		sty fat_file_mode_tmp			; save open flag
+		sty fat_tmp_mode				; save open flag
 		ldy #FD_INDEX_CURRENT_DIR   	; use current dir fd as start directory
 		jsr __fat_open_path
 		bne	@l_error
@@ -774,7 +767,7 @@ fat_open:
 @l_error:
 		cmp #ENOENT					; no such file or directory ?
 		bne @l_exit					; other error, then exit
-		lda fat_file_mode_tmp		; check if we should create a new file
+		lda fat_tmp_mode			; check if we should create a new file
 		and #O_CREAT | O_WRONLY | O_APPEND
 		beq @l_err_enoent			; nothing set, exit with ENOENT
 
@@ -784,7 +777,7 @@ fat_open:
 		bne @l_exit
 		jsr fat_alloc_fd							; alloc new fd for the new file we want to create
 		bne @l_exit									; and we want to avoid an error in between the different block writes
-		stx fat_file_fd_tmp							; save fd
+		stx fat_tmp_fd							; save fd
 		jsr __fat_set_fd_lba						; update dir lba addr and dir entry number within fd
 
 		lda #DIR_Attr_Mask_Archive				    ; create as regular file with archive bit set
@@ -792,12 +785,12 @@ fat_open:
 		jsr __fat_write_dir_entry					; create dir entry at current dirptr
 		bne @l_exit_close
 
-		ldx fat_file_fd_tmp							; newly opened file descriptor to X
+		ldx fat_tmp_fd							; newly opened file descriptor to X
 		lda #EOK									; and exit with A=0 (EOK)
 		bra @l_exit
 @l_exit_close:
 		pha 										; save error
-		ldx fat_file_fd_tmp
+		ldx fat_tmp_fd
 		jsr fat_close						 		; free the allocated file descriptor
 		pla
 		bra @l_exit
@@ -829,7 +822,7 @@ __fat_open_path:
 		sta krn_ptr1
 		stx krn_ptr1+1			    ; save path arg given in a/x
 
-		ldx #FD_INDEX_TEMP_DIR		; we use temp dir to not clobber the current dir, maybe we will run into an error
+		ldx #FD_INDEX_TEMP_DIR		; we use the temp dir fd to not clobber the current dir (Y parameter!), maybe we will run into an error
 		jsr fat_clone_fd			; Y is given as param
 
 		ldy	#0						; trim wildcard at the beginning
@@ -1447,8 +1440,11 @@ fat_getfilesize:
 fat_find_first:
 		SetVector fat_dirname_mask, krn_ptr2									; build fat dir entry mask from user input
 		jsr	string_fat_mask
-		SetVector dirname_mask_matcher, fat_matcher
+		SetVector dirname_mask_matcher, fat_vec_matcher
 
+		; in:
+		;   X - directory fd index into fd_area
+__fat_find_first:
 		lda volumeID+VolumeID::SecPerClus
 		sta blocks
 		jsr calc_lba_addr
@@ -1494,4 +1490,4 @@ ff_end:
 		rts
 
 __fat_matcher:
-		jmp	(fat_matcher)
+		jmp	(fat_vec_matcher)

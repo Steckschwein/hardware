@@ -11,16 +11,19 @@ MASK=$2
 filenameptr=$4
 krn_ptr1=$6
 krn_ptr2=$8
+krn_ptr3=$a
 
 fd_area						= $0320 ; File descriptor area until $0350 
 FD_Entries_Max = 16
 FD_Entry_Size = 9 ; 9 byte per fd entry
-TMP1=$f0
 krn_tmp=$f0
+TMP1=$f0
+krn_tmp2=$f1
 TMP2=$f1
-krn_tmp1=$f1
+krn_tmp3=$f2
 TMP3=$f2
-krn_tmp2=$f2
+TMP4=$f4
+krn_tmp4=$f4
 
 EINVAL=$01
 
@@ -43,6 +46,8 @@ filename_buf: 	.rs 32
 fat_dirname_mask: 	.rs 11
 	
 test_suite
+	jmp 	fat_name_string_test
+	
 	lda 	#<usr_input
 	sta 	filenameptr
 	lda 	#>usr_input
@@ -53,8 +58,9 @@ test_suite
 	sta 	krn_ptr2
 	lda 	#>fat_dirname_mask
 	sta 	krn_ptr2+1
+
 	
-	jsr 	string_fat_mask
+;	jsr 	string_fat_mask
 
 	lda #'['
 	jsr chrout
@@ -70,12 +76,35 @@ l_out_l0:
 	jsr chrout	
 l_out_le:
 
-	lda 	#<dir_9
-	sta 	dirptr
-	lda 	#>dir_9
-	sta 	dirptr+1	
-	jsr 	dirname_mask_matcher
 
+fat_name_string_test:
+	lda 	#<dir_7
+	sta 	dirptr
+	lda 	#>dir_7
+	sta 	dirptr+1
+	lda 	#<buffer
+	sta  	krn_ptr3
+	lda 	#>buffer
+	sta 	krn_ptr3+1
+	stz	krn_tmp3
+		
+	jsr 	fat_name_string
+
+	lda #'['
+	jsr chrout
+	ldy #0
+l_nst:	
+	lda (krn_ptr3),y
+	beq t_exit
+	jsr chrout
+	iny 
+	cpy krn_tmp3
+	bne l_nst
+	lda #']'
+	jsr chrout	
+	
+	;jsr 	dirname_mask_matcher
+t_exit:	
 	rts
 
 usr_input:
@@ -86,7 +115,8 @@ usr_input:
 ;	.db "*.dat",0
 ;	.db "ls*  ",0
 ;	.db "ls.*  ",0	
-	.db "1.*",0	
+;	.db "1.*",0
+	.db "1",0	
 ;	.db "l*.prg  ",0
 ;	.db "*.*  ",0
 

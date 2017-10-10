@@ -7,10 +7,12 @@
 .segment "KERNEL"
 .export string_fat_name, fat_name_string, put_char
 .export string_fat_mask
+.export path_inverse
 .export dirname_mask_matcher
+.export cluster_nr_matcher
 
 		; in:
-		;	dirptr pointer to dir entry
+		;	dirptr - pointer to dir entry (F32DirEntry)
 dirname_mask_matcher:
 		ldy #10 ;.sizeof(F32DirEntry::Name) + .sizeof(F32DirEntry::Ext) - 1
 __dmm:	lda fat_dirname_mask, y
@@ -27,6 +29,30 @@ __dmm_neq:
 		clc
 		rts
 		
+		; in:
+		;	dirptr - pointer to dir entry (F32DirEntry)
+cluster_nr_matcher:
+		ldy #F32DirEntry::FstClusLO+0
+		lda	fat_tmp_dw+0
+		cmp (dirptr),y
+		bne @l_notfound
+		ldy #F32DirEntry::FstClusLO+1
+		lda fat_tmp_dw+1
+		cmp (dirptr),y
+		bne @l_notfound
+		ldy #F32DirEntry::FstClusHI+0
+		lda	fat_tmp_dw+2
+		cmp (dirptr),y
+		bne @l_notfound
+		ldy #F32DirEntry::FstClusHI+1
+		lda fat_tmp_dw+3
+		cmp (dirptr),y
+		beq @l_found
+@l_notfound:
+		clc
+@l_found:
+		rts
+
 	; trim string, remove leading and trailing white space
 	; in:
 	;	filenameptr with input string to trim
@@ -127,41 +153,64 @@ __tfn_mask_char_l2:
 	bne __tfn_mask_input
 	rts
 
-	; fat name to string by reference
+	; fat name to string (by reference)
 	; in:
-	;	krn_ptr2	- pointer to result string
-	;	krn_tmp2	- offset from krn_ptr2 (result string)
-	; out:
-	;	
+	;	dirptr		- pointer to directory entry (F32DirEntry)
+	;	krn_ptr3	- pointer to result string
+	;	krn_tmp3	- offset from krn_ptr3 (result string)
 fat_name_string:
-	ldy #0
+	stz krn_tmp
 l_next:
+	ldy krn_tmp
 	cpy #11
 	beq l_exit
-l_next_y:
-	sty krn_tmp
-	lda	(dirptr), y
+	inc krn_tmp
+	lda (dirptr), y
 	cmp #' '
-	beq l_skip
-	jsr put_char
-	ldy krn_tmp
-l_skip:
-	iny
+	beq l_next
 	cpy #8
-	bne l_next
+	bne fns_ca
+	pha 
 	lda #'.'
 	jsr put_char
-	ldy #8
-	bra l_next_y
-
+	pla	
+fns_ca:	
+	jsr put_char
+	bra l_next
+	
 put_char:
 	ldy krn_tmp3
 	sta (krn_ptr3), y
 	inc krn_tmp3
-	debug8 "t3", krn_tmp3
-	debug16 "p3", krn_ptr3
 l_exit:
 	rts
+	
+		; recursive inverse
+path_inverse:
+		stz krn_tmp
+		stz krn_tmp2
+		ldy #0
+l_inv:
+		lda (krn_ptr3), y
+		iny
+		cpy krn_tmp3
+		beq l_seg
+		cmp #'/'
+		bne l_inv
+		phy
+		jsr l_inv
+		ply
+		sty krn_tmp
+l_seg:
+		ldy krn_tmp
+		inc krn_tmp
+		lda (krn_ptr3), y
+		ldy krn_tmp2
+		sta (krn_ptr2), y
+		inc krn_tmp2
+		cmp #'/'
+		bne l_seg
+		rts		
 	
 	; build 11 byte fat file name (8.3) as used within dir entries 
 	; in:
@@ -203,3 +252,4 @@ __illegalchar_ex:
 	rts
 __illegalchars:
 	.byte "?*+,/:;<=>\[]|",'"',127
+	

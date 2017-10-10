@@ -7,24 +7,26 @@
 		ldx #>buffer
 		ldy	#$ff
 		jsr krn_getcwd
-		beq	@l1
+		bne	@l_err
+		lda	#<buffer
+		ldx #>buffer
+		sta msgptr		;init for output below
+		stx msgptr+1
+		;TODO FIXME use a/x instead of zp location msgptr
+		jsr krn_strout
+		
+@l2:	jmp (retvec)
+
+@l_err:	
 		pha
 		lda #'E'
 		jsr krn_chrout
 		pla
 		jsr krn_hexout
 		bra @l2
-		;TODO FIXME use a/x instead of zp location msgptr
-@l1:	
-		lda	#<buffer
-		ldx #>buffer
-		sta msgptr		;init for output below
-		stx msgptr+1
-		jsr krn_strout
-@l2:	jmp (retvec)
-		
+
 buffer:
-	.res 256
+	.res 255
 
 .segment "INITBSS"	
 .segment "ZPSAVE"
