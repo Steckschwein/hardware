@@ -194,6 +194,11 @@ path_inverse:
 		stz krn_tmp
 		stz krn_tmp2
 		ldy #0
+		jsr l_inv
+		iny 
+		lda #0
+		sta (krn_ptr2),y
+		rts
 l_inv:
 		lda (krn_ptr3), y
 		iny
@@ -210,8 +215,8 @@ l_seg:
 		inc krn_tmp
 		lda (krn_ptr3), y
 		ldy krn_tmp2
-		sta (krn_ptr2), y
 		inc krn_tmp2
+		sta (krn_ptr2), y
 		cmp #'/'
 		bne l_seg
 		rts		

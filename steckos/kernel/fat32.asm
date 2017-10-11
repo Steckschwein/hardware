@@ -232,37 +232,34 @@ fat_get_root_and_pwd:
 		stx	fat_tmp_dw2+1
 ;		tya
 ;		eor	#$ff
-		;sta	krn_ptr3			;save -size-1 for easy loop
-		SetVector block_fat, krn_ptr3	;use 512 byte fat block as temp space, TODO FIXME 
+		;sta	krn_ptr3					;TODO FIXME - length check of output buffer, save -size-1 for easy loop
+		SetVector block_fat, krn_ptr3		;TODO FIXME - we use the 512 byte fat block buffer as temp space - FTW!
 		stz krn_tmp3
 		
-		ldy #FD_INDEX_CURRENT_DIR	; start from current directory
+		ldy #FD_INDEX_CURRENT_DIR			; start from current directory, clone the cd fd
 		ldx #FD_INDEX_TEMP_DIR
 		jsr fat_clone_fd
 @l_rd_dir:
-		lda #'/'
+		lda #'/'							; put the / char to result string
 		jsr put_char
-		ldx #FD_INDEX_TEMP_DIR
+		ldx #FD_INDEX_TEMP_DIR				; if root, exit to inverse the path string
 		jsr __fat_isroot
 		beq @l_inverse
-		m_memcpy fd_area+FD_INDEX_TEMP_DIR+F32_fd::StartCluster, fat_tmp_dw, 4
+		m_memcpy fd_area+FD_INDEX_TEMP_DIR+F32_fd::StartCluster, fat_tmp_dw, 4	; save the cluster from the fd of the "current" dir which is stored in FD_INDEX_TEMP_DIR (see clone above)
 		lda #<@l_dotdot
 		ldx #>@l_dotdot
-		ldy #FD_INDEX_TEMP_DIR
+		ldy #FD_INDEX_TEMP_DIR								; call opendir function with "..", on success the fd (FD_INDEX_TEMP_DIR) is updated now and we are reached the parent directory
 		jsr __fat_opendir
 		bne @l_exit
-		SetVector cluster_nr_matcher, fat_vec_matcher
-		ldx #FD_INDEX_TEMP_DIR
-		jsr __fat_find_first
-		bcc @l_exit
-		jsr fat_name_string			;append
-		bra @l_rd_dir
+		SetVector cluster_nr_matcher, fat_vec_matcher		; set the matcher strategy to the cluster number matcher
+		jsr __fat_find_first								; and call find first to find the entry with that cluster number we saved in fat_tmp_dw before we did the cd ".."
+		bcc @l_exit							
+		jsr fat_name_string									; found, dirptr points to the entry and we can simply extract the name - fat_name_string formats and appends the dir entry name:attr
+		bra @l_rd_dir										; go on with bottom up walk until root is reached
 @l_inverse:
-		copypointer fat_tmp_dw2, krn_ptr2
-		jsr path_inverse
-		iny
-		lda #0
-		sta (krn_ptr2),y
+		copypointer fat_tmp_dw2, krn_ptr2					; fat_tmp_dw2 is the pointer to the result string, given by the caller (eg. pwd.prg)
+		jsr path_inverse									; since we captured the dir entry names bottom up, the path segments are in inverse order, we have to inverse them per segment and write them to the target string
+		lda #EOK											; that's it...
 @l_exit:
 		rts
 @l_dotdot:
