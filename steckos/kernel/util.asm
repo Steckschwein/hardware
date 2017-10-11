@@ -32,6 +32,10 @@ __dmm_neq:
 		; in:
 		;	dirptr - pointer to dir entry (F32DirEntry)
 cluster_nr_matcher:
+		ldy #F32DirEntry::Name
+		lda (dirptr),y
+		cmp #DIR_Entry_Deleted
+		beq @l_notfound
 		ldy #F32DirEntry::FstClusLO+0
 		lda	fat_tmp_dw+0
 		cmp (dirptr),y
