@@ -22,7 +22,7 @@ main:
 		bne @errmsg
 		stx fd1
 		jsr krn_primm
-		.asciiz "op r+\n"
+		.byte "op r+",$0a,0
 		jsr krn_close
 
     	lda paramptr
@@ -32,7 +32,7 @@ main:
 		bne @errmsg
 		stx fd1
 		jsr krn_primm
-		.asciiz "op ro\n"
+		.byte "op ro",$0a,0
 		jsr krn_close
 		
     	lda paramptr
@@ -42,7 +42,7 @@ main:
 		bne @errmsg
 		stx fd1
 		jsr krn_primm
-		.asciiz "op rw+"
+		.byte "op rw+",$0a,0
 
 		lda #<testdata
 		sta write_blkptr+0

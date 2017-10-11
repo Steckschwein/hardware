@@ -312,23 +312,43 @@ fat_chdir:
 		debug "f_cd"
 		rts
 
+		; unlink a file denoted by given path in A/X
+        ; in:
+        ;   A/X - pointer to string with the file path
+		; out:
+		;   Z - Z=1 on success (A=0), Z=0 and A=error code otherwise
+fat_unlink:
+		ldy #O_RDONLY
+		jsr fat_open		; try to open as regular file
+		bra __fat_unlink
+		
+		; delete a directory entry denoted by given path in A/X
         ;in:
-        ;   A/X - pointer to the file name
+        ;   A/X - pointer to the directory path
+		; out:
+		;   Z - Z=1 on success (A=0), Z=0 and A=error code otherwise
 fat_rmdir:
 		jsr __fat_opendir_cd
-		bne	@l_exit
+		bra __fat_unlink
 
+__fat_unlink:
+		bne	@l_exit
+		jsr __fat_unlink_direntry
+		bne @l_exit
+		lda #EOK						; ok
+@l_exit:
+		debug "unlink"
+		rts
+		
+__fat_unlink_direntry:
 		lda	#DIR_Entry_Deleted			; ($e5)
 		sta (dirptr)					; mark dir entry as deleted
 		debug "rmdir"
 		;TODO implement fat/fat2 update, free the unused cluster(s)
 		;TODO write back updated block_data
-
-		lda #EOK						; ok
-@l_exit:
-		debug "rmdir"
+		lda #EIO
 		rts
-
+		
 
         ; in:
         ; 	A/X - pointer to the directory name
@@ -624,17 +644,18 @@ __fat_write_fat_blocks:
 __fat_reserve_cluster:
 		jsr __fat_find_free_cluster					; find free cluster, stored in fd_area for the fd given within fat_tmp_fd
 		bne @l_err_exit
-		jsr __fat_mark_free_cluster					; mark cluster in block with EOC - TODO cluster chain support
+		jsr __fat_mark_cluster						; mark cluster in block with EOC - TODO cluster chain support
 		jsr __fat_write_fat_blocks					; write the updated fat block for 1st and 2nd FAT to the device
 		bne @l_err_exit
 		jmp __fat_update_fsinfo						; update the fsinfo sector/block
 @l_err_exit:
 		rts
 
+		; mark cluster as EOC
 		; in:
 		;	Y - offset in block
 		; 	read_blkptr - points to block_fat either 1st or 2nd page
-__fat_mark_free_cluster:
+__fat_mark_cluster:
 ;		debugdump "block", block_fat+$190
 		lda #$ff
 		sta (read_blkptr), y
@@ -711,11 +732,9 @@ __fat_find_free_cluster:
 		lsr
 		adc fd_area+F32_fd::StartCluster+0, x	; C=0 always here, y is multiple of 4 and 2 lsr
 		sta fd_area+F32_fd::StartCluster+0, x	; safe clnr
-
-		debug32 "fc_tmp2", fd_area+F32_fd::StartCluster+$40 ;(almost the 3rd entry)
+		debug32 "fc_tmp2", fd_area+F32_fd::StartCluster+.sizeof(F32_fd)*3 ;(new fd is almost the 3rd entry)
 
 		;m_memcpy lba_addr, safe_lba TODO FIXME fat lba address, reuse them at next search
-
 		; to calc them we have to clnr = (block number * 512) / 4 + (Y / 4) => (lba_addr - fat_lba_begin) << 7 + (Y>>2)
 		; to avoid the <<7, we simply <<8 and do one ror
 		sec
@@ -737,7 +756,6 @@ __fat_find_free_cluster:
 		sta fd_area+F32_fd::StartCluster+3, x
 		bra @exit
 
-
         ; in:
         ;   A/X - pointer to string with the file path
 		;	  Y - file mode constant
@@ -757,10 +775,9 @@ fat_open:
 		jsr __fat_open_path
 		bne	@l_error
 		lda	fd_area + F32_fd::Attr, x	;
-		bit #DIR_Attr_Mask_Dir			; regular file or directory?
-		bne	@l_err_dir
-		lda #EOK					; ok
-		bra @l_exit
+		and #DIR_Attr_Mask_Dir			; regular file or directory?
+		beq	@l_exit_ok					; not dir, ok
+		bra @l_err_dir					; 
 @l_error:
 		cmp #ENOENT					; no such file or directory ?
 		bne @l_exit					; other error, then exit
@@ -772,9 +789,9 @@ fat_open:
 		copypointer dirptr, krn_ptr2
 		jsr string_fat_name							; build fat name upon input string (filenameptr)
 		bne @l_exit
-		jsr fat_alloc_fd							; alloc new fd for the new file we want to create
-		bne @l_exit									; and we want to avoid an error in between the different block writes
-		stx fat_tmp_fd							; save fd
+		jsr fat_alloc_fd							; alloc a fd for the new file we want to create to make sure we get one
+		bne @l_exit									; cause we want to avoid an error in between the different block writes
+		stx fat_tmp_fd								; save fd
 		jsr __fat_set_fd_lba						; update dir lba addr and dir entry number within fd
 
 		lda #DIR_Attr_Mask_Archive				    ; create as regular file with archive bit set
@@ -782,9 +799,8 @@ fat_open:
 		jsr __fat_write_dir_entry					; create dir entry at current dirptr
 		bne @l_exit_close
 
-		ldx fat_tmp_fd							; newly opened file descriptor to X
-		lda #EOK									; and exit with A=0 (EOK)
-		bra @l_exit
+		ldx fat_tmp_fd								; newly opened file descriptor to X
+		bra @l_exit_ok								; and exit...
 @l_exit_close:
 		pha 										; save error
 		ldx fat_tmp_fd
@@ -796,6 +812,9 @@ fat_open:
 		bra @l_exit
 @l_err_dir:											; was directory, we must not free any fd
 		lda	#EINVAL									; TODO FIXME error code for "Is a directory"
+		bra @l_exit
+@l_exit_ok:
+		lda #EOK									; A=0 (EOK)
 @l_exit:
 		debug "fopen"
 		rts
