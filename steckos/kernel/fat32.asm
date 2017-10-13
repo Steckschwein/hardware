@@ -287,7 +287,7 @@ __fat_opendir:
 		bit #DIR_Attr_Mask_Dir		; check that there is no error and we have a directory
 		bne	@l_ok
 		jsr fat_close				; not a directory, so we opened a file. just close them immediately and free the allocated fd
-		lda	#EINVAL					; TODO FIXME error code for "Not a directory"
+		lda	#ENOTDIR				; error "Not a directory"
 		bra @l_exit
 @l_ok:	lda #EOK					; ok
 @l_exit:
@@ -320,7 +320,12 @@ fat_chdir:
 fat_unlink:
 		ldy #O_RDONLY
 		jsr fat_open		; try to open as regular file
-		bra __fat_unlink
+		phx
+		jsr __fat_unlink
+		plx
+		jsr fat_close
+		debug "unlink"
+		rts
 		
 		; delete a directory entry denoted by given path in A/X
         ;in:
@@ -329,21 +334,51 @@ fat_unlink:
 		;   Z - Z=1 on success (A=0), Z=0 and A=error code otherwise
 fat_rmdir:
 		jsr __fat_opendir_cd
-		bra __fat_unlink
-
+		bne @l_exit
+		jsr __fat_isroot
+		beq @l_err_root
+		jsr __fat_count_direntries
+		cmp #3
+		bcs @l_err_notempty
+		jsr __fat_unlink
+		bra @l_exit
+@l_err_notempty:
+		lda #ENOTEMPTY
+		bra @l_exit
+@l_err_root:
+		lda #EINVAL
+@l_exit:
+		debug "rmdir"
+		rts
+		
+__fat_count_direntries:
+		stz krn_tmp
+		SetVector @l_all, filenameptr
+		jsr fat_find_first
+		bcc @l_exit
+@l_next:
+		inc	krn_tmp
+		jsr fat_find_next
+		bcs	@l_next
+@l_exit:
+		lda krn_tmp
+		rts
+@l_all:
+		.asciiz "*.*"
+		
 __fat_unlink:
 		bne	@l_exit
 		jsr __fat_unlink_direntry
 		bne @l_exit
 		lda #EOK						; ok
 @l_exit:
-		debug "unlink"
+		debug "_ulnk"
 		rts
 		
 __fat_unlink_direntry:
 		lda	#DIR_Entry_Deleted			; ($e5)
 		sta (dirptr)					; mark dir entry as deleted
-		debug "rmdir"
+		debug "_ulnkd"
 		;TODO implement fat/fat2 update, free the unused cluster(s)
 		;TODO write back updated block_data
 		lda #EIO
@@ -384,10 +419,8 @@ fat_mkdir:
 
 		jsr __fat_write_newdir_entry				; write the data of the newly created directory fd (fat_tmp_fd) with prepared data from dirptr
 @l_exit_close:
-		pha
 		ldx fat_tmp_fd
 		jsr fat_close						 		; free the allocated file descriptor
-		pla
 		bra @l_exit
 @err_exists:
 		lda	#EEXIST
@@ -802,16 +835,14 @@ fat_open:
 		ldx fat_tmp_fd								; newly opened file descriptor to X
 		bra @l_exit_ok								; and exit...
 @l_exit_close:
-		pha 										; save error
 		ldx fat_tmp_fd
 		jsr fat_close						 		; free the allocated file descriptor
-		pla
 		bra @l_exit
 @l_err_enoent:
 		lda	#ENOENT
 		bra @l_exit
 @l_err_dir:											; was directory, we must not free any fd
-		lda	#EINVAL									; TODO FIXME error code for "Is a directory"
+		lda	#EISDIR									; error "Is a directory"
 		bra @l_exit
 @l_exit_ok:
 		lda #EOK									; A=0 (EOK)
@@ -1416,18 +1447,15 @@ __fat_alloc_fd:
 		lda #EOK
 		rts
 
+		; free file descriptor quietly
         ; in:
         ;   X - offset into fd_area
-        ; out:
-		;   Z - Z=1 on success (A=0), Z=0 and A=error code otherwise
 fat_close:
-		lda fd_area + F32_fd::StartCluster +3, x
-		cmp #$ff	;#$ff means not open, carry is set...
-		bcs @l1
+		pha
 		lda #$ff    ; otherwise mark as closed
 		sta fd_area + F32_fd::StartCluster +3, x
-@l1:	lda #EOK
-		rts
+		pla
+@l1:	rts
 
 fat_close_all:
 		ldx #(2*FD_Entry_Size)	; skip 2 entries, they're reserverd for current and temp dir
@@ -1449,17 +1477,17 @@ fat_getfilesize:
 
 		; find first dir entry
 		; in:
-		;   X - directory fd index into fd_area
+		;   X - file descriptor (index into fd_area) of the directory
 		;	filenameptr	- with file name to search
 		; out:
-		;	C 			- carry = 1 if found and dirptr is set to the dir entry found, carry = 0 otherwise
+		;	C=1 if found and dirptr is set to the dir entry found, C=0 otherwise
 fat_find_first:
 		SetVector fat_dirname_mask, krn_ptr2									; build fat dir entry mask from user input
 		jsr	string_fat_mask
 		SetVector dirname_mask_matcher, fat_vec_matcher
 
 		; in:
-		;   X - directory fd index into fd_area
+		;   X - file descriptor (index into fd_area) of the directory
 __fat_find_first:
 		lda volumeID+VolumeID::SecPerClus
 		sta blocks
