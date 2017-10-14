@@ -47,13 +47,7 @@ dir_show_entry:
 		lda #' '
 		jsr krn_chrout
 
-		ldy #F32DirEntry::FileSize + 2
-;@l5:		dey
-		;lda (dirptr),y
-		;jsr krn_hexout
-;
-		;cpy #F32DirEntry::FileSize
-		;bne @l5
+;		ldy #F32DirEntry::FileSize + 2
 
 		ldy #F32DirEntry::FileSize +1
 		lda (dirptr),y
