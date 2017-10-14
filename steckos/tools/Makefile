@@ -4,7 +4,7 @@ LDFLAGS=--config ../steckos-c-app.cfg ../lib/steckschwein-kernel.lib
 
 .PHONY: all clean
 
-all: ls.prg ll.prg stat.prg rename.prg date.prg nvram.prg uname.prg hello.prg fibo.prg clear.prg setdate.prg view.prg echo.prg od.prg rmdir.prg mkdir.prg keycode.prg touch.prg du.prg cp.prg pwd.prg
+all: ls.prg ll.prg stat.prg fsinfo.prg rename.prg date.prg nvram.prg uname.prg hello.prg fibo.prg clear.prg setdate.prg view.prg echo.prg od.prg rmdir.prg mkdir.prg keycode.prg touch.prg du.prg cp.prg pwd.prg
 	(cd xmodem; make )
 
 
