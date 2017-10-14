@@ -11,7 +11,7 @@ tmp2	= $a2
 
 
 .import print_filename
-.export dir_show_entry
+.export dir_show_entry, pagecnt, entries_per_page
 
 dir_show_entry:
 		pha
@@ -46,8 +46,6 @@ dir_show_entry:
 		jsr krn_chrout
 		lda #' '
 		jsr krn_chrout
-
-;		ldy #F32DirEntry::FileSize + 2
 
 		ldy #F32DirEntry::FileSize +1
 		lda (dirptr),y
@@ -131,20 +129,6 @@ dir_show_entry:
         ; Bits 11–15: Hours, valid value range 0–23 inclusive.
         crlf
 
-		dec cnt
-		bne @l
-		keyin
-		cmp #13
-		beq @lx
-
-		lda #23
-		sta cnt
-		bra @l
-@lx:
-		lda #1
-		sta cnt
-
-@l:
 
 		pla
 		rts
@@ -233,6 +217,9 @@ CNVBIT:         ASL tmp0+0       ; Shift out one bit
 
 		rts
 
+entries = 23
+entries_per_page: .byte entries
+pagecnt: .byte entries
+
 ;BIN:		.word 0
 BCD:		.res 3
-cnt:		.byte 23

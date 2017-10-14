@@ -7,7 +7,7 @@ dir_attrib_mask		= $0a
 .include "appstart.inc"
 
 .export print_filename, cnt
-.import dir_show_entry
+.import dir_show_entry, pagecnt, entries_per_page
 
 appstart $1000
 main:
@@ -50,6 +50,23 @@ l1:
 
 
 		jsr dir_show_entry
+
+		dec pagecnt
+		bne @l
+		keyin
+		cmp #13 ; enter pages line by line
+		beq @lx
+		cmp #$03 ; CTRL-C
+		beq @l5
+
+		lda entries_per_page
+		sta pagecnt
+		bra @l
+@lx:
+		lda #1
+		sta pagecnt
+
+@l:
 
 		jsr krn_getkey
 		cmp #$03 ; CTRL-C?
