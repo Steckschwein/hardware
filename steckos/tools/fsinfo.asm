@@ -7,7 +7,7 @@ volid = $0308
 appstart $1000
 
         jsr krn_primm
-        .byte "Bytes / sector    :",$00
+        .byte "Bytes / sector    : $",$00
 
         lda volid + VolumeID::BytsPerSec+1
         jsr krn_hexout
@@ -17,7 +17,7 @@ appstart $1000
         crlf
 
         jsr krn_primm
-        .byte "Sectors / cluster :",$00
+        .byte "Sectors / cluster : $",$00
 
         lda volid + VolumeID::SecPerClus
         jsr krn_hexout
@@ -25,7 +25,7 @@ appstart $1000
         crlf
 
         jsr krn_primm
-        .byte "Number of FATs    :",$00
+        .byte "Number of FATs    : $",$00
 
         lda volid + VolumeID::NumFATs
         jsr krn_hexout
@@ -33,7 +33,7 @@ appstart $1000
         crlf
 
         jsr krn_primm
-        .byte "Reserved sectors  :",$00
+        .byte "Reserved sectors  : $",$00
 
         lda volid + VolumeID::RsvdSecCnt+1
         jsr krn_hexout
@@ -43,7 +43,7 @@ appstart $1000
         crlf
 
         jsr krn_primm
-        .byte "Sectors / FAT     :",$00
+        .byte "Sectors / FAT     : $",$00
 
         lda volid + VolumeID::FATSz32+3
         jsr krn_hexout
