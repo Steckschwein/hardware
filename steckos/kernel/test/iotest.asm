@@ -53,10 +53,9 @@ main:
 		stz fd_area + F32_fd::FileSize + 1,x
 		stz fd_area + F32_fd::FileSize + 2,x
 		stz fd_area + F32_fd::FileSize + 3,x
-		
 		jsr krn_write
-		
 		jsr krn_close
+		bne @errmsg
 		
 		
 @exit:
