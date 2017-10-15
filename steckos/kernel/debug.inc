@@ -4,6 +4,14 @@
 .import _debugout, _debugout8, _debugout16, _debugout32
 .import _debugout32p
 .import _debugdump
+.import _debugdirentry
+
+.macro debugdirentry
+.if .defined(debug_enabled)
+	jsr _debugdirentry
+	.byte 0
+.endif
+.endmacro
 
 .macro debug msg
 .if .defined(debug_enabled)

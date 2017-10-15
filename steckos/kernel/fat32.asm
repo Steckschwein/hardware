@@ -336,9 +336,10 @@ fat_rmdir:
 		jsr __fat_opendir_cd
 		bne @l_exit
 		jsr __fat_isroot
-		beq @l_err_root
+		beq @l_err_root					; cannot delete the root dir ;)
 		jsr __fat_count_direntries
-		cmp #3
+		debug "cntdir"
+		cmp #3							; >= 3 dir entries, must be more then "." and ".."
 		bcs @l_err_notempty
 		jsr __fat_unlink
 		bra @l_exit
@@ -352,36 +353,34 @@ fat_rmdir:
 		rts
 		
 __fat_count_direntries:
-		stz krn_tmp
+		stz krn_tmp3
 		SetVector @l_all, filenameptr
 		jsr fat_find_first
 		bcc @l_exit
 @l_next:
-		inc	krn_tmp
+		inc	krn_tmp3
 		jsr fat_find_next
 		bcs	@l_next
 @l_exit:
-		lda krn_tmp
+		lda krn_tmp3
 		rts
 @l_all:
 		.asciiz "*.*"
 		
 __fat_unlink:
+		jsr __fat_read_direntry
 		bne	@l_exit
-		jsr __fat_unlink_direntry
-		bne @l_exit
+		debugdirentry
+		lda	#DIR_Entry_Deleted			; ($e5)
+		sta (dirptr)					; mark dir entry as deleted
+		
+;		debug "_ulnkd"
+		;TODO implement fat/fat2 update, free the unused cluster(s)
+		;TODO write back updated block_data
+;		bne @l_exit
 		lda #EOK						; ok
 @l_exit:
 		debug "_ulnk"
-		rts
-		
-__fat_unlink_direntry:
-		lda	#DIR_Entry_Deleted			; ($e5)
-		sta (dirptr)					; mark dir entry as deleted
-		debug "_ulnkd"
-		;TODO implement fat/fat2 update, free the unused cluster(s)
-		;TODO write back updated block_data
-		lda #EIO
 		rts
 		
 

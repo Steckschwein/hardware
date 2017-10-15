@@ -6,6 +6,8 @@
 .export	_debugout32
 .export _debugdump
 
+.export _debugdirentry
+
 .import	krn_chrout, krn_hexout, krn_primm
 
 .segment "KERNEL"
@@ -47,7 +49,19 @@ _debugout_enter:
 		jsr krn_hexout
 		lda	#' '
 		jmp krn_chrout
-_debugout_restore:
+		
+_debugdirentry:
+		jsr 	_debugout_enter
+		ldy #0
+	@l0:
+		lda (dirptr),y
+		jsr krn_hexout
+		lda #' '
+		jsr krn_chrout
+		iny 
+		cpy #32
+		bne @l0
+		bra _debugoutnone
 		
 _debugdump:
 		jsr 	_debugout_enter
@@ -67,6 +81,7 @@ _debugout8:
 		bra		_debugout0
 _debugout:
 		jsr 	_debugout_enter
+_debugoutnone:		
 		lda		#$ff
 _debugout0:
 		sta		dbg_bytes
