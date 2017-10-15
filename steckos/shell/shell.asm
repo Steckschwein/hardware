@@ -289,8 +289,6 @@ cd:
         ;	debugptr "cderr:", paramptr
 		jmp errmsg
 @l2:
-		jsr krn_primm
-		.byte $0a," cd ok",$00
 		jmp mainloop
 
 run:
