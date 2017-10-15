@@ -27,7 +27,9 @@ appstart $1000
         jsr krn_primm
         .byte "Partition info: ",$0a,"Bootable      :",$00
         lda part0 + PartitionEntry::Bootflag
-        jsr krn_hexout
+        and #$0f
+        ora #'0'
+        jsr krn_chrout
 
         jsr krn_primm
         .byte $0a,"Type Code     :$", $00
@@ -78,18 +80,32 @@ appstart $1000
         lda volid + VolumeID::SecPerClus
         jsr krn_hexout
 
-        crlf
 
         jsr krn_primm
-        .byte "Number of FATs    :$",$00
+        .byte $0a,"Number of FATs    :",$00
 
         lda volid + VolumeID::NumFATs
-        jsr krn_hexout
-
-        crlf
+        and #$0f
+        ora #'0'
+        jsr krn_chrout
 
         jsr krn_primm
-        .byte "Reserved sectors  :$",$00
+        .byte $0a,"Active FAT        :",$00
+
+        lda volid + VolumeID::MirrorFlags
+        bit #$00
+        bpl @both
+
+        and #$0f
+        ora #'0'
+        jsr krn_chrout
+        bra @foo
+@both:
+        jsr krn_primm
+        .byte "both",$00
+@foo:
+        jsr krn_primm
+        .byte $0a,"Reserved sectors  :$",$00
 
         lda volid + VolumeID::RsvdSecCnt+1
         jsr krn_hexout
