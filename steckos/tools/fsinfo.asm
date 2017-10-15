@@ -65,21 +65,21 @@ appstart $1000
 
 
         jsr krn_primm
-        .byte "Bytes / sector    :$",$00
+        .byte "Bytes / sector    :",$00
 
-        lda volid + VolumeID::BytsPerSec+1
-        jsr krn_hexout
+        ldx volid + VolumeID::BytsPerSec+1
         lda volid + VolumeID::BytsPerSec
-        jsr krn_hexout
+        jsr BINBCD16
+        jsr display_bcd
 
-        crlf
 
         jsr krn_primm
-        .byte "Sectors / cluster :$",$00
+        .byte $0a,"Sectors / cluster :",$00
 
         lda volid + VolumeID::SecPerClus
-        jsr krn_hexout
-
+        ldx #$00
+        jsr BINBCD16
+        jsr display_bcd
 
         jsr krn_primm
         .byte $0a,"Number of FATs    :",$00
@@ -105,13 +105,12 @@ appstart $1000
         .byte "both",$00
 @foo:
         jsr krn_primm
-        .byte $0a,"Reserved sectors  :$",$00
+        .byte $0a,"Reserved sectors  :",$00
 
-        lda volid + VolumeID::RsvdSecCnt+1
-        jsr krn_hexout
+        ldx volid + VolumeID::RsvdSecCnt+1
         lda volid + VolumeID::RsvdSecCnt
-        jsr krn_hexout
-
+        jsr BINBCD16
+        jsr display_bcd
         crlf
 
         jsr krn_primm
@@ -184,6 +183,52 @@ appstart $1000
         crlf
 
         jmp (retvec)
+
+BINBCD16:
+        sta tmp0
+		stx tmp0+1
+        SED             ; Switch to decimal mode
+        LDA #0          ; Ensure the result is clear
+        STA BCD+0
+        STA BCD+1
+        STA BCD+2
+        LDX #16         ; The number of source bits
+
+CNVBIT:
+        ASL tmp0+0       ; Shift out one bit
+        ROL tmp0+1
+        LDA BCD+0       ; And add into result
+        ADC BCD+0
+        STA BCD+0
+        LDA BCD+1       ; propagating any carry
+        ADC BCD+1
+        STA BCD+1
+        LDA BCD+2       ; ... thru whole result
+        ADC BCD+2
+        STA BCD+2
+        DEX             ; And repeat for next bit
+        BNE CNVBIT
+        CLD             ; Back to binary
+
+        rts
+
+display_bcd:
+        lda BCD + 2
+        beq @n1
+        jsr krn_hexout
+@n1:
+        lda BCD + 1
+        beq @n2
+        jsr krn_hexout
+@n2:
+        lda BCD + 0
+        jsr krn_hexout
+        rts
+
+
+
 lba_tmp: .res 4
+BCD: .res 3
+tmp0: .res 2
 .align 255,0
 data:
