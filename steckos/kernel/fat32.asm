@@ -155,7 +155,7 @@ __fat_read_direntry:
 		clc
 		adc #>block_data
 		sta dirptr+1
-		
+
 		lda #EOK
 @l_exit:
 		debug32 "rd_dir", lba_addr
@@ -235,7 +235,7 @@ fat_get_root_and_pwd:
 		;sta	krn_ptr3					;TODO FIXME - length check of output buffer, save -size-1 for easy loop
 		SetVector block_fat, krn_ptr3		;TODO FIXME - we use the 512 byte fat block buffer as temp space - FTW!
 		stz krn_tmp3
-		
+
 		ldy #FD_INDEX_CURRENT_DIR			; start from current directory, clone the cd fd
 		ldx #FD_INDEX_TEMP_DIR
 		jsr fat_clone_fd
@@ -253,7 +253,7 @@ fat_get_root_and_pwd:
 		bne @l_exit
 		SetVector cluster_nr_matcher, fat_vec_matcher		; set the matcher strategy to the cluster number matcher
 		jsr __fat_find_first								; and call find first to find the entry with that cluster number we saved in fat_tmp_dw before we did the cd ".."
-		bcc @l_exit							
+		bcc @l_exit
 		jsr fat_name_string									; found, dirptr points to the entry and we can simply extract the name - fat_name_string formats and appends the dir entry name:attr
 		bra @l_rd_dir										; go on with bottom up walk until root is reached
 @l_inverse:
@@ -264,7 +264,7 @@ fat_get_root_and_pwd:
 		rts
 @l_dotdot:
 		.asciiz ".."
-		
+
 		; open directory by given path starting from current directory
 		;in:
         ;   A/X - pointer to string with the file path
@@ -326,7 +326,7 @@ fat_unlink:
 		jsr fat_close
 		debug "unlink"
 		rts
-		
+
 		; delete a directory entry denoted by given path in A/X
         ;in:
         ;   A/X - pointer to the directory path
@@ -351,7 +351,7 @@ fat_rmdir:
 @l_exit:
 		debug "rmdir"
 		rts
-		
+
 __fat_count_direntries:
 		stz krn_tmp3
 		SetVector @l_all, filenameptr
@@ -366,14 +366,14 @@ __fat_count_direntries:
 		rts
 @l_all:
 		.asciiz "*.*"
-		
+
 __fat_unlink:
 		jsr __fat_read_direntry
 		bne	@l_exit
 		debugdirentry
 		lda	#DIR_Entry_Deleted			; ($e5)
 		sta (dirptr)					; mark dir entry as deleted
-		
+
 ;		debug "_ulnkd"
 		;TODO implement fat/fat2 update, free the unused cluster(s)
 		;TODO write back updated block_data
@@ -382,7 +382,7 @@ __fat_unlink:
 @l_exit:
 		debug "_ulnk"
 		rts
-		
+
 
         ; in:
         ; 	A/X - pointer to the directory name
@@ -809,7 +809,7 @@ fat_open:
 		lda	fd_area + F32_fd::Attr, x	;
 		and #DIR_Attr_Mask_Dir			; regular file or directory?
 		beq	@l_exit_ok					; not dir, ok
-		bra @l_err_dir					; 
+		bra @l_err_dir					;
 @l_error:
 		cmp #ENOENT					; no such file or directory ?
 		bne @l_exit					; other error, then exit
@@ -1197,11 +1197,9 @@ fat_mount:
 		part0 = sd_blktarget + BootSector::Partitions + PartTable::Partition_0
 
 		lda part0 + PartitionEntry::TypeCode
-		cmp #PartType_FAT32
-		beq @l2
 		cmp #PartType_FAT32_LBA
 		beq @l2
-		; type code not PartType_FAT32 or PartType_FAT32_LBA
+		; type code not  PartType_FAT32_LBA ($0C)
 		lda #fat_invalid_partition_type
 		jmp end_mount
 @l2:
@@ -1412,7 +1410,7 @@ __fat_set_fd_lba:
 		rol
 		rol krn_tmp
 		rol
-		
+
 		sta fd_area + F32_fd::DirEntryPos, x
 		rts
 
@@ -1434,7 +1432,7 @@ fat_alloc_fd:
 		bne @l1
 		lda #EMFILE								; Too many open files, no free file descriptor found
 		rts
-__fat_alloc_fd:									
+__fat_alloc_fd:
 		stz fd_area+F32_fd::StartCluster+3,x	; init start cluster with root dir cluster which is 0 - @see Note in calc_lba_addr
 		stz fd_area+F32_fd::StartCluster+2,x
 		stz fd_area+F32_fd::StartCluster+1,x
@@ -1515,7 +1513,7 @@ fat_find_next:
 		lda dirptr
 		clc
 		adc #DIR_Entry_Size
-		sta dirptr		
+		sta dirptr
 		bcc @l6
 		inc dirptr+1
 @l6:
