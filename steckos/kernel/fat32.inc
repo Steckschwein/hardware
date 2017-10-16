@@ -74,15 +74,7 @@ PartType_FAT32_LBA	= $0c
 ;--------------------------------------------------------------------------------------
 FSInfo_FreeClus	= $01e8	; amount of free clusters
 FSInfo_LastClus	= $01ec ; last known cluster number
-.struct F32FSinfo
-	Signature1 .dword
-	Reserved1  .byte 479
-	Signature2 .dword
-	FreeClus   .dword
-	LastClus   .dword
-	Reserved2  .byte 11
-	BlockSig   .word
-.endstruct
+
 ;--------------------------------------------------------------------------------------
 ; FAT32 Directory Entry
 ;--------------------------------------------------------------------------------------

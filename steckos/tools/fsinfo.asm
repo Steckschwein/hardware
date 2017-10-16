@@ -147,15 +147,15 @@ appstart $1000
 
         jsr krn_primm
         .byte $0a,"Free clusters     :",$00
-        m_memcpy data+488, tmp0, 4
+        m_memcpy data + FSInfo_FreeClus, tmp0, 4
 
         jsr BINBCD32
         ldx #$05
         jsr display_bcd
 
         jsr krn_primm
-        .byte $0a,"Next free cluster :",$00
-        m_memcpy data+492, tmp0, 4
+        .byte $0a,"Last cluster      :",$00
+        m_memcpy data+FSInfo_LastClus, tmp0, 4
 
         jsr BINBCD32
         ldx #$05
