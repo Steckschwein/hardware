@@ -436,7 +436,7 @@ __fat_update_fsinfo:
 		jsr	sd_read_block
 		bne @l_exit
 ;		debug32 "fi_fcl", block_fat+FSInfo_FreeClus
-		_dec32 block_fat+FSInfo_FreeClus
+		_dec32 block_fat + F32FSInfo::FreeClus
 @l_write:
 ;		debug32 "fi_fcl", block_fat+FSInfo_FreeClus
 		jmp __fat_write_block_fat

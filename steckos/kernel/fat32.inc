@@ -72,9 +72,17 @@ PartType_FAT32_LBA	= $0c
 ;--------------------------------------------------------------------------------------
 ; FAT32 FSInfo Sector Offsets
 ;--------------------------------------------------------------------------------------
-FSInfo_FreeClus	= $01e8	; amount of free clusters
-FSInfo_LastClus	= $01ec ; last known cluster number
-
+;FSInfo_FreeClus	= $01e8	; amount of free clusters
+;FSInfo_LastClus	= $01ec ; last known cluster number
+.struct F32FSInfo
+	Signature1		.byte 4
+	Reserved1		.byte $1e0
+	Signature2		.byte 4
+	FreeClus        .byte 4
+	LastClus		.byte 4
+	Reserved2		.byte 11
+	Signature		.word
+.endstruct
 ;--------------------------------------------------------------------------------------
 ; FAT32 Directory Entry
 ;--------------------------------------------------------------------------------------
