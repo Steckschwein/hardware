@@ -60,6 +60,11 @@ appstart $1000
         .byte $0a,$0a,"Filesystem Info: ",$00
 
         jsr krn_primm
+        .byte $0a,"Media Type        :$",$00
+        lda data + VolumeID_full::Media
+        jsr krn_hexout
+
+        jsr krn_primm
         .byte $0a,"OEM Name          :",$00
 
         ldx #$00
