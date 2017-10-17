@@ -56,7 +56,7 @@ PartType_FAT32_LBA	= $0c
 	Media		.byte	; 21 ; For removable media, 0xF0 is frequently used.
 				; The legal values for this field are
 				; 0xF0, 0xF8, 0xF9, 0xFA, 0xFB, 0xFC, 0xFD, 0xFE, and 0xFF.
-	MirrorFlags	.word   ; Bits 0-3: number of active FAT (if bit 7 is 1)
+	SectsPerFAT .word   ;  Number of sectors per FAT. 0 for fat32
 					; Bits 4-6: reserved
 					; Bit 7: one: single active FAT; zero: all FATs are updated at runtime
 					; Bits 8-15: reserved
