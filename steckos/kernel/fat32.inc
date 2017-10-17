@@ -69,6 +69,46 @@ PartType_FAT32_LBA	= $0c
 	FSInfoSec	.word ; (2 byte)
 .endstruct
 
+.struct VolumeID_full
+	JmpToBoot	.byte 3     ; JMP command to bootstrap code ( in x86-world )
+	OEMName		.byte 8     ; OEM name/version (E.g. "IBM  3.3", "IBM 20.0", "MSDOS5.0", "MSWIN4.0".
+        					; Various format utilities leave their own name, like "CH-FOR18".
+        					; Sometimes just garbage. Microsoft recommends "MSWIN4.1".)
+							; https://www.win.tue.nl/~aeb/linux/fs/fat/fat-1.html
+	;  BIOS Parameter Block begins here
+	BytsPerSec	.word ; 11-12	; 512 usually
+	SecPerClus	.byte ; 13	; Sectors per Cluster as power of 2. valid are: 1,2,4,8,16,32,64,128
+	RsvdSecCnt	.word ; 14-15	; number of reserved sectors
+	NumFATs		.byte ; 16
+	Reserved	.byte 4 ; 17-20 (max root entries, total logical sectors skipped)
+	Media		.byte	; 21 ; For removable media, 0xF0 is frequently used.
+				; The legal values for this field are
+				; 0xF0, 0xF8, 0xF9, 0xFA, 0xFB, 0xFC, 0xFD, 0xFE, and 0xFF.
+	SectsPerFAT .word   ; 22-23 ; Number of sectors per FAT. 0 for fat32
+
+	Reserved2	.byte 12; 24-35 Placeholder until FAT32 EBPB
+
+	; FAT32 Extended BIOS Parameter Block begins here
+	FATSz32		.dword	; 36-39 ; sectors per FAT
+	MirrorFlags	.word   ; 40-41; Bits 0-3: number of active FAT (if bit 7 is 1)
+						; Bits 4-6: reserved
+						; Bit 7: one: single active FAT; zero: all FATs are updated at runtime
+						; Bits 8-15: reserved
+						; https://www.win.tue.nl/~aeb/linux/fs/fat/fat-1.html
+
+	Version		.word   ; 42-43
+	RootClus	.dword	; 44-47
+	FSInfoSec	.word   ; 48-49
+	BootSectCpy .word	; 50-51
+	Reserved3	.byte 12 ; 52-63
+	PhysDrvNum	.byte   ; 64
+	Reserved4	.byte	; 65
+	ExtBootSig  .byte	; 66
+	VolumeID	.dword  ; 67-70
+	VolumeLabel .byte 11 ; 71-82
+	FSType		.byte 8	; 83-90
+
+.endstruct
 ;--------------------------------------------------------------------------------------
 ; FAT32 FSInfo Sector Offsets
 ;--------------------------------------------------------------------------------------

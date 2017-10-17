@@ -21,7 +21,7 @@ appstart $1000
         SetVector data, read_blkptr
         jsr krn_sd_read_block
 
-        m_memcpy part0 + PartitionEntry::LBABegin, lba_tmp, 4
+        m_memcpy part0 + PartitionEntry::LBABegin, lba_addr, 4
 
         jsr krn_primm
         .byte "Partition info: ",$0a,"Bootable      :",$00
@@ -52,14 +52,50 @@ appstart $1000
         ldx #$05
         jsr display_bcd
 
-        jsr krn_primm
-        .byte $0a,$0a,"Filesystem Info: ",$0a,$00
+
+        SetVector data, read_blkptr
+        jsr krn_sd_read_block
 
         jsr krn_primm
-        .byte "Bytes / sector    :",$00
+        .byte $0a,$0a,"Filesystem Info: ",$00
 
-        ldx volid + VolumeID::BytsPerSec+1
-        lda volid + VolumeID::BytsPerSec
+        jsr krn_primm
+        .byte $0a,"OEM Name          :",$00
+
+        ldx #$00
+@l:
+        lda data + VolumeID_full::OEMName,x
+        jsr krn_chrout
+        inx
+        cpx #$08
+        bne @l
+
+        jsr krn_primm
+        .byte $0a,"Volume Label      :",$00
+        ldx #$00
+@l1:
+        lda data + VolumeID_full::VolumeLabel,x
+        jsr krn_chrout
+        inx
+        cpx #$0b
+        bne @l1
+
+        jsr krn_primm
+        .byte $0a,"FS Type           :",$00
+        ldx #$00
+@l2:
+        lda data + VolumeID_full::FSType,x
+        jsr krn_chrout
+        inx
+        cpx #$08
+        bne @l2
+
+
+        jsr krn_primm
+        .byte $0a,"Bytes / sector    :",$00
+
+        ldx data + VolumeID_full::BytsPerSec+1
+        lda data + VolumeID_full::BytsPerSec
         jsr BINBCD16
         ldx #$02
         jsr display_bcd
@@ -68,7 +104,7 @@ appstart $1000
         jsr krn_primm
         .byte $0a,"Sectors / cluster :",$00
 
-        lda volid + VolumeID::SecPerClus
+        lda data + VolumeID_full::SecPerClus
         ldx #$00
         jsr BINBCD16
         ldx #$02
@@ -77,7 +113,7 @@ appstart $1000
         jsr krn_primm
         .byte $0a,"Number of FATs    :",$00
 
-        lda volid + VolumeID::NumFATs
+        lda data + VolumeID_full::NumFATs
         and #$0f
         ora #'0'
         jsr krn_chrout
@@ -85,7 +121,7 @@ appstart $1000
         jsr krn_primm
         .byte $0a,"Active FAT        :",$00
 
-        lda volid + VolumeID::MirrorFlags
+        lda data + VolumeID_full::MirrorFlags
         bit #$00
         bpl @both
 
@@ -100,8 +136,8 @@ appstart $1000
         jsr krn_primm
         .byte $0a,"Reserved sectors  :",$00
 
-        ldx volid + VolumeID::RsvdSecCnt+1
-        lda volid + VolumeID::RsvdSecCnt
+        ldx data + VolumeID_full::RsvdSecCnt+1
+        lda data + VolumeID_full::RsvdSecCnt
         jsr BINBCD16
         ldx #$02
         jsr display_bcd
@@ -110,7 +146,7 @@ appstart $1000
         jsr krn_primm
         .byte "Sectors / FAT     :",$00
 
-        m_memcpy volid + VolumeID::FATSz32, tmp0, 4
+        m_memcpy data + VolumeID_full::FATSz32, tmp0, 4
         jsr BINBCD32
         ldx #$05
         jsr display_bcd
@@ -118,21 +154,21 @@ appstart $1000
         jsr krn_primm
         .byte $0a,"FSInfo sector LBA :",$00
 
-        lda volid + VolumeID::FSInfoSec
+        lda data + VolumeID_full::FSInfoSec
         clc
-        adc lba_tmp+0
+        adc lba_addr+0
         sta lba_addr+0
 
-        lda volid + VolumeID::FSInfoSec+1
-        adc lba_tmp+1
+        lda data + VolumeID_full::FSInfoSec+1
+        adc lba_addr+1
         sta lba_addr+1
 
 
         lda #$00
-        adc lba_tmp+2
+        adc lba_addr+2
         sta lba_addr+2
         lda #$00
-        adc lba_tmp+3
+        adc lba_addr+3
         sta lba_addr+3
 
         m_memcpy lba_addr, tmp0, 4
