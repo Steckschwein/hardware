@@ -238,12 +238,13 @@ BINBCD32:
         rts
 
 display_bcd:
-        ;ldx #$05
-        @l:
+@l1:    lda BCD,x
+        bne @l
+        dex
+        bpl @l1
+@l:
         lda BCD,x
-;        beq @out
         jsr krn_hexout
-@out:
         dex
         bpl @l
         rts
