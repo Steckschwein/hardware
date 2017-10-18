@@ -292,7 +292,6 @@ display_bcd:
 
 
 
-lba_tmp: .res 4
 BCD: .res 6
 tmp0: .res 2
 .align 255,0
