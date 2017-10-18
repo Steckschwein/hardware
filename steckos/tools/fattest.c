@@ -412,10 +412,9 @@ int main(int argc, char* argv[]){
 	unsigned long fat_lba_addr=0;
 	unsigned long fat_lba_addr_n=0;
 
-	FILE* res = fopen(".", "r+");
-	fprintf(stdout, "fopen(%x): %x %s\n", res, errno, strerror(errno));
-	
-	return 0;
+	// FILE* res = fopen(".", "r+");
+	// fprintf(stdout, "fopen(%x): %x %s\n", res, errno, strerror(errno));
+	// return 0;
 	
 	//dir entry
 	//char filename[12] = "TESTDIR    \0";

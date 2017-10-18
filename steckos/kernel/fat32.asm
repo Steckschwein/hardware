@@ -40,8 +40,7 @@ fat_read_block:
 
 		jsr calc_blocks
 		jsr calc_lba_addr
-		jsr sd_read_block
-		rts
+		jmp sd_read_block
 @l_err_exit:
 		lda #EINVAL
 		rts
@@ -87,10 +86,10 @@ fat_write:
 		jsr __fat_reserve_cluster							; otherwise start cluster is root, we try to find a free cluster, fat_tmp_fd has to be set
 		bne @l_exit
 		restoreptr write_blkptr								; restore write ptr
-		ldx fat_tmp_fd									; restore fd, go on with writing data
+		ldx fat_tmp_fd										; restore fd, go on with writing data
 @l_write:
-		jsr calc_lba_addr									; calc lba and blocks of file payload
 		jsr calc_blocks
+		jsr calc_lba_addr									; calc lba and blocks of file payload
 .ifdef MULTIBLOCK_WRITE
 .warning "SD multiblock writes are EXPERIMENTAL"
 		jsr sd_write_multiblock
@@ -337,14 +336,9 @@ fat_rmdir:
 		bne @l_exit
 		jsr __fat_isroot
 		beq @l_err_root					; cannot delete the root dir ;)
-		jsr __fat_count_direntries
-		debug "cntdir"
-		cmp #3							; >= 3 dir entries, must be more then "." and ".."
-		bcs @l_err_notempty
+		jsr __fat_dir_isempty
+		bcs @l_exit
 		jsr __fat_unlink
-		bra @l_exit
-@l_err_notempty:
-		lda #ENOTEMPTY
 		bra @l_exit
 @l_err_root:
 		lda #EINVAL
@@ -352,6 +346,14 @@ fat_rmdir:
 		debug "rmdir"
 		rts
 
+__fat_dir_isempty:
+		jsr __fat_count_direntries
+		cmp #3							; >= 3 dir entries, must be more then "." and ".."
+		bcc @l_exit
+		lda #ENOTEMPTY
+@l_exit:
+		rts
+		
 __fat_count_direntries:
 		stz krn_tmp3
 		SetVector @l_all, filenameptr
@@ -368,13 +370,14 @@ __fat_count_direntries:
 		.asciiz "*.*"
 
 __fat_unlink:
-		jsr __fat_read_direntry
+		jsr __fat_read_direntry			;
 		bne	@l_exit
 		debugdirentry
 		lda	#DIR_Entry_Deleted			; ($e5)
 		sta (dirptr)					; mark dir entry as deleted
 
-;		debug "_ulnkd"
+;		jsr __fat_update_fsinfo
+
 		;TODO implement fat/fat2 update, free the unused cluster(s)
 		;TODO write back updated block_data
 ;		bne @l_exit
@@ -861,7 +864,6 @@ fat_open:
 .macro _open
 		stz	filename_buf, x	;\0 terminate the current path fragment
 		jsr	__fat_open
-		;debugdump "o_", filename_buf
 		bne @l_exit
 .endmacro
 __fat_open_path:
