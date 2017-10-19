@@ -346,72 +346,6 @@ fat_rmdir:
 		debug "rmdir"
 		rts
 
-__fat_dir_isempty:
-		phx
-		jsr __fat_count_direntries
-		cmp #3							; >= 3 dir entries, must be more then "." and ".."
-		bcc @l_exit
-		lda #ENOTEMPTY
-@l_exit:
-		plx
-		rts
-		
-__fat_count_direntries:
-		stz krn_tmp3
-		SetVector @l_all, filenameptr
-		jsr fat_find_first
-		bcc @l_exit
-@l_next:
-		lda (dirptr)
-		cmp #DIR_Entry_Deleted
-		beq @l_find_next
-		inc	krn_tmp3
-@l_find_next:
-		jsr fat_find_next
-		bcs	@l_next
-@l_exit:
-		lda krn_tmp3
-		debug "f_cde"
-		rts
-@l_all:
-		.asciiz "*.*"
-
-__fat_unlink:
-		jsr calc_fat_lba_addr
-		SetVector block_fat, read_blkptr
-		jsr __fat_read_block
-		bne @l_exit
-		
-		lda fd_area+F32_fd::StartCluster+0,x 	; offset within block_fat, clnr<<2 (* 4)
-		bit #$40								; high block (2nd page) ?
-		bne @l_clnr
-		ldy #>block_fat							; no, set read_blkptr to start of block_fat
-		sty read_blkptr+1
-@l_clnr:
-		debug "f_ul_clnr"
-		asl
-		asl
-		tay
-		jsr is_fat_cln_end
-		bcc @l_exit								; TODO cluster chain not supported yet!!!
-		lda #0
-		jsr __fat_mark_cluster					; mark cluster as free
-		jsr __fat_write_fat_blocks				; write back fat blocks
-		bne @l_exit
-		jsr __fat_read_direntry					; read the dir entry
-		bne	@l_exit
-		lda	#DIR_Entry_Deleted					; mark dir entry as deleted ($e5)
-		sta (dirptr)							;
-		debugdirentry		
-		jsr __fat_write_block_data				; write back dir entry
-		bne @l_exit
-		jsr __fat_update_fsinfo_inc
-		lda #EOK								; ok
-@l_exit:
-		debug "_ulnk"
-		rts
-
-
         ; in:
         ; 	A/X - pointer to the directory name
 		; out:
@@ -1582,6 +1516,73 @@ fat_find_next:
 ff_eod:
 		clc					; we are at the end, C=0 and return
 ff_end:
+		rts
+
+__fat_dir_isempty:
+		phx
+		jsr __fat_count_direntries
+		cmp #3							; >= 3 dir entries, must be more then "." and ".."
+		bcc @l_exit
+		lda #ENOTEMPTY
+@l_exit:
+		plx
+		rts
+		
+__fat_count_direntries:
+		stz krn_tmp3
+		SetVector @l_all, filenameptr
+		jsr fat_find_first
+		bcc @l_exit
+@l_next:
+		lda (dirptr)
+		cmp #DIR_Entry_Deleted
+		beq @l_find_next
+		inc	krn_tmp3
+@l_find_next:
+		jsr fat_find_next
+		bcs	@l_next
+@l_exit:
+		lda krn_tmp3
+		debug "f_cde"
+		rts
+@l_all:
+		.asciiz "*.*"
+
+__fat_unlink:
+		phx
+		jsr calc_fat_lba_addr
+		SetVector block_fat, read_blkptr
+		jsr __fat_read_block
+		bne @l_exit
+		
+		lda fd_area+F32_fd::StartCluster+0,x 	; offset within block_fat, clnr<<2 (* 4)
+		bit #$40								; high block (2nd page) ?
+		bne @l_clnr
+		ldy #>block_fat							; no, set read_blkptr to start of block_fat
+		sty read_blkptr+1
+@l_clnr:
+		debug "f_ul_clnr"
+		asl
+		asl
+		tay
+		jsr is_fat_cln_end
+		bcc @l_exit								; TODO cluster chain not supported yet!!!
+		lda #0
+		jsr __fat_mark_cluster					; mark cluster as free
+		jsr __fat_write_fat_blocks				; write back fat blocks
+		bne @l_exit
+		jsr __fat_read_direntry					; read the dir entry
+		bne	@l_exit
+		lda	#DIR_Entry_Deleted					; mark dir entry as deleted ($e5)
+		sta (dirptr)							;
+		debugdirentry		
+		jsr __fat_write_block_data				; write back dir entry
+		bne @l_exit
+		jsr __fat_update_fsinfo_inc
+@l_exit:
+		plx
+		cmp	#EOK
+		debug "_ulnk"
 		rts
 
 __fat_matcher:
