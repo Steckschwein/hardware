@@ -1,4 +1,5 @@
 .include "common.inc"
+.include "errno.inc"
 .include "../kernel/kernel.inc"
 .include "../kernel/kernel_jumptable.inc"
 

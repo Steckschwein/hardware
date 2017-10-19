@@ -5,7 +5,7 @@
 			sta addr+1
 .endmacro
 
-.macro inc32 val
+.macro _inc32 val
 		.local @l1
 		inc val + 0
 		bne @l1
@@ -36,6 +36,7 @@
 
 .macro m_memcpy src, dest, n
 		.local @l
+		.assert n<$80, error, "n must not >=$80"
 		ldx #n-1
 @l:
 		lda src,x
@@ -46,6 +47,7 @@
 
 .macro m_memcpy2ptr src, ptr, n
 		.local @l
+		.assert n<$80, error, "n must not >=$80"
 		ldy #n-1
 @l:		lda src,y
 		sta (ptr),y
@@ -55,6 +57,7 @@
 
 .macro m_memset dest, value, n
 		.local @l
+		.assert n<$80, error, "n must not >=$80"
 		ldx #n-1
 		lda #value
 @l:		sta dest,x
@@ -63,7 +66,7 @@
 .endmacro
 
 .macro m_memclr dest, n
-;		.assert n<=128, "count > $80, error, but must not!"
+		.assert n<$80, error, "n must not >=$80"
 		.local @l
 		ldx #n-1
 @l:		stz dest,x

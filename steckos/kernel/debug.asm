@@ -63,6 +63,10 @@ _debugdirentry:
 		bne @l0
 		bra _debugoutnone
 		
+_debugdumpptr:
+;		jsr 	_debugout_enter
+;		lda 	#11
+;		bra		_debugout0		
 _debugdump:
 		jsr 	_debugout_enter
 		lda 	#11

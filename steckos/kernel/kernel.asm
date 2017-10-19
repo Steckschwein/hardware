@@ -19,7 +19,8 @@ text_mode_40 = 1
 .import textui_enable, textui_disable, vdp_display_off,  textui_blank, textui_update_crs_ptr, textui_crsxy, textui_scroll_up
 .import init_sdcard
 .import fat_mount, fat_open, fat_isOpen, fat_close, fat_close_all, fat_read, fat_find_first, fat_find_next
-.import fat_mkdir, fat_rmdir, fat_chdir
+.import fat_mkdir, fat_chdir, fat_rmdir
+.import fat_unlink
 .import fat_write
 .import fat_read_block, fat_get_root_and_pwd
 .import fat_getfilesize
@@ -254,12 +255,11 @@ trampolin_code_end:
 .segment "JUMPTABLE"
 ; "kernel" jumptable
 
-.export krn_execv
 .export krn_rmdir
 krn_rmdir: 				    jmp fat_rmdir
 .export krn_mkdir
 krn_mkdir: 				    jmp fat_mkdir
-
+.export krn_execv
 krn_execv:                  jmp execv
 
 .export krn_uart_rx_nowait
@@ -274,8 +274,8 @@ krn_open: 				    jmp fat_open
 .export krn_chdir
 krn_chdir: 				    jmp fat_chdir
 
-.export krn_isOpen
-krn_isOpen: 				jmp fat_isOpen
+.export krn_unlink
+krn_unlink: 				jmp fat_unlink
 
 .export krn_close
 krn_close: 				    jmp fat_close

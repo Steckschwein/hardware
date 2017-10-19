@@ -45,8 +45,8 @@
         ;sta     tmp2			; save to tmp2, offset to fd_area
 		tax						; fd to x
 
-		jsr		krn_isOpen
-		bcs     invalidfd
+;		jsr		krn_isOpen
+;		bcs     invalidfd
 
 ; Read the block
 		lda		#<blockbuffer

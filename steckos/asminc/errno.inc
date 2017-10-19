@@ -29,9 +29,9 @@
         EBADF                   ; Bad file number
         ENOEXEC                 ; Exec format error
 
-		EISDIR      			; Is a directory
-		ENOTDIR     			; Not a directory
-		ENOTEMPTY				; Directory not empty
+		EISDIR      			; Is a directory		; 0x12
+		ENOTDIR     			; Not a directory		; 0x13
+		ENOTEMPTY				; Directory not empty	; 0x14
 		
 		EUNKNOWN                ; Unknown OS specific error - must be last!
 		

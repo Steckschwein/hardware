@@ -54,8 +54,18 @@
 
 .macro debugdump msg, addr, n
 .if .defined(debug_enabled)
+		;.assert n<=$80, error, "range error in dump"
 		jsr _debugdump
 		.word addr
+		.asciiz msg
+.endif
+.endmacro
+
+.macro debugdumpptr msg, ptr, n
+.if .defined(debug_enabled)
+		;.assert n<=$80, error, "range error in dump"
+		jsr _debugdumpptr
+		.word ptr
 		.asciiz msg
 .endif
 .endmacro

@@ -123,14 +123,12 @@ PartType_FAT32_LBA	= $0c
 ;--------------------------------------------------------------------------------------
 ; FAT32 FSInfo Sector Offsets
 ;--------------------------------------------------------------------------------------
-;FSInfo_FreeClus	= $01e8	; amount of free clusters
-;FSInfo_LastClus	= $01ec ; last known cluster number
 .struct F32FSInfo
 	Signature1		.byte 4
 	Reserved1		.byte $1e0
 	Signature2		.byte 4
-	FreeClus        .byte 4
-	LastClus		.byte 4
+	FreeClus        .byte 4	; amount of free clusters
+	LastClus		.byte 4	; last known cluster number
 	Reserved2		.byte 11
 	Signature		.word
 .endstruct
@@ -164,13 +162,13 @@ DIR_Entry_Deleted			= $e5
 ;--------------------------------------------------------------------------------------
 
 .struct F32_fd
-	StartCluster	.word 2	; +4
-	FileSize		.word 2	; +4
+	StartCluster	.dword	; +4
+	FileSize		.dword	; +4
 	Attr			.byte	; +1
-	DirEntryLBA		.word 2 ; +4 LBA of the block where the dir entry of the file is located
+	DirEntryLBA		.dword	; +4 LBA of the block where the dir entry of the file is located
 	DirEntryPos		.byte	; +1 block offset within the block (DirEntryPos * DIR_Entry_Size)
-	CurrentCluster	.word 2	; +4
-;	SeekPos			.word 2	; +4
+	CurrentCluster	.dword	; +4
+;	SeekPos			.dword	; +4
 ;	openFlags		.byte 	; +1 flags during open
 ;	Reserved		.byte 9	;fill up to $20
 .endstruct
