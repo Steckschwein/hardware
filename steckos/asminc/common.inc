@@ -37,11 +37,11 @@
 .macro m_memcpy src, dest, n
 		.local @l
 		.assert n<$80, error, "n must not >=$80"
-		ldx #n-1
+		ldy #n-1
 @l:
-		lda src,x
-		sta dest,x
-		dex
+		lda src,y
+		sta dest,y
+		dey
 		bpl @l
 .endmacro
 

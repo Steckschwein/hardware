@@ -244,8 +244,8 @@ fat_get_root_and_pwd:
 		jsr __fat_isroot
 		beq @l_inverse
 		m_memcpy fd_area+FD_INDEX_TEMP_DIR+F32_fd::StartCluster, fat_tmp_dw, 4	; save the cluster from the fd of the "current" dir which is stored in FD_INDEX_TEMP_DIR (see clone above)
-		lda #<@l_dotdot
-		ldx #>@l_dotdot
+		lda #<l_dot_dot
+		ldx #>l_dot_dot
 		ldy #FD_INDEX_TEMP_DIR								; call opendir function with "..", on success the fd (FD_INDEX_TEMP_DIR) is updated now and we are reached the parent directory
 		jsr __fat_opendir
 		bne @l_exit
@@ -260,8 +260,6 @@ fat_get_root_and_pwd:
 		lda #EOK											; that's it...
 @l_exit:
 		rts
-@l_dotdot:
-		.asciiz ".."
 
 		; open directory by given path starting from current directory
 		;in:
@@ -333,14 +331,17 @@ fat_unlink:
 fat_rmdir:
 		jsr __fat_opendir_cd
 		bne @l_exit
-		debugdirentry
+		;debugdirentry
 		jsr __fat_isroot
 		beq @l_err_root					; cannot delete the root dir ;)
+		jsr __fat_is_dot_dir
+		beq @l_err_einval
 		jsr __fat_dir_isempty
 		bcs @l_exit
 		jsr __fat_unlink
 		bra @l_exit
 @l_err_root:
+@l_err_einval:
 		lda #EINVAL
 @l_exit:
 		debug "rmdir"
@@ -392,8 +393,7 @@ fat_mkdir:
 		;TODO check valid fsinfo block
 		;TODO check whether clnr is maintained, test 0xFFFFFFFF ?
 		;TODO improve calc, currently fixed to cluster-=1
-		; in
-		;	A - update amount of free clusters to be reserved/freed [-128...127]
+		;TODO A - update amount of free clusters to be reserved/freed [-128...127]
 __fat_update_fsinfo_inc:
 		jsr __fat_read_fsinfo
 		bne __fat_update_fsinfo_exit
@@ -409,7 +409,7 @@ __fat_update_fsinfo_dec:
 __fat_read_fsinfo:
 		m_memcpy fat_fsinfo_lba, lba_addr, 4
 		SetVector block_fat, read_blkptr
-		jmp	sd_read_block
+		jmp	__fat_read_block
 __fat_update_fsinfo_exit:
 		rts
 		
@@ -662,6 +662,38 @@ __fat_reserve_cluster:
 		jmp __fat_update_fsinfo_dec					; update the fsinfo sector/block
 @l_err_exit:
 		rts
+
+
+		; free cluster and maintain the fsinfo block
+		; in:
+		;	X - the file descriptor into fd_area (F32_fd::StartCluster)
+		; out:
+		;	Z=1 on success, Z=0 otherwise and A=error code
+__fat_free_cluster:
+		jsr calc_fat_lba_addr
+		SetVector block_fat, read_blkptr
+		jsr __fat_read_block
+		bne @l_exit
+		
+		lda fd_area+F32_fd::StartCluster+0,x 	; offset within block_fat, clnr<<2 (* 4)
+		bit #$40								; high block (2nd page) ?
+		bne @l_clnr
+		ldy #>block_fat							; no, set read_blkptr to start of block_fat
+		sty read_blkptr+1
+@l_clnr:
+		asl
+		asl
+		tay
+		jsr is_fat_cln_end
+		bcc @l_exit								; TODO cluster chain not supported yet!!!
+		lda #0
+		jsr __fat_mark_cluster					; mark cluster as free
+		jsr __fat_write_fat_blocks				; write back fat blocks
+		bne @l_exit
+		jmp __fat_update_fsinfo_inc
+@l_exit:
+		rts
+
 
 		; mark cluster as EOC
 		; in:
@@ -1549,41 +1581,37 @@ __fat_count_direntries:
 		.asciiz "*.*"
 
 __fat_unlink:
-		phx
-		jsr calc_fat_lba_addr
-		SetVector block_fat, read_blkptr
-		jsr __fat_read_block
-		bne @l_exit
-		
-		lda fd_area+F32_fd::StartCluster+0,x 	; offset within block_fat, clnr<<2 (* 4)
-		bit #$40								; high block (2nd page) ?
-		bne @l_clnr
-		ldy #>block_fat							; no, set read_blkptr to start of block_fat
-		sty read_blkptr+1
-@l_clnr:
-		debug "f_ul_clnr"
-		asl
-		asl
-		tay
-		jsr is_fat_cln_end
-		bcc @l_exit								; TODO cluster chain not supported yet!!!
-		lda #0
-		jsr __fat_mark_cluster					; mark cluster as free
-		jsr __fat_write_fat_blocks				; write back fat blocks
-		bne @l_exit
+		jsr __fat_isroot						; no clnr assigned yet, file was just touched
+		beq @l_unlink_direntry					; if so, we can skip freeing clusters from fat
+
+		jsr __fat_free_cluster					; free cluster, update fsinfo
+		bne	@l_exit		
+@l_unlink_direntry:
 		jsr __fat_read_direntry					; read the dir entry
 		bne	@l_exit
 		lda	#DIR_Entry_Deleted					; mark dir entry as deleted ($e5)
-		sta (dirptr)							;
-		debugdirentry		
+		sta (dirptr)							
 		jsr __fat_write_block_data				; write back dir entry
-		bne @l_exit
-		jsr __fat_update_fsinfo_inc
 @l_exit:
-		plx
-		cmp	#EOK
 		debug "_ulnk"
+		rts
+
+__fat_is_dot_dir:
+		lda #'.'
+		cmp (dirptr)
+		bne @l_exit
+		ldy #10
+		lda #' '
+@l_next:
+		cmp (dirptr),y
+		bne @l_exit
+		dey 
+		bne @l_next
+@l_exit:
 		rts
 
 __fat_matcher:
 		jmp	(fat_vec_matcher)
+
+l_dot_dot:
+		.asciiz ".."
