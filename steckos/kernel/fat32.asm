@@ -362,7 +362,11 @@ __fat_count_direntries:
 		jsr fat_find_first
 		bcc @l_exit
 @l_next:
+		lda (dirptr)
+		cmp #DIR_Entry_Deleted
+		beq @l_find_next
 		inc	krn_tmp3
+@l_find_next:
 		jsr fat_find_next
 		bcs	@l_next
 @l_exit:
@@ -381,9 +385,10 @@ __fat_unlink:
 		lda fd_area+F32_fd::StartCluster+0,x 	; offset within block_fat, clnr<<2 (* 4)
 		bit #$40								; high block (2nd page) ?
 		bne @l_clnr
-		lda #>block_fat							; no, read_blkptr+1 to start of block_fat
-		sta read_blkptr+1
+		ldy #>block_fat							; no, set read_blkptr to start of block_fat
+		sty read_blkptr+1
 @l_clnr:
+		debug "f_ul_clnr"
 		asl
 		asl
 		tay
