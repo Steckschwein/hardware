@@ -61,7 +61,7 @@ appstart $1000
 
         jsr krn_primm
         .byte $0a,"Media Type        :$",$00
-        lda data + VolumeID_full::Media
+        lda data + VolumeID_full::BPB + BPB::Media
         jsr krn_hexout
 
         jsr krn_primm
@@ -79,7 +79,7 @@ appstart $1000
         .byte $0a,"Volume Label      :",$00
         ldx #$00
 @l1:
-        lda data + VolumeID_full::VolumeLabel,x
+        lda data + VolumeID_full::EBPB + EBPB::VolumeLabel,x
         jsr krn_chrout
         inx
         cpx #$0b
@@ -89,7 +89,7 @@ appstart $1000
         .byte $0a,"FS Type           :",$00
         ldx #$00
 @l2:
-        lda data + VolumeID_full::FSType,x
+        lda data + VolumeID_full::EBPB + EBPB::FSType,x
         jsr krn_chrout
         inx
         cpx #$08
@@ -99,8 +99,8 @@ appstart $1000
         jsr krn_primm
         .byte $0a,"Bytes / sector    :",$00
 
-        ldx data + VolumeID_full::BytsPerSec+1
-        lda data + VolumeID_full::BytsPerSec
+        ldx data + VolumeID_full::BPB + BPB::BytsPerSec+1
+        lda data + VolumeID_full::BPB + BPB::BytsPerSec
         jsr BINBCD16
         ldx #$02
         jsr display_bcd
@@ -109,7 +109,7 @@ appstart $1000
         jsr krn_primm
         .byte $0a,"Sectors / cluster :",$00
 
-        lda data + VolumeID_full::SecPerClus
+        lda data + VolumeID_full::BPB + BPB::SecPerClus
         ldx #$00
         jsr BINBCD16
         ldx #$02
@@ -118,7 +118,7 @@ appstart $1000
         jsr krn_primm
         .byte $0a,"Number of FATs    :",$00
 
-        lda data + VolumeID_full::NumFATs
+        lda data + VolumeID_full::BPB + BPB::NumFATs
         and #$0f
         ora #'0'
         jsr krn_chrout
@@ -126,7 +126,7 @@ appstart $1000
         jsr krn_primm
         .byte $0a,"Active FAT        :",$00
 
-        lda data + VolumeID_full::MirrorFlags
+        lda data + VolumeID_full::EBPB + EBPB::MirrorFlags
         bit #$00
         bpl @both
 
@@ -141,8 +141,8 @@ appstart $1000
         jsr krn_primm
         .byte $0a,"Reserved sectors  :",$00
 
-        ldx data + VolumeID_full::RsvdSecCnt+1
-        lda data + VolumeID_full::RsvdSecCnt
+        ldx data + VolumeID_full::BPB + BPB::RsvdSecCnt+1
+        lda data + VolumeID_full::BPB + BPB::RsvdSecCnt
         jsr BINBCD16
         ldx #$02
         jsr display_bcd
@@ -151,7 +151,7 @@ appstart $1000
         jsr krn_primm
         .byte "Sectors / FAT     :",$00
 
-        m_memcpy data + VolumeID_full::FATSz32, tmp0, 4
+        m_memcpy data + VolumeID_full::EBPB + EBPB::FATSz32, tmp0, 4
         jsr BINBCD32
         ldx #$05
         jsr display_bcd
@@ -159,12 +159,12 @@ appstart $1000
         jsr krn_primm
         .byte $0a,"FSInfo sector LBA :",$00
 
-        lda data + VolumeID_full::FSInfoSec
+        lda data + VolumeID_full::EBPB + EBPB::FSInfoSec
         clc
         adc lba_addr+0
         sta lba_addr+0
 
-        lda data + VolumeID_full::FSInfoSec+1
+        lda data + VolumeID_full::EBPB + EBPB::FSInfoSec+1
         adc lba_addr+1
         sta lba_addr+1
 
@@ -210,10 +210,9 @@ BINBCD16:
         sta tmp0
 		stx tmp0+1
         SED             ; Switch to decimal mode
-        LDA #0          ; Ensure the result is clear
-        STA BCD+0
-        STA BCD+1
-        STA BCD+2
+        STZ BCD+0
+        STZ BCD+1
+        STZ BCD+2
         LDX #16         ; The number of source bits
 
 @CNVBIT:
@@ -237,17 +236,14 @@ BINBCD16:
 BINBCD32:
         lda tmp0
         SED             ; Switch to decimal mode
-        LDA #0          ; Ensure the result is clear
-        STA BCD+0
-        STA BCD+1
-        STA BCD+2
-        STA BCD+3
-        STA BCD+4
-        STA BCD+5
-
+        STZ BCD+0
+        STZ BCD+1
+        STZ BCD+2
+        STZ BCD+3
+        STZ BCD+4
+        STZ BCD+5
 
         LDX #32         ; The number of source bits
-
 @CNVBIT:
         ASL tmp0+0       ; Shift out one bit
         ROL tmp0+1
@@ -268,7 +264,8 @@ BINBCD32:
         STA BCD+3
         LDA BCD+4       ; ... thru whole result
         ADC BCD+4
-        STA BCD+4;        LDA BCD+5       ; ... thru whole result
+        STA BCD+4;
+        LDA BCD+5       ; ... thru whole result
         ADC BCD+5
         STA BCD+5
 
@@ -294,5 +291,5 @@ display_bcd:
 
 BCD: .res 6
 tmp0: .res 2
-.align 255,0
+;.align 255,0
 data:
