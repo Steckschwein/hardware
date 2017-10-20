@@ -58,10 +58,10 @@
 .macro m_memset dest, value, n
 		.local @l
 		.assert n<$80, error, "n must not >=$80"
-		ldx #n-1
+		ldy #n-1
 		lda #value
-@l:		sta dest,x
-		dex
+@l:		sta dest,y
+		dey
 		bpl @l
 .endmacro
 
