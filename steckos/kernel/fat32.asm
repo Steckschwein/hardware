@@ -836,18 +836,12 @@ fat_open:
 		bne @l_exit
 		jsr fat_alloc_fd							; alloc a fd for the new file we want to create to make sure we get one
 		bne @l_exit									; cause we want to avoid an error in between the different block writes
-		stx fat_tmp_fd								; save fd
 		jsr __fat_set_fd_lba						; update dir lba addr and dir entry number within fd
 
 		lda #DIR_Attr_Mask_Archive				    ; create as regular file with archive bit set
 		jsr __fat_write_dir_entry					; create dir entry at current dirptr
-		bne @l_exit_close
-
-		ldx fat_tmp_fd								; newly opened file descriptor to X
-		bra @l_exit_ok								; and exit...
-@l_exit_close:
-		ldx fat_tmp_fd
-		jsr fat_close						 		; free the allocated file descriptor
+		beq @l_exit_ok
+		jsr fat_close						 		; free the allocated file descriptor on any errors
 		bra @l_exit
 @l_err_enoent:
 		lda	#ENOENT
