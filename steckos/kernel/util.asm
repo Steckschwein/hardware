@@ -239,7 +239,7 @@ __sfn_ic:
 	bne __sfn_ic
 __sfn_mask:
 	jsr string_fat_mask				;
-	lda #0
+	lda #EOK
 __sfn_exit:	
 	rts
 	
@@ -248,17 +248,17 @@ __sfn_exit:
 	; out:
 	;	Z=1 on success, Z=0 otherwise which input char is invalid
 string_illegalchar:
-	ldx #15					; size of blacklist
+	ldx #(__illegalchars_end - __illegalchars) -1					; x to length(lacklist)-1
 __illegalchar_l1:
 	cmp __illegalchars, x
 	beq __illegalchar_ex
 	dex
 	bpl __illegalchar_l1
-	lda #0
+	lda #EOK
 	rts
 __illegalchar_ex:	
 	lda #EINVAL
 	rts
 __illegalchars:
 	.byte "?*+,/:;<=>\[]|",'"',127
-	
+__illegalchars_end:

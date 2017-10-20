@@ -92,10 +92,8 @@ __rtc_systime_update:
 		clc
 		adc #100            				;time_t year starts from 1900
 		sta rtc_systime_t+time_t::tm_year
-.ifdef DEBUG_RTC
 		debug32 "rtc0", rtc_systime_t
 		debug32 "rtc1", rtc_systime_t+4
-.endif
 		jmp spi_deselect
 	
 ; dec = (((BCD>>4)*10) + (BCD&0xf))
