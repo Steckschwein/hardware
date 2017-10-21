@@ -64,9 +64,17 @@ kern_init:
 	bne do_upload
 
 	jsr fat_mount
-	debug "mnt"
-	bne do_upload
+	beq @l_init
+	pha
+	jsr krn_primm
+	.asciiz "mount error ("
+	pla
+	jsr krn_hexout
+	jsr krn_primm
+	.byte ")",$0a,0
+	bra do_upload
 
+@l_init:
 	lda #<filename
 	ldx #>filename
 	jsr execv

@@ -1,3 +1,7 @@
+; enable debug for this module
+.ifdef DEBUG_EXECV
+	debug_enabled=1
+.endif
 .include "common.inc"
 .include "kernel.inc"
 .include "errno.inc"

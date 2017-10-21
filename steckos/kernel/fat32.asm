@@ -125,17 +125,7 @@ fat_write:
 		; out:
 		;	dirptr pointing to the corresponding directory entry of type F32DirEntry
 __fat_read_direntry:
-		lda fd_area + F32_fd::DirEntryLBA+3 , x				; set lba addr of dir entry...
-		sta lba_addr+3
-		lda fd_area + F32_fd::DirEntryLBA+2 , x
-		sta lba_addr+2
-		lda fd_area + F32_fd::DirEntryLBA+1 , x
-		sta lba_addr+1
-		lda fd_area + F32_fd::DirEntryLBA+0 , x
-		sta lba_addr+0
-		
-		debug32 "f_rde", lba_addr
-		
+		jsr __fat_set_lba_fd								; setup lba address from fd
 		SetVector block_data, read_blkptr
 		jsr __fat_read_block								; and read the block with the dir entry
 		bne @l_exit
@@ -361,17 +351,14 @@ fat_mkdir:
 		jsr string_fat_name							; build fat name upon input string (filenameptr) and store them directly to current dirptr!
 		bne @l_exit
 
-		jsr fat_alloc_fd							; alloc new fd - try to allocate a new fd here and right before any fat writes, cause they may fail
+		jsr fat_alloc_fd							; alloc a fd for the new directory - try to allocate a new fd here, right before any fat writes, cause they may fail
 		bne @l_exit									; and we want to avoid an error in between the different block writes
 		jsr __fat_set_fd_lba						; update dir lba addr and dir entry number within fd from lba_addr and dir_ptr which where setup during __fat_opendir_cd from above
 
-		m_memcpy lba_addr, fat_tmp_dw, 4			; found..., save lba_addr pointing to the block the current dir entry resides (dirptr)
-		debug32 "slba", fat_tmp_dw
-		jsr __fat_reserve_cluster					; find and reserve next free cluster and store them in fd_area at X
+		jsr __fat_reserve_cluster					; try to find and reserve next free cluster and store them in fd_area at fd (X)
 		bne @l_exit_close
-		m_memcpy fat_tmp_dw, lba_addr, 4			; restore lba_addr of dirptr
-		debug32 "rlba", lba_addr
 
+		jsr __fat_set_lba_fd						; setup lba_addr from fd		
 		lda #DIR_Attr_Mask_Dir						; set type directory
 		jsr __fat_write_dir_entry					; create dir entry at current dirptr
 		bne @l_exit_close
@@ -438,7 +425,7 @@ __fat_write_newdir_entry:
 		sta block_data+1*.sizeof(F32DirEntry)+F32DirEntry::Name+0				; 2nd entry ".."
 		sta block_data+1*.sizeof(F32DirEntry)+F32DirEntry::Name+1
 
-		ldx #FD_INDEX_TEMP_DIR													; due to fat_opendir/fat_open the fd of temp dir (FD_INDEX_TEMP_DIR) contains the last visited directory ("..") - FTW!
+		ldx #FD_INDEX_TEMP_DIR													; due to fat_opendir/fat_open within fat_mkdir the fd of temp dir (FD_INDEX_TEMP_DIR) represents the last visited directory which must be the parent of this one ("..") - FTW!
 		debug32 "cd_cln", fd_area + FD_INDEX_TEMP_DIR + F32_fd::StartCluster
 		lda fd_area+F32_fd::StartCluster+0,x
 		sta block_data+1*.sizeof(F32DirEntry)+F32DirEntry::FstClusLO+0
@@ -450,13 +437,13 @@ __fat_write_newdir_entry:
 		sta block_data+1*.sizeof(F32DirEntry)+F32DirEntry::FstClusHI+1
 
 		ldx #$80
-@l_erase:
+@l_1st_block:
 		stz block_data+2*.sizeof(F32DirEntry), x								; all dir entries, but "." and ".." (+2), are set to 0
 		stz block_data+$080, x
 		stz block_data+$100, x
 		stz block_data+$180, x
 		dex
-		bpl @l_erase
+		bpl @l_1st_block
 
 		plx																		; restore fd
 		jsr calc_lba_addr
@@ -465,14 +452,15 @@ __fat_write_newdir_entry:
 
 		m_memset block_data, 0, 2*.sizeof(F32DirEntry)							; now erase the "." and ".." entries too
 		ldy volumeID+VolumeID::SecPerClus										; fill up (VolumeID::SecPerClus - 1) reamining blocks of the cluster with empty dir entries
-		dey
 		debug32 "er_d", lba_addr
-@l_erase2:
+		bra @l_remain_blocks_e
+@l_remain_blocks:
 		jsr inc_lba_address														; next block within cluster
 		jsr __fat_write_block_data
 		bne @l_exit
+@l_remain_blocks_e:
 		dey
-		bne @l_erase2															; write until VolumeID::SecPerClus - 1
+		bne @l_remain_blocks												; write until VolumeID::SecPerClus - 1
 @l_exit:
 		rts
 
@@ -512,8 +500,7 @@ __fat_write_block:
 		;	Z=1 on success, Z=0 otherwise, A=error code
 __fat_write_dir_entry:
 		jsr __fat_prepare_dir_entry
-
-		debug16 "lsd_pt", dirptr
+		debug16 "f_wde_dp", dirptr
 
 		;TODO FIXME duplicate code here! - @see fat_find_next:
 		lda dirptr+1
@@ -615,7 +602,7 @@ __fat_prepare_dir_entry:
 
 		jsr __fat_set_direntry_timedate
 		
-		ldy #F32DirEntry::WrtTime
+		ldy #F32DirEntry::WrtTime									; creation date/time copy over from modified date/time
 		lda (dirptr),y
 		ldy #F32DirEntry::CrtTime
 		sta (dirptr),y
@@ -932,14 +919,9 @@ __fat_open:
 
 		ldx #FD_INDEX_TEMP_DIR
 		jsr fat_find_first
-		ldx #FD_INDEX_TEMP_DIR
 		bcs fat_open_found
 		lda #ENOENT
-		jmp end_open_err
-
-lbl_fat_open_error:
-		lda #EINVAL ; TODO FIXME error code
-		jmp end_open_err
+		bra end_open_err
 		
 fat_open_found:						; found...
 		ldy #F32DirEntry::Attr
@@ -1032,7 +1014,7 @@ calc_blocks: ;blocks = filesize / BLOCKSIZE -> filesize >> 9 (div 512) +1 if fil
 @l2:	debug16 "cbl", blocks
 		rts
 
-; 		calculate LBA address of first block from cluster number found in file descriptor entry file descriptor index must be in x
+; 		calculate LBA address of first block from cluster number found in file descriptor entry. file descriptor index must be in x
 ;		in:	
 ;			X - file descriptor index
 calc_lba_addr:
@@ -1056,7 +1038,7 @@ calc_lba_addr:
 		;SecPerClus is a power of 2 value, therefore cluster << n, where n ist the number of bit set in VolumeID::SecPerClus
 		lda volumeID+VolumeID::SecPerClus
 @lm:	lsr
-		beq @lme    ; 1 sector/cluster therefore skip multiply
+		beq @lme    ; until 1 sector/cluster
 		tax
 		asl lba_addr +0
 		rol lba_addr +1
@@ -1073,7 +1055,6 @@ calc_lba_addr:
 			sta lba_addr + i
 		.endrepeat
 		debug32 "f_cla", lba_addr
-calc_end:
 		plx
 		pla
 		rts
@@ -1162,14 +1143,14 @@ is_fat_cln_end:
 
 		; extract next cluster number from the 512 fat block buffer
 		; unsigned int offs = (cla << 2 & (BLOCK_SIZE-1));//offset within 512 byte block, cluster nr * 4 (32 Bit) and Bit 8-0 gives the offset
-fat_next_cln:
+__fat_next_cln:
 		lda fd_area + F32_fd::CurrentCluster  +0,x
 		asl
 		asl
 		tay
 		lda fd_area + F32_fd::CurrentCluster  +0,x
 		and #$c0	; we dont <<2 the bit15-8 of the cluster number but test bit 7,6 - if one is set, we simply use the "high" page of the block + the bit7-0 <<2 offset in y
-		bne	fat_next_cln_hi
+		bne	@fat_next_cln_hi
 		lda	block_fat+0, y
 		sta fd_area + F32_fd::CurrentCluster+0, x
 		lda	block_fat+1, y
@@ -1179,7 +1160,7 @@ fat_next_cln:
 		lda	block_fat+3, y
 		sta fd_area + F32_fd::CurrentCluster+3, x
 		rts
-fat_next_cln_hi:
+@fat_next_cln_hi:
 		lda	block_fat+$100, y
 		sta fd_area + F32_fd::CurrentCluster+0, x
 		lda	block_fat+$100+1, y
@@ -1204,45 +1185,37 @@ fat_mount:
 		jsr sd_read_block
 
 		jsr fat_check_signature
-		beq @l1
-		jmp end_mount
+		bne @l_exit
 @l1:
-		part0 = sd_blktarget + BootSector::Partitions + PartTable::Partition_0
+		@part0 = sd_blktarget + BootSector::Partitions + PartTable::Partition_0
 
-		lda part0 + PartitionEntry::TypeCode
+		lda @part0 + PartitionEntry::TypeCode
 		cmp #PartType_FAT32_LBA
 		beq @l2
-		; type code not  PartType_FAT32_LBA ($0C)
-		lda #fat_invalid_partition_type
-		jmp end_mount
+		lda #fat_invalid_partition_type	; type code not  PartType_FAT32_LBA ($0C)
+		bra @l_exit
 @l2:
-		m_memcpy part0 + PartitionEntry::LBABegin, lba_addr, 4
-
+		m_memcpy @part0 + PartitionEntry::LBABegin, lba_addr, 4
+		debug32 "p_lba", lba_addr
+		
 		SetVector sd_blktarget, read_blkptr
 		; Read FAT Volume ID at LBABegin and Check signature
 		jsr sd_read_block
-
+		bne @l_exit
 		jsr fat_check_signature
-		beq @l4
-		jmp end_mount
+		bne @l_exit
 @l4:
-
-.ifdef DEBUGFAT
-		jsr krn_primm
-		.asciiz "MF: "
-		lda sd_blktarget + VolumeID::MirrorFlags
-		jsr krn_hexout
-.endif
 		m_memcpy	sd_blktarget+11, volumeID, .sizeof(VolumeID) ; +11 skip first 11 bytes, we are not interested in
 
 		; Bytes per Sector, must be 512 = $0200
 		lda	volumeID+VolumeID::BytsPerSec+0
-		bne @l5
+		bne @l_exit
 		lda	volumeID+VolumeID::BytsPerSec+1
 		cmp #$02
 		beq @l6
-@l5:	lda #fat_invalid_sector_size
-		jmp end_mount
+		lda #fat_invalid_sector_size
+@l_exit:
+		jmp @end_mount
 @l6:
 		; cluster_begin_lba = Partition_LBA_Begin + Number_of_Reserved_Sectors + (Number_of_FATs * Sectors_Per_FAT) -  (2 * sec/cluster);
 		; fat_lba_begin		= Partition_LBA_Begin + Number_of_Reserved_Sectors
@@ -1348,7 +1321,7 @@ fat_mount:
 		; alloc file descriptor for current dir. which is cluster number 0 on fat32 - Note: the RootClus offset is compensated within calc_lba_addr
 		ldx #FD_INDEX_CURRENT_DIR
 		jsr __fat_alloc_fd
-end_mount:
+@end_mount:
 		debug "f_mnt"
 		rts
 
@@ -1382,6 +1355,10 @@ fat_isOpen:
 		cmp #$ff		;#$ff means not open
 		rts
 
+fat_close_all:
+		ldx #(2*FD_Entry_Size)	; skip 2 entries, they're reserverd for current and temp dir
+		bra fat_init_fdarea_with_x
+
 fat_init_fdarea:
 		ldx #$00
 fat_init_fdarea_with_x:
@@ -1392,9 +1369,27 @@ fat_init_fdarea_with_x:
 		bne @l1
 		rts
 
+		; in:
+		;	X - file descriptor
+		; out:
+		;	lba_addr setup with direntry lba
+__fat_set_lba_fd:
+		lda fd_area + F32_fd::DirEntryLBA+3 , x				; set lba addr of dir entry...
+		sta lba_addr+3
+		lda fd_area + F32_fd::DirEntryLBA+2 , x
+		sta lba_addr+2
+		lda fd_area + F32_fd::DirEntryLBA+1 , x
+		sta lba_addr+1
+		lda fd_area + F32_fd::DirEntryLBA+0 , x
+		sta lba_addr+0
+		debug32 "f_slba", lba_addr
+		rts
+
 		; update the dir entry position and dir lba_addr of the given file descriptor
 		; in:
 		;	X - file descriptor
+		; out:
+		;	updated file descriptor, DirEntryLBA and DirEntryPos setup accordingly
 __fat_set_fd_lba:
 	 	lda lba_addr + 3
 		sta fd_area + F32_fd::DirEntryLBA + 3, x
@@ -1467,9 +1462,6 @@ fat_close:
 		pla
 @l1:	rts
 
-fat_close_all:
-		ldx #(2*FD_Entry_Size)	; skip 2 entries, they're reserverd for current and temp dir
-		bra	fat_init_fdarea_with_x
 
 		; get size of file in fd
 		; in:
@@ -1505,7 +1497,7 @@ __fat_find_first:
 		SetVector block_data, read_blkptr
 
 ff_l3:	SetVector block_data, dirptr	; dirptr to begin of target buffer
-		jsr sd_read_block
+		jsr __fat_read_block
 		bne ff_end
 		dec read_blkptr+1				; set read_blkptr to origin address
 ff_l4:
@@ -1535,14 +1527,20 @@ fat_find_next:
 		sta dirptr+1 		; save
 		bcc ff_l4			; no, process entry
 		dec blocks			; end of cluster reached?
-		beq ff_eod			; TODO FIXME cluster chain support, dir may go on in next cluster ;)
+		beq ff_eoc			; TODO FIXME cluster chain support, dir may go on in next cluster ;)
 		jsr inc_lba_address	; increment lba address to read next block
 		bra ff_l3
+ff_eoc:
+;		jsr 
 ff_eod:
 		clc					; we are at the end, C=0 and return
 ff_end:
 		rts
 
+		; in:
+		;	X - file descriptor of directory
+		; out:
+		;	C=0 if directory is empty or contains <=2 entries ("." and ".."), C=1 otherwise
 __fat_dir_isempty:
 		phx
 		jsr __fat_count_direntries
