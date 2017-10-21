@@ -32,7 +32,9 @@ main:
 		stx tmp1						; save fd
 		SetVector content, read_blkptr
 		jsr krn_read
-		bne @err_close
+		ldx tmp1
+		jsr krn_close
+		bne @err
 
 		jsr	krn_textui_disable			;disable textui
 		SetVector content, addr
@@ -50,9 +52,6 @@ main:
 		cli
 		bra l2
 
-@err_close:
-		ldx tmp1
-		jsr krn_close
 @err:
 		jsr krn_primm
 		.asciiz "load error file "
