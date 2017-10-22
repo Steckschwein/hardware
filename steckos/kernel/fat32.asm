@@ -1327,11 +1327,7 @@ fat_mount:
 		debug "f_mnt"
 		rts
 
-		; out:
-		;   x - FD_INDEX_TEMP_DIR offset to fd area
-fat_open_rootdir:
-		ldx #FD_INDEX_TEMP_DIR					; set temp directory to cluster number 0 - Note: the RootClus offset is compensated within calc_lba_addr
-		jmp __fat_alloc_fd
+
 
 		; clone source file descriptor with offset y into fd_area to target fd with x
 		; in:
@@ -1437,6 +1433,11 @@ fat_alloc_fd:
 		bne @l1
 		lda #EMFILE								; Too many open files, no free file descriptor found
 		rts
+		; out:
+		;   x - FD_INDEX_TEMP_DIR offset to fd area
+fat_open_rootdir:
+		ldx #FD_INDEX_TEMP_DIR					; set temp directory to cluster number 0 - Note: the RootClus offset is compensated within calc_lba_addr
+;		jmp __fat_alloc_fd
 __fat_alloc_fd:
 		stz fd_area+F32_fd::StartCluster+3,x	; init start cluster with root dir cluster which is 0 - @see Note in calc_lba_addr
 		stz fd_area+F32_fd::StartCluster+2,x
