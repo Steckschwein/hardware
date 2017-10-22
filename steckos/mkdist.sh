@@ -1,7 +1,7 @@
 #!/bin/bash
 
 TARGET=$1
-TOOLS_BIN="clear.prg ls.prg ll.prg stat.prg rename.prg date.prg keycode.prg view.prg rm.prg rmdir.prg mkdir.prg cp.prg pwd.prg touch.prg"
+TOOLS_BIN="clear.prg ls.prg ll.prg stat.prg rename.prg date.prg keycode.prg view.prg rm.prg rmdir.prg mkdir.prg cp.prg pwd.prg touch.prg attrib.prg"
 TOOLS_SBIN="nvram.prg setdate.prg fsinfo.prg"
 TOOLS_USRBIN="view.prg"
 

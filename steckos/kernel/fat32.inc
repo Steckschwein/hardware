@@ -133,6 +133,10 @@ PartType_FAT32_LBA	= $0c
 	FileSize		.byte 4
 .endstruct
 
+DIR_Attr_Mask_ReadOnly		= 1<<0;
+DIR_Attr_Mask_Hidden		= 1<<1;
+DIR_Attr_Mask_System		= 1<<2;
+DIR_Attr_Mask_Volume		= 1<<3;
 DIR_Attr_Mask_Dir   		= 1<<4;
 DIR_Attr_Mask_Archive  		= 1<<5;
 
