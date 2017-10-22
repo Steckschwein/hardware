@@ -47,7 +47,7 @@ PartType_FAT32_LBA	= $0c
 ;--------------------------------------------------------------------------------------
 ; FAT32 Volume ID
 ;--------------------------------------------------------------------------------------
-.struct VolumeID
+.struct VolumeID_old
 	BytsPerSec	.word ; 12	; 512 usually
 	SecPerClus	.byte ; 13	; Sectors per Cluster as power of 2. valid are: 1,2,4,8,16,32,64,128
 	RsvdSecCnt	.word ; 14	; number of reserved sectors
@@ -193,7 +193,7 @@ FD_INDEX_TEMP_DIR = FD_Entry_Size	; temp dir always go to fd #1
 FAT_EOC			= $0fffffff	; end of cluster chain marker
 
 volumeID				= $0308 ; address of VolumeID
-cluster_begin_lba 		= volumeID + .sizeof(VolumeID) ; begin of cluster area (4 byte)
+cluster_begin_lba 		= volumeID + .sizeof(VolumeID_new) ; begin of cluster area (4 byte)
 fat_lba_begin			= cluster_begin_lba + 4; (2 byte) begin of fat area - TODO FIXME we assume 16bit are sufficient since fat is placed at the beginning of the device
 fat2_lba_begin			= fat_lba_begin + 2	; (2 byte) end of first fat and begin of 2nd fat (mirror) area - TODO FIXME we assume 16bit ...
 fat_fsinfo_lba			= fat2_lba_begin + 2; (4 byte)
