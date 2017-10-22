@@ -1283,13 +1283,13 @@ fat_mount:
 
 		; cluster_begin_lba_m2 -> cluster_begin_lba - (VolumeID::RootClus*VolumeID::SecPerClus)
 		debug8 "sec/cl", volumeID+VolumeID::BPB + BPB::SecPerClus
-		debug32 "r_cl", volumeID+VolumeID::BPB + BPB::RootClus
+		debug32 "r_cl", volumeID+VolumeID::EBPB + EBPB::RootClus
 		debug32 "s_lba", lba_addr
 		debug16 "r_sec", volumeID + VolumeID::BPB + BPB::RsvdSecCnt
 		debug16 "f_lba", fat_lba_begin
 		debug32 "f_sec", volumeID +  VolumeID::EBPB + EBPB::FATSz32
 		debug16 "f2_lba", fat2_lba_begin
-		debug16 "fi_sec", volumeID+VolumeID::BPB + BPB::FSInfoSec
+		debug16 "fi_sec", volumeID+ VolumeID::EBPB + EBPB::FSInfoSec
 		debug32 "fi_lba", fat_fsinfo_lba
 		debug32 "cl_lba", cluster_begin_lba
 		debug16 "fbuf", filename_buf
