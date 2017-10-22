@@ -42,6 +42,8 @@ PartType_FAT32_LBA	= $0c
 
 ;BS_VolLab2		= 71
 
+
+
 ;--------------------------------------------------------------------------------------
 ; FAT32 Volume ID
 ;--------------------------------------------------------------------------------------
@@ -98,6 +100,12 @@ PartType_FAT32_LBA	= $0c
 				; The legal values for this field are
 				; 0xF0, 0xF8, 0xF9, 0xFA, 0xFB, 0xFC, 0xFD, 0xFE, and 0xFF.
 	SectsPerFAT .word   ; 22-23 ; Number of sectors per FAT. 0 for fat32
+.endstruct
+
+.struct VolumeID_new
+	BPB			.tag BPB
+	Reserved2	.byte 12; 24-35 Placeholder until FAT32 EBPB
+	EBPB		.tag EBPB
 .endstruct
 
 .struct VolumeID_full

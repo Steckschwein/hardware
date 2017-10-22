@@ -451,7 +451,7 @@ __fat_write_newdir_entry:
 		bne @l_exit
 
 		m_memset block_data, 0, 2*.sizeof(F32DirEntry)							; now erase the "." and ".." entries too
-		ldy volumeID+VolumeID::SecPerClus										; fill up (VolumeID::SecPerClus - 1) reamining blocks of the cluster with empty dir entries
+		ldy volumeID+ VolumeID_new:: BPB + BPB::SecPerClus										; fill up (VolumeID::SecPerClus - 1) reamining blocks of the cluster with empty dir entries
 		debug32 "er_d", lba_addr
 		bra @l_remain_blocks_e
 @l_remain_blocks:
@@ -629,7 +629,7 @@ __fat_write_fat_blocks:
 		clc										; calc fat2 lba_addr = lba_addr + VolumeID::FATSz32
 		.repeat 4, i
 			lda lba_addr + i
-			adc volumeID + VolumeID::FATSz32 + i
+			adc volumeID + VolumeID_new::EBPB + EBPB::FATSz32 + i
 			sta lba_addr + i
 		.endrepeat
 		jsr __fat_write_block_fat
@@ -1024,7 +1024,7 @@ calc_lba_addr:
 		jsr	__fat_isroot
 		bne	@l_scl
 		.repeat 4,i
-			lda volumeID + VolumeID::RootClus + i
+			lda volumeID + VolumeID_new::EBPB + EBPB::RootClus + i
 			sta lba_addr + i
 		.endrepeat
 		bra @l_calc
@@ -1036,7 +1036,7 @@ calc_lba_addr:
 		.endrepeat
 @l_calc:
 		;SecPerClus is a power of 2 value, therefore cluster << n, where n ist the number of bit set in VolumeID::SecPerClus
-		lda volumeID+VolumeID::SecPerClus
+		lda volumeID+VolumeID_new::BPB + BPB::SecPerClus
 @lm:	lsr
 		beq @lme    ; until 1 sector/cluster
 		tax
@@ -1210,9 +1210,9 @@ fat_mount:
 		m_memcpy	sd_blktarget + VolumeID_full::EBPB, volumeID + VolumeID_full::EBPB - VolumeID_full::BPB , .sizeof(EBPB) ; +11 skip first 11 bytes, we are not interested in
 
 		; Bytes per Sector, must be 512 = $0200
-		lda	volumeID+VolumeID::BytsPerSec+0
+		lda	volumeID + VolumeID_new::BPB + BPB::BytsPerSec+0
 		bne @l_exit
-		lda	volumeID+VolumeID::BytsPerSec+1
+		lda	volumeID + VolumeID_new::BPB + BPB::BytsPerSec+1
 		cmp #$02
 		beq @l6
 		lda #fat_invalid_sector_size
@@ -1226,11 +1226,11 @@ fat_mount:
 		; add number of reserved sectors to calculate fat_lba_begin. also store in cluster_begin_lba for further calculation
 		clc
 		lda lba_addr + 0
-		adc volumeID + VolumeID::RsvdSecCnt + 0
+		adc volumeID + VolumeID_new::BPB + BPB::RsvdSecCnt + 0
 		sta cluster_begin_lba + 0
 		sta fat_lba_begin + 0
 		lda lba_addr + 1
-		adc volumeID + VolumeID::RsvdSecCnt + 1
+		adc volumeID + VolumeID_new::BPB + BPB::RsvdSecCnt + 1
 		sta cluster_begin_lba + 1
 		sta fat_lba_begin + 1
 		lda lba_addr + 2
@@ -1244,11 +1244,11 @@ fat_mount:
 
 		; Number of FATs. Must be 2
 		; cluster_begin_lba = fat_lba_begin + (sectors_per_fat * VolumeID::NumFATs (2))
-		ldy volumeID + VolumeID::NumFATs
+		ldy volumeID + VolumeID_new::BPB + BPB::NumFATs
 @l7:	clc
 		ldx #$00
 @l8:	ror ; get carry flag back
-		lda volumeID + VolumeID::FATSz32,x ; sectors per fat
+		lda volumeID + VolumeID_new::EBPB + EBPB::FATSz32,x ; sectors per fat
 		adc cluster_begin_lba,x
 		sta cluster_begin_lba,x
 		inx
@@ -1261,20 +1261,20 @@ fat_mount:
 		; calc begin of 2nd fat (end of 1st fat)
 		; TODO FIXME - we assume 16bit are sufficient for now since fat is placed at the beginning of the device
 		clc
-		lda volumeID + VolumeID::FATSz32+0 ; sectors/blocks per fat
+		lda volumeID +  VolumeID_new::EBPB + EBPB::FATSz32+0 ; sectors/blocks per fat
 		adc fat_lba_begin	+0
 		sta fat2_lba_begin	+0
-		lda volumeID + VolumeID::FATSz32+1
+		lda volumeID +  VolumeID_new::EBPB + EBPB::FATSz32+1
 		adc fat_lba_begin	+1
 		sta fat2_lba_begin	+1
 
 		; calc fs_info lba address
 		clc
 		lda lba_addr+0
-		adc volumeID+VolumeID::FSInfoSec+0
+		adc volumeID+ VolumeID_new::EBPB + EBPB::FSInfoSec+0
 		sta fat_fsinfo_lba+0
 		lda lba_addr+1
-		adc volumeID+VolumeID::FSInfoSec+1
+		adc volumeID+ VolumeID_new::EBPB + EBPB::FSInfoSec+1
 		sta fat_fsinfo_lba+1
 		lda #0
 		sta fat_fsinfo_lba+3
@@ -1282,21 +1282,21 @@ fat_mount:
 		sta fat_fsinfo_lba+2
 
 		; cluster_begin_lba_m2 -> cluster_begin_lba - (VolumeID::RootClus*VolumeID::SecPerClus)
-		debug8 "sec/cl", volumeID+VolumeID::SecPerClus
-		debug32 "r_cl", volumeID+VolumeID::RootClus
+		debug8 "sec/cl", volumeID+VolumeID_new::BPB + BPB::SecPerClus
+		debug32 "r_cl", volumeID+VolumeID_new::BPB + BPB::RootClus
 		debug32 "s_lba", lba_addr
-		debug16 "r_sec", volumeID + VolumeID::RsvdSecCnt
+		debug16 "r_sec", volumeID + VolumeID_new::BPB + BPB::RsvdSecCnt
 		debug16 "f_lba", fat_lba_begin
-		debug32 "f_sec", volumeID + VolumeID::FATSz32
+		debug32 "f_sec", volumeID +  VolumeID_new::EBPB + EBPB::FATSz32
 		debug16 "f2_lba", fat2_lba_begin
-		debug16 "fi_sec", volumeID+VolumeID::FSInfoSec
+		debug16 "fi_sec", volumeID+VolumeID_new::BPB + BPB::FSInfoSec
 		debug32 "fi_lba", fat_fsinfo_lba
 		debug32 "cl_lba", cluster_begin_lba
 		debug16 "fbuf", filename_buf
 
 		;TODO FIXME we assume 2 here insteasd of using the value in VolumeID::RootClus
 		; cluster_begin_lba_m2 -> cluster_begin_lba - (2*sec/cluster) => cluster_begin_lba - (sec/cluster << 1)
-		lda volumeID+VolumeID::SecPerClus ; max sec/cluster can be 128, with 2 (BPB_RootClus) * 128 wie may subtract max 256
+		lda volumeID+VolumeID_new::BPB + BPB::SecPerClus ; max sec/cluster can be 128, with 2 (BPB_RootClus) * 128 wie may subtract max 256
 		asl
 		sta lba_addr        ;   used as tmp
 		stz lba_addr +1     ;   safe carry
@@ -1493,7 +1493,7 @@ fat_find_first:
 		; in:
 		;   X - file descriptor (index into fd_area) of the directory
 __fat_find_first:
-		lda volumeID+VolumeID::SecPerClus
+		lda volumeID+VolumeID_new::BPB + BPB::SecPerClus
 		sta blocks
 		jsr calc_lba_addr
 		SetVector block_data, read_blkptr
