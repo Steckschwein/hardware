@@ -104,7 +104,7 @@ PartType_FAT32_LBA	= $0c
 
 .struct VolumeID_new
 	BPB			.tag BPB
-	Reserved2	.byte 12; 24-35 Placeholder until FAT32 EBPB
+;	Reserved2	.byte 12; 24-35 Placeholder until FAT32 EBPB
 	EBPB		.tag EBPB
 .endstruct
 

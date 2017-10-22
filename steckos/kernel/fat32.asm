@@ -1206,8 +1206,8 @@ fat_mount:
 		bne @l_exit
 @l4:
 		;m_memcpy	sd_blktarget+11, volumeID, .sizeof(VolumeID) ; +11 skip first 11 bytes, we are not interested in
-		m_memcpy	sd_blktarget + VolumeID_full::BPB, volumeID, .sizeof(BPB) ; +11 skip first 11 bytes, we are not interested in
-		m_memcpy	sd_blktarget + VolumeID_full::EBPB, volumeID + VolumeID_full::EBPB - VolumeID_full::BPB , .sizeof(EBPB) ; +11 skip first 11 bytes, we are not interested in
+		m_memcpy	sd_blktarget + VolumeID_full::BPB, volumeID + VolumeID_new::BPB, .sizeof(BPB) ; +11 skip first 11 bytes, we are not interested in
+		m_memcpy	sd_blktarget + VolumeID_full::EBPB, volumeID + VolumeID_new::EBPB, .sizeof(EBPB) ; +11 skip first 11 bytes, we are not interested in
 
 		; Bytes per Sector, must be 512 = $0200
 		lda	volumeID + VolumeID_new::BPB + BPB::BytsPerSec+0
