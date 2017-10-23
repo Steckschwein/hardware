@@ -659,13 +659,18 @@ __fat_read_cluster_block_and_select:
 		SetVector block_fat, read_blkptr
 		jsr __fat_read_block
 		bne @l_exit
+		jsr __fat_isroot						; is root clnr?
+		bne	@l_clnr_page
+		lda volumeID + VolumeID::EBPB + EBPB::RootClus+0
+		bra @l_clnr_page
 		lda fd_area+F32_fd::StartCluster+0,x 	; offset within block_fat, clnr<<2 (* 4)
+@l_clnr_page:
 		bit #$40								; clnr within 2nd page of the 512 byte block ?
 		bne @l_clnr
 		ldy #>block_fat							; no, set read_blkptr to start of block_fat
 		sty read_blkptr+1
 @l_clnr:
-		asl
+		asl										; block offset = clnr*4
 		asl
 		tay
 		jsr __fat_is_cln_eoc
@@ -1164,11 +1169,12 @@ __fat_is_cln_eoc:
 		; out:
 		;
 __fat_next_cln:
+		debug32 "f_nc0", fd_area+FD_INDEX_TEMP_DIR+F32_fd::StartCluster
+		
 		jsr __fat_read_cluster_block_and_select
 		bne @l_exit								; read error...
 		bcs @l_exit								; EOC reached?
 
-		debug32 "f_nc0", fd_area+FD_INDEX_TEMP_DIR+F32_fd::StartCluster
 		
 		lda	(read_blkptr), y
 		sta fd_area + F32_fd::StartCluster+0, x
@@ -1298,18 +1304,6 @@ fat_mount:
 		sta fat_fsinfo_lba+2
 
 		; cluster_begin_lba_m2 -> cluster_begin_lba - (VolumeID::RootClus*VolumeID::SecPerClus)
-		debug8 "sec/cl", volumeID+VolumeID::BPB + BPB::SecPerClus
-		debug32 "r_cl", volumeID+VolumeID::EBPB + EBPB::RootClus
-		debug32 "s_lba", lba_addr
-		debug16 "r_sec", volumeID + VolumeID::BPB + BPB::RsvdSecCnt
-		debug16 "f_lba", fat_lba_begin
-		debug32 "f_sec", volumeID +  VolumeID::EBPB + EBPB::FATSz32
-		debug16 "f2_lba", fat2_lba_begin
-		debug16 "fi_sec", volumeID+ VolumeID::EBPB + EBPB::FSInfoSec
-		debug32 "fi_lba", fat_fsinfo_lba
-		debug32 "cl_lba", cluster_begin_lba
-		debug16 "fbuf", filename_buf
-
 		;TODO FIXME we assume 2 here insteasd of using the value in VolumeID::RootClus
 		; cluster_begin_lba_m2 -> cluster_begin_lba - (2*sec/cluster) => cluster_begin_lba - (sec/cluster << 1)
 		lda volumeID+VolumeID::BPB + BPB::SecPerClus ; max sec/cluster can be 128, with 2 (BPB_RootClus) * 128 wie may subtract max 256
@@ -1331,7 +1325,17 @@ fat_mount:
 		sbc #0
 		sta cluster_begin_lba +3
 
-		;debug32s "clb2:", cluster_begin_lba
+		debug8 "sec/cl", volumeID+VolumeID::BPB + BPB::SecPerClus
+		debug32 "r_cl", volumeID+VolumeID::EBPB + EBPB::RootClus
+		debug32 "s_lba", lba_addr
+		debug16 "r_sec", volumeID + VolumeID::BPB + BPB::RsvdSecCnt
+		debug16 "f_lba", fat_lba_begin
+		debug32 "f_sec", volumeID +  VolumeID::EBPB + EBPB::FATSz32
+		debug16 "f2_lba", fat2_lba_begin
+		debug16 "fi_sec", volumeID+ VolumeID::EBPB + EBPB::FSInfoSec
+		debug32 "fi_lba", fat_fsinfo_lba
+		debug32 "cl_lba", cluster_begin_lba
+		debug16 "fbuf", filename_buf
 
 		; init file descriptor area
 		jsr fat_init_fdarea
@@ -1516,7 +1520,6 @@ __fat_find_first_mask:
 		;   X - file descriptor (index into fd_area) of the directory
 __fat_find_first:
 		SetVector block_data, read_blkptr
-ff_l2:		
 		lda volumeID+VolumeID::BPB + BPB::SecPerClus
 		sta blocks
 		jsr calc_lba_addr
@@ -1555,10 +1558,10 @@ fat_find_next:
 		jsr inc_lba_address	; increment lba address to read next block
 		bra ff_l3
 @ff_eoc:
+		ldx #FD_INDEX_TEMP_DIR					; TODO FIXME dont know if this is a good idea... FD_INDEX_TEMP_DIR was setup above and following the cluster chain is done with the FD_INDEX_TEMP_DIR to no clobber the FD_INDEX_CURRENT_DIR
 		jsr __fat_next_cln						; select next cluster
-		debug "ff_eoc"
-;		bne	ff_eod								; error...
-;		bcc	ff_l2								; C=0, go on with next cluster
+		bne	ff_eod								; error...
+		bcc	__fat_find_first					; C=0, go on with next cluster
 ff_eod:
 		clc										; we are at the end, C=0 and return
 ff_end:
