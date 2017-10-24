@@ -508,24 +508,22 @@ __fat_write_dir_entry:
 		bcc @l2
 		inc krn_ptr1+1
 @l2:
-		lda krn_ptr1+1 													; end of block? :/ edge-case, we have to create the end-of-directory entry at the next block
+		lda krn_ptr1+1 													; end of block reached? :/ edge-case, we have to create the end-of-directory entry at the next block
 		cmp #>(block_data + sd_blocksize)
 		bne @l_eod														; no, write one block only
 
+		; new dir entry 
 		jsr __fat_write_block_data										; write the current block with the updated dir entry first
 		bne @l_exit
-
-		phx
-		ldx #$80														; fill the new dir block with 0 to mark eod
-@l_erase:
-		stz block_data+$000, x
-		stz block_data+$080, x
-		stz block_data+$100, x
-		stz block_data+$180, x
-		dex
+		ldy #$80														; safely, fill the new dir block with 0 to mark eod
+@l_erase:; A=0 here
+		sta block_data+$000, y
+		sta block_data+$080, y
+		sta block_data+$100, y
+		sta block_data+$180, y
+		dey
 		bpl @l_erase
 		jsr inc_lba_address												; increment lba address to write to next block
-		plx
 		debug32 "eod", lba_addr
 		;TODO FIXME test end of cluster, if so reserve a new one, update cluster chain for directory ;)
 @l_eod:
@@ -1171,11 +1169,6 @@ __fat_is_cln_eoc:
 __fat_next_cln:
 		debug32 "f_nc0", fd_area+FD_INDEX_TEMP_DIR+F32_fd::StartCluster
 		
-		jsr __fat_read_cluster_block_and_select
-		bne @l_exit								; read error...
-		bcs @l_exit								; EOC reached?
-
-		
 		lda	(read_blkptr), y
 		sta fd_area + F32_fd::StartCluster+0, x
 		iny
@@ -1526,11 +1519,11 @@ __fat_find_first:
 
 ff_l3:	SetVector block_data, dirptr			; dirptr to begin of target buffer
 		jsr __fat_read_block
-		bne ff_end
+		bne ff_exit
 		dec read_blkptr+1						; set read_blkptr to origin address
 ff_l4:
 		lda (dirptr)
-		beq ff_eod								; first byte of dir entry is $00 (end of directory)
+		beq ff_exit								; first byte of dir entry is $00 (end of directory)
 @l5:
 		ldy #F32DirEntry::Attr					; else check if long filename entry
 		lda (dirptr),y 							; we are only going to filter those here (or maybe not?)
@@ -1559,10 +1552,12 @@ fat_find_next:
 		bra ff_l3
 @ff_eoc:
 		ldx #FD_INDEX_TEMP_DIR					; TODO FIXME dont know if this is a good idea... FD_INDEX_TEMP_DIR was setup above and following the cluster chain is done with the FD_INDEX_TEMP_DIR to no clobber the FD_INDEX_CURRENT_DIR
+		jsr __fat_read_cluster_block_and_select
+		bne ff_exit								; read error...
+		bcs ff_exit								; EOC reached?
 		jsr __fat_next_cln						; select next cluster
-		bne	ff_eod								; error...
-		bcc	__fat_find_first					; C=0, go on with next cluster
-ff_eod:
+		bra	__fat_find_first					; C=0, go on with next cluster
+ff_exit:
 		clc										; we are at the end, C=0 and return
 ff_end:
 		rts
