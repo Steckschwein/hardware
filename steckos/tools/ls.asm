@@ -1,5 +1,4 @@
 
-dir_attrib_mask		= $0a
 .include "common.inc"
 .include "../kernel/kernel.inc"
 .include "../kernel/kernel_jumptable.inc"
@@ -7,7 +6,7 @@ dir_attrib_mask		= $0a
 .include "appstart.inc"
 
 .export print_filename, cnt
-.import dir_show_entry, pagecnt, entries_per_page
+.import dir_show_entry, pagecnt, entries_per_page, dir_attrib_mask
 
 appstart $1000
 main:
@@ -45,7 +44,7 @@ l1:
 		ldy #F32DirEntry::Attr
 		lda (dirptr),y
 
-		bit #dir_attrib_mask ; Hidden attribute set, skip
+		bit dir_attrib_mask ; Hidden attribute set, skip
 		bne @l3
 
 

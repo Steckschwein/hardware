@@ -11,7 +11,7 @@ tmp2	= $a2
 
 
 .import print_filename
-.export dir_show_entry, pagecnt, entries_per_page
+.export dir_show_entry, pagecnt, entries_per_page, dir_attrib_mask
 
 dir_show_entry:
 		pha
@@ -218,6 +218,8 @@ CNVBIT:         ASL tmp0+0       ; Shift out one bit
 		rts
 
 entries = 23
+dir_attrib_mask:  .byte $0a
+
 entries_per_page: .byte entries
 pagecnt: .byte entries
 

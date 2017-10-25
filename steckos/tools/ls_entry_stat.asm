@@ -10,7 +10,7 @@ tmp1    = $a1
 
 
 .import print_filename
-.export dir_show_entry, pagecnt, entries_per_page
+.export dir_show_entry, pagecnt, entries_per_page, dir_attrib_mask
 
 dir_show_entry:
 		pha
@@ -254,6 +254,7 @@ CNVBIT:
 entries = 3
 entries_per_page: .byte entries
 pagecnt: .byte entries
+dir_attrib_mask:  .byte $08
 
 
 ;BIN:		.word 0

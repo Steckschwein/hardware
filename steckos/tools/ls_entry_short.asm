@@ -4,7 +4,7 @@
 
 
 .import print_filename, cnt
-.export dir_show_entry, pagecnt, entries_per_page
+.export dir_show_entry, pagecnt, entries_per_page, dir_attrib_mask
 
 dir_show_entry:
 		pha
@@ -22,6 +22,7 @@ dir_show_entry:
 
 		rts
 
+dir_attrib_mask:  .byte $0a
 entries = 69
 entries_per_page: .byte entries
 pagecnt: .byte entries

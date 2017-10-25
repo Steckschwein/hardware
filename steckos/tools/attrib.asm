@@ -109,7 +109,7 @@ attrib:
 		jsr krn_chrout
 
 		lda (dirptr),y
-		ldx #$02
+		ldx #$03
 @al:
 		bit attr_tbl,x
 		beq @skip
