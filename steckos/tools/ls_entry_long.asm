@@ -24,25 +24,18 @@ dir_show_entry:
 		lda (dirptr),y
 
 
-		ror
-		ror
-		ror
-		bcc @l1
+		bit #DIR_Attr_Mask_Volume
+		beq @l1
 		lda #'V'
-		bra @l4
+		bra @l3
 @l1:
-		ror
-		bcc @l2
-		lda #'S'
-		bra @l4
-@l2:
-		ror
-		bcc @l3
+		bit #DIR_Attr_Mask_Dir
+		beq @l2
 		lda #'D'
-		bra @l4
-@l3:
+		bra @l3
+@l2:
 		lda #'F'
-@l4:
+@l3:
 		jsr krn_chrout
 		lda #' '
 		jsr krn_chrout
