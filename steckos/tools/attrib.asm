@@ -153,9 +153,9 @@ unset_attrib:
 		rts
 
 attr_tbl:
-		.byte DIR_Attr_Mask_ReadOnly, DIR_Attr_Mask_Hidden,DIR_Attr_Mask_Archive
+		.byte DIR_Attr_Mask_ReadOnly, DIR_Attr_Mask_Hidden,DIR_Attr_Mask_System,DIR_Attr_Mask_Archive
 attr_lbl:
-		.byte 'R','H','A'
+		.byte 'R','H','S','A'
 
 filename:
 		.res 11
