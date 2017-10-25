@@ -64,6 +64,7 @@ fat_read:
 
 		; in:
 		;	X - offset into fd_area
+		;	write_blkptr - set to the address with data we have to write
 		; out:
 		;   Z - Z=1 on success (A=0), Z=0 and A=error code otherwise
 fat_write:
@@ -86,6 +87,7 @@ fat_write:
 		jsr __fat_reserve_cluster							; otherwise start cluster is root, we try to find a free cluster, fat_tmp_fd has to be set
 		bne @l_exit
 		restoreptr write_blkptr								; restore write ptr
+		debug "f_w"
 		ldx fat_tmp_fd										; restore fd, go on with writing data
 @l_write:
 		jsr calc_blocks
@@ -409,46 +411,45 @@ __fat_write_newdir_entry:
 		cpy #.sizeof(F32DirEntry)
 		bne @l_dir_cp
 
-		phx																		; save fd
-		ldx #.sizeof(F32DirEntry::Name) + .sizeof(F32DirEntry::Ext)	-1			; erase name and build the "." and ".." entries
+		ldy #.sizeof(F32DirEntry::Name) + .sizeof(F32DirEntry::Ext)	-1			; erase name and build the "." and ".." entries
 		lda #$20
 @l_clr_name:
-		sta block_data, x														; 1st dir entry
-		sta block_data+1*.sizeof(F32DirEntry), x								; 2nd dir entry
-		dex
+		sta block_data, y														; 1st dir entry
+		sta block_data+1*.sizeof(F32DirEntry), y								; 2nd dir entry
+		dey
 		bne @l_clr_name
 		lda #'.'
 		sta block_data+F32DirEntry::Name+0										; 1st entry "."
 		sta block_data+1*.sizeof(F32DirEntry)+F32DirEntry::Name+0				; 2nd entry ".."
 		sta block_data+1*.sizeof(F32DirEntry)+F32DirEntry::Name+1
 
-		ldx #FD_INDEX_TEMP_DIR													; due to fat_opendir/fat_open within fat_mkdir the fd of temp dir (FD_INDEX_TEMP_DIR) represents the last visited directory which must be the parent of this one ("..") - FTW!
+		ldy #FD_INDEX_TEMP_DIR													; due to fat_opendir/fat_open within fat_mkdir the fd of temp dir (FD_INDEX_TEMP_DIR) represents the last visited directory which must be the parent of this one ("..") - FTW!
 		debug32 "cd_cln", fd_area + FD_INDEX_TEMP_DIR + F32_fd::StartCluster
-		lda fd_area+F32_fd::StartCluster+0,x
+		lda fd_area+F32_fd::StartCluster+0,y
 		sta block_data+1*.sizeof(F32DirEntry)+F32DirEntry::FstClusLO+0
-		lda fd_area+F32_fd::StartCluster+1,x
+		lda fd_area+F32_fd::StartCluster+1,y
 		sta block_data+1*.sizeof(F32DirEntry)+F32DirEntry::FstClusLO+1
-		lda fd_area+F32_fd::StartCluster+2,x
+		lda fd_area+F32_fd::StartCluster+2,y
 		sta block_data+1*.sizeof(F32DirEntry)+F32DirEntry::FstClusHI+0
-		lda fd_area+F32_fd::StartCluster+3,x
+		lda fd_area+F32_fd::StartCluster+3,y
 		sta block_data+1*.sizeof(F32DirEntry)+F32DirEntry::FstClusHI+1
 
-		ldx #$80
+		ldy #$80
+		lda #$00
 @l_1st_block:
-		stz block_data+2*.sizeof(F32DirEntry), x								; all dir entries, but "." and ".." (+2), are set to 0
-		stz block_data+$080, x
-		stz block_data+$100, x
-		stz block_data+$180, x
-		dex
+		sta block_data+2*.sizeof(F32DirEntry), y								; all dir entries, but "." and ".." (+2), are set to 0
+		sta block_data+$080, y
+		sta block_data+$100, y
+		sta block_data+$180, y
+		dey
 		bpl @l_1st_block
 
-		plx																		; restore fd
 		jsr calc_lba_addr
 		jsr __fat_write_block_data
 		bne @l_exit
 
 		m_memset block_data, 0, 2*.sizeof(F32DirEntry)							; now erase the "." and ".." entries too
-		ldy volumeID+ VolumeID:: BPB + BPB::SecPerClus										; fill up (VolumeID::SecPerClus - 1) reamining blocks of the cluster with empty dir entries
+		ldy volumeID+ VolumeID:: BPB + BPB::SecPerClus							; fill up (VolumeID::SecPerClus - 1) reamining blocks of the cluster with empty dir entries
 		debug32 "er_d", lba_addr
 		bra @l_remain_blocks_e
 @l_remain_blocks:
@@ -457,7 +458,7 @@ __fat_write_newdir_entry:
 		bne @l_exit
 @l_remain_blocks_e:
 		dey
-		bne @l_remain_blocks												; write until VolumeID::SecPerClus - 1
+		bne @l_remain_blocks													; write until VolumeID::SecPerClus - 1
 @l_exit:
 		rts
 
@@ -523,9 +524,17 @@ __fat_write_dir_entry:
 		sta block_data+$180, y
 		dey
 		bpl @l_erase
-		jsr inc_lba_address												; increment lba address to write to next block
-		debug32 "eod", lba_addr
+		
 		;TODO FIXME test end of cluster, if so reserve a new one, update cluster chain for directory ;)
+		debug32 "eod_lba", lba_addr
+		debug32 "eod_cln", fd_area+FD_INDEX_TEMP_DIR
+;		lda lba_addr+0
+;		adc #02
+;		sbc volumeID+VolumeID::BPB + BPB::SecPerClus		
+;		lda fd_area+F32_fd::StartCluster+0
+;		sbc lba_addr+0		
+		jsr inc_lba_address												; increment lba address to write to next block
+		
 @l_eod:
 		;TODO FIXME erase the rest of the block, currently 0 is assumed
 		jsr __fat_write_block_data										; write the updated dir entry to device
@@ -626,7 +635,7 @@ __fat_write_fat_blocks:
 			adc volumeID + VolumeID::EBPB + EBPB::FATSz32 + i
 			sta lba_addr + i
 		.endrepeat
-		jsr __fat_write_block_fat
+		jsr __fat_write_block_fat				; write to fat mirror (fat2)
 @err_exit:
 		rts
 
@@ -1038,7 +1047,6 @@ __prepare_calc_lba_addr:
 		.endrepeat
 		rts
 @l_scl:
-		; lba_addr = cluster_begin_lba_m2 + (cluster_number * VolumeID::SecPerClus);
 		.repeat 4,i
 			lda fd_area + F32_fd::StartCluster + i,x
 			sta lba_addr + i
@@ -1047,6 +1055,7 @@ __prepare_calc_lba_addr:
 		
 		
 ; 		calculate LBA address of first block from cluster number found in file descriptor entry. file descriptor index must be in x
+;		Note: lba_addr = cluster_begin_lba_m2 + (cluster_number * VolumeID::SecPerClus)
 ;		in:
 ;			X - file descriptor index
 calc_lba_addr:
@@ -1297,8 +1306,8 @@ fat_mount:
 		sta fat_fsinfo_lba+2
 
 		; cluster_begin_lba_m2 -> cluster_begin_lba - (VolumeID::RootClus*VolumeID::SecPerClus)
-		;TODO FIXME we assume 2 here insteasd of using the value in VolumeID::RootClus
 		; cluster_begin_lba_m2 -> cluster_begin_lba - (2*sec/cluster) => cluster_begin_lba - (sec/cluster << 1)
+		;TODO FIXME we assume 2 here instead of using the value in VolumeID::RootClus
 		lda volumeID+VolumeID::BPB + BPB::SecPerClus ; max sec/cluster can be 128, with 2 (BPB_RootClus) * 128 wie may subtract max 256
 		asl
 		sta lba_addr        ;   used as tmp
