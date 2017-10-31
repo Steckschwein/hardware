@@ -46,9 +46,9 @@ hello:
 		crlf
 
 mainloop:
-		; output prompt character
 
 		crlf
+		; output current path
 
 		lda	#<msgbuf
 		ldx #>msgbuf
@@ -56,11 +56,11 @@ mainloop:
 		jsr krn_getcwd
 		bne @nocwd
 
-;		SetVector msgbuf, msgptr
 		lda #<msgbuf
 		ldx #>msgbuf
 		jsr krn_strout
 @nocwd:
+		; output prompt character
 		lda #'>'
 		jsr krn_chrout
 
@@ -471,7 +471,6 @@ upload:
 
 help:
 		crlf
-;		SetVector helptxt1, msgptr
 		lda #<helptxt1
 		ldx #>helptxt1
 		jsr krn_strout
