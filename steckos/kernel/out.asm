@@ -2,7 +2,7 @@
 
 .segment "KERNEL"
 .export chrout, hexout, strout, primm
-.import textui_chrout, textui_strout
+.import textui_chrout, textui_strout, textui_primm
 
 ;----------------------------------------------------------------------------------------------
 ; Output char on active output device
@@ -71,22 +71,23 @@ hexdigit:
 ; jsr primm
 ; .byte "Example Text!",$00
 ;----------------------------------------------------------------------------------------------
-primm:
-		pla						; Get the low part of "return" address
+primm = textui_primm
+;primm:
+;		pla						; Get the low part of "return" addres
                                 ; (data start address)
-		sta     krn_ptr3
-		pla
-		sta     krn_ptr3+1             ; Get the high part of "return" address
+;		sta     krn_ptr3
+;		pla
+;		sta     krn_ptr3+1             ; Get the high part of "return" address
                                 ; (data start address)
 		; Note: actually we're pointing one short
-PSINB:	inc     krn_ptr3             ; update the pointer
-		bne     PSICHO          ; if not, we're pointing to next character
-		inc     krn_ptr3+1             ; account for page crossing
-PSICHO:	lda     (krn_ptr3)	        ; Get the next string character
-		beq     PSIX1           ; don't print the final NULL
-		jsr     chrout		; write it out
-		bra     PSINB           ; back around
-PSIX1:	inc     krn_ptr3             ;
-		bne     PSIX2           ;
-		inc     krn_ptr3+1             ; account for page crossing
-PSIX2:	jmp     (krn_ptr3)           ; return to byte following final NULL
+;PSINB:	inc     krn_ptr3             ; update the pointer
+;		bne     PSICHO          ; if not, we're pointing to next character
+;		inc     krn_ptr3+1             ; account for page crossing
+;PSICHO:	lda     (krn_ptr3)	        ; Get the next string character
+;		beq     PSIX1           ; don't print the final NULL
+;		jsr     chrout		; write it out
+;		bra     PSINB           ; back around
+;PSIX1:	inc     krn_ptr3             ;
+;		bne     PSIX2           ;
+;		inc     krn_ptr3+1             ; account for page crossing
+;PSIX2:	jmp     (krn_ptr3)           ; return to byte following final NULL

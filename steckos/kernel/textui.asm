@@ -26,7 +26,7 @@ screen_frames		=   screen_status + 2
 saved_char			=   screen_status + 3
 
 .segment "KERNEL"
-.export textui_init0, textui_update_screen, textui_chrout, textui_put, textui_strout
+.export textui_init0, textui_update_screen, textui_chrout, textui_put, textui_strout, textui_primm
 .export textui_enable, textui_disable, textui_blank, textui_update_crs_ptr, textui_crsxy, textui_scroll_up
 .import vdp_bgcolor, vdp_memcpy, vdp_mode_text, vdp_display_off
 
@@ -237,6 +237,35 @@ textui_strout:
 		_screen_dirty
 		rts
 
+;----------------------------------------------------------------------------------------------
+; Put the string following in-line until a NULL out to the console
+; jsr primm
+; .byte "Example Text!",$00
+;----------------------------------------------------------------------------------------------
+textui_primm:
+		pla						; Get the low part of "return" address
+                                ; (data start address)
+		sta     krn_ptr3
+		pla
+		sta     krn_ptr3+1             ; Get the high part of "return" address
+                                ; (data start address)
+		inc screen_write_lock
+		; Note: actually we're pointing one short
+PSINB:	inc     krn_ptr3             ; update the pointer
+		bne     PSICHO          ; if not, we're pointing to next character
+		inc     krn_ptr3+1             ; account for page crossing
+PSICHO:	lda     (krn_ptr3)	        ; Get the next string character
+		beq     PSIX1           ; don't print the final NULL
+		jsr     textui_dispatch_char		; write it out
+		bra     PSINB           ; back around
+PSIX1:	inc     krn_ptr3             ;
+		bne     PSIX2           ;
+		inc     krn_ptr3+1             ; account for page crossing
+PSIX2:
+		stz screen_write_lock
+		_screen_dirty
+		jmp     (krn_ptr3)           ; return to byte following final NULL
+
 textui_chrout:
 		beq	@l1	; \0 char
 		;php
@@ -249,6 +278,7 @@ textui_chrout:
 		pla					; restore a/p
 		;plp
 @l1:	rts
+
 
 
 ; set crs x and y position absolutely - 0..32/0..23 or 0..39/0..23 40 char mode
