@@ -8,8 +8,8 @@
 		ldy	#$ff
 		jsr krn_getcwd
 		bne	@l_err
-;		lda	#<buffer
-;		ldx #>buffer
+		lda	#<buffer
+		ldx #>buffer
 		;TODO FIXME use a/x instead of zp location msgptr
 		jsr krn_strout
 
