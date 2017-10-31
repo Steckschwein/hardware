@@ -69,10 +69,7 @@ mainloop:
 
 		; put input into buffer until return is pressed
 inputloop:
-;@l:		jsr krn_getkey
-		;bcc @l
 		keyin
-
 
 		cmp #KEY_RETURN ; return?
 		beq parse
@@ -161,7 +158,6 @@ compare:
 @l2:	lda (cmdptr),y
 
 		; if not, there is a terminating null
-		; cmp #$00
 		bne @l3
 
 		cmp cmdlist,x
@@ -211,8 +207,6 @@ unknown:
 		lda (bufptr)
 		beq @l1
 
-		; +SetVector .buf, paramptr
-		; +ShellPrintString .crlf
 		crlf
 		jmp run
 
@@ -294,7 +288,6 @@ cd:
     	ldx paramptr+1
     	jsr krn_chdir
 		beq @l2
-        ;	debugptr "cderr:", paramptr
 		jmp errmsg
 @l2:
 		jmp mainloop
@@ -357,7 +350,6 @@ run:
 		iny
 		bne	@l5
 @l4:	stz tmpbuf,x
-;        debugdump "t:", tmpbuf
 		lda #<tmpbuf
 		ldx #>tmpbuf    ; cmdline in a/x
 		jsr krn_execv   ; return A with errorcode
@@ -372,7 +364,6 @@ dumpvec_end   	= dumpvec
 dumpvec_start 	= dumpvec+2
 
 dump:
-		; stz .dumpvec
 		stz dumpvec+1
 		stz dumpvec+2
 		stz dumpvec+3
@@ -466,7 +457,7 @@ dump:
 		sta dumpvec_start+1
 		bra @l3
 
-@l8:		jmp mainloop
+@l8:	jmp mainloop
 .endif
 
 upload:
@@ -478,7 +469,6 @@ upload:
 
 help:
 		crlf
-		; +ShellPrintString .hellotxt
 		SetVector helptxt1, msgptr
 		jsr krn_strout
 		jmp mainloop
@@ -486,7 +476,5 @@ help:
 PATH:		.asciiz "/bin/:/sbin/:/usr/bin/"
 APPEXT:		.asciiz ".PRG"
 tmpbuf:
-;	.res 64,0
-;.align 256
 buf = tmpbuf + 64
 msgbuf = tmpbuf + buf
