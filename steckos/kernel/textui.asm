@@ -26,7 +26,16 @@ screen_frames		=   screen_status + 2
 saved_char			=   screen_status + 3
 
 .segment "KERNEL"
-.export textui_init0, textui_update_screen, textui_chrout, textui_put, textui_strout, textui_primm
+.export textui_init0, textui_update_screen, textui_chrout, textui_put
+
+.ifdef TEXTUI_STROUT
+.export textui_strout
+.endif
+
+.ifdef TEXTUI_PRIMM
+.export textui_primm
+.endif
+
 .export textui_enable, textui_disable, textui_blank, textui_update_crs_ptr, textui_crsxy, textui_scroll_up
 .import vdp_bgcolor, vdp_memcpy, vdp_mode_text, vdp_display_off
 
@@ -221,6 +230,13 @@ textui_put:
         pla
         rts
 
+.ifdef TEXTUI_STROUT
+;----------------------------------------------------------------------------------------------
+; Output string on screen
+; in:
+;   A - lowbyte  of string address
+;   X - highbyte of string address
+;----------------------------------------------------------------------------------------------
 textui_strout:
 		sta krn_ptr3		;init for output below
 		stx krn_ptr3+1
@@ -236,12 +252,14 @@ textui_strout:
 
 		_screen_dirty
 		rts
+.endif
 
 ;----------------------------------------------------------------------------------------------
 ; Put the string following in-line until a NULL out to the console
 ; jsr primm
 ; .byte "Example Text!",$00
 ;----------------------------------------------------------------------------------------------
+.ifdef TEXTUI_PRIMM
 textui_primm:
 		pla						; Get the low part of "return" address
                                 ; (data start address)
@@ -265,6 +283,8 @@ PSIX2:
 		stz screen_write_lock
 		_screen_dirty
 		jmp     (krn_ptr3)           ; return to byte following final NULL
+.endif
+
 
 textui_chrout:
 		beq	@l1	; \0 char

@@ -17,6 +17,10 @@ LDFLAGS=--config steckos.cfg
 #DEBUG += -DFAT_NOWRITE 
 # debug rtc updates by kernel
 
+# optimize flags
+OPT += -DTEXTUI_STROUT
+OPT += -DTEXTUI_PRIMM
+
 .PHONY: all clean
 all: kernel.bin loader.bin
 
@@ -25,7 +29,7 @@ clean:
 	rm -f *.o *.bin *.map *.txt kernel_jumptable.inc version.inc
 
 %.o: %.asm $(ASM_INCLUDE)/vdp.inc zeropage.inc fat32.inc version.inc ../asminc/common.inc
-	ca65 --cpu $(CPU) --target none $(DEBUG) --include-dir $(ASM_INCLUDE)  $<
+	ca65 --cpu $(CPU) --target none $(DEBUG) $(OPT) --include-dir $(ASM_INCLUDE)  $<
 
 version.inc:
 	echo -n ".byte \"r`hg log -l1 | grep changeset | cut -d ':' -f2 | tr -d ' '`\"" > version.inc

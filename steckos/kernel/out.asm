@@ -2,7 +2,15 @@
 
 .segment "KERNEL"
 .export chrout, hexout, strout, primm
-.import textui_chrout, textui_strout, textui_primm
+.import textui_chrout
+
+.ifdef TEXTUI_STROUT
+.import textui_strout
+.endif
+
+.ifdef TEXTUI_PRIMM
+.import textui_primm
+.endif
 
 ;----------------------------------------------------------------------------------------------
 ; Output char on active output device
@@ -18,25 +26,26 @@ chrout = textui_chrout
 ;   A - lowbyte  of string address
 ;   X - highbyte of string address
 ;----------------------------------------------------------------------------------------------
+.ifdef TEXTUI_STROUT
 strout = textui_strout
+.else
+strout:
+		sta krn_ptr3		;init for output below
+		stx krn_ptr3+1
+		pha                 ;save a, y to stack
+		phy
 
-;stroutx:
-;		sta krn_ptr3		;init for output below
-;		stx krn_ptr3+1
-;		pha                 ;save a, y to stack
-;		phy
+		ldy #$00
+@l1:	lda (krn_ptr3),y
+		beq @l2
+		jsr chrout
+		iny
+		bne @l1
 
-;		ldy #$00
-;@l1:	lda (krn_ptr3),y
-;		beq @l2
-;		jsr chrout
-;		iny
-;		bne @l1
-
-;@l2:	ply                 ;restore a, y
-;		pla
-;		rts
-
+@l2:	ply                 ;restore a, y
+		pla
+		rts
+.endif
 ;----------------------------------------------------------------------------------------------
 ; Output byte as hex string on active output device
 ;----------------------------------------------------------------------------------------------
@@ -71,23 +80,26 @@ hexdigit:
 ; jsr primm
 ; .byte "Example Text!",$00
 ;----------------------------------------------------------------------------------------------
+.ifdef TEXTUI_PRIMM
 primm = textui_primm
-;primm:
-;		pla						; Get the low part of "return" addres
+.else
+primm:
+		pla						; Get the low part of "return" addres
                                 ; (data start address)
-;		sta     krn_ptr3
-;		pla
-;		sta     krn_ptr3+1             ; Get the high part of "return" address
+		sta     krn_ptr3
+		pla
+		sta     krn_ptr3+1             ; Get the high part of "return" address
                                 ; (data start address)
 		; Note: actually we're pointing one short
-;PSINB:	inc     krn_ptr3             ; update the pointer
-;		bne     PSICHO          ; if not, we're pointing to next character
-;		inc     krn_ptr3+1             ; account for page crossing
-;PSICHO:	lda     (krn_ptr3)	        ; Get the next string character
-;		beq     PSIX1           ; don't print the final NULL
-;		jsr     chrout		; write it out
-;		bra     PSINB           ; back around
-;PSIX1:	inc     krn_ptr3             ;
-;		bne     PSIX2           ;
-;		inc     krn_ptr3+1             ; account for page crossing
-;PSIX2:	jmp     (krn_ptr3)           ; return to byte following final NULL
+PSINB:	inc     krn_ptr3             ; update the pointer
+		bne     PSICHO          ; if not, we're pointing to next character
+		inc     krn_ptr3+1             ; account for page crossing
+PSICHO:	lda     (krn_ptr3)	        ; Get the next string character
+		beq     PSIX1           ; don't print the final NULL
+		jsr     chrout		; write it out
+		bra     PSINB           ; back around
+PSIX1:	inc     krn_ptr3             ;
+		bne     PSIX2           ;
+		inc     krn_ptr3+1             ; account for page crossing
+PSIX2:	jmp     (krn_ptr3)           ; return to byte following final NULL
+.endif
