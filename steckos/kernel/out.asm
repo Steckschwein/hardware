@@ -2,14 +2,15 @@
 
 .segment "KERNEL"
 .export chrout, hexout, strout, primm
-.import textui_chrout
+.import textui_chrout, textui_strout
 
 ;----------------------------------------------------------------------------------------------
 ; Output char on active output device
+; in:
+;  A - char to output
 ;----------------------------------------------------------------------------------------------
 ;chrout:     jmp textui_chrout
 chrout = textui_chrout
-
 
 ;----------------------------------------------------------------------------------------------
 ; Output string on active output device
@@ -17,22 +18,24 @@ chrout = textui_chrout
 ;   A - lowbyte  of string address
 ;   X - highbyte of string address
 ;----------------------------------------------------------------------------------------------
-strout:
-		sta krn_ptr3		;init for output below
-		stx krn_ptr3+1
-		pha                 ;save a, y to stack
-		phy
+strout = textui_strout
 
-		ldy #$00
-@l1:	lda (krn_ptr3),y
-		beq @l2
-		jsr chrout
-		iny
-		bne @l1
+;stroutx:
+;		sta krn_ptr3		;init for output below
+;		stx krn_ptr3+1
+;		pha                 ;save a, y to stack
+;		phy
 
-@l2:	ply                 ;restore a, y
-		pla
-		rts
+;		ldy #$00
+;@l1:	lda (krn_ptr3),y
+;		beq @l2
+;		jsr chrout
+;		iny
+;		bne @l1
+
+;@l2:	ply                 ;restore a, y
+;		pla
+;		rts
 
 ;----------------------------------------------------------------------------------------------
 ; Output byte as hex string on active output device

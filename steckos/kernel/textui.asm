@@ -26,7 +26,7 @@ screen_frames		=   screen_status + 2
 saved_char			=   screen_status + 3
 
 .segment "KERNEL"
-.export textui_init0, textui_update_screen, textui_chrout, textui_put
+.export textui_init0, textui_update_screen, textui_chrout, textui_put, textui_strout
 .export textui_enable, textui_disable, textui_blank, textui_update_crs_ptr, textui_crsxy, textui_scroll_up
 .import vdp_bgcolor, vdp_memcpy, vdp_mode_text, vdp_display_off
 
@@ -41,7 +41,7 @@ textui_decy:
 		rts
 @l1:	dec	crs_y			; go on with textui_update_crs_ptr below
 		bra	textui_update_crs_ptr
-	
+
 textui_incx:
 		lda	crs_x
 		cmp	#(COLS-1)
@@ -49,20 +49,20 @@ textui_incx:
 		rts					;TODO should we move to next row automatically ?!?
 @l1:	inc	crs_x
 		bra	textui_update_crs_ptr
-	
+
 textui_decx:
 		lda	crs_x
 		bne	@l1
 		rts
-@l1:	dec	crs_x			; go on with textui_update_crs_ptr below	
+@l1:	dec	crs_x			; go on with textui_update_crs_ptr below
 textui_update_crs_ptr:		;   updates the 16 bit pointer crs_p upon crs_x, crs_y values
 		pha
-		
+
 		lda saved_char     	;restore saved char
 		sta (crs_ptr)
 		lda #STATUS_CURSOR
 		trb screen_status  	;reset cursor state
-    
+
 		;use the crs_ptr as tmp variable
 		stz	crs_ptr+1
 		lda crs_y
@@ -70,14 +70,14 @@ textui_update_crs_ptr:		;   updates the 16 bit pointer crs_p upon crs_x, crs_y v
 		asl
 		asl
 		sta crs_ptr 	   	; save crs_y * 8
-		asl		   
+		asl
 		rol crs_ptr+1	   	; save carry
 		asl
 		rol crs_ptr+1		; again, save carry
 		adc crs_ptr	    	; crs_y*32 + crs_y*8 (crs_ptr) => y*40
 		bcc @l1
 		inc	crs_ptr+1		; overflow inc page count
-		clc				; 
+		clc				;
 @l1:	adc crs_x
 		sta crs_ptr
 		lda #>screen_buffer
@@ -86,7 +86,7 @@ textui_update_crs_ptr:		;   updates the 16 bit pointer crs_p upon crs_x, crs_y v
 
 		lda	(crs_ptr)
 		sta saved_char		;save char at new position
-		
+
 		pla
 		rts
 
@@ -98,7 +98,7 @@ textui_init0:
         jsr textui_enable
 textui_init:
 		jmp	vdp_mode_text
-	
+
 textui_blank:
 		ldx	#$00
 		lda	#CURSOR_BLANK
@@ -144,19 +144,19 @@ textui_update_screen:
 		beq	@l1
 
 		inc	screen_frames
-        
+
 		jsr	textui_cursor
-		
+
 		lda	screen_status
 		and	#STATUS_BUFFER_DIRTY
 		beq	@l1	;exit if not dirty
-		
+
 		SetVector	screen_buffer, addr    ; copy back buffer to video ram
 		lda	#<ADDRESS_GFX1_SCREEN
 		ldy	#WRITE_ADDRESS + >ADDRESS_GFX1_SCREEN
 		ldx	#$04
 		jsr	vdp_memcpy
-		
+
 		lda	screen_status		;clean dirty
 		and	#<(~STATUS_BUFFER_DIRTY)
 		sta	screen_status
@@ -164,7 +164,7 @@ textui_update_screen:
 @l1:
 		lda	#Medium_Green<<4|Black
 		jsr	vdp_bgcolor
-		rts	
+		rts
 
 textui_scroll_up:
 		phx
@@ -220,11 +220,14 @@ textui_put:
         _screen_dirty
         pla
         rts
-    
-textui_print:
+
+textui_strout:
+		sta krn_ptr3		;init for output below
+		stx krn_ptr3+1
+
 		inc screen_write_lock	;write on
 		ldy	#$00
-@l1:	lda	(msgptr),y
+@l1:	lda	(krn_ptr3),y
 		beq	@l2
 		jsr textui_dispatch_char
 		iny
@@ -247,14 +250,14 @@ textui_chrout:
 		;plp
 @l1:	rts
 
-	
+
 ; set crs x and y position absolutely - 0..32/0..23 or 0..39/0..23 40 char mode
 ;
 textui_crsxy:
 		stx crs_x
 		sty crs_y
 		jmp textui_update_crs_ptr
-    
+
 textui_dispatch_char:
 		cmp	#KEY_CR			;cariage return?
 		bne	lfeed
@@ -280,7 +283,7 @@ lfeed:
     	rts
 @l3:	dec	crs_x
     	bra @l2
-@l4:    	   
+@l4:
 		sta	saved_char         ; the trick, simple set saved value to plot as saved char, will be print by textui_update_crs_ptr
 		lda	crs_x
 		cmp	#(COLS-1)
@@ -289,5 +292,5 @@ lfeed:
 		jmp	textui_update_crs_ptr
 @l5:	stz	crs_x
 		jmp	inc_cursor_y
-lupdate:	
+lupdate:
 		jmp	textui_update_crs_ptr
