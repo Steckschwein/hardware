@@ -9,23 +9,28 @@
 ;----------------------------------------------------------------------------------------------
 ;chrout:     jmp textui_chrout
 chrout = textui_chrout
-            
-    
+
+
 ;----------------------------------------------------------------------------------------------
 ; Output string on active output device
+; in:
+;   A - lowbyte  of string address
+;   X - highbyte of string address
 ;----------------------------------------------------------------------------------------------
 strout:
+		sta krn_ptr3		;init for output below
+		stx krn_ptr3+1
 		pha                 ;save a, y to stack
 		phy
 
 		ldy #$00
-@l1:		lda (msgptr),y
+@l1:	lda (krn_ptr3),y
 		beq @l2
 		jsr chrout
 		iny
 		bne @l1
 
-@l2:		ply                 ;restore a, y
+@l2:	ply                 ;restore a, y
 		pla
 		rts
 
@@ -41,9 +46,9 @@ hexout:
 		lsr
 		lsr
 		lsr
-		lsr				
+		lsr
 		jsr hexdigit
-		txa 
+		txa
 		jsr hexdigit
 		plx
 		pla
@@ -57,13 +62,13 @@ hexdigit:
 		adc     #6              ;add offset for letter a-f
 @l:
 		jmp 	chrout
-        
+
 ;Put the string following in-line until a NULL out to the console
 DPL		= msgptr
 DPH		= msgptr+1
 
 primm:
-PUTSTRI: 
+PUTSTRI:
 		pla						; Get the low part of "return" address
                                 ; (data start address)
 		sta     DPL

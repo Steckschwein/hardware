@@ -56,7 +56,9 @@ mainloop:
 		jsr krn_getcwd
 		bne @nocwd
 
-		SetVector msgbuf, msgptr
+;		SetVector msgbuf, msgptr
+		lda #<msgbuf
+		ldx #>msgbuf
 		jsr krn_strout
 @nocwd:
 		lda #'>'
@@ -469,7 +471,9 @@ upload:
 
 help:
 		crlf
-		SetVector helptxt1, msgptr
+;		SetVector helptxt1, msgptr
+		lda #<helptxt1
+		ldx #>helptxt1
 		jsr krn_strout
 		jmp mainloop
 

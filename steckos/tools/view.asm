@@ -28,7 +28,7 @@ main:
 		ldy #O_RDONLY
 		jsr krn_open
 		bne @err
-		
+
 		stx tmp1						; save fd
 		SetVector content, read_blkptr
 		jsr krn_read
@@ -55,7 +55,8 @@ main:
 @err:
 		jsr krn_primm
 		.asciiz "load error file "
-		copypointer	paramptr, msgptr
+		lda #<paramptr
+		ldx #>paramptr
 		jsr krn_strout
 
 l2:		jmp (retvec)
