@@ -37,7 +37,6 @@ strout:
 ;----------------------------------------------------------------------------------------------
 ; Output byte as hex string on active output device
 ;----------------------------------------------------------------------------------------------
-
 hexout:
 		pha
 		phx
@@ -63,27 +62,28 @@ hexdigit:
 @l:
 		jmp 	chrout
 
-;Put the string following in-line until a NULL out to the console
-DPL		= msgptr
-DPH		= msgptr+1
 
+;----------------------------------------------------------------------------------------------
+; Put the string following in-line until a NULL out to the console
+; jsr primm
+; .byte "Example Text!",$00
+;----------------------------------------------------------------------------------------------
 primm:
-PUTSTRI:
 		pla						; Get the low part of "return" address
                                 ; (data start address)
-		sta     DPL
+		sta     krn_ptr3
 		pla
-		sta     DPH             ; Get the high part of "return" address
+		sta     krn_ptr3+1             ; Get the high part of "return" address
                                 ; (data start address)
 		; Note: actually we're pointing one short
-PSINB:	inc     DPL             ; update the pointer
+PSINB:	inc     krn_ptr3             ; update the pointer
 		bne     PSICHO          ; if not, we're pointing to next character
-		inc     DPH             ; account for page crossing
-PSICHO:	lda     (DPL)	        ; Get the next string character
+		inc     krn_ptr3+1             ; account for page crossing
+PSICHO:	lda     (krn_ptr3)	        ; Get the next string character
 		beq     PSIX1           ; don't print the final NULL
 		jsr     chrout		; write it out
 		bra     PSINB           ; back around
-PSIX1:	inc     DPL             ;
+PSIX1:	inc     krn_ptr3             ;
 		bne     PSIX2           ;
-		inc     DPH             ; account for page crossing
-PSIX2:	jmp     (DPL)           ; return to byte following final NULL
+		inc     krn_ptr3+1             ; account for page crossing
+PSIX2:	jmp     (krn_ptr3)           ; return to byte following final NULL
