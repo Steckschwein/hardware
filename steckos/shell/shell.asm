@@ -21,9 +21,6 @@ KEY_CRSR_RIGHT 	 	= $10
 KEY_CRSR_LEFT 	 	= $11
 
 BUF_SIZE		= 32
-
-;buf 			= $d600
-;endbuf				= buf + BUF_SIZE*16
 bufptr			= $d0
 pathptr			= $d2
 ; Address pointers for serial upload
@@ -37,6 +34,7 @@ startaddr		= $d9
 init:
 		SetVector mainloop, retvec
 		SetVector buf, bufptr
+		SetVector msgbuf, msgptr
 
 
 hello:
@@ -51,6 +49,16 @@ mainloop:
 		; output prompt character
 
 		crlf
+
+		lda	#<msgbuf
+		ldx #>msgbuf
+		ldy	#$ff
+		jsr krn_getcwd
+		bne @nocwd
+
+		SetVector msgbuf, msgptr
+		jsr krn_strout
+@nocwd:
 		lda #'>'
 		jsr krn_chrout
 
@@ -481,3 +489,4 @@ tmpbuf:
 ;	.res 64,0
 ;.align 256
 buf = tmpbuf + 64
+msgbuf = tmpbuf + buf
