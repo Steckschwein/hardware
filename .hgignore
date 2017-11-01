@@ -16,3 +16,4 @@ syntax: glob
 *~
 *.d
 *.s
+steckos/dist
