@@ -238,9 +238,6 @@ cmdlist:
 		.byte "up",0
 		.word krn_upload
 
-		.byte "help"
-		.byte $00
-		.word help
 .ifdef DEBUG
 		.byte "dump"
 		.byte $00
@@ -268,22 +265,17 @@ atoi:
 
 errmsg:
 		;TODO FIXME maybe use oserror() from cc65 lib
-		pha
+		cmp #$f1
+		bne @l1
 		jsr krn_primm
-		.asciiz "Error: "
-		pla
-		jsr krn_hexout
+		.byte "invalid command",$0a,$00
+		jmp mainloop
+@l1:
+		jsr krn_primm
+		.byte "unknown error",$0a,$00
 
 		jmp mainloop
 
-
-helptxt1:
-		.byte $0a,"ll/ls       - directory (long/short)"
-		.byte $0a,"cd <name>   - change directory"
-.ifdef DEBUG
-		.byte $0a,"dump <addr> <addr> - dump memory"
-.endif
-		.byte $00
 
 cd:
     	lda paramptr
@@ -469,12 +461,6 @@ upload:
 		; jump to new code
 		jmp (startaddr)
 
-help:
-		crlf
-		lda #<helptxt1
-		ldx #>helptxt1
-		jsr krn_strout
-		jmp mainloop
 
 PATH:		.asciiz "/bin/:/sbin/:/usr/bin/"
 APPEXT:		.asciiz ".PRG"
