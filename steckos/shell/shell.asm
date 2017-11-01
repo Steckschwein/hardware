@@ -267,13 +267,21 @@ errmsg:
 		;TODO FIXME maybe use oserror() from cc65 lib
 		cmp #$f1
 		bne @l1
-		jsr krn_primm
-		.byte "invalid command",$0a,$00
-		jmp mainloop
-@l1:
-		jsr krn_primm
-		.byte "unknown error",$0a,$00
 
+		jsr krn_primm
+		.byte $0a,"invalid command",$0a,$00
+		jmp mainloop
+
+@l1:	cmp #$f2
+		bne @l2
+
+		jsr krn_primm
+		.byte $0a,"invalid directory",$0a,$00
+		jmp mainloop
+
+@l2:
+		jsr krn_primm
+		.byte $0a,"unknown error",$0a,$00
 		jmp mainloop
 
 
@@ -282,6 +290,7 @@ cd:
     	ldx paramptr+1
     	jsr krn_chdir
 		beq @l2
+		lda #$f2 ; invalid dir
 		jmp errmsg
 @l2:
 		jmp mainloop
