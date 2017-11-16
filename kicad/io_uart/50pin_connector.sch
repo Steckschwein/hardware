@@ -476,4 +476,29 @@ Wire Wire Line
 Connection ~ 5150 4250
 Wire Wire Line
 	5800 4350 5900 4350
+Text GLabel 8000 2450 0    60   Input ~ 0
+/CS_IO2
+Text GLabel 8000 2600 0    60   Input ~ 0
+/CS_IO1
+Text GLabel 8000 2750 0    60   Input ~ 0
+/CS_IO0
+Wire Wire Line
+	8000 2450 8100 2450
+Wire Wire Line
+	8000 2600 8100 2600
+Wire Wire Line
+	8000 2750 8100 2750
+NoConn ~ 8100 2450
+NoConn ~ 8100 2600
+NoConn ~ 8100 2750
+Text GLabel 8000 2900 0    60   Input ~ 0
+/CS_VDP
+Wire Wire Line
+	8000 2900 8100 2900
+NoConn ~ 8100 2900
+Text GLabel 8000 3050 0    60   Input ~ 0
+RDY
+Wire Wire Line
+	8000 3050 8100 3050
+NoConn ~ 8100 3050
 $EndSCHEMATC
