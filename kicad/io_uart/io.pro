@@ -1,4 +1,4 @@
-update=Wed 12 Apr 2017 09:55:08 AM CEST
+update=Fri 17 Nov 2017 07:23:51 AM CET
 version=1
 last_client=eeschema
 [general]
@@ -27,6 +27,16 @@ ModuleOutlineThickness=0.150000000000
 [cvpcb]
 version=1
 NetIExt=net
+[schematic_editor]
+version=1
+PageLayoutDescrFile=
+PlotDirectoryName=/home/dommas/Desktop/
+SubpartIdSeparator=0
+SubpartFirstId=65
+NetFmtName=
+SpiceForceRefPrefix=0
+SpiceUseNetNumbers=0
+LabSize=60
 [eeschema]
 version=1
 LibDir=../lbr
@@ -67,13 +77,3 @@ LibName33=mini_din
 LibName34=dallas-rtc
 LibName35=lp2950l
 LibName36=osc
-[schematic_editor]
-version=1
-PageLayoutDescrFile=
-PlotDirectoryName=/home/dommas/Desktop/
-SubpartIdSeparator=0
-SubpartFirstId=65
-NetFmtName=
-SpiceForceRefPrefix=0
-SpiceUseNetNumbers=0
-LabSize=60
