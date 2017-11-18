@@ -43,7 +43,8 @@ dir_show_entry:
 		ldy #F32DirEntry::FileSize +1
 		lda (dirptr),y
 		tax
-		ldy #F32DirEntry::FileSize
+		dey
+		;ldy #F32DirEntry::FileSize
 		lda (dirptr),y
 
 		jsr dpb2ad
@@ -175,57 +176,23 @@ decoutz:
  ; Lookup table for decimal to ASCII
 dec_tbl:			.byte 128,160,200
 
-BINBCD16:
-                sta tmp0
-		stx tmp0+1
-	        SED             ; Switch to decimal mode
-                LDA #0          ; Ensure the result is clear
-                STA BCD+0
-                STA BCD+1
-                STA BCD+2
-                LDX #16         ; The number of source bits
-
-CNVBIT:         ASL tmp0+0       ; Shift out one bit
-                ROL tmp0+1
-                LDA BCD+0       ; And add into result
-                ADC BCD+0
-                STA BCD+0
-                LDA BCD+1       ; propagating any carry
-                ADC BCD+1
-                STA BCD+1
-                LDA BCD+2       ; ... thru whole result
-                ADC BCD+2
-                STA BCD+2
-                DEX             ; And repeat for next bit
-                BNE CNVBIT
-                CLD             ; Back to binary
-
-
-		lda BCD+2
-		jsr krn_hexout
-		lda BCD+1
-		jsr krn_hexout
-		lda BCD
-		jsr krn_hexout
-
-		rts
 
 dpb2ad:
-			sta $31
-			stx $32
+			sta tmp0
+			stx tmp1
 			ldy #$00
 nxtdig:
 
 			ldx #$00
-subem:		lda $31
+subem:		lda tmp0
 			sec
 			sbc subtbl,y
-			sta $31
-			lda $32
+			sta tmp0
+			lda tmp1
 			iny
 			sbc subtbl,y
 			bcc adback
-			sta $32
+			sta tmp1
 			inx
 			dey
 			bra subem
@@ -233,9 +200,9 @@ subem:		lda $31
 adback:
 
 			dey
-			lda $31
+			lda tmp0
 			adc subtbl,y
-			sta $31
+			sta tmp0
 			txa
 			ora #$30
 			jsr krn_chrout
@@ -243,7 +210,7 @@ adback:
 			iny
 			cpy #08
 			bcc nxtdig
-			lda $31
+			lda tmp0
 			ora #$30
 
 
