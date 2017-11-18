@@ -3,7 +3,7 @@
   (general
     (links 275)
     (no_connects 1)
-    (area 62.179999 45.669999 222.300001 146.100001)
+    (area 45.516073 33.770999 240.711447 146.100001)
     (thickness 1.6)
     (drawings 8)
     (tracks 2286)
@@ -14,18 +14,18 @@
 
   (page A4)
   (layers
-    (0 F.Cu signal hide)
-    (31 B.Cu signal hide)
-    (33 F.Adhes user)
-    (35 F.Paste user)
+    (0 F.Cu signal)
+    (31 B.Cu signal)
+    (33 F.Adhes user hide)
+    (35 F.Paste user hide)
     (37 F.SilkS user)
     (39 F.Mask user)
-    (40 Dwgs.User user)
-    (41 Cmts.User user)
-    (42 Eco1.User user)
-    (43 Eco2.User user)
+    (40 Dwgs.User user hide)
+    (41 Cmts.User user hide)
+    (42 Eco1.User user hide)
+    (43 Eco2.User user hide)
     (44 Edge.Cuts user)
-    (45 Margin user)
+    (45 Margin user hide)
   )
 
   (setup
@@ -56,7 +56,7 @@
     (aux_axis_origin 0 0)
     (visible_elements FFFFFF7F)
     (pcbplotparams
-      (layerselection 0x00020_80000001)
+      (layerselection 0x010a0_80000001)
       (usegerberextensions false)
       (excludeedgelayer true)
       (linewidth 0.100000)
@@ -3479,7 +3479,7 @@
     )
   )
 
-  (gr_text "Steckschwein IO/SPI Board v2.0\n2017 Thomas Woinke / Marko Lauke\nhttp://www.steckschwein.de" (at 170.18 139.7) (layer F.SilkS)
+  (gr_text "Steckschwein IO/SPI Board v2.0\n2017 Thomas Woinke / Marko Lauke\nhttp://www.steckschwein.de" (at 170.18 138.43) (layer F.SilkS)
     (effects (font (size 1.5 1.5) (thickness 0.3)) (justify left))
   )
   (gr_text GND (at 83.82 101.6 270) (layer F.SilkS)
