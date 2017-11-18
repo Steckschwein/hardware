@@ -7,8 +7,8 @@
 #define PIN_KB  PIND
 #define PORT_KB PORTD
 #define CLOCK   2
-#define DATAPIN 0
-#define MOUSE_DATAPIN 1
+#define DATAPIN 6
+#define MOUSE_DATAPIN 7
 
 void init_kb(void);
 void decode(unsigned char sc);
