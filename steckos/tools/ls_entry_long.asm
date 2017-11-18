@@ -46,7 +46,7 @@ dir_show_entry:
 		ldy #F32DirEntry::FileSize
 		lda (dirptr),y
 
-		jsr BINBCD16
+		jsr dpb2ad
 
 		lda #' '
 		jsr krn_chrout
@@ -209,6 +209,51 @@ CNVBIT:         ASL tmp0+0       ; Shift out one bit
 		jsr krn_hexout
 
 		rts
+
+dpb2ad:
+			sta $31
+			stx $32
+			ldy #$00
+nxtdig:
+
+			ldx #$00
+subem:		lda $31
+			sec
+			sbc subtbl,y
+			sta $31
+			lda $32
+			iny
+			sbc subtbl,y
+			bcc adback
+			sta $32
+			inx
+			dey
+			bra subem
+
+adback:
+
+			dey
+			lda $31
+			adc subtbl,y
+			sta $31
+			txa
+			ora #$30
+			jsr krn_chrout
+			iny
+			iny
+			cpy #08
+			bcc nxtdig
+			lda $31
+			ora #$30
+
+
+			jmp krn_chrout
+;			rts
+
+subtbl:		.word 10000
+			.word 1000
+			.word 100
+			.word 10
 
 entries = 23
 dir_attrib_mask:  .byte $0a
