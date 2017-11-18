@@ -181,6 +181,7 @@ dpb2ad:
 			sta tmp0
 			stx tmp1
 			ldy #$00
+			sty tmp2
 nxtdig:
 
 			ldx #$00
@@ -204,9 +205,21 @@ adback:
 			adc subtbl,y
 			sta tmp0
 			txa
-			ora #$30
+			bne setlzf
+			bit tmp2
+			bmi cnvta
+			bpl printspc
+setlzf:		ldx #$80
+			stx tmp2
+
+cnvta:		ora #$30
 			jsr krn_chrout
-			iny
+			bra uptbl
+printspc:
+			lda #' '
+			jsr krn_chrout
+			
+uptbl:		iny
 			iny
 			cpy #08
 			bcc nxtdig
@@ -216,6 +229,7 @@ adback:
 
 			jmp krn_chrout
 ;			rts
+
 
 subtbl:		.word 10000
 			.word 1000
