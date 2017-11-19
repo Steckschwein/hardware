@@ -1,7 +1,8 @@
 .include "../steckos/kernel/kernel.inc"
 .include "../steckos/kernel/kernel_jumptable.inc"
 .include "../steckos/asminc/common.inc"
-
+.include "../steckos/asminc/appstart.inc"
+appstart $1000
 
 main:
 	lda #$0a
@@ -18,8 +19,8 @@ main:
 	jsr krn_chrout
 	bra @loop
 
-	
-out:	
+
+out:
 	lda #$0a
 	jsr krn_chrout
 
@@ -47,14 +48,14 @@ out:
 
 
 @sub:
-	sec 
+	sec
 	sbc #13
 	bra @output
 @add:
-	;clc ; carry will always be clear when we get here, so save on byte 
+	;clc ; carry will always be clear when we get here, so save on byte
 	adc #13
 @output:
-	inx         ; Cycles: 2 
-	jsr krn_chrout ; Cycles: 6 
+	inx         ; Cycles: 2
+	jsr krn_chrout ; Cycles: 6
 	bra @loop
 buf:
