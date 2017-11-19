@@ -5,7 +5,7 @@
 .include "../kernel/fat32.inc"
 .include "appstart.inc"
 
-.export print_filename, cnt
+.export print_filename, cnt, files, dirs
 .import dir_show_entry, pagecnt, entries_per_page, dir_attrib_mask
 
 appstart $1000
@@ -29,7 +29,7 @@ l1:
 		printstring "i/o error"
 		jmp (retvec)
 
-@l2_1:		bcs @l4
+@l2_1:	bcs @l4
 		bra @l5
 		; jsr .dir_show_entry
 @l3:
@@ -73,9 +73,48 @@ l1:
 		bra @l3
 @l5:
 
+		lda files
+		beq @end
+		jsr b2ad
+		jsr krn_primm
+		.byte " file(s)",$0a,$00
+		lda dirs
+		beq @end
+		jsr b2ad
+		jsr krn_primm
+		.byte " dir(s)",$0a,$00
+
+@end:
 
 		jmp (retvec)
 
+b2ad:		phx
+			ldx #$00
+c100:		cmp #100
+			bcc out1
+			sbc #100
+			inx
+			bra c100
+out1:		jsr putout
+			ldx #$00
+c10:		cmp #10
+			bcc out2
+			sbc #10
+			inx
+			bra c10
+out2:		jsr putout
+			clc
+			adc #$30
+			jsr krn_chrout
+			plx
+			rts
+
+putout:		pha
+			txa
+			adc #$30
+			jsr krn_chrout
+			pla
+			rts
 
 
 print_filename:
@@ -89,3 +128,5 @@ print_filename:
 
 pattern:			.byte "*.*",$00
 cnt: 	.byte $04
+dirs:	.byte $00
+files:	.byte $00

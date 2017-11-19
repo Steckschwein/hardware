@@ -7,7 +7,7 @@
 
 
 
-.import print_filename
+.import print_filename, files, dirs
 .export dir_show_entry, pagecnt, entries_per_page, dir_attrib_mask
 
 dir_show_entry:
@@ -25,6 +25,7 @@ dir_show_entry:
 		beq @l
 		jsr krn_primm
 		.byte "<DIR> ",$00
+		inc dirs
 		bra @date				; no point displaying directory size as its always zeros
 								; just print some spaces and skip to date display
 @l:
@@ -39,6 +40,7 @@ dir_show_entry:
 
 		lda #' '
 		jsr krn_chrout
+		inc files
 @date:
 		ldy #F32DirEntry::WrtDate
 
