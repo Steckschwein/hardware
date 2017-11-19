@@ -111,6 +111,13 @@ dir_show_entry:
 
 		jsr b2ad
 
+		lda #':'
+		jsr krn_chrout
+
+		lda (dirptr),y
+		and #%00011111
+
+		jsr b2ad
 
         ; Bits 11–15: Hours, valid value range 0–23 inclusive.
         crlf
