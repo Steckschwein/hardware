@@ -74,10 +74,11 @@ l1:
 @l5:
 
 		lda files
-		beq @end
+		beq @dirs
 		jsr b2ad
 		jsr krn_primm
 		.byte " file(s)",$0a,$00
+@dirs:
 		lda dirs
 		beq @end
 		jsr b2ad
