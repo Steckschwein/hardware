@@ -34,7 +34,7 @@ dir_show_entry:
 		jsr krn_primm
 		.byte "D       ",$00
 		bra @date				; no point displaying directory size as its always zeros
-								; just print some spaces and skip to date display 
+								; just print some spaces and skip to date display
 @l2:
 		lda #'F'
 @l3:
@@ -56,9 +56,13 @@ dir_show_entry:
 		jsr krn_chrout
 @date:
 		ldy #F32DirEntry::WrtDate
+
 		lda (dirptr),y
+
+		; day
 		and #%00011111
-		jsr decoutz
+
+		jsr b2ad
 
 		lda #'.'
 		jsr krn_chrout
@@ -76,7 +80,7 @@ dir_show_entry:
 		lsr
 		lsr
 
-		jsr decoutz
+		jsr b2ad
 
 		lda #'.'
 		jsr krn_chrout
@@ -89,7 +93,7 @@ dir_show_entry:
 		bcc @l6		; greater than 100 (post-2000)
 		sec 		; yes, substract 100
 		sbc #100
-@l6:	jsr decoutz ; there we go
+@l6:	jsr b2ad ; there we go
 
 
 		lda #' '
@@ -103,7 +107,7 @@ dir_show_entry:
 		lsr
 		lsr
 
-		jsr decoutz
+		jsr b2ad
 
 		lda #':'
 		jsr krn_chrout
@@ -120,7 +124,7 @@ dir_show_entry:
 		ror
 		.endrepeat
 
-		jsr decoutz
+		jsr b2ad
 
 
         ; Bits 11–15: Hours, valid value range 0–23 inclusive.
@@ -130,55 +134,34 @@ dir_show_entry:
 		pla
 		rts
 
-;----------------------------------------------------------------------------------------------
-; decout - output byte in A as decimal ASCII without leading zeros
-;----------------------------------------------------------------------------------------------
-decout:
-		phx
-		phy
-		ldx #1
-		stx tmp1
-		inx
-		ldy #$40
-@l1:
-		sty tmp0
-		lsr
-@l2:	rol
-		bcs @l3
-		cmp dec_tbl,x
-		bcc @l4
-@l3:	sbc dec_tbl,x
-		sec
-@l4:	rol tmp0
-		bcc @l2
-		tay
-		cpx tmp1
-		lda tmp0
-		bcc @l5
-		beq @l6
-		stx tmp1
-@l5:	eor #$30
-		jsr krn_chrout
-@l6:	tya
-		ldy #$10
-		dex
-		bpl @l1
-		ply
-		plx
 
-		rts
-decoutz:
-		cmp #10
-		bcs @l1
-		pha
-		lda #'0'
-		jsr krn_chrout
-		pla
-@l1:
-		jmp decout
- ; Lookup table for decimal to ASCII
-dec_tbl:			.byte 128,160,200
+b2ad:		phx
+;			ldx #$00
+;c100:		cmp #100
+;			bcc out1
+;			sbc #100
+;			inx
+;			bra c100
+;out1:		jsr putout
+			ldx #$00
+c10:		cmp #10
+			bcc out2
+			sbc #10
+			inx
+			bra c10
+out2:		jsr putout
+			clc
+			adc #$30
+			jsr krn_chrout
+			plx
+			rts
 
+putout:		pha
+			txa
+			adc #$30
+			jsr krn_chrout
+			pla
+			rts
 
 dpb2ad:
 			sta tmp0
@@ -244,6 +227,3 @@ dir_attrib_mask:  .byte $0a
 
 entries_per_page: .byte entries
 pagecnt: .byte entries
-
-;BIN:		.word 0
-BCD:		.res 3
