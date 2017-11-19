@@ -3,11 +3,8 @@
 .include "../kernel/kernel_jumptable.inc"
 .include "../kernel/fat32.inc"
 .include "../asminc/common.inc"
+.include "tools.inc"
 
-
-tmp0    = $a0
-tmp1    = $a1
-tmp2	= $a2
 
 
 .import print_filename
@@ -24,25 +21,13 @@ dir_show_entry:
 		lda (dirptr),y
 
 
-		bit #DIR_Attr_Mask_Volume
-		beq @l1
-		lda #'V'
-		bra @l3
-@l1:
 		bit #DIR_Attr_Mask_Dir
-		beq @l2
+		beq @l
 		jsr krn_primm
-		.byte "D       ",$00
+		.byte "<DIR> ",$00
 		bra @date				; no point displaying directory size as its always zeros
 								; just print some spaces and skip to date display
-@l2:
-		lda #'F'
-@l3:
-		jsr krn_chrout
 @l:
-		lda #' '
-		jsr krn_chrout
-
 		ldy #F32DirEntry::FileSize +1
 		lda (dirptr),y
 		tax
@@ -134,7 +119,6 @@ dir_show_entry:
 		pla
 		rts
 
-
 b2ad:		phx
 ;			ldx #$00
 ;c100:		cmp #100
@@ -221,6 +205,8 @@ subtbl:		.word 10000
 			.word 1000
 			.word 100
 			.word 10
+
+
 
 entries = 23
 dir_attrib_mask:  .byte $0a
