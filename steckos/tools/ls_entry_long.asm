@@ -31,12 +31,15 @@ dir_show_entry:
 @l1:
 		bit #DIR_Attr_Mask_Dir
 		beq @l2
-		lda #'D'
-		bra @l3
+		jsr krn_primm
+		.byte "D       ",$00
+		bra @date				; no point displaying directory size as its always zeros
+								; just print some spaces and skip to date display 
 @l2:
 		lda #'F'
 @l3:
 		jsr krn_chrout
+@l:
 		lda #' '
 		jsr krn_chrout
 
@@ -51,7 +54,7 @@ dir_show_entry:
 
 		lda #' '
 		jsr krn_chrout
-
+@date:
 		ldy #F32DirEntry::WrtDate
 		lda (dirptr),y
 		and #%00011111
@@ -218,7 +221,7 @@ cnvta:		ora #$30
 printspc:
 			lda #' '
 			jsr krn_chrout
-			
+
 uptbl:		iny
 			iny
 			cpy #08
