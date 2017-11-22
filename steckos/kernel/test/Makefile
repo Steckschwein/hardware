@@ -1,9 +1,9 @@
-CA65FLAGS=--cpu 65c02 --include-dir ../../../asmunit --include-dir ../../asminc --include-dir ../
+CA65FLAGS=--cpu 65c02 --include-dir ../../../asmunit --include-dir ../../asminc --include-dir ../ --include-dir ../../../asmunit
 LDFLAGS=--config ../steckosapp.cfg
 
 .PHONY: all clean
 
-all: matcher.test.prg iotest.prg
+all: matcher.test.prg iotest.prg test_out.prg
 
 clean:
 	rm -f *.prg *.s *.o
