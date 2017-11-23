@@ -10,6 +10,8 @@ tmp1    = $a1
 
 
 .import print_filename
+.import b2ad, dpb2ad
+
 .export dir_show_entry, pagecnt, entries_per_page, dir_attrib_mask
 
 dir_show_entry:
@@ -26,7 +28,7 @@ dir_show_entry:
 		tax
 		ldy #F32DirEntry::FileSize
 		lda (dirptr),y
-		jsr BINBCD16
+		jsr dpb2ad
 
 		jsr krn_primm
 		.byte "  Cluster#1: ",$00
@@ -104,7 +106,7 @@ dir_show_entry:
 print_fat_date:
 		lda (dirptr),y
 		and #%00011111
-		jsr decoutz
+		jsr b2ad
 
 		lda #'.'
 		jsr krn_chrout
@@ -122,7 +124,7 @@ print_fat_date:
 		lsr
 		lsr
 
-		jsr decoutz
+		jsr b2ad
 
 		lda #'.'
 		jsr krn_chrout
@@ -135,7 +137,7 @@ print_fat_date:
 		bcc @l6		; greater than 100 (post-2000)
 		sec 		; yes, substract 100
 		sbc #100
-@l6:	jsr decoutz ; there we go
+@l6:	jsr b2ad ; there we go
 
 		rts
 
@@ -146,7 +148,7 @@ print_fat_time:
 		lsr
 		lsr
 
-		jsr decoutz
+		jsr b2ad
 
 		lda #':'
 		jsr krn_chrout
@@ -163,99 +165,13 @@ print_fat_time:
 		ror
 		.endrepeat
 
-		jsr decoutz
+		jsr b2ad
 
 		rts
-;----------------------------------------------------------------------------------------------
-; decout - output byte in A as decimal ASCII without leading zeros
-;----------------------------------------------------------------------------------------------
-decout:
-		phx
-		phy
-		ldx #1
-		stx tmp1
-		inx
-		ldy #$40
-@l1:
-		sty tmp0
-		lsr
-@l2:	rol
-		bcs @l3
-		cmp dec_tbl,x
-		bcc @l4
-@l3:	sbc dec_tbl,x
-		sec
-@l4:	rol tmp0
-		bcc @l2
-		tay
-		cpx tmp1
-		lda tmp0
-		bcc @l5
-		beq @l6
-		stx tmp1
-@l5:	eor #$30
-		jsr krn_chrout
-@l6:	tya
-		ldy #$10
-		dex
-		bpl @l1
-		ply
-		plx
-
-		rts
-decoutz:
-		cmp #10
-		bcs @l1
-		pha
-		lda #'0'
-		jsr krn_chrout
-		pla
-@l1:
-		jmp decout
- ; Lookup table for decimal to ASCII
-dec_tbl:			.byte 128,160,200
 
 
-BINBCD16:
-        sta tmp0
-		stx tmp0+1
-		SED             ; Switch to decimal mode
-		LDA #0          ; Ensure the result is clear
-		STA BCD+0
-		STA BCD+1
-		STA BCD+2
-		LDX #16         ; The number of source bits
-
-CNVBIT:
-		ASL tmp0+0       ; Shift out one bit
-		ROL tmp0+1
-		LDA BCD+0       ; And add into result
-		ADC BCD+0
-		STA BCD+0
-		LDA BCD+1       ; propagating any carry
-		ADC BCD+1
-		STA BCD+1
-		LDA BCD+2       ; ... thru whole result
-		ADC BCD+2
-		STA BCD+2
-		DEX             ; And repeat for next bit
-		BNE CNVBIT
-		CLD             ; Back to binary
-
-		lda BCD+2
-		jsr krn_hexout
-		lda BCD+1
-		jsr krn_hexout
-		lda BCD
-		jsr krn_hexout
-
-		rts
 
 entries = 3
 entries_per_page: .byte entries
 pagecnt: .byte entries
 dir_attrib_mask:  .byte $08
-
-
-;BIN:		.word 0
-BCD:		.res 3
