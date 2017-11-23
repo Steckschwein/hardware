@@ -1,0 +1,18 @@
+CPU=65c02
+CA65FLAGS=--include-dir ../asminc --include-dir ../kernel
+LDFLAGS=--config ../steckos-c-app.cfg ../lib/steckschwein-kernel.lib
+OBJS=bin2asc.o
+
+.PHONY: all clean
+
+
+all: toollib.a
+
+clean:
+	rm -f *.o toollib.a
+
+%.o: %.asm
+	ca65 --cpu $(CPU) $(CA65FLAGS) $(@:.o=.asm)
+
+toollib.a: $(OBJS)
+	ar65 a toollib.a $(OBJS)

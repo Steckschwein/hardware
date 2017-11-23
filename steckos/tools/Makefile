@@ -1,6 +1,7 @@
 CPU=65c02
 CA65FLAGS=--include-dir ../asminc --include-dir ../kernel
 LDFLAGS=--config ../steckos-c-app.cfg ../lib/steckschwein-kernel.lib
+TOOLLIB=lib/toollib.a
 
 .PHONY: all clean
 
@@ -11,6 +12,7 @@ all: ls.prg ll.prg stat.prg fsinfo.prg attrib.prg rename.prg help.prg date.prg n
 
 clean:
 	rm -f *.prg *.s *.o toollib.a
+	(cd lib; make clean)
 	(cd xmodem; make clean)
 
 %.o: %.c
@@ -20,18 +22,18 @@ clean:
 %.o: %.asm
 	ca65 --cpu $(CPU) $(CA65FLAGS) $(@:.o=.asm)
 
-toollib.a: bin2asc.o
-	ar65 a toollib.a bin2asc.o
+toollib:
+	( cd lib ; make )
 
 %.prg:  %.o ../lib/steckschwein-kernel.lib
 	ld65 $< $(LDFLAGS) -o $@
 
-ls.prg: toollib.a ls.o ls_entry_short.o
-	cl65 $(CA65FLAGS) --target none --config ../kernel/steckosapp.cfg ls.o ls_entry_short.o toollib.a -o ls.prg
-ll.prg: toollib.a ls.o ls_entry_long.o
-	cl65 $(CA65FLAGS) --target none --config ../kernel/steckosapp.cfg ls.o ls_entry_long.o toollib.a -o ll.prg
-stat.prg: toollib.a ls.o ls_entry_stat.o
-	cl65 $(CA65FLAGS) --target none --config ../kernel/steckosapp.cfg ls.o ls_entry_stat.o toollib.a -o stat.prg
+ls.prg: toollib ls.o ls_entry_short.o
+	cl65 $(CA65FLAGS) --target none --config ../kernel/steckosapp.cfg ls.o ls_entry_short.o $(TOOLLIB) -o ls.prg
+ll.prg: toollib ls.o ls_entry_long.o
+	cl65 $(CA65FLAGS) --target none --config ../kernel/steckosapp.cfg ls.o ls_entry_long.o $(TOOLLIB) -o ll.prg
+stat.prg: toollib ls.o ls_entry_stat.o
+	cl65 $(CA65FLAGS) --target none --config ../kernel/steckosapp.cfg ls.o ls_entry_stat.o $(TOOLLIB) -o stat.prg
 
 
 %: %.prg

@@ -1,5 +1,5 @@
-.include "../kernel/kernel_jumptable.inc"
-.include "tools.inc"
+.include "../../kernel/kernel_jumptable.inc"
+.include "../tools.inc"
 
 .export b2ad, b2ad2, dpb2ad
 
