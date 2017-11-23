@@ -5,13 +5,6 @@
 
 .segment "CODE"
 b2ad:		phx
-;			ldx #$00
-;c100:		cmp #100
-;			bcc out1
-;			sbc #100
-;			inx
-;			bra c100
-;out1:		jsr putout
 			ldx #$00
 @c10:		cmp #10
 			bcc @out2
