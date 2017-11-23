@@ -1,10 +1,21 @@
 .include "../../kernel/kernel_jumptable.inc"
 .include "../../kernel/kernel.inc"
+.include "../../kernel/fat32.inc"
 
 .include "../tools.inc"
 
-.export print_fat_date, print_fat_time
+.export print_filename, print_fat_date, print_fat_time
 .import b2ad
+
+print_filename:
+		ldy #F32DirEntry::Name
+@l1:	lda (dirptr),y
+		jsr krn_chrout
+		iny
+		cpy #$0b
+		bne @l1
+		rts
+
 print_fat_date:
 		lda (dirptr),y
 		and #%00011111

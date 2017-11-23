@@ -5,7 +5,7 @@
 .include "../kernel/fat32.inc"
 .include "appstart.inc"
 .include "tools.inc"
-.export print_filename, cnt, files, dirs
+.export cnt, files, dirs
 .import dir_show_entry, pagecnt, entries_per_page, dir_attrib_mask
 .import b2ad2
 
@@ -93,14 +93,7 @@ l1:
 
 
 
-print_filename:
-		ldy #F32DirEntry::Name
-@l1:		lda (dirptr),y
-		jsr krn_chrout
-		iny
-		cpy #$0b
-		bne @l1
-		rts
+
 
 pattern:			.byte "*.*",$00
 cnt: 	.byte $04
