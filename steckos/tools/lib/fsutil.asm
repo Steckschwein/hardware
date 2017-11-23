@@ -6,7 +6,7 @@
 
 .export print_filename, print_fat_date, print_fat_time
 .import b2ad
-
+.segment "CODE"
 print_filename:
 		ldy #F32DirEntry::Name
 @l1:	lda (dirptr),y
