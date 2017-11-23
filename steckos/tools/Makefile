@@ -25,8 +25,8 @@ clean:
 toollib:
 	( cd lib ; make )
 
-%.prg:  %.o ../lib/steckschwein-kernel.lib
-	ld65 $< $(LDFLAGS) -o $@
+%.prg:  %.o toollib ../lib/steckschwein-kernel.lib
+	ld65 $< $(LDFLAGS) $(TOOLLIB) -o $@
 
 ls.prg: toollib ls.o ls_entry_short.o
 	cl65 $(CA65FLAGS) --target none --config ../kernel/steckosapp.cfg ls.o ls_entry_short.o $(TOOLLIB) -o ls.prg
