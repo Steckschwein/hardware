@@ -3,14 +3,11 @@
 .include "../kernel/kernel_jumptable.inc"
 .include "../kernel/fat32.inc"
 
-
-tmp0    = $a0
-tmp1    = $a1
-
+.include "tools.inc"
 
 
 .import print_filename
-.import b2ad, dpb2ad, print_fat_date, print_fat_time, bin2dual
+.import b2ad, dpb2ad, print_fat_date, print_fat_time, bin2dual, hexout
 
 
 .export dir_show_entry, pagecnt, entries_per_page, dir_attrib_mask
@@ -36,16 +33,16 @@ dir_show_entry:
 
 		ldy #F32DirEntry::FstClusHI+1
 		lda (dirptr),y
-		jsr krn_hexout
+		jsr hexout
 		dey
 		lda (dirptr),y
-		jsr krn_hexout
+		jsr hexout
 		ldy #F32DirEntry::FstClusLO+1
 		lda (dirptr),y
-		jsr krn_hexout
+		jsr hexout
 		dey
 		lda (dirptr),y
-		jsr krn_hexout
+		jsr hexout
 
 		crlf
 

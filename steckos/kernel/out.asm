@@ -1,7 +1,7 @@
 .include "kernel.inc"
 
 .segment "KERNEL"
-.export chrout, hexout, strout, primm
+.export chrout, strout, primm
 .import textui_chrout
 
 .ifdef TEXTUI_STROUT
@@ -46,33 +46,7 @@ strout:
 		pla
 		rts
 .endif
-;----------------------------------------------------------------------------------------------
-; Output byte as hex string on active output device
-;----------------------------------------------------------------------------------------------
-hexout:
-		pha
-		phx
 
-		tax
-		lsr
-		lsr
-		lsr
-		lsr
-		jsr hexdigit
-		txa
-		jsr hexdigit
-		plx
-		pla
-		rts
-
-hexdigit:
-		and     #%00001111      ;mask lsd for hex print
-		ora     #'0'            ;add "0"
-		cmp     #'9'+1          ;is it a decimal digit?
-		bcc     @l	            ;yes! output it
-		adc     #6              ;add offset for letter a-f
-@l:
-		jmp 	chrout
 
 
 ;----------------------------------------------------------------------------------------------

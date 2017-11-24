@@ -6,7 +6,7 @@
 .include "../kernel/sdcard.inc"
 
 .include "appstart.inc"
-
+.import hexout
 ;data = $2000
 volid = $0308
 part0 = data + BootSector::Partitions + PartTable::Partition_0
@@ -33,7 +33,7 @@ appstart $1000
         jsr krn_primm
         .byte $0a,"Type Code     :$", $00
         lda part0 + PartitionEntry::TypeCode
-        jsr krn_hexout
+        jsr hexout
         crlf
 
         jsr krn_primm
@@ -62,7 +62,7 @@ appstart $1000
         jsr krn_primm
         .byte $0a,"Media Type        :$",$00
         lda data + F32_VolumeID::BPB + BPB::Media
-        jsr krn_hexout
+        jsr hexout
 
         jsr krn_primm
         .byte $0a,"OEM Name          :",$00
@@ -282,7 +282,7 @@ display_bcd:
         bpl @l1
 @l:
         lda BCD,x
-        jsr krn_hexout
+        jsr hexout
         dex
         bpl @l
         rts

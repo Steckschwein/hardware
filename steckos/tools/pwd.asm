@@ -1,6 +1,6 @@
 .include "kernel.inc"
 .include "kernel_jumptable.inc"
-
+.import hexout
 .segment "CODE"
 
 		lda	#<buffer
@@ -20,7 +20,7 @@
 		lda #'E'
 		jsr krn_chrout
 		pla
-		jsr krn_hexout
+		jsr hexout
 		bra @l2
 
 

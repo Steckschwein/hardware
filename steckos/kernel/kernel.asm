@@ -27,7 +27,7 @@ text_mode_40 = 1
 .import sd_read_block, sd_write_block
 
 .import execv
-.import strout, hexout, primm
+.import strout, primm
 
 kern_init:
 	sei
@@ -69,7 +69,11 @@ kern_init:
 	jsr krn_primm
 	.asciiz "mount error ("
 	pla
-	jsr krn_hexout
+
+	and #%00001111
+	ora #'0'
+	jsr krn_chrout
+
 	jsr krn_primm
 	.byte ")",$0a,0
 	bra do_upload
@@ -161,11 +165,6 @@ upload:
 	jsr uart_rx
 	sta startaddr+1
 
-	lda startaddr+1
-	jsr hexout
-	lda startaddr
-	jsr hexout
-
 	lda #' '
 	jsr textui_chrout
 
@@ -187,12 +186,6 @@ upload:
 	lda length+1
 	adc startaddr+1
 	sta endaddr+1
-
-	lda endaddr+1
-	jsr hexout
-
-	lda endaddr
-	jsr hexout
 
 	lda #' '
 	jsr textui_chrout
@@ -330,8 +323,11 @@ krn_textui_update_crs_ptr:  jmp textui_update_crs_ptr
 .export krn_textui_clrscr_ptr
 krn_textui_clrscr_ptr:      jmp textui_blank
 
-.export krn_hexout
-krn_hexout:				jmp hexout
+;.export krn_hexout
+;krn_hexout:				jmp hexout
+
+dummy:	jmp dummy
+
 
 .export krn_init_sdcard
 krn_init_sdcard:		jmp init_sdcard

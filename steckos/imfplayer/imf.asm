@@ -228,7 +228,9 @@ player_isr:
 		jmp (old_isr)
 
 error:
-	jsr krn_hexout
+    and #$0f
+    ora #'0'
+	jsr krn_chrout
 	jsr krn_primm
 	.asciiz "load error"
 end:

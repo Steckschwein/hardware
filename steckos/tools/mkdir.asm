@@ -4,6 +4,8 @@
 .include "../kernel/kernel_jumptable.inc"
 
 .include "appstart.inc"
+.import hexout
+
 appstart $1000
 
     	lda paramptr
@@ -13,7 +15,7 @@ appstart $1000
 		;
 		jsr krn_mkdir
 		bne @errmsg
-		
+
 @exit:
 		jmp (retvec)
 
@@ -23,5 +25,5 @@ appstart $1000
 		jsr krn_primm
 		.asciiz "Error: "
 		pla
-		jsr krn_hexout
+		jsr hexout
 		jmp @exit

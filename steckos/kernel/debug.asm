@@ -8,7 +8,7 @@
 
 .export _debugdirentry
 
-.import	krn_chrout, krn_hexout, krn_primm
+.import	krn_chrout, krn_primm
 
 .segment "KERNEL"
 
@@ -30,47 +30,47 @@ _debugout_enter:
 		pla
 		sta dbg_status
 		cld
-		
+
 		lda 	__dbg_ptr
 		sta 	dbg_savept
 		lda 	__dbg_ptr+1
 		sta 	dbg_savept+1
-		
+
 		stz dbg_bytes
 		jsr krn_primm
 		.asciiz "AXYP "
 		lda dbg_acc
-		jsr krn_hexout
-		lda dbg_xreg 
-		jsr krn_hexout
+		jsr _hexout
+		lda dbg_xreg
+		jsr _hexout
 		lda dbg_yreg
-		jsr krn_hexout
+		jsr _hexout
 		lda dbg_status
-		jsr krn_hexout
+		jsr _hexout
 		lda	#' '
 		jmp krn_chrout
-		
+
 _debugdirentry:
 		jsr 	_debugout_enter
 		ldy #0
 	@l0:
 		lda (dirptr),y
-		jsr krn_hexout
+		jsr _hexout
 		lda #' '
 		jsr krn_chrout
-		iny 
+		iny
 		cpy #32
 		bne @l0
 		bra _debugoutnone
-		
+
 _debugdumpptr:
 ;		jsr 	_debugout_enter
 ;		lda 	#11
-;		bra		_debugout0		
+;		bra		_debugout0
 _debugdump:
 		jsr 	_debugout_enter
 		lda 	#11
-		bra		_debugout0		
+		bra		_debugout0
 _debugout32:
 		jsr 	_debugout_enter
 		lda 	#3
@@ -85,7 +85,7 @@ _debugout8:
 		bra		_debugout0
 _debugout:
 		jsr 	_debugout_enter
-_debugoutnone:		
+_debugoutnone:
 		lda		#$ff
 _debugout0:
 		sta		dbg_bytes
@@ -110,13 +110,13 @@ _debugout0:
 
 		ldy 	dbg_bytes			; bytes to output
 		lda		__dbg_ptr+1
-		jsr 	krn_hexout
+		jsr 	_hexout
 		lda		__dbg_ptr
-		jsr 	krn_hexout
+		jsr 	_hexout
 		lda		#' '
 		jsr 	krn_chrout
 @l1:	lda		(__dbg_ptr),y
-		jsr 	krn_hexout
+		jsr 	_hexout
 		lda 	#' '
 		jsr 	krn_chrout
 		dey
@@ -124,20 +124,20 @@ _debugout0:
 		lda		#' '
 		jsr 	krn_chrout
 
-		clc 
+		clc
 		lda		dbg_return		; restore address for message argument
 		adc		#2				; +2 - 16bit debug address argument
 								; Note: actually we're pointing one short
 		sta 	__dbg_ptr		;
 		lda 	dbg_return+1
 		adc 	#0
-		sta		__dbg_ptr+1	
+		sta		__dbg_ptr+1
 
 @PSINB:							; Note: actually we're pointing one short
 		inc     __dbg_ptr       ; update the pointer
 		bne     @PSICHO         ; if not, we're pointing to next character
 		inc     __dbg_ptr+1		; account for page crossing
-		
+
 @PSICHO:lda     (__dbg_ptr)	    ; Get the next string character
 		beq     @PSIX1          ; don't print the final NULL
 		jsr     krn_chrout		; write it out
@@ -152,7 +152,7 @@ _debugout0:
 		sta 	dbg_return
 		lda		__dbg_ptr+1
 		sta 	dbg_return+1
-		
+
 		lda 	dbg_savept		; restore
 		sta 	__dbg_ptr
 		lda 	dbg_savept+1
@@ -164,5 +164,33 @@ _debugout0:
 		ldx		dbg_xreg
 		ldy		dbg_yreg
 		plp
-		
+
 		jmp     (dbg_return)           ; return to byte following final NULL
+
+;----------------------------------------------------------------------------------------------
+; Output byte as hex string on active output device
+;----------------------------------------------------------------------------------------------
+_hexout:
+		pha
+		phx
+
+		tax
+		lsr
+		lsr
+		lsr
+		lsr
+		jsr @hexdigit
+		txa
+		jsr @hexdigit
+		plx
+		pla
+		rts
+
+@hexdigit:
+		and     #%00001111      ;mask lsd for hex print
+		ora     #'0'            ;add "0"
+		cmp     #'9'+1          ;is it a decimal digit?
+		bcc     @l	            ;yes! output it
+		adc     #6              ;add offset for letter a-f
+@l:
+		jmp 	krn_chrout

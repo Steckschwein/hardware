@@ -4,7 +4,7 @@
 .include 	"appstart.inc"
 appstart $1000
 
-
+.import hexout
 main:
 @0:
 	jsr krn_getkey
@@ -13,5 +13,5 @@ main:
 	jsr krn_primm
 	.byte $0a,"0x",0
 	pla
-	jsr	krn_hexout
+	jsr	hexout
 	jmp (retvec)

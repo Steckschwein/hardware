@@ -29,7 +29,7 @@ LF  = $0A        ; Line feed character
 IRQ_vec	= VEC_SV+2		; IRQ code vector	(VEC_SV = ccflag+$0b)
 NMI_vec	= IRQ_vec+$0A	; NMI code vector
 ; NOTE: ccflag + $18 -> $02a8
-					
+
 ; reset vector points here
 
 RES_vec:
@@ -79,7 +79,9 @@ io_error:
 		jsr	krn_primm
 		.asciiz "io error: "
 		pla
-		jmp krn_hexout
+		and #$0f
+		ora #'0'
+		jsr krn_chrout
 
 bsave:
 		lda #O_WRONLY
