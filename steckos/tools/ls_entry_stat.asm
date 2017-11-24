@@ -10,7 +10,7 @@ tmp1    = $a1
 
 
 .import print_filename
-.import b2ad, dpb2ad, print_fat_date, print_fat_time
+.import b2ad, dpb2ad, print_fat_date, print_fat_time, bin2dual
 
 
 .export dir_show_entry, pagecnt, entries_per_page, dir_attrib_mask
@@ -59,21 +59,8 @@ dir_show_entry:
 
 		ldy #F32DirEntry::Attr
 		lda (dirptr),y
-		ldx #$07
-@l:
-		rol
-		bcc @skip
-		pha
-		lda #'1'
-		bra @out
-@skip:
-		pha
-		lda #'0'
-@out:
-		jsr krn_chrout
-		pla
-		dex
-		bpl @l
+
+		jsr bin2dual
 		crlf
 
 
