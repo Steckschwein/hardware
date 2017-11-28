@@ -12,12 +12,7 @@
 
 	appstart $1000
 main:
-
-
-	;via port a
-	; lda #$00
 	stz via1ier             ; disable VIA1 T1 interrupts
-	; lda #%00000000 			; set latch
 	stz via1acr
 	lda #%11001100 			; set level
 	sta via1pcr
@@ -25,34 +20,34 @@ main:
 	sta via1ddra
 
 	jsr krn_primm
-	.byte "x to disable joystick ports",$0a, y to enable",$0a,$00
+	.byte "x to disable joystick ports",$0a,"y to enable",$0a,$00
 
 loop:
 
-	lda	#PORT_SEL_1			;port 1
-	;lda	#00
+
+	lda	#PORT_SEL_1
 	sta	via1porta
 
+	jsr krn_primm
+	.asciiz "j1: "
 
-	lda #<text_j2
-	ldx #>text_j2
-	jsr krn_strout
 
 	lda	via1porta
 	and	#%00111111
 	jsr	hexout
 
-	lda	#PORT_SEL_2			;port 2
+
+	lda	#PORT_SEL_2		;port 1
 	sta	via1porta
 
-	lda #<text_j1
-	ldx #>text_j1
 
-	jsr krn_strout
+	jsr krn_primm
+	.asciiz " j2: "
 
 	lda	via1porta
 	and	#%00111111
 	jsr	hexout
+
 
 	ldx #$00
 	ldy crs_y
@@ -68,14 +63,13 @@ loop:
 	sta uart1mcr
 	bra loop
 @l:	cmp #'y'
-	bne loop
+	bne @l1
 	; joysticks on
 	lda #%11111011
 	and uart1mcr
 	sta uart1mcr
 	bra loop
-
-text_j1:
-	.asciiz " j1: "
-text_j2:
-	.asciiz "j2: "
+@l1:
+	cmp #$03
+	bne loop
+	jmp (retvec)
