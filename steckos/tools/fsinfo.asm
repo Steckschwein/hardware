@@ -6,9 +6,7 @@
 .include "../kernel/sdcard.inc"
 
 .include "appstart.inc"
-.import hexout
-;data = $2000
-volid = $0308
+data = $2000
 part0 = data + BootSector::Partitions + PartTable::Partition_0
 
 appstart $1000
@@ -287,9 +285,32 @@ display_bcd:
         bpl @l
         rts
 
+hexout:
+		pha
+		phx
 
+		tax
+		lsr
+		lsr
+		lsr
+		lsr
+		jsr hexdigit
+		txa
+		jsr hexdigit
+		plx
+		pla
+		rts
+
+hexdigit:
+		and     #%00001111      ;mask lsd for hex print
+		ora     #'0'            ;add "0"
+		cmp     #'9'+1          ;is it a decimal digit?
+		bcc     @l	            ;yes! output it
+		adc     #6              ;add offset for letter a-f
+@l:
+		jmp 	krn_chrout
 
 BCD: .res 6
 tmp0: .res 2
 ;.align 255,0
-data:
+;data:
