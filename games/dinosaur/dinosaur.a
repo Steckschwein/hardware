@@ -4,8 +4,10 @@
 !src "../../steckos/asminc/joystick.inc"
 
 *=appstart
-		
-.JOY_PORT=PORT_SEL_2		;port 2
+
+fd_area					= $0380 ; File descriptor area until $0400
+
+.JOY_PORT=PORT_SEL_1		;port 1
 .enemy_state=$0
 .seed=$1
 .game_state=$2
@@ -49,25 +51,26 @@
 !src <t99xx.lib.a>
 main:
 	sei
-	
-        lda #<.filename
-        ldx #>.filename
-        jsr krn_open
-        lda errno
+
+    lda #<.filename
+    ldx #>.filename
+	ldy #$01
+    jsr krn_open
+
 	bne +
 
-        +SetVector score_data, read_blkptr
-        jsr krn_read
+    +SetVector score_data, read_blkptr
+    jsr krn_read
 	jsr krn_close
 +
-    
+
 	lda	a_vreg
 	jsr	vdp_display_off
 	jsr	.init_vram
 	jsr	.init_screen
 ;    +jsr krn_via_int_off
 ;	+init_joystick
-	
+
 	lda	#33
 	sta	.seed
 
@@ -79,12 +82,12 @@ main:
 
 ROM_OFF = 1<<0
 ; 	system attribute has to be set on file system
-memctl = $0230 
+memctl = $0230
     lda #ROM_OFF
     sta memctl
 
 	+SetVector	.game_isr, $fffe
-    
+
 	+vnops
 	lda	#Light_Blue
 	sta	adrl		;set character color
@@ -92,25 +95,25 @@ memctl = $0230
 	lda	#<.A_GX_COL
 	ldy	#.WRITE_ADDRESS + >.A_GX_COL	;color vram
 	jsr	vdp_fills
-	
+
 	+SetVector .vdp_init_gfx, addr
 	jsr	vdp_init_reg
-	
+
 	cli
 -	bra	-
 
 .vdp_init_gfx
 	!byte 	0
 	!byte	v_reg1_16k|v_reg1_display_on|v_reg1_spr_size|v_reg1_int
-	!byte 	(.A_GX_SCR / $400)	; name table - value * $400					--> characters 
+	!byte 	(.A_GX_SCR / $400)	; name table - value * $400					--> characters
 	!byte 	(.A_GX_COL /  $40)	; color table - value * $40 (gfx1), 7f/ff (gfx2)
-	!byte 	(.A_GX_PAT_2 / $800) ; pattern table (charset) - value * $800  	--> offset in VRAM 
+	!byte 	(.A_GX_PAT_2 / $800) ; pattern table (charset) - value * $800  	--> offset in VRAM
 	!byte	(.A_SP_ATR / $80)	; sprite attribute table - value * $80 		--> offset in VRAM
 	!byte 	(.A_SP_PAT / $800)  ; sprite pattern table - value * $800  		--> offset in VRAM
 	!byte	Light_Blue
 
-	
-.init_screen				;draw desert 
+
+.init_screen				;draw desert
 	ldx	#$00
 	ldy	#206
 -	lda	#.CHAR_BLANK
@@ -127,7 +130,7 @@ memctl = $0230
 	cpx	#32
 	bne	-
 	rts
-	
+
 .scroll_background
 	lda	.frame_cnt
 	and	#01
@@ -138,7 +141,7 @@ memctl = $0230
 +	lda	#(.A_GX_PAT_2 / $800)
 	ldy	#v_reg4
 	+vdp_sreg
-	
+
 	ldx	#$00
 -	lda	.screen+1,x
 	sta	.screen,x
@@ -148,7 +151,7 @@ memctl = $0230
 	sta	.screen+32*2,x
 	lda	.screen+32*3+1,x
 	sta	.screen+32*3,x
-	inx	
+	inx
 	cpx	#32
 	bne	-
 
@@ -158,7 +161,7 @@ memctl = $0230
 	beq	+
 --	asl	; x4, rows
 	asl
-	tay	
+	tay
 	iny ;+1 into bg table
 	lda	(.level_bg_ptr),y
 	sta	.screen+31
@@ -172,8 +175,8 @@ memctl = $0230
 	lda	(.level_bg_ptr),y
 	sta	.screen+31+(32*3)
 	inc	.level_bg_cnt
-	rts	
-+	
+	rts
++
 -	ldx	.level_script_ptr
 	lda	.level_script, x
 	bpl	+
@@ -185,12 +188,12 @@ memctl = $0230
 	beq	++				;0 - background desert/hills
     bit #1              ;1 - cacti
     bne +				;2 - otherwise, pterodactyl
-    
+
 	;enable pterodactyl
 	jsr	.enable_pd
-	
+
     bra ++              ;bg desert/hills
-    
+
 +	jsr .rnd			;otherwise choose cacti randomly
 	and	#$03
 	asl
@@ -200,7 +203,7 @@ memctl = $0230
 	lda	.bg_table+1, x
 	sta	.level_bg_ptr+1
 	bra	+++
-	
+
 ++	jsr .rnd			;desert/hills randomly
 	and	#$10
 	beq	+
@@ -216,14 +219,14 @@ memctl = $0230
 	!word .level_bg_2
 	!word .level_bg_3
 	!word .level_bg_4
-	
-.level_script ; 
+
+.level_script ;
     ; 0 - background
     ; 1 - cacti
     ; 2 - pterodactyl with background
 ;	!byte 0,0,0,0,0,0,1,0,0,0,1,0,0,0,1,0,0,1,0,0,0,1,0,0,1,0,0,0,0,1,$80
 	!byte 0,0,0,0,0,0,1,0,0,0,1,0,2,0,0,0,0,1,0,0,0,2,0,0,1,0,0,0,1,0,0,1,0,0,0,1,0,0,1,2,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,2,0,1,0,0,0,0,2,0,1,0,0,1,$80
-	
+
 ;	detection algorithm - dinosaur is 32*32px, we check only char positions and sprites as follows - cause this best matches the dinosaur shape
 ;	 ##		-> ##
 ;	 ##		   #
@@ -248,18 +251,18 @@ memctl = $0230
 	cmp	.sprite_tab+1*4					; test the y pos of the lower sprites, sufficient for collision
 	bcc	+
 	beq	+
-	cmp	.sprite_tab+3*4					
+	cmp	.sprite_tab+3*4
 	bcc	+
 	beq	+
-    
+
 	;detect collision - pterodactyl
-	
-	
+
+
     rts
-    
+
 +	lda	#.DINOSAUR_DEAD
 	sta .dinosaur_state
-	
+
 .game_over
 	jsr	.get_joy_status
 	and	#JOY_FIRE		;if fire is pressed set bit
@@ -271,17 +274,17 @@ memctl = $0230
 	bra	+++
 ++	lda	#.STATUS_GAME_OVER
 	sta .game_state
-	
+
 +++	+SetVector .text_game_over, addr
 	lda	#<(.A_GX_SCR + (.Y_OFS_GAME_OVER*32))
 	ldy	#.WRITE_ADDRESS + >(.A_GX_SCR+(.Y_OFS_GAME_OVER*32))
 	jsr .vdp_print
-    
+
     ;testing purpose
     ;jmp (retvec)
-    
+
 	rts
-	
+
 .vdp_print
 	+vdp_sreg
 	ldy	#$00
@@ -298,7 +301,7 @@ memctl = $0230
 	sta	via1porta
 	lda	via1porta		;read port input
 	rts
-	
+
 .animate_dinosaur
 	lda	.dinosaur_state
 	bit	#.DINOSAUR_JUMP
@@ -348,7 +351,7 @@ memctl = $0230
 +	+SetVector	.dino_run_2, addr
 	bra .set_sprite_pointer
 
-.set_sprite_pointer	
+.set_sprite_pointer
 	ldy	#$00
 	lda	(addr),y
 	sta	.sprite_tab+2
@@ -362,12 +365,12 @@ memctl = $0230
 	lda	(addr),y
 	sta	.sprite_tab+2+3*4
 	rts
-	
+
 .animate_enemy
 	lda	.enemy_state
 	bne	+
 	rts
-	
+
 +	ldx #$0
 -	lda	.sprite_tab_enemy+1,x
 	sec
@@ -378,10 +381,10 @@ memctl = $0230
     clc
     adc #.EC_MAX_LEFT_POS ; offset and EC enabled
 	bra	+
-	
+
 ++  jsr	.disable_pd
 	rts
-	
+
 +	tay
     lda .sprite_tab_enemy+3,x
     eor #Sprite_EC
@@ -394,7 +397,7 @@ memctl = $0230
     beq +
     ldx #$08
     bra -
-    
+
 +	lda	.frame_cnt
 	and	#08
 	beq	+
@@ -417,7 +420,7 @@ memctl = $0230
 	sta	.sprite_tab_enemy+2+3*4
 	rts
 
-	
+
 .animate_sky
 	ldx	#$00
 -	dec	.sprite_tab_sky+1,x
@@ -426,7 +429,7 @@ memctl = $0230
 	tay
 	and	#Sprite_EC
 	bne	+
-	tya	
+	tya
 	ora	#Sprite_EC
 	sta	.sprite_tab_sky+3,x
 	lda	#32
@@ -437,7 +440,7 @@ memctl = $0230
 	sta	.sprite_tab_sky+3,x
 	lda	#$ff
 	sta .sprite_tab_sky+1,x
-	
+
 ++	inx
 	inx
 	inx
@@ -445,20 +448,20 @@ memctl = $0230
 	cpx	#4*2*4; 4 clouds, 2 sprites each shifted?
 	bne	-
 	rts
-	
+
 .game_isr
 	bit	a_vreg
 	bpl	.game_isr_exit
 
 	+save
-	
+
 ;    lda   #Dark_Yellow
 ;    jsr   vdp_bgcolor
-	
+
 	lda	.game_state
 	and	#.STATUS_PLAY
 	beq	+
-	
+
 	jsr	.scroll_background
 	jsr	.animate_enemy
 	jsr	.animate_sky
@@ -467,7 +470,7 @@ memctl = $0230
 	jsr	.detect_collision
 	jsr	.animate_dinosaur
 	bra	+++
-    
+
 +
 	jsr .get_joy_status
 	and	#JOY_FIRE
@@ -478,7 +481,7 @@ memctl = $0230
     jsr krn_getkey
 	cmp #$20    ; space ?
 	bne +++
-	
+
 ++	lda	.game_state
 	and	#.STATUS_JOY_PRESSED
 	bne	+++
@@ -490,9 +493,9 @@ memctl = $0230
 
 	lda	#Black
 	jsr	vdp_bgcolor
-	
+
 	+restore
-.game_isr_exit	
+.game_isr_exit
 	rti
 
 .disable_pd
@@ -503,7 +506,7 @@ memctl = $0230
 	sta .sprite_tab_enemy+4*2,x
 	sta .sprite_tab_enemy+4*3,x
 	rts
-	
+
 .enable_pd
 	inc	.enemy_state
 	ldx	#0
@@ -516,26 +519,26 @@ memctl = $0230
 
 .new_game
 	jsr	.init_screen
-	
+
 	ldx	#$00
 -	lda	.sprite_init_tab, x
 	sta .sprite_tab,x
-	inx	
+	inx
 	cpx	#4*4
 	bne	-
-	
+
 	lda	#.CHAR_BLANK
 	sta adrl
 	lda	#<(.A_GX_SCR + (.Y_OFS_GAME_OVER*32))
 	ldy	#.WRITE_ADDRESS + >(.A_GX_SCR+(.Y_OFS_GAME_OVER*32))
 	ldx #32
 	jsr vdp_fills
-	
+
 	stz	.dinosaur_state	; run initialy
 	stz	.enemy_state
-	
+
 	jsr	.disable_pd
-	
+
 	lda	#$05
 	sta .score_board_cnt
 	stz	.sin_tab_offs
@@ -550,7 +553,7 @@ memctl = $0230
 	inx
 	cpx	#4
 	bne	-
-	
+
 	lda	.score_value			;set new highscore
 	cmp	.score_value_high
 	bcc	++
@@ -570,14 +573,18 @@ memctl = $0230
 	lda	.score_value
 	sta	.score_value_high
 
-        lda #<.filename
-        ldx #>.filename
-        jsr krn_open
-        lda errno
+    lda #<.filename
+    ldx #>.filename
+	ldy #$02 ; O_WRONLY
+    jsr krn_open
 	bne +++
-
-        +SetVector score_data, write_blkptr
-        jsr krn_write
+    +SetVector score_data, write_blkptr
+	lda #$03
+	sta fd_area + 4 + 0,x
+	stz fd_area + 4 + 1,x
+	stz fd_area + 4 + 2,x
+	stz fd_area + 4 + 3,x
+    jsr krn_write
 	jsr krn_close
 +++
 
@@ -585,12 +592,12 @@ memctl = $0230
 	stz	.score_value+1
 	stz	.score_value+2
 
-	
-	
+
+
 +	lda	#.STATUS_PLAY
 	sta .game_state
 	rts
-	
+
 .score_board
 	dec	.score_board_cnt	;every 5 frames update score, which means 10 digits per second
 	beq	+
@@ -608,10 +615,10 @@ memctl = $0230
 	sta	.score_value+1
 	bcc	+
 	adc	.score_value
-	sta	.score_value	
+	sta	.score_value
 +	cld
 	rts
-	
+
 .kbd_enable
 	lda #%01111010
 	sta via1portb
@@ -620,7 +627,7 @@ memctl = $0230
 .kbd_disable
 	; disable keyboard
 	ldx #$7e
-	stx via1portb	
+	stx via1portb
 	rts
 
 .action_handler
@@ -631,7 +638,7 @@ memctl = $0230
  ;   jsr krn_getkey
 	;cmp #'A'
    ; beq .up
-       
+
 +   jsr .get_joy_status
 	and #JOY_UP
 	bne	+
@@ -656,9 +663,9 @@ memctl = $0230
 	sta .dinosaur_state
 	rts
 +	lda	#.DINOSAUR_RUN
-	sta .dinosaur_state		
+	sta .dinosaur_state
 ++	rts
-		
+
 .init_vram
 	ldx	#$03
 	lda	#.CHAR_BLANK					;fill vram screen with blank
@@ -674,7 +681,7 @@ memctl = $0230
 	ldy #.WRITE_ADDRESS + >.A_GX_PAT_1
 	ldx	#$08
 	jsr	vdp_memcpy
-	+SetVector charset, addr			; 
+	+SetVector charset, addr			;
 	lda #<.A_GX_PAT_2
 	ldy #.WRITE_ADDRESS + >.A_GX_PAT_2
 	ldx	#$08
@@ -687,13 +694,13 @@ memctl = $0230
 	ldy #.WRITE_ADDRESS + >(.A_GX_PAT_1+.GAME_CHAR_OFFS)
 	ldx	#$03
 	jsr	vdp_memcpy
-	
+
 	+SetVector .game_chars_4px, addr	; 2nd game charset with 4px offset
 	lda #<(.A_GX_PAT_2+.GAME_CHAR_OFFS)
 	ldy #.WRITE_ADDRESS + >(.A_GX_PAT_2+.GAME_CHAR_OFFS)
 	ldx	#$03
 	jsr	vdp_memcpy
-	
+
 	+SetVector .sprites, addr
 	lda	#<.A_SP_PAT
 	ldy	#.WRITE_ADDRESS + >.A_SP_PAT
@@ -705,10 +712,10 @@ memctl = $0230
 	ldy	#.WRITE_ADDRESS + >(.A_GX_SCR+(22*32))
 	jsr .vdp_print
 	rts
-	
+
 .update_vram
 	;update sprite tab
-	+SetVector .sprite_tab, addr		
+	+SetVector .sprite_tab, addr
 	lda	#<.A_SP_ATR
 	ldy	#.WRITE_ADDRESS + >.A_SP_ATR
 	ldx	#.sprite_tab_end-.sprite_tab
@@ -724,8 +731,8 @@ memctl = $0230
 	+vnops
 	sta	a_vram
 	inx
-	bne	-	
-+	
+	bne	-
++
 	lda	.score_value_high
 	jsr .digit_out
 	lda	.score_value_high+1
@@ -741,13 +748,13 @@ memctl = $0230
 	jsr .digits_out
 	lda	.score_value+2
 	jsr .digits_out
-	
+
 	+SetVector .screen, addr			;copy screen
 	lda	#<(.A_GX_SCR + (16*32))
 	ldy	#.WRITE_ADDRESS + >(.A_GX_SCR+(16*32))
 	ldx	#32*4
 	jmp	vdp_memcpys
-	
+
 	rts
 
 .digits_out
@@ -766,16 +773,16 @@ memctl = $0230
 	+vnops
 	sta a_vram
 	rts
-	
+
 .rnd:
    lda .seed
    beq .doEor
    asl
    beq .noEor ;if the input was $80, skip the EOR
    bcc .noEor
-.doEor:    
+.doEor:
 	eor #$1d
-.noEor:  
+.noEor:
 	sta .seed
 	rts
 
@@ -788,7 +795,7 @@ memctl = $0230
 	!byte	.DINOSAUR_Y		,.DINOSAUR_X+16	,0	,.dinosaur_color
 	!byte	.DINOSAUR_Y+16	,.DINOSAUR_X+16	,4	,.dinosaur_color
 	!byte	.DINOSAUR_Y		,.DINOSAUR_X	,8	,.dinosaur_color
-	!byte	.DINOSAUR_Y+16	,.DINOSAUR_X	,28	,.dinosaur_color 	
+	!byte	.DINOSAUR_Y+16	,.DINOSAUR_X	,28	,.dinosaur_color
 .sprite_tab:
 	!fill	4*4, 0
 .sprite_tab_enemy:
@@ -803,7 +810,7 @@ memctl = $0230
 	!byte	98,200,48, White
 	!byte	98,216,52, White
 	!byte	$d0	; end of sprite table
-.sprite_tab_end	
+.sprite_tab_end
 
 .sprite_tab_sky_trigger:
 	!fill	4, 0
@@ -821,7 +828,7 @@ memctl = $0230
 .dino_dead
 	!byte 32,4,8,28
 
-	
+
 .text_game_label	!text " Verbindung zum Internet konnte  nicht hergestellt werden.",$0
 .text_game_over		!text "           GAME OVER!",$0
 .text_score_board	!text "HI ",$0
