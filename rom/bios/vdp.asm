@@ -47,7 +47,9 @@ init_vdp:
 			ldy	#(WRITE_ADDRESS + >ADDRESS_GFX1_SCREEN)
 			vdp_sreg
 			ldy #$00      ;2
-			ldx	#$04                    ;4 pages - 4x256 byte, sufficient for 32*24 and 40*24 mode
+			
+			ldx	#$08                    ;8 pages - 8x256 byte, sufficient for 32*24 and 40*24 and 80*24 mode
+			
 			lda	#' '					;fill vram screen with blank
 @l1: 
 			vnops          ;8
@@ -262,6 +264,16 @@ vdp_set_addr:				; set the vdp vram adress, write A to vram
 		rts
 
 vdp_init_bytes_text:
+.ifdef COLS80
+	.byte 	v_reg0_m4	; text mode 2
+	.byte   v_reg1_16k|v_reg1_display_on|v_reg1_int|v_reg1_m1
+	.byte 	(ADDRESS_GFX1_SCREEN / $400)| 3	; name table - value * $400					--> characters 
+	.byte 	0	; not used
+	.byte 	(ADDRESS_GFX1_PATTERN / $800) ; pattern table (charset) - value * $800  	--> offset in VRAM 
+	.byte	0	; not used
+	.byte 	0	; not used
+	.byte	Gray<<4|Black
+.else
 	.byte 0
 	.byte   v_reg1_16k|v_reg1_display_on|v_reg1_int|v_reg1_m1
 	.byte 	(ADDRESS_GFX1_SCREEN / $400)	; name table - value * $400					--> characters 
@@ -270,6 +282,7 @@ vdp_init_bytes_text:
 	.byte	0	; not used
 	.byte 	0	; not used
 	.byte	Gray<<4|Black
+.endif	
 .endif
 		
 vnopslide:
@@ -277,4 +290,10 @@ vnopslide:
 		nop
 		nop
 		nop
+
+.ifdef V9958		
+		nop
+		nop
+		nop
+.endif
 		rts

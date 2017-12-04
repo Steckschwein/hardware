@@ -3,6 +3,7 @@ a_vram		= a_vdp
 a_vreg		= a_vdp+1
 
 v_reg0_m3			= 1<<1
+v_reg0_m4			= 1<<2
 v_reg0_extV			= 1<<0
 
 v_reg1_16k			= 1<<7
@@ -42,7 +43,7 @@ White          =$0f
 WRITE_ADDRESS			=$40
 ADDRESS_GFX_SPRITE		=$1b00
 
-ADDRESS_GFX1_SCREEN		=$0800
+ADDRESS_GFX1_SCREEN		=$0000
 ADDRESS_GFX1_PATTERN	=$3800
 ADDRESS_GFX1_COLOR		=$1b80
 ADDRESS_GFX1_SPRITE		=ADDRESS_GFX_SPRITE
@@ -50,7 +51,14 @@ ADDRESS_GFX1_SPRITE_PATTERN=$1000
 
 ROWS=23
 .ifdef CHAR6x8
+.ifdef COLS80
+	.ifndef V9958
+		.assert 0, error, "80 COLUMNS ARE SUPPORTED ON V9958 ONLY! MAKE SURE -DV9958 IS ENABLED"
+	.endif
+COLS=80
+.else
 COLS=40
+.endif
 .endif
 .ifndef CHAR6x8
 COLS=32

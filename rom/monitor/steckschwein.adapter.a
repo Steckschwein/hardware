@@ -24,8 +24,9 @@ tmp0		= $e6
 tmp1		= $e7 
 
 .init_io
-		;+SetVector RESET, nmivec direct loaded into ROM
-		+SetVector COUT1, CSWL
+		;+SetVector RESET, nmivec - direct loaded into ROM
+		;+SetVector .chrout, CSWL
+		
 		+SetVector .getkey, KSWL
 		rts
 		
