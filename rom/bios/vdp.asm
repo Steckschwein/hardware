@@ -241,25 +241,38 @@ vdp_init_bytes_gfx1:
 .endif
 
 .ifdef CHAR6x8
-vdp_set_addr:				; set the vdp vram adress, write A to vram
-		stz	tmp1
+v_l=tmp0
+v_h=tmp1
+vdp_set_addr:			; set the vdp vram adress, write A to vram
+		stz	v_h
 		lda crs_y
 		asl
 		asl
-		asl
-		sta tmp0			; save crs_y * 8
-		asl		   			; crs_y*16
-		rol tmp1		   	; save carry if overflow
-		asl					; crs_y*32
-		rol tmp1			; again, save carry
-		adc tmp0		   	; crs_y*32 + crs_y*8 (crs_ptr) => y*40
+		asl				; crs_y*8
+		
+.ifdef COLS80
+		; crs_y*64 + crs_y*16 (crs_ptr) => y*80 						
+		asl				; y*16
+		sta v_l
+		rol v_h		   	; save carry if overflow
+.else
+		; crs_y*32 + crs_y*8  (crs_ptr) => y*40
+		sta v_l			; save		
+.endif
+		
+		asl		   		; 
+		rol v_h		   	; save carry if overflow
+		asl				; 
+		rol v_h			; save carry if overflow
+		adc v_l
+		
 		bcc @l1
-		inc	tmp1			; overflow inc page count
-		clc					; 
-@l1:	adc crs_x			; add x to address
+		inc	v_h			; overflow inc page count
+		clc				; 
+@l1:	adc crs_x		; add x to address
 		sta a_vreg
 		lda #(WRITE_ADDRESS + >ADDRESS_GFX1_SCREEN)
-		adc	tmp1			; add carry and page to address high byte
+		adc	v_h			; add carry and page to address high byte
 		sta	a_vreg
 		rts
 
@@ -267,22 +280,17 @@ vdp_init_bytes_text:
 .ifdef COLS80
 	.byte 	v_reg0_m4	; text mode 2
 	.byte   v_reg1_16k|v_reg1_display_on|v_reg1_int|v_reg1_m1
-	.byte 	(ADDRESS_GFX1_SCREEN / $400)| 3	; name table - value * $400					--> characters 
-	.byte 	0	; not used
-	.byte 	(ADDRESS_GFX1_PATTERN / $800) ; pattern table (charset) - value * $800  	--> offset in VRAM 
-	.byte	0	; not used
-	.byte 	0	; not used
-	.byte	Gray<<4|Black
+	.byte 	(ADDRESS_GFX1_SCREEN / $1000)| 1<<1 | 1<<0	; name table - value * $1000 (v9958) --> charset
 .else
-	.byte 0
+	.byte	0
 	.byte   v_reg1_16k|v_reg1_display_on|v_reg1_int|v_reg1_m1
-	.byte 	(ADDRESS_GFX1_SCREEN / $400)	; name table - value * $400					--> characters 
+	.byte 	(ADDRESS_GFX1_SCREEN / $1000) 	; name table - value * $400					--> charset
+.endif
 	.byte 	0	; not used
 	.byte 	(ADDRESS_GFX1_PATTERN / $800) ; pattern table (charset) - value * $800  	--> offset in VRAM 
 	.byte	0	; not used
 	.byte 	0	; not used
 	.byte	Gray<<4|Black
-.endif	
 .endif
 		
 vnopslide:
