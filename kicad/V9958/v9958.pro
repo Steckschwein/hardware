@@ -1,4 +1,4 @@
-update=05/12/2017 11:40:35
+update=05/12/2017 12:26:57
 version=1
 last_client=kicad
 [cvpcb]
@@ -63,3 +63,13 @@ LibName28=atmel
 LibName29=contrib
 LibName30=valves
 LibName31=D:/development/steckschwein-code/kicad/lbr/tms99xx
+[schematic_editor]
+version=1
+PageLayoutDescrFile=
+PlotDirectoryName=
+SubpartIdSeparator=0
+SubpartFirstId=65
+NetFmtName=
+SpiceForceRefPrefix=0
+SpiceUseNetNumbers=0
+LabSize=60
