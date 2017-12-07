@@ -1,24 +1,12 @@
-update=08/03/2015 20:05:10
+update=06/12/2017 21:44:49
 version=1
-last_client=kicad
+last_client=eeschema
 [cvpcb]
 version=1
 NetIExt=net
 [cvpcb/libraries]
 EquName1=devcms
 [schematic_editor]
-version=1
-PageLayoutDescrFile=
-SubpartIdSeparator=0
-SubpartFirstId=65
-NetFmtName=PcbnewAdvanced
-SpiceForceRefPrefix=0
-SpiceUseNetNumbers=0
-RptD_X=0
-RptD_Y=100
-RptLab=1
-LabSize=60
-[eeschema]
 version=1
 PageLayoutDescrFile=
 SubpartIdSeparator=0
@@ -52,3 +40,8 @@ BoardOutlineThickness=0.09999999999999999
 ModuleOutlineThickness=0.15
 [general]
 version=1
+[eeschema]
+version=1
+LibDir=
+[eeschema/libraries]
+LibName1=tms9929-rescue
