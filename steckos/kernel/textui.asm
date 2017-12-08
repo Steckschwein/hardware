@@ -3,7 +3,11 @@
 .include "vdp.inc"
 
 ROWS=24
+.ifdef COLS80
+COLS=80
+.else
 COLS=40
+.endif
 CURSOR_BLANK=' '
 CURSOR_CHAR=$db ; invert blank char - @see charset_6x8.asm
 
@@ -15,11 +19,7 @@ STATUS_CURSOR=1<<1
 STATUS_TEXTUI_ENABLED=1<<2
 
 .segment "OS_CACHE"
-screen_buffer:      	;.res 960, 0 ;@see steckos.cfg
-;screen_status: 		.byte 0
-;screen_write_lock: 	.byte 0
-;screen_frames:		.byte 0
-;saved_char:			.byte 0
+screen_buffer:      ;.res COLS*ROWS, CURSOR_BLANK
 screen_status 		=   screen_buffer + (COLS*(ROWS+1))
 screen_write_lock 	=   screen_status + 1
 screen_frames		=   screen_status + 2
@@ -78,12 +78,22 @@ textui_update_crs_ptr:		;   updates the 16 bit pointer crs_p upon crs_x, crs_y v
 		asl
 		asl
 		asl
-		sta crs_ptr 	   	; save crs_y * 8
+		
+.ifdef COLS80
+		; crs_y*64 + crs_y*16 (crs_ptr) => y*80 						
+		asl					; y*16
+		sta crs_ptr
+		rol crs_ptr+1	   	; save carry if overflow
+.else
+		; crs_y*32 + crs_y*8  (crs_ptr) => y*40
+		sta crs_ptr			; save		
+.endif
+
 		asl
-		rol crs_ptr+1	   	; save carry
+		rol crs_ptr+1	   	; save carry if overflow
 		asl
-		rol crs_ptr+1		; again, save carry
-		adc crs_ptr	    	; crs_y*32 + crs_y*8 (crs_ptr) => y*40
+		rol crs_ptr+1		; save carry if overflow
+		adc crs_ptr	    	; 
 		bcc @l1
 		inc	crs_ptr+1		; overflow inc page count
 		clc				;
@@ -115,6 +125,14 @@ textui_blank:
 @l1:	sta	screen_buffer+$000,x	;4 pages
 		sta	screen_buffer+$100,x
 		sta screen_buffer+$200,x
+
+.ifdef COLS80
+		sta screen_buffer+$300,x
+		sta screen_buffer+$400,x
+		sta screen_buffer+$500,x
+		sta screen_buffer+$600,x
+.endif
+		
 		inx
 		bne	@l1
 @l2:    sta	screen_buffer+$300,x
@@ -163,7 +181,7 @@ textui_update_screen:
 		SetVector	screen_buffer, addr    ; copy back buffer to video ram
 		lda	#<ADDRESS_GFX1_SCREEN
 		ldy	#WRITE_ADDRESS + >ADDRESS_GFX1_SCREEN
-		ldx	#$04
+		ldx	#$08
 		jsr	vdp_memcpy
 
 		lda	screen_status		;clean dirty
@@ -190,11 +208,29 @@ textui_scroll_up:
 		sta	screen_buffer+$200,x
 		inx
 		bne	@l3
+.ifdef COLS80		
 @l4:	lda	screen_buffer+$300+COLS,x
 		sta	screen_buffer+$300,x
 		inx
-        cpx #<(COLS * ROWS)
 		bne	@l4
+@l5:	lda	screen_buffer+$400+COLS,x
+		sta	screen_buffer+$400,x
+		inx
+		bne	@l5
+@l6:	lda	screen_buffer+$500+COLS,x
+		sta	screen_buffer+$500,x
+		inx
+		bne	@l6		
+@l7:	lda	screen_buffer+$600+COLS,x
+		sta	screen_buffer+$600,x
+		inx
+		bne	@l7
+.endif
+@le:	lda	screen_buffer+$300+COLS,x
+		sta	screen_buffer+$300,x
+		inx
+        cpx #<(COLS * ROWS)
+		bne	@le
 		plx
 		rts
 
@@ -249,8 +285,8 @@ textui_strout:
 		iny
 		bne	@l1
 @l2:	stz	screen_write_lock	;write off
-
 		_screen_dirty
+		
 		rts
 .endif
 
@@ -262,11 +298,11 @@ textui_strout:
 .ifdef TEXTUI_PRIMM
 textui_primm:
 		pla						; Get the low part of "return" address
-                                ; (data start address)
+		plx						; Get the high part of "return" address
+		
 		sta     krn_ptr3
-		pla
-		sta     krn_ptr3+1             ; Get the high part of "return" address
-                                ; (data start address)
+		stx     krn_ptr3+1     	
+		
 		inc screen_write_lock
 		; Note: actually we're pointing one short
 PSINB:	inc     krn_ptr3             ; update the pointer
@@ -282,21 +318,20 @@ PSIX1:	inc     krn_ptr3             ;
 PSIX2:
 		stz screen_write_lock
 		_screen_dirty
+		
 		jmp     (krn_ptr3)           ; return to byte following final NULL
 .endif
 
 
 textui_chrout:
 		beq	@l1	; \0 char
-		;php
 		pha		; safe char
 		inc screen_write_lock	;write on
 		jsr textui_dispatch_char
 		stz	screen_write_lock	;write off
 		_screen_dirty
 
-		pla					; restore a/p
-		;plp
+		pla					; restore a
 @l1:	rts
 
 

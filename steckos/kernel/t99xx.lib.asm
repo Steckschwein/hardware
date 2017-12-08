@@ -6,6 +6,12 @@
 
 .segment "KERNEL"
 
+.ifdef COLS80
+	.ifndef V9958
+		.assert 0, error, "80 COLUMNS ARE SUPPORTED ON V9958 ONLY! MAKE SURE -DV9958 IS ENABLED"
+	.endif
+.endif
+
 vdp_display_off:
         SyncBlank
         vnops
@@ -36,7 +42,7 @@ vdp_memcpy:
 		rts
 
 ;
-;	text mode - 40x24 character mode, 16 colors with same color for 8 characters in a block
+;	text mode - 40x24/80x24 character mode, 2 colors
 ;
 vdp_mode_text:
 	SetVector vdp_init_bytes_text, adrl
@@ -58,9 +64,15 @@ vdp_init_reg:
 	rts
 
 vdp_init_bytes_text:
-	.byte 0
+.ifdef COLS80
+	.byte 	v_reg0_m4	; text mode 2
 	.byte   v_reg1_16k|v_reg1_display_on|v_reg1_int|v_reg1_m1
-	.byte 	(ADDRESS_GFX1_SCREEN / $400)	; name table - value * $400					--> characters 
+	.byte 	(ADDRESS_GFX1_SCREEN / $1000)| 1<<1 | 1<<0	; name table - value * $1000 (v9958) --> charset
+.else
+	.byte	0
+	.byte   v_reg1_16k|v_reg1_display_on|v_reg1_int|v_reg1_m1
+	.byte 	(ADDRESS_GFX1_SCREEN / $1000) 	; name table - value * $400					--> charset
+.endif
 	.byte 	0	; not used
 	.byte 	(ADDRESS_GFX1_PATTERN / $800) ; pattern table (charset) - value * $800  	--> offset in VRAM 
 	.byte	0	; not used

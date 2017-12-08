@@ -10,6 +10,7 @@ a_vram		= a_vdp
 a_vreg		= a_vdp+1
 
 v_reg0_m3			= 1<<1
+v_reg0_m4			= 1<<2
 v_reg0_extV			= 1<<0
 
 v_reg1_16k			= 1<<7
@@ -57,7 +58,8 @@ White          =$0f ;255 255 255	"white"
 WRITE_ADDRESS			=$40
 ADDRESS_GFX_SPRITE		=$1b00
 
-ADDRESS_GFX1_SCREEN		=$0800			; name table
+;ADDRESS_GFX1_SCREEN	=$0800			; name table
+ADDRESS_GFX1_SCREEN		=$0000			; name table
 ADDRESS_GFX1_PATTERN	=$3800
 ADDRESS_GFX1_COLOR		=$1b80
 ADDRESS_GFX1_SPRITE		=ADDRESS_GFX_SPRITE
@@ -83,6 +85,10 @@ ADDRESS_GFX_MC_SPRITE_PATTERN	=ADDRESS_GFX2_PATTERN	; sprite pattern
 vdp_nopslide:
 		nop			;2cl
 		nop			;2cl
+.ifdef	V9958
+
+.endif
+		
 		rts			;6cl
 .endmacro
 
