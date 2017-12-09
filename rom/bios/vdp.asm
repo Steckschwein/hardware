@@ -253,13 +253,9 @@ vdp_set_addr:			; set the vdp vram adress, write A to vram
 .ifdef COLS80
 		; crs_y*64 + crs_y*16 (crs_ptr) => y*80 						
 		asl				; y*16
-		sta v_l
 		rol v_h		   	; save carry if overflow
-.else
-		; crs_y*32 + crs_y*8  (crs_ptr) => y*40
-		sta v_l			; save		
 .endif
-		
+		sta v_l			; save		
 		asl		   		; 
 		rol v_h		   	; save carry if overflow
 		asl				; 
