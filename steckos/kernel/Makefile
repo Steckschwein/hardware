@@ -8,6 +8,9 @@ LDFLAGS=--config steckos.cfg
 # enable 80 cols
 #DEFINES+=-DCOLS80
 
+# enable textui debug
+#DEBUG += -DDEBUG_TEXTUI
+
 # enable debug
 #DEBUG += -DDEBUG_SDCARD
 # debug rtc updates by kernel
@@ -15,7 +18,7 @@ LDFLAGS=--config steckos.cfg
 # debug util
 #DEBUG += -DDEBUG_UTIL
 # debug fat32
-DEBUG += -DDEBUG_FAT32
+#DEBUG += -DDEBUG_FAT32
 # dump fat blocks on write
 #DEBUG += -DFAT_DUMP_FAT_WRITE
 # do not write anything (metadata)

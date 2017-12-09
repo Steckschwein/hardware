@@ -1,11 +1,17 @@
+; enable debug for this module
+;.ifdef DEBUG_TEXTUI
+;	debug_enabled=1
+;.endif
+
 .include "common.inc"
 .include "kernel.inc"
 .include "vdp.inc"
 
-ROWS=24
 .ifdef COLS80
+ROWS=18
 COLS=80
 .else
+ROWS=24
 COLS=40
 .endif
 CURSOR_BLANK=' '
@@ -18,15 +24,19 @@ STATUS_BUFFER_DIRTY=1<<0
 STATUS_CURSOR=1<<1
 STATUS_TEXTUI_ENABLED=1<<2
 
+;screen_buffer		=	$4000
 .segment "OS_CACHE"
 screen_buffer:      ;.res COLS*ROWS, CURSOR_BLANK
-screen_status 		=   screen_buffer + (COLS*(ROWS+1))
+;screen_status:
+screen_status 		=   screen_buffer + $0800
 screen_write_lock 	=   screen_status + 1
 screen_frames		=   screen_status + 2
 saved_char			=   screen_status + 3
 
 .segment "KERNEL"
 .export textui_init0, textui_update_screen, textui_chrout, textui_put
+.export textui_enable, textui_disable, textui_blank, textui_update_crs_ptr, textui_crsxy
+.import vdp_bgcolor, vdp_memcpy, vdp_mode_text, vdp_display_off
 
 .ifdef TEXTUI_STROUT
 .export textui_strout
@@ -35,9 +45,6 @@ saved_char			=   screen_status + 3
 .ifdef TEXTUI_PRIMM
 .export textui_primm
 .endif
-
-.export textui_enable, textui_disable, textui_blank, textui_update_crs_ptr, textui_crsxy, textui_scroll_up
-.import vdp_bgcolor, vdp_memcpy, vdp_mode_text, vdp_display_off
 
 .macro _screen_dirty
 		lda #STATUS_BUFFER_DIRTY
@@ -64,7 +71,7 @@ textui_decx:
 		bne	@l1
 		rts
 @l1:	dec	crs_x			; go on with textui_update_crs_ptr below
-textui_update_crs_ptr:		;   updates the 16 bit pointer crs_p upon crs_x, crs_y values
+textui_update_crs_ptr:		;  updates the 16 bit pointer crs_p upon crs_x, crs_y values
 		pha
 
 		lda saved_char     	;restore saved char
@@ -82,13 +89,9 @@ textui_update_crs_ptr:		;   updates the 16 bit pointer crs_p upon crs_x, crs_y v
 .ifdef COLS80
 		; crs_y*64 + crs_y*16 (crs_ptr) => y*80 						
 		asl					; y*16
-		sta crs_ptr
 		rol crs_ptr+1	   	; save carry if overflow
-.else
-		; crs_y*32 + crs_y*8  (crs_ptr) => y*40
-		sta crs_ptr			; save		
 .endif
-
+		sta crs_ptr
 		asl
 		rol crs_ptr+1	   	; save carry if overflow
 		asl
@@ -125,20 +128,13 @@ textui_blank:
 @l1:	sta	screen_buffer+$000,x	;4 pages
 		sta	screen_buffer+$100,x
 		sta screen_buffer+$200,x
-
-.ifdef COLS80
 		sta screen_buffer+$300,x
 		sta screen_buffer+$400,x
 		sta screen_buffer+$500,x
 		sta screen_buffer+$600,x
-.endif
-		
+		sta screen_buffer+$700,x
 		inx
 		bne	@l1
-@l2:    sta	screen_buffer+$300,x
-        inx
-        cpx #<(COLS*(ROWS+1))
-        bne @l2
     	stz crs_x
     	stz crs_y
         jsr	textui_update_crs_ptr
@@ -208,7 +204,6 @@ textui_scroll_up:
 		sta	screen_buffer+$200,x
 		inx
 		bne	@l3
-.ifdef COLS80		
 @l4:	lda	screen_buffer+$300+COLS,x
 		sta	screen_buffer+$300,x
 		inx
@@ -225,12 +220,11 @@ textui_scroll_up:
 		sta	screen_buffer+$600,x
 		inx
 		bne	@l7
-.endif
-@le:	lda	screen_buffer+$300+COLS,x
-		sta	screen_buffer+$300,x
+@l8:	lda	screen_buffer+$700+COLS,x
+		sta	screen_buffer+$700,x
 		inx
-        cpx #<(COLS * ROWS)
-		bne	@le
+		cpx	#($100-COLS)
+		bne	@l8
 		plx
 		rts
 
@@ -336,7 +330,7 @@ textui_chrout:
 
 
 
-; set crs x and y position absolutely - 0..32/0..23 or 0..39/0..23 40 char mode
+; set crs x and y position absolutely - 0..32/0..23 or 0..39/0..23 40 char mode or 0..79/0..23 80 char mode (text2)
 ;
 textui_crsxy:
 		stx crs_x
@@ -357,13 +351,13 @@ lfeed:
 		bne	@l4
 		lda	crs_x
 		bne	@l3
-		lda	crs_y			; cursor y=0, no dec
+		lda	crs_y				; cursor y=0, no dec
 		beq	lupdate
 		dec	crs_y
 		lda	#(COLS-1)			; set x to end of line above
 		sta	crs_x
 @l2:	jsr	textui_update_crs_ptr
-		lda	#CURSOR_BLANK			;blank the saved char
+		lda	#CURSOR_BLANK		;blank the saved char
 		sta	saved_char
     	rts
 @l3:	dec	crs_x
