@@ -1,4 +1,4 @@
-all: dinosaur.prg dinosaur.hi
+all: dinosaur.prg 
 
 %.res: %.xpm
 	sh xpm2acme16bit.sh dinosaur.sprites.xpm > dinosaur.sprites.res
@@ -17,12 +17,10 @@ all: dinosaur.prg dinosaur.hi
 	sh xpm2acme8bit.sh dinosaur.chars.6.4px.xpm > dinosaur.chars.6.4px.res
 
 clean:
-	rm -f *.prg *.labels *.res DINOSAUR.HI
+	rm -f *.prg *.labels *.res 
 
 %.prg: %.a ${ACME}/t9929.h.a ${ACME}/*.lib.a *.res 
 	acme -v -f cbm --cpu 65c02 -o $@ $<
 
-dinosaur.hi:
-	dd if=/dev/zero of=DINOSAUR.HI bs=3 count=1
 transfer: all
 	../../transfer.py dinosaur.prg
