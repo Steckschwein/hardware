@@ -85,10 +85,16 @@ ADDRESS_GFX_MC_SPRITE_PATTERN	=ADDRESS_GFX2_PATTERN	; sprite pattern
 vdp_nopslide:
 		nop			;2cl
 		nop			;2cl
-.ifdef	V9958
-
-.endif
-		
+		nop			;2cl
+		nop			;2cl
+		nop			;2cl
+		nop			;2cl
+		nop			;2cl
+		nop			;2cl
+		nop			;2cl
+		nop			;2cl
+		nop			;2cl
+		nop			;2cl
 		rts			;6cl
 .endmacro
 
