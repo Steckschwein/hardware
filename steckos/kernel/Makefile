@@ -20,6 +20,7 @@ LDFLAGS=--config steckos.cfg
 #DEBUG += -DFAT_DUMP_FAT_WRITE
 # do not write anything (metadata)
 # DEBUG += -DFAT_NOWRITE
+DEBUG += -DV9958
 
 #
 #DEBUG += -DDEBUG_EXECV
