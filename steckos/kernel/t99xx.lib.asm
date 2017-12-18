@@ -34,7 +34,7 @@ vdp_memcpy:
 		iny             ;2
 		vnops
 		sta   a_vram    ;1 opcode fetch
-		
+
 		bne   @l1         ;3
 		inc   adrh
 		dex
@@ -45,6 +45,14 @@ vdp_memcpy:
 ;	text mode - 40x24/80x24 character mode, 2 colors
 ;
 vdp_mode_text:
+
+.ifdef V9958
+	; enable V9958 wait state generator
+	lda #1<<2
+	ldy #v_reg25
+	vdp_sreg
+.endif
+
 	SetVector vdp_init_bytes_text, adrl
 ; setup video registers upon given table
 ;	input:
@@ -74,7 +82,7 @@ vdp_init_bytes_text:
 	.byte 	(ADDRESS_GFX1_SCREEN / $1000) 	; name table - value * $400					--> charset
 .endif
 	.byte 	0	; not used
-	.byte 	(ADDRESS_GFX1_PATTERN / $800) ; pattern table (charset) - value * $800  	--> offset in VRAM 
+	.byte 	(ADDRESS_GFX1_PATTERN / $800) ; pattern table (charset) - value * $800  	--> offset in VRAM
 	.byte	0	; not used
 	.byte 	0	; not used
 	.byte	Medium_Green<<4|Black
@@ -88,5 +96,5 @@ vdp_bgcolor:
 	vnops
 	sta   a_vreg
 	rts
-	
+
 m_vdp_nopslide

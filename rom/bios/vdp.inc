@@ -22,13 +22,14 @@ v_reg4 	= $84
 v_reg5 	= $85
 v_reg6 	= $86
 v_reg7  = $87
+v_reg25 = 128 + 25
 
 Transparent    =$00
 Black          =$01
 Medium_Green   =$02
 Light_Green    =$03
 Dark_Blue      =$04
-Light_Blue     =$05;  5 Light Blue 
+Light_Blue     =$05;  5 Light Blue
 Dark_Red       =$06
 Cyan           =$07 ;(Aqua Blue)
 Medium_Red     =$08

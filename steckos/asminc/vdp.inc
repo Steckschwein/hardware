@@ -29,6 +29,8 @@ v_reg4 	= $84
 v_reg5 	= $85
 v_reg6 	= $86
 v_reg7  = $87
+v_reg25 = 128 + 25
+
 
 SP_Y=0
 SP_X=1
@@ -78,7 +80,7 @@ ADDRESS_GFX_MC_SPRITE_PATTERN	=ADDRESS_GFX2_PATTERN	; sprite pattern
 
 ; vnops - 16cl -> 8Mhz -> 2Âµs, the min vdp wait
 .macro	vnops
-	jsr vdp_nopslide	;6cl	
+	jsr vdp_nopslide	;6cl
 .endmacro
 
 .macro m_vdp_nopslide
@@ -87,21 +89,25 @@ vdp_nopslide:
 		nop			;2cl
 		nop			;2cl
 		nop			;2cl
+
 		nop			;2cl
 		nop			;2cl
 		nop			;2cl
 		nop			;2cl
+
 		nop			;2cl
 		nop			;2cl
 		nop			;2cl
 		nop			;2cl
+
+
 		rts			;6cl
 .endmacro
 
 .macro vdp_sreg
 			sta	a_vreg
 			vnops
-			sty	a_vreg	
+			sty	a_vreg
 .endmacro
 
 .macro	SyncBlank

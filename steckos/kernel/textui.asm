@@ -78,22 +78,22 @@ textui_update_crs_ptr:		;   updates the 16 bit pointer crs_p upon crs_x, crs_y v
 		asl
 		asl
 		asl
-		
+
 .ifdef COLS80
-		; crs_y*64 + crs_y*16 (crs_ptr) => y*80 						
+		; crs_y*64 + crs_y*16 (crs_ptr) => y*80
 		asl					; y*16
 		sta crs_ptr
 		rol crs_ptr+1	   	; save carry if overflow
 .else
 		; crs_y*32 + crs_y*8  (crs_ptr) => y*40
-		sta crs_ptr			; save		
+		sta crs_ptr			; save
 .endif
 
 		asl
 		rol crs_ptr+1	   	; save carry if overflow
 		asl
 		rol crs_ptr+1		; save carry if overflow
-		adc crs_ptr	    	; 
+		adc crs_ptr	    	;
 		bcc @l1
 		inc	crs_ptr+1		; overflow inc page count
 		clc				;
@@ -111,6 +111,9 @@ textui_update_crs_ptr:		;   updates the 16 bit pointer crs_p upon crs_x, crs_y v
 
 textui_init0:
 		jsr	vdp_display_off			        ;display off
+
+
+
         SetVector screen_buffer, crs_ptr    ;set crs ptr initial to screen buffer
 		jsr	textui_blank			        ;blank screen buffer
         stz screen_write_lock               ;reset write lock
@@ -132,7 +135,7 @@ textui_blank:
 		sta screen_buffer+$500,x
 		sta screen_buffer+$600,x
 .endif
-		
+
 		inx
 		bne	@l1
 @l2:    sta	screen_buffer+$300,x
@@ -208,7 +211,7 @@ textui_scroll_up:
 		sta	screen_buffer+$200,x
 		inx
 		bne	@l3
-.ifdef COLS80		
+.ifdef COLS80
 @l4:	lda	screen_buffer+$300+COLS,x
 		sta	screen_buffer+$300,x
 		inx
@@ -220,7 +223,7 @@ textui_scroll_up:
 @l6:	lda	screen_buffer+$500+COLS,x
 		sta	screen_buffer+$500,x
 		inx
-		bne	@l6		
+		bne	@l6
 @l7:	lda	screen_buffer+$600+COLS,x
 		sta	screen_buffer+$600,x
 		inx
@@ -286,7 +289,7 @@ textui_strout:
 		bne	@l1
 @l2:	stz	screen_write_lock	;write off
 		_screen_dirty
-		
+
 		rts
 .endif
 
@@ -299,10 +302,10 @@ textui_strout:
 textui_primm:
 		pla						; Get the low part of "return" address
 		plx						; Get the high part of "return" address
-		
+
 		sta     krn_ptr3
-		stx     krn_ptr3+1     	
-		
+		stx     krn_ptr3+1
+
 		inc screen_write_lock
 		; Note: actually we're pointing one short
 PSINB:	inc     krn_ptr3             ; update the pointer
@@ -318,7 +321,7 @@ PSIX1:	inc     krn_ptr3             ;
 PSIX2:
 		stz screen_write_lock
 		_screen_dirty
-		
+
 		jmp     (krn_ptr3)           ; return to byte following final NULL
 .endif
 

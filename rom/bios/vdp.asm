@@ -16,25 +16,34 @@
 
 .macro	SyncBlank
      		lda a_vreg
-@lada:	
+@lada:
  			bit	a_vreg
  			bpl @lada	   ; wait until blank - irq flag set?
 .endmacro
 
-.macro vdp_sreg 
+.macro vdp_sreg
 			sta	a_vreg
 			vnops
-			sty	a_vreg	
+			sty	a_vreg
 .endmacro
 
 ;----------------------------------------------------------------------------------------------
 ; init tms9929 into gfx1 mode
 ;----------------------------------------------------------------------------------------------
-init_vdp:			
+init_vdp:
 			SyncBlank			;wait blank, display off
 			lda		#v_reg1_16k	;enable 16K ram, disable screen
 			ldy	  	#v_reg1
-			vdp_sreg			
+			vdp_sreg
+
+
+.ifdef V9958
+			; enable V9958 wait state generator
+			lda #1<<2
+			ldy #v_reg25
+			vdp_sreg
+.endif
+
 
 			lda	#<ADDRESS_GFX_SPRITE
 			ldy	#(WRITE_ADDRESS + >ADDRESS_GFX_SPRITE)
@@ -47,11 +56,11 @@ init_vdp:
 			ldy	#(WRITE_ADDRESS + >ADDRESS_GFX1_SCREEN)
 			vdp_sreg
 			ldy #$00      ;2
-			
+
 			ldx	#$08                    ;8 pages - 8x256 byte, sufficient for 32*24 and 40*24 and 80*24 mode
-			
+
 			lda	#' '					;fill vram screen with blank
-@l1: 
+@l1:
 			vnops          ;8
 			iny             ;2
 			sta   a_vram    ;
@@ -77,7 +86,7 @@ init_vdp:
 			lda   (addr),y ;5
 			iny            ;2
 			vnops         ;8
-			sta   a_vram   ;1 opcode fetch	
+			sta   a_vram   ;1 opcode fetch
 			bne   @l2        ;3
 			inc   adrh
 			dex
@@ -90,9 +99,9 @@ init_vdp:
 			lda #Gray<<4|Black          ;enable gfx 1 with gray on black background
 			ldx	#$20
 @l3:		vnops
-			dex         
-			sta a_vram  
-			bne @l3			
+			dex
+			sta a_vram
+			bne @l3
 
 			ldx	#$00					;init vdp regs
 			ldy	#v_reg0
@@ -101,7 +110,7 @@ init_vdp:
 			.endif
 			.ifndef CHAR6x8
 			lda vdp_init_bytes_gfx1,x
-			.endif			
+			.endif
 			vdp_sreg
 			iny
 			inx
@@ -113,7 +122,7 @@ vdp_scroll_up:
 			SetVector	(ADDRESS_GFX1_SCREEN+COLS), ptr1		        ; +COLS - offset second row
 			SetVector	(ADDRESS_GFX1_SCREEN+(WRITE_ADDRESS<<8)), ptr2	; offset first row as "write adress"
 
-			lda	a_vreg  ; clear v-blank bit, we dont know where we are...			
+			lda	a_vreg  ; clear v-blank bit, we dont know where we are...
 @l1:
 			bit	a_vreg  ; sync with next v-blank, so that we have the full 4300µs to copy the vram
 			bpl	@l1
@@ -126,7 +135,7 @@ vdp_scroll_up:
 			vnops		; wait 2µs, 8Mhz = 16cl => 8 nop
 			ldx	a_vram	;
 			vnops
-			
+
 			lda	ptr2l	; 3cl
 			sta	a_vreg
 			nop
@@ -144,7 +153,7 @@ vdp_scroll_up:
 			inc	ptr2l  ; 5cl
 			bne	@l2		; 3cl
 			inc	ptr2h
-			bra	@l1			
+			bra	@l1
 @l4:
 			ldx	#COLS	; write address is already setup from loop
 			lda	#' '
@@ -154,7 +163,7 @@ vdp_scroll_up:
 			dex
 			bne	@l5
 			rts
-			
+
 inc_cursor_y:
 			lda crs_y
 			cmp	#ROWS		;last line ?
@@ -181,7 +190,7 @@ vdp_chrout:
 			beq	@l4
 			dec	crs_x
 			bra @l5
-@l4:	
+@l4:
 			lda	crs_y			; cursor y=0, no dec
 			beq	@l6
 			dec	crs_y
@@ -197,7 +206,7 @@ vdp_chrout:
 			cmp	#(COLS-1)
 			beq @l7
 			inc	crs_x
-@l6:	
+@l6:
 			rts
 @l7:
 			stz	crs_x
@@ -232,9 +241,9 @@ vdp_set_addr:				; set the vdp vram adress, write A to vram
 vdp_init_bytes_gfx1:
 		.byte 	0
 		.byte	v_reg1_16k|v_reg1_display_on|v_reg1_spr_size
-		.byte 	(ADDRESS_GFX1_SCREEN / $400)	; name table - value * $400					--> characters 
+		.byte 	(ADDRESS_GFX1_SCREEN / $400)	; name table - value * $400					--> characters
 		.byte 	(ADDRESS_GFX1_COLOR /  $40)	; color table - value * $40 (gfx1), 7f/ff (gfx2)
-		.byte 	(ADDRESS_GFX1_PATTERN / $800) ; pattern table (charset) - value * $800  	--> offset in VRAM 
+		.byte 	(ADDRESS_GFX1_PATTERN / $800) ; pattern table (charset) - value * $800  	--> offset in VRAM
 		.byte	(ADDRESS_GFX1_SPRITE / $80)	; sprite attribute table - value * $80 		--> offset in VRAM
 		.byte 	(ADDRESS_GFX1_SPRITE_PATTERN / $800)  ; sprite pattern table - value * $800  		--> offset in VRAM
 		.byte	Black
@@ -249,26 +258,26 @@ vdp_set_addr:			; set the vdp vram adress, write A to vram
 		asl
 		asl
 		asl				; crs_y*8
-		
+
 .ifdef COLS80
-		; crs_y*64 + crs_y*16 (crs_ptr) => y*80 						
+		; crs_y*64 + crs_y*16 (crs_ptr) => y*80
 		asl				; y*16
 		sta v_l
 		rol v_h		   	; save carry if overflow
 .else
 		; crs_y*32 + crs_y*8  (crs_ptr) => y*40
-		sta v_l			; save		
+		sta v_l			; save
 .endif
-		
-		asl		   		; 
+
+		asl		   		;
 		rol v_h		   	; save carry if overflow
-		asl				; 
+		asl				;
 		rol v_h			; save carry if overflow
 		adc v_l
-		
+
 		bcc @l1
 		inc	v_h			; overflow inc page count
-		clc				; 
+		clc				;
 @l1:	adc crs_x		; add x to address
 		sta a_vreg
 		lda #(WRITE_ADDRESS + >ADDRESS_GFX1_SCREEN)
@@ -287,19 +296,19 @@ vdp_init_bytes_text:
 	.byte 	(ADDRESS_GFX1_SCREEN / $1000) 	; name table - value * $400					--> charset
 .endif
 	.byte 	0	; not used
-	.byte 	(ADDRESS_GFX1_PATTERN / $800) ; pattern table (charset) - value * $800  	--> offset in VRAM 
+	.byte 	(ADDRESS_GFX1_PATTERN / $800) ; pattern table (charset) - value * $800  	--> offset in VRAM
 	.byte	0	; not used
 	.byte 	0	; not used
 	.byte	Gray<<4|Black
 .endif
-		
+
 vnopslide:
 		nop
 		nop
 		nop
 		nop
 
-.ifdef V9958		
+.ifdef V9958
 		nop
 		nop
 		nop
