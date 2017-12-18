@@ -356,9 +356,6 @@ krn_uart_rx:			jmp uart_rx
 .export krn_primm
 krn_primm:      		jmp primm
 
-.export krn_textui_scroll_up
-krn_textui_scroll_up:      jmp textui_scroll_up
-
 .export krn_getcwd
 krn_getcwd:      		jmp fat_get_root_and_pwd
 
