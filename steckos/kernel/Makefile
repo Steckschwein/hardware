@@ -15,11 +15,12 @@ LDFLAGS=--config steckos.cfg
 # debug util
 #DEBUG += -DDEBUG_UTIL
 # debug fat32
-DEBUG += -DDEBUG_FAT32
+# DEBUG += -DDEBUG_FAT32
 # dump fat blocks on write
 #DEBUG += -DFAT_DUMP_FAT_WRITE
 # do not write anything (metadata)
-DEBUG += -DFAT_NOWRITE
+# DEBUG += -DFAT_NOWRITE
+
 #
 #DEBUG += -DDEBUG_EXECV
 
@@ -40,9 +41,9 @@ clean:
 
 version.inc:
 	echo -n ".byte \"r`hg log -l1 | grep changeset | cut -d ':' -f2 | tr -d ' '`\"" > version.inc
-	
+
 kernel.bin: version.inc $(OBJS) kernel.inc zeropage.inc debug.inc
-	ld65 $(LDFLAGS) $(OBJS) -m kernel.map -Ln symbols.txt -o kernel.bin 
+	ld65 $(LDFLAGS) $(OBJS) -m kernel.map -Ln symbols.txt -o kernel.bin
 	grep krn symbols.txt | sed "s/al 00//" | awk -F' ' '{print $$2" = $$"$$1}'| sed -e "s/^\.//g" > kernel_jumptable.inc
 
 loader.bin: kernel.bin loader.o
