@@ -3,9 +3,9 @@ LDFLAGS=--config bios.cfg -m map.txt
 # 6x8 characters
 DEFINES+=-DCHAR6x8 
 # if 9958 is used
-DEFINES+=-DV9958
+#DEFINES+=-DV9958
 # enable 80 cols
-DEFINES+=-DCOLS80
+#DEFINES+=-DCOLS80
 
 
 .PHONY: all clean
