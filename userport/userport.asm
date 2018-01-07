@@ -36,12 +36,9 @@ LCD_RS 	= (1<<4)
 
 	jsr delay
 l:
-	;  set register select because we will send a command
-	set_bit LCD_RS
-	lda #$5a
+	; init lcd to 4bit mode
 
-	jsr send_byte
-	clear_bit LCD_RS
+	jsr init_lcd_4bit
 
 	; send bytes
 	ldx #$00
@@ -56,26 +53,54 @@ l:
 	jmp (retvec)
 
 
+init_lcd_4bit:
+	clear_bit LCD_RS
+
+
+	lda #$03
+	jsr send_byte
+	jsr delay
+
+	lda #$03
+	jsr send_byte
+	jsr delay
+
+	lda #$02
+	jsr send_byte
+	jsr delay
+
+	lda #$28
+	jsr send_byte
+	jsr delay
+
+	set_bit LCD_RS
+	rts
+
 send_byte:
 	phx
 	tax
 
+	; clear lower nibble in port
+	lda via1porta
+	and #$f0
+	sta via1porta
+
+	txa
 	lsr
 	lsr
 	lsr
 	lsr
 
-	and #$0f
 	ora via1porta
 	sta via1porta
 
-	jsr delay
 	set_bit LCD_E
 	jsr delay
 	clear_bit LCD_E
-
 	jsr delay
 
+
+	; clear lower nibble in port
 	lda via1porta
 	and #$f0
 	sta via1porta
@@ -84,11 +109,11 @@ send_byte:
 	and #$0f
 	ora via1porta
 	sta via1porta
-	jsr delay
+
+
 	set_bit LCD_E
 	jsr delay
 	clear_bit LCD_E
-
 	jsr delay
 
 	plx
@@ -97,10 +122,10 @@ send_byte:
 
 
 delay:
-;	phy
+	phy
 	phx
-;	ldy #$ff
-;loop2:
+	ldy #$ff
+loop2:
 	ldx #$ff
 loop:
 	.repeat 50
@@ -109,13 +134,11 @@ loop:
 
 	dex
 	bne loop
-;	dey
-;	bne loop2
+	dey
+	bne loop2
 	plx
-;	ply
+	ply
 	rts
 
-scratch:
-	.byte $00
 chars:
-	.byte "Hello",$00
+	.byte "Hello World!",$00
