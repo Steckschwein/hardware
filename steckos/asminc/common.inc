@@ -1,4 +1,4 @@
-.macro SetVector word, addr 
+.macro SetVector word, addr
 			lda #<word
 			sta addr
 			lda #>word
@@ -94,19 +94,19 @@
 	pha
 	lda ptr+1
 	pha
-.endmacro 
+.endmacro
 
 .macro restoreptr ptr
 	pla
 	sta ptr+1
 	pla
 	sta ptr
-.endmacro 
+.endmacro
 
-.macro copypointer fromptr, toptr 
+.macro copypointer fromptr, toptr
 	.repeat 2, i
 		lda fromptr+i
-		sta toptr	+i	
+		sta toptr	+i
 	.endrepeat
 .endmacro
 
@@ -126,6 +126,17 @@
 	.local @l
 @l:     jsr krn_getkey
         bcc @l
+.endmacro
+
+; swap nibbles of byte in A
+;http://6502.org/source/general/SWN.html
+.macro swap
+	ASL  A
+	ADC  #$80
+	ROL  A
+	ASL  A
+	ADC  #$80
+	ROL  A
 .endmacro
 
 KEY_ESCAPE = 27
