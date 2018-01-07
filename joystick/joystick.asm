@@ -4,7 +4,6 @@
 .include "../steckos/asminc/via.inc"
 .include "../steckos/asminc/common.inc"
 .include "../steckos/asminc/joystick.inc"
-.include "../steckos/kernel/uart.inc"
 
 .include "../steckos/asminc/appstart.inc"
 
@@ -58,16 +57,12 @@ loop:
 	cmp #'x'
 	bne @l
 	; joysticks off
-	lda #%00000100
-	ora uart1mcr
-	sta uart1mcr
+	joy_off
 	bra loop
 @l:	cmp #'y'
 	bne @l1
 	; joysticks on
-	lda #%11111011
-	and uart1mcr
-	sta uart1mcr
+	joy_on
 	bra loop
 @l1:
 	cmp #$03
