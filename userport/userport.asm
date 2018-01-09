@@ -7,8 +7,8 @@
 
 .include "../steckos/asminc/appstart.inc"
 
-LCD_E 	= (1<<5)
-LCD_RS 	= (1<<4)
+LCD_E 	= (1<<0)
+LCD_RS 	= (1<<1)
 
 .macro set_bit bit
 	lda #bit
@@ -34,8 +34,6 @@ LCD_RS 	= (1<<4)
 	lda #$00
 	sta via1porta
 
-	jsr delay
-l:
 	; init lcd to 4bit mode
 
 	jsr init_lcd_4bit
@@ -46,6 +44,7 @@ l:
 	lda chars,x
 	beq @end
 	jsr send_byte
+	jsr delay
 	inx
 	bne @l
 
@@ -57,21 +56,25 @@ init_lcd_4bit:
 	clear_bit LCD_RS
 
 
-	lda #$03
+	ldx #$02
+@l1:
+	lda #$30
 	jsr send_byte
 	jsr delay
+	dex
+	bpl @l1
 
-	lda #$03
-	jsr send_byte
-	jsr delay
-
-	lda #$02
+	lda #$20
 	jsr send_byte
 	jsr delay
 
 	lda #$28
 	jsr send_byte
 	jsr delay
+
+	;lda #%00001110
+	;jsr send_byte
+	;jsr delay
 
 	set_bit LCD_RS
 	rts
@@ -80,65 +83,54 @@ send_byte:
 	phx
 	tax
 
-	; clear lower nibble in port
 	lda via1porta
-	and #$f0
-	sta via1porta
-
-	txa
-	lsr
-	lsr
-	lsr
-	lsr
-
-	ora via1porta
-	sta via1porta
-
-	set_bit LCD_E
-	jsr delay
-	clear_bit LCD_E
-	jsr delay
-
-
-	; clear lower nibble in port
-	lda via1porta
-	and #$f0
-	sta via1porta
-
-	txa
 	and #$0f
-	ora via1porta
+	sta via1porta
+	txa
+	and #$f0
+	jsr send_nibble
+
+	lda via1porta
+	and #$0f
 	sta via1porta
 
 
-	set_bit LCD_E
-	jsr delay
-	clear_bit LCD_E
-	jsr delay
+	txa
 
+	asl
+	asl
+	asl
+	asl
+
+	jsr send_nibble
 	plx
 	rts
 
+send_nibble:
+	ora via1porta
+	sta via1porta
+	; fall through to pulse_clock
+
+pulse_clock:
+	inc via1porta
+	jsr delay
+	dec via1porta
+
+	rts
 
 
 delay:
-	phy
 	phx
-	ldy #$ff
-loop2:
 	ldx #$ff
 loop:
-	.repeat 50
+	.repeat 10
 	nop
 	.endrepeat
 
 	dex
 	bne loop
-	dey
-	bne loop2
 	plx
-	ply
 	rts
 
 chars:
-	.byte "Hello World!",$00
+	.byte "Hello World!3",$00
