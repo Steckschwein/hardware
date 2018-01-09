@@ -34,10 +34,7 @@ LCD_RS 	= (1<<1)
 	lda #$00
 	sta via1porta
 
-	; init lcd to 4bit mode
-
 	jsr init_lcd_4bit
-
 	; send bytes
 	ldx #$00
 @l:
@@ -52,17 +49,22 @@ LCD_RS 	= (1<<1)
 	jmp (retvec)
 
 
+; init lcd to 4bit mode
+
 init_lcd_4bit:
 	clear_bit LCD_RS
 
-
-	ldx #$02
-@l1:
 	lda #$30
 	jsr send_byte
 	jsr delay
-	dex
-	bpl @l1
+
+	lda #$30
+	jsr send_byte
+	jsr delay
+
+	lda #$30
+	jsr send_byte
+	jsr delay
 
 	lda #$20
 	jsr send_byte
@@ -86,6 +88,7 @@ send_byte:
 	lda via1porta
 	and #$0f
 	sta via1porta
+
 	txa
 	and #$f0
 	jsr send_nibble
@@ -108,13 +111,14 @@ send_byte:
 
 send_nibble:
 	ora via1porta
+	;jsr hexout
 	sta via1porta
 	; fall through to pulse_clock
 
 pulse_clock:
-	inc via1porta
+	set_bit LCD_E
 	jsr delay
-	dec via1porta
+	clear_bit LCD_E
 
 	rts
 
