@@ -37,8 +37,6 @@ LCD_RS 	= (1<<1)
 	jsr init_lcd_4bit
 	jsr delay
 
-	; send bytes
-
 	ldx #$00
 @l:
 	lda chars,x
@@ -49,8 +47,8 @@ LCD_RS 	= (1<<1)
 	bne @l
 
 @end:
-	jmp (retvec)
-
+	;jmp (retvec)
+	jmp krn_upload
 
 ; init lcd to 4bit mode
 
@@ -64,6 +62,7 @@ init_lcd_4bit:
 	lda #$30
 	jsr send_byte
 	jsr delay
+
 	lda #$30
 	jsr send_byte
 	jsr delay
@@ -73,18 +72,10 @@ init_lcd_4bit:
 	jsr send_byte
 	jsr delay
 
-	lda #$20
-	jsr send_byte
-	jsr delay
-
 
 	lda #$28
 	jsr send_byte
 	jsr delay
-
-	;lda #%00001110
-	;jsr send_byte
-	;jsr delay
 
 	set_bit LCD_RS
 	rts
@@ -100,7 +91,6 @@ send_byte:
 	txa
 	and #$f0
 	ora via1porta
-	jsr hexout
 	sta via1porta
 	jsr pulse_clock
 
@@ -118,25 +108,28 @@ send_byte:
 	asl
 
 	ora via1porta
-	jsr hexout
 	sta via1porta
 	jsr pulse_clock
 	plx
 	rts
 
 pulse_clock:
-	nop
-	nop
-	nop
+	jsr small_delay
 	inc via1porta
-	nop
-	nop
-	nop
+	jsr small_delay
 	dec via1porta
-	nop
-	nop
-	nop
+	jsr small_delay
 
+	rts
+
+small_delay:
+	phx
+	ldx #100
+@l:
+	nop
+	dex
+	bne @l
+	plx
 	rts
 
 delay:
@@ -153,4 +146,4 @@ loop:
 	rts
 
 chars:
-	.byte "Hello World!",$00
+	.byte "was anderes!",$00
