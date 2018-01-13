@@ -35,7 +35,10 @@ LCD_RS 	= (1<<1)
 	sta via1porta
 
 	jsr init_lcd_4bit
+	jsr delay
+
 	; send bytes
+
 	ldx #$00
 @l:
 	lda chars,x
@@ -61,14 +64,19 @@ init_lcd_4bit:
 	lda #$30
 	jsr send_byte
 	jsr delay
-
 	lda #$30
+	jsr send_byte
+	jsr delay
+
+
+	lda #$20
 	jsr send_byte
 	jsr delay
 
 	lda #$20
 	jsr send_byte
 	jsr delay
+
 
 	lda #$28
 	jsr send_byte
@@ -91,11 +99,15 @@ send_byte:
 
 	txa
 	and #$f0
-	jsr send_nibble
+	ora via1porta
+	jsr hexout
+	sta via1porta
+	jsr pulse_clock
 
 	lda via1porta
 	and #$0f
 	sta via1porta
+
 
 
 	txa
@@ -105,27 +117,31 @@ send_byte:
 	asl
 	asl
 
-	jsr send_nibble
+	ora via1porta
+	jsr hexout
+	sta via1porta
+	jsr pulse_clock
 	plx
 	rts
 
-send_nibble:
-	ora via1porta
-	;jsr hexout
-	sta via1porta
-	; fall through to pulse_clock
-
 pulse_clock:
-	set_bit LCD_E
-	jsr delay
-	clear_bit LCD_E
+	nop
+	nop
+	nop
+	inc via1porta
+	nop
+	nop
+	nop
+	dec via1porta
+	nop
+	nop
+	nop
 
 	rts
 
-
 delay:
 	phx
-	ldx #$ff
+	ldx #$50
 loop:
 	.repeat 10
 	nop
@@ -137,4 +153,4 @@ loop:
 	rts
 
 chars:
-	.byte "Hello World!3",$00
+	.byte "Hello World!",$00
