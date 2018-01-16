@@ -34,14 +34,14 @@ LCD_RS 	= (1<<1)
 	lda #$00
 	sta via1porta
 
-	jsr init_lcd_4bit
+	jsr lcd_init_4bit
 	jsr delay
 
 	ldx #$00
 @l:
 	lda chars,x
 	beq @end
-	jsr send_byte
+	jsr lcd_send_byte
 	jsr delay
 	inx
 	bne @l
@@ -51,36 +51,52 @@ LCD_RS 	= (1<<1)
 	jmp krn_upload
 
 ; init lcd to 4bit mode
-
-init_lcd_4bit:
+lcd_init_4bit:
 	clear_bit LCD_RS
 
 	lda #$30
-	jsr send_byte
+	sta via1porta
+	jsr pulse_clock
 	jsr delay
 
 	lda #$30
-	jsr send_byte
+	sta via1porta
+	jsr pulse_clock
 	jsr delay
 
 	lda #$30
-	jsr send_byte
+	sta via1porta
+	jsr pulse_clock
 	jsr delay
 
 
 	lda #$20
-	jsr send_byte
+	sta via1porta
+	jsr pulse_clock
 	jsr delay
 
 
 	lda #$28
-	jsr send_byte
+	jsr lcd_send_byte
 	jsr delay
+
+	lda #$0e
+	jsr lcd_send_byte
+	jsr delay
+
+	lda #$80
+	jsr lcd_send_byte
+	jsr delay
+
+	lda #$01
+	jsr lcd_send_byte
+	jsr delay
+
 
 	set_bit LCD_RS
 	rts
 
-send_byte:
+lcd_send_byte:
 	phx
 	tax
 
@@ -133,16 +149,22 @@ small_delay:
 	rts
 
 delay:
+	phy
 	phx
-	ldx #$50
-loop:
+	ldy #4
+@loop2:
+	ldx #250
+@loop1:
 	.repeat 10
 	nop
 	.endrepeat
 
 	dex
-	bne loop
+	bne @loop1
+	dey
+	bne @loop2
 	plx
+	ply
 	rts
 
 chars:
