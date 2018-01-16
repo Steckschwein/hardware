@@ -101,37 +101,36 @@ lcd_init_4bit:
 	jsr lcd_send_byte
 	jsr delay_40us
 
-	lda #$90
+	lda #$80
 	jsr lcd_send_byte
 	jsr delay_40us
 
 	lda #$01
 	jsr lcd_send_byte
-	jsr delay
 
 
 
 	set_bit LCD_RS
 	rts
 
-lcd_busy_wait:
-	lda #$0f
-	sta via1ddra
-
-@l:
-
-	lda #LCD_RW|LCD_E
-	lda via1porta
-	dec via1porta
-	jsr hexout
-
-	jsr pulse_clock
-	bit #$00
-	bne @l
-
-	lda #$ff
-	sta via1ddra
-	rts
+;lcd_busy_wait:
+;	lda #$0f
+;	sta via1ddra
+;
+;@l:
+;
+;	lda #LCD_RW|LCD_E
+;	lda via1porta
+;	dec via1porta
+;	jsr hexout
+;
+;	jsr pulse_clock
+;	bit #$00
+;	bne @l
+;
+;	lda #$ff
+;	sta via1ddra
+;	rts
 
 
 lcd_send_byte:
