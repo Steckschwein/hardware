@@ -139,4 +139,17 @@
 	ROL  A
 .endmacro
 
+.macro set_bit bit, location
+	lda #bit
+	ora location
+	sta location
+.endmacro
+
+.macro clear_bit bit, location
+	lda #bit
+	eor #$ff
+	and location
+	sta location
+.endmacro
+
 KEY_ESCAPE = 27

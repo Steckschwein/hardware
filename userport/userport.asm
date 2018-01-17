@@ -7,22 +7,9 @@
 
 .include "../steckos/asminc/appstart.inc"
 
-LCD_E 	= (1<<0)
-LCD_RS 	= (1<<1)
-LCD_RW 	= (1<<2)
+.include "lcd.inc"
 
-.macro set_bit bit
-	lda #bit
-	ora via1porta
-	sta via1porta
-.endmacro
 
-.macro clear_bit bit
-	lda #bit
-	eor #$ff
-	and via1porta
-	sta via1porta
-.endmacro
 
 .import hexout
 
@@ -49,10 +36,10 @@ LCD_RW 	= (1<<2)
 
 @next:
 	; set address to next row
-	clear_bit LCD_RS
+	clear_bit LCD_RS, via1porta
 	lda #$c0
 	jsr lcd_send_byte
-	set_bit LCD_RS
+	set_bit LCD_RS, via1porta
 	jsr delay_40us
 
 	ldx #$00
@@ -71,7 +58,7 @@ LCD_RW 	= (1<<2)
 
 ; init lcd to 4bit mode
 lcd_init_4bit:
-	clear_bit LCD_RS
+	clear_bit LCD_RS, via1porta
 
 	lda #$30
 	sta via1porta
@@ -110,7 +97,7 @@ lcd_init_4bit:
 
 
 
-	set_bit LCD_RS
+	set_bit LCD_RS, via1porta
 	rts
 
 ;lcd_busy_wait:
