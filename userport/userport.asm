@@ -22,6 +22,21 @@
 	keyin
 	cmp #$03
 	beq @end
+	cmp #$1b
+	beq @end
+
+	cmp #$12
+	bne @out
+
+	clear_bit LCD_RS, via1porta
+	lda #LCD_INST_CURSOR_HOME
+	jsr lcd_send_byte
+	jsr delay_40us
+	set_bit LCD_RS, via1porta
+	bra @l
+
+@out:
+	jsr hexout
 	jsr lcd_send_byte
 	jsr delay_40us
 	bra @l
@@ -75,7 +90,9 @@ lcd_init_4bit:
 @init_bytes:
 	.byte $30, $30, $30, $20, $00
 @init_bytes2:
+	; 4bit mode, 2 line display
 	.byte LCD_INST_FUNCTION_SET|LCD_BIT_FUNCTION_SET_N
+	; display on, cursor on
 	.byte LCD_INST_DISPLAY_ON_OFF|LCD_BIT_DISPLAY_ON_OFF_C|LCD_BIT_DISPLAY_ON_OFF_D
 	.byte LCD_INST_SET_DDRAM_ADDR
 	.byte LCD_INST_CLEAR_DISPLAY
