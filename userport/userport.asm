@@ -14,23 +14,16 @@
 .import hexout
 
 	appstart $1000
-	joy_off
 
-	lda #$ff
-	sta via1ddra
-
-	lda #$00
-	sta via1porta
 
 	jsr lcd_init_4bit
-	jsr delay
 
 	ldx #$00
 @l:
 	lda chars,x
 	beq @next
 	jsr lcd_send_byte
-	jsr delay
+	jsr delay_40us
 	inx
 	bne @l
 
@@ -42,23 +35,34 @@
 	set_bit LCD_RS, via1porta
 	jsr delay_40us
 
-	ldx #$00
+	ldx #$0f
 @l2:
 	lda chars,x
 	beq @end
 	jsr lcd_send_byte
 	jsr delay_40us
-	inx
-	bne @l2
+	dex
+	bpl @l2
 
 
 @end:
 	;jmp (retvec)
 	jmp krn_upload
 
+chars:
+	.byte "1234567812345678",$00
+
+
 ; init lcd to 4bit mode
 lcd_init_4bit:
-	clear_bit LCD_RS, via1porta
+
+	joy_off
+
+	lda #$ff
+	sta via1ddra
+
+	lda #$00
+	sta via1porta
 
 	ldx #$00
 @l:
@@ -83,47 +87,13 @@ lcd_init_4bit:
 
 @end:
 	set_bit LCD_RS, via1porta
-	rts
+	jmp delay
+	;rts
+
 @init_bytes:
 	.byte $30, $30, $30, $20, $00
 @init_bytes2:
 	.byte $28, $0e, $80, $01, $00
-
-	
-lcd_busy_wait:
-	pha
-	lda #$0f
-	sta via1ddra
-
-@l:
-
-	lda #LCD_RW|LCD_E
-	sta via1porta
-	nop
-	nop
-	lda via1porta
-	dec via1porta
-	;jsr hexout
-
-	lda #LCD_RW|LCD_E
-	nop
-	nop
-	lda via1porta
-	dec via1porta
-	;jsr hexout
-
-
-
-	bit #$00
-	bne @l
-
-	clear_bit LCD_RW, via1porta
-
-	lda #$ff
-	sta via1ddra
-
-	pla
-	rts
 
 
 lcd_send_byte:
@@ -169,7 +139,7 @@ pulse_clock:
 
 delay_40us:
 
-	ldy #$40
+	ldy #40
 @l:
 			; 1cl = 125ns
 	nop 	;2cl = 250ns
@@ -198,6 +168,3 @@ delay:
 	plx
 	ply
 	rts
-
-chars:
-	.byte "kjsdnfkjdnfksdjx",$00
