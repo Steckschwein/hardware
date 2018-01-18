@@ -47,7 +47,7 @@
 	lda chars,x
 	beq @end
 	jsr lcd_send_byte
-	jsr delay
+	jsr delay_40us
 	inx
 	bne @l2
 
@@ -60,64 +60,70 @@
 lcd_init_4bit:
 	clear_bit LCD_RS, via1porta
 
-	lda #$30
+	ldx #$00
+@l:
+	lda @init_bytes,x
+	beq @part2
 	sta via1porta
 	jsr pulse_clock
 	jsr delay_40us
+	inx
+	bne @l
 
-	lda #$30
-	sta via1porta
-	jsr pulse_clock
-	jsr delay_40us
+@part2:
 
-	lda #$30
-	sta via1porta
-	jsr pulse_clock
-	jsr delay_40us
-
-	lda #$20
-	sta via1porta
-	jsr pulse_clock
-	jsr delay_40us
-
-	lda #$28
+	ldx #$00
+@l2:
+	lda @init_bytes2,x
+	beq @end
 	jsr lcd_send_byte
 	jsr delay_40us
+	inx
+	bne @l2
 
-	lda #$0e
-	jsr lcd_send_byte
-	jsr delay_40us
-
-	lda #$80
-	jsr lcd_send_byte
-	jsr delay_40us
-
-	lda #$01
-	jsr lcd_send_byte
-
-
-
+@end:
 	set_bit LCD_RS, via1porta
 	rts
+@init_bytes:
+	.byte $30, $30, $30, $20, $00
+@init_bytes2:
+	.byte $28, $0e, $80, $01, $00
 
-;lcd_busy_wait:
-;	lda #$0f
-;	sta via1ddra
-;
-;@l:
-;
-;	lda #LCD_RW|LCD_E
-;	lda via1porta
-;	dec via1porta
-;	jsr hexout
-;
-;	jsr pulse_clock
-;	bit #$00
-;	bne @l
-;
-;	lda #$ff
-;	sta via1ddra
-;	rts
+	
+lcd_busy_wait:
+	pha
+	lda #$0f
+	sta via1ddra
+
+@l:
+
+	lda #LCD_RW|LCD_E
+	sta via1porta
+	nop
+	nop
+	lda via1porta
+	dec via1porta
+	;jsr hexout
+
+	lda #LCD_RW|LCD_E
+	nop
+	nop
+	lda via1porta
+	dec via1porta
+	;jsr hexout
+
+
+
+	bit #$00
+	bne @l
+
+	clear_bit LCD_RW, via1porta
+
+	lda #$ff
+	sta via1ddra
+
+	pla
+	rts
 
 
 lcd_send_byte:
@@ -163,12 +169,12 @@ pulse_clock:
 
 delay_40us:
 
-	ldx #$40
+	ldy #$40
 @l:
 			; 1cl = 125ns
 	nop 	;2cl = 250ns
 	nop 	;2cl = 250ns
-	dex 	;2cl = 250ns
+	dey 	;2cl = 250ns
 	bne @l
 			;2cl = 250ns
 			;      1000ns = 1us
@@ -194,4 +200,4 @@ delay:
 	rts
 
 chars:
-	.byte "1234567812345678",$00
+	.byte "kjsdnfkjdnfksdjx",$00
