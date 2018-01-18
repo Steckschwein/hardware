@@ -15,42 +15,24 @@
 
 	appstart $1000
 
-
 	jsr lcd_init_4bit
 
-	ldx #$00
+
 @l:
-	lda chars,x
-	beq @next
-	jsr lcd_send_byte
-	jsr delay_40us
-	inx
-	bne @l
-
-@next:
-	; set address to next row
-	clear_bit LCD_RS, via1porta
-	lda #$c0
-	jsr lcd_send_byte
-	set_bit LCD_RS, via1porta
-	jsr delay_40us
-
-	ldx #$0f
-@l2:
-	lda chars,x
+	keyin
+	cmp #$03
 	beq @end
 	jsr lcd_send_byte
 	jsr delay_40us
-	dex
-	bpl @l2
+	bra @l
+
 
 
 @end:
 	;jmp (retvec)
 	jmp krn_upload
 
-chars:
-	.byte "1234567812345678",$00
+
 
 
 ; init lcd to 4bit mode
@@ -93,7 +75,11 @@ lcd_init_4bit:
 @init_bytes:
 	.byte $30, $30, $30, $20, $00
 @init_bytes2:
-	.byte $28, $0e, $80, $01, $00
+	.byte LCD_INST_FUNCTION_SET|LCD_BIT_FUNCTION_SET_N
+	.byte LCD_INST_DISPLAY_ON_OFF|LCD_BIT_DISPLAY_ON_OFF_C|LCD_BIT_DISPLAY_ON_OFF_D
+	.byte LCD_INST_SET_DDRAM_ADDR
+	.byte LCD_INST_CLEAR_DISPLAY
+	.byte $00
 
 
 lcd_send_byte:
