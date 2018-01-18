@@ -21,25 +21,59 @@
 @l:
 	keyin
 	cmp #$03
-	beq @end
+	bne @l1
+ 	jmp @end
+@l1:
 	cmp #$1b
-	beq @end
+	bne @l2
+	jmp @end
+@l2:
+	cmp #$10
+	bne @next
 
+	lda #LCD_INST_SHIFT|LCD_BIT_SHIFT_SC
+	jsr lcd_command
+	bra @l
+
+@next:
+	cmp #$11
+	bne @next2
+
+	lda #LCD_INST_SHIFT|LCD_BIT_SHIFT_RL|LCD_BIT_SHIFT_SC
+	jsr lcd_command
+	bra @l
+
+
+@next2:
 	cmp #$12
+	bne @next3
+
+	lda #LCD_INST_CURSOR_HOME
+	jsr lcd_command
+	bra @l
+
+@next3:
+	cmp #$1F
+	bne @next4
+
+	lda #LCD_INST_SET_DDRAM_ADDR|$40
+	jsr lcd_command
+	jmp @l
+
+@next4:
+	cmp #$1E
 	bne @out
 
-	clear_bit LCD_RS, via1porta
-	lda #LCD_INST_CURSOR_HOME
-	jsr lcd_send_byte
-	jsr delay_40us
-	set_bit LCD_RS, via1porta
-	bra @l
+	lda #LCD_INST_SET_DDRAM_ADDR
+	jsr lcd_command
+	jmp @l
+
 
 @out:
 	jsr hexout
 	jsr lcd_send_byte
 	jsr delay_40us
-	bra @l
+	jmp @l
 
 
 
@@ -48,8 +82,14 @@
 	jmp krn_upload
 
 
-
-
+lcd_command:
+	pha
+	clear_bit LCD_RS, via1porta
+	pla
+	jsr lcd_send_byte
+	jsr delay_40us
+	set_bit LCD_RS, via1porta
+	rts
 ; init lcd to 4bit mode
 lcd_init_4bit:
 
