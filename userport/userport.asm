@@ -28,7 +28,7 @@
 	bne @l2
 	jmp @end
 @l2:
-	cmp #$10
+	cmp #'<'
 	bne @next
 
 	lda #LCD_INST_SHIFT|LCD_BIT_SHIFT_SC
@@ -36,7 +36,7 @@
 	bra @l
 
 @next:
-	cmp #$11
+	cmp #'>'
 	bne @next2
 
 	lda #LCD_INST_SHIFT|LCD_BIT_SHIFT_RL|LCD_BIT_SHIFT_SC
@@ -62,12 +62,37 @@
 
 @next4:
 	cmp #$1E
-	bne @out
+	bne @next5
 
 	lda #LCD_INST_SET_DDRAM_ADDR
 	jsr lcd_command
 	jmp @l
 
+@next5:
+	cmp #$11
+	bne @next6
+
+	lda #LCD_INST_SHIFT
+	jsr lcd_command
+	bra @l
+
+@next6:
+	cmp #$10
+	bne @next7
+
+	lda #LCD_INST_SHIFT|LCD_BIT_SHIFT_RL
+	jsr lcd_command
+	bra @l
+
+@next7:
+	cmp #$08
+	bne @out
+
+	lda #LCD_INST_SHIFT
+	jsr lcd_command
+	lda #' '
+
+	
 
 @out:
 	jsr hexout
