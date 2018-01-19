@@ -20,13 +20,10 @@
 @l:
 	keyin
 	cmp #$03
-	bne @l1
- 	jmp @end
-@l1:
+	beq @end
 	cmp #$1b
-	bne @l2
-	jmp @end
-@l2:
+	beq @end
+
 	cmp #'<'
 	bne @next
 
@@ -57,7 +54,7 @@
 
 	lda #LCD_INST_SET_DDRAM_ADDR|$40
 	jsr lcd_command
-	jmp @l
+	bra @l
 
 @next4:
 	cmp #$1E
@@ -65,7 +62,7 @@
 
 	lda #LCD_INST_SET_DDRAM_ADDR
 	jsr lcd_command
-	jmp @l
+	bra @l
 
 @next5:
 	cmp #$11
