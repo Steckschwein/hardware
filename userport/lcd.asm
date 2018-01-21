@@ -119,10 +119,11 @@ delay_40us:
 			;      1000ns = 1us
 	rts
 
+delay_count = clockspeed * 1000 / 21
 delay_1ms:
-	lda #>380
+	lda #>delay_count
 	sta val+1
-	lda #<380
+	lda #<delay_count
 	sta val
 @l:
 	dec16 val  ; max. 11 cl
