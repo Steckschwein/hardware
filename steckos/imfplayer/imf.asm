@@ -11,12 +11,7 @@ __LOADADDR__ = $1000
 .word __LOADADDR__
 .segment "CODE"
 
-.macro dec16 word
-        lda word
-        bne :+
-        dec word+1
-:       dec word
-.endmacro
+
 
 
 CPU_CLOCK=clockspeed * 1000000

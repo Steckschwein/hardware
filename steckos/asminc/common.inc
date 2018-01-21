@@ -152,4 +152,11 @@
 	sta location
 .endmacro
 
+.macro dec16 word
+        lda word
+        bne :+
+        dec word+1
+:       dec word
+.endmacro
+
 KEY_ESCAPE = 27
