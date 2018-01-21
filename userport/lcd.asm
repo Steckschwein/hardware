@@ -108,7 +108,7 @@ pulse_clock:
 
 delay_40us:
 
-	ldy #40
+	ldy #clockspeed / 8 * 40
 @l:
 			; 1cl = 125ns
 	nop 	;2cl = 250ns
