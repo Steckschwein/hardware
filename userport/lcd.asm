@@ -120,16 +120,16 @@ delay_40us:
 	rts
 
 delay_1ms:
-	lda #>400
+	lda #>380
 	sta val+1
-	lda #<400
+	lda #<380
 	sta val
 @l:
-	dec16 val
-	lda val+1
-	bne @l
-	lda val
-	bne @l
+	dec16 val  ; max. 11 cl
+	lda val+1  ; 2cl
+	bne @l     ; 2/3cl
+	lda val    ; 2cl
+	bne @l     ; 2/3cl
 	rts
 
 val:

@@ -153,10 +153,10 @@
 .endmacro
 
 .macro dec16 word
-        lda word
-        bne :+
-        dec word+1
-:       dec word
+        lda word   ; 2cl
+        bne :+	   ;2/3cl
+        dec word+1 ; 3cl
+:       dec word   ; 3cl
 .endmacro
 
 KEY_ESCAPE = 27
