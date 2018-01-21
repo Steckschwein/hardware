@@ -1,6 +1,7 @@
 .include "../steckos/asminc/via.inc"
 .include "../steckos/asminc/common.inc"
 .include "../steckos/asminc/joystick.inc"
+.include "../steckos/kernel/kernel.inc"
 
 .include "lcd.inc"
 
@@ -48,7 +49,7 @@ lcd_init_4bit:
 
 @end:
 	set_bit LCD_RS, via1porta
-	jmp delay
+	jmp delay_1ms
 	;rts
 
 @init_bytes:
@@ -118,21 +119,18 @@ delay_40us:
 			;      1000ns = 1us
 	rts
 
-delay:
-	phy
-	phx
-	ldy #4
-@loop2:
-	ldx #250
-@loop1:
-	.repeat 5
-	nop
-	.endrepeat
-
-	dex
-	bne @loop1
-	dey
-	bne @loop2
-	plx
-	ply
+delay_1ms:
+	lda #>400
+	sta val+1
+	lda #<400
+	sta val
+@l:
+	dec16 val
+	lda val+1
+	bne @l
+	lda val
+	bne @l
 	rts
+
+val:
+	.word $0000
