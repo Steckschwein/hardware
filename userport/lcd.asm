@@ -64,36 +64,34 @@ lcd_init_4bit:
 	.byte $00
 
 
+tmp = $cd
+tmp2 = $ce
+
 lcd_send_byte:
 	phx
 	tax
 
 	lda via1porta
 	and #$0f
-	sta via1porta
+	sta tmp
 
 	txa
 	and #$f0
-	ora via1porta
+	ora tmp
 	sta via1porta
 	jsr pulse_clock
-
-	lda via1porta
-	and #$0f
-	sta via1porta
-
 
 
 	txa
-
 	asl
 	asl
 	asl
 	asl
 
-	ora via1porta
+	ora tmp
 	sta via1porta
 	jsr pulse_clock
+
 	plx
     jmp delay_40us
 	;rts
