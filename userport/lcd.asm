@@ -65,7 +65,6 @@ lcd_init_4bit:
 
 
 tmp = $cd
-tmp2 = $ce
 
 lcd_send_byte:
 	phx
