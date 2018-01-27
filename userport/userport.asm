@@ -1,8 +1,8 @@
 
-.include "../steckos/kernel/kernel.inc"
-.include "../steckos/kernel/kernel_jumptable.inc"
-.include "../steckos/asminc/common.inc"
-.include "../steckos/asminc/appstart.inc"
+.include "kernel.inc"
+.include "kernel_jumptable.inc"
+.include "common.inc"
+.include "appstart.inc"
 
 .include "lcd.inc"
 

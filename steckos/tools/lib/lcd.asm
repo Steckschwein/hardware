@@ -1,9 +1,8 @@
-.include "../steckos/asminc/via.inc"
-.include "../steckos/asminc/common.inc"
-.include "../steckos/asminc/joystick.inc"
-.include "../steckos/kernel/kernel.inc"
-
-.include "lcd.inc"
+.include "../../asminc/via.inc"
+.include "../../asminc/common.inc"
+.include "../../asminc/joystick.inc"
+.include "../../asminc/lcd.inc"
+.include "../../kernel/kernel.inc"
 
 .export lcd_init_4bit, lcd_send_byte, lcd_command
 .code
