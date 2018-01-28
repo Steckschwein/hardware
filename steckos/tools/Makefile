@@ -1,6 +1,7 @@
 CPU=65c02
 CA65FLAGS=--include-dir ../asminc --include-dir ../kernel
 LDFLAGS=--config ../steckos-c-app.cfg ../lib/steckschwein-kernel.lib
+ASM_INCLUDE=--include-dir ../steckos/kernel --include-dir ../steckos/asminc
 TOOLLIB=lib/toollib.a
 
 .PHONY: all clean
@@ -20,7 +21,7 @@ clean:
 	ca65 -I ../../cc65 --cpu $(CPU) $(CA65FLAGS) $(@:.o=.s)
 
 %.o: %.asm
-	ca65 --cpu $(CPU) $(CA65FLAGS) $(@:.o=.asm)
+	ca65 --cpu $(CPU) $(CA65FLAGS) $(ASM_INCLUDE) $(@:.o=.asm)
 
 toollib:
 	( cd lib ; make )

@@ -1,7 +1,7 @@
-.include "../kernel/kernel.inc"
-.include "../kernel/kernel_jumptable.inc"
-.include "../asminc/via.inc"
-.include "../asminc/common.inc"
+.include "kernel.inc"
+.include "kernel_jumptable.inc"
+.include "via.inc"
+.include "common.inc"
 .include "fcntl.inc"
 .include "ym3812.inc"
 

@@ -1,8 +1,8 @@
 
 .include "common.inc"
-.include "../kernel/kernel.inc"
-.include "../kernel/kernel_jumptable.inc"
-.include "../kernel/fat32.inc"
+.include "kernel.inc"
+.include "kernel_jumptable.inc"
+.include "fat32.inc"
 .include "appstart.inc"
 .include "tools.inc"
 .export cnt, files, dirs
