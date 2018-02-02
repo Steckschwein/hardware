@@ -20,8 +20,8 @@ crs_y   	= $028d
 msgptr  	= $e4		; 2 bytes
 
 ; kernel pointer (internally used)
-krn_ptr1    	= $e6	; 2 bytes			; 
-krn_ptr2    	= $e8	; 2 bytes			; 
+krn_ptr1    	= $e6	; 2 bytes			;
+krn_ptr2    	= $e8	; 2 bytes			;
 krn_ptr3    	= $ea	; 2 bytes
 
 krn_tmp     	= $ec		; 16 bit tmp
@@ -39,6 +39,6 @@ write_blkptr 		= $f6
 sd_tmp	     		= $f8
 
 lba_addr 			= $0280		; 4 bytes
-blocks				= $0284		; 3 bytes blocks to read, 3 bytes sufficient to address 4GB -> 4294967296 >> 9 = 8388608 ($800000) max blocks/file 
+blocks				= $0284		; 3 bytes blocks to read, 3 bytes sufficient to address 4GB -> 4294967296 >> 9 = 8388608 ($800000) max blocks/file
 
-trampolin			= $0288
+trampolin			= $0010
