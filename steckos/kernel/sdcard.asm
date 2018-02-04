@@ -37,6 +37,9 @@ init_sdcard:
 			bne @l1
 
 			jsr sd_select_card
+			beq @next
+			jmp @exit
+@next:
 
 			jsr sd_param_init
 
@@ -155,6 +158,8 @@ init_sdcard:
 			lda #cmd16
 			jsr sd_cmd
 			debug "CMD16"
+
+
 
 @exit_ok:
 @l9:
@@ -390,6 +395,7 @@ sd_write_multiblock:
 			; 2. use SET_WR_BLOCK_ERASE_COUNT (ACMD23) to pre-erase number of blocks
 
 			jsr sd_select_card
+			bne @exit
 
 			jsr sd_cmd_lba
 			lda #cmd25	; Send CMD25 command byte
@@ -475,21 +481,29 @@ sd_select_card:
 			lda #sd_card_sel
 			sta via1portb
 ; fall through to sd_busy_wait
+
 ;---------------------------------------------------------------------
 ; wait while sd card is busy
 ; Z = 1, A = 1 when error (timeout)
 ;---------------------------------------------------------------------
 sd_busy_wait:
+			ldx #$ff
 @l1:    	lda #$ff
+			dex
+			beq @err
+
+			phx
 	        jsr spi_rw_byte
+			plx
 	        cmp #$ff
 	        bne @l1
 
+			lda #$00
+	       	rts
+
+@err:
 			lda #$01
 			rts
-@l2:		lda #$00
-        	rts
-
 
 ;---------------------------------------------------------------------
 ; clear sd card parameter buffer
