@@ -108,7 +108,7 @@ do_irq:
 @BrkCmd:
 	pla                     ;
 	plx                     ;
-	jmp   do_nmi 
+	jmp   do_nmi
 ; system interrupt handler
 ; handle keyboard input and text screen refresh
 @irq:
@@ -180,9 +180,6 @@ upload:
 	jsr uart_rx
 	sta startaddr+1
 
-	lda #' '
-	jsr textui_chrout
-
 	jsr upload_ok
 
 	; load number of bytes to be uploaded
@@ -201,9 +198,6 @@ upload:
 	lda length+1
 	adc startaddr+1
 	sta endaddr+1
-
-	lda #' '
-	jsr textui_chrout
 
 	lda startaddr
 	sta addr
