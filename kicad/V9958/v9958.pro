@@ -1,4 +1,4 @@
-update=12/02/2018 20:10:41
+update=Mon 12 Feb 2018 09:00:35 PM CET
 version=1
 last_client=kicad
 [cvpcb]
@@ -72,3 +72,4 @@ LibName27=atmel
 LibName28=contrib
 LibName29=valves
 LibName30=tms99xx
+LibName31=dram
