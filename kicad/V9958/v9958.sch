@@ -1,4 +1,5 @@
 EESchema Schematic File Version 2
+LIBS:v9958-rescue
 LIBS:power
 LIBS:device
 LIBS:transistors
@@ -29,7 +30,6 @@ LIBS:atmel
 LIBS:contrib
 LIBS:valves
 LIBS:tms99xx
-LIBS:v9958-rescue
 LIBS:v9958-cache
 EELAYER 25 0
 EELAYER END
@@ -670,4 +670,6 @@ F 3 "" H 5750 2600 60  0001 C CNN
 	1    5400 2550
 	1    0    0    -1  
 $EndComp
+Text Label 6200 4050 0    60   ~ 0
+CSYNC
 $EndSCHEMATC

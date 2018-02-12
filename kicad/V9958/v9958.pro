@@ -1,4 +1,4 @@
-update=07/12/2017 14:15:45
+update=12/02/2018 19:56:21
 version=1
 last_client=kicad
 [cvpcb]
@@ -72,4 +72,3 @@ LibName27=atmel
 LibName28=contrib
 LibName29=valves
 LibName30=tms99xx
-LibName31=v9958-rescue
