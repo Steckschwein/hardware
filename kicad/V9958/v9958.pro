@@ -1,4 +1,4 @@
-update=Mon 12 Feb 2018 09:00:35 PM CET
+update=Thu 15 Feb 2018 11:08:43 PM CET
 version=1
 last_client=kicad
 [cvpcb]
@@ -73,3 +73,4 @@ LibName28=contrib
 LibName29=valves
 LibName30=tms99xx
 LibName31=dram
+LibName32=osc
