@@ -1,4 +1,4 @@
-update=Fri 16 Feb 2018 08:08:54 PM CET
+update=Sat 24 Feb 2018 04:12:18 PM CET
 version=1
 last_client=kicad
 [cvpcb]
@@ -28,16 +28,6 @@ SolderMaskMinWidth=0
 DrawSegmentWidth=0.2
 BoardOutlineThickness=0.09999999999999999
 ModuleOutlineThickness=0.15
-[schematic_editor]
-version=1
-PageLayoutDescrFile=
-PlotDirectoryName=
-SubpartIdSeparator=0
-SubpartFirstId=65
-NetFmtName=
-SpiceForceRefPrefix=0
-SpiceUseNetNumbers=0
-LabSize=60
 [eeschema]
 version=1
 LibDir=../lbr
@@ -54,3 +44,13 @@ LibName9=dram
 LibName10=osc
 LibName11=mini_din
 LibName12=steckschwein
+[schematic_editor]
+version=1
+PageLayoutDescrFile=
+PlotDirectoryName=
+SubpartIdSeparator=0
+SubpartFirstId=65
+NetFmtName=
+SpiceForceRefPrefix=0
+SpiceUseNetNumbers=0
+LabSize=60
