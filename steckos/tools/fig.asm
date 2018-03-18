@@ -92,6 +92,7 @@ gfxui_on:
 	
     copypointer  $fffe, irqsafe
     SetVector  blend_isr, $fffe
+	
 	jsr vdp_gfx2_on			    ;enable gfx2 mode
     cli
     rts
@@ -105,6 +106,3 @@ gfxui_off:
 m_vdp_nopslide
 
 irqsafe: .res 2, 0
-
-tmp0:	.res 1
-tmp5:	.res 1

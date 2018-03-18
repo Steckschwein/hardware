@@ -7,9 +7,23 @@ TOOLLIB=lib/toollib.a
 .PHONY: all clean
 
 
-all: ls.prg ll.prg stat.prg fsinfo.prg attrib.prg rename.prg help.prg date.prg nvram.prg uname.prg hello.prg fibo.prg clear.prg setdate.prg view.prg echo.prg od.prg rmdir.prg mkdir.prg keycode.prg touch.prg du.prg cp.prg pwd.prg rm.prg
+all: ls.prg ll.prg \
+	stat.prg fsinfo.prg attrib.prg rename.prg \
+	help.prg \
+	setdate.prg date.prg \
+	nvram.prg uname.prg \
+	clear.prg \
+	view.prg \
+	echo.prg \
+	od.prg \
+	touch.prg \
+	rmdir.prg mkdir.prg \
+	cp.prg pwd.prg rm.prg \
+	du.prg \
+	keycode.prg \
+	hello.prg \
+	fibo.prg
 	(cd xmodem; make )
-
 
 clean:
 	rm -f *.prg *.s *.o toollib.a
