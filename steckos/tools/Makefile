@@ -22,7 +22,8 @@ all: ls.prg ll.prg \
 	du.prg \
 	keycode.prg \
 	hello.prg \
-	fibo.prg
+	fibo.prg \
+	fig.prg
 	(cd xmodem; make )
 
 clean:

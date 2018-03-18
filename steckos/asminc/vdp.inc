@@ -84,23 +84,19 @@ ADDRESS_GFX_MC_SPRITE_PATTERN	=ADDRESS_GFX2_PATTERN	; sprite pattern
 
 .macro m_vdp_nopslide
 vdp_nopslide:
-		nop			;2cl
-		nop			;2cl
-		nop			;2cl
-		nop			;2cl
 
-		nop			;2cl
-		nop			;2cl
-		nop			;2cl
-		nop			;2cl
-
-		nop			;2cl
-		nop			;2cl
-		nop			;2cl
-		nop			;2cl
+			; 8µs = 8000ns = 64 * 125ns
+			; nop = 2cl
+			; 8µs = 23 nop
+			; jsr = 6cl
+			; rts = 6cl
+			; 32 - 12 = 20
+			.repeat 20 ; clockspeed * 1000 / 125 / 2 - 12
+			nop
+			.endrepeat
 
 
-		rts			;6cl
+			rts			;6cl
 .endmacro
 
 .macro vdp_sreg
