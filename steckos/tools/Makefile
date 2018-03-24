@@ -23,6 +23,7 @@ all: ls.prg ll.prg \
 	keycode.prg \
 	hello.prg \
 	fibo.prg \
+	gfx7.prg \
 	fig.prg
 	(cd xmodem; make )
 

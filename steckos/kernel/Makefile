@@ -4,9 +4,9 @@ ASM_INCLUDE=../asminc
 LDFLAGS=--config steckos.cfg
 
 # if 9958 is used
-#DEFINES+=-DV9958
+DEFINES+=-DV9958
 # enable 80 cols
-#DEFINES+=-DCOLS80
+DEFINES+=-DCOLS80
 
 # enable debug
 #DEBUG += -DDEBUG_SDCARD
@@ -20,7 +20,7 @@ LDFLAGS=--config steckos.cfg
 #DEBUG += -DFAT_DUMP_FAT_WRITE
 # do not write anything (metadata)
 # DEBUG += -DFAT_NOWRITE
-DEBUG += -DV9958
+#DEBUG += -DV9958
 
 #
 #DEBUG += -DDEBUG_EXECV

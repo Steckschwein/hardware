@@ -3,24 +3,15 @@
 
 .ROWS=23
 ;
-;	TODO	
+;	TODO
 ;		improve some functions,  avoid nop for vdp write delay 2µs by opcode reordering
 ;		investigate the difference between wdc and rockwell if no nop is used
 ;
 
 vdp_nopslide:
-		nop			;2cl
-		nop			;2cl
-		nop			;2cl
-		nop			;2cl
-		nop			;2cl
-		nop			;2cl
-		nop			;2cl
-		nop			;2cl
-		nop			;2cl
-		nop			;2cl
-		nop			;2cl
-		nop			;2cl
+		!for i,0,20 {
+			nop
+		}
 		rts			;6cl
 
 vdp_irq_off
@@ -52,7 +43,7 @@ vdp_fills:
 	sta   a_vram    ;4
 	bne	-           ;3
 	rts
-	
+
 ; fill vram with pattern
 ;
 vdp_fill:
@@ -83,13 +74,13 @@ vdp_memcpy
 	iny             ;2
 	+vnops
 	sta   a_vram    ;1 opcode fetch
-	
+
 	bne   -         ;3
 	inc   adrh
 	dex
 	bne   -
 	rts
-	
+
 ;	input:
 ;	adrl/adrh vector set
 ;	a - low byte vram adress
@@ -119,9 +110,9 @@ vdp_mode_gfx1_blank		; 3 x 256 bytes
 
 !ifndef bios_stuff {
 ;
-; blank gfx mode 2 with 
+; blank gfx mode 2 with
 ; adrl - color to fill
-;    
+;
 vdp_mode_gfx2_blank:		; 2 x 6K
 	sta adrl
 	lda #<ADDRESS_GFX2_COLOR
@@ -147,9 +138,9 @@ vdp_mode_sprites_off
 .vdp_init_bytes_gfx1
 	!byte 	0
 	!byte	v_reg1_16k|v_reg1_display_on|v_reg1_spr_size|v_reg1_int
-	!byte 	(ADDRESS_GFX1_SCREEN / $400)	; name table - value * $400					--> characters 
+	!byte 	(ADDRESS_GFX1_SCREEN / $400)	; name table - value * $400					--> characters
 	!byte 	(ADDRESS_GFX1_COLOR /  $40)	; color table - value * $40 (gfx1), 7f/ff (gfx2)
-	!byte 	(ADDRESS_GFX1_PATTERN / $800) ; pattern table (charset) - value * $800  	--> offset in VRAM 
+	!byte 	(ADDRESS_GFX1_PATTERN / $800) ; pattern table (charset) - value * $800  	--> offset in VRAM
 	!byte	(ADDRESS_GFX1_SPRITE / $80)	; sprite attribute table - value * $80 		--> offset in VRAM
 	!byte 	(ADDRESS_GFX1_SPRITE_PATTERN / $800)  ; sprite pattern table - value * $800  		--> offset in VRAM
 	!byte	Black
@@ -165,7 +156,7 @@ vdp_mode_gfx1
 	jsr	vdp_fills
 	+SetVector .vdp_init_bytes_gfx1, adrl
     ;go on below
-	
+
 ; setup video registers upon given table
 ;	input:
 ;	adrl/adrh vector set to vdp init table for al 8 vdp registers
@@ -182,12 +173,12 @@ vdp_init_reg
 	bne   -
 	rts
 
-;	
+;
 ;
 !ifndef bios_stuff {
 ;
 ;	gfx 2 - each pixel can be addressed - e.g. for image
-;	
+;
 vdp_mode_gfx2:
 	jsr	.vdp_fill_name_table
 	+SetVector	vdp_init_bytes_gfx2, adrl
@@ -195,7 +186,7 @@ vdp_mode_gfx2:
 
 ;
 ;	gfx 3 - 4x4 color block - multicolor mode
-;	
+;
 vdp_mode_gfx_mc
 	+SetVector	.vdp_init_bytes_gfx_mc, adrl
 	bra	vdp_init_reg
@@ -253,7 +244,7 @@ vdp_mode_gfx3_load_bitmap
 	ldx	#$03	;768 byte
 	jsr	vdp_memcpy					;load the pic data --> pattern table at vram $0000
 	rts
-	
+
 .vdp_fill_name_table
 	;set 768 different patterns --> name table
 	lda	#<ADDRESS_GFX2_SCREEN
@@ -268,19 +259,19 @@ vdp_mode_gfx3_load_bitmap
 	dey
 	bne	-
 rts
-	
+
 .vdp_init_bytes_text
 	!byte 0
 	!byte v_reg1_16k|v_reg1_display_on|v_reg1_int|v_reg1_m1
-	!byte 	(ADDRESS_GFX1_SCREEN / $400)	; name table - value * $400					--> characters 
+	!byte 	(ADDRESS_GFX1_SCREEN / $400)	; name table - value * $400					--> characters
 	!byte 	0	; not used
-	!byte 	(ADDRESS_GFX1_PATTERN / $800) ; pattern table (charset) - value * $800  	--> offset in VRAM 
+	!byte 	(ADDRESS_GFX1_PATTERN / $800) ; pattern table (charset) - value * $800  	--> offset in VRAM
 	!byte	0	; not used
 	!byte 	0	; not used
 	!byte	Medium_Green<<4|Black
 
 vdp_init_bytes_gfx2
-	!byte 	v_reg0_m3		; 
+	!byte 	v_reg0_m3		;
 	!byte 	v_reg1_16k|v_reg1_display_on|v_reg1_spr_size |v_reg1_int
 	!byte 	(ADDRESS_GFX2_SCREEN / $400)	; name table - value * $400
 	!byte	$ff				; color table setting for gfx mode 2 --> only Bit 7 is taken into account 0 => at vram $0000, 1 => at vram $2000, Bit 6-0 AND to character number
@@ -290,15 +281,15 @@ vdp_init_bytes_gfx2
 	!byte	Black
 
 .vdp_init_bytes_gfx_mc
-	!byte 	0		; 
+	!byte 	0		;
 	!byte 	v_reg1_16k|v_reg1_display_on|v_reg1_m2|v_reg1_spr_size; |v_reg1_int
 	!byte 	(ADDRESS_GFX_MC_SCREEN / $400)		; name table - value * $400 -> 3 * 256 pattern names (3 pages)
 	!byte	$ff									; color table not used in multicolor mode
-	!byte	(ADDRESS_GFX_MC_PATTERN / $800) 	; pattern table, 1536 byte - 3 * 256 
+	!byte	(ADDRESS_GFX_MC_PATTERN / $800) 	; pattern table, 1536 byte - 3 * 256
 	!byte	(ADDRESS_GFX_MC_SPRITE / $80)	; sprite attribute table - value * $80 --> offset in VRAM
 	!byte	(ADDRESS_GFX_MC_SPRITE_PATTERN / $800)	; sprite pattern table - value * $800  --> offset in VRAM
 	!byte	Black
-	
+
 ;
 ;   input:	a - color
 ;
@@ -368,7 +359,7 @@ vdp_bgcolor
 	bra	.vdp_scroll_up	; scroll up, dont inc y, exit
 +	inc crs_y
 	rts
-	
+
 ;
 ; vdp direct char out, no backbuffer is used. vdp vram is accessed directly
 ;
@@ -404,14 +395,14 @@ vdp_chrout
 ++	rts
 +	stz	crs_x
 	bra	.inc_cursor_y
-    
+
 vdp_putchar
 	pha
 	jsr .vdp_set_addr
 	pla
 	sta a_vram
     rts
-	
+
 .vdp_set_addr			; set the vdp vram adress to write one byte afterwards
 	lda	crs_y   		; * 32
 	asl
@@ -421,7 +412,7 @@ vdp_putchar
 	asl
 	ora	crs_x
 	sta	a_vreg
-    
+
 	lda crs_y   		; * 32
 	lsr					; div 8 -> page offset 0-2
 	lsr
