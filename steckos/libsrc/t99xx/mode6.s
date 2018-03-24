@@ -8,39 +8,23 @@
 .import vdp_nopslide
 .import vdp_fill
 
-.export vdp_gfx7_on
-.export vdp_gfx7_blank
-.export vdp_gfx7_set_pixel
+.export vdp_gfx6_on
+.export vdp_gfx6_blank
+.export vdp_gfx6_set_pixel
 
 .code
 ;
-;	gfx 7 - each pixel can be addressed - e.g. for image
+;	gfx 6 - 
 ;
-vdp_gfx7_on:
-			jsr vdp_fill_name_table
-			lda #<vdp_init_bytes_gfx7
+vdp_gfx6_on:
+			lda #<vdp_init_bytes_gfx6
 			sta ptr1
-			lda #>vdp_init_bytes_gfx7
+			lda #>vdp_init_bytes_gfx6
 			sta ptr1+1
-			jmp	vdp_init_reg
+			jmp vdp_init_reg
 
-vdp_fill_name_table:
-			;set 768 different patterns --> name table
-			lda	#<ADDRESS_GFX7_SCREEN
-			ldy	#WRITE_ADDRESS+ >ADDRESS_GFX7_SCREEN
-			vdp_sreg
-			ldy	#$03
-			ldx	#$00
-@0:			vnops
-			stx	a_vram  ;
-			inx         ;2
-			bne	@0       ;3
-			dey
-			bne	@0
-			rts
-
-vdp_init_bytes_gfx7:
-			.byte v_reg0_m5|v_reg0_m4|v_reg0_m3									; reg0 mode bits
+vdp_init_bytes_gfx6:
+			.byte v_reg0_m5|v_reg0_m3												; reg0 mode bits
 			.byte v_reg1_display_on|v_reg1_spr_size |v_reg1_int 			; TODO FIXME verify v_reg1_16k t9929 specific, therefore 0
 			.byte $1f	; => 00<A16>1 1111 - entw. bank 0 oder 1 (64k)
 			.byte	$0
@@ -54,7 +38,7 @@ vdp_init_bytes_gfx7:
 ; blank gfx mode 2 with
 ; 	A - color to fill (RGB) 3+3+2)
 ;
-vdp_gfx7_blank:		; 2 x 6K
+vdp_gfx6_blank:		; 2 x 6K
 ;.ifdef V9958
 	sta tmp1
 	lda #%00000000
@@ -73,8 +57,8 @@ vdp_gfx7_blank:		; 2 x 6K
 ;	A - color [0..f]
 ;
 ; 	VRAM ADDRESS = 8(INT(X DIV 8)) + 256(INT(Y DIV 8)) + (Y MOD 8)
-vdp_gfx7_set_pixel:
-		beq vdp_gfx7_set_pixel_e	; 0 - not set, leave blank
+vdp_gfx6_set_pixel:
+		beq vdp_gfx6_set_pixel_e	; 0 - not set, leave blank
 ;		sta tmp1					; otherwise go on and set pixel
 		; calculate low byte vram adress
 		txa						;2
@@ -113,7 +97,7 @@ vdp_gfx7_set_pixel:
 		sta	a_vreg
 		vnops
 		stx a_vram	;set vdp vram address high byte
-vdp_gfx7_set_pixel_e:
+vdp_gfx6_set_pixel_e:
 		rts
 bitmask:
 	.byte $80,$40,$20,$10,$08,$04,$02,$01

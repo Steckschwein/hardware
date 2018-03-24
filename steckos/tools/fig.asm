@@ -71,31 +71,32 @@ blend_isr:
 		rti
 
 gfxui_on:
-    sei
-	jsr	vdp_display_off			;display off
+   sei
+	jsr vdp_display_off			;display off
 	jsr vdp_mode_sprites_off	;sprites off
 
-    lda #Black<<4|Black
-    jsr vdp_gfx2_blank
+   lda #Black<<4|Black
+   jsr vdp_gfx2_blank
 
-    SetVector  content, ptr1
+   SetVector  content, ptr1
 	lda	#<ADDRESS_GFX2_PATTERN
 	ldy	#WRITE_ADDRESS + >ADDRESS_GFX2_PATTERN
 	ldx	#$18	;6k bitmap - $1800
 	jsr	vdp_memcpy					;load the pic data
 
-    SetVector  color, ptr1
+   SetVector  color, ptr1
 	lda	#<ADDRESS_GFX2_COLOR
 	ldy	#WRITE_ADDRESS + >ADDRESS_GFX2_COLOR
 	ldx	#$18	;6k bitmap - $1800
 	jsr	vdp_memcpy					;load the pic data
 	
-    copypointer  $fffe, irqsafe
-    SetVector  blend_isr, $fffe
+   copypointer  $fffe, irqsafe
+	SetVector  blend_isr, $fffe
 	
 	jsr vdp_gfx2_on			    ;enable gfx2 mode
-    cli
-    rts
+	
+	cli
+   rts
 
 gfxui_off:
     sei

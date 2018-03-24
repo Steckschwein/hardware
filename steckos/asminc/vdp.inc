@@ -28,10 +28,12 @@ v_reg1 	= $81
 v_reg2 	= $82
 v_reg3 	= $83
 v_reg4 	= $84
-v_reg5 	= $85
-v_reg6 	= $86
-v_reg7  = $87
-v_reg25 = 128 + 25
+v_reg5 	= $80 + 	5
+v_reg6 	= $80	+	6
+v_reg7  	= $80	+	7
+v_reg11	= $80 + 11
+v_reg14	= $80 + 14
+v_reg25 	= $80 + 25
 
 
 SP_Y=0
@@ -74,6 +76,8 @@ ADDRESS_GFX2_COLOR		=$2000
 ADDRESS_GFX2_SPRITE		=ADDRESS_GFX_SPRITE
 ADDRESS_GFX2_SPRITE_PATTERN=ADDRESS_GFX2_PATTERN
 
+ADDRESS_GFX6_SCREEN		=$0000			; screen
+
 ADDRESS_GFX7_SCREEN		=$0000			; screen
 ADDRESS_GFX7_SPRITE		=ADDRESS_GFX_SPRITE
 ADDRESS_GFX7_SPRITE_PATTERN=ADDRESS_GFX2_PATTERN
@@ -97,7 +101,7 @@ vdp_nopslide:
 			; jsr = 6cl
 			; rts = 6cl
 			; 32 - 12 = 20
-			.repeat 20 ; clockspeed * 1000 / 125 / 2 - 12
+			.repeat 32 ; clockspeed * 1000 / 125 / 2 - 12
 			nop
 			.endrepeat
 

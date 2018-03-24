@@ -9,8 +9,8 @@
 .importzp ptr2, ptr3
 .importzp tmp3, tmp4
 
-.import vdp_gfx7_on
-.import vdp_gfx7_blank
+.import vdp_gfx6_on
+.import vdp_gfx6_blank
 .import vdp_display_off
 .import vdp_memcpy
 .import vdp_mode_sprites_off
@@ -57,20 +57,20 @@ gfxui_on:
 	ldy #v_reg14
 	vdp_sreg
 	vnops
-	lda #<ADDRESS_GFX7_SCREEN
-	ldy #(WRITE_ADDRESS + >ADDRESS_GFX7_SCREEN)
+	lda #<ADDRESS_GFX6_SCREEN
+	ldy #(WRITE_ADDRESS + >ADDRESS_GFX6_SCREEN)
 	vdp_sreg
 	
     lda #%00011100
 ;    lda #%00000011
 ;   lda #%11100000
     lda #%11100011
-;    jsr vdp_gfx7_blank
+;    jsr vdp_gfx6_blank
 		
 	ldy #192
 	ldx #0
 @l0:
-	sty a_vram
+	stx a_vram
 	vnops
 	dex 
 	bne @l0
@@ -80,7 +80,7 @@ gfxui_on:
     copypointer  $fffe, irqsafe
     SetVector  blend_isr, $fffe
 
-	 jsr vdp_gfx7_on			    ;enable gfx7 mode
+	 jsr vdp_gfx6_on			    ;enable gfx6 mode
     cli
     rts
 

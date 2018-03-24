@@ -73,7 +73,7 @@ textui_update_crs_ptr:		;   updates the 16 bit pointer crs_p upon crs_x, crs_y v
 		trb screen_status  	;reset cursor state
 
 		;use the crs_ptr as tmp variable
-		stz	crs_ptr+1
+		stz crs_ptr+1
 		lda crs_y
 		asl
 		asl
@@ -81,7 +81,7 @@ textui_update_crs_ptr:		;   updates the 16 bit pointer crs_p upon crs_x, crs_y v
 
 .ifdef COLS80
 		; crs_y*64 + crs_y*16 (crs_ptr) => y*80
-		asl					; y*16
+		asl						; y*16
 		sta crs_ptr
 		rol crs_ptr+1	   	; save carry if overflow
 .else
@@ -122,32 +122,28 @@ textui_init:
 		jmp	vdp_mode_text
 
 textui_blank:
-		ldx	#$00
+		ldx 	#0
 		lda	#CURSOR_BLANK
-        sta saved_char
-@l1:	sta	screen_buffer+$000,x	;4 pages
+		sta 	saved_char
+@l1:	sta	screen_buffer+$000,x	;4 pages, 40x24
 		sta	screen_buffer+$100,x
-		sta screen_buffer+$200,x
+		sta 	screen_buffer+$200,x
+		sta 	screen_buffer+$300,x
 
 .ifdef COLS80
-		sta screen_buffer+$300,x
-		sta screen_buffer+$400,x
+		sta screen_buffer+$400,x	;additional 4 pages for 80 cols
 		sta screen_buffer+$500,x
 		sta screen_buffer+$600,x
+		sta screen_buffer+$700,x
 .endif
-
 		inx
 		bne	@l1
-@l2:    sta	screen_buffer+$300,x
-        inx
-        cpx #<(COLS*(ROWS+1))
-        bne @l2
-    	stz crs_x
-    	stz crs_y
-        jsr	textui_update_crs_ptr
+    	stz 	crs_x
+    	stz 	crs_y
+      jsr	textui_update_crs_ptr
 
-        _screen_dirty
-        rts
+      _screen_dirty
+		rts
 
 textui_cursor:
 		lda screen_write_lock
@@ -211,6 +207,13 @@ textui_scroll_up:
 		sta	screen_buffer+$200,x
 		inx
 		bne	@l3
+.ifndef COLS80
+@le:	lda	screen_buffer+$300+COLS,x
+		sta	screen_buffer+$300,x
+		inx
+      cpx #<(COLS * ROWS)
+		bne	@le
+.endif
 .ifdef COLS80
 @l4:	lda	screen_buffer+$300+COLS,x
 		sta	screen_buffer+$300,x
@@ -228,12 +231,13 @@ textui_scroll_up:
 		sta	screen_buffer+$600,x
 		inx
 		bne	@l7
-.endif
-@le:	lda	screen_buffer+$300+COLS,x
-		sta	screen_buffer+$300,x
+@le:	lda	screen_buffer+$700+COLS,x
+		sta	screen_buffer+$700,x
 		inx
-        cpx #<(COLS * ROWS)
+      cpx #<(COLS * ROWS)
 		bne	@le
+.endif
+
 		plx
 		rts
 
@@ -252,7 +256,7 @@ inc_cursor_y:
 		jsr	textui_scroll_up	; scroll and exit
 		jmp textui_update_crs_ptr
 @l1:	inc crs_y
-	    jmp textui_update_crs_ptr
+	   jmp textui_update_crs_ptr
 
 textui_enable:
 		lda	#STATUS_TEXTUI_ENABLED

@@ -24,7 +24,8 @@ all: ls.prg ll.prg \
 	hello.prg \
 	fibo.prg \
 	gfx7.prg \
-	fig.prg
+	fig.prg \
+	vramtest.prg
 	(cd xmodem; make )
 
 clean:
