@@ -23,6 +23,9 @@ v_reg1_m2			= 1<<3
 v_reg1_spr_size		= 1<<1
 v_reg1_spr_mag		= 1<<0
 
+v_reg25_wait 		= 1<<2
+v_reg25_cmd 		= 1<<6
+
 v_reg0 	= $80
 v_reg1 	= $81
 v_reg2 	= $82
@@ -30,7 +33,9 @@ v_reg3 	= $83
 v_reg4 	= $84
 v_reg5 	= $80 + 	5
 v_reg6 	= $80	+	6
-v_reg7  	= $80	+	7
+v_reg7  = $80	+	7
+v_reg8  = $80	+	8
+
 v_reg11	= $80 + 11
 v_reg14	= $80 + 14
 v_reg25 	= $80 + 25
