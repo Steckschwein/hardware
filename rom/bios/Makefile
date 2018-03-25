@@ -5,7 +5,7 @@ DEFINES+=-DCHAR6x8
 # if 9958 is used
 DEFINES+=-DV9958
 # enable 80 cols
-DEFINES+=-DCOLS80
+# DEFINES+=-DCOLS80
 
 
 .PHONY: all clean
@@ -14,7 +14,7 @@ all: version.inc bios.bin
 clean:
 	rm -f *.o *.bin version.inc bios_call.inc *.txt
 
-%.o: %.asm
+%.o: %.asm version.inc
 	ca65 --target none $(DEFINES) $<
 
 version.inc:

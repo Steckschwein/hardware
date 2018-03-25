@@ -13,13 +13,17 @@ appstart $1000
 VRAM_START=$0000
 
 main:
+	lda	#v_reg8_SPD | v_reg8_VR
+	sta a_vreg
+	lda #v_reg8
+	sta a_vreg
+	
 	jsr krn_primm
 	.byte $0a, "Video Mem:$",0
 
 	lda #1		; start at vram $4000
 	sta vbank
 
-	jmp l_ok
 lbank:	
 	lda #(WRITE_ADDRESS+>VRAM_START)
 	sta adr_h_w
@@ -81,13 +85,13 @@ ln:
 	inc   adr_h_r
 	jsr   mem_ca
 	
-	lda	adr_h_r			;TODO vdp bank switch here
+	lda	adr_h_r		;TODO vdp bank switch here
 	cmp	#$40
 	bne   ll
 	
 	inc vbank
 	lda vbank
-	cmp #02		;128K ?
+	cmp #08			;128K ?
 	beq l_ok
 	jmp lbank
 	

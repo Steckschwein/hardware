@@ -22,6 +22,7 @@ v_reg4 	= $84
 v_reg5 	= $85
 v_reg6 	= $86
 v_reg7  = $87
+v_reg8	= $88
 v_reg25 = 128 + 25
 
 Transparent    =$00

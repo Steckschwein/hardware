@@ -23,6 +23,9 @@ v_reg1_m2			= 1<<3
 v_reg1_spr_size		= 1<<1
 v_reg1_spr_mag		= 1<<0
 
+v_reg8_VR			= 1<<3	; 0/1 16k/64k video ram
+v_reg8_SPD			= 1<<1	; 0/1 sprites enabled/disabled
+
 v_reg25_wait 		= 1<<2
 v_reg25_cmd 		= 1<<6
 
@@ -106,7 +109,7 @@ vdp_nopslide:
 			; jsr = 6cl
 			; rts = 6cl
 			; 32 - 12 = 20
-			.repeat 32 ; clockspeed * 1000 / 125 / 2 - 12
+			.repeat 20 ; clockspeed * 1000 / 125 / 2 - 12
 			nop
 			.endrepeat
 

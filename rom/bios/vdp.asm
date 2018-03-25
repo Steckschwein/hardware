@@ -32,15 +32,18 @@
 ;----------------------------------------------------------------------------------------------
 init_vdp:
 			SyncBlank			;wait blank, display off
-			lda		#v_reg1_16k	;enable 16K ram, disable screen
+			lda		#v_reg1_16k	;enable 16K/64k ram, disable screen
 			ldy	  	#v_reg1
 			vdp_sreg
-
-
+			
 .ifdef V9958
 			; enable V9958 wait state generator
 			lda #1<<2
 			ldy #v_reg25
+			vdp_sreg
+
+			lda	#1<<3 	; assume 64kx4 video ram, so we set bit 3 here TODO FIXME vram detection
+			ldy #v_reg8
 			vdp_sreg
 .endif
 
