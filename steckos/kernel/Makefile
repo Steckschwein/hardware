@@ -6,7 +6,7 @@ LDFLAGS=--config steckos.cfg
 # if 9958 is used
 DEFINES+=-DV9958
 # enable 80 cols
-DEFINES+=-DCOLS80
+#DEFINES+=-DCOLS80
 
 # enable debug
 #DEBUG += -DDEBUG_SDCARD

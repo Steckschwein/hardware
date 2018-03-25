@@ -9,15 +9,17 @@
 
 appstart $1000
 
-VRAM_START=$1000
+
+VRAM_START=$0000
 
 main:
 	jsr krn_primm
 	.byte $0a, "Video Mem:$",0
 
-	lda #0		; start at vram $4000
+	lda #1		; start at vram $4000
 	sta vbank
 
+	jmp l_ok
 lbank:	
 	lda #(WRITE_ADDRESS+>VRAM_START)
 	sta adr_h_w
@@ -45,8 +47,7 @@ ln:
 
 	sei
 	
-	jsr set_vbank
-	vdp_sreg
+	jsr set_vaddr
 	ply
 	lda pattern, x
 	vnops
@@ -56,7 +57,8 @@ ln:
 	phy
 	vnops
 	ldy adr_h_r	
-	vdp_sreg
+;	vdp_sreg
+	jsr set_vaddr
 	ply
 	vnops
 	
@@ -70,14 +72,14 @@ ln:
 	bne   l3
 	
 	inx
-	cpx   #$0a		; pattern table
+	cpx   #(pattern_e-pattern)		; size of test pattern table
 	bne   l2
 	ldx   #$00
 	iny
 	bne   ll
 	inc   adr_h_w	; next 256 byte page
 	inc   adr_h_r
-   jsr   mem_ca
+	jsr   mem_ca
 	
 	lda	adr_h_r			;TODO vdp bank switch here
 	cmp	#$40
@@ -85,7 +87,7 @@ ln:
 	
 	inc vbank
 	lda vbank
-	cmp #%00001000		;128K ?
+	cmp #02		;128K ?
 	beq l_ok
 	jmp lbank
 	
@@ -121,30 +123,33 @@ mem_ca:	; output value
 
 
 
-set_vbank:
+set_vaddr:
 	pha
 	phy
 	lda vbank
 	ldy #v_reg14
 	vdp_sreg
+	vnops
 	ply
 	pla
-	vnops
+	vdp_sreg
 	rts
 
 rset_vbank:
 	pha
 	phy
+	vnops
 	lda #0
 	ldy #v_reg14
 	vdp_sreg	
 	ply
 	pla
-	vnops
 	rts
 	
    
-pattern:  .byte $f0,$0f,$96,$69,$a9,$9a,$00,$ff
+pattern:  .byte $f0;,$0f,$96,$69,$a9,$9a,$00,$ff
+pattern_e:
+
 adr_h_w:	 .res 2
 adr_h_r:	 .res 2
 vbank:	 .res 1
