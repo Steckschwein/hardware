@@ -127,8 +127,8 @@ textui_blank:
 		sta 	saved_char
 @l1:	sta	screen_buffer+$000,x	;4 pages, 40x24
 		sta	screen_buffer+$100,x
-		sta 	screen_buffer+$200,x
-		sta 	screen_buffer+$300,x
+		sta screen_buffer+$200,x
+		sta screen_buffer+$300,x
 
 .ifdef COLS80
 		sta screen_buffer+$400,x	;additional 4 pages for 80 cols
@@ -180,7 +180,11 @@ textui_update_screen:
 		SetVector	screen_buffer, addr    ; copy back buffer to video ram
 		lda	#<ADDRESS_GFX1_SCREEN
 		ldy	#WRITE_ADDRESS + >ADDRESS_GFX1_SCREEN
-		ldx	#$08
+.ifdef COLS80
+		ldx	#$08						    
+.else
+		ldx	#$04
+.endif
 		jsr	vdp_memcpy
 
 		lda	screen_status		;clean dirty

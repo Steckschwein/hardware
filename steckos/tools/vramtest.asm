@@ -31,65 +31,48 @@ lbank:
 	stx adr_h_r
 	ldy #<VRAM_START
 	jsr mem_ca
-;	lda	a_vreg	;clear and wait next
-;l0: 	bit	a_vreg
-;		bpl	l0
-ll:	
-;		tya
-;		and	#$07
-;		bne	ln
-;l1:	bit	a_vreg
-;		bpl	l1
 l2:
-ln:
 	tya
-;	jsr hexout
 	phy
 	ldy adr_h_w	
-;	lda adr_h_w
-;	jsr hexout
 
 	sei
-	
 	jsr set_vaddr
 	ply
 	lda pattern, x
 	vnops
 	sta a_vram
-;	sta test_ptr
 	tya
 	phy
 	vnops
 	ldy adr_h_r	
-;	vdp_sreg
 	jsr set_vaddr
 	ply
 	vnops
 	
 	lda a_vram
-;	lda test_ptr
 	
-	jsr rset_vbank
-	
+	jsr rset_vbank		; reset vbank - TODO FIXME, kernel has to make sure that correct video adress is set for all vram operations, use V9958 flag
 	cli
-	cmp   pattern, x
-	bne   l3
+	
+	cmp pattern, x
+	bne l3
 	
 	inx
 	cpx   #(pattern_e-pattern)		; size of test pattern table
 	bne   l2
-	ldx   #$00
+	ldx   #0
 	iny
-	bne   ll
+	bne   l2
 	inc   adr_h_w	; next 256 byte page
 	inc   adr_h_r
 	jsr   mem_ca
 	
-	lda	adr_h_r		;TODO vdp bank switch here
-	cmp	#$40
-	bne   ll
+	lda	adr_h_r
+	cmp	#$40		; 16k reached?
+	bne l2
 	
-	inc vbank
+	inc vbank		;vram bank switch
 	lda vbank
 	cmp #08			;128K ?
 	beq l_ok
@@ -111,7 +94,7 @@ l3:	pha            	;save erroneous pattern
 	jmp (retvec)
 
 mem_ca:	; output value
-	phy            ;save vram adress low byte
+	phy            	;save vram adress low byte
 	ldx #11			; offset output
 	ldy crs_y
 	jsr krn_textui_crsxy
@@ -124,7 +107,6 @@ mem_ca:	; output value
 	pla
 	jsr hexout
 	rts
-
 
 
 set_vaddr:
@@ -142,7 +124,6 @@ set_vaddr:
 rset_vbank:
 	pha
 	phy
-	vnops
 	lda #0
 	ldy #v_reg14
 	vdp_sreg	
@@ -151,12 +132,11 @@ rset_vbank:
 	rts
 	
    
-pattern:  .byte $f0;,$0f,$96,$69,$a9,$9a,$00,$ff
+pattern:  .byte $f0,$0f,$96,$69,$a9,$9a,$00,$ff
 pattern_e:
 
-adr_h_w:	 .res 2
-adr_h_r:	 .res 2
-vbank:	 .res 1
-test_ptr: .res 1
+adr_h_w:	.res 2
+adr_h_r:	.res 2
+vbank:	 	.res 1
 
 m_vdp_nopslide

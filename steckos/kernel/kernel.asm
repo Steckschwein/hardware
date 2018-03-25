@@ -59,7 +59,8 @@ kern_init:
 	.byte $d4,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$be,$0a
 	.byte $00
 
-
+	SetVector do_upload, retvec ; retvec per default to do_upload. end up in do_upload again, if a program exits safely
+	
 	jsr init_sdcard
 	bne do_upload
 
