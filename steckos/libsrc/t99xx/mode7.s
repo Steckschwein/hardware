@@ -42,12 +42,12 @@ vdp_fill_name_table:
 vdp_init_bytes_gfx7:
 			.byte v_reg0_m5|v_reg0_m4|v_reg0_m3									; reg0 mode bits
 			.byte v_reg1_display_on|v_reg1_spr_size |v_reg1_int 			; TODO FIXME verify v_reg1_16k t9929 specific, therefore 0
-			.byte $1f	; => 00<A16>1 1111 - entw. bank 0 oder 1 (64k)
-			.byte	$0
-			.byte	$0
-			.byte	$ff
-			.byte	$3f
-			.byte	$ff
+			.byte $3f	; => 00<A16>1 1111 - entw. bank 0 oder 1 (64k)
+			.byte $0
+			.byte $0
+			.byte $ff
+			.byte $3f
+			.byte $ff
 			
 
 ;

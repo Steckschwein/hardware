@@ -37,55 +37,69 @@ row=$100
 blend_isr:
     bit a_vreg
     bpl @0
-    save
+	save
+	
+    lda	#%11100000
+	jsr vdp_bgcolor
+
     lda	#Black
 	jsr vdp_bgcolor
+	
 	restore
 @0:
 		rti
 
 gfxui_on:
-   sei
+    sei
 	jsr vdp_display_off			;display off
 	jsr vdp_mode_sprites_off	;sprites off
 
-	lda #%00000011
+	
+	lda #%00000011				;sprites off
 	ldy #v_reg11
 	vdp_sreg
+	
+	lda #v_reg8_SPD | v_reg8_VR
+	ldy #v_reg8
+	vdp_sreg
+	vnops
 
-	lda #%00000000
+	jsr vdp_gfx7_on			    ;enable gfx7 mode
+
+	lda #%00000100
 	ldy #v_reg14
 	vdp_sreg
 	vnops
 	lda #<ADDRESS_GFX7_SCREEN
 	ldy #(WRITE_ADDRESS + >ADDRESS_GFX7_SCREEN)
 	vdp_sreg
-	
-    lda #%00011100
-;    lda #%00000011
-;   lda #%11100000
-    lda #%11100011
-;    jsr vdp_gfx7_blank
-		
-	ldy #192
-	ldx #0
+
+	SetVector	rgbdata, ptr1
+	ldx #171
+	ldy #0
 @l0:
-	sty a_vram
 	vnops
-	dex 
+	lda (ptr1),y
+	sta a_vram
+	iny
 	bne @l0
-	dey
+	inc ptr1+1
+	dex
 	bne @l0
 
     copypointer  $fffe, irqsafe
     SetVector  blend_isr, $fffe
 
-	 jsr vdp_gfx7_on			    ;enable gfx7 mode
+	lda #%00000000	; reset vbank - TODO FIXME, kernel has to make sure that correct video adress is set for all vram operations, use V9958 flag
+	ldy #v_reg14
+	vdp_sreg	
+	
     cli
     rts
 
 gfxui_off:
     sei
+
     copypointer  irqsafe, $fffe
     cli
     rts
@@ -93,3 +107,10 @@ gfxui_off:
 m_vdp_nopslide
 
 irqsafe: .res 2, 0
+
+.align 256,0
+rgbdata:
+.incbin "felix.ppm.raw"
+
+
+.segment "STARTUP"
