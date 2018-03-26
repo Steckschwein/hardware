@@ -46,7 +46,7 @@ hello:
 		crlf
 
 mainloop:
-
+		cld
 		crlf
 		; output current path
 

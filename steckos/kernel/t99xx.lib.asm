@@ -63,7 +63,7 @@ vdp_init_reg:
 @l1:
 	lda (adrl),y
 	sta a_vreg
-	iny				;iny first, burn cycle to avoid vdp nop
+	iny
 	vnops
 	stx a_vreg
 	inx

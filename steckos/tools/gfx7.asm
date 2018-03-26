@@ -18,6 +18,7 @@
 
 appstart $1000
 
+.code
 main:
 		jsr	krn_textui_disable			;disable textui
 		
@@ -55,10 +56,6 @@ gfxui_on:
 	jsr vdp_mode_sprites_off	;sprites off
 
 	
-	lda #%00000011				;sprites off
-	ldy #v_reg11
-	vdp_sreg
-	
 	lda #v_reg8_SPD | v_reg8_VR
 	ldy #v_reg8
 	vdp_sreg
@@ -66,12 +63,12 @@ gfxui_on:
 
 	jsr vdp_gfx7_on			    ;enable gfx7 mode
 
-	lda #%00000100
+	lda #<.HIWORD(ADDRESS_GFX7_SCREEN<<2)
 	ldy #v_reg14
 	vdp_sreg
 	vnops
-	lda #<ADDRESS_GFX7_SCREEN
-	ldy #(WRITE_ADDRESS + >ADDRESS_GFX7_SCREEN)
+	lda #<.LOWORD(ADDRESS_GFX7_SCREEN)
+	ldy #(WRITE_ADDRESS + >.LOWORD(ADDRESS_GFX7_SCREEN))
 	vdp_sreg
 
 	SetVector	rgbdata, ptr1
@@ -86,7 +83,16 @@ gfxui_on:
 	inc ptr1+1
 	dex
 	bne @l0
-
+	
+	ldx #192-171
+@lerase:
+	vnops
+	stz a_vram
+	iny 
+	bne @lerase
+	dex
+	bne @lerase
+	
     copypointer  $fffe, irqsafe
     SetVector  blend_isr, $fffe
 

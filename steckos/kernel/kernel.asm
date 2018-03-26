@@ -114,7 +114,8 @@ do_irq:
 ; handle keyboard input and text screen refresh
 @irq:
 	save
-
+	cld	;clear decimal flag, maybe an app has modified it during execution
+	
 	bit	a_vreg
 	bpl @exit	   ; VDP IRQ flag set?
 	jsr	textui_update_screen

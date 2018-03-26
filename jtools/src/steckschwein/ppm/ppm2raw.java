@@ -72,15 +72,15 @@ public class ppm2raw {
 	}
 
 	private static PpmImage parsePpmImage(InputStream stream) throws IOException {
-		String identifier = readString(stream);
+		String identifier = parseString(stream);
 
 		if (!"P6".equals(identifier)) {
 			System.err.println("unknown ppm image format!");
 			return null;
 		}
-		int width = parseInt(readString(stream));
-		int height = parseInt(readString(stream));
-		int colors = parseInt(readString(stream));
+		int width = parseInt(parseString(stream));
+		int height = parseInt(parseString(stream));
+		int colors = parseInt(parseString(stream));
 
 		PpmImage ppmImage = new PpmImage(width, height, colors);
 
@@ -121,7 +121,7 @@ public class ppm2raw {
 
 	static byte[] whitespaces = { ' ', '\t', '\n', '\r' };
 
-	private static String readString(InputStream stream) throws IOException {
+	private static String parseString(InputStream stream) throws IOException {
 		ByteBuffer allocate = ByteBuffer.allocate(8);
 		int r;
 		while ((r = stream.read()) != -1) {

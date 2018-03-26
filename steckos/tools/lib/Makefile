@@ -1,7 +1,7 @@
 CPU=65c02
 CA65FLAGS=--include-dir ../asminc --include-dir ../kernel
 LDFLAGS=--config ../steckos-c-app.cfg ../lib/steckschwein-kernel.lib
-OBJS=bin2asc.o fsutil.o hexout.o bin2dual.o lcd.o
+OBJS=bin2asc.o fsutil.o hexout.o bin2dual.o lcd.o dword2asc.o
 
 .PHONY: all clean
 

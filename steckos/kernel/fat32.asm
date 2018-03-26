@@ -29,7 +29,7 @@
 
 .segment "KERNEL"
 
-		;	read one block, TODO - updates the seek position within FD
+		;	read one block, TODO - update seek position within FD
 		;in:
 		;	X	- offset into fd_area
 		;out:
@@ -40,7 +40,7 @@ fat_read_block:
 
 		jsr calc_blocks
 		jsr calc_lba_addr
-		jmp sd_read_block
+		jmp __fat_read_block								; and read the block with the dir entry
 @l_err_exit:
 		lda #EINVAL
 		rts
@@ -48,7 +48,7 @@ fat_read_block:
 		;in:
 		;	X - offset into fd_area
 		;out:
-		;	A - A = 0 on success, error code otherwise
+		;   Z - Z=1 on success (A=0), Z=0 and A=error code otherwise
 fat_read:
 		jsr fat_isOpen
 		beq @l_err_exit
@@ -462,6 +462,7 @@ __fat_write_newdir_entry:
 @l_exit:
 		rts
 
+		; internal sd read block, read_blkptr and lba_addr already calculated
 __fat_read_block:
 		phx
 		jsr sd_read_block
@@ -1088,7 +1089,6 @@ calc_lba_addr:
 		pla
 		rts
 
-
 inc_lba_address:
 		_inc32 lba_addr
 		rts
@@ -1138,6 +1138,7 @@ __calc_fat_lba_addr:
 		; out:
 		;	Z=1 if it is the root cluster, Z=0 otherwise
 __fat_isroot:
+		;TODO improve performance, do the check only if type is directory
 		lda fd_area+F32_fd::StartCluster+3,x				; check whether start cluster is the root dir cluster nr (0x00000000) as initial set by fat_alloc_fd
 		ora fd_area+F32_fd::StartCluster+2,x
 		ora fd_area+F32_fd::StartCluster+1,x
