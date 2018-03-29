@@ -54,17 +54,17 @@ vdp_init_bytes_gfx7:
 ; 	A - color to fill (RGB) 3+3+2)
 ;
 vdp_gfx7_blank:		; 2 x 6K
-;.ifdef V9958
-	sta tmp1
-	lda #%00000000
-	ldy #v_reg14
-	vdp_sreg
-	
-	lda #<ADDRESS_GFX7_SCREEN
-	ldy #WRITE_ADDRESS + >ADDRESS_GFX7_SCREEN
-	ldx #32
-	jmp vdp_fill
-
+			ldx #192
+			ldy #0
+@l0:
+;			vnops
+			sta a_vram
+			iny
+			bne @l0
+			inc ptr1+1
+			dex
+			bne @l0
+			rts
 ;	set pixel to gfx2 mode screen
 ;
 ;	X - x coordinate [0..ff]
