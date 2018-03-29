@@ -54,14 +54,13 @@ vdp_init_bytes_gfx7:
 ; 	A - color to fill (RGB) 3+3+2)
 ;
 vdp_gfx7_blank:		; 2 x 6K
-			ldx #192
+			ldx #212
 			ldy #0
 @l0:
-;			vnops
+			vnops
 			sta a_vram
 			iny
 			bne @l0
-			inc ptr1+1
 			dex
 			bne @l0
 			rts
