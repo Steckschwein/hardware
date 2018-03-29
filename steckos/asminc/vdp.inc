@@ -41,8 +41,55 @@ v_reg8  = $80	+	8
 
 v_reg11	= $80 + 11
 v_reg14	= $80 + 14
-v_reg25 	= $80 + 25
+v_reg25 = $80 + 25
 
+v_reg36 = $80 + 36
+v_reg37 = $80 + 37
+v_reg38 = $80 + 38
+v_reg39 = $80 + 39
+v_reg40 = $80 + 40
+v_reg41 = $80 + 41
+v_reg42 = $80 + 42
+v_reg43 = $80 + 43
+v_reg44 = $80 + 44
+v_reg45 = $80 + 45
+v_reg46 = $80 + 46
+
+
+; VDP command opcodes
+; high speed move
+v_cmd_hmmc 	= %11110000
+v_cmd_ymmm 	= %11100000
+v_cmd_hmmm 	= %11010000
+v_cmd_hmmv 	= %11000000
+
+; logical move
+v_cmd_lmmc 	= %10110000
+v_cmd_lmcm 	= %10100000
+v_cmd_lmmm 	= %10010000
+v_cmd_lmmv 	= %10000000
+
+v_cmd_line 	= %01110000
+v_cmd_srch 	= %01100000
+v_cmd_pset 	= %01010000
+v_cmd_point = %01000000
+v_cmd_stop	= %00000000
+
+; VDP command logical operations
+; SC = source color code
+; DC = destination color code
+
+v_log_imp	= %00000000 ; DC=SC
+v_log_and	= %00000001	; DC AND SC
+v_log_or	= %00000010 ; DC OR SC
+v_log_eor	= %00000011 ; DC=/SC AND DC OR SC AND /DC
+v_log_not	= %00000100 ; DC=/SC
+
+v_log_timp	= %00001000 ; if SC=0 then DC=DC else DC=SC
+v_log_tand	= %00001001 ; if SC=0 then DC=DC else DC=SC AND DC
+v_log_tor	= %00001010 ; if SC=0 then DC=DC else DC=SC OR DC
+v_log_teor	= %00001011 ; if SC=0 then DC=DC else DC=/SC AND DC OR SC AND /DC
+v_log_tnot	= %00001100 ; if SC=0 then DC=DC else DC=/SC
 
 SP_Y=0
 SP_X=1
