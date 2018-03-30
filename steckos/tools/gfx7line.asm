@@ -9,7 +9,6 @@
 
 
 .import vdp_gfx7_on
-.import vdp_gfx7_blank
 .import vdp_gfx7_set_pixel
 .import vdp_display_off
 .import vdp_memcpy
@@ -27,15 +26,17 @@ ht_y = $a6
 
 .code
 main:
+		sei
 
 		jsr	krn_textui_disable			;disable textui
 		jsr	gfxui_on
 
-		lda #128
+
+		lda #0
 		sta pt_x
 		stz pt_x+1
 
-		lda #106
+		lda #0
 		sta pt_y
 		lda #$01
 		sta pt_y+1
@@ -51,6 +52,7 @@ main:
 		sta ht_y+1
 
 
+
 @loop:
 		vnops
 		lda #%11100000
@@ -61,6 +63,13 @@ main:
 		dec ht_y
 		dec ht_y
 		dec ht_y
+		dec ht_y
+		dec ht_y
+		dec ht_y
+		dec ht_y
+		dec ht_y
+		dec ht_y
+
 		bne @loop
 
 		keyin
@@ -77,11 +86,20 @@ row=$100
 blend_isr:
     bit a_vreg
     bpl @0
+	save
+
+	lda	#%11100000
+	jsr vdp_bgcolor
+
+	lda	#Black
+	jsr vdp_bgcolor
+
+	restore
 @0:
 	rti
 
+
 gfxui_on:
-    sei
 	jsr vdp_display_off			;display off
 	jsr vdp_mode_sprites_off	;sprites off
 
@@ -112,15 +130,15 @@ gfxui_on:
 	jsr vdp_gfx7_blank
 	vnops
 
+
 	copypointer  $fffe, irqsafe
 	SetVector  blend_isr, $fffe
 
 @end:
-	lda #%00000000	; reset vbank - TODO FIXME, kernel has to make sure that correct video adress is set for all vram operations, use V9958 flag
-	ldy #v_reg14
-	vdp_sreg
+	; lda #%00000000	; reset vbank - TODO FIXME, kernel has to make sure that correct video adress is set for all vram operations, use V9958 flag
+	; ldy #v_reg14
+	; vdp_sreg
 
-    cli
     rts
 
 gfxui_off:
@@ -206,8 +224,82 @@ vdp_gfx7_line:
 	pla
 	rts
 
+vdp_gfx7_blank:
+	save
+
+	pha
+
+	lda #0
+	ldy #v_reg36
+	vdp_sreg
+	vnops
+
+	lda #0
+	ldy #v_reg37
+	vdp_sreg
+	vnops
+
+	lda #0
+	ldy #v_reg38
+	vdp_sreg
+	vnops
+
+	lda #0
+	ldy #v_reg39
+	vdp_sreg
+	vnops
+
+	lda #255
+	ldy #v_reg40
+	vdp_sreg
+	vnops
+
+	lda #0
+	ldy #v_reg41
+	vdp_sreg
+	vnops
+
+	lda #212
+	ldy #v_reg42
+	vdp_sreg
+	vnops
+
+	lda #1
+	ldy #v_reg43
+	vdp_sreg
+	vnops
+
+	pla
+	;lda #%00000011
+	ldy #v_reg44
+	vdp_sreg
+	vnops
+
+	lda #$0
+	ldy #v_reg45
+	vdp_sreg
+	vnops
+
+	lda #v_cmd_hmmv
+	ldy #v_reg46
+	vdp_sreg
+	vnops
+
+	lda #2
+	ldy #v_reg15
+	vdp_sreg
+@wait:
+	vnops
+	lda a_vreg
+	ror
+	bcs @wait
+
+	restore
+	rts
+
 m_vdp_nopslide
 
 irqsafe: .res 2, 0
+
 
  .segment "STARTUP"
