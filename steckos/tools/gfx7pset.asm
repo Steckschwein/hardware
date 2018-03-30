@@ -90,8 +90,8 @@ gfxui_on:
 	bne @loop
 
 
-	copypointer  $fffe, irqsafe
-	SetVector  blend_isr, $fffe
+;	copypointer  $fffe, irqsafe
+;	SetVector  blend_isr, $fffe
 
 @end:
 	; lda #%00000000	; reset vbank - TODO FIXME, kernel has to make sure that correct video adress is set for all vram operations, use V9958 flag
@@ -102,15 +102,15 @@ gfxui_on:
     rts
 
 gfxui_off:
-    sei
+;    sei
 
-    copypointer  irqsafe, $fffe
-    cli
+;    copypointer  irqsafe, $fffe
+;    cli
     rts
 
 m_vdp_nopslide
 
-irqsafe: .res 2, 0
+;irqsafe: .res 2, 0
 
 .align 256,0
 rgbdata:
