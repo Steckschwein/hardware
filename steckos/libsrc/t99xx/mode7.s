@@ -72,46 +72,64 @@ vdp_gfx7_blank:		; 2 x 6K
 ;
 ; 	VRAM ADDRESS = 8(INT(X DIV 8)) + 256(INT(Y DIV 8)) + (Y MOD 8)
 vdp_gfx7_set_pixel:
-		beq vdp_gfx7_set_pixel_e	; 0 - not set, leave blank
-;		sta tmp1					; otherwise go on and set pixel
-		; calculate low byte vram adress
-		txa						;2
-		and	#$f8
-		sta	tmp2
-		tya
-		and	#$07
-		ora	tmp2
-		sta	a_vreg	;4 set vdp vram address low byte
-		sta	tmp2	;3 safe vram low byte
+		pha
+		phx
+		phy
 
-		; high byte vram address - div 8, result is vram address "page" $0000, $0100, ...
-		tya						;2
-		lsr						;2
-		lsr						;2
-		lsr						;2
-		sta	a_vreg				;set vdp vram address high byte
-		ora #WRITE_ADDRESS		;2 adjust for write
-		tay						;2 safe vram high byte for write in y
+		pha
+		phy
 
-		txa						;2 set the appropriate bit
-		and	#$07				;2
-		tax						;2
-		lda	bitmask,x			;4
-;		and tmp1				;3
-		ora	a_vram				;4 read current byte in vram and OR with new pixel
-		tax						;2 or value to x
-		nop						;2
-		nop						;2
-		nop						;2
-		lda	tmp2				;2
-		sta a_vreg
-		tya						;2
-		nop						;2
-		nop						;2
-		sta	a_vreg
+		txa
+		ldy #v_reg36
+		vdp_sreg
 		vnops
-		stx a_vram	;set vdp vram address high byte
-vdp_gfx7_set_pixel_e:
+
+		; dummy highbyte
+		lda #0
+		ldy #v_reg37
+		vdp_sreg
+		vnops
+
+		pla
+		ldy #v_reg38
+		vdp_sreg
+		vnops
+
+		; dummy highbyte
+		lda #1
+		ldy #v_reg39
+		vdp_sreg
+		vnops
+
+		pla
+		;	colour
+		;	GGGRRRBB
+		ldy #v_reg44
+		vdp_sreg
+		vnops
+
+		lda #$0
+		ldy #v_reg45
+		vdp_sreg
+		vnops
+
+		lda #v_cmd_pset
+		ldy #v_reg46
+		vdp_sreg
+		vnops
+
+		lda #2
+		ldy #v_reg15
+		vdp_sreg
+@wait:
+		vnops
+		lda a_vreg
+		ror
+		bcs @wait
+
+		ply
+		plx
+		pla
 		rts
 bitmask:
 	.byte $80,$40,$20,$10,$08,$04,$02,$01
