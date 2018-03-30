@@ -47,7 +47,7 @@ vdp_init_bytes_gfx7:
 			.byte $0
 			.byte $ff
 			.byte $3f
-			.byte $ff
+			.byte $00 ; border color
 
 ;
 ; blank gfx mode 2 with
@@ -64,7 +64,7 @@ vdp_gfx7_blank:		; 2 x 6K
 			dex
 			bne @l0
 			rts
-;	set pixel to gfx2 mode screen
+;	set pixel to gfx7 using v9958 command engine
 ;
 ;	X - x coordinate [0..ff]
 ;	Y - y coordinate [0..bf]
