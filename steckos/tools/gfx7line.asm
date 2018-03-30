@@ -6,11 +6,11 @@
 .include "appstart.inc"
 
 
-.importzp ptr2, ptr3
-.importzp tmp3, tmp4
+
 
 .import vdp_gfx7_on
 .import vdp_gfx7_blank
+.import vdp_gfx7_set_pixel
 .import vdp_display_off
 .import vdp_memcpy
 .import vdp_mode_sprites_off
@@ -19,15 +19,49 @@
 
 appstart $1000
 
-pt_x = 25
-pt_y = 257
-ht_x = 150
-ht_y = 150
+
+pt_x = $a0
+pt_y = $a2
+ht_x = $a4
+ht_y = $a6
+
 .code
 main:
 
 		jsr	krn_textui_disable			;disable textui
 		jsr	gfxui_on
+
+		lda #128
+		sta pt_x
+		stz pt_x+1
+
+		lda #106
+		sta pt_y
+		lda #$01
+		sta pt_y+1
+
+		lda #255
+		sta ht_x
+		lda #0
+		sta ht_x+1
+
+		lda #212
+		sta ht_y
+		lda #0
+		sta ht_y+1
+
+
+@loop:
+		vnops
+		lda #%11100000
+		jsr vdp_gfx7_line
+		dec ht_y
+		dec ht_y
+		dec ht_y
+		dec ht_y
+		dec ht_y
+		dec ht_y
+		bne @loop
 
 		keyin
 		jsr	gfxui_off
@@ -43,15 +77,6 @@ row=$100
 blend_isr:
     bit a_vreg
     bpl @0
-	save
-
-    ; lda	#%11100000
-	; jsr vdp_bgcolor
-	;
-    ; lda	#Black
-	; jsr vdp_bgcolor
-	;
-	restore
 @0:
 	rti
 
@@ -66,7 +91,7 @@ gfxui_on:
 	vdp_sreg
 	vnops
 
-	; lines
+;	lines
 	lda #v_reg9_ln
 	ldy #v_reg9
 	vdp_sreg
@@ -83,115 +108,84 @@ gfxui_on:
 	vdp_sreg
 
 
-	; lda #%00000000
-	; jsr vdp_gfx7_blank
-	; vnops
-	;
-	; lda #36
-	; ldy #v_reg17
-	; vdp_sreg
-	; vnops
-	;
-	; lda #<pt_x
-	; sta a_vregi
-	; vnops
-	;
-	; lda #>pt_x
-	; sta a_vregi
-	; vnops
-	;
-	; lda #<pt_y
-	; sta a_vregi
-	; vnops
-	;
-	; lda #>pt_y
-	; sta a_vregi
-	; vnops
-	;
-	; lda #100
-	; sta a_vregi
-	; vnops
-	;
-	; lda #0
-	; sta a_vregi
-	; vnops
-	;
-	; lda #50
-	; sta a_vregi
-	; vnops
-	;
-	; lda #0
-	; sta a_vregi
-	; vnops
-	;
-	; lda #%11100000
-	; sta a_vregi
-	; vnops
-	;
-	; lda #$0
-	; sta a_vregi
-	; vnops
-
-	; lda #v_cmd_line
-	; sta a_vregi
-	; vnops
-
-
+	lda #%00000000
+	jsr vdp_gfx7_blank
 	vnops
 
-	lda #<pt_x
+	copypointer  $fffe, irqsafe
+	SetVector  blend_isr, $fffe
+
+@end:
+	lda #%00000000	; reset vbank - TODO FIXME, kernel has to make sure that correct video adress is set for all vram operations, use V9958 flag
+	ldy #v_reg14
+	vdp_sreg
+
+    cli
+    rts
+
+gfxui_off:
+    sei
+
+    copypointer  irqsafe, $fffe
+    cli
+    rts
+
+vdp_gfx7_line:
+	pha
+	phx
+	phy
+
+	pha
+
+	lda pt_x
 	ldy #v_reg36
 	vdp_sreg
 	vnops
-	lda #>pt_x
+
+	lda pt_x+1
 	ldy #v_reg37
 	vdp_sreg
 	vnops
 
-	lda #<pt_y
+	lda pt_y
 	ldy #v_reg38
 	vdp_sreg
 	vnops
-	lda #>pt_y
+
+	lda pt_y+1
 	ldy #v_reg39
 	vdp_sreg
 	vnops
 
-	lda #<ht_x
+	lda ht_x
 	ldy #v_reg40
 	vdp_sreg
-
 	vnops
 
-	lda #>ht_x
+	lda ht_x+1
 	ldy #v_reg41
 	vdp_sreg
 	vnops
 
-	lda #<ht_y
+	lda ht_y
 	ldy #v_reg42
 	vdp_sreg
 	vnops
 
-	lda #>ht_y
+	lda ht_y+1
 	ldy #v_reg43
 	vdp_sreg
 	vnops
 
-;	colour
-;	GGGRRRBB
-	lda #%11100000
+	pla
 	ldy #v_reg44
 	vdp_sreg
 	vnops
-
-
 
 	lda #$0
 	ldy #v_reg45
 	vdp_sreg
 	vnops
-
 
 	lda #v_cmd_line
 	ldy #v_reg46
@@ -207,31 +201,13 @@ gfxui_on:
 	ror
 	bcs @wait
 
-	copypointer  $fffe, irqsafe
-	SetVector  blend_isr, $fffe
-
-@end:
-	; lda #%00000000	; reset vbank - TODO FIXME, kernel has to make sure that correct video adress is set for all vram operations, use V9958 flag
-	; ldy #v_reg14
-	; vdp_sreg
-
-    cli
-    rts
-
-gfxui_off:
-    sei
-
-    copypointer  irqsafe, $fffe
-    cli
-    rts
+	ply
+	plx
+	pla
+	rts
 
 m_vdp_nopslide
 
 irqsafe: .res 2, 0
 
-.align 256,0
-rgbdata:
-; .incbin "531740.raw"
-
-
-.segment "STARTUP"
+ .segment "STARTUP"
