@@ -131,5 +131,3 @@ vdp_gfx7_set_pixel:
 		plx
 		pla
 		rts
-bitmask:
-	.byte $80,$40,$20,$10,$08,$04,$02,$01
