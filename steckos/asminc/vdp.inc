@@ -8,6 +8,8 @@ ptr1=$e2
 a_vdp		= $0220
 a_vram		= a_vdp
 a_vreg		= a_vdp+1
+a_vregi		= a_vdp+2
+
 
 v_reg0_m3			= 1<<1
 v_reg0_m4			= 1<<2
@@ -26,8 +28,20 @@ v_reg1_spr_mag		= 1<<0
 v_reg8_VR			= 1<<3	; 0/1 16k/64k video ram
 v_reg8_SPD			= 1<<1	; 0/1 sprites enabled/disabled
 
+v_reg9_ln 			= 1<<7  ; lines - 212 lines if 1, 192 lines if 0
+v_reg9_il			= 1<<3	; interlace
+
+v_reg9_nt			= 1<<1	; ntsc/pal
+
 v_reg25_wait 		= 1<<2
 v_reg25_cmd 		= 1<<6
+
+v_reg45_mxc = 1<<6
+v_reg45_mxd = 1<<5
+v_reg45_mxs = 1<<4
+v_reg45_diy = 1<<3
+v_reg45_dix = 1<<2
+v_reg45_maj = 1<<0
 
 v_reg0 	= $80
 v_reg1 	= $81
@@ -38,10 +52,13 @@ v_reg5 	= $80 + 	5
 v_reg6 	= $80	+	6
 v_reg7  = $80	+	7
 v_reg8  = $80	+	8
+v_reg9  = $80	+	9
 
 v_reg11	= $80 + 11
 v_reg14	= $80 + 14
 v_reg15	= $80 + 15
+
+v_reg17	= $80 + 17
 
 v_reg25 = $80 + 25
 
