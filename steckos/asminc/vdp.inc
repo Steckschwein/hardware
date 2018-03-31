@@ -8,7 +8,7 @@ ptr1=$e2
 a_vdp		= $0220
 a_vram		= a_vdp
 a_vreg		= a_vdp+1
-a_vregi		= a_vdp+2
+a_vregi		= a_vdp+3
 
 
 v_reg0_m3			= 1<<1
@@ -188,6 +188,17 @@ vdp_nopslide:
 			vnops
 			sty	a_vreg
 .endmacro
+
+.macro vdp_reg reg, val
+			pha
+			lda #val
+			sta	a_vreg
+			vnops
+			lda #$80 + reg
+			sta	a_vreg
+			pla
+.endmacro
+
 
 .macro	SyncBlank
 	bit a_vreg	; maybe within blank, we clean flag by read to a_vreg

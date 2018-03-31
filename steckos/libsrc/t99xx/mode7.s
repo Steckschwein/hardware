@@ -73,61 +73,50 @@ vdp_gfx7_blank:		; 2 x 6K
 ; 	VRAM ADDRESS = 8(INT(X DIV 8)) + 256(INT(Y DIV 8)) + (Y MOD 8)
 vdp_gfx7_set_pixel:
 		pha
-		phx
-		phy
-
 		pha
 		phy
 
-		txa
-		ldy #v_reg36
-		vdp_sreg
+		vdp_reg 17,36
+		vnops
+		stx a_vregi
 		vnops
 
 		; dummy highbyte
 		lda #0
-		ldy #v_reg37
-		vdp_sreg
+		sta a_vregi
 		vnops
 
 		pla
-		ldy #v_reg38
-		vdp_sreg
+		sta a_vregi
 		vnops
 
 		; dummy highbyte
 		lda #1
-		ldy #v_reg39
-		vdp_sreg
+		sta a_vregi
 		vnops
+
+		vdp_reg 17,44
 
 		pla
 		;	colour
 		;	GGGRRRBB
-		ldy #v_reg44
-		vdp_sreg
+		sta a_vregi
 		vnops
 
 		lda #$0
-		ldy #v_reg45
-		vdp_sreg
+		sta a_vregi
 		vnops
 
 		lda #v_cmd_pset
-		ldy #v_reg46
-		vdp_sreg
+		sta a_vregi
 		vnops
 
-		lda #2
-		ldy #v_reg15
-		vdp_sreg
+		vdp_reg 15,2
 @wait:
 		vnops
 		lda a_vreg
 		ror
 		bcs @wait
 
-		ply
-		plx
 		pla
 		rts
