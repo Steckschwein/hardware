@@ -53,17 +53,56 @@ vdp_init_bytes_gfx7:
 ; blank gfx mode 2 with
 ; 	A - color to fill (RGB) 3+3+2)
 ;
-vdp_gfx7_blank:		; 2 x 6K
-			ldx #212
-			ldy #0
-@l0:
-			vnops
-			sta a_vram
-			iny
-			bne @l0
-			dex
-			bne @l0
-			rts
+vdp_gfx7_blank:
+	pha
+	phx
+
+	sta colour
+	vdp_reg 17,36
+
+	ldx #0
+@loop:
+	vnops
+	lda data,x
+	sta a_vregi
+	inx
+	cpx #12
+	bne @loop
+
+	vnops
+	vdp_reg 15,2
+@wait:
+	vnops
+	lda a_vreg
+	ror
+	bcs @wait
+
+	plx
+	pla
+	rts
+
+data:
+	.word 0 ;x
+	.word 256 ;y
+	.word 256 ; len x
+	.word 212 ; len y
+colour:
+	.byte %00011100 ; colour
+	.byte $00 ; destination memory, x direction, y direction, yada yada
+	.byte v_cmd_hmmv ; command
+; vdp_gfx7_blank:		; 2 x 6K
+; 			ldx #212
+; 			ldy #0
+; @l0:
+; 			vnops
+; 			sta a_vram
+; 			iny
+; 			bne @l0
+; 			dex
+; 			bne @l0
+; 			rts
+
+
 ;	set pixel to gfx7 using v9958 command engine
 ;
 ;	X - x coordinate [0..ff]
