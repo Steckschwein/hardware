@@ -74,7 +74,7 @@ gfxui_on:
 	vdp_sreg
 
 
-	lda #%00000000
+	lda #%00000011
 	jsr vdp_gfx7_blank
 	vnops
 
