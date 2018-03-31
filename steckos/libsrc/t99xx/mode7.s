@@ -113,7 +113,6 @@ colour:
 vdp_gfx7_set_pixel:
 		pha
 		pha
-		phy
 
 		vdp_reg 17,36
 		vnops
@@ -125,8 +124,7 @@ vdp_gfx7_set_pixel:
 		sta a_vregi
 		vnops
 
-		pla
-		sta a_vregi
+		sty a_vregi
 		vnops
 
 		; dummy highbyte
