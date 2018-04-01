@@ -103,6 +103,33 @@ colour:
 ; 			rts
 
 
+;	X - x coordinate [0..ff]
+;	Y - y coordinate [0..bf]
+;	A - color GRB [0..ff] as 332
+; 	VRAM ADDRESS = X + 256*Y
+vdp_gfx7_set_pixel_n:
+         pha 
+         stx a_vreg                 ; A7-A0 vram address low byte
+         tya
+         and #$3f                   ; A13-A8 vram address highbyte         
+         ora #WRITE_ADDRESS
+         vnops                      ; TODO FIXME code reorder, avoid vnops
+         sta a_vreg                 
+         tya                        ; A16-A14 bank select via reg#14
+         rol
+         rol
+         rol
+         and #$03
+         ora #<.HIWORD(ADDRESS_GFX7_SCREEN<<2)
+         sta a_vreg
+         vnops
+         lda #v_reg14
+         sta a_vreg
+         vnops
+         pla 
+         sta a_vram                 ; set color
+         rts
+
 ;	set pixel to gfx7 using v9958 command engine
 ;
 ;	X - x coordinate [0..ff]
