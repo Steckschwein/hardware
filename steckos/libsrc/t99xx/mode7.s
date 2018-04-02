@@ -50,11 +50,10 @@ vdp_init_bytes_gfx7:
 			.byte $00 ; border color
 
 ;
-; blank gfx mode 2 with
+; blank gfx mode 7 with
 ; 	A - color to fill (RGB) 3+3+2)
 ;
 vdp_gfx7_blank:
-	pha
 	phx
 
 	sta colour
@@ -78,7 +77,6 @@ vdp_gfx7_blank:
 	bcs @wait
 
 	plx
-	pla
 	rts
 
 data:
@@ -108,13 +106,13 @@ colour:
 ;	A - color GRB [0..ff] as 332
 ; 	VRAM ADDRESS = X + 256*Y
 vdp_gfx7_set_pixel_n:
-         pha 
+         pha
          stx a_vreg                 ; A7-A0 vram address low byte
          tya
-         and #$3f                   ; A13-A8 vram address highbyte         
+         and #$3f                   ; A13-A8 vram address highbyte
          ora #WRITE_ADDRESS
          vnops                      ; TODO FIXME code reorder, avoid vnops
-         sta a_vreg                 
+         sta a_vreg
          tya                        ; A16-A14 bank select via reg#14
          rol
          rol
@@ -126,7 +124,7 @@ vdp_gfx7_set_pixel_n:
          lda #v_reg14
          sta a_vreg
          vnops
-         pla 
+         pla
          sta a_vram                 ; set color
          rts
 

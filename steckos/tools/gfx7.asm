@@ -21,9 +21,9 @@ appstart $1000
 .code
 main:
 		jsr	krn_textui_disable			;disable textui
-		
+
 		jsr	gfxui_on
-		
+
 		keyin
 		jsr	gfxui_off
 
@@ -31,22 +31,22 @@ main:
 		jsr	krn_textui_init
 		jsr	krn_textui_enable
 		cli
-		
+
 		jmp (retvec)
 
 row=$100
 blend_isr:
     bit a_vreg
     bpl @0
-	save
-	
-    lda	#%11100000
-	jsr vdp_bgcolor
+	; save
 
-    lda	#Black
-	jsr vdp_bgcolor
-	
-	restore
+    ; lda	#%11100000
+	; jsr vdp_bgcolor
+	;
+    ; lda	#Black
+	; jsr vdp_bgcolor
+
+	; restore
 @0:
 		rti
 
@@ -55,7 +55,7 @@ gfxui_on:
 	jsr vdp_display_off			;display off
 	jsr vdp_mode_sprites_off	;sprites off
 
-	
+
 	lda #v_reg8_SPD | v_reg8_VR
 	ldy #v_reg8
 	vdp_sreg
@@ -83,23 +83,23 @@ gfxui_on:
 	inc ptr1+1
 	dex
 	bne @l0
-	
+
 	ldx #192-171
 @lerase:
 	vnops
 	stz a_vram
-	iny 
+	iny
 	bne @lerase
 	dex
 	bne @lerase
-	
+
     copypointer  $fffe, irqsafe
     SetVector  blend_isr, $fffe
 
 	lda #%00000000	; reset vbank - TODO FIXME, kernel has to make sure that correct video adress is set for all vram operations, use V9958 flag
 	ldy #v_reg14
-	vdp_sreg	
-	
+	vdp_sreg
+
     cli
     rts
 

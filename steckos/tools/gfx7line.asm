@@ -20,19 +20,13 @@
 appstart $1000
 
 
-pt_x = $a0
-pt_y = $a2
-ht_x = $a4
-ht_y = $a6
+pt_x = $10
+pt_y = $12
+ht_x = $14
+ht_y = $16
 
 .code
 main:
-		sei
-
-		jsr	krn_textui_disable			;disable textui
-		jsr	gfxui_on
-
-
 		lda #0
 		sta pt_x
 		stz pt_x+1
@@ -52,41 +46,31 @@ main:
 		lda #0
 		sta ht_y+1
 
-		ldx #70
+		ldx #21
 
-@loop:
-		vnops
-		lda #%11100000
-		jsr vdp_gfx7_line
+		jsr	krn_textui_disable			;disable textui
+		jsr	gfxui_on
 
-		dec ht_y
-		dec ht_y
-		dec ht_y
-		dec ht_y
-		dec ht_y
-		dec ht_y
-		dec ht_y
-		dec ht_y
-		dec ht_y
-		dec ht_y
-		dec ht_y
-		dec ht_y
+		lda #$41
+		sta $0230
 
-		dex
-		bne @loop
+
 
 		keyin
+
 		jsr	gfxui_off
 
 		jsr	krn_display_off			;restore textui
 		jsr	krn_textui_init
 		jsr	krn_textui_enable
+		bit a_vreg ; acknowledge any vdp interrupts before re-enabling interrupts
+
 		cli
 
 		jmp (retvec)
 
-row=$100
 blend_isr:
+	php
     bit a_vreg
     bpl @0
 	save
@@ -99,48 +83,66 @@ blend_isr:
 
 	restore
 @0:
+	plp
 	rti
 
 
 gfxui_on:
+	sei
 	jsr vdp_display_off			;display off
 	jsr vdp_mode_sprites_off	;sprites off
 
-
-	lda #v_reg8_SPD | v_reg8_VR
-	ldy #v_reg8
-	vdp_sreg
+	vdp_reg 8, v_reg8_SPD | v_reg8_VR
 	vnops
 
 ;	lines
-	lda #v_reg9_ln
-	ldy #v_reg9
-	vdp_sreg
-	vnops
+	vdp_reg 9, v_reg9_ln
 
 	jsr vdp_gfx7_on			    ;enable gfx7 mode
 
-	lda #<.HIWORD(ADDRESS_GFX7_SCREEN<<2)
-	ldy #v_reg14
-	vdp_sreg
+	vdp_reg 14, <.HIWORD(ADDRESS_GFX7_SCREEN<<2)
 	vnops
-	lda #<.LOWORD(ADDRESS_GFX7_SCREEN)
-	ldy #(WRITE_ADDRESS + >.LOWORD(ADDRESS_GFX7_SCREEN))
-	vdp_sreg
 
-
-	lda #%00000011
-	jsr vdp_gfx7_blank
+	vdp_reg (WRITE_ADDRESS + >.LOWORD(ADDRESS_GFX7_SCREEN)), <.LOWORD(ADDRESS_GFX7_SCREEN)
 	vnops
+
+	; lda #%00000011
+	; jsr vdp_gfx7_blank
+
+; @loop:
+; 	vnops
+	lda #$ff
+	jsr vdp_gfx7_line
+
+;
+; 	dec ht_y
+; 	dec ht_y
+; 	dec ht_y
+; 	dec ht_y
+; 	dec ht_y
+; 	dec ht_y
+; 	dec ht_y
+; 	dec ht_y
+; 	dec ht_y
+; 	dec ht_y
+; 	dec ht_y
+; 	dec ht_y
+;
+; 	dex
+; 	bne @loop
 
 
 	copypointer  $fffe, irqsafe
 	SetVector  blend_isr, $fffe
 
-@end:
-	; lda #%00000000	; reset vbank - TODO FIXME, kernel has to make sure that correct video adress is set for all vram operations, use V9958 flag
-	; ldy #v_reg14
-	; vdp_sreg
+	; reset vbank - TODO FIXME, kernel has to make sure that correct video adress is set for all vram operations, use V9958 flag
+	vdp_reg 14, %00000000
+
+	bit a_vreg ; acknowledge any vdp interrupts before re-enabling interrupts
+	cli
+	lda #$81
+	sta $0230
+
 
     rts
 
@@ -148,56 +150,48 @@ gfxui_off:
     sei
 
     copypointer  irqsafe, $fffe
+
+	bit a_vreg ; acknowledge any vdp interrupts before re-enabling interrupts
     cli
     rts
 
 vdp_gfx7_line:
-
+	phx
 	pha
 
-
 	vdp_reg 17,36
-	lda pt_x
-	sta a_vregi
+
+	ldx #0
+@loop:
 	vnops
-	lda pt_x+1
+	lda pt_x,x
 	sta a_vregi
-	vnops
-	lda pt_y
-	sta a_vregi
-	vnops
-	lda pt_y+1
-	sta a_vregi
-	vnops
-	lda ht_x
-	sta a_vregi
-	vnops
-	lda ht_x+1
-	sta a_vregi
-	vnops
-	lda ht_y
-	sta a_vregi
-	vnops
-	lda ht_y+1
-	sta a_vregi
+	inx
+	cpx #8
+	bne @loop
+
 	vnops
 	pla
 	sta a_vregi
+
 	vnops
 	lda #0
 	sta a_vregi
+
 	vnops
 	lda #v_cmd_line
 	sta a_vregi
+
 	vnops
 
-	vdp_reg 15,2
 @wait:
+	vdp_reg 15,2
 	vnops
 	lda a_vreg
 	ror
 	bcs @wait
 
+	plx
 	rts
 
 

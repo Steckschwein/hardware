@@ -163,7 +163,7 @@ ADDRESS_GFX_MC_SPRITE_PATTERN	=ADDRESS_GFX2_PATTERN	; sprite pattern
 
 ; vnops - 16cl -> 8Mhz -> 2Âµs, the min vdp wait
 .macro	vnops
-	jsr vdp_nopslide	;6cl
+		jsr vdp_nopslide	;6cl
 .endmacro
 
 .macro m_vdp_nopslide
@@ -190,13 +190,11 @@ vdp_nopslide:
 .endmacro
 
 .macro vdp_reg reg, val
-			pha
 			lda #val
 			sta	a_vreg
 			vnops
 			lda #$80 + reg
 			sta	a_vreg
-			pla
 .endmacro
 
 
