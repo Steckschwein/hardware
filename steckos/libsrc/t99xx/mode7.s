@@ -11,6 +11,7 @@
 .export vdp_gfx7_on
 .export vdp_gfx7_blank
 .export vdp_gfx7_set_pixel
+.export vdp_gfx7_set_pixel_n
 
 .code
 ;
