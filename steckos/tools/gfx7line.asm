@@ -51,11 +51,6 @@ main:
 		jsr	krn_textui_disable			;disable textui
 		jsr	gfxui_on
 
-		lda #$41
-		sta $0230
-
-
-
 		keyin
 
 		jsr	gfxui_off
@@ -70,10 +65,11 @@ main:
 		jmp (retvec)
 
 blend_isr:
-	php
+	pha
+	vdp_reg 15,0
+	vnops
     bit a_vreg
     bpl @0
-	save
 
 	lda	#%11100000
 	jsr vdp_bgcolor
@@ -81,9 +77,9 @@ blend_isr:
 	lda	#Black
 	jsr vdp_bgcolor
 
-	restore
+
 @0:
-	plp
+	pla
 	rti
 
 
@@ -106,30 +102,30 @@ gfxui_on:
 	vdp_reg (WRITE_ADDRESS + >.LOWORD(ADDRESS_GFX7_SCREEN)), <.LOWORD(ADDRESS_GFX7_SCREEN)
 	vnops
 
-	; lda #%00000011
-	; jsr vdp_gfx7_blank
+	lda #%00000011
+	jsr vdp_gfx7_blank
 
-; @loop:
-; 	vnops
+@loop:
+	vnops
 	lda #$ff
 	jsr vdp_gfx7_line
 
-;
-; 	dec ht_y
-; 	dec ht_y
-; 	dec ht_y
-; 	dec ht_y
-; 	dec ht_y
-; 	dec ht_y
-; 	dec ht_y
-; 	dec ht_y
-; 	dec ht_y
-; 	dec ht_y
-; 	dec ht_y
-; 	dec ht_y
-;
-; 	dex
-; 	bne @loop
+
+	dec ht_y
+	dec ht_y
+	dec ht_y
+	dec ht_y
+	dec ht_y
+	dec ht_y
+	dec ht_y
+	dec ht_y
+	dec ht_y
+	dec ht_y
+	dec ht_y
+	dec ht_y
+
+	dex
+	bne @loop
 
 
 	copypointer  $fffe, irqsafe
@@ -138,20 +134,14 @@ gfxui_on:
 	; reset vbank - TODO FIXME, kernel has to make sure that correct video adress is set for all vram operations, use V9958 flag
 	vdp_reg 14, %00000000
 
-	bit a_vreg ; acknowledge any vdp interrupts before re-enabling interrupts
 	cli
-	lda #$81
-	sta $0230
-
-
-    rts
+	rts
 
 gfxui_off:
     sei
 
     copypointer  irqsafe, $fffe
 
-	bit a_vreg ; acknowledge any vdp interrupts before re-enabling interrupts
     cli
     rts
 
@@ -184,8 +174,8 @@ vdp_gfx7_line:
 
 	vnops
 
-@wait:
 	vdp_reg 15,2
+@wait:
 	vnops
 	lda a_vreg
 	ror

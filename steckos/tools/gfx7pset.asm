@@ -39,11 +39,20 @@ main:
 
 		jmp (retvec)
 
-row=$100
 blend_isr:
+	pha
+	vdp_reg 15,0
+	vnops
     bit a_vreg
     bpl @0
+
+	lda	#%11100000
+	jsr vdp_bgcolor
+
+	lda	#Black
+	jsr vdp_bgcolor
 @0:
+	pla
 	rti
 
 gfxui_on:
@@ -74,7 +83,7 @@ gfxui_on:
 	vdp_sreg
 
 
-	lda #%00000011	
+	lda #%00000011
 	jsr vdp_gfx7_blank
 	vnops
 
@@ -90,31 +99,27 @@ gfxui_on:
 	bne @loop
 
 
-;	copypointer  $fffe, irqsafe
-;	SetVector  blend_isr, $fffe
+	copypointer  $fffe, irqsafe
+	SetVector  blend_isr, $fffe
 
 @end:
-	; lda #%00000000	; reset vbank - TODO FIXME, kernel has to make sure that correct video adress is set for all vram operations, use V9958 flag
-	; ldy #v_reg14
-	; vdp_sreg
+	vdp_reg 14,0
 
     cli
     rts
 
 gfxui_off:
-;    sei
+   sei
 
-;    copypointer  irqsafe, $fffe
-;    cli
-    rts
+   copypointer  irqsafe, $fffe
+   cli
+   rts
 
 m_vdp_nopslide
 
-;irqsafe: .res 2, 0
+irqsafe: .res 2, 0
 
 .align 256,0
-rgbdata:
-; .incbin "531740.raw"
 
 sintable:
 .byte 105, 110, 114, 119, 124, 128, 132, 136
