@@ -723,9 +723,6 @@ __fat_mark_cluster:
 		sta (read_blkptr), y
 		iny
       and #$0f
-;		cmp #0
-;		beq @l0
-;		lda #$0f
 @l0:	sta (read_blkptr), y
 		rts
 
