@@ -22,7 +22,7 @@ text_mode_40 = 1
 .import fat_mkdir, fat_chdir, fat_rmdir
 .import fat_unlink
 .import fat_write
-.import fat_read_block, fat_get_root_and_pwd
+.import fat_read_blocks, fat_get_root_and_pwd
 .import fat_getfilesize
 .import sd_read_block, sd_write_block
 
@@ -297,8 +297,8 @@ krn_close_all: 			    jmp fat_close_all
 .export krn_read
 krn_read:    				jmp fat_read
 
-.export krn_read_block
-krn_read_block:    			jmp fat_read_block
+.export krn_read_blocks
+krn_read_blocks:    			jmp fat_read_blocks
 
 .export krn_find_first
 krn_find_first:			    jmp fat_find_first

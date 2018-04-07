@@ -20,7 +20,8 @@
 
 .export fat_mount
 .export fat_open, fat_chdir, fat_unlink
-.export fat_mkdir, fat_rmdir, fat_read_block
+.export fat_mkdir, fat_rmdir
+.export fat_read_block, fat_read_blocks ; TODO FIXME align exec
 .export fat_read, fat_find_first, fat_find_next, fat_write
 .export fat_get_root_and_pwd
 
@@ -34,8 +35,8 @@
 		;	X	- offset into fd_area
 		;	read_blkptr
 		;out:
-		;   Z - Z=1 on success (A=0), Z=0 and A=error code otherwise
-fat_read_block:
+		;	Z=1 on success (A=0), Z=0 and A=error code otherwise
+fat_read_blocks:
 		jsr fat_isOpen
 		beq @l_err_exit
 
@@ -43,7 +44,26 @@ fat_read_block:
 		
 		jsr calc_lba_addr
 		
-		jmp __fat_read_block								; and read the block with the dir entry
+		jmp __fat_read_block
+@l_err_exit:
+		lda #EINVAL
+		rts
+		
+		;	@deprecated - use fat_read_blocks instead, just for backward compatibility
+		;
+		; read one block, TODO - update seek position within FD
+		;in:
+		;	X	- offset into fd_area
+		;	read_blkptr
+		;out:
+		;	Z=1 on success (A=0), Z=0 and A=error code otherwise
+fat_read_block:
+		jsr fat_isOpen
+		beq @l_err_exit
+
+		jsr calc_blocks
+		jsr calc_lba_addr
+		jmp sd_read_block
 @l_err_exit:
 		lda #EINVAL
 		rts
@@ -51,7 +71,7 @@ fat_read_block:
 		;in:
 		;	X - offset into fd_area
 		;out:
-		;   Z - Z=1 on success (A=0), Z=0 and A=error code otherwise
+		;	Z=1 on success (A=0), Z=0 and A=error code otherwise
 fat_read:
 		jsr fat_isOpen
 		beq @l_err_exit
@@ -723,7 +743,7 @@ __fat_mark_cluster:
 		sta (read_blkptr), y
 		iny
       and #$0f
-@l0:	sta (read_blkptr), y
+      sta (read_blkptr), y
 		rts
 
 		; in:

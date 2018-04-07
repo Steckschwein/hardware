@@ -55,7 +55,7 @@
 		lda		#>blockbuffer
 		sta		read_blkptr+1
 		sta		ptr4+1
-		jsr		krn_read_block	; read single block, x holds the fd
+		jsr		krn_read_blocks	; read single block, x holds the fd
 		
 		beq		@_r1
         jmp     __directerrno   ; Sets _errno, clears _oserror, returns -1

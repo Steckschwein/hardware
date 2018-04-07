@@ -23,7 +23,7 @@ execv:
 
 		SetVector sd_blktarget, read_blkptr
 		phx ; save x register for fat_close
-        jsr	fat_read_block
+		jsr	fat_read_block
 		plx
 		jsr fat_close			; close after read to free fd, regardless of error
 
