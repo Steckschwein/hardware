@@ -32,6 +32,7 @@
 		;	read one block, TODO - update seek position within FD
 		;in:
 		;	X	- offset into fd_area
+		;	read_blkptr
 		;out:
 		;   Z - Z=1 on success (A=0), Z=0 and A=error code otherwise
 fat_read_block:
@@ -39,7 +40,9 @@ fat_read_block:
 		beq @l_err_exit
 
 		jsr calc_blocks
+		
 		jsr calc_lba_addr
+		
 		jmp __fat_read_block								; and read the block with the dir entry
 @l_err_exit:
 		lda #EINVAL
@@ -129,10 +132,10 @@ fat_write:
 __fat_read_direntry:
 		jsr __fat_set_lba_from_fd_dirlba					; setup lba address from fd
 		SetVector block_data, read_blkptr
-		jsr __fat_read_block								; and read the block with the dir entry
+		jsr __fat_read_block								   ; and read the block with the dir entry
 		bne @l_exit
 
-		lda fd_area + F32_fd::DirEntryPos , x				; setup dirptr
+		lda fd_area + F32_fd::DirEntryPos , x			; setup dirptr
 @set_dirptr_from_entry_nr:
 		stz dirptr
 
@@ -198,17 +201,17 @@ __fat_set_direntry_filesize:
 		;	dirptr
 __fat_set_direntry_cluster:
 		ldy #F32DirEntry::FstClusHI+1
-		lda fd_area + F32_fd::StartCluster+3 , x
+		lda fd_area + F32_fd::CurrentCluster+3 , x
 		sta (dirptr), y
 		dey
-		lda fd_area + F32_fd::StartCluster+2 , x
+		lda fd_area + F32_fd::CurrentCluster+2 , x
 		sta (dirptr), y
 
 		ldy #F32DirEntry::FstClusLO+1
-		lda fd_area + F32_fd::StartCluster+1 , x
+		lda fd_area + F32_fd::CurrentCluster+1 , x
 		sta (dirptr), y
 		dey
-		lda fd_area + F32_fd::StartCluster+0 , x
+		lda fd_area + F32_fd::CurrentCluster+0 , x
 		sta (dirptr), y
 		rts
 
@@ -234,7 +237,7 @@ fat_get_root_and_pwd:
 		ldx #FD_INDEX_TEMP_DIR							; if root, exit to inverse the path string
 		jsr __fat_isroot
 		beq @l_inverse
-		m_memcpy fd_area+FD_INDEX_TEMP_DIR+F32_fd::StartCluster, fat_tmp_dw, 4	; save the cluster from the fd of the "current" dir which is stored in FD_INDEX_TEMP_DIR (see clone above)
+		m_memcpy fd_area+FD_INDEX_TEMP_DIR+F32_fd::CurrentCluster, fat_tmp_dw, 4	; save the cluster from the fd of the "current" dir which is stored in FD_INDEX_TEMP_DIR (see clone above)
 		lda #<l_dot_dot
 		ldx #>l_dot_dot
 		ldy #FD_INDEX_TEMP_DIR							; call opendir function with "..", on success the fd (FD_INDEX_TEMP_DIR) is updated now and we reached the parent directory
@@ -391,7 +394,7 @@ __fat_update_fsinfo_dec:
 __fat_read_fsinfo:
 		m_memcpy fat_fsinfo_lba, lba_addr, 4
 		SetVector block_fat, read_blkptr
-		jmp	__fat_read_block
+		jmp __fat_read_block
 __fat_update_fsinfo_exit:
 		rts
 
@@ -424,14 +427,14 @@ __fat_write_newdir_entry:
 		sta block_data+1*.sizeof(F32DirEntry)+F32DirEntry::Name+1
 
 		ldy #FD_INDEX_TEMP_DIR													; due to fat_opendir/fat_open within fat_mkdir the fd of temp dir (FD_INDEX_TEMP_DIR) represents the last visited directory which must be the parent of this one ("..") - FTW!
-		debug32 "cd_cln", fd_area + FD_INDEX_TEMP_DIR + F32_fd::StartCluster
-		lda fd_area+F32_fd::StartCluster+0,y
+		debug32 "cd_cln", fd_area + FD_INDEX_TEMP_DIR + F32_fd::CurrentCluster
+		lda fd_area+F32_fd::CurrentCluster+0,y
 		sta block_data+1*.sizeof(F32DirEntry)+F32DirEntry::FstClusLO+0
-		lda fd_area+F32_fd::StartCluster+1,y
+		lda fd_area+F32_fd::CurrentCluster+1,y
 		sta block_data+1*.sizeof(F32DirEntry)+F32DirEntry::FstClusLO+1
-		lda fd_area+F32_fd::StartCluster+2,y
+		lda fd_area+F32_fd::CurrentCluster+2,y
 		sta block_data+1*.sizeof(F32DirEntry)+F32DirEntry::FstClusHI+0
-		lda fd_area+F32_fd::StartCluster+3,y
+		lda fd_area+F32_fd::CurrentCluster+3,y
 		sta block_data+1*.sizeof(F32DirEntry)+F32DirEntry::FstClusHI+1
 
 		ldy #$80
@@ -462,10 +465,12 @@ __fat_write_newdir_entry:
 @l_exit:
 		rts
 
-		; internal sd read block, read_blkptr and lba_addr already calculated
+		; internal sd read block
+		; requires: read_blkptr and lba_addr already calculated
 __fat_read_block:
 		phx
 		jsr sd_read_block
+  		;dec read_blkptr+1		; TODO FIXME clarification with TW - sd_read_block increments block ptr highbyte - sideeffect!
 		plx
 		cmp #0
 		rts
@@ -532,7 +537,7 @@ __fat_write_dir_entry:
 ;		lda lba_addr+0
 ;		adc #02
 ;		sbc volumeID+VolumeID::BPB + BPB::SecPerClus		
-;		lda fd_area+F32_fd::StartCluster+0
+;		lda fd_area+F32_fd::CurrentCluster+0
 ;		sbc lba_addr+0		
 		jsr inc_lba_address												; increment lba address to write to next block
 		
@@ -671,7 +676,7 @@ __fat_read_cluster_block_and_select:
 		bne	@l_clnr_page
 		lda volumeID + VolumeID::EBPB + EBPB::RootClus+0
 		bra @l_clnr_page
-		lda fd_area+F32_fd::StartCluster+0,x 	; offset within block_fat, clnr<<2 (* 4)
+		lda fd_area+F32_fd::CurrentCluster+0,x 	; offset within block_fat, clnr<<2 (* 4)
 @l_clnr_page:
 		bit #$40								; clnr within 2nd page of the 512 byte block ?
 		bne @l_clnr
@@ -689,16 +694,16 @@ __fat_read_cluster_block_and_select:
 
 		; free cluster and maintain the fsinfo block
 		; in:
-		;	X - the file descriptor into fd_area (F32_fd::StartCluster)
+		;	X - the file descriptor into fd_area (F32_fd::CurrentCluster)
 		; out:
 		;	Z=1 on success, Z=0 otherwise and A=error code
 __fat_free_cluster:
 		jsr __fat_read_cluster_block_and_select
 		bne @l_exit								; read error...
-		bcc @l_exit								; TODO cluster chain during delete not supported yet - therefore EOC (C=1) expected here !!!
+		bcc @l_exit								; TODO FIXME cluster chain during deletion not supported yet - therefore EOC (C=1) expected here !!!
 		debug "f_fc"
-		jsr __fat_mark_cluster					; mark cluster as free
-		jsr __fat_write_fat_blocks				; write back fat blocks
+		jsr __fat_mark_cluster				; mark cluster as free (A=0)
+		jsr __fat_write_fat_blocks			; write back fat blocks
 		bne @l_exit
 		jmp __fat_update_fsinfo_inc
 @l_exit:
@@ -717,9 +722,10 @@ __fat_mark_cluster:
 		iny
 		sta (read_blkptr), y
 		iny
-		cmp #0
-		beq @l0
-		lda #$0f
+      and #$0f
+;		cmp #0
+;		beq @l0
+;		lda #$0f
 @l0:	sta (read_blkptr), y
 		rts
 
@@ -729,7 +735,7 @@ __fat_mark_cluster:
 		;	Z=1 on success
 		;		Y=offset in block_fat of found cluster
 		;		lba_addr with fat block where the found cluster resides
-		;		the found cluster is stored within the given file descriptor (fd_area+F32_fd::StartCluster,x)
+		;		the found cluster is stored within the given file descriptor (fd_area+F32_fd::CurrentCluster,x)
 		;	Z=0 on error, A=error code
 __fat_find_free_cluster:
 		;TODO improve, use a previously saved lba_addr and/or found cluster number
@@ -743,9 +749,9 @@ __fat_find_free_cluster:
 		SetVector	block_fat, read_blkptr
 @next_block:
 		debug32 "f_lba", lba_addr
-		jsr	__fat_read_block	; read fat block
+		jsr __fat_read_block	; read fat block
 		bne @exit
-		dec read_blkptr+1		; TODO FIXME clarification with TW - sd_read_block increments block ptr highbyte
+		dec read_blkptr+1		; TODO FIXME clarification with TW - sd_read_block increments block ptr highbyte - sideeffect!
 
 		ldy	#0
 @l1:	lda	block_fat+0,y		; 1st page find cluster entry with 00 00 00 00
@@ -771,7 +777,7 @@ __fat_find_free_cluster:
 		cmp	fat2_lba_begin+0
 		bne	@next_block			;
 		lda #ENOSPC				; end reached, answer ENOSPC () - "No space left on device"
-@exit:	debug32 "free_cl", fd_area+(2*.sizeof(F32_fd)) + F32_fd::StartCluster ; almost the 3rd entry
+@exit:	debug32 "free_cl", fd_area+(2*.sizeof(F32_fd)) + F32_fd::CurrentCluster ; almost the 3rd entry
 		rts
 @l_found_hb: ; found in "high" block (2nd page of the sd_blocksize)
 		lda #>(block_fat+$100)	; set read_blkptr to begin 2nd page of fat_buffer - @see __fat_mark_free_cluster
@@ -779,13 +785,13 @@ __fat_find_free_cluster:
 		lda #$40				; adjust clnr with +$40 (256 / 4 byte/clnr) clusters since it was found in 2nd page
 @l_found_lb:					; A=0 here, if called from above
 		debug32 "f_ffc_lba", lba_addr
-		sta fd_area+F32_fd::StartCluster+0, x
+		sta fd_area+F32_fd::CurrentCluster+0, x
 		tya
 		lsr						; offset Y>>2 (div 4, 32 bit clnr)
 		lsr
-		adc fd_area+F32_fd::StartCluster+0, x	; C=0 always here, y is multiple of 4 and 2 lsr
-		sta fd_area+F32_fd::StartCluster+0, x	; safe clnr
-		debug32 "fc_tmp2", fd_area+F32_fd::StartCluster+.sizeof(F32_fd)*3 ;(new fd is almost the 3rd entry)
+		adc fd_area+F32_fd::CurrentCluster+0, x	; C=0 always here, y is multiple of 4 and 2 lsr
+		sta fd_area+F32_fd::CurrentCluster+0, x	; safe clnr
+		debug32 "fc_tmp2", fd_area+F32_fd::CurrentCluster+.sizeof(F32_fd)*3 ;(new fd is almost the 3rd entry)
 
 		;m_memcpy lba_addr, safe_lba TODO FIXME fat lba address, reuse them at next search
 		; to calc them we have to clnr = (block number * 512) / 4 + (Y / 4) => (lba_addr - fat_lba_begin) << 7 + (Y>>2)
@@ -797,16 +803,16 @@ __fat_find_free_cluster:
 		lda lba_addr+1
 		sbc fat_lba_begin+1		; now we have 16bit blocknumber
 		lsr						; clnr = blocks<<7
-		sta fd_area+F32_fd::StartCluster+2, x
+		sta fd_area+F32_fd::CurrentCluster+2, x
 		lda krn_tmp				; restore A
 		ror
-		sta fd_area+F32_fd::StartCluster+1, x
+		sta fd_area+F32_fd::CurrentCluster+1, x
 		lda #0
-		ror						; clnr += offset within block - already saved in F32_fd::StartCluster+0, x s.above
-		adc fd_area+F32_fd::StartCluster+0, x
-		sta fd_area+F32_fd::StartCluster+0, x
+		ror						; clnr += offset within block - already saved in F32_fd::CurrentCluster+0, x s.above
+		adc fd_area+F32_fd::CurrentCluster+0, x
+		sta fd_area+F32_fd::CurrentCluster+0, x
 		lda #0					; exit found
-		sta fd_area+F32_fd::StartCluster+3, x
+		sta fd_area+F32_fd::CurrentCluster+3, x
 		bra @exit
 
         ; in:
@@ -955,17 +961,17 @@ fat_open_found:						; found...
 		;save 32 bit cluster number from dir entry
 		ldy #F32DirEntry::FstClusHI +1
 		lda (dirptr),y
-		sta fd_area + F32_fd::StartCluster + 3, x
+		sta fd_area + F32_fd::CurrentCluster + 3, x
 		dey
 		lda (dirptr),y
-		sta fd_area + F32_fd::StartCluster + 2, x
+		sta fd_area + F32_fd::CurrentCluster + 2, x
 
 		ldy #F32DirEntry::FstClusLO +1
 		lda (dirptr),y
-		sta fd_area + F32_fd::StartCluster + 1, x
+		sta fd_area + F32_fd::CurrentCluster + 1, x
 		dey
 		lda (dirptr),y
-		sta fd_area + F32_fd::StartCluster + 0, x
+		sta fd_area + F32_fd::CurrentCluster + 0, x
 
 		ldy #F32DirEntry::FileSize + 3
 		lda (dirptr),y
@@ -1002,7 +1008,7 @@ inc_blkptr:
 		inc read_blkptr+1
 @l:
 		rts
-
+      
 fat_check_signature:
 		lda #$55
 		cmp sd_blktarget + BootSector::Signature
@@ -1049,7 +1055,7 @@ __prepare_calc_lba_addr:
 		rts
 @l_scl:
 		.repeat 4,i
-			lda fd_area + F32_fd::StartCluster + i,x
+			lda fd_area + F32_fd::CurrentCluster + i,x
 			sta lba_addr + i
 		.endrepeat
 		rts
@@ -1139,10 +1145,10 @@ __calc_fat_lba_addr:
 		;	Z=1 if it is the root cluster, Z=0 otherwise
 __fat_isroot:
 		;TODO improve performance, do the check only if type is directory
-		lda fd_area+F32_fd::StartCluster+3,x				; check whether start cluster is the root dir cluster nr (0x00000000) as initial set by fat_alloc_fd
-		ora fd_area+F32_fd::StartCluster+2,x
-		ora fd_area+F32_fd::StartCluster+1,x
-		ora fd_area+F32_fd::StartCluster+0,x
+		lda fd_area+F32_fd::CurrentCluster+3,x				; check whether start cluster is the root dir cluster nr (0x00000000) as initial set by fat_alloc_fd
+		ora fd_area+F32_fd::CurrentCluster+2,x
+		ora fd_area+F32_fd::CurrentCluster+1,x
+		ora fd_area+F32_fd::CurrentCluster+0,x
 		rts
 
 		; check whether the EOC (end of cluster chain) cluster number is reached
@@ -1177,23 +1183,23 @@ __fat_is_cln_eoc:
 		; out:
 		;
 __fat_next_cln:
-		debug32 "f_nc0", fd_area+FD_INDEX_TEMP_DIR+F32_fd::StartCluster
+		debug32 "f_nc0", fd_area+FD_INDEX_TEMP_DIR+F32_fd::CurrentCluster
 		
 		lda	(read_blkptr), y
-		sta fd_area + F32_fd::StartCluster+0, x
+		sta fd_area + F32_fd::CurrentCluster+0, x
 		iny
 		lda	(read_blkptr), y
-		sta fd_area + F32_fd::StartCluster+1, x
+		sta fd_area + F32_fd::CurrentCluster+1, x
 		iny
 		lda	(read_blkptr), y
-		sta fd_area + F32_fd::StartCluster+2, x
+		sta fd_area + F32_fd::CurrentCluster+2, x
 		iny
 		lda	(read_blkptr), y
-		sta fd_area + F32_fd::StartCluster+3, x
+		sta fd_area + F32_fd::CurrentCluster+3, x
 		
 		lda #EOK
 @l_exit:
-		debug32 "f_nc1", fd_area+FD_INDEX_TEMP_DIR+F32_fd::StartCluster
+		debug32 "f_nc1", fd_area+FD_INDEX_TEMP_DIR+F32_fd::CurrentCluster
 		rts
 
 
@@ -1377,7 +1383,7 @@ __fat_clone_fd:
 		; out:
 		;	Z=0 if file is open, Z=1 otherwise
 fat_isOpen:
-		lda fd_area + F32_fd::StartCluster +3, x
+		lda fd_area + F32_fd::CurrentCluster +3, x
 		cmp #$ff		;#$ff means not open
 		rts
 
@@ -1389,7 +1395,7 @@ fat_init_fdarea:
 		ldx #$00
 fat_init_fdarea_with_x:
 		lda #$ff
-@l1:	sta fd_area + F32_fd::StartCluster + 3 , x
+@l1:	sta fd_area + F32_fd::CurrentCluster + 3 , x
 		inx
 		cpx #(FD_Entry_Size*FD_Entries_Max)
 		bne @l1
@@ -1448,7 +1454,7 @@ __fat_set_fd_direntry:
 		;   Z - Z=1 on success (A=0), Z=0 and A=error code otherwise
 fat_alloc_fd:
 		ldx #(2*FD_Entry_Size)							; skip 2 entries, they're reserverd for current and temp dir
-@l1:	lda fd_area + F32_fd::StartCluster +3, x
+@l1:	lda fd_area + F32_fd::CurrentCluster +3, x
 
 		cmp #$ff	;#$ff means unused, return current x as offset
 		beq __fat_alloc_fd
@@ -1467,10 +1473,10 @@ fat_alloc_fd:
 fat_open_rootdir:
 		ldx #FD_INDEX_TEMP_DIR					; set temp directory to cluster number 0 - Note: the RootClus offset is compensated within calc_lba_addr
 __fat_alloc_fd:
-		stz fd_area+F32_fd::StartCluster+3,x	; init start cluster with root dir cluster which is 0 - @see Note in calc_lba_addr
-		stz fd_area+F32_fd::StartCluster+2,x
-		stz fd_area+F32_fd::StartCluster+1,x
-		stz fd_area+F32_fd::StartCluster+0,x
+		stz fd_area+F32_fd::CurrentCluster+3,x	; init start cluster with root dir cluster which is 0 - @see Note in calc_lba_addr
+		stz fd_area+F32_fd::CurrentCluster+2,x
+		stz fd_area+F32_fd::CurrentCluster+1,x
+		stz fd_area+F32_fd::CurrentCluster+0,x
 		stz fd_area+F32_fd::FileSize+3,x		; init file size with 0, it's maintained during open
 		stz fd_area+F32_fd::FileSize+2,x
 		stz fd_area+F32_fd::FileSize+1,x
@@ -1483,7 +1489,7 @@ __fat_alloc_fd:
 fat_close:
 		pha
 		lda #$ff    ; otherwise mark as closed
-		sta fd_area + F32_fd::StartCluster +3, x
+		sta fd_area + F32_fd::CurrentCluster +3, x
 		pla
 @l1:	rts
 
@@ -1511,7 +1517,7 @@ fat_getfilesize:
 fat_find_first:
 		txa										; use the given fd as source (Y)
 		tay
-		ldx #FD_INDEX_TEMP_DIR					; we use the temp dir with a copy of given fd, cause F32_fd::StartCluster is adjusted if end of cluster is reached
+		ldx #FD_INDEX_TEMP_DIR					; we use the temp dir with a copy of given fd, cause F32_fd::CurrentCluster is adjusted if end of cluster is reached
 		jsr __fat_clone_fd
 		; in:
 		;   X - file descriptor (index into fd_area) of the directory
@@ -1530,10 +1536,10 @@ __fat_find_first:
 ff_l3:	SetVector block_data, dirptr			; dirptr to begin of target buffer
 		jsr __fat_read_block
 		bne ff_exit
-		dec read_blkptr+1						; set read_blkptr to origin address
+		dec read_blkptr+1						   ; set read_blkptr to origin address
 ff_l4:
 		lda (dirptr)
-		beq ff_exit								; first byte of dir entry is $00 (end of directory)
+		beq ff_exit								   ; first byte of dir entry is $00 (end of directory)
 @l5:
 		ldy #F32DirEntry::Attr					; else check if long filename entry
 		lda (dirptr),y 							; we are only going to filter those here (or maybe not?)
