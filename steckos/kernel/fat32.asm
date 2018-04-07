@@ -997,17 +997,6 @@ end_open_err:
 		ply
 		cmp	#0			;restore z flag
 		rts
-
-inc_blkptr:
-		; Increment blkptr by 32 bytes, jump to next dir entry
-		clc
-		lda read_blkptr
-		adc #32
-		sta read_blkptr
-		bcc @l
-		inc read_blkptr+1
-@l:
-		rts
       
 fat_check_signature:
 		lda #$55
