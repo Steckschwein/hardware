@@ -11,34 +11,18 @@
 .export vdp_gfx7_on
 .export vdp_gfx7_blank
 .export vdp_gfx7_set_pixel
-.export vdp_gfx7_set_pixel_n
+.export vdp_gfx7_set_pixel_direct
 
 .code
 ;
 ;	gfx 7 - each pixel can be addressed - e.g. for image
 ;
 vdp_gfx7_on:
-			jsr vdp_fill_name_table
 			lda #<vdp_init_bytes_gfx7
 			sta ptr1
 			lda #>vdp_init_bytes_gfx7
 			sta ptr1+1
 			jmp	vdp_init_reg
-
-vdp_fill_name_table:
-			;set 768 different patterns --> name table
-			lda	#<ADDRESS_GFX7_SCREEN
-			ldy	#WRITE_ADDRESS+ >ADDRESS_GFX7_SCREEN
-			vdp_sreg
-			ldy	#$03
-			ldx	#$00
-@0:			vnops
-			stx	a_vram  ;
-			inx         ;2
-			bne	@0       ;3
-			dey
-			bne	@0
-			rts
 
 vdp_init_bytes_gfx7:
 			.byte v_reg0_m5|v_reg0_m4|v_reg0_m3									; reg0 mode bits
@@ -106,7 +90,7 @@ colour:
 ;	Y - y coordinate [0..bf]
 ;	A - color GRB [0..ff] as 332
 ; 	VRAM ADDRESS = X + 256*Y
-vdp_gfx7_set_pixel_n:
+vdp_gfx7_set_pixel:
          pha
          stx a_vreg                 ; A7-A0 vram address low byte
          tya
@@ -136,7 +120,7 @@ vdp_gfx7_set_pixel_n:
 ;	A - color [0..f]
 ;
 ; 	VRAM ADDRESS = 8(INT(X DIV 8)) + 256(INT(Y DIV 8)) + (Y MOD 8)
-vdp_gfx7_set_pixel:
+vdp_gfx7_set_pixel_direct:
 		pha
 		pha
 
