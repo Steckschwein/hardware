@@ -10,6 +10,10 @@
 .import vdp_gfx2_on
 .import vdp_gfx2_set_pixel
 
+.import vdp_gfx7_on
+.import vdp_gfx7_blank
+.import vdp_gfx7_set_pixel
+
 .import	vdp_bgcolor
 
 .export GFX_2_On
@@ -59,6 +63,16 @@ GFX_2_On:
 		cli
 		rts
 
+GFX_7_On:
+		sei
+		jsr krn_textui_disable			;disable textui
+		jsr krn_display_off
+		lda #%00000000 ; black 
+;		jsr vdp_gfx7_blank
+;		jsr vdp_gfx7_on
+		cli
+		rts
+		
 GFX_2_Plot:
 		jsr GFX_Plot_Prepare
 		jmp vdp_gfx2_set_pixel
