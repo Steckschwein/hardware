@@ -16,7 +16,7 @@
 .include "fcntl.inc"
 .include "appstart.inc"
 
-appstart $b400
+appstart $b200
 
 .include "basic.asm"
 .include "ext/gfx.asm"		    ;extensions

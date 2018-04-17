@@ -1,6 +1,8 @@
 CPU=65c02
 CA65FLAGS=--include-dir ../asminc --include-dir ../kernel
+LDFLAGS=--config ../steckos-c-app.cfg ../lib/steckschwein-kernel.lib
 LIBS=../lib/steckschwein-kernel.lib
+TOOLLIB=../tools/lib/toollib.a
 
 all: mainarg.prg coniotst.prg time-test.prg 
 
@@ -17,7 +19,7 @@ clean:
 	ca65 --cpu $(CPU) $(CA65FLAGS) $(@:.o=.asm)
 	
 %.prg: %.o ../lib/steckschwein-kernel.lib
-	ld65 -C ../steckos-c-app.cfg $< $(LIBS) -o $@
+	ld65 $< $(LDFLAGS) $(TOOLLIB) -o $@
 
 ls.prg: ls.o ls_entry_short.o
 	cl65 $(CA65FLAGS) --target none --config ../kernel/steckos.cfg ls.o ls_entry_short.o -o ls.prg

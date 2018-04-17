@@ -18,6 +18,7 @@
 
 .export GFX_2_On
 .export GFX_MC_On
+.export GFX_7_On
 .export GFX_MC_Plot
 .export GFX_2_Plot
 .export GFX_Off
@@ -67,9 +68,9 @@ GFX_7_On:
 		sei
 		jsr krn_textui_disable			;disable textui
 		jsr krn_display_off
+		jsr vdp_gfx7_on
 		lda #%00000000 ; black 
-;		jsr vdp_gfx7_blank
-;		jsr vdp_gfx7_on
+		jsr vdp_gfx7_blank
 		cli
 		rts
 		

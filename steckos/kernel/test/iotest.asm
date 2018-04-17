@@ -8,6 +8,8 @@
 .include "appstart.inc"
 appstart $1000
 
+.import hexout
+
 main:
 		lda (paramptr)	; empty string?
 		bne @l_cp
@@ -66,7 +68,7 @@ test_result:
 		jsr krn_primm
 		.asciiz " r="
 		pla
-		jsr krn_hexout
+		jsr hexout
 		
 		cmp #0
 		bne @fail
@@ -98,7 +100,7 @@ errmsg:
 		jsr krn_primm
 		.asciiz "Error: "
 		pla
-		jsr krn_hexout
+		jsr hexout
 		jmp exit
 file_notexist:
 		.asciiz "notexist.dat"
