@@ -61,6 +61,9 @@ gfxui_on:
 	vdp_sreg
 	vnops
 
+	vdp_reg 9, v_reg9_ln
+	;|v_reg9_il
+
 	jsr vdp_gfx7_on			    ;enable gfx7 mode
 
 	lda #<.HIWORD(ADDRESS_GFX7_SCREEN<<2)
@@ -72,7 +75,7 @@ gfxui_on:
 	vdp_sreg
 
 	SetVector	rgbdata, ptr1
-	ldx #171
+	ldx #212
 	ldy #0
 @l0:
 	vnops
@@ -84,14 +87,14 @@ gfxui_on:
 	dex
 	bne @l0
 
-	ldx #192-171
-@lerase:
-	vnops
-	stz a_vram
-	iny
-	bne @lerase
-	dex
-	bne @lerase
+; 	ldx #192-171
+; @lerase:
+; 	vnops
+; 	stz a_vram
+; 	iny
+; 	bne @lerase
+; 	dex
+; 	bne @lerase
 
     copypointer  $fffe, irqsafe
     SetVector  blend_isr, $fffe
@@ -116,7 +119,7 @@ irqsafe: .res 2, 0
 
 .align 256,0
 rgbdata:
-.incbin "felix.ppm.raw"
+.incbin "DSC_0004.raw"
 
 
 .segment "STARTUP"
