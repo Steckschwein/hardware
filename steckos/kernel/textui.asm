@@ -202,7 +202,7 @@ textui_scroll_up:
 @l1:	lda	screen_buffer+$000+COLS,x
 		sta	screen_buffer+$000,x
 		inx
-		bne	@l1
+		bne	@l1		
 @l2:	lda	screen_buffer+$100+COLS,x
 		sta	screen_buffer+$100,x
 		inx
@@ -309,10 +309,9 @@ textui_strout:
 .ifdef TEXTUI_PRIMM
 textui_primm:
 		pla						; Get the low part of "return" address
-		plx						; Get the high part of "return" address
-
 		sta     krn_ptr3
-		stx     krn_ptr3+1
+		pla						; Get the high part of "return" address
+		sta     krn_ptr3+1
 
 		inc screen_write_lock
 		; Note: actually we're pointing one short
