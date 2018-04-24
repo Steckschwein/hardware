@@ -23,7 +23,7 @@ main:
 		ldy #O_CREAT
     	jsr krn_open
 		jsr test_result
-		stx fd1
+		bne exit
 		jsr krn_close
 
 		jsr krn_primm
@@ -33,7 +33,7 @@ main:
 		ldy #O_RDONLY
     	jsr krn_open
 		jsr test_result
-		stx fd1
+		bne exit
 		jsr krn_close
 		
 		jsr krn_primm
@@ -43,7 +43,7 @@ main:
 		ldy #O_WRONLY
     	jsr krn_open
 		jsr test_result
-		stx fd1
+		bne exit
 		
 		lda #<testdata
 		sta write_blkptr+0
@@ -54,16 +54,22 @@ main:
 		stz fd_area + F32_fd::FileSize + 1,x
 		stz fd_area + F32_fd::FileSize + 2,x
 		stz fd_area + F32_fd::FileSize + 3,x
-		jsr krn_write
-		jsr krn_close
-		jsr test_result
 		
-		jsr test_not_exist		
+		jsr krn_write
 		jsr test_result
+		bne close_exit
+		jsr krn_close
+		
+;		jsr test_not_exist		
+;		jsr test_result
+		bra exit
+close_exit:
+		jsr krn_close
 exit:
 		jmp (retvec)
 
 test_result:
+		pha
 		pha
 		jsr krn_primm
 		.asciiz " r="
@@ -74,11 +80,14 @@ test_result:
 		bne @fail
 		jsr krn_primm
 		.byte " .",$0a,0
-		rts
+		bra	@test_result_exit
 @fail:
 		jsr krn_primm
 		.byte " E",$0a,0
-		rts 
+@test_result_exit:
+		pla
+		cmp #0
+		rts
 		
 test_not_exist:
 		jsr krn_primm
@@ -90,10 +99,10 @@ test_not_exist:
 		beq @fail	; anti test, expect open failed
 		lda #0
 		rts
+		
 @fail:	lda #$ff
 		rts
 		
-
 errmsg:
 		;TODO FIXME maybe use oserror() from cc65 lib
 		pha

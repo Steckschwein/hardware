@@ -58,7 +58,7 @@ strout:
 primm = textui_primm
 .else
 primm:
-		pla						; Get the low part of "return" addres
+		pla						; Get the low part of "return" address
                                 ; (data start address)
 		sta     krn_ptr3
 		pla

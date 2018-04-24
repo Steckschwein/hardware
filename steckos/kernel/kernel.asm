@@ -67,7 +67,7 @@ kern_init:
 	jsr fat_mount
 	beq @l_init
 	pha
-	jsr krn_primm
+	jsr primm
 	.asciiz "mount error ("
 	pla
 
@@ -75,7 +75,7 @@ kern_init:
 	ora #'0'
 	jsr krn_chrout
 
-	jsr krn_primm
+	jsr primm
 	.byte ")",$0a,0
 	bra do_upload
 

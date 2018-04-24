@@ -37,8 +37,8 @@ _debugout_enter:
 		sta 	dbg_savept+1
 
 		stz dbg_bytes
-		jsr krn_primm
-		.asciiz "AXYP "
+;		jsr krn_primm
+;		.asciiz "AXYP "
 		lda dbg_acc
 		jsr _hexout
 		lda dbg_xreg

@@ -91,6 +91,7 @@ fat_read:
 		; out:
 		;   Z - Z=1 on success (A=0), Z=0 and A=error code otherwise
 fat_write:
+		debug "f_w_s"
 		stx fat_tmp_fd										; save fd
 
 		jsr fat_isOpen
@@ -110,7 +111,7 @@ fat_write:
 		jsr __fat_reserve_cluster							; otherwise start cluster is root, we try to find a free cluster, fat_tmp_fd has to be set
 		bne @l_exit
 		restoreptr write_blkptr								; restore write ptr
-		debug "f_w"
+		debug "f_w_1"
 		ldx fat_tmp_fd										; restore fd, go on with writing data
 @l_write:
 		jsr calc_blocks
@@ -141,7 +142,7 @@ fat_write:
 
 		jsr __fat_write_block_data							; lba_addr is already set from read, see above
 @l_exit:
-		debug16 "fwrite", dirptr
+		debug16 "f_w_e", dirptr
 		rts
 
 		; read the block with the directory entry of the given file descriptor, dirptr is adjusted accordingly
@@ -490,7 +491,7 @@ __fat_write_newdir_entry:
 __fat_read_block:
 		phx
 		jsr sd_read_block
-  		;dec read_blkptr+1		; TODO FIXME clarification with TW - sd_read_block increments block ptr highbyte - sideeffect!
+  		dec read_blkptr+1		; TODO FIXME clarification with TW - sd_read_block increments block ptr highbyte - sideeffect!
 		plx
 		cmp #0
 		rts
@@ -768,7 +769,6 @@ __fat_find_free_cluster:
 		debug32 "f_lba", lba_addr
 		jsr __fat_read_block	; read fat block
 		bne @exit
-		dec read_blkptr+1		; TODO FIXME clarification with TW - sd_read_block increments block ptr highbyte - sideeffect!
 
 		ldy	#0
 @l1:	lda	block_fat+0,y		; 1st page find cluster entry with 00 00 00 00
@@ -865,8 +865,8 @@ fat_open:
 		copypointer dirptr, krn_ptr2
 		jsr string_fat_name							; build fat name upon input string (filenameptr)
 		bne @l_exit
-		jsr fat_alloc_fd							; alloc a fd for the new file we want to create to make sure we get one
-		bne @l_exit									; cause we want to avoid an error in between the different block writes
+		jsr fat_alloc_fd							; alloc a fd for the new file we want to create to make sure we get one before
+		bne @l_exit									; we do any sd block writes which may result in various errors
 		jsr __fat_set_fd_direntry					; update dir lba addr and dir entry number within fd
 
 		lda #DIR_Attr_Mask_Archive				    ; create as regular file with archive bit set
@@ -1493,11 +1493,12 @@ __fat_alloc_fd:
         ; in:
         ;   X - offset into fd_area
 fat_close:
+		debug "f_cl_s"
 		pha
 		lda #$ff    ; otherwise mark as closed
 		sta fd_area + F32_fd::CurrentCluster +3, x
 		pla
-@l1:	rts
+		rts
 
 
 		; get size of file in fd
@@ -1542,7 +1543,6 @@ __fat_find_first:
 ff_l3:	SetVector block_data, dirptr			; dirptr to begin of target buffer
 		jsr __fat_read_block
 		bne ff_exit
-		dec read_blkptr+1						   ; set read_blkptr to origin address
 ff_l4:
 		lda (dirptr)
 		beq ff_exit								   ; first byte of dir entry is $00 (end of directory)
