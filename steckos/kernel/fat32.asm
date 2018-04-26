@@ -3,15 +3,19 @@
 	debug_enabled=1
 .endif
 
+.include "zeropage.inc"
 .include "common.inc"
-.include "kernel.inc"
 .include "fat32.inc"
 .include "rtc.inc"
 .include "errno.inc"	; from ca65 api
 .include "fcntl.inc"	; from ca65 api
 
+.include "debug.inc"
+
+; external deps - block layer
 .import sd_read_block, sd_read_multiblock, sd_write_block, sd_write_multiblock
-.import sd_read_block_data
+
+
 .import __rtc_systime_update
 .import string_fat_name, fat_name_string, put_char
 .import string_fat_mask
