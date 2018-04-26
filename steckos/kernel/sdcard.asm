@@ -9,7 +9,13 @@
 .include "via.inc"
 .segment "KERNEL"
 .import spi_rw_byte, spi_r_byte
-.export init_sdcard, sd_read_block, sd_read_multiblock, sd_write_block, sd_select_card, sd_deselect_card
+.export init_sdcard, sd_select_card, sd_deselect_card
+.export sd_read_block, sd_read_multiblock, sd_write_block
+
+; public bock api
+.export read_block=sd_read_block
+.export write_block=sd_write_block
+
 .ifdef MULTIBLOCK_WRITE
 .export sd_write_multiblock
 .endif

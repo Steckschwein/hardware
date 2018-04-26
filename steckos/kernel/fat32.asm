@@ -13,7 +13,10 @@
 .include "debug.inc"
 
 ; external deps - block layer
-.import sd_read_block, sd_read_multiblock, sd_write_block, sd_write_multiblock
+.import read_block, write_block
+
+; TODO FIXME - encapsulate within sd layer
+.import sd_read_multiblock
 
 
 .import __rtc_systime_update
@@ -67,7 +70,7 @@ fat_read_block:
 
 		jsr calc_blocks
 		jsr calc_lba_addr
-		jmp sd_read_block
+		jmp read_block
 @l_err_exit:
 		lda #EINVAL
 		rts
@@ -83,7 +86,7 @@ fat_read:
 		jsr calc_blocks
 		jsr calc_lba_addr
 		jsr sd_read_multiblock
-;		jsr sd_read_block
+;		jsr read_block
 		rts
 @l_err_exit:
 		lda #EINVAL
@@ -122,10 +125,11 @@ fat_write:
 		jsr calc_lba_addr									; calc lba and blocks of file payload
 .ifdef MULTIBLOCK_WRITE
 .warning "SD multiblock writes are EXPERIMENTAL"
+		.import sd_write_multiblock
 		jsr sd_write_multiblock
 .else
 @l:
-		jsr sd_write_block
+		jsr write_block
 		bne @l_exit
 		jsr inc_lba_address
 		dec blocks
@@ -494,8 +498,8 @@ __fat_write_newdir_entry:
 		; requires: read_blkptr and lba_addr already calculated
 __fat_read_block:
 		phx
-		jsr sd_read_block
-  		dec read_blkptr+1		; TODO FIXME clarification with TW - sd_read_block increments block ptr highbyte - sideeffect!
+		jsr read_block
+  		dec read_blkptr+1		; TODO FIXME clarification with TW - read_block increments block ptr highbyte - sideeffect!
 		plx
 		cmp #0
 		rts
@@ -513,7 +517,7 @@ __fat_write_block:
 		sta write_blkptr+1
 		stz write_blkptr	;page aligned
 .ifndef FAT_NOWRITE
-		jmp sd_write_block
+		jmp write_block
 .else
 		lda #EOK
 		rts
@@ -1223,7 +1227,7 @@ fat_mount:
 		.endrepeat
 
 		SetVector sd_blktarget, read_blkptr
-		jsr sd_read_block
+		jsr read_block
 
 		jsr fat_check_signature
 		bne @l_exit
@@ -1241,7 +1245,7 @@ fat_mount:
 
 		SetVector sd_blktarget, read_blkptr
 		; Read FAT Volume ID at LBABegin and Check signature
-		jsr sd_read_block
+		jsr read_block
 		bne @l_exit
 		jsr fat_check_signature
 		bne @l_exit
