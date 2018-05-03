@@ -53,10 +53,9 @@ openfile:
 		jsr LAB_EVEX
         jsr LAB_EVST
 
-        stz buf
         tay
-        dey
-        sta buf,y
+        lda #0
+        sta buf+1,y
 
 @loop:
         lda (ut1_pl),y
