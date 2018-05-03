@@ -50,26 +50,24 @@ LAB_stlp:
 openfile:
 		sta @mode			; save file open mode
 		jsr LAB_EVEX
-		lda Dtypef
-		bne @go
-		; not a string, trigger syntax error
-		ldx #$02
-		jsr LAB_XERR
-@go:
-		ldy #$00
-@l:
-		lda (ssptr_l),y
-		beq @open
-		cmp #'"'
-		beq @term
-		iny
-		bne @l
-@term:
-		lda #$00
-		sta (ssptr_l),y
+        jsr LAB_EVST
+
+        stz buf
+        tay
+        dey
+        sta buf,y
+
+@loop:
+        lda (ut1_pl),y
+        beq @out
+        sta buf,y
+        dey
+        bpl @loop
+@out:
+
 @open:
-		lda ssptr_l
-		ldx ssptr_h
+		lda #<buf
+		ldx #>buf
 		ldy @mode
 		jmp krn_open
 @mode:	.res 1
@@ -136,8 +134,9 @@ bload:
 
 		jsr krn_close
 
-		jsr krn_primm
-		.byte "Ok", $0a, $00
+        LDA   #<LAB_RMSG   ; "READY"
+        LDY   #>LAB_RMSG
+        JSR   LAB_18C3
 		JMP   LAB_1319
 
 .ifdef UART
@@ -208,3 +207,4 @@ END_CODE:
 	;.word	NMI_vec		; NMI vector
 	;.word	RES_vec		; RESET vector
 	;.word	IRQ_vec		; IRQ vector
+buf:
