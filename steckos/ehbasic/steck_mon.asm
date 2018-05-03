@@ -48,7 +48,8 @@ LAB_stlp:
 		JMP	LAB_COLD		; do EhBASIC cold start
 
 openfile:
-		sta @mode			; save file open mode
+		;sta @mode			; save file open mode
+        pha
 		jsr LAB_EVEX
         jsr LAB_EVST
 
@@ -68,9 +69,10 @@ openfile:
 @open:
 		lda #<buf
 		ldx #>buf
-		ldy @mode
+		;ldy @mode
+        ply
 		jmp krn_open
-@mode:	.res 1
+;@mode:	.res 1
 
 io_error:
 		pha
