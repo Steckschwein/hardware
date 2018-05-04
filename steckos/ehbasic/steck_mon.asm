@@ -170,29 +170,29 @@ LAB_vec:
 
 ; EhBASIC IRQ support
 
-IRQ_CODE:
-	PHA				; save A
-    lda #'i'
-    jsr V_OUTP
-	LDA	IrqBase		; get the IRQ flag byte
-	LSR				; shift the set b7 to b6, and on down ...
-	ORA	IrqBase		; OR the original back in
-	STA	IrqBase		; save the new IRQ flag byte
-	PLA				; restore A
-	RTI
+; IRQ_CODE:
+; 	PHA				; save A
+;     lda #'i'
+;     jsr V_OUTP
+; 	LDA	IrqBase		; get the IRQ flag byte
+; 	LSR				; shift the set b7 to b6, and on down ...
+; 	ORA	IrqBase		; OR the original back in
+; 	STA	IrqBase		; save the new IRQ flag byte
+; 	PLA				; restore A
+; 	RTI
 
 ; EhBASIC NMI support
 
-NMI_CODE:
-	PHA				; save A
-   	lda #'n'
-   	jsr V_OUTP
-	LDA	NmiBase		; get the NMI flag byte
-	LSR				; shift the set b7 to b6, and on down ...
-	ORA	NmiBase		; OR the original back in
-	STA	NmiBase		; save the new NMI flag byte
-	PLA				; restore A
-	RTI
+; NMI_CODE:
+; 	PHA				; save A
+;    	lda #'n'
+;    	jsr V_OUTP
+; 	LDA	NmiBase		; get the NMI flag byte
+; 	LSR				; shift the set b7 to b6, and on down ...
+; 	ORA	NmiBase		; OR the original back in
+; 	STA	NmiBase		; save the new NMI flag byte
+; 	PLA				; restore A
+; 	RTI
 
 END_CODE:
 
