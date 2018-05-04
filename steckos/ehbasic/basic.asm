@@ -1032,8 +1032,17 @@ LAB_13AC:
 	LDA	Ibuffs,X		; get byte from input buffer
 	BEQ	LAB_13EC		; if null save byte then exit
 
-	toupper
+; *** begin patch: lower case token recognition V2 ***
+; ***              WARNING! changes documented behavior!
+; *** add
+      CMP   #'{'              ; convert lower to upper case
+      BCS   LAB_13EC          ; is above lower case
+      CMP   #'a'
+      BCC   PATCH_LC          ; is below lower case
+      AND   #$DF              ; mask lower case bit
 
+PATCH_LC:
+; *** end
 	CMP	#'_'			; compare with "_"
 	BCS	LAB_13EC		; if >= go save byte then continue crunching
 
@@ -1069,8 +1078,12 @@ LAB_13D0:
 	CMP	(ut2_pl),Y		; compare with keyword first character table byte
 	BEQ	LAB_13D1		; go do word_table_chr if match
 
-	;BCC	LAB_13EA		; if < keyword first character table byte go restore
-	BCC 	PATCH_LC2
+
+; *** replace
+;      BCC   LAB_13EA          ; if < keyword first character table byte go restore
+; *** with
+      BCC   PATCH_LC2         ; if < keyword first character table byte go restore
+; *** end
 					; Y and save to crunched
 
 	INY				; else increment pointer
@@ -1098,18 +1111,13 @@ LAB_13D8:
 	BMI	LAB_13EA		; all bytes matched so go save token
 
 	INX				; next buffer byte
-	CMP	Ibuffs,X		; compare with byte from input buffer
+; *** replace
+;      CMP   Ibuffs,X          ; compare with byte from input buffer
+; *** with
+      EOR     Ibuffs,x        ; check bits against table
+      AND     #$DF            ; DF masks the upper/lower case bit
+; *** end
 	BEQ	LAB_13D6		; go compare next if match
-
-	; toupper and cmp again to be case insensitive in the tokenizer
-
-	; convert to lowercase, short version
-	ORA #$20
-
- 	CMP Ibuffs,X  ; compare with byte from input buffer
- 	BEQ LAB_13D6  ; go compare next if match
-
-
 
 	BNE	LAB_1417		; branch if >< (not found keyword)
 
@@ -1171,7 +1179,12 @@ LAB_141B:
 	LDA	(ut2_pl),Y		; get byte from keyword table
 	BNE	LAB_13D8		; go test next word if not zero byte (end of table)
 
+
+; *** add label
 PATCH_LC2:
+; *** end
+; *** end   patch: lower case token recognition V2 ***
+
 					; reached end of table with no match
 	LDA	Ibuffs,X		; restore byte from input buffer
 	BPL	LAB_13EA		; branch always (all bytes in buffer are $00-$7F)
