@@ -92,7 +92,7 @@ gfxui_on:
 	vnops
 
 ;	lines
-	vdp_reg 9, v_reg9_ln
+	vdp_reg 9, v_reg9_ln;|v_reg9_il
 
 	jsr vdp_gfx7_on			    ;enable gfx7 mode
 
