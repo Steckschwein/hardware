@@ -71,13 +71,16 @@ openfile:
 		jmp krn_open
 
 io_error:
-		pha
-		jsr	krn_primm
-		.asciiz "io error: "
-		pla
-		and #$0f
-		ora #'0'
-		jsr krn_chrout
+		; pha
+		; jsr	krn_primm
+		; .asciiz "io error: "
+		; pla
+		; and #$0f
+		; ora #'0'
+		; jsr krn_chrout
+
+        ldx #$24
+        jmp LAB_XERR
 
 bsave:
 		lda #O_WRONLY

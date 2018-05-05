@@ -8697,6 +8697,7 @@ LAB_BAER:
 	.word	ERR_CN		;$1E continue error
 	.word	ERR_UF		;$20 undefined function
 	.word ERR_LD		;$22 LOOP without DO
+	.word ERR_FN		;$24 File not found
 
 ; I may implement these two errors to force definition of variables and
 ; dimensioning of arrays before use.
@@ -8725,6 +8726,8 @@ ERR_ST:	.byte	"String too complex",$00
 ERR_CN:	.byte	"Can't continue",$00
 ERR_UF:	.byte	"Undefined function",$00
 ERR_LD:	.byte	"LOOP without DO",$00
+ERR_FN:	.byte	"File not found",$00
+
 
 ;ERR_UV	.byte	"Undefined variable",$00
 
