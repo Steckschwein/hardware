@@ -333,9 +333,13 @@ TK_BITCLR	= TK_BITSET+1	; BITCLR token
 TK_IRQ		= TK_BITCLR+1	; IRQ token
 TK_NMI		= TK_IRQ+1		; NMI token
 
+TK_BYE		= TK_NMI+1
+
 ; secondary command tokens, can't start a statement
 
-TK_TAB		= TK_NMI+1		; TAB token
+;TK_TAB		= TK_NMI+1		; TAB token
+TK_TAB		= TK_BYE+1		; TAB token
+
 TK_ELSE		= TK_TAB+1		; ELSE token
 TK_TO		= TK_ELSE+1		; TO token
 TK_FN		= TK_TO+1		; FN token
@@ -7754,8 +7758,17 @@ LAB_TWOPI:
 	LDY	#>LAB_2C7C		; set (2*pi) pointer high byte
 	JMP	LAB_UFAC		; unpack memory (AY) into FAC1 and return
 
+
+LAB_BYE:
+	PHA
+	lda #'B'
+	jsr krn_chrout
+	pla
+	rts
+
 ; system dependant i/o vectors
 ; these are in RAM and are set by the monitor at start-up
+
 
 
 V_INPT:
@@ -8013,6 +8026,7 @@ LAB_CTBL:
 	.word	LAB_BITCLR-1	; BITCLR		new command
 	.word	LAB_IRQ-1		; IRQ			new command
 	.word	LAB_NMI-1		; NMI			new command
+	.word	LAB_BYE-1
 
 ; function pre process routine table
 
@@ -8242,6 +8256,9 @@ LBB_BITSET:
 LBB_BITTST:
 	.byte	"ITTST(",TK_BITTST
 					; BITTST(
+LBB_BYE:
+	.byte	"YE",TK_BYE
+
 	.byte	$00
 TAB_ASCC:
 LBB_CALL:
@@ -8548,6 +8565,9 @@ LAB_KEYT:
 	.word	LBB_IRQ		; IRQ
 	.byte	3,'N'
 	.word	LBB_NMI		; NMI
+	.byte	3,'B'
+	.word	LBB_BYE
+
 
 ; secondary commands (can't start a statement)
 
