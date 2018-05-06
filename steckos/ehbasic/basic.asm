@@ -333,12 +333,13 @@ TK_BITCLR	= TK_BITSET+1	; BITCLR token
 TK_IRQ		= TK_BITCLR+1	; IRQ token
 TK_NMI		= TK_IRQ+1		; NMI token
 
-TK_BYE		= TK_NMI+1
-
+TK_PLOT		= TK_NMI+1
+TK_TXT		= TK_PLOT+1
+TK_GFX		= TK_TXT+1
 ; secondary command tokens, can't start a statement
 
 ;TK_TAB		= TK_NMI+1		; TAB token
-TK_TAB		= TK_BYE+1		; TAB token
+TK_TAB		= TK_GFX+1		; TAB token
 
 TK_ELSE		= TK_TAB+1		; ELSE token
 TK_TO		= TK_ELSE+1		; TO token
@@ -7759,17 +7760,38 @@ LAB_TWOPI:
 	JMP	LAB_UFAC		; unpack memory (AY) into FAC1 and return
 
 
-LAB_BYE:
-	PHA
-	lda #'B'
-	jsr krn_chrout
+LAB_PLOT:
+	pha
+	phx
+	phy
+	jsr GFX_MC_Plot
+	ply
+	plx
+	pla
+	RTS
+
+LAB_GFX:
+	pha
+	phx
+	phy
+	jsr GFX_MC_On
+	ply
+	plx
+	pla
+	rts
+
+LAB_TXT:
+	pha
+	phx
+	phy
+	jsr GFX_Off
+	ply
+	plx
 	pla
 	rts
 
 ; system dependant i/o vectors
 ; these are in RAM and are set by the monitor at start-up
-
-
 
 V_INPT:
 	JMP	(VEC_IN)		; non halting scan input device
@@ -8026,7 +8048,11 @@ LAB_CTBL:
 	.word	LAB_BITCLR-1	; BITCLR		new command
 	.word	LAB_IRQ-1		; IRQ			new command
 	.word	LAB_NMI-1		; NMI			new command
-	.word	LAB_BYE-1
+	.word	LAB_PLOT-1
+	.word	LAB_GFX-1
+	.word	LAB_TXT-1
+
+
 
 ; function pre process routine table
 
@@ -8256,9 +8282,6 @@ LBB_BITSET:
 LBB_BITTST:
 	.byte	"ITTST(",TK_BITTST
 					; BITTST(
-LBB_BYE:
-	.byte	"YE",TK_BYE
-
 	.byte	$00
 TAB_ASCC:
 LBB_CALL:
@@ -8309,6 +8332,9 @@ LBB_FRE:
 TAB_ASCG:
 LBB_GET:
 	.byte	"ET",TK_GET		; GET
+LBB_GFX:
+	.byte	"FX",TK_GFX
+
 LBB_GOSUB:
 	.byte	"OSUB",TK_GOSUB	; GOSUB
 LBB_GOTO:
@@ -8382,6 +8408,10 @@ LBB_PEEK:
 	.byte	"EEK(",TK_PEEK	; PEEK(
 LBB_PI:
 	.byte	"I",TK_PI		; PI
+
+LBB_PLOT:
+	.byte	"LOT",TK_PLOT	; PLOT
+
 LBB_POKE:
 	.byte	"OKE",TK_POKE	; POKE
 LBB_POS:
@@ -8444,6 +8474,10 @@ LBB_TO:
 	.byte	"O",TK_TO		; TO
 LBB_TWOPI:
 	.byte	"WOPI",TK_TWOPI	; TWOPI
+
+LBB_TXT:
+	.byte	"XT",TK_TXT
+
 	.byte	$00
 TAB_ASCU:
 LBB_UCASES:
@@ -8565,8 +8599,13 @@ LAB_KEYT:
 	.word	LBB_IRQ		; IRQ
 	.byte	3,'N'
 	.word	LBB_NMI		; NMI
-	.byte	3,'B'
-	.word	LBB_BYE
+	.byte	4,'P'
+	.word	LBB_PLOT
+	.byte	3,'G'
+	.word	LBB_GFX
+	.byte	3,'T'
+	.word	LBB_TXT
+
 
 
 ; secondary commands (can't start a statement)
