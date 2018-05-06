@@ -7763,6 +7763,7 @@ LAB_TWOPI:
 
 LAB_DIR:
 	pha
+
 	SetVector pattern, filenameptr
 
 	ldx #FD_INDEX_CURRENT_DIR
@@ -7794,7 +7795,7 @@ LAB_DIR:
 	ldy #$00
 @outloop:
 	lda (dirptr),y
-	jsr krn_chrout
+	jsr LAB_PRNA
 	iny
 	cpy #11
 	bne @outloop
