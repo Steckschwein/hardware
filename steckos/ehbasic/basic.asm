@@ -336,10 +336,12 @@ TK_NMI		= TK_IRQ+1		; NMI token
 TK_PLOT		= TK_NMI+1
 TK_TXT		= TK_PLOT+1
 TK_GFX		= TK_TXT+1
+TK_DIR		= TK_GFX+1
+
 ; secondary command tokens, can't start a statement
 
 ;TK_TAB		= TK_NMI+1		; TAB token
-TK_TAB		= TK_GFX+1		; TAB token
+TK_TAB		= TK_DIR+1		; TAB token
 
 TK_ELSE		= TK_TAB+1		; ELSE token
 TK_TO		= TK_ELSE+1		; TO token
@@ -7759,6 +7761,54 @@ LAB_TWOPI:
 	LDY	#>LAB_2C7C		; set (2*pi) pointer high byte
 	JMP	LAB_UFAC		; unpack memory (AY) into FAC1 and return
 
+LAB_DIR:
+	pha
+	SetVector pattern, filenameptr
+
+	ldx #FD_INDEX_CURRENT_DIR
+	jsr krn_find_first
+	bcs @l2_1
+	lda #'E'
+	jsr krn_chrout
+	bra @end
+@l2_1:
+	bcs @l4
+	bra @l5
+		; jsr .dir_show_entry
+@l3:
+	ldx #FD_INDEX_CURRENT_DIR
+	jsr krn_find_next
+	bcc @l5
+@l4:
+	lda (dirptr)
+	cmp #$e5
+	beq @l3
+
+	ldy #F32DirEntry::Attr
+	lda (dirptr),y
+
+	bit #$0a ; Hidden attribute set, skip
+	bne @l3
+
+
+	ldy #$00
+@outloop:
+	lda (dirptr),y
+	jsr krn_chrout
+	iny
+	cpy #11
+	bne @outloop
+
+	lda #$0a
+	jsr krn_chrout
+
+	bra @l3
+@l5:
+@end:
+	pla
+	rts
+pattern:
+	.asciiz "*.*"
 
 LAB_PLOT:
 	pha
@@ -8051,6 +8101,8 @@ LAB_CTBL:
 	.word	LAB_PLOT-1
 	.word	LAB_GFX-1
 	.word	LAB_TXT-1
+	.word	LAB_DIR-1
+
 
 
 
@@ -8306,6 +8358,9 @@ LBB_DEF:
 	.byte	"EF",TK_DEF		; DEF
 LBB_DIM:
 	.byte	"IM",TK_DIM		; DIM
+LBB_DIR:
+	.byte	"IR",TK_DIR		; DIR
+
 LBB_DOKE:
 	.byte	"OKE",TK_DOKE	; DOKE note - "DOKE" must come before "DO"
 LBB_DO:
@@ -8605,6 +8660,8 @@ LAB_KEYT:
 	.word	LBB_GFX
 	.byte	3,'T'
 	.word	LBB_TXT
+	.byte	3,'D'
+	.word	LBB_DIR
 
 
 

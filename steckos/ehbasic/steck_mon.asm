@@ -11,6 +11,8 @@
 
 .include "../kernel/kernel.inc"
 .include "../kernel/kernel_jumptable.inc"
+.include "../asminc/common.inc"
+
 .include "../kernel/fat32.inc"
 .include "../kernel/uart.inc"
 .include "fcntl.inc"
