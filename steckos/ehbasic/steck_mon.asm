@@ -55,9 +55,9 @@ openfile:
         jsr LAB_EVST
 
         tay
-        lda #0
-        sta buf+1,y
-
+    	lda #0
+    	sta buf,y
+    	dey
 @loop:
         lda (ut1_pl),y
         beq @out
@@ -73,14 +73,6 @@ openfile:
 		jmp krn_open
 
 io_error:
-		; pha
-		; jsr	krn_primm
-		; .asciiz "io error: "
-		; pla
-		; and #$0f
-		; ora #'0'
-		; jsr krn_chrout
-
         ldx #$24
         jmp LAB_XERR
 

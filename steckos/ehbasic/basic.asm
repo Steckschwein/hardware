@@ -337,11 +337,12 @@ TK_PLOT		= TK_NMI+1
 TK_TXT		= TK_PLOT+1
 TK_GFX		= TK_TXT+1
 TK_DIR		= TK_GFX+1
+TK_CD		= TK_DIR+1
 
 ; secondary command tokens, can't start a statement
 
 ;TK_TAB		= TK_NMI+1		; TAB token
-TK_TAB		= TK_DIR+1		; TAB token
+TK_TAB		= TK_CD+1		; TAB token
 
 TK_ELSE		= TK_TAB+1		; ELSE token
 TK_TO		= TK_ELSE+1		; TO token
@@ -7761,21 +7762,58 @@ LAB_TWOPI:
 	LDY	#>LAB_2C7C		; set (2*pi) pointer high byte
 	JMP	LAB_UFAC		; unpack memory (AY) into FAC1 and return
 
+LAB_CD:
+	jsr LAB_EVEX
+	jsr LAB_EVST
+
+	tay
+	lda #0
+	sta buf,y
+	dey
+@loop:
+	lda (ut1_pl),y
+	beq @out
+	sta buf,y
+	dey
+	bpl @loop
+@out:
+
+@open:
+	ldx #$00
+@l:
+	lda buf,x
+	beq @x
+	jsr LAB_PRNA
+	inx
+	bne @l
+@x:
+	lda #<buf
+	ldx #>buf
+	jsr krn_chdir
+	beq @end
+	ldx #$24
+	jmp LAB_XERR
+@end:
+	rts
 LAB_DIR:
 	pha
+	phx
+	phy
 
 	SetVector pattern, filenameptr
+
+
+	jsr LAB_CRLF
 
 	ldx #FD_INDEX_CURRENT_DIR
 	jsr krn_find_first
 	bcs @l2_1
 	lda #'E'
-	jsr krn_chrout
+	jsr LAB_PRNA
 	bra @end
 @l2_1:
 	bcs @l4
 	bra @l5
-		; jsr .dir_show_entry
 @l3:
 	ldx #FD_INDEX_CURRENT_DIR
 	jsr krn_find_next
@@ -7791,7 +7829,6 @@ LAB_DIR:
 	bit #$0a ; Hidden attribute set, skip
 	bne @l3
 
-
 	ldy #$00
 @outloop:
 	lda (dirptr),y
@@ -7800,12 +7837,13 @@ LAB_DIR:
 	cpy #11
 	bne @outloop
 
-	lda #$0a
-	jsr krn_chrout
+	jsr LAB_CRLF
 
 	bra @l3
 @l5:
 @end:
+	ply
+	plx
 	pla
 	rts
 pattern:
@@ -8103,6 +8141,8 @@ LAB_CTBL:
 	.word	LAB_GFX-1
 	.word	LAB_TXT-1
 	.word	LAB_DIR-1
+	.word	LAB_CD-1
+
 
 
 
@@ -8339,6 +8379,10 @@ LBB_BITTST:
 TAB_ASCC:
 LBB_CALL:
 	.byte	"ALL",TK_CALL	; CALL
+
+LBB_CD:
+	.byte	"D",TK_CD	; CD
+
 LBB_CHRS:
 	.byte	"HR$(",TK_CHRS	; CHR$(
 LBB_CLEAR:
@@ -8663,6 +8707,8 @@ LAB_KEYT:
 	.word	LBB_TXT
 	.byte	3,'D'
 	.word	LBB_DIR
+	.byte	2,'C'
+	.word	LBB_CD
 
 
 
