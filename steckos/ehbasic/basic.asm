@@ -7778,15 +7778,6 @@ LAB_CD:
 	bpl @loop
 @out:
 
-@open:
-	ldx #$00
-@l:
-	lda buf,x
-	beq @x
-	jsr LAB_PRNA
-	inx
-	bne @l
-@x:
 	lda #<buf
 	ldx #>buf
 	jsr krn_chdir
