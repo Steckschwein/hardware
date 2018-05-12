@@ -75,35 +75,41 @@ textui_update_crs_ptr:		;   updates the 16 bit pointer crs_p upon crs_x, crs_y v
 		;use the crs_ptr as tmp variable
 		stz crs_ptr+1
 		lda crs_y
-		asl
-		asl
-		asl
+		asl						; y*2
+		asl						; y*4
+		asl						; y*8
 
 .ifdef COLS80
 		; crs_y*64 + crs_y*16 (crs_ptr) => y*80
 		asl						; y*16
 		sta crs_ptr
+		php						; save carry
 		rol crs_ptr+1	   	; save carry if overflow
 .else
 		; crs_y*32 + crs_y*8  (crs_ptr) => y*40
 		sta crs_ptr			; save
 .endif
-
 		asl
 		rol crs_ptr+1	   	; save carry if overflow
 		asl
-		rol crs_ptr+1		; save carry if overflow
-		adc crs_ptr	    	;
+		rol crs_ptr+1			; save carry if overflow
+
+		plp						; restore carry from overflow above
+		bcc @l0
+		inc crs_ptr+1
+		clc
+		
+@l0:	adc crs_ptr	    		;
 		bcc @l1
-		inc	crs_ptr+1		; overflow inc page count
+		inc crs_ptr+1		; overflow inc page count
 		clc				;
 @l1:	adc crs_x
 		sta crs_ptr
 		lda #>screen_buffer
-		adc	crs_ptr+1		; add carry and page to address high byte
-		sta	crs_ptr+1
+		adc crs_ptr+1		; add carry and page to address high byte
+		sta crs_ptr+1
 
-		lda	(crs_ptr)
+		lda (crs_ptr)
 		sta saved_char		;save char at new position
 
 		pla
@@ -114,30 +120,40 @@ textui_init0:
 
 
 
-        SetVector screen_buffer, crs_ptr    ;set crs ptr initial to screen buffer
+      SetVector screen_buffer, crs_ptr    ;set crs ptr initial to screen buffer
 		jsr	textui_blank			        ;blank screen buffer
-        stz screen_write_lock               ;reset write lock
-        jsr textui_enable
+      stz screen_write_lock               ;reset write lock
+      jsr textui_enable
 textui_init:
 		jmp	vdp_mode_text
 
 textui_blank:
-		ldx 	#0
-		lda	#CURSOR_BLANK
-		sta 	saved_char
-@l1:	sta	screen_buffer+$000,x	;4 pages, 40x24
-		sta	screen_buffer+$100,x
+		ldx #0
+		lda #CURSOR_BLANK
+		sta saved_char
+@l1:	sta screen_buffer+$000,x	;4 pages, 40x24
+		sta screen_buffer+$100,x
 		sta screen_buffer+$200,x
-		sta screen_buffer+$300,x
 
 .ifdef COLS80
+		sta screen_buffer+$300,x
 		sta screen_buffer+$400,x	;additional 4 pages for 80 cols
 		sta screen_buffer+$500,x
 		sta screen_buffer+$600,x
+.endif
+		inx
+		bne @l1
+@l2:
+.ifndef COLS80
+		sta screen_buffer+$300,x
+.endif
+.ifdef COLS80
 		sta screen_buffer+$700,x
 .endif
 		inx
-		bne	@l1
+		cpx #<(COLS*(ROWS+1))
+		bne @l2
+
     	stz 	crs_x
     	stz 	crs_y
       jsr	textui_update_crs_ptr
@@ -147,17 +163,17 @@ textui_blank:
 
 textui_cursor:
 		lda screen_write_lock
-		bne	@l2
+		bne @l2
 		lda screen_frames
-		and	#$0f
-		bne	@l2
-		lda	#STATUS_CURSOR
-		tsb	screen_status
-		beq	@l1
-		trb	screen_status
-		lda	saved_char
+		and #$0f
+		bne @l2
+		lda #STATUS_CURSOR
+		tsb screen_status
+		beq @l1
+		trb screen_status
+		lda saved_char
 		jmp textui_put
-@l1:	lda	#CURSOR_CHAR
+@l1:	lda #CURSOR_CHAR
 		jmp textui_put
 @l2:	rts
 
@@ -270,13 +286,6 @@ textui_disable:
         stz screen_status
 		rts
 
-textui_put:
-        pha
-		sta	(crs_ptr)
-        _screen_dirty
-        pla
-        rts
-
 .ifdef TEXTUI_STROUT
 ;----------------------------------------------------------------------------------------------
 ; Output string on screen
@@ -332,6 +341,12 @@ PSIX2:
 		jmp     (krn_ptr3)           ; return to byte following final NULL
 .endif
 
+textui_put:
+		pha
+		sta (crs_ptr)
+		_screen_dirty
+		pla
+		rts
 
 textui_chrout:
 		beq	@l1	; \0 char
