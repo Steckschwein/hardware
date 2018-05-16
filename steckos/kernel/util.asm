@@ -1,3 +1,25 @@
+; MIT License
+;
+; Copyright (c) 2018 Thomas Woinke, Marko Lauke, www.steckschein.de
+;
+; Permission is hereby granted, free of charge, to any person obtaining a copy
+; of this software and associated documentation files (the "Software"), to deal
+; in the Software without restriction, including without limitation the rights
+; to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+; copies of the Software, and to permit persons to whom the Software is
+; furnished to do so, subject to the following conditions:
+;
+; The above copyright notice and this permission notice shall be included in all
+; copies or substantial portions of the Software.
+;
+; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+; AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+; SOFTWARE.
+
 .ifdef DEBUG_UTIL		; enable debug for this module
 	debug_enabled=1
 .endif
@@ -28,7 +50,7 @@ __dmm_next:
 __dmm_neq:
 		clc
 		rts
-		
+
 		; in:
 		;	dirptr - pointer to dir entry (F32DirEntry)
 cluster_nr_matcher:
@@ -72,7 +94,7 @@ l_1:
 		inc	krn_tmp
 		lda	(filenameptr),	y
 		beq	l_2
-		cmp	#' '+1			
+		cmp	#' '+1
 		bcc	l_1					; skip all chars within 0..32
 l_2:	ldy	krn_tmp2
 		sta	(filenameptr), y
@@ -85,9 +107,9 @@ l_2:	ldy	krn_tmp2
 l_st_ex:
 		clc				;
 		tya				; length to A
-		rts	
+		rts
 
-	; build 11 byte fat file name (8.3) as used within dir entries 
+	; build 11 byte fat file name (8.3) as used within dir entries
 	; in:
 	;	filenameptr pointer to input string to convert to fat file name mask
 	;	krn_ptr2 pointer to result of fat file name mask
@@ -98,7 +120,7 @@ l_st_ex:
 string_fat_mask:
 	jsr string_trim					; trim input
 	bcs __tfm_exit					; C=1, overflow
-	beq __tfm_exit					; Z=1, empty input	
+	beq __tfm_exit					; Z=1, empty input
 
 	stz krn_tmp
 	ldy #0
@@ -129,12 +151,12 @@ __tfn_mask_qm:
 __tfn_mask_star:
 	cmp #'*'
 	bne __tfn_mask_char
-	lda #'?'	
+	lda #'?'
 __tfn_mask_fill:
 	clc
 __tfn_mask_fill_l1:
 	ldy krn_tmp2
-__tfn_mask_fill_l2:	
+__tfn_mask_fill_l2:
 	sta (krn_ptr2), y
 	iny
 	bcs __tfn_mask_input			; C=1, then go on next char
@@ -142,7 +164,7 @@ __tfn_mask_fill_l2:
 	beq __tfn_mask_input		; go on with extension
 	cpy #8+3
 	bne __tfn_mask_fill_l2
-__tfm_exit:	
+__tfm_exit:
 	rts
 __tfn_mask_char:
 	cmp #$60 ; Is lowercase?
@@ -152,7 +174,7 @@ __tfn_mask_char_l1:
 	ldy krn_tmp2
 __tfn_mask_char_l2:
 	sta (krn_ptr2), y
-	iny 
+	iny
 	cpy #8+3
 	bne __tfn_mask_input
 	rts
@@ -174,28 +196,28 @@ l_next:
 	beq l_next
 	cpy #8
 	bne fns_ca
-	pha 
+	pha
 	lda #'.'
 	jsr put_char
-	pla	
-fns_ca:	
+	pla
+fns_ca:
 	jsr put_char
 	bra l_next
-	
+
 put_char:
 	ldy krn_tmp3
 	sta (krn_ptr3), y
 	inc krn_tmp3
 l_exit:
 	rts
-	
+
 		; recursive inverse
 path_inverse:
 		stz krn_tmp
 		stz krn_tmp2
 		ldy #0
 		jsr l_inv
-		iny 
+		iny
 		lda #0
 		sta (krn_ptr2),y
 		rts
@@ -219,9 +241,9 @@ l_seg:
 		sta (krn_ptr2), y
 		cmp #'/'
 		bne l_seg
-		rts		
-	
-	; build 11 byte fat file name (8.3) as used within dir entries 
+		rts
+
+	; build 11 byte fat file name (8.3) as used within dir entries
 	; in:
 	;	filenameptr with input string to convert to fat file name mask
 	;	krn_ptr2 with pointer where the fat file name mask should be stored
@@ -240,9 +262,9 @@ __sfn_ic:
 __sfn_mask:
 	jsr string_fat_mask				;
 	lda #EOK
-__sfn_exit:	
+__sfn_exit:
 	rts
-	
+
 	; in:
 	;	A - char to check whether it is legal to build a fat file name or extension
 	; out:
@@ -256,7 +278,7 @@ __illegalchar_l1:
 	bpl __illegalchar_l1
 	lda #EOK
 	rts
-__illegalchar_ex:	
+__illegalchar_ex:
 	lda #EINVAL
 	rts
 __illegalchars:

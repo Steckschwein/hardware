@@ -1,3 +1,26 @@
+; MIT License
+;
+; Copyright (c) 2018 Thomas Woinke, Marko Lauke, www.steckschein.de
+;
+; Permission is hereby granted, free of charge, to any person obtaining a copy
+; of this software and associated documentation files (the "Software"), to deal
+; in the Software without restriction, including without limitation the rights
+; to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+; copies of the Software, and to permit persons to whom the Software is
+; furnished to do so, subject to the following conditions:
+;
+; The above copyright notice and this permission notice shall be included in all
+; copies or substantial portions of the Software.
+;
+; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+; AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+; SOFTWARE.
+
+
 ; enable debug for this module
 .ifdef DEBUG_FAT32
 	debug_enabled=1
@@ -48,14 +71,14 @@ fat_read_blocks:
 		beq @l_err_exit
 
 		jsr calc_blocks
-		
+
 		jsr calc_lba_addr
-		
+
 		jmp __fat_read_block
 @l_err_exit:
 		lda #EINVAL
 		rts
-		
+
 		;	@deprecated - use fat_read_blocks instead, just for backward compatibility
 		;
 		; read one block, TODO - update seek position within FD
@@ -259,7 +282,7 @@ fat_get_root_and_pwd:
 		stz krn_tmp3
 
 		jsr __fat_clone_cd_td							; start from current directory, clone the cd fd
-		
+
 @l_rd_dir:
 		lda #'/'										; put the / char to result string
 		jsr put_char
@@ -548,7 +571,7 @@ __fat_write_dir_entry:
 		cmp #>(block_data + sd_blocksize)
 		bne @l_eod														; no, write one block only
 
-		; new dir entry 
+		; new dir entry
 		jsr __fat_write_block_data										; write the current block with the updated dir entry first
 		bne @l_exit
 		ldy #$80														; safely, fill the new dir block with 0 to mark eod
@@ -559,17 +582,17 @@ __fat_write_dir_entry:
 		sta block_data+$180, y
 		dey
 		bpl @l_erase
-		
+
 		;TODO FIXME test end of cluster, if so reserve a new one, update cluster chain for directory ;)
 		debug32 "eod_lba", lba_addr
 		debug32 "eod_cln", fd_area+FD_INDEX_TEMP_DIR
 ;		lda lba_addr+0
 ;		adc #02
-;		sbc volumeID+VolumeID::BPB + BPB::SecPerClus		
+;		sbc volumeID+VolumeID::BPB + BPB::SecPerClus
 ;		lda fd_area+F32_fd::CurrentCluster+0
-;		sbc lba_addr+0		
+;		sbc lba_addr+0
 		jsr inc_lba_address												; increment lba address to write to next block
-		
+
 @l_eod:
 		;TODO FIXME erase the rest of the block, currently 0 is assumed
 		jsr __fat_write_block_data										; write the updated dir entry to device
@@ -719,7 +742,7 @@ __fat_read_cluster_block_and_select:
 		lda #EOK
 @l_exit:
 		rts
-		
+
 
 		; free cluster and maintain the fsinfo block
 		; in:
@@ -1022,7 +1045,7 @@ end_open_err:
 		ply
 		cmp	#0			;restore z flag
 		rts
-      
+
 fat_check_signature:
 		lda #$55
 		cmp sd_blktarget + BootSector::Signature
@@ -1073,8 +1096,8 @@ __prepare_calc_lba_addr:
 			sta lba_addr + i
 		.endrepeat
 		rts
-		
-		
+
+
 ; 		calculate LBA address of first block from cluster number found in file descriptor entry. file descriptor index must be in x
 ;		Note: lba_addr = cluster_begin_lba_m2 + (cluster_number * VolumeID::SecPerClus)
 ;		in:
@@ -1198,7 +1221,7 @@ __fat_is_cln_eoc:
 		;
 __fat_next_cln:
 		debug32 "f_nc0", fd_area+FD_INDEX_TEMP_DIR+F32_fd::CurrentCluster
-		
+
 		lda	(read_blkptr), y
 		sta fd_area + F32_fd::CurrentCluster+0, x
 		iny
@@ -1210,7 +1233,7 @@ __fat_next_cln:
 		iny
 		lda	(read_blkptr), y
 		sta fd_area + F32_fd::CurrentCluster+3, x
-		
+
 		lda #EOK
 @l_exit:
 		debug32 "f_nc1", fd_area+FD_INDEX_TEMP_DIR+F32_fd::CurrentCluster
@@ -1430,7 +1453,7 @@ __fat_set_lba_from_fd_dirlba:
 		sta lba_addr+0
 		debug32 "f_slba", lba_addr
 		rts
-		
+
 		; update the dir entry position and dir lba_addr of the given file descriptor
 		; in:
 		;	X - file descriptor
@@ -1481,7 +1504,7 @@ fat_alloc_fd:
 		bne @l1
 		lda #EMFILE								; Too many open files, no free file descriptor found
 		rts
-		
+
 		; out:
 		;   x - FD_INDEX_TEMP_DIR offset to fd area
 fat_open_rootdir:
@@ -1576,7 +1599,7 @@ fat_find_next:
 		lda dirptr+1
 		cmp #>(sd_blktarget + sd_blocksize)	; end of block reached?
 		bcc ff_l4			; no, process entry
-		dec blocks			; 
+		dec blocks			;
 		beq @ff_eoc			; end of cluster reached?
 		jsr inc_lba_address	; increment lba address to read next block
 		bra ff_l3

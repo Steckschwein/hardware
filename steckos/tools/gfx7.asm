@@ -119,7 +119,7 @@ irqsafe: .res 2, 0
 
 .align 256,0
 rgbdata:
-.incbin "DSC_0004.raw"
+.incbin "felix.ppm.raw"
 
 
 .segment "STARTUP"

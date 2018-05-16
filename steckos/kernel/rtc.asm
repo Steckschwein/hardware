@@ -1,3 +1,25 @@
+; MIT License
+;
+; Copyright (c) 2018 Thomas Woinke, Marko Lauke, www.steckschein.de
+;
+; Permission is hereby granted, free of charge, to any person obtaining a copy
+; of this software and associated documentation files (the "Software"), to deal
+; in the Software without restriction, including without limitation the rights
+; to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+; copies of the Software, and to permit persons to whom the Software is
+; furnished to do so, subject to the following conditions:
+;
+; The above copyright notice and this permission notice shall be included in all
+; copies or substantial portions of the Software.
+;
+; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+; AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+; SOFTWARE.
+
 ; enable debug for this module
 .ifdef DEBUG_RTC
 	debug_enabled=1
@@ -36,7 +58,7 @@ init_rtc:
 		; Deselect SPI SS for RTC
 		jmp spi_deselect
 
-		
+
 		;in:
 		;	A/X pointer to time_t struct @see asminc/rtc.inc
 		;out:
@@ -51,15 +73,15 @@ rtc_systime:
 		dey
 		bne @cp
 		rts		;exit Z=0 here
-		
-		
+
+
 		;in:
 		;	-
 		;out:
 		;	-
 __rtc_systime_update:
 		jsr	spi_select_rtc
-		
+
 		lda #0				;0 means rtc read, start from first address (seconds)
 		jsr spi_rw_byte
 
@@ -77,7 +99,7 @@ __rtc_systime_update:
 
 		jsr spi_r_byte     ;week day
 		sta rtc_systime_t+time_t::tm_wday
-		
+
 		jsr spi_r_byte     					;day of month
 		jsr BCD2dec
 		sta rtc_systime_t+time_t::tm_mday
@@ -95,7 +117,7 @@ __rtc_systime_update:
 		debug32 "rtc0", rtc_systime_t
 		debug32 "rtc1", rtc_systime_t+4
 		jmp spi_deselect
-	
+
 ; dec = (((BCD>>4)*10) + (BCD&0xf))
 BCD2dec:tax
 		and     #%00001111
@@ -104,7 +126,7 @@ BCD2dec:tax
 		and     #%11110000      ; highbyte => 10a = 8a + 2a
 		lsr                     ; 2a
 		sta     krn_tmp2
-		lsr						; 
+		lsr						;
 		lsr                     ; 8a
 		adc     krn_tmp2        ; = *10
 		adc     krn_tmp

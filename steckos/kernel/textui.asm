@@ -1,3 +1,25 @@
+; MIT License
+;
+; Copyright (c) 2018 Thomas Woinke, Marko Lauke, www.steckschein.de
+;
+; Permission is hereby granted, free of charge, to any person obtaining a copy
+; of this software and associated documentation files (the "Software"), to deal
+; in the Software without restriction, including without limitation the rights
+; to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+; copies of the Software, and to permit persons to whom the Software is
+; furnished to do so, subject to the following conditions:
+;
+; The above copyright notice and this permission notice shall be included in all
+; copies or substantial portions of the Software.
+;
+; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+; AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+; SOFTWARE.
+
 .include "common.inc"
 .include "kernel.inc"
 .include "vdp.inc"
@@ -98,7 +120,7 @@ textui_update_crs_ptr:		;   updates the 16 bit pointer crs_p upon crs_x, crs_y v
 		bcc @l0
 		inc crs_ptr+1
 		clc
-		
+
 @l0:	adc crs_ptr	    		;
 		bcc @l1
 		inc crs_ptr+1		; overflow inc page count
@@ -197,7 +219,7 @@ textui_update_screen:
 		lda	#<ADDRESS_GFX1_SCREEN
 		ldy	#WRITE_ADDRESS + >ADDRESS_GFX1_SCREEN
 .ifdef COLS80
-		ldx	#$08						    
+		ldx	#$08
 .else
 		ldx	#$04
 .endif
@@ -218,7 +240,7 @@ textui_scroll_up:
 @l1:	lda	screen_buffer+$000+COLS,x
 		sta	screen_buffer+$000,x
 		inx
-		bne	@l1		
+		bne	@l1
 @l2:	lda	screen_buffer+$100+COLS,x
 		sta	screen_buffer+$100,x
 		inx

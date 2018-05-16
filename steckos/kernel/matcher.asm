@@ -1,3 +1,25 @@
+; MIT License
+;
+; Copyright (c) 2018 Thomas Woinke, Marko Lauke, www.steckschein.de
+;
+; Permission is hereby granted, free of charge, to any person obtaining a copy
+; of this software and associated documentation files (the "Software"), to deal
+; in the Software without restriction, including without limitation the rights
+; to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+; copies of the Software, and to permit persons to whom the Software is
+; furnished to do so, subject to the following conditions:
+;
+; The above copyright notice and this permission notice shall be included in all
+; copies or substantial portions of the Software.
+;
+; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+; AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+; SOFTWARE.
+
 
 ; 	match input name[.[ext]] (8.3 filename) against 11 byte dir entry <name><ext>
 ;	note:
@@ -15,7 +37,7 @@ matcher_test1:	lda filename_buf,x
 				and #$df					; uppercase
 				cmp (dirptr)				; match first byte?
 				bne matcher_FAIL
-				
+
 matcher_prepare0:
 				sta buffer,x
 				inx
@@ -47,8 +69,8 @@ matcher_match_name:
 				LDX #$00					;yes, now match the filename
 				LDY #$FF        			;y is an index in the string
 				lda #8						;end of dir entry to index 8, which is the name of the 8.3 dir entry
-				sta krn_tmp				
-matcher_NEXT:    		
+				sta krn_tmp
+matcher_NEXT:
 				LDA buffer,X   				;Look at next pattern character
 				CMP #'*'					;Is it a star?
 				BEQ matcher_STAR        	;Yes, do the complicated stuff
@@ -60,12 +82,12 @@ matcher_NEXT:
 				cmp (dirptr),y   	 		;yes, expect space in dir name, marks end of string within dir entry
 				bcs matcher_FOUND			;yes, matched, succes C=1 here
 				rts				 			;no, exit with no match
-matcher_quest:	
+matcher_quest:
 				CMP #'?'	     			; Is the pattern caracter a ques?
 				BNE matcher_REG         	; No, it's a regular character
 				LDA (dirptr),Y     			; Yes, so it will match anything
 				BEQ matcher_FAIL        	;  except the end of string
-matcher_REG:	
+matcher_REG:
 				cmp #'a'					; char [a-z] ?
 				bcc matcher_cmp				; no, we have to go the long way
 				cmp #'z'+1
