@@ -1,4 +1,24 @@
-
+; MIT License
+;
+; Copyright (c) 2018 Thomas Woinke, Marko Lauke, www.steckschein.de
+;
+; Permission is hereby granted, free of charge, to any person obtaining a copy
+; of this software and associated documentation files (the "Software"), to deal
+; in the Software without restriction, including without limitation the rights
+; to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+; copies of the Software, and to permit persons to whom the Software is
+; furnished to do so, subject to the following conditions:
+;
+; The above copyright notice and this permission notice shall be included in all
+; copies or substantial portions of the Software.
+;
+; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+; AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+; SOFTWARE.
 
 opl_stat = $0240        ; status register
 opl_sel  = opl_stat		; register select
@@ -68,7 +88,7 @@ opl2_chan8_op2	= opl2_op18
 ;--------------------------------------------------------------------------------------------------------------
 
 
-.macro oplSetRegVal reg, val 
+.macro oplSetRegVal reg, val
 	lda #reg
 	sta opl_stat
 	; http://www.shipbrook.net/jeff/sb.html
@@ -89,7 +109,7 @@ opl2_chan8_op2	= opl2_op18
 
 .endmacro
 
-.macro oplSetReg reg 
+.macro oplSetReg reg
 	pha
 	lda #reg
 	sta opl_stat
@@ -105,7 +125,7 @@ opl2_chan8_op2	= opl2_op18
 	; 23.000 ns / 0.25ns = 92 cycles / 92 = 46 NOPs
 	; !for .i,1,46 {
 	; 	nop
-	; } 
+	; }
 	ldy #opl2_data_delay
 :
 	dey

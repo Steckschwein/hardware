@@ -1,3 +1,26 @@
+
+// MIT License
+//
+// Copyright (c) 2018 Thomas Woinke, Marko Lauke, www.steckschein.de
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
 #include <stdlib.h>
 #include <string.h>
 #include <conio.h>
@@ -12,26 +35,26 @@ unsigned char DS1306(unsigned char v){
 }
 
 void set_clock(struct tm *tm)
-{   
+{
 	if(tm->tm_year<100 || tm->tm_year > 199){
 		cprintf("invalid year, range 2000<=year<=2099, but was %d\n", tm->tm_year+1900);
 		tm->tm_year = 2017 - 1900;//fallback set hard to 2016
-	}	
+	}
     spi_select_rtc();
 	spi_write(0x80);//write, start with seconds
-	
+
     spi_write(DS1306(tm->tm_sec));//seconds
     spi_write(DS1306(tm->tm_min));//minutes
 	spi_write(DS1306(tm->tm_hour) | 1<<7);//set clock, also 24h mode (bit 7)
-	
+
 	spi_write(0x84);//write, start with day of month
     spi_write(DS1306(tm->tm_mday));//day
 	// TODO FIXME month must not be coded in bcd, check whether this is an DS1306 issue
-	//spi_write(DS1306(tm->tm_mon+1)); // ansi tm struct 0..11, correct DS1306 specific 1..12
+	//spi_write(DS1306(tm->tm_mon+1))// ansi tm struct 0..11, correct DS1306 specific 1..12
 	spi_write(tm->tm_mon+1);
-	spi_write(DS1306(tm->tm_year-100)); // ansi tm struct year - 1900, correct DS1306 specific year 2000..
+	spi_write(DS1306(tm->tm_year-100))// ansi tm struct year - 1900, correct DS1306 specific year 2000..
 	spi_deselect();
-} 
+}
 
 unsigned int substr2int(unsigned char *s, unsigned short b, unsigned short l){
 	unsigned short i;
