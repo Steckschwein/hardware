@@ -31,7 +31,7 @@
 ;	CALL PLOT,X,Y,COLOR		- invoke GFX_Plot with CALL api
 ;
 GFX_BgColor:
-		JSR LAB_SCGB ; scan for "," and get byte 
+		JSR LAB_SCGB ; scan for "," and get byte
 		stx a_vreg
 		lda #$87
 		sta a_vreg
@@ -69,11 +69,11 @@ GFX_7_On:
 		jsr krn_textui_disable			;disable textui
 		jsr krn_display_off
 		jsr vdp_gfx7_on
-		lda #%00000000 ; black 
+		lda #%00000000 ; black
 		jsr vdp_gfx7_blank
 		cli
 		rts
-		
+
 GFX_2_Plot:
 		jsr GFX_Plot_Prepare
 		jmp vdp_gfx2_set_pixel
@@ -82,18 +82,17 @@ GFX_MC_Plot:
 		jmp vdp_mc_set_pixel
 
 GFX_Plot_Prepare:
-		JSR LAB_SCGB 	; scan for "," and get byte 
-		stx PLOT_XBYT	; save plot x 
-		JSR LAB_SCGB 	; scan for "," and get byte 
+		JSR LAB_GTBY
+		stx PLOT_XBYT	; save plot x
+		JSR LAB_SCGB 	; scan for "," and get byte
 		stx PLOT_YBYT	; save plot y
-		JSR LAB_SCGB 	; scan for "," and get byte 
-		
+		JSR LAB_SCGB 	; scan for "," and get byte
 		txa				; color to A
 		ldx PLOT_XBYT
 		ldy PLOT_YBYT
 		SyncBlank		; wait sync
 		rts
-		
+
 PLOT_XBYT:
                .byte $00 ; set default
 PLOT_YBYT:
