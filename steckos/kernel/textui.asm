@@ -101,15 +101,15 @@ textui_update_crs_ptr:		;   updates the 16 bit pointer crs_p upon crs_x, crs_y v
 		asl						; y*4
 		asl						; y*8
 
-.ifdef COLS80
-		; crs_y*64 + crs_y*16 (crs_ptr) => y*80
+.ifdef COLS80					; crs_y*64 + crs_y*16 (crs_ptr) => y*80
 		asl						; y*16
 		sta crs_ptr
 		php						; save carry
 		rol crs_ptr+1	   	; save carry if overflow
 .else
 		; crs_y*32 + crs_y*8  (crs_ptr) => y*40
-		sta crs_ptr			; save
+		sta crs_ptr				; save
+		php						; save carry
 .endif
 		asl
 		rol crs_ptr+1	   	; save carry if overflow
