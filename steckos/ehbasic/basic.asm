@@ -7840,35 +7840,9 @@ LAB_DIR:
 pattern:
 	.asciiz "*.*"
 
-LAB_PLOT:
-	pha
-	phx
-	phy
-	jsr GFX_MC_Plot
-	ply
-	plx
-	pla
-	RTS
-
-LAB_GFX:
-	pha
-	phx
-	phy
-	jsr GFX_MC_On
-	ply
-	plx
-	pla
-	rts
-
-LAB_TXT:
-	pha
-	phx
-	phy
-	jsr GFX_Off
-	ply
-	plx
-	pla
-	rts
+LAB_PLOT = GFX_MC_Plot
+LAB_GFX  = GFX_MC_On
+LAB_TXT  = GFX_Off
 
 ; system dependant i/o vectors
 ; these are in RAM and are set by the monitor at start-up
