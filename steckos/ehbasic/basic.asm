@@ -7765,20 +7765,8 @@ LAB_TWOPI:
 	JMP	LAB_UFAC		; unpack memory (AY) into FAC1 and return
 
 LAB_CD:
-	jsr LAB_EVEX
-	jsr LAB_EVST
-
-	tay
-	lda #0
-	sta buf,y
-	dey
-@loop:
-	lda (ut1_pl),y
-	beq @out
-	sta buf,y
-	dey
-	bpl @loop
-@out:
+	jsr strparam2buf
+	SetVector buf, filenameptr
 
 	lda #<buf
 	ldx #>buf
@@ -7790,6 +7778,7 @@ LAB_CD:
 @end:
 	rts
 
+
 LAB_DIR:
 	pha
 	phx
@@ -7797,23 +7786,9 @@ LAB_DIR:
 
 	BEQ	@end0
 
+	jsr strparam2buf
+	bcc @end0
 
-	jsr LAB_EVEX
-	jsr LAB_EVST
-	cmp #$00
-	beq @end0
-
-	tay
-	lda #0
-	sta buf,y
-	dey
-@loop:
-	lda (ut1_pl),y
-	beq @out
-	sta buf,y
-	dey
-	bpl @loop
-@out:
 	SetVector buf, filenameptr
 	lda #<buf
 	ldx #>buf
@@ -7869,6 +7844,30 @@ LAB_DIR:
 	rts
 pattern:
 	.asciiz "*.*"
+
+strparam2buf:
+	jsr LAB_EVEX
+	jsr LAB_EVST
+	cmp #$00
+	beq @end
+
+	tay
+	lda #0
+	sta buf,y
+	dey
+@loop:
+	lda (ut1_pl),y
+	beq @out
+	sta buf,y
+	dey
+	bpl @loop
+@out:
+	sec
+	rts
+@end:
+	clc
+	rts
+
 
 LAB_PLOT = GFX_MC_Plot
 LAB_GFX  = GFX_MC_On

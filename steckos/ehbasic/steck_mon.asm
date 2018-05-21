@@ -51,22 +51,23 @@ LAB_stlp:
 
 openfile:
         pha             ; save file open mode
-		jsr LAB_EVEX
-        jsr LAB_EVST
-
-        tay
-    	lda #0
-    	sta buf,y
-    	dey
-@loop:
-        lda (ut1_pl),y
-        beq @out
-        sta buf,y
-        dey
-        bpl @loop
-@out:
-
+; 		jsr LAB_EVEX
+;         jsr LAB_EVST
+;
+;         tay
+;     	lda #0
+;     	sta buf,y
+;     	dey
+; @loop:
+;         lda (ut1_pl),y
+;         beq @out
+;         sta buf,y
+;         dey
+;         bpl @loop
+; @out:
+        jsr strparam2buf
 @open:
+        SetVector buf, filenameptr
 		lda #<buf
 		ldx #>buf
         ply
