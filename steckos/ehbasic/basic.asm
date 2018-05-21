@@ -266,8 +266,10 @@ IrqBase		= $DF		; IRQ handler enabled/setup/triggered flags
 ;			= $DE		; unused
 ;			= $DF		; unused
 
-;			= $E0		; unused
-;			= $E1		; unused
+;			= $E0		; used by gfx extension
+;			= $E1		; used by gfx extension
+
+
 ;                     = $E2           ; unused
 ;                     = $E3           ; unused
 ;                     = $E4           ; unused
@@ -7782,17 +7784,45 @@ LAB_CD:
 	ldx #>buf
 	jsr krn_chdir
 	beq @end
+	; File not found error
 	ldx #$24
 	jmp LAB_XERR
 @end:
 	rts
+
 LAB_DIR:
 	pha
 	phx
 	phy
 
-	SetVector pattern, filenameptr
+	BEQ	@end0
 
+
+	jsr LAB_EVEX
+	jsr LAB_EVST
+	cmp #$00
+	beq @end0
+
+	tay
+	lda #0
+	sta buf,y
+	dey
+@loop:
+	lda (ut1_pl),y
+	beq @out
+	sta buf,y
+	dey
+	bpl @loop
+@out:
+	SetVector buf, filenameptr
+	lda #<buf
+	ldx #>buf
+	bra @skip
+
+@end0:
+
+	SetVector pattern, filenameptr
+@skip:
 
 	jsr LAB_CRLF
 
@@ -8872,3 +8902,4 @@ LAB_IMSG:	.byte	" Extra ignored",$0D,$0A,$00
 LAB_REDO:	.byte	" Redo from start",$0D,$0A,$00
 
 AA_end_basic:
+buf:

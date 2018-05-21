@@ -24,6 +24,9 @@
 .export GFX_Off
 .export GFX_BgColor
 
+PLOT_XBYT   = $E0
+PLOT_YBYT   = $E1
+
 ;
 ;	within basic define extensions as follows
 ;
@@ -31,7 +34,7 @@
 ;	CALL PLOT,X,Y,COLOR		- invoke GFX_Plot with CALL api
 ;
 GFX_BgColor:
-		JSR LAB_SCGB ; scan for "," and get byte
+		JSR LAB_GTBY	; Get byte parameter and ensure numeric type, else do type mismatch error. Return the byte in X.
 		stx a_vreg
 		lda #$87
 		sta a_vreg
@@ -79,10 +82,11 @@ GFX_2_Plot:
 		jmp vdp_gfx2_set_pixel
 GFX_MC_Plot:
 		jsr GFX_Plot_Prepare
+		rts
 		jmp vdp_mc_set_pixel
 
 GFX_Plot_Prepare:
-		JSR LAB_GTBY
+		JSR LAB_GTBY	; Get byte parameter and ensure numeric type, else do type mismatch error. Return the byte in X.
 		stx PLOT_XBYT	; save plot x
 		JSR LAB_SCGB 	; scan for "," and get byte
 		stx PLOT_YBYT	; save plot y
@@ -93,7 +97,7 @@ GFX_Plot_Prepare:
 		SyncBlank		; wait sync
 		rts
 
-PLOT_XBYT:
-               .byte $00 ; set default
-PLOT_YBYT:
-               .byte $00 ; set default
+; PLOT_XBYT:
+;                .byte $00 ; set default
+; PLOT_YBYT:
+;                .byte $00 ; set default
