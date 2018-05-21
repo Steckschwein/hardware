@@ -33,9 +33,25 @@ U 1 1 5B040310
 P 3650 2550
 F 0 "U9" H 3650 2600 60  0000 C CNN
 F 1 "YAC512" H 3650 2500 60  0000 C CNN
-F 2 "" H 3650 2550 60  0000 C CNN
+F 2 "Housings_SOIC:SOIC-16_3.9x9.9mm_Pitch1.27mm" H 3650 2550 60  0001 C CNN
 F 3 "" H 3650 2550 60  0000 C CNN
 	1    3650 2550
 	1    0    0    -1  
 $EndComp
+Text HLabel 2700 2500 0    60   Input ~ 0
+DIN
+Wire Wire Line
+	2700 2500 2850 2500
+Text HLabel 2700 2600 0    60   Input ~ 0
+CLK
+Wire Wire Line
+	2700 2600 2850 2600
+Text HLabel 2700 2900 0    60   Input ~ 0
+SMP1
+Text HLabel 2700 2800 0    60   Input ~ 0
+SMP2
+Wire Wire Line
+	2700 2800 2850 2800
+Wire Wire Line
+	2700 2900 2850 2900
 $EndSCHEMATC
