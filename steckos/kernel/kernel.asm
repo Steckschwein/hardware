@@ -45,7 +45,7 @@ text_mode_40 = 1
 .import fat_mkdir, fat_chdir, fat_rmdir
 .import fat_unlink
 .import fat_write
-.import fat_read_blocks, fat_get_root_and_pwd
+.import fat_fread, fat_get_root_and_pwd
 .import fat_getfilesize
 .import sd_read_block, sd_write_block
 
@@ -287,8 +287,7 @@ trampolin_code:
 	;jmp $f000
 trampolin_code_end:
 
-.segment "JUMPTABLE"
-; "kernel" jumptable
+.segment "JUMPTABLE"		; "kernel" jumptable
 
 .export krn_rmdir
 krn_rmdir: 				    jmp fat_rmdir
@@ -321,7 +320,7 @@ krn_close_all: 			    jmp fat_close_all
 krn_read:    				jmp fat_read
 
 .export krn_read_blocks
-krn_read_blocks:    			jmp fat_read_blocks
+krn_read_blocks:    			jmp fat_fread
 
 .export krn_find_first
 krn_find_first:			    jmp fat_find_first

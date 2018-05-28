@@ -51,8 +51,9 @@
 .export fat_mount
 .export fat_open, fat_chdir, fat_unlink
 .export fat_mkdir, fat_rmdir
-.export fat_read_block, fat_read_blocks ; TODO FIXME align exec
-.export fat_read, fat_find_first, fat_find_next, fat_write
+.export fat_read_block, fat_fread ; TODO FIXME update exec, use fat_fread
+.export fat_read
+.export fat_find_first, fat_find_next, fat_write
 .export fat_get_root_and_pwd
 
 .export fat_close_all, fat_close, fat_getfilesize
@@ -60,23 +61,38 @@
 
 .segment "KERNEL"
 
-		;	read one block, TODO - update seek position within FD
+		;	seek n bytes within file denoted by the given FD
 		;in:
-		;	X	- offset into fd_area
-		;	read_blkptr
+		;	X	 - offset into fd_area
+		;	A/Y - seek bytes
 		;out:
 		;	Z=1 on success (A=0), Z=0 and A=error code otherwise
-fat_read_blocks:
+fat_fseek:
 		jsr fat_isOpen
-		beq @l_err_exit
-
-		jsr calc_blocks
-
-		jsr calc_lba_addr
-
-		jmp __fat_read_block
+		bne @l_err_exit
+		rts
 @l_err_exit:
 		lda #EINVAL
+		rts
+
+		
+		;	read n blocks from file denoted by the given FD and maintains seek position and remaining blocks
+		;in:
+		;	X	 - offset into fd_area
+		;	A/Y - number of bytes to read
+		;	read_blkptr - address where the read blocks should be stored
+		;out:
+		;	Z=1 on success (A=0), Z=0 and A=error code otherwise
+fat_fread:
+		jsr fat_fseek
+		bne @l_err_exit
+		; calc blocks from given size
+		; calc lba from current seek pos - CurrentCluster, SeekPos
+							
+		jsr __calc_blocks
+		jsr __calc_lba_addr
+		jmp __fat_read_block
+@l_err_exit:
 		rts
 
 		;	@deprecated - use fat_read_blocks instead, just for backward compatibility
@@ -91,8 +107,8 @@ fat_read_block:
 		jsr fat_isOpen
 		beq @l_err_exit
 
-		jsr calc_blocks
-		jsr calc_lba_addr
+		jsr __calc_blocks
+		jsr __calc_lba_addr
 		jmp read_block
 @l_err_exit:
 		lda #EINVAL
@@ -106,8 +122,8 @@ fat_read:
 		jsr fat_isOpen
 		beq @l_err_exit
 
-		jsr calc_blocks
-		jsr calc_lba_addr
+		jsr __calc_blocks
+		jsr __calc_lba_addr
 		jsr sd_read_multiblock
 ;		jsr read_block
 		rts
@@ -144,8 +160,8 @@ fat_write:
 		debug "f_w_1"
 		ldx fat_tmp_fd										; restore fd, go on with writing data
 @l_write:
-		jsr calc_blocks
-		jsr calc_lba_addr									; calc lba and blocks of file payload
+		jsr __calc_blocks
+		jsr __calc_lba_addr									; calc lba and blocks of file payload
 .ifdef MULTIBLOCK_WRITE
 .warning "SD multiblock writes are EXPERIMENTAL"
 		.import sd_write_multiblock
@@ -499,7 +515,7 @@ __fat_write_newdir_entry:
 		dey
 		bpl @l_1st_block
 
-		jsr calc_lba_addr
+		jsr __calc_lba_addr
 		jsr __fat_write_block_data
 		bne @l_exit
 
@@ -522,7 +538,7 @@ __fat_write_newdir_entry:
 __fat_read_block:
 		phx
 		jsr read_block
-  		dec read_blkptr+1		; TODO FIXME clarification with TW - read_block increments block ptr highbyte - sideeffect!
+  		dec read_blkptr+1		; TODO FIXME clarification with TW - read_block increments block ptr highbyte - which is a sideeffect and should be avoided
 		plx
 		cmp #0
 		rts
@@ -1057,7 +1073,7 @@ fat_check_signature:
 @l2:	rts
 
 
-calc_blocks: ;blocks = filesize / BLOCKSIZE -> filesize >> 9 (div 512) +1 if filesize LSB is not 0
+__calc_blocks: ;blocks = filesize / BLOCKSIZE -> filesize >> 9 (div 512) +1 if filesize LSB is not 0
 		lda fd_area + F32_fd::FileSize + 3,x
 		lsr
 		sta blocks + 2
@@ -1102,7 +1118,7 @@ __prepare_calc_lba_addr:
 ;		Note: lba_addr = cluster_begin_lba_m2 + (cluster_number * VolumeID::SecPerClus)
 ;		in:
 ;			X - file descriptor index
-calc_lba_addr:
+__calc_lba_addr:
 		pha
 		phx
 
@@ -1569,7 +1585,7 @@ __fat_find_first:
 		SetVector block_data, read_blkptr
 		lda volumeID+VolumeID::BPB + BPB::SecPerClus
 		sta blocks
-		jsr calc_lba_addr
+		jsr __calc_lba_addr
 
 ff_l3:	SetVector block_data, dirptr			; dirptr to begin of target buffer
 		jsr __fat_read_block
