@@ -52,7 +52,7 @@ void set_clock(struct tm *tm)
 	// TODO FIXME month must not be coded in bcd, check whether this is an DS1306 issue
 	//spi_write(DS1306(tm->tm_mon+1))// ansi tm struct 0..11, correct DS1306 specific 1..12
 	spi_write(tm->tm_mon+1);
-	spi_write(DS1306(tm->tm_year-100))// ansi tm struct year - 1900, correct DS1306 specific year 2000..
+	spi_write(DS1306(tm->tm_year-100));// ansi tm struct year - 1900, correct DS1306 specific year 2000..
 	spi_deselect();
 }
 
