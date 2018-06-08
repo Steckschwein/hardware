@@ -1,4 +1,4 @@
-update=Mon 31 Oct 2016 11:56:42 AM CET
+update=Mon 21 May 2018 11:36:57 AM CEST
 version=1
 last_client=kicad
 [cvpcb]
@@ -27,6 +27,16 @@ BoardOutlineThickness=0.100000000000
 ModuleOutlineThickness=0.150000000000
 [general]
 version=1
+[schematic_editor]
+version=1
+PageLayoutDescrFile=
+PlotDirectoryName=
+SubpartIdSeparator=0
+SubpartFirstId=65
+NetFmtName=
+SpiceForceRefPrefix=0
+SpiceUseNetNumbers=0
+LabSize=60
 [eeschema]
 version=1
 LibDir=../lbr
@@ -65,13 +75,4 @@ LibName31=y3014b
 LibName32=ym3812
 LibName33=rc4136
 LibName34=osc
-[schematic_editor]
-version=1
-PageLayoutDescrFile=
-PlotDirectoryName=
-SubpartIdSeparator=0
-SubpartFirstId=65
-NetFmtName=
-SpiceForceRefPrefix=0
-SpiceUseNetNumbers=0
-LabSize=60
+LibName35=yamaha_opl
