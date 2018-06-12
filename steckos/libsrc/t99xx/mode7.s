@@ -18,12 +18,19 @@
 ;	gfx 7 - each pixel can be addressed - e.g. for image
 ;
 vdp_gfx7_on:
-			lda #<vdp_init_bytes_gfx7
-			sta ptr1
-			lda #>vdp_init_bytes_gfx7
-			sta ptr1+1
-			jmp	vdp_init_reg
-
+			lda #v_reg9 ;	from register number down to reg0
+			tax
+			and #$7f		;	unmask offset
+			tay
+@0:		lda vdp_init_bytes_gfx7,y
+			sta a_vreg
+			vnops
+			stx a_vreg
+			dex
+			dey
+			bpl @0
+			rts
+		
 vdp_init_bytes_gfx7:
 			.byte v_reg0_m5|v_reg0_m4|v_reg0_m3									; reg0 mode bits
 			.byte v_reg1_display_on|v_reg1_spr_size |v_reg1_int 				; TODO FIXME verify v_reg1_16k t9929 specific, therefore 0
@@ -33,6 +40,8 @@ vdp_init_bytes_gfx7:
 			.byte $ff
 			.byte $3f
 			.byte $00 ; border color
+			.byte v_reg8_SPD | v_reg8_VR
+			.byte 0;			v_reg9_ln	//TODO FIXME ntsc off => gfx_off
 
 ;
 ; blank gfx mode 7 with
@@ -73,6 +82,7 @@ colour:
 	.byte %00011100 ; colour
 	.byte $00 ; destination memory, x direction, y direction, yada yada
 	.byte v_cmd_hmmv ; command
+	
 ; vdp_gfx7_blank:		; 2 x 6K
 ; 			ldx #212
 ; 			ldy #0

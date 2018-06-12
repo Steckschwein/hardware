@@ -72,8 +72,6 @@ GFX_7_On:
 		jsr krn_textui_disable			;disable textui
 		jsr krn_display_off
 		jsr vdp_gfx7_on
-		lda #%00000000 ; black
-		jsr vdp_gfx7_blank
 		cli
 		rts
 
@@ -84,6 +82,10 @@ GFX_MC_Plot:
 		jsr GFX_Plot_Prepare
 		rts
 		jmp vdp_mc_set_pixel
+		
+GFX_7_Plot:
+		jsr GFX_Plot_Prepare
+		jmp vdp_gfx7_set_pixel
 
 GFX_Plot_Prepare:
 		JSR LAB_GTBY	; Get byte parameter and ensure numeric type, else do type mismatch error. Return the byte in X.

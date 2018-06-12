@@ -47,6 +47,11 @@ main:
 		jsr	gfxui_on
 
 		keyin
+		
+;		jsr 	vdp_gfx7_blank
+
+;		keyin
+		
 		jsr	gfxui_off
 
 		jsr	krn_display_off			;restore textui
@@ -73,18 +78,9 @@ blend_isr:
 		rti
 
 gfxui_on:
-    sei
+   sei
 	jsr vdp_display_off			;display off
 	jsr vdp_mode_sprites_off	;sprites off
-
-
-	lda #v_reg8_SPD | v_reg8_VR
-	ldy #v_reg8
-	vdp_sreg
-	vnops
-
-	vdp_reg 9, v_reg9_ln
-	;|v_reg9_il
 
 	jsr vdp_gfx7_on			    ;enable gfx7 mode
 
