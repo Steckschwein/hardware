@@ -7,17 +7,17 @@ CC65 := $(if $(wildcard ../bin/cc65*),../bin/cc65,cc65)
 LD65 := $(if $(wildcard ../bin/ld65*),../bin/ld65,ld65)
 LDFLAGS=-Ln basic.lbl --config ../kernel/steckosapp.cfg
 # uncomment for a serial line version
-#DEFINES=-DUART
+# DEFINES=-DUART
 
-all: $(OBJ) 
+all: $(OBJ)
 clean:
 	rm -f *.prg *.o *.lbl
 
 %.o: %.asm basic.asm ext/*.asm $(LIBS)
 	$(CA65) --include-dir $(ASM_INCLUDE) --target none $(DEFINES)  $<
 
-basic.prg: steck_mon.o 
+basic.prg: steck_mon.o
 	$(LD65) $(LDFLAGS) steck_mon.o $(LIBS) -o basic.prg
 
 transfer: all
-	../../transfer.py $(OBJ) 
+	../../transfer.py $(OBJ)

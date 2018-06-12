@@ -80,7 +80,6 @@ GFX_2_Plot:
 		jmp vdp_gfx2_set_pixel
 GFX_MC_Plot:
 		jsr GFX_Plot_Prepare
-		rts
 		jmp vdp_mc_set_pixel
 		
 GFX_7_Plot:
@@ -96,7 +95,14 @@ GFX_Plot_Prepare:
 		txa				; color to A
 		ldx PLOT_XBYT
 		ldy PLOT_YBYT
-		SyncBlank		; wait sync
+		;SyncBlank		; wait sync
+		lda PLOT_XBYT
+		ora #'0'
+		jsr LAB_PRNA
+		lda PLOT_YBYT
+		ora #'0'
+		jsr LAB_PRNA
+
 		rts
 
 ; PLOT_XBYT:
