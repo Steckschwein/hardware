@@ -76,12 +76,13 @@ GFX_7_On:
 		rts
 
 GFX_2_Plot:
+
 		jsr GFX_Plot_Prepare
 		jmp vdp_gfx2_set_pixel
 GFX_MC_Plot:
 		jsr GFX_Plot_Prepare
 		jmp vdp_mc_set_pixel
-		
+
 GFX_7_Plot:
 		jsr GFX_Plot_Prepare
 		jmp vdp_gfx7_set_pixel
