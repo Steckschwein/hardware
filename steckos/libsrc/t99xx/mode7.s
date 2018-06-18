@@ -11,7 +11,7 @@
 .export vdp_gfx7_on
 .export vdp_gfx7_blank
 .export vdp_gfx7_set_pixel
-.export vdp_gfx7_set_pixel_direct
+.export vdp_gfx7_set_pixel_cmd
 
 .code
 ;
@@ -49,8 +49,18 @@ vdp_init_bytes_gfx7:
 ;
 vdp_gfx7_blank:
 	phx
-
+	
 	sta colour
+	
+	lda #<.HIWORD(ADDRESS_GFX7_SCREEN<<2)
+	ldy #v_reg14
+	vdp_sreg
+	vnops
+	lda #<.LOWORD(ADDRESS_GFX7_SCREEN)
+	ldy #(WRITE_ADDRESS + >.LOWORD(ADDRESS_GFX7_SCREEN))
+	vdp_sreg
+	vnops
+	
 	vdp_reg 17,36
 
 	ldx #0
@@ -130,7 +140,7 @@ vdp_gfx7_set_pixel:
 ;	A - color [0..f]
 ;
 ; 	VRAM ADDRESS = 8(INT(X DIV 8)) + 256(INT(Y DIV 8)) + (Y MOD 8)
-vdp_gfx7_set_pixel_direct:
+vdp_gfx7_set_pixel_cmd:
 		pha
 		pha
 

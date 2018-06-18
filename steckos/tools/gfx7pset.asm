@@ -83,28 +83,7 @@ gfxui_on:
 	jsr vdp_display_off			;display off
 	jsr vdp_mode_sprites_off	;sprites off
 
-
-	lda #v_reg8_SPD | v_reg8_VR
-	ldy #v_reg8
-	vdp_sreg
-	vnops
-
-	; lines
-	; lda #v_reg9_ln
-	; ldy #v_reg9
-	; vdp_sreg
-	; vnops
-
 	jsr vdp_gfx7_on			    ;enable gfx7 mode
-
-	lda #<.HIWORD(ADDRESS_GFX7_SCREEN<<2)
-	ldy #v_reg14
-	vdp_sreg
-	vnops
-	lda #<.LOWORD(ADDRESS_GFX7_SCREEN)
-	ldy #(WRITE_ADDRESS + >.LOWORD(ADDRESS_GFX7_SCREEN))
-	vdp_sreg
-
 
 	lda #%00000011
 	jsr vdp_gfx7_blank
