@@ -7870,7 +7870,6 @@
 
 
     LAB_PLOT = GFX_7_Plot
-    ;LAB_GRAPHIC  = GFX_7_On
     LAB_TEXT  = GFX_Off
 
 LAB_GRAPHIC:
@@ -7880,15 +7879,17 @@ LAB_GRAPHIC:
     tax
     jmp (gfx_table,x)
 gfx_table:
-    .word $0000 ; 0
-    .word $0000 ; 1
+    .word gfx_dummy; 0
+    .word gfx_dummy; 1
     .word GFX_2_On ; 2
-    .word $0000 ; 1
-    .word $0000 ; 1
-    .word $0000 ; 1
-    .word $0000 ; 1
+    .word gfx_dummy; 1
+    .word gfx_dummy; 1
+    .word gfx_dummy; 1
+    .word gfx_dummy; 1
     .word GFX_7_On ; 7
     .word GFX_MC_On ; 8
+gfx_dummy:
+    rts
 
 
 ; system dependant i/o vectors
