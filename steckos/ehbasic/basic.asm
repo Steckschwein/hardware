@@ -336,8 +336,8 @@
     TK_NMI		= TK_IRQ+1		; NMI token
 
     TK_PLOT		= TK_NMI+1
-    TK_TXT		= TK_PLOT+1
-    TK_DIR		= TK_TXT+1
+    TK_TEXT		= TK_PLOT+1
+    TK_DIR		= TK_TEXT+1
     TK_CD		= TK_DIR+1
     TK_GRAPHIC  = TK_CD+1
 
@@ -7870,8 +7870,25 @@
 
 
     LAB_PLOT = GFX_7_Plot
-    LAB_GRAPHIC  = GFX_7_On
-    LAB_TXT  = GFX_Off
+    ;LAB_GRAPHIC  = GFX_7_On
+    LAB_TEXT  = GFX_Off
+
+LAB_GRAPHIC:
+    JSR LAB_GTBY    ; Get byte parameter and ensure numeric type, else do type mismatch error. Return the byte in X.
+    txa
+    asl
+    tax
+    jmp (gfx_table,x)
+gfx_table:
+    .word $0000 ; 0
+    .word $0000 ; 1
+    .word GFX_2_On ; 2
+    .word $0000 ; 1
+    .word $0000 ; 1
+    .word $0000 ; 1
+    .word $0000 ; 1
+    .word GFX_7_On ; 7
+    .word GFX_MC_On ; 8
 
 
 ; system dependant i/o vectors
@@ -8133,7 +8150,7 @@ LAB_CTBL:
 	.word	LAB_IRQ-1		; IRQ			new command
 	.word	LAB_NMI-1		; NMI			new command
 	.word	LAB_PLOT-1
-	.word	LAB_TXT-1
+	.word	LAB_TEXT-1
 	.word	LAB_DIR-1
 	.word	LAB_CD-1
 	.word	LAB_GRAPHIC-1
@@ -8569,8 +8586,8 @@ LBB_TO:
 LBB_TWOPI:
 	.byte	"WOPI",TK_TWOPI	; TWOPI
 
-LBB_TXT:
-	.byte	"XT",TK_TXT
+LBB_TEXT:
+	.byte	"EXT",TK_TEXT
 
 	.byte	$00
 TAB_ASCU:
@@ -8695,8 +8712,8 @@ LAB_KEYT:
 	.word	LBB_NMI		; NMI
 	.byte	4,'P'
 	.word	LBB_PLOT
-	.byte	3,'T'
-	.word	LBB_TXT
+	.byte	4,'T'
+	.word	LBB_TEXT
 	.byte	3,'D'
 	.word	LBB_DIR
 	.byte	2,'C'
