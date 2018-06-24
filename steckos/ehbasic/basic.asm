@@ -7869,7 +7869,8 @@
         rts
 
 
-    LAB_PLOT = GFX_7_Plot
+    LAB_PLOT = GFX_MC_Plot
+
     LAB_TEXT  = GFX_Off
 
 LAB_GRAPHIC:
@@ -7879,8 +7880,8 @@ LAB_GRAPHIC:
     tax
     jmp (gfx_table,x)
 gfx_table:
-    .word gfx_dummy; 0
-    .word gfx_dummy; 1
+    .word GFX_Off  ; 0
+    .word GFX_Off  ; 1
     .word GFX_2_On ; 2
     .word gfx_dummy; 1
     .word gfx_dummy; 1
@@ -8580,6 +8581,8 @@ LBB_TAB:
 	.byte	"AB(",TK_TAB	; TAB(
 LBB_TAN:
 	.byte	"AN(",TK_TAN	; TAN(
+LBB_TEXT:
+	.byte	"EXT",TK_TEXT
 LBB_THEN:
 	.byte	"HEN",TK_THEN	; THEN
 LBB_TO:
@@ -8587,8 +8590,6 @@ LBB_TO:
 LBB_TWOPI:
 	.byte	"WOPI",TK_TWOPI	; TWOPI
 
-LBB_TEXT:
-	.byte	"EXT",TK_TEXT
 
 	.byte	$00
 TAB_ASCU:

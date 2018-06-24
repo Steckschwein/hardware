@@ -100,14 +100,7 @@ GFX_Plot_Prepare:
 		ldx PLOT_XBYT
 		ldy PLOT_YBYT
 		;SyncBlank		; wait sync
-		lda PLOT_XBYT
-		ora #'0'
-		jsr LAB_PRNA
-		lda PLOT_YBYT
-		ora #'0'
-		jsr LAB_PRNA
         pla
-
 		rts
 
 ; PLOT_XBYT:

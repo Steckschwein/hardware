@@ -7,7 +7,7 @@ CC65 := $(if $(wildcard ../bin/cc65*),../bin/cc65,cc65)
 LD65 := $(if $(wildcard ../bin/ld65*),../bin/ld65,ld65)
 LDFLAGS=-Ln basic.lbl --config ../kernel/steckosapp.cfg
 # uncomment for a serial line version
-# DEFINES=-DUART
+#DEFINES=-DUART
 
 all: $(OBJ)
 clean:

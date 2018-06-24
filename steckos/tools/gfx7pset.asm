@@ -34,6 +34,7 @@
 .import vdp_gfx7_blank
 ; .import vdp_gfx7_set_pixel_n
 .import vdp_gfx7_set_pixel
+.import vdp_gfx7_set_pixel_cmd
 .import vdp_display_off
 .import vdp_memcpy
 .import vdp_mode_sprites_off
@@ -93,7 +94,7 @@ gfxui_on:
 	ldx #0
 	ldy sintable,x
 @loop:
-	jsr vdp_gfx7_set_pixel
+	jsr vdp_gfx7_set_pixel_cmd
 	vnops
 	inx
 	ldy sintable,x
@@ -146,5 +147,9 @@ sintable:
 .byte 151, 149, 146, 143, 140, 136, 132, 128
 .byte 124, 119, 115, 110, 105, 100, 95, 90
 .byte 86, 81, 76, 72, 68, 64, 60, 57
-.byte 54, 52, 49, 47, 46, 45, 44, 44, 44, 45, 46, 47, 49, 51, 54, 57, 60, 64, 68, 72, 76, 81, 85, 90, 95, 100, 105, 110, 114, 119, 124, 128, 132, 136, 140, 143, 146, 148, 151, 153, 154, 155, 156, 156, 156, 155, 154, 153, 151, 149, 146, 143, 140, 136, 132, 128, 124, 119, 115, 110, 105, 100, 95, 90, 86, 81
- .segment "STARTUP"
+.byte 54, 52, 49, 47, 46, 45, 44, 44
+.byte 44, 45, 46, 47, 49, 51, 54, 57
+.byte 60, 64, 68, 72, 76, 81, 85, 90
+.byte 95, 100, 105, 110, 114, 119, 124
+.byte 128, 132, 136, 140, 143, 146, 148, 151, 153, 154, 155, 156, 156, 156, 155, 154, 153, 151, 149, 146, 143, 140, 136, 132, 128, 124, 119, 115, 110, 105, 100, 95, 90, 86, 81
+.segment "STARTUP"
