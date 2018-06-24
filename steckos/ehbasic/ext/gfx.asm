@@ -13,6 +13,7 @@
 .import vdp_gfx7_on
 .import vdp_gfx7_blank
 .import vdp_gfx7_set_pixel
+.import vdp_gfx7_set_pixel_cmd
 
 .import	vdp_bgcolor
 
@@ -89,6 +90,7 @@ GFX_7_Plot:
 		jmp vdp_gfx7_set_pixel
 
 GFX_Plot_Prepare:
+        pha
 		JSR LAB_GTBY	; Get byte parameter and ensure numeric type, else do type mismatch error. Return the byte in X.
 		stx PLOT_XBYT	; save plot x
 		JSR LAB_SCGB 	; scan for "," and get byte
@@ -104,6 +106,7 @@ GFX_Plot_Prepare:
 		lda PLOT_YBYT
 		ora #'0'
 		jsr LAB_PRNA
+        pla
 
 		rts
 
