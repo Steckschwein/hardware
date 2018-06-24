@@ -98,7 +98,7 @@ GFX_Plot_Prepare:
 		txa				; color to A
 		ldx PLOT_XBYT
 		ldy PLOT_YBYT
-		;SyncBlank		; wait sync
+;		SyncBlank		; wait sync
 		rts
 
 ; PLOT_XBYT:

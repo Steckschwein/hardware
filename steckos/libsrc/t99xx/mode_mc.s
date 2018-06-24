@@ -16,7 +16,7 @@
 .code
 ;
 ;	gfx multi color mode - 4x4px blocks where each can have one of the 15 colors
-;	
+;
 vdp_mc_on:
 			jsr vdp_mc_init_screen
 			lda #<vdp_mc_init_bytes
@@ -25,7 +25,7 @@ vdp_mc_on:
 			sta ptr1+1
 			jmp vdp_init_reg
 
-;			
+;
 ;
 ;
 vdp_mc_init_screen:
@@ -47,7 +47,7 @@ vdp_mc_init_screen:
 			bne	@l2
 			cpx	#32*6	; 6 pages overall
 			beq @le
-			stx tmp2	; next 
+			stx tmp2	; next
 			clc
 			txa
 			adc #32
@@ -76,19 +76,19 @@ vdp_mc_blank:
 vdp_mc_set_pixel:
 		and #$0f
 		sta tmp1				;safe color
-		
-		txa			
+
+		txa
 		and #$3e				; x div 2 * 8 => x div 2 * 2 * 2 * 2 => lsr, asl, asl, asl => lsr,asl = and #3e ($3f - x boundary), asl, asl
 		asl
 		asl
 		sta tmp2
-		
+
 		tya
 		and	#$07				; y mod 8
 		ora	tmp2				; with x
 		sta	a_vreg				;4 set vdp vram address low byte
 		sta	tmp2				;3 safe vram address low byte for write
-		
+
 		; high byte vram address - div 8, result is vram address "page" $0000, $0100, ... until $05ff
 		tya						;2
 		lsr						;2
@@ -113,28 +113,30 @@ l1:		lda tmp1				;3
 		sta tmp1
 		lda #$0f
 		and a_vram
-l2:	
+l2:
 		ora tmp1				;3
 		nop						;2
 		nop						;2
 		nop						;2
+        vnops
 		ldx tmp2				;3
 		stx	a_vreg				;4 setup write adress
 		nop						;2
 		nop						;2
 		nop						;2
+        vnops
 		sty a_vreg
 		vnops
 		sta a_vram
-		
+
 		rts
 
 vdp_mc_init_bytes:
-			.byte 	0		; 
+			.byte 	0		;
 			.byte 	v_reg1_16k|v_reg1_display_on|v_reg1_m2|v_reg1_spr_size;|v_reg1_int
 			.byte 	(ADDRESS_GFX_MC_SCREEN / $400)		; name table - value * $400 -> 3 * 256 pattern names (3 pages)
 			.byte	$ff									; color table not used in multicolor mode
-			.byte	(ADDRESS_GFX_MC_PATTERN / $800) 	; pattern table, 1536 byte - 3 * 256 
+			.byte	(ADDRESS_GFX_MC_PATTERN / $800) 	; pattern table, 1536 byte - 3 * 256
 			.byte	(ADDRESS_GFX_MC_SPRITE / $80)	; sprite attribute table - value * $80 --> offset in VRAM
 			.byte	(ADDRESS_GFX_MC_SPRITE_PATTERN / $800)	; sprite pattern table - value * $800  --> offset in VRAM
 			.byte	Black
