@@ -13,6 +13,7 @@ LIBS:mini_din
 LIBS:steckschwein
 LIBS:yamaha_opl
 LIBS:rc4136
+LIBS:audio
 LIBS:v9958-cache
 EELAYER 25 0
 EELAYER END

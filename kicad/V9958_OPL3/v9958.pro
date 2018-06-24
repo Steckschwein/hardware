@@ -1,4 +1,4 @@
-update=Sun 27 May 2018 04:47:05 PM CEST
+update=Sun 24 Jun 2018 08:08:40 PM CEST
 version=1
 last_client=kicad
 [cvpcb]
@@ -56,3 +56,4 @@ LibName11=mini_din
 LibName12=steckschwein
 LibName13=yamaha_opl
 LibName14=rc4136
+LibName15=audio
