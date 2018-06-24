@@ -90,7 +90,6 @@ GFX_7_Plot:
 		jmp vdp_gfx7_set_pixel
 
 GFX_Plot_Prepare:
-        pha
 		JSR LAB_GTBY	; Get byte parameter and ensure numeric type, else do type mismatch error. Return the byte in X.
 		stx PLOT_XBYT	; save plot x
 		JSR LAB_SCGB 	; scan for "," and get byte
@@ -100,7 +99,6 @@ GFX_Plot_Prepare:
 		ldx PLOT_XBYT
 		ldy PLOT_YBYT
 		;SyncBlank		; wait sync
-        pla
 		rts
 
 ; PLOT_XBYT:
