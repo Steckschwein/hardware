@@ -73,8 +73,11 @@ vdp_mc_blank:
 ;	A - color [0..f]
 ;
 ; 	VRAM ADDRESS = 8(INT(X DIV 2)) + 256(INT(Y DIV 8)) + (Y MOD 8)
+;
+; 	TODO FIXME 9929 timing support, should we differentiate ?!? /MLA
+;
 vdp_mc_set_pixel:
-		and #$0f
+		and #$0f				;only the 16 colors
 		sta tmp1				;safe color
 
 		txa
@@ -101,7 +104,8 @@ vdp_mc_set_pixel:
 		txa						;2
 		bit #1					;3 test color shift required, upper nibble?
 		beq l1					;2/3
-		nop						;2
+		;nop						;2
+		vnops
 		lda #$f0				;2
 		and a_vram				;4
 		bra l2					;3
@@ -115,16 +119,16 @@ l1:		lda tmp1				;3
 		and a_vram
 l2:
 		ora tmp1				;3
-		nop						;2
-		nop						;2
-		nop						;2
+		;nop						;2
+		;nop						;2
+		;nop						;2
         vnops
 		ldx tmp2				;3
 		stx	a_vreg				;4 setup write adress
-		nop						;2
-		nop						;2
-		nop						;2
-        vnops
+		;nop						;2
+		;nop						;2
+		;nop						;2
+		vnops
 		sty a_vreg
 		vnops
 		sta a_vram

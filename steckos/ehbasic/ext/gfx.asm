@@ -20,6 +20,7 @@
 .export GFX_2_On
 .export GFX_MC_On
 .export GFX_7_On
+.export GFX_7_Plot
 .export GFX_MC_Plot
 .export GFX_2_Plot
 .export GFX_Off
@@ -31,7 +32,7 @@ PLOT_YBYT   = $E1
 ;
 ;	within basic define extensions as follows
 ;
-;	PLOT = $xxxx 			- assign the adress of GFX_Plot from label file
+;	PLOT = $xxxx 				- assign the adress of GFX_Plot from label file
 ;	CALL PLOT,X,Y,COLOR		- invoke GFX_Plot with CALL api
 ;
 GFX_BgColor:
@@ -84,7 +85,7 @@ GFX_2_Plot:
 GFX_MC_Plot:
 		jsr GFX_Plot_Prepare
 		jmp vdp_mc_set_pixel
-
+		
 GFX_7_Plot:
 		jsr GFX_Plot_Prepare
 		jmp vdp_gfx7_set_pixel
@@ -96,12 +97,6 @@ GFX_Plot_Prepare:
 		stx PLOT_YBYT	; save plot y
 		JSR LAB_SCGB 	; scan for "," and get byte
 		txa				; color to A
-		ldx PLOT_XBYT
+ 		ldx PLOT_XBYT
 		ldy PLOT_YBYT
-;		SyncBlank		; wait sync
 		rts
-
-; PLOT_XBYT:
-;                .byte $00 ; set default
-; PLOT_YBYT:
-;                .byte $00 ; set default
