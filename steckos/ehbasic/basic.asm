@@ -268,6 +268,9 @@
 
     ;			= $E0		; used by gfx extension
     ;			= $E1		; used by gfx extension
+    PLOT_XBYT   = $E0
+    PLOT_YBYT   = $E1
+    GFX_MODE    = $E4
 
 
     ;                     = $E2           ; unused
@@ -7869,15 +7872,31 @@
         rts
 
 
-    LAB_PLOT = GFX_MC_Plot
+    ;LAB_PLOT = GFX_MC_Plot
 
     LAB_TEXT  = GFX_Off
+
+LAB_PLOT:
+    ldx GFX_MODE
+    jmp (gfx_plot_table,x)
+gfx_plot_table:
+    .word GFX_Off  ; 0
+    .word GFX_Off  ; 1
+    .word GFX_2_Plot ; 2
+    .word gfx_dummy; 1
+    .word gfx_dummy; 1
+    .word gfx_dummy; 1
+    .word gfx_dummy; 1
+    .word GFX_7_Plot ; 7
+    .word GFX_MC_Plot; 8
 
 LAB_GRAPHIC:
     JSR LAB_GTBY    ; Get byte parameter and ensure numeric type, else do type mismatch error. Return the byte in X.
     txa
     asl
     tax
+    stx GFX_MODE
+
     jmp (gfx_table,x)
 gfx_table:
     .word GFX_Off  ; 0
@@ -7891,7 +7910,6 @@ gfx_table:
     .word GFX_MC_On ; 8
 gfx_dummy:
     rts
-
 
 ; system dependant i/o vectors
 ; these are in RAM and are set by the monitor at start-up

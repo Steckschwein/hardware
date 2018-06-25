@@ -26,8 +26,6 @@
 .export GFX_Off
 .export GFX_BgColor
 
-PLOT_XBYT   = $E0
-PLOT_YBYT   = $E1
 
 ;
 ;	within basic define extensions as follows
@@ -85,7 +83,7 @@ GFX_2_Plot:
 GFX_MC_Plot:
 		jsr GFX_Plot_Prepare
 		jmp vdp_mc_set_pixel
-		
+
 GFX_7_Plot:
 		jsr GFX_Plot_Prepare
 		jmp vdp_gfx7_set_pixel
