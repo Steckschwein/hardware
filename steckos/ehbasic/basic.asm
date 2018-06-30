@@ -452,8 +452,8 @@
 
     Ram_top		= __LOADADDR__	; end of user RAM+1 (set as needed, should be page aligned)
 
-    ; This start can be changed to suit your system
-        ;*=$b000
+		; This start can be changed to suit your system
+		;*=$b000
 
     ; For convenience, put jump here to reset location so it can be
     ; run from the load address.
@@ -7871,43 +7871,38 @@
         clc
         rts
 
-
-    ;LAB_PLOT = GFX_MC_Plot
-
     LAB_TEXT  = GFX_Off
 
 LAB_PLOT:
-    ldx GFX_MODE
+    ldx GFX_MODE		; init with text model - @see RES_vec:
     jmp (gfx_plot_table,x)
 gfx_plot_table:
     .word GFX_Off  ; 0
     .word GFX_Off  ; 1
     .word GFX_2_Plot ; 2
-    .word gfx_dummy; 1
-    .word gfx_dummy; 1
-    .word gfx_dummy; 1
-    .word gfx_dummy; 1
+    .word GFX_MC_Plot; 3
+    .word gfx_dummy; 4
+    .word gfx_dummy; 5
+    .word gfx_dummy; 6
     .word GFX_7_Plot ; 7
-    .word GFX_MC_Plot; 8
 
 LAB_GRAPHIC:
     JSR LAB_GTBY    ; Get byte parameter and ensure numeric type, else do type mismatch error. Return the byte in X.
     txa
+	 and #$07
     asl
     tax
     stx GFX_MODE
-
     jmp (gfx_table,x)
 gfx_table:
     .word GFX_Off  ; 0
     .word GFX_Off  ; 1
     .word GFX_2_On ; 2
-    .word gfx_dummy; 1
-    .word gfx_dummy; 1
-    .word gfx_dummy; 1
-    .word gfx_dummy; 1
+    .word GFX_MC_On ; 3
+    .word gfx_dummy; 4
+    .word gfx_dummy; 5
+    .word gfx_dummy; 6
     .word GFX_7_On ; 7
-    .word GFX_MC_On ; 8
 gfx_dummy:
     rts
 
@@ -8470,7 +8465,7 @@ LBB_GOTO:
 	.byte	"OTO",TK_GOTO	; GOTO
 LBB_GRAPHIC:
 	.byte	"RAPHIC",TK_GRAPHIC	; GRAPHIC
-	.byte	$00
+;	.byte	$00	; TODO FIXME Why?
 TAB_ASCH:
 LBB_HEXS:
 	.byte	"EX$(",TK_HEXS	; HEX$(

@@ -59,7 +59,7 @@ GFX_MC_On:
 
 GFX_2_On:
 		sei
-		jsr	krn_textui_disable			;disable textui
+		jsr krn_textui_disable			;disable textui
 		jsr krn_display_off
 		lda #Gray<<4|Black
 		jsr vdp_gfx2_blank
@@ -71,7 +71,7 @@ GFX_7_On:
 		sei
 		jsr krn_textui_disable			;disable textui
 		jsr krn_display_off
-		jsr vdp_gfx7_blank
+;		jsr vdp_gfx7_blank
 		jsr vdp_gfx7_on
 		cli
 		rts
@@ -86,8 +86,22 @@ GFX_MC_Plot:
 
 GFX_7_Plot:
 		jsr GFX_Plot_Prepare
-		jmp vdp_gfx7_set_pixel
+		sei
+		jsr vdp_gfx7_set_pixel
+		
+         vnops
+         lda #<.HIWORD(ADDRESS_GFX1_SCREEN<<2)
+			lda #0
+         sta a_vreg
+         vnops
+         lda #v_reg14
+         sta a_vreg
+		
+		cli
+		rts
 
+m_vdp_nopslide
+		
 GFX_Plot_Prepare:
 		JSR LAB_GTBY	; Get byte parameter and ensure numeric type, else do type mismatch error. Return the byte in X.
 		stx PLOT_XBYT	; save plot x

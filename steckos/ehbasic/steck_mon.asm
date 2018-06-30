@@ -46,7 +46,10 @@ LAB_stlp:
 		STA	VEC_IN-1,Y		; save to RAM
  		DEY				; decrement index/count
  		BNE	LAB_stlp		; loop if more to do
-
+		
+		lda	#0				;init text mode
+		sta 	GFX_MODE		
+	
 		JMP	LAB_COLD		; do EhBASIC cold start
 
 openfile:
