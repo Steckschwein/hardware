@@ -88,20 +88,20 @@ GFX_7_Plot:
 		jsr GFX_Plot_Prepare
 		sei
 		jsr vdp_gfx7_set_pixel
-		
-         vnops
-         lda #<.HIWORD(ADDRESS_GFX1_SCREEN<<2)
-			lda #0
-         sta a_vreg
-         vnops
-         lda #v_reg14
-         sta a_vreg
-		
+
+		vnops
+		lda #<.HIWORD(ADDRESS_GFX1_SCREEN<<2)
+		lda #0
+		sta a_vreg
+		vnops
+		lda #v_reg14
+		sta a_vreg
+
 		cli
 		rts
 
 m_vdp_nopslide
-		
+
 GFX_Plot_Prepare:
 		JSR LAB_GTBY	; Get byte parameter and ensure numeric type, else do type mismatch error. Return the byte in X.
 		stx PLOT_XBYT	; save plot x
