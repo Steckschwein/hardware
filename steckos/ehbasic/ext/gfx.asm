@@ -71,8 +71,13 @@ GFX_7_On:
 		sei
 		jsr krn_textui_disable			;disable textui
 		jsr krn_display_off
-;		jsr vdp_gfx7_blank
+
 		jsr vdp_gfx7_on
+		vnops
+		lda #$00
+		jsr vdp_gfx7_blank
+		vnops
+
 		cli
 		rts
 
