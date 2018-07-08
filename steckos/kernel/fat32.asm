@@ -41,7 +41,6 @@
 ; TODO FIXME - encapsulate within sd layer
 .import sd_read_multiblock
 
-
 .import __rtc_systime_update
 .import string_fat_name, fat_name_string, put_char
 .import string_fat_mask
@@ -53,6 +52,7 @@
 .export fat_mkdir, fat_rmdir
 .export fat_read_block, fat_fread ; TODO FIXME update exec, use fat_fread
 .export fat_read
+.export fat_fseek
 .export fat_find_first, fat_find_next, fat_write
 .export fat_get_root_and_pwd
 
@@ -64,17 +64,50 @@
 		;	seek n bytes within file denoted by the given FD
 		;in:
 		;	X	 - offset into fd_area
-		;	A/Y - seek bytes
+		;	A/Y - pointer to seek_struct - @see 
 		;out:
 		;	Z=1 on success (A=0), Z=0 and A=error code otherwise
 fat_fseek:
-		jsr fat_isOpen
-		bne @l_err_exit
+		phx
+		sta krn_ptr1								; save ptr
+		sty krn_ptr1
+		jsr __fat_isOpen
+		beq __exit_ebadf
+		
+		ldy #Seek::Whence
+		lda (krn_ptr1),y
+		bne @seek_update
+		stz fd_area+F32_fd::SeekPos+0, x		; seek_set - add seek from beginning, therefore zero seek pos
+		stz fd_area+F32_fd::SeekPos+1, x
+		stz fd_area+F32_fd::SeekPos+2, x
+		stz fd_area+F32_fd::SeekPos+3, x
+@seek_update:										; seek_cur - relative to current position
+		iny											; y to #Seek::Offset
+@add:	clc
+		lda (krn_ptr1),y
+		adc fd_area+F32_fd::SeekPos+0, x
+		sta fd_area+F32_fd::SeekPos+0, x
+		inx
+		iny
+		cpy #.sizeof(Seek::Whence) + .sizeof(Seek::Offset)
+		bne @add
+		lda #EOK
+		bra __exit
+		
+__exit_ebadf:
+		lda #EBADF
+__exit:
+		plx
+		cmp #0
 		rts
-@l_err_exit:
-		lda #EINVAL
+		
+		;in:
+		;	X	 - offset into fd_area
+		;out:
+		;	Z=1 on success (A=0), Z=0 and A=error code otherwise
+__fat_fseek:
+		;SetVector block_data, read_blkptr
 		rts
-
 		
 		;	read n blocks from file denoted by the given FD and maintains seek position and remaining blocks
 		;in:
@@ -84,13 +117,14 @@ fat_fseek:
 		;out:
 		;	Z=1 on success (A=0), Z=0 and A=error code otherwise
 fat_fread:
-		jsr fat_fseek
+		jsr __fat_fseek
 		bne @l_err_exit
+		
 		; calc blocks from given size
-		; calc lba from current seek pos - CurrentCluster, SeekPos
-							
+		; calc lba from current seek pos - CurrentCluster, SeekPos					
 		jsr __calc_blocks
 		jsr __calc_lba_addr
+		
 		jmp __fat_read_block
 @l_err_exit:
 		rts
@@ -104,7 +138,7 @@ fat_fread:
 		;out:
 		;	Z=1 on success (A=0), Z=0 and A=error code otherwise
 fat_read_block:
-		jsr fat_isOpen
+		jsr __fat_isOpen
 		beq @l_err_exit
 
 		jsr __calc_blocks
@@ -119,7 +153,7 @@ fat_read_block:
 		;out:
 		;	Z=1 on success (A=0), Z=0 and A=error code otherwise
 fat_read:
-		jsr fat_isOpen
+		jsr __fat_isOpen
 		beq @l_err_exit
 
 		jsr __calc_blocks
@@ -140,7 +174,7 @@ fat_write:
 		debug "f_w_s"
 		stx fat_tmp_fd										; save fd
 
-		jsr fat_isOpen
+		jsr __fat_isOpen
 		beq @l_not_open
 
 		lda	fd_area + F32_fd::Attr, x
@@ -250,17 +284,17 @@ __fat_set_direntry_timedate:
 		rts
 
 __fat_set_direntry_filesize:
-		ldy #F32DirEntry::FileSize+3
 		lda fd_area + F32_fd::FileSize+3 , x
+		ldy #F32DirEntry::FileSize+3
 		sta (dirptr),y
 		lda fd_area + F32_fd::FileSize+2 , x
-		ldy #F32DirEntry::FileSize+2
+		dey
 		sta (dirptr),y
 		lda fd_area + F32_fd::FileSize+1 , x
-		ldy #F32DirEntry::FileSize+1
+		dey
 		sta (dirptr),y
-		ldy #F32DirEntry::FileSize+0
 		lda fd_area + F32_fd::FileSize+0 , x
+		dey
 		sta (dirptr),y
 		rts
 
@@ -538,7 +572,7 @@ __fat_write_newdir_entry:
 __fat_read_block:
 		phx
 		jsr read_block
-  		dec read_blkptr+1		; TODO FIXME clarification with TW - read_block increments block ptr highbyte - which is a sideeffect and should be avoided
+  		dec read_blkptr+1		; TODO FIXME clarification with TW - read_block increments block ptr highbyte - which is a sideeffect and should be avoided		
 		plx
 		cmp #0
 		rts
@@ -817,29 +851,29 @@ __fat_find_free_cluster:
 		jsr __fat_read_block	; read fat block
 		bne @exit
 
-		ldy	#0
-@l1:	lda	block_fat+0,y		; 1st page find cluster entry with 00 00 00 00
+		ldy #0
+@l1:	lda block_fat+0,y		; 1st page find cluster entry with 00 00 00 00
 		ora block_fat+1,y
 		ora block_fat+2,y
 		ora block_fat+3,y
-		beq	@l_found_lb			; branch, A=0 here
-		lda	block_fat+$100+0,y	; 2nd page find cluster entry with 00 00 00 00
+		beq @l_found_lb			; branch, A=0 here
+		lda block_fat+$100+0,y	; 2nd page find cluster entry with 00 00 00 00
 		ora block_fat+$100+1,y
 		ora block_fat+$100+2,y
 		ora block_fat+$100+3,y
-		beq	@l_found_hb
+		beq @l_found_hb
 		iny
 		iny
 		iny
 		iny
 		bne @l1
-		jsr inc_lba_address		; inc lba_addr, next fat block
+		jsr inc_lba_address	; inc lba_addr, next fat block
 		lda lba_addr+1			; end of fat reached?
-		cmp	fat2_lba_begin+1	; cmp with fat2_begin_lba
+		cmp fat2_lba_begin+1	; cmp with fat2_begin_lba
 		bne @next_block
 		lda lba_addr+0
-		cmp	fat2_lba_begin+0
-		bne	@next_block			;
+		cmp fat2_lba_begin+0
+		bne @next_block		;
 		lda #ENOSPC				; end reached, answer ENOSPC () - "No space left on device"
 @exit:	debug32 "free_cl", fd_area+(2*.sizeof(F32_fd)) + F32_fd::CurrentCluster ; almost the 3rd entry
 		rts
@@ -847,7 +881,7 @@ __fat_find_free_cluster:
 		lda #>(block_fat+$100)	; set read_blkptr to begin 2nd page of fat_buffer - @see __fat_mark_free_cluster
 		sta read_blkptr+1
 		lda #$40				; adjust clnr with +$40 (256 / 4 byte/clnr) clusters since it was found in 2nd page
-@l_found_lb:					; A=0 here, if called from above
+@l_found_lb:				; A=0 here, if called from above
 		debug32 "f_ffc_lba", lba_addr
 		sta fd_area+F32_fd::CurrentCluster+0, x
 		tya
@@ -934,13 +968,13 @@ fat_open:
 		rts
 
 		; open a path to a file or directory starting from current directory
-        ; in:
-        ;   A/X - pointer to string with the file path
+		; in:
+		;	A/X - pointer to string with the file path
 		;	Y	- file descriptor of fd_area denoting the start directory. usually FD_INDEX_CURRENT_DIR is used
-        ; out:
-        ;   X - index into fd_area of the opened file. if a directory was opened then X == FD_INDEX_TEMP_DIR
-		;   Z - Z=1 on success (A=0), Z=0 and A=error code otherwise
-		;	Note: regardless of return value, the dirptr points the last visited directory entry and the corresponding lba_addr is set to the block where the dir entry resides.
+		; out:
+		;  X - index into fd_area of the opened file. if a directory was opened then X == FD_INDEX_TEMP_DIR
+		;	Z - Z=1 on success (A=0), Z=0 and A=error code otherwise
+		;	Note: regardless of return value, the dirptr points to the last visited directory entry and the corresponding lba_addr is set to the block where the dir entry resides.
 		;		  furthermore the filenameptr points to the last inspected path fragment of the given input path
 .macro _open
 		stz	filename_buf, x	;\0 terminate the current path fragment
@@ -1169,7 +1203,7 @@ __calc_fat_lba_addr:
 		lda lba_addr+3
 		rol
 		sta lba_addr+2
-		lda #0									;$0f (see EOC) highes value for cluster MSB, due to >>7 the $0f from the MSB is erased completely
+		lda #0									;$0f (see EOC) highest value for cluster MSB, due to >>7 the $0f from the MSB is erased completely
 		rol
 		sta lba_addr+3
 		clc										; add fat_lba_begin and lba_addr
@@ -1435,7 +1469,7 @@ __fat_clone_fd:
 		;	x - offset to fd_area
 		; out:
 		;	Z=0 if file is open, Z=1 otherwise
-fat_isOpen:
+__fat_isOpen:
 		lda fd_area + F32_fd::CurrentCluster +3, x
 		cmp #$ff		;#$ff means not open
 		rts
@@ -1620,12 +1654,12 @@ fat_find_next:
 		jsr inc_lba_address	; increment lba address to read next block
 		bra ff_l3
 @ff_eoc:
-		ldx #FD_INDEX_TEMP_DIR					; TODO FIXME dont know if this is a good idea... FD_INDEX_TEMP_DIR was setup above and following the cluster chain is done with the FD_INDEX_TEMP_DIR to no clobber the FD_INDEX_CURRENT_DIR
+		ldx #FD_INDEX_TEMP_DIR					; TODO FIXME dont know if this is a good idea... FD_INDEX_TEMP_DIR was setup above and following the cluster chain is done with the FD_INDEX_TEMP_DIR to not clobber the FD_INDEX_CURRENT_DIR
 		jsr __fat_read_cluster_block_and_select
 		bne ff_exit								; read error...
 		bcs ff_exit								; EOC reached?
-		jsr __fat_next_cln						; select next cluster
-		bra	__fat_find_first					; C=0, go on with next cluster
+		jsr __fat_next_cln					; select next cluster
+		bra __fat_find_first					; C=0, go on with next cluster
 ff_exit:
 		clc										; we are at the end, C=0 and return
 ff_end:

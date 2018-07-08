@@ -23,6 +23,7 @@
 .ifdef DEBUG_UTIL		; enable debug for this module
 	debug_enabled=1
 .endif
+.setcpu "65c02"
 .include	"kernel.inc"
 .include	"fat32.inc"
 .include	"errno.inc"

@@ -170,6 +170,13 @@ DIR_Entry_Deleted            = $e5
 ; File descriptor struct
 ;--------------------------------------------------------------------------------------
 
+.struct Seek
+			Whence	.byte		; SEEK_SET - OFFSET is the absolute file position (an offset from the beginning of the file) desired.  OFFSET must be positive.
+									; SEEK_CUR - OFFSET is relative to the current file position.  OFFSET can meaningfully be either positive or negative.
+									; SEEK_END - OFFSET is relative to the current end of file.  OFFSET can meaningfully be either positive (to increase the size of the file) or negative.
+			Offset	.dword
+.endstruct
+
 .struct F32_fd
    CurrentCluster .dword; +4
    FileSize       .dword; +4
@@ -206,8 +213,9 @@ filename_buf         = fat_tmp_mode + 1 ; (13 byte, 8.3 + \0) file name buffer
 fat_dirname_mask      = filename_buf + 13; (11 byte, fat32 name and ext)
 fat_vec_matcher         = fat_dirname_mask + 11; (2 byte) jump vector
 
-fd_area               = $0380 ; File descriptor area until $0400
-sd_blktarget         = $0400
-block_data            = sd_blktarget
-block_fat               = $0600
 sd_blocksize         = $200
+fd_area					= $0380 ; File descriptor area until $0400
+sd_blktarget			= $0400
+block_data				= sd_blktarget
+block_fat				= block_data+sd_blocksize
+

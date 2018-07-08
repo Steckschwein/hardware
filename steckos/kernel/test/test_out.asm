@@ -5,6 +5,8 @@
 
 .include "appstart.inc"
 appstart $1000
+		
+		rts
 
 		ldx #0
 		ldy #0
