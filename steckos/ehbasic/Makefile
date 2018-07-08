@@ -13,7 +13,7 @@ all: $(OBJ)
 clean:
 	rm -f *.prg *.o *.lbl
 
-%.o: %.asm basic.asm ext/*.asm $(LIBS)
+steck_mon.o: steck_mon.asm basic.asm ext/*.asm $(LIBS)
 	$(CA65) --include-dir $(ASM_INCLUDE) --target none $(DEFINES)  $<
 
 basic.prg: steck_mon.o
