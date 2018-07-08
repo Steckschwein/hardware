@@ -7889,7 +7889,7 @@ gfx_plot_table:
 LAB_GRAPHIC:
     JSR LAB_GTBY    ; Get byte parameter and ensure numeric type, else do type mismatch error. Return the byte in X.
     txa
-	 and #$07
+	and #$07
     asl
     tax
     stx GFX_MODE
