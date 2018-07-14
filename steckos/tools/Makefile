@@ -26,7 +26,8 @@ all: ls.prg ll.prg \
 	gfx7.prg \
 	fig.prg \
 	ppmview.prg \
-	vramtest.prg
+	vramtest.prg \
+	wozmon.prg
 	(cd xmodem; make )
 
 clean:
