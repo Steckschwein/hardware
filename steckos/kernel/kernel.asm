@@ -41,12 +41,14 @@ text_mode_40 = 1
 .import getkey
 .import textui_enable, textui_disable, vdp_display_off,  textui_blank, textui_update_crs_ptr, textui_crsxy, textui_scroll_up
 .import init_sdcard
-.import fat_mount, fat_open, fat_isOpen, fat_close, fat_close_all, fat_read, fat_find_first, fat_find_next
+.import fat_mount, fat_open, fat_close, fat_close_all, fat_read, fat_find_first, fat_find_next
 .import fat_mkdir, fat_chdir, fat_rmdir
 .import fat_unlink
 .import fat_write
+.import fat_fseek
 .import fat_fread, fat_get_root_and_pwd
 .import fat_getfilesize
+
 .import sd_read_block, sd_write_block
 
 .import execv
@@ -312,40 +314,40 @@ krn_chdir: 				    jmp fat_chdir
 krn_unlink: 				jmp fat_unlink
 
 .export krn_close
-krn_close: 				    jmp fat_close
+krn_close:						jmp fat_close
 .export krn_close_all
-krn_close_all: 			    jmp fat_close_all
+krn_close_all:					jmp fat_close_all
 
 .export krn_read
-krn_read:    				jmp fat_read
+krn_read:						jmp fat_read
 
 .export krn_read_blocks
 krn_read_blocks:    			jmp fat_fread
 
 .export krn_find_first
-krn_find_first:			    jmp fat_find_first
+krn_find_first:				jmp fat_find_first
 .export krn_find_next
-krn_find_next:			    jmp fat_find_next
+krn_find_next:					jmp fat_find_next
 .export krn_textui_init
-krn_textui_init:		    jmp	textui_init0
+krn_textui_init:				jmp	textui_init0
 .export krn_textui_enable
-krn_textui_enable:		    jmp	textui_enable
+krn_textui_enable:			jmp	textui_enable
 .export krn_textui_disable
-krn_textui_disable:		    jmp textui_disable			;disable textui
+krn_textui_disable:			jmp textui_disable			;disable textui
 
 .export krn_display_off
-krn_display_off:		    jmp vdp_display_off
+krn_display_off:				jmp vdp_display_off
 
 .export krn_getkey
-krn_getkey:				    jmp getkey
+krn_getkey:						jmp getkey
 
 .export krn_chrout
-krn_chrout:                 jmp textui_chrout
+krn_chrout:						jmp textui_chrout
 .export krn_putchar
-krn_putchar:                jmp textui_put
+krn_putchar:					jmp textui_put
 
 .export krn_strout
-krn_strout:				    jmp strout
+krn_strout:						jmp strout
 
 .export krn_textui_crsxy
 krn_textui_crsxy:           jmp textui_crsxy
@@ -356,8 +358,8 @@ krn_textui_update_crs_ptr:  jmp textui_update_crs_ptr
 .export krn_textui_clrscr_ptr
 krn_textui_clrscr_ptr:      jmp textui_blank
 
-;.export krn_hexout
-;krn_hexout:				jmp hexout
+.export krn_fseek
+krn_fseek:						jmp fat_fseek
 
 dummy:	jmp dummy
 

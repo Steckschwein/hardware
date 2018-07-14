@@ -51,6 +51,10 @@ kernel.bin: version.inc $(OBJS) kernel.inc zeropage.inc debug.inc
 loader.bin: kernel.bin loader.o
 	ld65 $(LDFLAGS) loader.o -o loader.bin
 
+	# -m <kernel start adress - $100 (loader)
+disas: loader.bin
+	dcc6502 -o 0xe700 -m 6394 -d -n -c loader.bin > loader.dis
+	
 transfer: loader.bin
 	../../transfer.py -s 0x1000 loader.bin
 
