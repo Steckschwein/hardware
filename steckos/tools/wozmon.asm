@@ -34,12 +34,13 @@ IN              = $0300         ;  Input buffer to $027F
 
 RESET:          CLD             ; Clear decimal arithmetic mode.
                 CLI
-                ; LDY #$7F        ; Mask for DSP data direction register.
+                LDY #$7F        ; Mask for DSP data direction register.
                 ; STY DSP         ; Set it up.
-                ; LDA #$A7        ; KBD and DSP control register mask.
+                LDA #$A7        ; KBD and DSP control register mask.
                 ; STA KBDCR       ; Enable interrupts, set CA1, CB1, for
                 ; STA DSPCR       ; positive edge sense/output mode.
-NOTCR:          CMP #'_'    ; "_"?
+NOTCR:          ; CMP #'_'    ; "_"?
+                CMP #$08 + $80
                 BEQ BACKSPACE   ; Yes.
                 CMP #$1B        ; ESC?
                 BEQ ESCAPE      ; Yes.
@@ -85,8 +86,8 @@ NEXTHEX:        LDA IN,Y        ; Get character for hex test.
                 EOR #$30        ; Map digits to $0-9.
                 CMP #$0A        ; Digit?
                 BCC DIG         ; Yes.
-                ADC #$08        ; Map letter "A"-"F" to $FA-FF.
-                CMP #$7A        ; Hex letter?
+                ADC #$88        ; Map letter "A"-"F" to $FA-FF.
+                CMP #$FA        ; Hex letter?
                 BCC NOTHEX      ; No, character not hex.
 DIG:            ASL
                 ASL             ; Hex digit to MSD of A.
@@ -159,8 +160,8 @@ ECHO:
                 ; BIT DSP         ; bit (B7) cleared yet?
                 ; BMI ECHO        ; No, wait for display.
                 ; STA DSP         ; Output character. Sets DA.
-                jsr krn_chrout
-                RTS             ; Return.
+                jmp krn_chrout
+                ;RTS             ; Return.
 
                 ; BRK             ; unused
                 ; BRK             ; unused
