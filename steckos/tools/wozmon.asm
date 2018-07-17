@@ -62,8 +62,8 @@ NEXTCHAR:
                 ORA #$80
                 STA IN,Y        ; Add to text buffer.
                 JSR ECHO        ; Display character.
-                ; CMP #$8D        ; CR?
-                CMP #$0D        ; check for $0D instead $8D because bit7
+                CMP #$8D        ; CR?
+                ; CMP #$0D        ; check for $0D instead $8D because bit7
                                 ; has been cleared during JSR ECHO
                 BNE NOTCR       ; No.
                 LDY #$FF        ; Reset text index.
@@ -164,9 +164,11 @@ ECHO:
                 ; BIT DSP         ; bit (B7) cleared yet?
                 ; BMI ECHO        ; No, wait for display.
                 ; STA DSP         ; Output character. Sets DA.
+                pha
                 and #$7F
-                jmp krn_chrout
-                ;RTS             ; Return.
+                jsr krn_chrout
+                pla
+                RTS             ; Return.
 
                 ; BRK             ; unused
                 ; BRK             ; unused
