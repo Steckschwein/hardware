@@ -42,13 +42,14 @@ RESET:          CLD             ; Clear decimal arithmetic mode.
 NOTCR:          ; CMP #'_'    ; "_"?
                 CMP #$08 + $80
                 BEQ BACKSPACE   ; Yes.
-                CMP #$1B        ; ESC?
+                ; CMP #$1B        ; ESC?
+                CMP #$9B        ; ESC?
                 BEQ ESCAPE      ; Yes.
                 INY             ; Advance text index.
                 BPL NEXTCHAR    ; Auto ESC if > 127.
-ESCAPE:         LDA #'\'    ; "\".
+ESCAPE:         LDA #'\' + $80   ; "\".
                 JSR ECHO        ; Output it.
-GETLINE:        LDA #$0A        ; CR.
+GETLINE:        LDA #$8A        ; CR.
                 JSR ECHO        ; Output it.
                 LDY #$01        ; Initialize text index.
 BACKSPACE:      DEY             ; Back up text index.
@@ -58,10 +59,12 @@ NEXTCHAR:
                 ; BPL NEXTCHAR    ; Loop until ready.
                 ; LDA KBD         ; Load character. B7 should be ‘1’.
                 keyin
+                ORA #$80
                 STA IN,Y        ; Add to text buffer.
                 JSR ECHO        ; Display character.
-                ;CMP #$8D        ; CR?
-                CMP #$0D
+                ; CMP #$8D        ; CR?
+                CMP #$0D        ; check for $0D instead $8D because bit7
+                                ; has been cleared during JSR ECHO
                 BNE NOTCR       ; No.
                 LDY #$FF        ; Reset text index.
                 LDA #$00        ; For XAM mode.
@@ -70,20 +73,20 @@ SETSTOR:        ASL             ; Leaves $7B if setting STOR mode.
 SETMODE:        STA MODE        ; $00=XAM $7B=STOR $AE=BLOK XAM
 BLSKIP:         INY             ; Advance text index.
 NEXTITEM:       LDA IN,Y        ; Get character.
-                CMP #$0D        ; CR?
+                CMP #$8D        ; CR?
                 BEQ GETLINE     ; Yes, done this line.
-                CMP #'.'    ; "."?
+                CMP #'.' + $80    ; "."?
                 BCC BLSKIP      ; Skip delimiter.
                 BEQ SETMODE     ; Yes. Set STOR mode.
-                CMP #':'    ; ":"?
+                CMP #':' + $80   ; ":"?
                 BEQ SETSTOR     ; Yes. Set STOR mode.
-                CMP #'R'    ; "R"?
+                CMP #'R' + $80   ; "R"?
                 BEQ RUN         ; Yes. Run user program.
                 STX L           ; $00-> L.
                 STX H           ; and H.
                 STY YSAV        ; Save Y for comparison.
 NEXTHEX:        LDA IN,Y        ; Get character for hex test.
-                EOR #$30        ; Map digits to $0-9.
+                EOR #$B0        ; Map digits to $0-9.
                 CMP #$0A        ; Digit?
                 BCC DIG         ; Yes.
                 ADC #$88        ; Map letter "A"-"F" to $FA-FF.
@@ -112,8 +115,8 @@ NOTHEX:         CPY YSAV        ; Check if L, H empty (no hex digits).
                 INC STH         ; Add carry to ‘store index’ high order.
 TONEXTITEM:     JMP NEXTITEM    ; Get next command item.
 RUN:            JMP (XAML)      ; Run at current XAM index.
-NOTSTOR:        ;BMI XAMNEXT     ; B7=0 for XAM, 1 for BLOCK XAM.
-                BNE XAMNEXT
+NOTSTOR:        BMI XAMNEXT     ; B7=0 for XAM, 1 for BLOCK XAM.
+                ; BNE XAMNEXT
                 LDX #$02        ; Byte count.
 SETADR:         LDA L-1,X       ; Copy hex data to
                 STA STL-1,X     ; ‘store index’.
@@ -121,15 +124,15 @@ SETADR:         LDA L-1,X       ; Copy hex data to
                 DEX             ; Next of 2 bytes.
                 BNE SETADR      ; Loop unless X=0.
 NXTPRNT:        BNE PRDATA      ; NE means no address to print.
-                LDA #$0A        ; CR.
+                LDA #$8A        ; CR.
                 JSR ECHO        ; Output it.
                 LDA XAMH        ; ‘Examine index’ high-order byte.
                 JSR PRBYTE      ; Output it in hex format.
                 LDA XAML        ; Low-order ‘examine index’ byte.
                 JSR PRBYTE      ; Output it in hex format.
-                LDA #':'    ; ":".
+                LDA #':' + $80  ; ":".
                 JSR ECHO        ; Output it.
-PRDATA:         LDA #$20        ; Blank.
+PRDATA:         LDA #$A0        ; Blank.
                 JSR ECHO        ; Output it.
                 LDA (XAML,X)    ; Get data byte at ‘examine index’.
                 JSR PRBYTE      ; Output it in hex format.
@@ -153,14 +156,15 @@ PRBYTE:         PHA             ; Save A for LSD.
                 JSR PRHEX       ; Output hex digit.
                 PLA             ; Restore A.
 PRHEX:          AND #$0F        ; Mask LSD for hex print.
-                ORA #'0'    ; Add "0".
-                CMP #$3A        ; Digit?
+                ORA #'0' + $80  ; Add "0".
+                CMP #$BA        ; Digit?
                 BCC ECHO        ; Yes, output it.
                 ADC #$06        ; Add offset for letter.
 ECHO:
                 ; BIT DSP         ; bit (B7) cleared yet?
                 ; BMI ECHO        ; No, wait for display.
                 ; STA DSP         ; Output character. Sets DA.
+                and #$7F
                 jmp krn_chrout
                 ;RTS             ; Return.
 
