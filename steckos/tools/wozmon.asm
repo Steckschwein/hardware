@@ -112,7 +112,8 @@ NOTHEX:         CPY YSAV        ; Check if L, H empty (no hex digits).
                 INC STH         ; Add carry to ‘store index’ high order.
 TONEXTITEM:     JMP NEXTITEM    ; Get next command item.
 RUN:            JMP (XAML)      ; Run at current XAM index.
-NOTSTOR:        BMI XAMNEXT     ; B7=0 for XAM, 1 for BLOCK XAM.
+NOTSTOR:        ;BMI XAMNEXT     ; B7=0 for XAM, 1 for BLOCK XAM.
+                BNE XAMNEXT
                 LDX #$02        ; Byte count.
 SETADR:         LDA L-1,X       ; Copy hex data to
                 STA STL-1,X     ; ‘store index’.
