@@ -59,6 +59,7 @@ NEXTCHAR:
                 ; BPL NEXTCHAR    ; Loop until ready.
                 ; LDA KBD         ; Load character. B7 should be ‘1’.
                 keyin
+                toupper
                 ORA #$80
                 STA IN,Y        ; Add to text buffer.
                 JSR ECHO        ; Display character.
