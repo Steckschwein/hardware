@@ -1,7 +1,12 @@
-.include "../../kernel/kernel_jumptable.inc"
-.include "../tools.inc"
+;
+;	hexout a binary number
+;
+.import char_out
+
 .export hexout
-.segment "CODE"
+
+.code
+
 hexout:
 		pha
 		phx
@@ -19,10 +24,10 @@ hexout:
 		rts
 
 hexdigit:
-		and     #%00001111      ;mask lsd for hex print
-		ora     #'0'            ;add "0"
-		cmp     #'9'+1          ;is it a decimal digit?
-		bcc     @l	            ;yes! output it
-		adc     #6              ;add offset for letter a-f
+		and #%00001111      ;mask lsd for hex print
+		ora #'0'            ;add "0"
+		cmp #'9'+1          ;is it a decimal digit?
+		bcc @l	            ;yes! output it
+		adc #6              ;add offset for letter a-f
 @l:
-		jmp 	krn_chrout
+		jmp char_out

@@ -5,6 +5,9 @@
 appstart $1000
 
 .import hexout
+
+.export char_out=krn_chrout
+
 main:
 @0:
 	jsr krn_getkey

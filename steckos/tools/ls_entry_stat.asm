@@ -28,12 +28,12 @@
 
 .include "tools.inc"
 
-
 .import print_filename
 .import b2ad, dpb2ad, print_fat_date, print_fat_time, bin2dual, hexout
 
-
 .export dir_show_entry, pagecnt, entries_per_page, dir_attrib_mask
+
+.export char_out=krn_chrout
 
 dir_show_entry:
 		pha

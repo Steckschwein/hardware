@@ -26,6 +26,9 @@
 
 .include "appstart.inc"
 .import hexout
+
+.export char_out=krn_chrout
+
 appstart $1000
 
     	lda paramptr

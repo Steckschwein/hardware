@@ -1,6 +1,9 @@
 .include "kernel.inc"
 .include "kernel_jumptable.inc"
 .import hexout
+
+.export char_out=krn_chrout
+
 .segment "CODE"
 
 		lda	#<buffer

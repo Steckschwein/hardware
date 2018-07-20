@@ -29,8 +29,9 @@
 .import hexout
 .importzp ptr2, ptr3
 
-appstart $1000
+.export char_out=krn_chrout
 
+appstart $1000
 
 VRAM_START=$0000
 
