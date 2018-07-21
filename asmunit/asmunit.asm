@@ -1,55 +1,15 @@
-.ifndef __ASMUNIT_INC
-.define	__ASMUNIT_INC "__ASMUNIT_INC"
-
-tst_acc				= $0100
-tst_xreg			= $0101
-tst_yreg			= $0102
-tst_status			= $0103
-tst_savept			= $0104
-tst_return			= $0106
-tst_bytes			= $0108
-
-_tst_addr_ptr=$0
-_tst_ptr=$2
-
-.macro assertX expect
-	jsr _assert_xreg
-	.word tst_xreg
-	.byte expect
-.endmacro
-
-.macro assertY expect
-	jsr _assert_yreg
-	.word tst_yreg
-	.byte expect
-.endmacro
-
-.macro assertA expect
-	jsr _assert_acc
-	.word tst_acc
-	.byte expect
-.endmacro
-
-.macro assert8 msg, expect8, address
-	jsr _assert8
-	.word address
-	.byte expect8
-	.asciiz msg
-.endmacro
-
-.macro assert16 msg, expect16, address
-	jsr _assert16
-	.word address
-	.word expect16
-	.asciiz msg
-.endmacro
-
-.macro assert32 msg, expect32, address
-	jsr _assert32
-	.word address
-	.dword expect32
-	.asciiz msg
-.endmacro
+.setcpu "65c02"
+	
+_char_out_ptr: .res 1,0
+	char_out_buffer: .res 32,0
+.export char_out=_char_out
+_char_out:
+	phx
+	ldx _char_out_ptr
+	sta char_out_buffer, x
+	inc _char_out_ptr
+	plx
+	rts
 
 _assert_enter:
 		sta tst_acc
@@ -121,7 +81,9 @@ _assert:
 		plp
 		
 		jmp     (tst_return)           ; return to byte following final NULL
-.endif
+
+@_assert_fail:
+		rts
 
 _inc_tst_ptr:
 		inc     _tst_ptr      	; update the pointer

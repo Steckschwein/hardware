@@ -1,11 +1,11 @@
 ;
 ;	hexout a binary number
 ;
-.import char_out
-
 .export hexout
 
 .code
+
+.import char_out
 
 hexout:
 		pha

@@ -1,10 +1,17 @@
 
+; uut
 .import hexout
+
+.include "assertion.inc"
+
+;.export char_out=$f001
 
 .code
 	lda	#$e7
 	jsr	hexout
 	
-	rts
+	assert16out "exp", "e7"
 	
-.segment "STARTUP"
+	rts
+
+.include "asmunit.asm"
