@@ -9,8 +9,8 @@ char_out_buffer: .res 32,0
 ;char_out_buffer: .rs 32
 
 tst_acc			= $0100	; we use the lower part of the stack as temp space assuming the stack is almost not complety exhausted :/
-tst_xreg		= $0101
-tst_yreg		= $0102
+tst_xreg			= $0101
+tst_yreg			= $0102
 tst_status		= $0103
 tst_save_ptr	= $0104 ; to save and restore the _tst_ptr
 tst_return_ptr	= $0106 ; to save and restore the _tst_exp_ptr and to build the return vector
@@ -72,7 +72,7 @@ _assert:
 		ldy #0
 _l_assert:
 		lda (_tst_inp_ptr),y		; get next value
-		cmp	(_tst_ptr)				; and assert
+		cmp	(_tst_ptr)			; and assert
 		bne	_assert_fail
 		jsr _inc_tst_ptr			
 		iny
@@ -96,7 +96,7 @@ _assert_fail:
 		ldy #5 ;<(_l_fail-_l_messages)
 		jsr _print
 		
-		ldy	#0
+		ldy #0
 _fail_l1:						; was ...
 		lda (_tst_inp_ptr),y
 		jsr _test_out

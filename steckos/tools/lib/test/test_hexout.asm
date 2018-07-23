@@ -11,8 +11,6 @@
 	assertOut "7E"	; assert outpuz
 	assertA $7e		; assert A is not destroyed
 		
-	nop
-	nop	
 	rts
 	
 	.include "asmunit.asm" 
