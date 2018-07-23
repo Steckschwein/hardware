@@ -165,10 +165,10 @@ _l_out:	beq _l_exit
 		dex
 		bra _l_out		
 _test_out:
-		sta $e001
+		jsr test_char_out
 		rts
 		
 _l_messages:
-_l_pass:	 	.byte 4,  "PASS"
+_l_pass:	 		.byte 4,  "PASS"
 _l_fail: 		.byte 10, "FAIL, was "
 _l_fail_was:	.byte 10,	" expected "
