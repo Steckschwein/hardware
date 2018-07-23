@@ -1,7 +1,7 @@
 .ifndef __ASSERTION_INC
 .define	__ASSERTION_INC "__ASSERTION_INC"
 .setcpu "65c02"
-
+ 
 tst_acc			= $0100
 tst_xreg			= $0101
 tst_yreg			= $0102
@@ -14,49 +14,47 @@ _tst_addr_ptr=$0
 _tst_ptr=$2
 
 .macro assertX expect
-	jsr _assert8
-	.word tst_xreg
-	.byte expect
+	assert8 expect, tst_xreg
 .endmacro
 
 .macro assertY expect
-	jsr _assert8
-	.word tst_yreg
-	.byte expect
+	assert8 expect, tst_yreg
 .endmacro
 
 .macro assertA expect
-	jsr _assert8
-	.word tst_acc
-	.byte expect
+	assert8 expect, tst_acc
 .endmacro
 
-.macro assert8 msg, expect8, address
-	jsr _assert8
+.macro assertCPU expect
+	assert8 expect, tst_status
+.endmacro
+
+.macro assert8 expect8, address
+	jsr _assert
 	.word address
+	.byte 1
 	.byte expect8
-	.asciiz msg
 .endmacro
 
-.macro assert16out msg, expect_string
-	jsr _assert16
-	.word char_out_buffer
-	.byte expect_string
-	.asciiz msg
-.endmacro
-
-.macro assert16 msg, expect16, address
-	jsr _assert16
+.macro assert16 expect16, address
+	jsr _assert
 	.word address
+	.byte 2
 	.word expect16
-	.asciiz msg
 .endmacro
 
-.macro assert32 msg, expect32, address
-	jsr _assert32
+.macro assert32 expect32, address
+	jsr _assert
 	.word address
+	.byte 4
 	.dword expect32
-	.asciiz msg
+.endmacro
+
+.macro assertOut expect_string
+	jsr _assert
+	.word char_out_buffer
+	.byte .sizeof(expect_string)
+	.byte expect_string
 .endmacro
 
 .endif

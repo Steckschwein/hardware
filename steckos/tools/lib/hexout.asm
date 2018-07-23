@@ -1,11 +1,11 @@
 ;
 ;	hexout a binary number
 ;
-.export hexout
+;.export hexout
 
-.code
+;.code
 
-.import char_out
+;.import char_out
 
 hexout:
 		pha
@@ -24,10 +24,10 @@ hexout:
 		rts
 
 hexdigit:
-		and #%00001111      ;mask lsd for hex print
+		and #$0f      ;mask lsd for hex print
 		ora #'0'            ;add "0"
 		cmp #'9'+1          ;is it a decimal digit?
-		bcc @l	            ;yes! output it
+		bcc _out            ;yes! output it
 		adc #6              ;add offset for letter a-f
-@l:
+_out:
 		jmp char_out
