@@ -40,6 +40,7 @@
 .endmacro
 
 .macro assertOut expect_string
+	stz _char_out_ptr					; reset char_out_buffer	before test - TODO FIXME maybe a dedicated macro?!?
 	jsr _assert
 	.word char_out_buffer
 	.byte .strlen(expect_string)

@@ -8,7 +8,7 @@
 	
 	lda	#$7e
 	jsr	hexout
-
+	
 	assertOut "7E"	; assert outpuz
 	assertA $7e		; assert A is not destroyed
 

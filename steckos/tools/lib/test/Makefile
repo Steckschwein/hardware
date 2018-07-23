@@ -18,7 +18,9 @@ clean:
 	ld65 $(LDFLAGS) $< $(LIBS) -o $@
 	
 test_%: test_%.prg
-	py65mon -m 65c02 -l $@.prg
-
+#	py65mon -m 65c02 -l $@.prg
+	../../../../transfer.py $@.prg
+	
+	
 %.dis: %.prg
 	dcc6502 -o 0x1000 -d -n -c $< > $@
