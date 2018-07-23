@@ -2,8 +2,9 @@
 _char_out_ptr: .res 1,0
 char_out_buffer: .res 32,0
 
-;.export char_out=_char_out
+.export char_out=_char_out
 
+;char_out=_char_out
 ;_char_out_ptr: .rs 1
 ;char_out_buffer: .rs 32
 
@@ -18,7 +19,6 @@ tst_bytes		= $0108
 _tst_ptr=$0
 _tst_inp_ptr=$2			; 
 
-char_out=_char_out
 _char_out:
 	phx
 	ldx _char_out_ptr
