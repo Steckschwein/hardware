@@ -1,11 +1,14 @@
 	.import hexout					; uut
 	.include "assertion.inc" 	; test api
-	
-	.include "kernel_jumptable.inc"
-	test_char_out=krn_chrout
 
-.code
-	
+	; required to run with steckos only
+	.include "kernel_jumptable.inc"
+	test_char_out=$f001;krn_chrout	 
+
+;.segment "EXEHDR" 
+;	.byte   1
+
+.code	
 	lda	#$7e
 	jsr	hexout
 	

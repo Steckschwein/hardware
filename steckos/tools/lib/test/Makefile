@@ -1,7 +1,9 @@
 CA65FLAGS=--include-dir ../../../../asmunit --include-dir ../../../asminc --include-dir ../../../kernel
 LIBS=../toollib.a ../../../lib/steckschwein-kernel.lib
-#LDFLAGS=--config ../../../../asmunit/asmunit.cfg $(LIBS)
-LDFLAGS=--config ../../../steckos-c-app.cfg $(LIBS)
+LDFLAGS=--config ../../../../asmunit/asmunit.cfg $(LIBS)
+#LDFLAGS=--config ../../../steckos-c-app.cfg $(LIBS)
+#LDFLAGS=--target sim65c02 -D__EXEHDR__=1
+
 OBJS=test_hexout.o
 
 .PHONY: all clean
@@ -18,8 +20,8 @@ clean:
 	ld65 $(LDFLAGS) $< $(LIBS) -o $@
 	
 test_%: test_%.prg
-#	py65mon -m 65c02 -l $@.prg
-	../../../../transfer.py $@.prg
+	py65mon -m 65c02 -l $@.prg
+#	../../../../transfer.py $@.prg
 	
 	
 %.dis: %.prg
