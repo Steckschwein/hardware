@@ -1,10 +1,12 @@
 .include "../../kernel/kernel_jumptable.inc"
 .include "../tools.inc"
 .export bin2dual
+.import char_out
 .segment "CODE"
 
 
 bin2dual:
+        pha
         phx
         ldx #$07
 @l:
@@ -17,9 +19,10 @@ bin2dual:
         pha
         lda #'0'
 @out:
-        jsr krn_chrout
+        jsr char_out
         pla
         dex
         bpl @l
         plx
+        pla
         rts
