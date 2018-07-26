@@ -69,6 +69,9 @@ _assert:
 		lda _tst_ptr+1
 		pha							; save ptr of argument 3 back to stack for fialure handling
 
+		lda #$0a						; start with newline before any output
+		jsr _test_out
+		
 		ldy #0
 _l_assert:
 		lda (_tst_inp_ptr),y		; get next value
@@ -79,7 +82,7 @@ _l_assert:
 		cpy tst_bytes
 		bne _l_assert				; back around	
 			
-		;TEST PASS
+		;TEST PASS		
 		pla
 		pla		
 		ldy #0 ;<(_l_pass-_l_messages)
@@ -119,12 +122,7 @@ _fail_l2:						; expected ...
 		cpy tst_bytes
 		bne _fail_l2
 		
-_l_end:
-		lda #$0a
-		jsr _test_out
-		lda #$0d
-		jsr _test_out
-		
+_l_end:		
 		lda tst_return_ptr		; restore old value at _tst_inp_ptr
 		sta _tst_inp_ptr
 		lda tst_return_ptr+1
