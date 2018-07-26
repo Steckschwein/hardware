@@ -2,6 +2,7 @@
 .include "../tools.inc"
 
 .export b2ad, b2ad2, dpb2ad
+.import char_out
 
 .segment "CODE"
 b2ad:		phx
@@ -14,14 +15,14 @@ b2ad:		phx
 @out2:		jsr putout
 			clc
 			adc #$30
-			jsr krn_chrout
+			jsr char_out
 			plx
 			rts
 
 putout:		pha
 			txa
 			adc #$30
-			jsr krn_chrout
+			jsr char_out
 			pla
 			rts
 
@@ -42,7 +43,7 @@ b2ad2:		phx
 @out2:		jsr putout
 			clc
 			adc #$30
-			jsr krn_chrout
+			jsr char_out
 			plx
 			rts
 
@@ -83,11 +84,11 @@ setlzf:		ldx #$80
 			stx tmp2
 
 cnvta:		ora #$30
-			jsr krn_chrout
+			jsr char_out
 			bra uptbl
 printspc:
 			lda #' '
-			jsr krn_chrout
+			jsr char_out
 
 uptbl:		iny
 			iny
@@ -97,7 +98,7 @@ uptbl:		iny
 			ora #$30
 
 
-			jmp krn_chrout
+			jmp char_out
 ;			rts
 
 
