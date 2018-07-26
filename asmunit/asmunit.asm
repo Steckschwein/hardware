@@ -165,7 +165,7 @@ _l_out:	beq _l_exit
 		dex
 		bra _l_out		
 _test_out:
-		jsr test_char_out
+		sta asmunit_char_out
 		rts
 		
 _l_messages:
