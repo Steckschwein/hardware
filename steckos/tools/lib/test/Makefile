@@ -21,7 +21,7 @@ clean:
 	ld65 $(LDFLAGS) $< $(LIBS) -o $@
 
 test_%: test_%.bin
-	../../../../asmunit/asmunit_runner.sh $@.bin 1000
+	../../../../asmunit/asmunit_wrapper.sh $@.bin 1000
 #	py65mon -m 65c02 -o f001
 #	../../../../transfer.py $@.prg
 

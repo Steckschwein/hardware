@@ -12,7 +12,9 @@ if [ -z ${address} ]; then
 	address="$1000"
 fi
 binary=$1
+
 py65mon -m 65c02 <<EOUNIT
 .load "${binary}" ${address}
 .goto ${address}
 EOUNIT
+
