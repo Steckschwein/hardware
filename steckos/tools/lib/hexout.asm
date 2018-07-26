@@ -22,10 +22,10 @@ hexout:
 		rts
 
 hexdigit:
-		and #$0f      ;mask lsd for hex print
-		ora #'0'            ;add "0"
-		cmp #'9'+1          ;is it a decimal digit?
-		bcc _out            ;yes! output it
-		adc #6              ;add offset for letter a-f
+		and #$0f      	;mask lsd for hex print
+		ora #'0'			;add "0"
+		cmp #'9'+1		;is it a decimal digit?
+		bcc _out			;yes! output it
+		adc #6			;add offset for letter a-f
 _out:
 		jmp char_out

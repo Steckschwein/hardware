@@ -22,6 +22,12 @@
 	assertOut "E7"	; assert outpuz
 	assertA $e7		; assert A is not destroyed
 	
+	lda	#$9f
+	jsr	hexout
+	
+	assertOut "9F"	
+	assertA $9f	
+	
 	rts
 	
 	.include "asmunit.asm" 
