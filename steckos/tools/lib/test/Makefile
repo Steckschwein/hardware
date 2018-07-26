@@ -20,7 +20,8 @@ clean:
 	ld65 $(LDFLAGS) $< $(LIBS) -o $@
 	
 test_%: test_%.prg
-	py65mon -m 65c02 -o f001
+	../../../../asmunit/asmunit_runner.sh $@.prg 1000
+#	py65mon -m 65c02 -o f001
 #	../../../../transfer.py $@.prg
 	
 	
