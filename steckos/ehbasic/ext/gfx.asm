@@ -73,9 +73,9 @@ GFX_7_On:
 		jsr krn_display_off
 
 		jsr vdp_gfx7_on
-		vnops
-		lda #$00
-		jsr vdp_gfx7_blank
+;		vnops
+;		lda #$00
+;		jsr vdp_gfx7_blank
 		vnops
 
 		cli

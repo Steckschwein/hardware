@@ -2061,8 +2061,9 @@
     ; the IF was executed and there may be a following ELSE so the code needs to return
     ; here to check and ignore the ELSE if present
 
-        LDY	#$00			; clear the index
-        LDA	(Bpntrl),Y		; get the next BASIC byte
+        ;LDY	#$00			; clear the index
+        ;LDA	(Bpntrl),Y		; get the next BASIC byte
+        LDA	(Bpntrl)		; get the next BASIC byte, 65C02 version
         CMP	#TK_ELSE		; compare it with the token for ELSE
         BEQ	LAB_DATA		; if ELSE ignore the following statement
 

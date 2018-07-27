@@ -28,7 +28,6 @@ all: ls.prg ll.prg \
 	ppmview.prg \
 	vramtest.prg \
 	wozmon.prg
-	(cd xmodem; make )
 
 clean:
 	rm -f *.prg *.s *.o toollib.a
