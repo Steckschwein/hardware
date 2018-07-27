@@ -29,6 +29,7 @@
 .export cnt, files, dirs
 .import dir_show_entry, pagecnt, entries_per_page, dir_attrib_mask
 .import b2ad2
+
 .export char_out=krn_chrout
 
 appstart $1000
