@@ -8,7 +8,7 @@ OBJS=test_hexout.o
 
 .PHONY: all clean
 
-all: test_hexout.bin test_bin2dual.bin
+all: test_hexout test_bin2dual
 testall: test_hexout test_bin2dual
 
 clean:
