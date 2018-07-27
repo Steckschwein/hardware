@@ -2,6 +2,8 @@
 .define	__ASSERTION_INC "__ASSERTION_INC"
 .setcpu "65c02"
 
+_CHAR_OUT_BUFFER_LENGTH=32
+
 .macro assertX expect
 	assert8 expect, tst_xreg
 .endmacro
@@ -40,6 +42,7 @@
 .endmacro
 
 .macro assertOut expect_string
+	.assert .strlen(expect_string) <= _CHAR_OUT_BUFFER_LENGTH, error, "Expectation argument exceeds size of test output buffer!"
 	stz _char_out_ptr					; reset char_out_buffer	before test - TODO FIXME maybe a dedicated macro?!?
 	jsr _assert
 	.word char_out_buffer

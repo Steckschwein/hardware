@@ -1,6 +1,6 @@
-.setcpu "65c02"	
+.setcpu "65c02"
 _char_out_ptr: .res 1,0
-char_out_buffer: .res 32,0
+char_out_buffer: .res _CHAR_OUT_BUFFER_LENGTH,0
 
 .export char_out=_char_out
 

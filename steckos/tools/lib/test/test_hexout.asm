@@ -1,13 +1,7 @@
-	.import hexout					; uut
-	.include "assertion.inc" 	; test api
-
-	; required to run with steckos only
-	.include "kernel_jumptable.inc"
+.import hexout					; uut
+.include "assertion.inc" 	; unit test api
 	
-	asmunit_char_out=$f001;krn_chrout	 
-
-;.segment "EXEHDR" 
-;	.byte   1
+asmunit_char_out=$f001		; py65mon output
 
 .code	
 	lda	#$7e
@@ -27,7 +21,7 @@
 	
 	assertOut "9F"	
 	assertA $9f	
-	
+
 	rts
 	
 	.include "asmunit.asm" 
