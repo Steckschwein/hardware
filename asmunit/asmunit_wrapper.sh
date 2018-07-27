@@ -1,7 +1,7 @@
 #!/bin/bash
 
 dir=`dirname $0`
-logfile=$dir/$1.log
+logfile=$1.log
 $dir/asmunit_runner.sh $1 $2 > $logfile
 
 if [ "`grep FAIL $logfile`" != "" ] ; then
