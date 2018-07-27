@@ -17,6 +17,9 @@
 .import vdp_mode_sprites_off
 .import vdp_bgcolor
 
+.export char_out=krn_chrout
+
+
 appstart $1000
 
 .code
@@ -26,18 +29,18 @@ main:
 		ldy #O_RDONLY
 		jsr krn_open
 		bne @err
-		
+
 		stx fd
-		
+
 		SetVector	ppmdata, read_blkptr
 		jsr	krn_read_blocks
 		bne @err
 
 		jsr parse_header
 		;bne	@err
-		
+
 		bra @exit
-		
+
 		jsr	krn_textui_disable			;disable textui
 		jsr	gfxui_on
 		keyin
@@ -47,12 +50,12 @@ main:
 		jsr	krn_textui_init
 		jsr	krn_textui_enable
 		bra @exit
-		
+
 @err:
 		jsr krn_primm
 		.asciiz " file error, code: "
 		jsr	hexout
-@exit:	
+@exit:
 		ldx fd
 		cmp #$ff
 		beq @l_exit
@@ -65,14 +68,14 @@ PPM_P6:	.byte "P6"
 parse_header:
 		ldy #0
 		jsr parse_string
-		
+
 		lda #'P'
 		cmp buffer
 		bne @l_not_ppm
 		lda #'6'
 		cmp buffer+1
 		bne @l_not_ppm
-		
+
 		jsr parse_int	;width
 		jsr parse_int	;height
 		jsr parse_int	;depth
@@ -82,7 +85,7 @@ parse_header:
 		jsr krn_primm
 		.asciiz " Not valid ppm file!"
 		rts
-		
+
 parse_int:
 		jsr parse_string
 		lda buffer, x
@@ -107,13 +110,13 @@ blend_isr:
 		bit a_vreg
 		bpl @0
 		save
-		
+
 		lda	#%11100000
 		jsr vdp_bgcolor
 
 		lda	#Black
 		jsr vdp_bgcolor
-	
+
 		restore
 @0:
 		rti
@@ -142,8 +145,8 @@ gfxui_on:
 
 	lda #%00000000	; reset vbank - TODO FIXME, kernel has to make sure that correct video adress is set for all vram operations, use V9958 flag
 	ldy #v_reg14
-	vdp_sreg	
-	
+	vdp_sreg
+
     cli
     rts
 
@@ -157,7 +160,7 @@ gfxui_off:
 m_vdp_nopslide
 
 irqsafe: .res 2, 0
-; TODO FIXME clarify BSS segment voodo 
+; TODO FIXME clarify BSS segment voodo
 fd:		.res 1, $ff
 buffer:	.res 8, 0
 
