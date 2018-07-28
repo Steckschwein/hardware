@@ -15,6 +15,12 @@ appstart $1000
 			jmp (retvec)
 
 
+;-----------------------------------------------------------------
+; square root from 8 bit number
+; parameter in $20
+; result in $20
+; destructive; A,Y
+;-----------------------------------------------------------------
 sqrt8:		ldy #$00
 			lda #$00
 			sta $21
