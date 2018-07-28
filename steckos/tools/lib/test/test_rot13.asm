@@ -13,6 +13,20 @@ asmunit_char_out=$f001		; py65mon output
 	assertX $00
 	assertY $00
 
+	lda	#'X'
+	jsr	rot13
+
+	assertA 'K'		; assert A is not destroyed
+
+	lda	#'0'
+	jsr	rot13
+
+	assertA '0'		; assert A is not destroyed
+
+	lda	#'9'
+	jsr	rot13
+
+	assertA '9'		; assert A is not destroyed
 	rts
 
 	.include "asmunit.asm"
