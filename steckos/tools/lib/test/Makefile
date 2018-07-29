@@ -8,7 +8,7 @@ LDFLAGS=--config ../../../../asmunit/asmunit.cfg $(LIBS)
 all: test_hexout test_bin2dual test_rot13 test_sqrt8
 
 clean:
-	rm -f *.bin *.o *.dis toollib.a
+	rm -f *.bin *.o *.dis *.log
 
 %.o: %.asm ../../../../asmunit/*.asm
 	ca65 $(CA65FLAGS) $(@:.o=.asm)
