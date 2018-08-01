@@ -292,17 +292,17 @@ trampolin_code_end:
 .segment "JUMPTABLE"		; "kernel" jumptable
 
 .export krn_rmdir
-krn_rmdir: 				    jmp fat_rmdir
+krn_rmdir:							jmp fat_rmdir
 .export krn_mkdir
-krn_mkdir: 				    jmp fat_mkdir
+krn_mkdir:							jmp fat_mkdir
 .export krn_execv
-krn_execv:                  jmp execv
+krn_execv:							jmp execv
 
 .export krn_uart_rx_nowait
-krn_uart_rx_nowait:		    jmp uart_rx_nowait
+krn_uart_rx_nowait:				jmp uart_rx_nowait
 
 .export krn_mount
-krn_mount: 				    jmp fat_mount
+krn_mount: 				    		jmp fat_mount
 
 .export krn_open
 krn_open: 				    jmp fat_open
@@ -321,8 +321,8 @@ krn_close_all:					jmp fat_close_all
 .export krn_read
 krn_read:						jmp fat_read
 
-.export krn_read_blocks
-krn_read_blocks:    			jmp fat_fread
+.export krn_fread
+krn_fread:    					jmp fat_fread
 
 .export krn_find_first
 krn_find_first:				jmp fat_find_first

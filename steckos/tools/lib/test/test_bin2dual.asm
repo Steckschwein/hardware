@@ -4,11 +4,6 @@
 	; required to run with steckos only
 	.include "kernel_jumptable.inc"
 
-	asmunit_char_out=$f001;krn_chrout
-
-;.segment "EXEHDR"
-;	.byte   1
-
 .code
 	lda	#$ff
 	ldx #$00

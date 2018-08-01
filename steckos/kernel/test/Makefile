@@ -1,23 +1,28 @@
-TOOLLIB=../../tools/lib/toollib.a
-CA65FLAGS=--cpu 65c02 --target sim65c02 --include-dir ../../../asmunit --include-dir ../../asminc --include-dir ../ --include-dir ../../../asmunit
-LDFLAGS=--config ../steckosapp.cfg $(TOOLLIB)
-
+DEFINES=-Dasmunit_char_out=0x200
+KERNEL_ADDRESS=0xe800
+CA65FLAGS=--include-dir ../../../asmunit --include-dir ../../asminc --include-dir ../../kernel $(DEFINES)
+LIBS=../util.o
+LDFLAGS=--config ../steckos.cfg $(DEFINES)
 
 .PHONY: all clean
 
-all: matcher.test.prg iotest.prg test_out.prg
+all: test.util
 
 clean:
-	rm -f *.prg *.s *.o
+	rm -f *.bin *.o *.dis *.log
 
-%.o: %.asm ../*.inc
+%.o: %.asm
 	ca65 $(CA65FLAGS) $(@:.o=.asm)
-	
-%.prg: %.o $(TOOLLIB)
-	ld65 $< $(LDFLAGS) -o $@
 
-test.longrun: longrun.test.prg
-	../../../transfer.py longrun.test.prg
+%.bin: %.o $(LIBS)
+	ld65 $(LDFLAGS) $< $(LIBS) -o $@
+
+%.dis: %.bin
+	dcc6502 -o $(KERNEL_ADDRESS) -d -n -c $< > $@
+
+test.%: test.%.bin
+	../../../asmunit/asmunit_wrapper.sh $@.bin $(KERNEL_ADDRESS)
+#	../../../../transfer.py $@.prg
 		
 %: %.prg
 	../../../transfer.py $<

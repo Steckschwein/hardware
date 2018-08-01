@@ -1,8 +1,6 @@
 .import hexout					; uut
 .include "assertion.inc" 	; unit test api
 	
-asmunit_char_out=$f001		; py65mon output
-
 .code	
 	lda	#$7e
 	jsr	hexout
@@ -19,7 +17,7 @@ asmunit_char_out=$f001		; py65mon output
 	lda	#$9f
 	jsr	hexout
 	
-	assertOut "9F"	
+	assertOut "9F"
 	assertA $9f	
 
 	rts

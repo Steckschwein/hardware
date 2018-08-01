@@ -178,12 +178,12 @@ DIR_Entry_Deleted            = $e5
 .endstruct
 
 .struct F32_fd
-   CurrentCluster .dword; +4
-   FileSize       .dword; +4
-   Attr           .byte; +1
-   DirEntryLBA    .dword; +4  LBA of the block where the dir entry of the file is located
-   DirEntryPos    .byte; +1   block offset within the block (DirEntryPos * DIR_Entry_Size)
-   SeekPos        .dword; +4
+   CurrentCluster .dword;	(4bt)
+   FileSize       .dword;	(4bt)
+   Attr           .byte;	(1bt)
+   DirEntryLBA    .dword;	(4bt)	LBA of the block where the dir entry of the file is located
+   DirEntryPos    .byte;	(1bt)	block offset within the block (DirEntryPos * DIR_Entry_Size)
+   SeekPos        .dword;	(4bt) seek position within the opened file
 ;   openFlags     .byte; +1 flags during open
 .endstruct
 

@@ -1,12 +1,11 @@
 .include "kernel_jumptable.inc"
 .include "zeropage.inc"
 
-.include "appstart.inc"
-appstart $1000
-			jmp	test_suite
+	jmp	test_suite
 
-.include "asm_unit.asm"
-
+;	.import 				; uut
+	.include "assertion.inc" 	; test api
+	.include "asmunit.asm"
 ; define
 chrout=krn_chrout
 

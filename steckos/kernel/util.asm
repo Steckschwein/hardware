@@ -27,6 +27,7 @@
 .include	"kernel.inc"
 .include	"fat32.inc"
 .include	"errno.inc"
+
 .segment "KERNEL"
 .export string_fat_name, fat_name_string, put_char
 .export string_fat_mask
@@ -88,7 +89,7 @@ cluster_nr_matcher:
 	;	Z=0 and A=length of string, Z=1 if string was trimmed to empty string (A=0)
 	;	C=1 on string overflow, means input >255 byte
 string_trim:
-		stz	krn_tmp
+		stz krn_tmp
 		stz krn_tmp2
 l_1:
 		ldy	krn_tmp

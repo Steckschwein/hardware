@@ -63,12 +63,19 @@ _CHAR_OUT_BUFFER_LENGTH=32
 	.dword expect32
 .endmacro
 
+.macro assertString expect, address
+	jsr _assert
+	.word address
+	.byte $80 | .strlen(expect)
+	.byte expect
+.endmacro
+
 .macro assertOut expect
 	.assert .strlen(expect) <= _CHAR_OUT_BUFFER_LENGTH, error, "Expectation argument exceeds size of test output buffer!"
 	stz _char_out_ptr					; reset char_out_buffer	before test - TODO FIXME maybe a dedicated macro?!?
 	jsr _assert
 	.word char_out_buffer
-	.byte .strlen(expect)
+	.byte $80 | .strlen(expect)
 	.byte expect
 .endmacro
 

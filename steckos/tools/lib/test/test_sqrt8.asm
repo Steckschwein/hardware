@@ -1,8 +1,6 @@
 .import sqrt8					; uut
 .include "assertion.inc" 	; unit test api
 
-asmunit_char_out=$f001		; py65mon output
-
 .code
     ldx #$00
 	lda	#25

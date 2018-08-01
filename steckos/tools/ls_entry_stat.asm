@@ -33,8 +33,6 @@
 
 .export dir_show_entry, pagecnt, entries_per_page, dir_attrib_mask
 
-.export char_out=krn_chrout
-
 dir_show_entry:
 		pha
 		jsr krn_primm
