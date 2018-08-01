@@ -51,15 +51,15 @@
 	
 	SetVector test_data_02, filenameptr
 	jsr string_fat_name
-	assertString "AB         ", output	; expect zero length string
+	assertString "AB         ", output	
 	
 	SetVector test_data_03, filenameptr
 	jsr string_fat_name
-	assertString "LS      PRG", output	; expect zero length string
+	assertString "LS      PRG", output	
 	
 	SetVector test_data_04, filenameptr
 	jsr string_fat_name
-	assertString "LS         ", output	; expect zero length string
+	assertString "LS         ", output	
 	
 	rts
 
