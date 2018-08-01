@@ -116,7 +116,6 @@ l_st_ex:
 	;	filenameptr pointer to input string to convert to fat file name mask
 	;	krn_ptr2 pointer to result of fat file name mask
 	; out:
-	;	fat_dir_entry_tmp with the mask build upon input string
 	;	C=1 if input was too large (>255 byte), C=0 otherwise
 	;	Z=1 if input was empty string, Z=0 otherwise
 string_fat_mask:
@@ -171,7 +170,7 @@ __tfm_exit:
 __tfn_mask_char:
 	cmp #$60 ; Is lowercase?
 	bcc __tfn_mask_char_l1
-	and	#$DF
+	and #$DF
 __tfn_mask_char_l1:
 	ldy krn_tmp2
 __tfn_mask_char_l2:
@@ -250,8 +249,8 @@ l_seg:
 	;	filenameptr with input string to convert to fat file name mask
 	;	krn_ptr2 with pointer where the fat file name mask should be stored
 	; out:
-	;	Z=1 on success and fat_dir_entry_tmp with the mask build upon input string
-	;   Z=0 on error, the input string contains invalid chars not allowed within a dos 8.3. file name
+	;	Z=1 on success and krn_ptr2 with the pointer of the mask build upon input string
+	;  Z=0 on error, the input string contains invalid chars not allowed within a dos 8.3. file name
 string_fat_name:
 	ldy #0
 __sfn_ic:

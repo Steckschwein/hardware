@@ -1,6 +1,6 @@
 DEFINES=-Dasmunit_char_out=0x200
 KERNEL_ADDRESS=0xe800
-CA65FLAGS=--include-dir ../../../asmunit --include-dir ../../asminc --include-dir ../../kernel $(DEFINES)
+CA65FLAGS=--include-dir ../../../asmunit --include-dir ../../asminc --include-dir ../ $(DEFINES)
 LIBS=../util.o
 LDFLAGS=--config ../steckos.cfg $(DEFINES)
 
