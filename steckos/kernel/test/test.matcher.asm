@@ -28,7 +28,7 @@
 	SetVector dir_3, dirptr
 	jsr dirname_mask_matcher
 	assertZero 1
-;	assertCarry 1
+	assertCarry 1
 	
 	brk
 
