@@ -16,5 +16,7 @@
 		
 		assert8 1, crs_x
 		assert8 3, crs_y
-		
+
+		brk
+
 	.include "asmunit.asm"

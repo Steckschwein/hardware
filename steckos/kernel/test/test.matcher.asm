@@ -31,8 +31,6 @@
 ;	assertCarry 1
 	
 	brk
-	brk
-	brk
 
 test_dirs=13
 expected_result: .res 32;   pointer of input + size of results (input_X + test_dirs)

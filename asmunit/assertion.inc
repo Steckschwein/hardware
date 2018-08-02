@@ -90,14 +90,12 @@
 	.if expect
 		bcs :+
 		_assertFlag _l_flag_c0, _FLAG_C1
-		bra :++
-:		_pass
 	.else
 		bcc :+
 		_assertFlag _l_flag_c1, _FLAG_C0
+	.endif
 		bra :++
 :		_pass
-	.endif
 :
 .endmacro
 
@@ -110,14 +108,12 @@
 	.if expect
 		bne :+
 		_assertFlag _l_flag_z0, _FLAG_Z1
-		bra :++
-:		_pass
 	.else
 		beq :+
 		_assertFlag _l_flag_z1, _FLAG_Z0
+	.endif
 		bra :++
 :		_pass
-	.endif
 :
 .endmacro
 
