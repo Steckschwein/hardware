@@ -6,7 +6,7 @@ LDFLAGS=--config ../steckos.cfg $(DEFINES)
 
 .PHONY: all clean
 
-all: test.util test.textui
+all: test.util test.textui test.matcher
 
 clean:
 	rm -f *.bin *.o *.dis *.log

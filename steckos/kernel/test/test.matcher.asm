@@ -1,21 +1,36 @@
-.include "kernel_jumptable.inc"
-.include "zeropage.inc"
-
-	jmp	test_suite
-
-;	.import 				; uut
 	.include "assertion.inc" 	; test api
-	.include "asmunit.asm"
-; define
-chrout=krn_chrout
+	
+	.include "common.inc"
+	.include "zeropage.inc"
+	
+	.include "fat32.inc"
+	
+	.import string_fat_mask
+	.import dirname_mask_matcher	; uut
+	
+.segment "KERNEL"	; test must be placed into kernel segment, cuz we wanna use the same linker config
 
-; required by matcher.asm
-buffer: .res 8+1+3,0
-.include	"../matcher.asm"
+	SetVector fat_dirname_mask, krn_ptr2	; ouput
+	
+	SetVector input_1, filenameptr
+	jsr string_fat_mask
+	
+	SetVector dir_1, dirptr
+	jsr dirname_mask_matcher
+	assertCarry 0
+	
+	SetVector dir_2, dirptr
+	jsr dirname_mask_matcher
+	assertCarry 0
+	
+	SetVector dir_3, dirptr
+	jsr dirname_mask_matcher
+	assertCarry 1
+	
+	rts
 
 test_dirs=13
 expected_result: .res 32;   pointer of input + size of results (input_X + test_dirs)
-filename_buf: .res 32;
 
 dir_1:	     .byte "A       TXT"
 dir_2:	     .byte "LL      PRG"	;2
@@ -31,7 +46,7 @@ dir_11:	     .byte "..FOO      "	;20
 dir_12:	     .byte "1          "	;22
 dir_13:	     .byte "LIST0001DB "	;24
 
-input_1: 	.byte 0,0,1,0,0,0,0,0,0,0,0,0,0 ;expected result - 0 - no match, 1 - match - eg. 0,0,1 mean matches "LS        PRG" from dir_3
+input_1:	;.byte 0,0,1,0,0,0,0,0,0,0,0,0,0 ;expected result - 0 - no match, 1 - match - eg. 0,0,1 mean matches "LS        PRG" from dir_3
 			.byte "ls.prg",0        	;user input
 input_2: 	.byte 0,1,1,1,0,0,0,0,0,0,0,0,0
 			.byte "l*.prg",0
@@ -90,20 +105,18 @@ test_dir_tab:
 	.word dir_7
 	.word dir_8
 	.word dir_9
-    .word dir_10
-    .word dir_11
-	.word dir_12
+   .word dir_10
+   .word dir_11
+   .word dir_12
 	.word dir_13
 test_dir_tab_e:
 
 Println:
     lda #$0a
-    jmp chrout
+    jmp _test_out
 
 .macro SetTestInput input
-    lda #<(input+test_dirs)
-	sta matcher_prepareinput+1
-	sta matcher_test1+1
+   lda #<(input+test_dirs)
 	sta testinput+1
 	sta filenameptr
 	
@@ -111,8 +124,6 @@ Println:
     sta a5+1
     ;high bytes
     lda #>(input+test_dirs)
-	sta matcher_prepareinput+2
-	sta matcher_test1+2
 	sta testinput+2
 	sta filenameptr+1
 	
@@ -122,17 +133,17 @@ Println:
 .endmacro
 
 test_suite:
-    SetTestInput input_21
-    jmp test
-	
+    SetTestInput input_1
+    jsr test
+	 rts
     SetTestInput input_1
     jsr test
     SetTestInput input_2
     jsr test
     SetTestInput input_3
     jsr test
-	SetTestInput input_4
-	jsr test
+	 SetTestInput input_4
+	 jsr test
     SetTestInput input_5
     jsr test
     SetTestInput input_6
@@ -188,21 +199,16 @@ l1:
     
 			phx
 			phy
-			jsr filename_matcher	; check <name>.<ext> against 11 byte dir entry <name> <ext>
+			jsr dirname_mask_matcher
 			ply
 			plx
 			lda	#0
 			rol			;result in carry to bit 0	
-;			jsr hexout
-;a50:		lda test_input, y
-;			jsr hexout
-a5:			cmp	expected_result, y
-			bne	_failed
-			jsr	_test_ok
+			jsr _hexout
+a5:		cmp	expected_result, y
 			bra _next
 _failed:
-			;failed with 'y'
-			jsr	_test_failed
+			assertOut "FAIL"
 _next:
 			iny
 			inx
@@ -210,11 +216,14 @@ _next:
 			cpx	#(test_dir_tab_e-test_dir_tab)
 			bne	l1
 			lda #' '
-			jsr chrout
+			jsr _test_out
 			ldy	#0
-testinput:	lda	expected_result, y
+testinput:	
+			lda	expected_result, y
 			beq	@oe
-			jsr chrout
+			jsr _test_out
 			iny
 			bne testinput
 @oe:		rts
+
+	.include "asmunit.asm"

@@ -25,6 +25,7 @@
 .setcpu "65c02"
 
 _CHAR_OUT_BUFFER_LENGTH=32
+_TYPE_STRING=$80
 
 .macro assertX expect
 	assert8 expect, tst_xreg
@@ -63,10 +64,34 @@ _CHAR_OUT_BUFFER_LENGTH=32
 	.dword expect32
 .endmacro
 
+;
+; assertCarry 0 => expect carry cleared
+; assertCarry 0 => expect carry set
+;
+.macro assertCarry expect
+	.assert expect = 0 || expect = 1, error, "Invalid expect, must be 0 or 1!"
+	.if expect
+		bcs :+++
+		jsr _assert
+		.word :++
+		.byte _TYPE_STRING | 3
+:		.byte "C=0"
+:		.byte "C=1"
+	.else
+		bcc :+++
+		jsr _assert
+		.word :++
+		.byte _TYPE_STRING | 3
+:		.byte "C=1"
+:		.byte "C=0"		
+	.endif
+:
+.endmacro
+
 .macro assertString expect, address
 	jsr _assert
 	.word address
-	.byte $80 | .strlen(expect)
+	.byte _TYPE_STRING | .strlen(expect)
 	.byte expect
 .endmacro
 
@@ -75,7 +100,7 @@ _CHAR_OUT_BUFFER_LENGTH=32
 	stz _char_out_ptr					; reset char_out_buffer	before test - TODO FIXME maybe a dedicated macro?!?
 	jsr _assert
 	.word char_out_buffer
-	.byte $80 | .strlen(expect)
+	.byte _TYPE_STRING | .strlen(expect)
 	.byte expect
 .endmacro
 

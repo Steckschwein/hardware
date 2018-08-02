@@ -37,9 +37,12 @@
 
 		; in:
 		;	dirptr - pointer to dir entry (F32DirEntry)
+		; out:
+		;	C=1 on match, C=0 otherwise
 dirname_mask_matcher:
 		ldy #10 ;.sizeof(F32DirEntry::Name) + .sizeof(F32DirEntry::Ext) - 1
-__dmm:	lda fat_dirname_mask, y
+__dmm:
+		lda fat_dirname_mask, y
 		cmp #'?'
 		beq __dmm_next
 		cmp (dirptr), y
