@@ -24,8 +24,14 @@
 .define	__ASSERTION_INC "__ASSERTION_INC"
 .setcpu "65c02"
 
-_CHAR_OUT_BUFFER_LENGTH=32
-_TYPE_STRING=$80
+.define _FLAG_C0 "C=0"
+.define _FLAG_C1 "C=1"
+.define _FLAG_Z0 "Z=0"
+.define _FLAG_Z1 "Z=1"
+
+.define	_CHAR_OUT_BUFFER_LENGTH 32
+.define	_TYPE_STRING $80
+
 
 .macro assertX expect
 	assert8 expect, tst_xreg
@@ -64,26 +70,53 @@ _TYPE_STRING=$80
 	.dword expect32
 .endmacro
 
+.macro _assertFlag labelAddress, labelSymbol
+		jsr _assert
+		.word labelAddress
+		.byte _TYPE_STRING | .strlen(labelSymbol)
+		.byte labelSymbol
+.endmacro
+
+.macro _pass
+	assert8 1, *+2
+.endmacro
+
 ;
 ; assertCarry 0 => expect carry cleared
-; assertCarry 0 => expect carry set
+; assertCarry 1 => expect carry set
 ;
 .macro assertCarry expect
 	.assert expect = 0 || expect = 1, error, "Invalid expect, must be 0 or 1!"
 	.if expect
-		bcs :+++
-		jsr _assert
-		.word :++
-		.byte _TYPE_STRING | 3
-:		.byte "C=0"
-:		.byte "C=1"
+		bcs :+
+		_assertFlag _l_flag_c0, _FLAG_C1
+		bra :++
+:		_pass
 	.else
-		bcc :+++
-		jsr _assert
-		.word :++
-		.byte _TYPE_STRING | 3
-:		.byte "C=1"
-:		.byte "C=0"		
+		bcc :+
+		_assertFlag _l_flag_c1, _FLAG_C0
+		bra :++
+:		_pass
+	.endif
+:
+.endmacro
+
+;
+; assertZero 0 => expect zero cleared
+; assertZero 1 => expect zero set
+;
+.macro assertZero expect
+	.assert expect = 0 || expect = 1, error, "Invalid expect, must be 0 or 1!"
+	.if expect
+		bne :+
+		_assertFlag _l_flag_z0, _FLAG_Z1
+		bra :++
+:		_pass
+	.else
+		beq :+
+		_assertFlag _l_flag_z1, _FLAG_Z0
+		bra :++
+:		_pass
 	.endif
 :
 .endmacro

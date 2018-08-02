@@ -61,7 +61,7 @@
 	jsr string_fat_name
 	assertString "LS         ", output	
 	
-	rts
+	brk
 
 output:	
 	.res 11,0

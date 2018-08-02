@@ -222,3 +222,7 @@ _l_messages:
 _l_pass:	 		.byte 4,  "PASS"
 _l_fail: 		.byte 10, "FAIL, was "
 _l_fail_was:	.byte 10,	" expected "
+_l_flag_c0:		.byte _FLAG_C0
+_l_flag_c1:		.byte _FLAG_C1
+_l_flag_z0:		.byte _FLAG_Z0
+_l_flag_z1:		.byte _FLAG_Z1

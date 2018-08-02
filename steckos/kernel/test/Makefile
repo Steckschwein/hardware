@@ -20,9 +20,11 @@ clean:
 %.dis: %.bin
 	dcc6502 -o $(KERNEL_ADDRESS) -d -n -c $< > $@
 
+%.dbg: %.bin
+	py65mon -m 65c02 --output 0x0200 $< $(KERNEL_ADDRESS)
+	
 test.%: test.%.bin
 	../../../asmunit/asmunit_wrapper.sh $@.bin $(KERNEL_ADDRESS)
-#	../../../../transfer.py $@.prg
 		
 %: %.prg
 	../../../transfer.py $<

@@ -18,16 +18,21 @@
 	SetVector dir_1, dirptr
 	jsr dirname_mask_matcher
 	assertCarry 0
-	
+	assertZero 1
+		
 	SetVector dir_2, dirptr
 	jsr dirname_mask_matcher
 	assertCarry 0
+	assertZero 1
 	
 	SetVector dir_3, dirptr
 	jsr dirname_mask_matcher
-	assertCarry 1
+	assertZero 1
+;	assertCarry 1
 	
-	rts
+	brk
+	brk
+	brk
 
 test_dirs=13
 expected_result: .res 32;   pointer of input + size of results (input_X + test_dirs)
