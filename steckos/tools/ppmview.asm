@@ -33,7 +33,7 @@ main:
 		stx fd
 
 		SetVector	ppmdata, read_blkptr
-		jsr	krn_read_blocks
+		jsr	krn_fread
 		bne @err
 
 		jsr parse_header

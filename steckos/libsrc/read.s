@@ -4,15 +4,15 @@
 ; int __fastcall__ read(int fd,void *buf,int count)
 
 		.include "fcntl.inc"
-        .include "errno.inc"
+      .include "errno.inc"
 		.include	"../kernel/kernel_jumptable.inc"
 		.include	"../kernel/zeropage.inc"
 
-        .import __rwsetup,__do_oserror,__inviocb,__oserror, popax
+      .import __rwsetup,__do_oserror,__inviocb,__oserror, popax
 		
 		.importzp tmp1,tmp2,tmp3,ptr1,ptr2,ptr3,ptr4
 		
-        .export _read
+      .export _read
 
 ;--------------------------------------------------------------------------
 ; _read
@@ -55,7 +55,7 @@
 		lda		#>blockbuffer
 		sta		read_blkptr+1
 		sta		ptr4+1
-		jsr		krn_read_blocks	; read single block, x holds the fd
+		jsr		krn_fread		; TODO FIXME - read single block, x holds the fd
 		
 		beq		@_r1
         jmp     __directerrno   ; Sets _errno, clears _oserror, returns -1
