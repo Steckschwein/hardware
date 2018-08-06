@@ -25,7 +25,6 @@ all: ls.prg ll.prg \
 	fibo.prg \
 	gfx7.prg \
 	fig.prg \
-	ppmview.prg \
 	vramtest.prg \
 	wozmon.prg
 
