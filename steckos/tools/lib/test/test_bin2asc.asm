@@ -1,13 +1,7 @@
 	.import b2ad2				; uut
 	.import b2ad				; uut
-    .import dpb2ad
+	.import dpb2ad
 	.include "assertion.inc" 	; test api
-
-	; required to run with steckos only
-	.include "kernel_jumptable.inc"
-
-;.segment "EXEHDR"
-;	.byte   1
 
 .code
     ldx #0

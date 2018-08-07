@@ -1,9 +1,6 @@
 	.import bin2dual					; uut
 	.include "assertion.inc" 	; test api
 
-	; required to run with steckos only
-	.include "kernel_jumptable.inc"
-
 .code
 	lda	#$ff
 	ldx #$00
