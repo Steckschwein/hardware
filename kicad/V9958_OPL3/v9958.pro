@@ -1,4 +1,4 @@
-update=Sun 24 Jun 2018 08:08:40 PM CEST
+update=Sat 08 Sep 2018 11:01:48 PM CEST
 version=1
 last_client=kicad
 [cvpcb]
@@ -42,18 +42,10 @@ LabSize=60
 version=1
 LibDir=../lbr
 [eeschema/libraries]
-LibName1=power
-LibName2=device
-LibName3=transistors
-LibName4=conn
-LibName5=linear
-LibName6=74xx
-LibName7=contrib
-LibName8=tms99xx
-LibName9=dram
-LibName10=osc
-LibName11=mini_din
-LibName12=steckschwein
-LibName13=yamaha_opl
-LibName14=rc4136
-LibName15=audio
+LibName1=tms99xx
+LibName2=dram
+LibName3=osc
+LibName4=mini_din
+LibName5=steckschwein
+LibName6=yamaha_opl
+LibName7=rc4136

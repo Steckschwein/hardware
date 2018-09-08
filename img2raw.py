@@ -12,14 +12,14 @@ for filename in sys.argv[1::]:
 	if not os.path.isfile(filename):
 		print "\t%s: file not found" % filename
 		continue
-		
-	
+
+
 	outfile  = os.path.basename(filename).split(".")[0] + ".raw"
 
 	with Image.open(filename) as img:
 		print "\tSource image is %dx%d" % img.size
 
-		img = ImageOps.fit(img, (256, 212), Image.ANTIALIAS)
+		img = ImageOps.fit(img, (256, 192), Image.ANTIALIAS)
 		print "\tResized to %dx%d" % img.size
 
 	with open(outfile, "w") as fout:

@@ -47,11 +47,11 @@ main:
 		jsr	gfxui_on
 
 		keyin
-		
+
 ;		jsr 	vdp_gfx7_blank
 
 ;		keyin
-		
+
 		jsr	gfxui_off
 
 		jsr	krn_display_off			;restore textui
@@ -137,7 +137,7 @@ irqsafe: .res 2, 0
 
 .align 256,0
 rgbdata:
-.incbin "felix.ppm.raw"
+.incbin "DSC_0014.raw"
 
 
 .segment "STARTUP"

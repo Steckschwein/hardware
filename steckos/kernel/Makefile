@@ -6,7 +6,7 @@ LDFLAGS=--config steckos.cfg
 # if 9958 is used
 DEFINES+=-DV9958
 # enable 80 cols
-#DEFINES+=-DCOLS80
+DEFINES+=-DCOLS80
 
 # enable debug
 #DEBUG += -DDEBUG_SDCARD
@@ -53,7 +53,7 @@ loader.bin: kernel.bin loader.o
 	# -m <kernel start adress - $100 (loader)
 disas: loader.bin
 	dcc6502 -o 0xe700 -m 6394 -d -n -c loader.bin > loader.dis
-	
+
 transfer: loader.bin
 	../../transfer.py -s 0x1000 loader.bin
 
