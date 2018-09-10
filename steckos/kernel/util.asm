@@ -215,7 +215,15 @@ put_char:
 l_exit:
 	rts
 
-		; recursive inverse
+	; recursive inverse a path string where each path segment is separated by a '/'
+	; in: 
+	;	krn_ptr2 - pointer to the result string 
+	;	krn_ptr3	- pointer to originary path we have to inverse
+	; out:
+	;	Y - length of the result string (krn_ptr2)
+	;
+	; sample: foo/bar/baz is converted to baz/bar/foo
+	;
 path_inverse:
 		stz krn_tmp
 		stz krn_tmp2
