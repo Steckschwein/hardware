@@ -57,20 +57,22 @@ fd_area					= $0380 ; File descriptor area until $0400
 	jmp main
 !src <t99xx.lib.a>
 main:
-	sei
-
-    lda #<.filename
-    ldx #>.filename
-	ldy #$01
-    jsr krn_open
-
-	bne +
-
-    +SetVector score_data, read_blkptr
-    jsr krn_read
-	jsr krn_close
+	lda #<.filename
+   ldx #>.filename
+	ldy #01		;#01 - O_RDONLY
+   jsr krn_open
+	beq +
+	jmp (retvec)
 +
-
+	+SetVector score_data, read_blkptr
+   jsr krn_read
+	beq +
+	jmp (retvec)
++	
+	jsr krn_close
+	
+	sei
+	
 	lda	a_vreg
 	jsr	vdp_display_off
 	jsr	.init_vram

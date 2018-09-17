@@ -16,10 +16,31 @@ appstart $1000
 
 main:
 		lda (paramptr)	; empty string?
-		bne @l_cp
+		bne @r_only
 		lda #$99
 		jmp errmsg
-@l_cp:
+		
+@r_only:
+		jsr krn_primm
+		.asciiz "op ro"	; open newly created file, read only
+    	lda paramptr
+    	ldx paramptr+1
+		ldy #01
+    	jsr krn_open
+		jsr test_result
+		beq @ro_read
+		jmp exit
+@ro_read:		
+		SetVector buffer, read_blkptr
+		jsr krn_read
+		jsr krn_close
+		jsr test_result
+		beq @r_plus		
+		jmp exit
+		
+@r_plus:
+		jmp exit
+
 		jsr krn_primm		
 		.asciiz "op r+"
     	lda paramptr
@@ -122,3 +143,6 @@ fd2:	.res 1
 testdata:
 		.byte "Hallo World!"
 testdata_e:
+
+.align 255
+buffer:

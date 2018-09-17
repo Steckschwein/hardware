@@ -123,8 +123,7 @@ fat_fread:
 		; calc blocks from given size
 		; calc lba from current seek pos - CurrentCluster, SeekPos					
 		jsr __calc_blocks
-		jsr __calc_lba_addr
-		
+		jsr __calc_lba_addr		
 		jmp __fat_read_block
 @l_err_exit:
 		rts
@@ -134,9 +133,10 @@ fat_fread:
 		; read one block, TODO - update seek position within FD
 		;in:
 		;	X	- offset into fd_area
-		;	read_blkptr
+		;	read_blkptr has to be set to target address - TODO FIXME ptr. parameter
 		;out:
 		;	Z=1 on success (A=0), Z=0 and A=error code otherwise
+		;  X	- number of bytes read
 fat_read_block:
 		jsr __fat_isOpen
 		beq @l_err_exit
@@ -157,12 +157,14 @@ fat_read:
 		beq @l_err_exit
 
 		jsr __calc_blocks
+		beq @l_exit
 		jsr __calc_lba_addr
 		jsr sd_read_multiblock
 ;		jsr read_block
 		rts
 @l_err_exit:
 		lda #EINVAL
+@l_exit:
 		rts
 
 		; in:
@@ -1107,6 +1109,8 @@ fat_check_signature:
 @l2:	rts
 
 
+		; out:
+		;	Z=1 (A=0) if no blocks to read (file has zero length)
 __calc_blocks: ;blocks = filesize / BLOCKSIZE -> filesize >> 9 (div 512) +1 if filesize LSB is not 0
 		lda fd_area + F32_fd::FileSize + 3,x
 		lsr
@@ -1116,7 +1120,7 @@ __calc_blocks: ;blocks = filesize / BLOCKSIZE -> filesize >> 9 (div 512) +1 if f
 		sta blocks + 1
 		lda fd_area + F32_fd::FileSize + 1,x
 		ror
-		sta blocks
+		sta blocks + 0
 		bcs @l1
 		lda fd_area + F32_fd::FileSize + 0,x
 		beq @l2
@@ -1125,7 +1129,10 @@ __calc_blocks: ;blocks = filesize / BLOCKSIZE -> filesize >> 9 (div 512) +1 if f
 		inc blocks+1
 		bne @l2
 		inc blocks+2
-@l2:	debug16 "cbl", blocks
+@l2:	lda blocks+2
+		ora blocks+1
+		ora blocks+0
+		debug16 "cbl", blocks
 		rts
 
 		; in:
