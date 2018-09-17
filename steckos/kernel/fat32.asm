@@ -988,19 +988,19 @@ __fat_open_path:
 		ldx #FD_INDEX_TEMP_DIR		; we use the temp dir fd to not clobber the current dir (Y parameter!), maybe we will run into an error
 		jsr __fat_clone_fd			; Y is given as param
 
-		ldy	#0						; trim wildcard at the beginning
+		ldy #0						; trim wildcard at the beginning
 @l1:	lda (krn_ptr1), y
-		cmp	#' '
-		bne	@l2
+		cmp #' '
+		bne @l2
 		iny
 		bne @l1
 		bra @l_err_einval		; overflow, >255 chars
 @l2:	;	starts with '/' ? - we simply cd root first
-		cmp	#'/'
-		bne	@l31
+		cmp #'/'
+		bne @l31
 		jsr fat_open_rootdir
 		iny
-        lda	(krn_ptr1), y		;end of input?
+		lda	(krn_ptr1), y		;end of input?
 		beq	@l_exit				;yes, so it was just the '/', exit with A=0
 @l31:
 		SetVector   filename_buf, filenameptr	; filenameptr to filename_buf

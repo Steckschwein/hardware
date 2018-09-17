@@ -4,18 +4,25 @@ CA65FLAGS=--include-dir ../../../asmunit --include-dir ../../asminc --include-di
 LIBS=../util.o ../textui.o ../t99xx.lib.o
 LDFLAGS=--config ../steckos.cfg $(DEFINES)
 
+# testing purpose of kernel api from client point of view 
+LIBS_PRG=../../tools/lib/toollib.a
+LDFLAGS_PRG=--config ../../steckos-c-app.cfg 
+
 .PHONY: all clean
 
 all: test.util test.textui test.matcher
 
 clean:
-	rm -f *.bin *.o *.dis *.log
+	rm -f *.prg *.bin *.o *.dis *.log
 
 %.o: %.asm
 	ca65 $(CA65FLAGS) $(@:.o=.asm)
 
 %.bin: %.o $(LIBS)
 	ld65 $(LDFLAGS) $< $(LIBS) -o $@
+
+%.prg: %.o $(LIBS)
+	ld65 $(LDFLAGS_PRG) $< $(LIBS_PRG) -o $@
 
 %.dis: %.bin
 	dcc6502 -o $(KERNEL_ADDRESS) -d -n -c $< > $@

@@ -21,5 +21,9 @@ build:
 	(cd imfplayer; make )
 	(cd test; make )
 
+test:
+	(cd kernel; make test)
+	(cd tools; make test)
+
 dist: build
 	./mkdist.sh $(DIST_TARGET)

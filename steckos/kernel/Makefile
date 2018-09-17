@@ -6,7 +6,7 @@ LDFLAGS=--config steckos.cfg
 # if 9958 is used
 DEFINES+=-DV9958
 # enable 80 cols
-DEFINES+=-DCOLS80
+# DEFINES+=-DCOLS80
 
 # enable debug
 #DEBUG += -DDEBUG_SDCARD
@@ -19,7 +19,7 @@ DEFINES+=-DCOLS80
 # dump fat blocks on write
 #DEBUG += -DFAT_DUMP_FAT_WRITE
 # do not write anything (metadata)
-#DEBUG += -DFAT_NOWRITE
+# DEBUG += -DFAT_NOWRITE
 #DEBUG += -DV9958
 
 #
@@ -60,5 +60,5 @@ transfer: loader.bin
 test.bin: test.o
 	cl65 --target none --config steckos.cfg test.asm -o test.bin
 
-test: test.bin
-	../../transfer.py test.bin -s 0x1000
+test:
+	(cd test; make test)

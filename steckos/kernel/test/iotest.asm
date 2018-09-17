@@ -2,13 +2,17 @@
 .include "errno.inc"
 .include "fcntl.inc"	; @see ca65 fcntl.inc
 .include "fat32.inc"	; @see ca65 fcntl.inc
-.include "../kernel/kernel.inc"
-.include "../kernel/kernel_jumptable.inc"
+.include "kernel.inc"
+.include "kernel_jumptable.inc"
+
+.import hexout
+
+.export char_out=krn_chrout
 
 .include "appstart.inc"
 appstart $1000
 
-.import hexout
+.code
 
 main:
 		lda (paramptr)	; empty string?
@@ -16,18 +20,18 @@ main:
 		lda #$99
 		jmp errmsg
 @l_cp:
-		jsr krn_primm
+		jsr krn_primm		
 		.asciiz "op r+"
     	lda paramptr
     	ldx paramptr+1
-		ldy #O_CREAT
+		ldy #O_CREAT		; "touch like", only create new file
     	jsr krn_open
 		jsr test_result
 		bne exit
 		jsr krn_close
 
 		jsr krn_primm
-		.asciiz "op ro"
+		.asciiz "op ro"	; open newly created file, read only
     	lda paramptr
     	ldx paramptr+1
 		ldy #O_RDONLY
@@ -37,7 +41,7 @@ main:
 		jsr krn_close
 		
 		jsr krn_primm
-		.asciiz "op rw+"
+		.asciiz "op rw+"	; open again for write
     	lda paramptr
     	ldx paramptr+1
 		ldy #O_WRONLY
