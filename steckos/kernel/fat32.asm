@@ -116,6 +116,7 @@ __fat_fseek:
 		;	read_blkptr - address where the read blocks should be stored
 		;out:
 		;	Z=1 on success (A=0), Z=0 and A=error code otherwise
+		;	TODO FIXME - how to give the client a hint how many bytes where read
 fat_fread:
 		jsr __fat_fseek
 		bne @l_err_exit
@@ -157,7 +158,7 @@ fat_read:
 		beq @l_err_exit
 
 		jsr __calc_blocks
-		beq @l_exit
+		beq @l_exit					; if Z=0, no blocks to read. we return with "EOK", 0 bytes read
 		jsr __calc_lba_addr
 		jsr sd_read_multiblock
 ;		jsr read_block
