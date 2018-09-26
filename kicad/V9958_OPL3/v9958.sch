@@ -1,11 +1,4 @@
 EESchema Schematic File Version 2
-LIBS:power
-LIBS:device
-LIBS:transistors
-LIBS:conn
-LIBS:linear
-LIBS:74xx
-LIBS:contrib
 LIBS:tms99xx
 LIBS:dram
 LIBS:osc
@@ -13,7 +6,6 @@ LIBS:mini_din
 LIBS:steckschwein
 LIBS:yamaha_opl
 LIBS:rc4136
-LIBS:audio
 LIBS:v9958-cache
 EELAYER 25 0
 EELAYER END
