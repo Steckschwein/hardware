@@ -17,9 +17,11 @@
 	
 	SetVector dir_1, dirptr
 	jsr dirname_mask_matcher
-	assertCarry 0
+	
+	assertA $47
+	assertCarry 0	
 	assertZero 1
-		
+	
 	SetVector dir_2, dirptr
 	jsr dirname_mask_matcher
 	assertCarry 0
@@ -28,7 +30,8 @@
 	SetVector dir_3, dirptr
 	jsr dirname_mask_matcher
 	assertZero 1
-	assertCarry 1
+	assertZero 1
+	assertCarry 1	
 	
 	brk
 
