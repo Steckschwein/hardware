@@ -95,6 +95,8 @@ _assert:
 
 		lda #$0a						; start with newline before any output
 		jsr _test_out
+		lda #$0d
+		jsr _test_out
 		
 		ldy #0
 _l_assert:
@@ -152,9 +154,9 @@ _l_end:
 		
 		lda tst_status
 		pha
-		lda	tst_acc
-		ldx	tst_xreg
-		ldy	tst_yreg
+		lda tst_acc
+		ldx tst_xreg
+		ldy tst_yreg
 		plp
 		
 		jmp (tst_return_ptr)           ; return to byte following final NULL
@@ -219,9 +221,9 @@ _test_out:
 		rts
 		
 _l_messages:
-_l_pass:	 		.byte 4,  "PASS"
-_l_fail: 		.byte 10, "FAIL, was "
-_l_fail_was:	.byte 10,	" expected "
+_l_pass:	 		.byte _l_fail-_l_pass-1			,"PASS"
+_l_fail: 		.byte _l_fail_was-_l_fail-1	,"FAIL, was "
+_l_fail_was:	.byte _l_flag_c0-_l_fail_was-1," expected "
 _l_flag_c0:		.byte _FLAG_C0
 _l_flag_c1:		.byte _FLAG_C1
 _l_flag_z0:		.byte _FLAG_Z0

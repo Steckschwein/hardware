@@ -71,14 +71,14 @@
 .endmacro
 
 .macro _assertFlag labelAddress, labelSymbol
-		jsr _assert
-		.word labelAddress
-		.byte _TYPE_STRING | .strlen(labelSymbol)
-		.byte labelSymbol
+	jsr _assert
+	.word labelAddress
+	.byte _TYPE_STRING | .strlen(labelSymbol)
+	.byte labelSymbol
 .endmacro
 
 .macro _pass
-	assert8 1, *+2
+	assert8 1, *+2	; FTW!
 .endmacro
 
 ;
