@@ -1,8 +1,9 @@
+OUT_ADDRESS=0x200
 DEFINES=-Dasmunit_char_out=0x200
 KERNEL_ADDRESS=0xe800
 CA65FLAGS=--include-dir ../../../asmunit --include-dir ../../asminc --include-dir ../ $(DEFINES)
-LIBS=../util.o ../textui.o ../t99xx.lib.o
-LDFLAGS=--config ../steckos.cfg $(DEFINES)
+LIBS=../util.o ../textui.o ../t99xx.lib.o ../../../asmunit/asmunit.a
+LDFLAGS=--config test.cfg $(DEFINES)
 
 # testing purpose of kernel api from client point of view 
 LIBS_PRG=../../tools/lib/toollib.a
@@ -19,7 +20,7 @@ clean:
 	ca65 $(CA65FLAGS) $(@:.o=.asm)
 
 %.bin: %.o $(LIBS)
-	ld65 $(LDFLAGS) $< $(LIBS) -o $@
+	ld65 -Ln $@.lst $(LDFLAGS) $< $(LIBS) -o $@
 
 %.prg: %.o $(LIBS)
 	ld65 $(LDFLAGS_PRG) $< $(LIBS_PRG) -o $@

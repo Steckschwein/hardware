@@ -1,14 +1,15 @@
-	.import bin2dual					; uut
-	.include "assertion.inc" 	; test api
+.include "asmunit.inc" 	; unit test api
+	
+.import bin2dual					; uut
 
 .code
-	lda	#$ff
+	lda #$ff
 	ldx #$00
-	jsr	bin2dual
+	jsr bin2dual
 
 	assertOut "11111111"	; assert outpuz
-	assertA $ff		; assert A is not destroyed
 	assertX $00
+	assertA $ff		; assert A is not destroyed
 
 	lda	#$f0
 	ldx #$00
@@ -42,7 +43,6 @@
 	assertA $aa		; assert A is not destroyed
 	assertX $00
 
+	brk
 
-	rts
-
-	.include "asmunit.asm"
+.segment "ASMUNIT"

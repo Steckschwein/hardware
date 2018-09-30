@@ -1,17 +1,16 @@
-OBJS=strcmp.test.o
-LDFLAGS=--config ../bios/bios.cfg
+DEFINES=-Dasmunit_char_out=0x200
+CA65FLAGS=$(DEFINES)
+OBJS=asmunit.o
+
 .PHONY: all clean
-all: strcmp.test.bin
 
-.PHONY: clean
+all: asmunit.a
+
 clean:
-	rm -f *.o *.bin 
+	rm -f *.o toollib.a
 
-%.o: %.asm strcmp.asm strcmp2.asm ../bios/bios_call.inc
-	ca65 -t none --cpu 65c02 -o $@ $(@:.o=.asm)
+%.o: %.asm asmunit.inc
+	ca65 $(CA65FLAGS) $(@:.o=.asm)
 
-strcmp.test.bin: $(OBJS)
-	ld65 $(LDFLAGS) $(OBJS) -o strcmp.test.bin
-    
-test: strcmp.test.bin
-	../transfer.py strcmp.test.bin -s 0x1000
+asmunit.a: $(OBJS)
+	ar65 a asmunit.a $(OBJS)

@@ -1,7 +1,8 @@
+.include "asmunit.inc" 	; unit test api
+
 	.import b2ad2				; uut
 	.import b2ad				; uut
 	.import dpb2ad
-	.include "assertion.inc" 	; test api
 
 .code
     ldx #0
@@ -46,6 +47,6 @@
 	; assertOut "9F"
 	; assertA $9f
 
-	rts
+	brk
 
-	.include "asmunit.asm"
+.segment "ASMUNIT"

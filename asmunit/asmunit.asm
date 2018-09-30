@@ -20,36 +20,44 @@
 ; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ; SOFTWARE. 
 
-.setcpu "65c02"
-_char_out_ptr: .res 1,0
-char_out_buffer: .res _CHAR_OUT_BUFFER_LENGTH,0
+.include "asmunit.inc"
+
+.export asmunit_char_out_ptr
+.export asmunit_char_out_buffer
 
 .export char_out=_char_out
+.export asmunit_print
+.export asmunit_assert
+
+.export asmunit_l_flag_c0
+.export asmunit_l_flag_c1
+.export asmunit_l_flag_z0
+.export asmunit_l_flag_z1
 
 ;char_out=_char_out
 ;_char_out_ptr: .rs 1
 ;char_out_buffer: .rs 32
 
-tst_acc			= $0100	; we use the lower part of the stack as temp space assuming the stack is almost not complety exhausted... hopefully :P
-tst_xreg			= $0101
-tst_yreg			= $0102
-tst_status		= $0103
-tst_save_ptr	= $0104 ; to save and restore the _tst_ptr
-tst_return_ptr	= $0106 ; to save and restore the _tst_exp_ptr and to build the return vector
-tst_bytes		= $0108
-
 _tst_ptr=$0
 _tst_inp_ptr=$2			; 
 
+.segment "ASMUNIT"
+
+	asmunit_char_out_buffer:	.res _TEST_OUT_BUFFER_LENGTH,0
+	asmunit_char_out_ptr: 		.res 1,0
+
 _char_out:
 	phx
-	ldx _char_out_ptr
-	sta char_out_buffer, x
-	inc _char_out_ptr
+	ldx asmunit_char_out_ptr
+	sta asmunit_char_out_buffer, x
+	inc asmunit_char_out_ptr
 	plx
 	rts
 
-_assert:
+asmunit_print:
+	rts
+	
+asmunit_assert:
 		sta tst_acc
 		stx tst_xreg
 		sty tst_yreg
@@ -184,7 +192,7 @@ _inc_tst_ptr:
 		inc     _tst_ptr+1		; account for page crossing
 _l_exit:
 		rts
-_print:
+_print:	; print length prefixed strings
 		phx
 		lda _l_messages,y
 		tax
@@ -223,8 +231,8 @@ _test_out:
 _l_messages:
 _l_pass:	 		.byte _l_fail-_l_pass-1			,"PASS"
 _l_fail: 		.byte _l_fail_was-_l_fail-1	,"FAIL, was "
-_l_fail_was:	.byte _l_flag_c0-_l_fail_was-1," expected "
-_l_flag_c0:		.byte _FLAG_C0
-_l_flag_c1:		.byte _FLAG_C1
-_l_flag_z0:		.byte _FLAG_Z0
-_l_flag_z1:		.byte _FLAG_Z1
+_l_fail_was:	.byte asmunit_l_flag_c0-_l_fail_was-1," expected "
+asmunit_l_flag_c0:		.byte _FLAG_C0
+asmunit_l_flag_c1:		.byte _FLAG_C1
+asmunit_l_flag_z0:		.byte _FLAG_Z0
+asmunit_l_flag_z1:		.byte _FLAG_Z1
