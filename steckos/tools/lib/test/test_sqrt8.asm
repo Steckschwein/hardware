@@ -1,5 +1,6 @@
+.include "asmunit.inc" 	; unit test api
+
 .import sqrt8					; uut
-.include "assertion.inc" 	; unit test api
 
 .code
     ldx #$00
@@ -16,4 +17,4 @@
 
     assert8 1, $20
 
-	.include "asmunit.asm"
+.segment "ASMUNIT"

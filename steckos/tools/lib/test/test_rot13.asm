@@ -1,5 +1,6 @@
+.include "asmunit.inc" 	; unit test api
+
 .import rot13					; uut
-.include "assertion.inc" 	; unit test api
 
 .code
     ldx #$00
@@ -24,7 +25,7 @@
 	lda	#'9'
 	jsr	rot13
 
-	assertA '9'		
-	rts
-
-	.include "asmunit.asm"
+	assertA '9'
+	brk
+	
+.segment "ASMUNIT"

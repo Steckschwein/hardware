@@ -1,4 +1,4 @@
-	.include "assertion.inc" 	; test api
+.include "asmunit.inc" 	; unit test api
 	
 	.include "common.inc"
 	.include "zeropage.inc"
@@ -43,23 +43,22 @@
 	SetVector test_data_08, filenameptr
 	jsr string_fat_mask
 	assertString "???????????", output
+	
+	SetVector test_data_09, filenameptr
+	jsr string_fat_mask
+	assertString "FI?ONA?IP?G", output
 
-;	---- test string_fat_name
-	SetVector test_data_01, filenameptr
-	jsr string_fat_name
-; TODO FIXME	assertString "", output	; expect zero length string
+	SetVector test_data_10, filenameptr
+	jsr string_fat_mask
+;	assertString "FI?ONA?IP?G", output ; TODO FIXME
+
+	SetVector test_data_11, filenameptr
+	jsr string_fat_mask
+	assertString "LS??????   ", output
 	
-	SetVector test_data_02, filenameptr
-	jsr string_fat_name
-	assertString "AB         ", output	
-	
-	SetVector test_data_03, filenameptr
-	jsr string_fat_name
-	assertString "LS      PRG", output	
-	
-	SetVector test_data_04, filenameptr
-	jsr string_fat_name
-	assertString "LS         ", output	
+	SetVector test_data_12, filenameptr
+	jsr string_fat_mask
+;	assertString "L???????   ", output ; TODO FIXME
 	
 	brk
 
@@ -81,5 +80,13 @@ test_data_07:
 	.asciiz "*"
 test_data_08:
 	.asciiz "*.*"
+test_data_09:
+	.asciiz "FI?ONA?I.P?G"
+test_data_10:
+	.asciiz "FI*ONA*I.P*G"
+test_data_11:
+	.asciiz "ls*"
+test_data_12:
+	.asciiz "l**"
 	
-	.include "asmunit.asm"
+.segment "ASMUNIT"

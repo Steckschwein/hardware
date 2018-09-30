@@ -1,8 +1,7 @@
 DEFINES=-Dasmunit_char_out=0x200
 CA65FLAGS=--include-dir ../../../../asmunit --include-dir ../../../asminc --include-dir ../../../kernel $(DEFINES)
-LIBS=../toollib.a
+LIBS=../toollib.a ../../../../asmunit/asmunit.a
 LDFLAGS=--config ../../../../asmunit/asmunit.cfg $(LIBS) $(DEFINES)
-#LDFLAGS=--config ../../../steckos-c-app.cfg $(LIBS)
 
 .PHONY: all clean
 

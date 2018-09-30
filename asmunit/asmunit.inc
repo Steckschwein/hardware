@@ -29,9 +29,31 @@
 .define _FLAG_Z0 "Z=0"
 .define _FLAG_Z1 "Z=1"
 
-.define	_CHAR_OUT_BUFFER_LENGTH 32
+.define	_TEST_OUT_BUFFER_LENGTH 32
 .define	_TYPE_STRING $80
 
+tst_acc			= $0100	; we use the lower part of the stack as temp space assuming the stack is almost not complety exhausted... hopefully :P
+tst_xreg			= $0101
+tst_yreg			= $0102
+tst_status		= $0103
+tst_save_ptr	= $0104 ; to save and restore the _tst_ptr
+tst_return_ptr	= $0106 ; to save and restore the _tst_exp_ptr and to build the return vector
+tst_bytes		= $0108
+
+;.import asmunit_print
+;.import asmunit_assert
+;.import asmunit_l_flag_c0
+;.import asmunit_l_flag_c1
+;.import asmunit_l_flag_z0
+;.import asmunit_l_flag_z1
+;.import asmunit_char_out_buffer
+;.import asmunit_char_out_ptr
+
+.macro test_name p_label
+	.import asmunit_print
+	jsr asmunit_print
+	.byte assertXX, 0
+.endmacro
 
 .macro assertX expect
 	assert8 expect, tst_xreg
@@ -50,28 +72,32 @@
 .endmacro
 
 .macro assert8 expect8, address
-	jsr _assert
+	.import asmunit_assert
+	jsr  asmunit_assert
 	.word address
 	.byte 1
 	.byte expect8
 .endmacro
 
 .macro assert16 expect16, address
-	jsr _assert
+	.import asmunit_assert
+	jsr  asmunit_assert
 	.word address
 	.byte 2
 	.word expect16
 .endmacro
 
 .macro assert32 expect32, address
-	jsr _assert
+	.import asmunit_assert
+	jsr  asmunit_assert
 	.word address
 	.byte 4
 	.dword expect32
 .endmacro
 
-.macro _assertFlag labelAddress, labelSymbol
-	jsr _assert
+.macro  asmunit_assertFlag labelAddress, labelSymbol
+	.import asmunit_assert
+	jsr  asmunit_assert
 	.word labelAddress
 	.byte _TYPE_STRING | .strlen(labelSymbol)
 	.byte labelSymbol
@@ -89,10 +115,12 @@
 	.assert expect = 0 || expect = 1, error, "Invalid expect, must be 0 or 1!"
 	.if expect
 		bcs :+
-		_assertFlag _l_flag_c0, _FLAG_C1
+		.import asmunit_l_flag_c0
+		 asmunit_assertFlag asmunit_l_flag_c0, _FLAG_C1
 	.else
 		bcc :+
-		_assertFlag _l_flag_c1, _FLAG_C0
+		.import asmunit_l_flag_c1
+		 asmunit_assertFlag asmunit_l_flag_c1, _FLAG_C0
 	.endif
 		bra :++
 :		_pass
@@ -107,10 +135,12 @@
 	.assert expect = 0 || expect = 1, error, "Invalid expect, must be 0 or 1!"
 	.if expect
 		bne :+
-		_assertFlag _l_flag_z0, _FLAG_Z1
+		.import asmunit_l_flag_z0
+		 asmunit_assertFlag asmunit_l_flag_z0, _FLAG_Z1
 	.else
 		beq :+
-		_assertFlag _l_flag_z1, _FLAG_Z0
+		.import asmunit_l_flag_z1
+		 asmunit_assertFlag asmunit_l_flag_z1, _FLAG_Z0
 	.endif
 		bra :++
 :		_pass
@@ -118,17 +148,22 @@
 .endmacro
 
 .macro assertString expect, address
-	jsr _assert
+	.import asmunit_assert
+	jsr asmunit_assert
 	.word address
 	.byte _TYPE_STRING | .strlen(expect)
 	.byte expect
 .endmacro
 
 .macro assertOut expect
-	.assert .strlen(expect) <= _CHAR_OUT_BUFFER_LENGTH, error, "Expectation argument exceeds size of test output buffer!"
-	stz _char_out_ptr					; reset char_out_buffer	before test - TODO FIXME maybe a dedicated macro?!?
-	jsr _assert
-	.word char_out_buffer
+	.import asmunit_assert
+	.import asmunit_char_out_buffer
+	.import asmunit_char_out_ptr
+	
+	.assert .strlen(expect) <= _TEST_OUT_BUFFER_LENGTH, error, "Expectation argument exceeds size of test output buffer!"
+	stz asmunit_char_out_ptr					; reset asmunit_char_out_buffer	before test - TODO FIXME maybe a dedicated macro?!?
+	jsr asmunit_assert
+	.word asmunit_char_out_buffer
 	.byte _TYPE_STRING | .strlen(expect)
 	.byte expect
 .endmacro

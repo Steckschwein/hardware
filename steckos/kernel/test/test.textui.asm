@@ -1,4 +1,4 @@
-	.include "assertion.inc" 	; test api
+	.include "asmunit.inc" 	; test api
 	.include "zeropage.inc"
 	
 	.import textui_chrout, textui_put
@@ -19,4 +19,4 @@
 
 		brk
 
-	.include "asmunit.asm"
+.segment "ASMUNIT"

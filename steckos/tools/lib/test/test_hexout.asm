@@ -1,5 +1,6 @@
+.include "asmunit.inc" 	; unit test api
+
 .import hexout					; uut
-.include "assertion.inc" 	; unit test api
 	
 .code	
 	lda	#$7e
@@ -20,6 +21,6 @@
 	assertOut "9F"
 	assertA $9f	
 
-	rts
+	brk
 	
-	.include "asmunit.asm" 
+.segment "ASMUNIT"
