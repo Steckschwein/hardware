@@ -1,4 +1,4 @@
-update=Sat 08 Sep 2018 11:01:48 PM CEST
+update=Sun 30 Sep 2018 08:31:21 PM CEST
 version=1
 last_client=kicad
 [cvpcb]
@@ -49,3 +49,4 @@ LibName4=mini_din
 LibName5=steckschwein
 LibName6=yamaha_opl
 LibName7=rc4136
+LibName8=/usr/share/kicad/library/ttl_ieee
