@@ -4,8 +4,8 @@ ASM_INCLUDE=--include-dir ../kernel --include-dir ../asminc
 
 all: $(TARGET)
 
-soundtest.prg: soundtest.o ym3812.o
-	cl65 --target none  --config ../kernel/steckosapp.cfg -o $@ soundtest.o ym3812.o
+sndtest.prg: sndtest.o ym3812.o
+	cl65 --target none  --config ../kernel/steckosapp.cfg -o $@ sndtest.o ym3812.o
 
 %.prg: $(OBJS)
 	cl65 --target none  --config ../kernel/steckosapp.cfg -o $@ $(OBJS)
