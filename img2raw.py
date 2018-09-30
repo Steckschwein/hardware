@@ -18,8 +18,8 @@ for filename in sys.argv[1::]:
 
 	with Image.open(filename) as img:
 		print "\tSource image is %dx%d" % img.size
-
-		img = ImageOps.fit(img, (256, 192), Image.ANTIALIAS)
+		# PIL.Image.NEAREST, PIL.Image.BILINEAR, PIL.Image.BICUBIC and PIL.Image.ANTIALIAS
+		img = ImageOps.fit(img, (256, 192), Image.NEAREST)
 		print "\tResized to %dx%d" % img.size
 
 	with open(outfile, "w") as fout:
