@@ -2,6 +2,10 @@ OBJS=imf.o ym3812.o
 TARGET=imf.prg
 ASM_INCLUDE=--include-dir ../kernel --include-dir ../asminc
 
+all: $(TARGET)
+
+soundtest.prg: soundtest.o ym3812.o
+	cl65 --target none  --config ../kernel/steckosapp.cfg -o $@ soundtest.o ym3812.o
 
 %.prg: $(OBJS)
 	cl65 --target none  --config ../kernel/steckosapp.cfg -o $@ $(OBJS)
@@ -9,10 +13,9 @@ ASM_INCLUDE=--include-dir ../kernel --include-dir ../asminc
 %.o: %.asm
 	ca65 $(ASM_INCLUDE) -o $@ $<
 
-all: $(TARGET) 
 
 clean:
 	rm -f $(TARGET) $(OBJS)
 
 imfplayer: $(TARGET)
-	../../transfer.py $(TARGET)    
+	../../transfer.py $(TARGET)
