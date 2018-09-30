@@ -14,7 +14,7 @@ for filename in sys.argv[1::]:
 		continue
 
 
-	outfile  = os.path.basename(filename).split(".")[0] + ".raw"
+	outfile  = os.path.splitext(os.path.basename(filename))[0] + ".raw"
 
 	with Image.open(filename) as img:
 		print "\tSource image is %dx%d" % img.size
