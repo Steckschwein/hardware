@@ -18,7 +18,12 @@ TARGET_DIR=target/test-reports
 mkdir -p ${TARGET_DIR}
 echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
 <testsuite xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd\" 
-	name=\"${1}\" \ time=\"0.001\" tests=\"${tests}\" errors=\"0\" skipped=\"0\" failures=\"${test_fail}\">
+	name=\"${1}\" 
+	time=\"0.001\" 
+	tests=\"${tests}\" 
+	errors=\"0\" 
+	skipped=\"0\" 
+	failures=\"${test_fail}\">
   <testcase name=\"\" classname=\"${1}\" time=\"0\"/>
 </testsuite>" > ${TARGET_DIR}/${1}.xml
 
