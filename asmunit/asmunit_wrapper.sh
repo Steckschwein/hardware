@@ -13,7 +13,7 @@ if [ -n "`grep FAIL $logfile`" ] ; then
         exit 1
 fi
 
-TARGET_DIR=target/surefire-reports
+TARGET_DIR=target/test-reports
 
 mkdir -p ${TARGET_DIR}
 echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
