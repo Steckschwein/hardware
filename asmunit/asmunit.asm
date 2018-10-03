@@ -128,7 +128,7 @@ _assert_fail:
 		jsr _inc_tst_ptr
 		iny							; adjust the pointer, consume the arguments
 		cpy tst_bytes
-		bne _assert_fail		
+		bne _assert_fail
 		
 		ldy #<(_l_fail-_l_messages)
 		jsr _print
@@ -143,6 +143,7 @@ _assert_fail:
 		pla
 		sta _tst_inp_ptr
 		jsr _fail					; expected ...
+		brk							; fail immediately, we will end up in monitor and can check the cpu state
 		
 _l_end:		
 		lda tst_return_ptr		; restore old value at _tst_inp_ptr
@@ -170,11 +171,11 @@ _l_end:
 		jmp (tst_return_ptr)           ; return to byte following final NULL
 
 _fail:
+		lda #'$'
+		jsr _test_out
 		ldy #0
 @l1:	txa
 		bmi @l2						; TODO FIXME ugly...
-		lda #'$'
-		jsr _test_out
 		lda (_tst_inp_ptr),y
 		jsr _hexout
 		bra @l3
