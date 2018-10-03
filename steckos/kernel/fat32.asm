@@ -72,7 +72,7 @@ fat_fseek:
 		sta krn_ptr1								; save ptr
 		sty krn_ptr1
 		jsr __fat_isOpen
-		beq __exit_ebadf
+		beq __exit_einval
 		
 		ldy #Seek::Whence
 		lda (krn_ptr1),y
@@ -94,8 +94,8 @@ fat_fseek:
 		lda #EOK
 		bra __exit
 		
-__exit_ebadf:
-		lda #EBADF
+__exit_einval:
+		lda #EINVAL
 __exit:
 		plx
 		cmp #0
@@ -118,15 +118,31 @@ __fat_fseek:
 		;	Z=1 on success (A=0), Z=0 and A=error code otherwise
 		;	TODO FIXME - how to give the client a hint how many bytes where read
 fat_fread:
-		jsr __fat_fseek
-		bne @l_err_exit
+;1. ansatz
+;- 32bit seekpos im fd mitführen und bei read/write updaten
+;- vor jedem read/write prüfen ob "seekpos dirty"
+;- - wenn dirty, dann seekpos zerlegen und 
+;    - cluster nr berechnen
+; 	  - block nr im cluster berechnen
+; 	  - offset im block
+;- + antworten der akt. seek pos ist billig, seekpos aus fd antworten
+;- + setzen der seek pos ist billig
+;-   - update seekpos in fd
+;-   - setzen "seekpos dirty"
+
+		sta krn_tmp
+		jsr __fat_isOpen
+		beq @l_exit_einval
+;		jsr __fat_fseek
+;		bne @l_exit_einval
 		
 		; calc blocks from given size
 		; calc lba from current seek pos - CurrentCluster, SeekPos					
 		jsr __calc_blocks
 		jsr __calc_lba_addr		
 		jmp __fat_read_block
-@l_err_exit:
+@l_exit_einval:
+		lda #EINVAL
 		rts
 
 		;	@deprecated - use fat_read_blocks instead, just for backward compatibility
@@ -685,15 +701,15 @@ __fat_rtc_time:
 		;	A/X with date from rtc struct in fat format
 __fat_rtc_date:
 		stz krn_tmp2
-		lda rtc_systime_t+time_t::tm_year								; years since 1900
+		lda rtc_systime_t+time_t::tm_year							; years since 1900
 		sec
-		sbc	#80															; fat year is 1980..2107 (bit 15-9)
+		sbc #80																; fat year is 1980..2107 (bit 15-9), we have to adjust 80 years
 		asl
 		sta krn_tmp
 		lda rtc_systime_t+time_t::tm_mon								; month from rtc is (0..11), adjust +1
 		inc
 		jsr __fat_rtc_high_word
-		lda rtc_systime_t+time_t::tm_mday								; day of month (1..31)
+		lda rtc_systime_t+time_t::tm_mday							; day of month (1..31)
 		ora krn_tmp2
 		debug "rdate"
 		rts
@@ -777,21 +793,21 @@ __fat_read_cluster_block_and_select:
 		SetVector block_fat, read_blkptr
 		jsr __fat_read_block
 		bne @l_exit
-		jsr __fat_isroot						; is root clnr?
-		bne	@l_clnr_page
+		jsr __fat_isroot							; is root clnr?
+		bne @l_clnr_page
 		lda volumeID + VolumeID::EBPB + EBPB::RootClus+0
 		bra @l_clnr_page
 		lda fd_area+F32_fd::CurrentCluster+0,x 	; offset within block_fat, clnr<<2 (* 4)
 @l_clnr_page:
-		bit #$40								; clnr within 2nd page of the 512 byte block ?
+		bit #$40										; clnr within 2nd page of the 512 byte block ?
 		bne @l_clnr
 		ldy #>block_fat							; no, set read_blkptr to start of block_fat
 		sty read_blkptr+1
 @l_clnr:
-		asl										; block offset = clnr*4
+		asl											; block offset = clnr*4
 		asl
 		tay
-		jsr __fat_is_cln_eoc
+		jsr __fat_is_cln_eoc						; C is returned accordingly
 		lda #EOK
 @l_exit:
 		rts
@@ -1140,6 +1156,7 @@ __calc_blocks: ;blocks = filesize / BLOCKSIZE -> filesize >> 9 (div 512) +1 if f
 		;	X - file descriptor
 		; out:
 		;	lba_addr setup with lba address from given file descriptor
+		;	A - with bit 0-7 of lba address
 __prepare_calc_lba_addr:
 		jsr	__fat_isroot
 		bne	@l_scl
@@ -1164,9 +1181,9 @@ __calc_lba_addr:
 		pha
 		phx
 
-		jsr	__prepare_calc_lba_addr
+		jsr __prepare_calc_lba_addr
 
-		;SecPerClus is a power of 2 value, therefore cluster << n, where n ist the number of bit set in VolumeID::SecPerClus
+		;SecPerClus is a power of 2 value, therefore cluster << n, where n is the number of bit set in VolumeID::SecPerClus
 		lda volumeID+VolumeID::BPB + BPB::SecPerClus
 @lm:	lsr
 		beq @lme    ; until 1 sector/cluster
@@ -1196,7 +1213,7 @@ inc_lba_address:
 
 		; in:
 		;	X - file descriptor
-		;vol->LbaFat + (cluster_nr>>7);// div 128 -> 4 (32bit) * 128 cluster numbers per block (512 bytes)
+		;	vol->LbaFat + (cluster_nr>>7);// div 128 -> 4 (32bit) * 128 cluster numbers per block (512 bytes)
 __calc_fat_lba_addr:
 		;instead of shift right 7 times in a loop, we copy over the hole byte (same as >>8) - and simply shift left 1 bit (<<1)
 		jsr __prepare_calc_lba_addr
@@ -1252,18 +1269,18 @@ __fat_isroot:
 __fat_is_cln_eoc:
 		phy
 		lda (read_blkptr),y
-		cmp	#<FAT_EOC
+		cmp #<FAT_EOC
 		bne @l_neoc
 		iny
 		lda (read_blkptr),y
-		cmp	#<(FAT_EOC>>8)
+		cmp #<(FAT_EOC>>8)
 		iny
 		lda (read_blkptr),y
-		cmp	#<(FAT_EOC>>16)
+		cmp #<(FAT_EOC>>16)
 		bne @l_neoc
 		iny
 		lda (read_blkptr),y
-		cmp	#<(FAT_EOC>>24)
+		cmp #<(FAT_EOC>>24)
 		beq @l_eoc
 @l_neoc:
 		clc
@@ -1275,21 +1292,22 @@ __fat_is_cln_eoc:
 		; unsigned int offs = (clnr << 2 & (BLOCK_SIZE-1));//offset within 512 byte block, cluster nr * 4 (32 Bit) and Bit 8-0 gives the offset
 		; in:
 		;	X - file descriptor
+		;	Y - offset from target address denoted by pointer (read_blkptr)
 		; out:
 		;
 __fat_next_cln:
 		debug32 "f_nc0", fd_area+FD_INDEX_TEMP_DIR+F32_fd::CurrentCluster
 
-		lda	(read_blkptr), y
+		lda (read_blkptr), y
 		sta fd_area + F32_fd::CurrentCluster+0, x
 		iny
-		lda	(read_blkptr), y
+		lda (read_blkptr), y
 		sta fd_area + F32_fd::CurrentCluster+1, x
 		iny
-		lda	(read_blkptr), y
+		lda (read_blkptr), y
 		sta fd_area + F32_fd::CurrentCluster+2, x
 		iny
-		lda	(read_blkptr), y
+		lda (read_blkptr), y
 		sta fd_area + F32_fd::CurrentCluster+3, x
 
 		lda #EOK
