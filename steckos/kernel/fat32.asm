@@ -37,7 +37,6 @@
 
 ; external deps - block layer
 .import read_block, write_block
-
 ; TODO FIXME - encapsulate within sd layer
 .import sd_read_multiblock
 
@@ -55,9 +54,12 @@
 .export fat_fseek
 .export fat_find_first, fat_find_next, fat_write
 .export fat_get_root_and_pwd
-
 .export fat_close_all, fat_close, fat_getfilesize
 .export inc_lba_address
+
+; TODO FIXME testing exports only, use DEFINE
+.export __calc_fat_lba_addr
+.export __fat_isroot
 
 .segment "KERNEL"
 

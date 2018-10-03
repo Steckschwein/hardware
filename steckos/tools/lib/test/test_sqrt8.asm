@@ -3,18 +3,18 @@
 .import sqrt8					; uut
 
 .code
-    ldx #$00
+	ldx #$00
 	lda	#25
-    sta $20
+	sta $20
 	jsr	sqrt8
 
-    assert8 5, $20
+	assert8 5, $20
 	assertX $00
 
 	lda	#0
-    sta $20
+	sta $20
 	jsr	sqrt8
 
-    assert8 1, $20
+	assert8 1, $20
 
 .segment "ASMUNIT"
