@@ -17,14 +17,13 @@
 		sta fd_area+F32_fd::CurrentCluster+3,x
 		
 		jsr __fat_isroot
-		assertZero 1		; expext "is root"
-		
-		
+		assertZero 1		; expect "is root"
+			
 		jsr __calc_fat_lba_addr
 
 		assertX 0
 		assertA 0
-		assert32 $00002800, lba_addr
+;		assert32 $00002800, lba_addr
 		
 		brk
 
@@ -48,15 +47,22 @@ _setup:
 	rts
 
 		
-.export __rtc_systime_update=mock__rtc_systime_update
-.export read_block=mock_read_block
-.export sd_read_multiblock=mock_sd_read_multiblock
-.export write_block=mock_write_block
+.export __rtc_systime_update=mock
+.export read_block=mock
+.export sd_read_multiblock=mock
+.export write_block=mock
+.export dirname_mask_matcher=mock
+.export cluster_nr_matcher=mock
+.export fat_name_string=mock
+.export path_inverse=mock
+.export put_char=mock
+.export string_fat_mask=mock
+.export string_fat_name=mock
 
-mock_sd_read_multiblock:
-mock_read_block:
-mock_write_block:
-mock__rtc_systime_update:
+
+mock:
+		clc
+		assertCarry 1; fail, if a mock is called
 		rts
 		
 		

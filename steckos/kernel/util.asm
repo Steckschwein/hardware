@@ -32,29 +32,7 @@
 .export string_fat_name, fat_name_string, put_char
 .export string_fat_mask
 .export path_inverse
-.export dirname_mask_matcher
 .export cluster_nr_matcher
-
-		; in:
-		;	dirptr - pointer to dir entry (F32DirEntry)
-		; out:
-		;	C=1 on match, C=0 otherwise
-dirname_mask_matcher:
-		ldy #10 ;.sizeof(F32DirEntry::Name) + .sizeof(F32DirEntry::Ext) - 1
-__dmm:
-		lda fat_dirname_mask, y
-		cmp #'?'
-		beq __dmm_next
-		cmp (dirptr), y
-		bne __dmm_neq
-__dmm_next:
-		dey
-		bpl __dmm
-		sec
-		rts
-__dmm_neq:
-		clc
-		rts
 
 		; in:
 		;	dirptr - pointer to dir entry (F32DirEntry)
