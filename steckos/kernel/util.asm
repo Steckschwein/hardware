@@ -29,6 +29,7 @@
 .include	"errno.inc"
 
 .segment "KERNEL"
+
 .export string_fat_name, fat_name_string, put_char
 .export string_fat_mask
 .export path_inverse

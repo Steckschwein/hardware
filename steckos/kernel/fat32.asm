@@ -59,6 +59,7 @@
 
 ; TODO FIXME testing exports only, use DEFINE
 .export __calc_fat_lba_addr
+.export __calc_lba_addr
 .export __fat_isroot
 
 .segment "KERNEL"
@@ -1434,7 +1435,7 @@ fat_mount:
 		asl
 		sta lba_addr        ;   used as tmp
 		stz lba_addr +1     ;   safe carry
-		rol	lba_addr +1
+		rol lba_addr +1
 		sec	                ;   subtract from cluster_begin_lba
 		lda cluster_begin_lba
 		sbc lba_addr

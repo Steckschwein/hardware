@@ -96,6 +96,10 @@ struct F32_fd{
 
 int readBlock(unsigned char *msg, unsigned char *buf, FILE *fd, unsigned long lba_addr){
 	unsigned long offset = (lba_addr << 9);//  fileOffset => lba_addr * 512
+	
+	if(msg != NULL)
+		printf("readBlock($%x): %s\n", lba_addr, msg);
+	
 //	fpos_t pos;
 //	int s = fgetpos (fd, &pos);
 //	printf("lba: $%x offset: %d $%x pos: $%x\n", lba_addr, s, offset, pos);
@@ -109,8 +113,6 @@ int readBlock(unsigned char *msg, unsigned char *buf, FILE *fd, unsigned long lb
 		fprintf(stderr, "readBlock($%x): Error reading file : %s\n", lba_addr, strerror(errno));
 		return n;
 	}
-	if(msg != NULL)
-		printf("readBlock($%x): %s\n", lba_addr, msg);
 	return n;
 }
 
@@ -317,7 +319,7 @@ int show_dir(FILE *fd, struct F32_Volume *vol, unsigned long dir_cln){
 	unsigned long data_lba_addr = calcDataLbaAddress(vol, dir_cln);
 	unsigned int e=0;
 	for(int i=0;i<vol->SecPerClus;i++){//
-		unsigned int n = readBlock(NULL, block_data, fd, data_lba_addr);
+		unsigned int n = readBlock("show_dir", block_data, fd, data_lba_addr);
 		if(n != BLOCK_SIZE){
 			printf("Error: %d\n",n);return 1;
 		}
@@ -505,7 +507,8 @@ int main(int argc, char* argv[]){
 	// ###################### find_first/find_next
 	
 	//for mkdir 
-	strncpy(filename, "FILE0001DAT\0", 12);
+	//strncpy(filename, "FILE0001DAT\0", 12);
+	strncpy(filename, "1       BAS\0", 12);
 	
 	unsigned int r;
 	struct F32_fd fileFound;
@@ -523,9 +526,12 @@ int main(int argc, char* argv[]){
 	printf("r: %d\n", r);
 	if(r == 2){
 		printf("file found '%s' found\n", fileFound.filename);
+		data_lba_addr = calcDataLbaAddress(&vol, fileFound.startCluster);
+		unsigned long blocks = fileFound.size >> 9; //(div BLOCK_SIZE);
+		printf("data cluster nr $%x, $%x blocks to read, lba $%x\n", fileFound.startCluster, blocks, data_lba_addr);
 	}
 	//############### poc mkdir 
-	if(r == 0){//end of dir above
+	else if(r == 0){//end of dir above
 		dumpDirEntry(block_data, boffs_data);
 		printf("eod reached, boffs $%x\n", boffs_data);
 		dumpBuffer("block with dir entry", block_data);

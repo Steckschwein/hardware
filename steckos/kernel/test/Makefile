@@ -19,11 +19,11 @@ clean:
 %.o: %.asm
 	ca65 $(CA65FLAGS) $(@:.o=.asm)
 
-test.%.bin: test.%.o $(LIBS)
+test.%.bin: test.%.o $(LIBS) $(<:test.%=%)
 	ld65 $(LDFLAGS) $< $(LIBS) ../$(<:test.%=%) -o $@
 
-test.matcher.bin: test.matcher.o $(LIBS)
-	ld65 $(LDFLAGS) $< $(LIBS) ../util.o ../matcher.o -o $@
+test.matcher.bin: test.matcher.o ../matcher.o ../util.o $(LIBS)
+	ld65 $(LDFLAGS) $< $(LIBS) ../matcher.o ../util.o -o $@
 	
 %.prg: %.o $(LIBS)
 	ld65 $(LDFLAGS_PRG) $< $(LIBS_PRG) -o $@

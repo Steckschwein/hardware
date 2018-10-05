@@ -24,6 +24,7 @@
 
 .export dirname_mask_matcher
 
+.segment "KERNEL"
 ; 	match input name[.[ext]] (8.3 filename) against 11 byte dir entry <name><ext>
 ;	note:
 ;		*.*	- matches any file or directory with extension

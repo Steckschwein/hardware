@@ -2,48 +2,67 @@
 	.include "fat32.inc"
 	.include "zeropage.inc"
 	
-	.import __calc_fat_lba_addr
+	.import __calc_lba_addr
 	.import __fat_isroot
 	
 .segment "KERNEL"	; test must be placed into kernel segment, cuz we wanna use the same linker config
 
 		jsr _setup
 		
-		ldx #0
-		lda #0												;setup fd0 as root cluster
-		sta fd_area+F32_fd::CurrentCluster+0,x		
-		sta fd_area+F32_fd::CurrentCluster+1,x
-		sta fd_area+F32_fd::CurrentCluster+2,x
-		sta fd_area+F32_fd::CurrentCluster+3,x
-		
+		ldx #0				
 		jsr __fat_isroot
-		assertZero 1		; expect "is root"
-			
-		jsr __calc_fat_lba_addr
-
+		assertZero 1		; expect fd0 "is root"
 		assertX 0
-		assertA 0
-;		assert32 $00002800, lba_addr
+		
+		jsr __calc_lba_addr
+		assertX 0
+		assert32 $00006800, lba_addr ; expect $67fe + $2 => the root dir lba
+		
+		ldx #4
+		jsr __fat_isroot
+		assertZero 0		; expect fd0 "is not root"
+		assertX 4
+		
+		jsr __calc_lba_addr
+		assertX 4
+		assert32 $000068e6, lba_addr ; expect $67fe + (clnr * sec/cl) => $67fe + $e8 * 1 = $68e6		
 		
 		brk
 
 _setup:
 	lda #1
 	sta volumeID+VolumeID::BPB + BPB::SecPerClus
-	
-	lda #$00
-	sta cluster_begin_lba+0
-	lda #$28
-	sta cluster_begin_lba+1
-	lda #$00
-	sta cluster_begin_lba+2
-	sta cluster_begin_lba+3
-	
-	stz lba_addr+0
-	stz lba_addr+1
-	stz lba_addr+2
-	stz lba_addr+3
 
+	lda #$00
+	sta volumeID + VolumeID::EBPB + EBPB::RootClus+3
+	sta volumeID + VolumeID::EBPB + EBPB::RootClus+2
+	sta volumeID + VolumeID::EBPB + EBPB::RootClus+1
+	lda #$02
+	sta volumeID + VolumeID::EBPB + EBPB::RootClus+0
+	
+	lda #$00						;cl lba $67fe
+	sta cluster_begin_lba+3
+	sta cluster_begin_lba+2
+	lda #$67
+	sta cluster_begin_lba+1
+	lda #$fe
+	sta cluster_begin_lba+0
+	
+	ldx #0
+	lda #0												;setup fd0 as root cluster
+	sta fd_area+F32_fd::CurrentCluster+0,x		
+	sta fd_area+F32_fd::CurrentCluster+1,x
+	sta fd_area+F32_fd::CurrentCluster+2,x
+	sta fd_area+F32_fd::CurrentCluster+3,x
+	
+	ldx #4
+	lda #0												;setup fd1 as with test cluster
+	sta fd_area+F32_fd::CurrentCluster+1,x
+	sta fd_area+F32_fd::CurrentCluster+2,x
+	sta fd_area+F32_fd::CurrentCluster+3,x
+	lda #$e8
+	sta fd_area+F32_fd::CurrentCluster+0,x		
+	
 	rts
 
 		
