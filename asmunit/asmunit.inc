@@ -134,11 +134,11 @@ tst_bytes		= $0108
 .macro assertZero expect
 	.assert expect = 0 || expect = 1, error, "Invalid expect, must be 0 or 1!"
 	.if expect
-		bne :+
+		beq :+
 		.import asmunit_l_flag_z0
 		 asmunit_assertFlag asmunit_l_flag_z0, _FLAG_Z1
 	.else
-		beq :+
+		bne :+
 		.import asmunit_l_flag_z1
 		 asmunit_assertFlag asmunit_l_flag_z1, _FLAG_Z0
 	.endif
