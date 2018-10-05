@@ -49,10 +49,14 @@ tst_bytes		= $0108
 ;.import asmunit_char_out_buffer
 ;.import asmunit_char_out_ptr
 
-.macro test_name p_label
-	.import asmunit_print
-	jsr asmunit_print
-	.byte assertXX, 0
+.macro test_name label
+	.import asmunit_assert
+	.local @labelAddress
+	jsr  asmunit_assert
+	.word @labelAddress
+	.byte _TYPE_STRING | .strlen(label)
+@labelAddress:
+	.byte label
 .endmacro
 
 .macro assertX expect
@@ -104,7 +108,7 @@ tst_bytes		= $0108
 .endmacro
 
 .macro _pass
-	assert8 1, *+2	; FTW!
+	assert8 1, *+2	; always true... FTW!
 .endmacro
 
 ;

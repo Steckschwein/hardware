@@ -54,7 +54,7 @@ _char_out:
 	plx
 	rts
 
-asmunit_print:
+asmunit_print:	
 	rts
 	
 asmunit_assert:
@@ -103,8 +103,6 @@ asmunit_assert:
 
 		lda #$0a						; start with newline before any output
 		jsr _test_out
-		lda #$0d
-		jsr _test_out
 		
 		ldy #0
 _l_assert:
@@ -116,36 +114,23 @@ _l_assert:
 		cpy tst_bytes
 		bne _l_assert				; back around	
 			
-		;TEST PASS		
-		pla
-		pla
+		;test 'PASS' or print test name
+		txa 
+		bmi @_l_testname	
 		ldy #<(_l_pass-_l_messages)
 		jsr _print
-		bra _l_end
+		bra _l_pass_end
+@_l_testname:
+		lda #'['
+		jsr _test_out
+		jsr _out_ptr
+		lda #']'
+		jsr _test_out
 		
-		;TEST FAIL
-_assert_fail:
-		jsr _inc_tst_ptr
-		iny							; adjust the pointer, consume the arguments
-		cpy tst_bytes
-		bne _assert_fail
-		
-		ldy #<(_l_fail-_l_messages)
-		jsr _print
-		
-		jsr _fail					; was ...
-		
-		ldy #<(_l_fail_was-_l_messages)
-		jsr _print		
-
-		pla							; restore ptr to argument 3 from above
-		sta _tst_inp_ptr+1
+_l_pass_end:
 		pla
-		sta _tst_inp_ptr
-		jsr _fail					; expected ...
-		brk							; fail immediately, we will end up in monitor and can check the cpu state
+		pla
 		
-_l_end:		
 		lda tst_return_ptr		; restore old value at _tst_inp_ptr
 		sta _tst_inp_ptr
 		lda tst_return_ptr+1
@@ -169,10 +154,33 @@ _l_end:
 		plp
 		
 		jmp (tst_return_ptr)           ; return to byte following final NULL
+		
+		;TEST FAIL
+_assert_fail:
+		jsr _inc_tst_ptr
+		iny							; adjust the pointer, consume the arguments
+		cpy tst_bytes
+		bne _assert_fail
+		
+		ldy #<(_l_fail-_l_messages)
+		jsr _print
+		
+		jsr _fail					; ouput "was "
+		
+		ldy #<(_l_fail_was-_l_messages)
+		jsr _print		
 
+		pla							; restore ptr to argument 3 from above
+		sta _tst_inp_ptr+1
+		pla
+		sta _tst_inp_ptr
+		jsr _fail					; expected ...
+		brk							; fail immediately, we will end up in monitor and can check the cpu state
+		
 _fail:
 		lda #'$'
 		jsr _test_out
+_out_ptr:		
 		ldy #0
 @l1:	txa
 		bmi @l2						; TODO FIXME ugly...

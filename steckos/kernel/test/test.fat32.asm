@@ -8,24 +8,32 @@
 .segment "KERNEL"	; test must be placed into kernel segment, cuz we wanna use the same linker config
 
 		jsr _setup
+
+		test_name "isRoot"
 		
 		ldx #0				
 		jsr __fat_isroot
 		assertZero 1		; expect fd0 "is root"
 		assertX 0
-		
-		jsr __calc_lba_addr
-		assertX 0
-		assert32 $00006800, lba_addr ; expect $67fe + $2 => the root dir lba
-		
+
 		ldx #4
 		jsr __fat_isroot
 		assertZero 0		; expect fd0 "is not root"
 		assertX 4
 		
+		test_name "calc_lba"
+		
+		ldx #0
+		jsr __calc_lba_addr
+		assertX 0
+		assert32 $00006800, lba_addr ; expect $67fe + $2 => the root dir lba
+		
+		ldx #4
 		jsr __calc_lba_addr
 		assertX 4
 		assert32 $000068e6, lba_addr ; expect $67fe + (clnr * sec/cl) => $67fe + $e8 * 1 = $68e6		
+		
+		;jsr mock
 		
 		brk
 
@@ -81,7 +89,7 @@ _setup:
 
 mock:
 		clc
-		assertCarry 1; fail, if a mock is called
+		assertCarry 1; fail, if a mock is called and thus is not implemented yet ;)
 		rts
 		
 		
