@@ -43,7 +43,7 @@ _tst_inp_ptr=$2			;
 
 .segment "ASMUNIT"
 
-	asmunit_char_out_buffer:	.res _TEST_OUT_BUFFER_LENGTH,0
+	asmunit_char_out_buffer:	.res _EXPECT_MAX_LENGTH,0
 	asmunit_char_out_ptr: 		.res 1,0
 
 _char_out:
@@ -91,8 +91,8 @@ asmunit_assert:
 		
 		jsr _inc_tst_ptr			; argument 2 - length of expect argument		
 		lda (_tst_ptr)
-		tax							; save the mode in X, bit 7 set => string, number otherwise
-		and #$7f
+		tax							; save the type and mode in X, bit 7 set => string, number otherwise
+		and #$3f;!(_OUTPUT_MODE | _OUTPUT_STRING)
 		sta tst_bytes
 
 		jsr _inc_tst_ptr			; argument 3 - the expectation value
@@ -113,20 +113,19 @@ _l_assert:
 		iny
 		cpy tst_bytes
 		bne _l_assert				; back around	
-			
-		;test 'PASS' or print test name
-		txa 
-		bmi @_l_testname	
-		ldy #<(_l_pass-_l_messages)
-		jsr _print
-		bra _l_pass_end
-@_l_testname:
+		
+		txa 						; assertion was ok if we end up here
+		and #_OUTPUT_MODE		; check mode (bit 6), either 'PASS' or print test name
+		beq @_l_pass			;
 		lda #'['
 		jsr _test_out
 		jsr _out_ptr
 		lda #']'
 		jsr _test_out
-		
+		bra _l_pass_end
+@_l_pass:						; print PASS
+		ldy #<(_l_pass-_l_messages)
+		jsr _print		
 _l_pass_end:
 		pla
 		pla

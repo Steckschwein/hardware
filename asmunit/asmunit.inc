@@ -29,8 +29,10 @@
 .define _FLAG_Z0 "Z=0"
 .define _FLAG_Z1 "Z=1"
 
-.define	_TEST_OUT_BUFFER_LENGTH 32
-.define	_TYPE_STRING $80
+.define	_EXPECT_MAX_LENGTH 32
+.define	_OUTPUT_STRING 1<<7
+.define	_OUTPUT_MODE	1<<6
+
 
 tst_acc			= $0100	; we use the lower part of the stack as temp space assuming the stack is almost not complety exhausted... hopefully :P
 tst_xreg			= $0101
@@ -52,11 +54,12 @@ tst_bytes		= $0108
 .macro test_name label
 	.import asmunit_assert
 	.local @labelAddress
+	.assert .strlen(label) <= _EXPECT_MAX_LENGTH, error, "Expectation argument exceeds limit!"
+
 	jsr  asmunit_assert
 	.word @labelAddress
-	.byte _TYPE_STRING | .strlen(label)
-@labelAddress:
-	.byte label
+	.byte _OUTPUT_MODE | _OUTPUT_STRING | .strlen(label)
+@labelAddress: .byte label
 .endmacro
 
 .macro assertX expect
@@ -103,7 +106,7 @@ tst_bytes		= $0108
 	.import asmunit_assert
 	jsr  asmunit_assert
 	.word labelAddress
-	.byte _TYPE_STRING | .strlen(labelSymbol)
+	.byte _OUTPUT_STRING | .strlen(labelSymbol)
 	.byte labelSymbol
 .endmacro
 
@@ -155,7 +158,8 @@ tst_bytes		= $0108
 	.import asmunit_assert
 	jsr asmunit_assert
 	.word address
-	.byte _TYPE_STRING | .strlen(expect)
+	.assert .strlen(expect) <= _EXPECT_MAX_LENGTH, error, "Expectation argument exceeds limit!"
+	.byte _OUTPUT_STRING | .strlen(expect)
 	.byte expect
 .endmacro
 
@@ -164,11 +168,11 @@ tst_bytes		= $0108
 	.import asmunit_char_out_buffer
 	.import asmunit_char_out_ptr
 	
-	.assert .strlen(expect) <= _TEST_OUT_BUFFER_LENGTH, error, "Expectation argument exceeds size of test output buffer!"
+	.assert .strlen(expect) <= _EXPECT_MAX_LENGTH, error, "Expectation argument exceeds limit of test output buffer!"
 	stz asmunit_char_out_ptr					; reset asmunit_char_out_buffer	before test - TODO FIXME maybe a dedicated macro?!?
 	jsr asmunit_assert
 	.word asmunit_char_out_buffer
-	.byte _TYPE_STRING | .strlen(expect)
+	.byte _OUTPUT_STRING | .strlen(expect)
 	.byte expect
 .endmacro
 

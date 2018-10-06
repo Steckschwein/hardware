@@ -33,7 +33,7 @@
 		assertX 4
 		assert32 $000068e6, lba_addr ; expect $67fe + (clnr * sec/cl) => $67fe + $e8 * 1 = $68e6		
 		
-		;jsr mock
+;		jsr mock
 		
 		brk
 
