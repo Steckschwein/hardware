@@ -7,19 +7,19 @@
 	
 .segment "KERNEL"	; test must be placed into kernel segment, cuz we wanna use the same linker config
 
-		jsr _setup
+		jsr setUp
 
 		test_name "isRoot"
 		
 		ldx #0				
 		jsr __fat_isroot
-		assertZero 1		; expect fd0 "is root"
+		assertZero 1		; expect fd0 - "is root"
 		assertX 0
 
 		ldx #4
 		jsr __fat_isroot
-		assertZero 0		; expect fd0 "is not root"
-		assertX 4
+		assertZero 0		; expect fd0 - "is not root"
+		assertX 4		
 		
 		test_name "calc_lba"
 		
@@ -37,7 +37,7 @@
 		
 		brk
 
-_setup:
+setUp:
 	lda #1
 	sta volumeID+VolumeID::BPB + BPB::SecPerClus
 

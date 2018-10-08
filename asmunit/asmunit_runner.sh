@@ -16,7 +16,7 @@ if [ -z ${address} ]; then
 fi
 binary=$1
 
-py65mon -m 65c02 --output $output <<EOUNIT
+python3.6 /cygdrive/d/development/py65/py65/monitor.py -m 65c02 --output $output <<EOUNIT
 .load "${binary}" ${address}
 .goto ${address}
 EOUNIT

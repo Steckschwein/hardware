@@ -24,7 +24,7 @@ echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
 	
 	while IFS='' read -r line || [[ -n "$line" ]]; do
 		if [[ $line =~ ^\[(.*)\]$ ]] ; then
-			echo ${BASH_REMATCH[1]} line was $line
+#			echo ${BASH_REMATCH[1]} line was $line
 			echo "<testcase name=\"${BASH_REMATCH[1]}\" classname=\"${1}\" time=\"0\"/>" >> ${TARGET_DIR}/${1}.xml
 #		echo "<testcase name=\"\" classname=\"${1}\" time=\"0\"/>"
 		fi
