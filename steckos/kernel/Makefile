@@ -15,7 +15,7 @@ DEFINES+=-DV9958
 # debug util
 #DEBUG += -DDEBUG_UTIL
 # debug fat32
-#DEBUG += -DDEBUG_FAT32
+DEBUG += -DDEBUG_FAT32
 # dump fat blocks on write
 #DEBUG += -DFAT_DUMP_FAT_WRITE
 # do not write anything (metadata)

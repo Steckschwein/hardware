@@ -28,6 +28,7 @@
 .export char_out=_char_out
 .export asmunit_print
 .export asmunit_assert
+.export asmunit_chrout
 
 .export asmunit_l_flag_c0
 .export asmunit_l_flag_c1
@@ -92,7 +93,7 @@ asmunit_assert:
 		jsr _inc_tst_ptr			; argument 2 - length of expect argument		
 		lda (_tst_ptr)
 		tax							; save the type and mode in X, bit 7 set => string, number otherwise
-		and #$3f;!(_OUTPUT_MODE | _OUTPUT_STRING)
+		and #$3f
 		sta tst_bytes
 
 		jsr _inc_tst_ptr			; argument 3 - the expectation value
@@ -102,7 +103,7 @@ asmunit_assert:
 		pha							; save ptr of argument 3 back to stack for failure handling
 
 		lda #$0a						; start with newline before any output
-		jsr _test_out
+		jsr asmunit_chrout
 		
 		ldy #0
 _l_assert:
@@ -114,18 +115,23 @@ _l_assert:
 		cpy tst_bytes
 		bne _l_assert				; back around	
 		
-		txa 						; assertion was ok if we end up here
-		and #_OUTPUT_MODE		; check mode (bit 6), either 'PASS' or print test name
-		beq @_l_pass			;
+		txa 							; assertion was ok if we end up here
+		and #1<<7|1<<6				; check string type
+		cmp #_OUTPUT_TESTNAME
+		bne @_l_fail			;
 		lda #'['
-		jsr _test_out
+		jsr asmunit_chrout
 		jsr _out_ptr
 		lda #']'
-		jsr _test_out
+		jsr asmunit_chrout
 		bra _l_pass_end
-@_l_pass:						; print PASS
+@_l_fail:
+		cmp #_OUTPUT_FAIL			
+		beq _raise_fail			; proceed to "FAIL <msg>"
+@_l_pass:							; proceed to "PASS"
 		ldy #<(_l_pass-_l_messages)
-		jsr _print		
+		jsr _print
+		
 _l_pass_end:
 		pla
 		pla
@@ -135,9 +141,9 @@ _l_pass_end:
 		lda tst_return_ptr+1
 		sta _tst_inp_ptr+1
 
-		lda	_tst_ptr			; _tst_ptr points to instruction at the end of assert parameter, adjust return vector
+		lda _tst_ptr			; _tst_ptr points to instruction at the end of assert parameter, adjust return vector
 		sta tst_return_ptr
-		lda	_tst_ptr+1
+		lda _tst_ptr+1
 		sta tst_return_ptr+1
 
 		lda tst_save_ptr		; restore old value at _tst_ptr
@@ -155,43 +161,50 @@ _l_pass_end:
 		jmp (tst_return_ptr)           ; return to byte following final NULL
 		
 		;TEST FAIL
+_raise_fail:
+		ldx #_OUTPUT_STRING
+		ldy #<(_l_fail-_l_messages)	; ouput "FAIL, was "
+		bra _assert_fail_expect		
 _assert_fail:
 		jsr _inc_tst_ptr
 		iny							; adjust the pointer, consume the arguments
 		cpy tst_bytes
 		bne _assert_fail
 		
-		ldy #<(_l_fail-_l_messages)
+		ldy #<(_l_fail-_l_messages)	; ouput "FAIL, was "
 		jsr _print
+		jsr _out_ptr						; argument
 		
-		jsr _fail					; ouput "was "
-		
-		ldy #<(_l_fail_was-_l_messages)
-		jsr _print		
+		ldy #<(_l_fail_expected-_l_messages)
+_assert_fail_expect:	
+		jsr _print							; ouput " expected "
 
-		pla							; restore ptr to argument 3 from above
+		pla									; restore ptr to argument 3 (expected) from above
 		sta _tst_inp_ptr+1
 		pla
 		sta _tst_inp_ptr
-		jsr _fail					; expected ...
-		brk							; fail immediately, we will end up in monitor and can check the cpu state
-		
-_fail:
-		lda #'$'
-		jsr _test_out
-_out_ptr:		
+		jsr _out_ptr						; expected ...
+		brk									; fail immediately, we will end up in monitor and can check the cpu state
+
+_out_ptr:
 		ldy #0
-@l1:	txa
-		bmi @l2						; TODO FIXME ugly...
+		txa
+		bmi _out_ptr_string
+		lda #'$'								; number with with $
+		jsr asmunit_chrout		
+_out_ptr_number:							; TODO big endian, for better readability
 		lda (_tst_inp_ptr),y
 		jsr _hexout
-		bra @l3
-@l2:	lda (_tst_inp_ptr),y
-		jsr _test_out
-@l3:
 		iny
 		cpy tst_bytes
-		bne @l1
+		bne _out_ptr_number
+		rts
+_out_ptr_string:
+		lda (_tst_inp_ptr),y
+		jsr asmunit_chrout
+		iny
+		cpy tst_bytes
+		bne _out_ptr_string
 		rts
 		
 _inc_tst_ptr:
@@ -200,7 +213,7 @@ _inc_tst_ptr:
 		inc     _tst_ptr+1		; account for page crossing
 _l_exit:
 		rts
-_print:	; print length prefixed strings
+_print:								; print length prefixed string
 		phx
 		lda _l_messages,y
 		tax
@@ -208,7 +221,7 @@ _l_out:
 		beq _x_exit
 		iny
 		lda _l_messages,y
-		jsr _test_out
+		jsr asmunit_chrout
 		dex
 		bra _l_out
 _hexout:
@@ -228,18 +241,18 @@ _hexdigit:
 		and #$0f      	;mask lsd for hex print
 		ora #'0'			;add "0"
 		cmp #'9'+1		;is it a decimal digit?
-		bcc _test_out	;yes! output it
+		bcc asmunit_chrout	;yes! output it
 		adc #$26			;add offset for letter a-f
-		jmp _test_out
+		jmp asmunit_chrout
 		
-_test_out:
+asmunit_chrout:
 		sta asmunit_char_out
 		rts
 		
 _l_messages:
 _l_pass:	 		.byte _l_fail-_l_pass-1			,"PASS"
-_l_fail: 		.byte _l_fail_was-_l_fail-1	,"FAIL, was "
-_l_fail_was:	.byte asmunit_l_flag_c0-_l_fail_was-1," expected "
+_l_fail: 		.byte _l_fail_expected-_l_fail-1	,"FAIL - "
+_l_fail_expected:	.byte asmunit_l_flag_c0-_l_fail_expected-1,", but expected "
 asmunit_l_flag_c0:		.byte _FLAG_C0
 asmunit_l_flag_c1:		.byte _FLAG_C1
 asmunit_l_flag_z0:		.byte _FLAG_Z0

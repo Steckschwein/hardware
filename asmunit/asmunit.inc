@@ -30,8 +30,14 @@
 .define _FLAG_Z1 "Z=1"
 
 .define	_EXPECT_MAX_LENGTH 32
-.define	_OUTPUT_STRING 1<<7
-.define	_OUTPUT_MODE	1<<6
+
+;.define	_OUTPUT_STRING 1<<7	; string or number
+;.define	_OUTPUT_MODE	1<<6	; 
+
+.define _OUTPUT_NUMBER 0
+.define _OUTPUT_FAIL 1<<6
+.define _OUTPUT_STRING 1<<7
+.define _OUTPUT_TESTNAME 1<<7 | 1<<6
 
 
 tst_acc			= $0100	; we use the lower part of the stack as temp space assuming the stack is almost not complety exhausted... hopefully :P
@@ -51,15 +57,50 @@ tst_bytes		= $0108
 ;.import asmunit_char_out_buffer
 ;.import asmunit_char_out_ptr
 
-.macro test_name label
+.macro _message label, mode
 	.import asmunit_assert
 	.local @labelAddress
 	.assert .strlen(label) <= _EXPECT_MAX_LENGTH, error, "Expectation argument exceeds limit!"
-
 	jsr  asmunit_assert
 	.word @labelAddress
-	.byte _OUTPUT_MODE | _OUTPUT_STRING | .strlen(label)
+	.byte mode | .strlen(label)
 @labelAddress: .byte label
+.endmacro
+
+.macro cmp16 address, _16Bit
+	lda address+0
+	cmp #<_16Bit
+	bne :+
+	lda address+1
+	cmp #>_16Bit
+:
+.endmacro
+
+.macro cmp32 address, _32Bit
+	cmp16 address+0, (_32Bit & $ffff)
+	bne :+
+	cmp16 address+2, (_32Bit>>16)
+:
+.endmacro
+
+.macro set16 address, _16bit
+	lda #<_16bit
+	sta address+0
+	lda #>_16bit
+	sta address+1
+.endmacro
+
+.macro set32 address, _32Bit
+	set16 address+0, (_32Bit & $ffff)
+	set16 address+2, (_32Bit>>16)
+.endmacro
+
+.macro test_name label
+	_message label, _OUTPUT_TESTNAME
+.endmacro
+
+.macro fail error
+	_message error, _OUTPUT_FAIL
 .endmacro
 
 .macro assertX expect
@@ -111,7 +152,7 @@ tst_bytes		= $0108
 .endmacro
 
 .macro _pass
-	assert8 1, *+2	; always true... FTW!
+	assert8 1, *+2	; always true... cuz of the .byte 1 in the assert8 macro - FTW!
 .endmacro
 
 ;

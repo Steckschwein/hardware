@@ -27,6 +27,22 @@
 			sta addr+1
 .endmacro
 
+.macro _add32 a32, a16
+		clc
+		lda a32+0
+		adc a16+0
+		sta a32+0
+		lda a32+1
+		adc a16+1
+		sta a32+1
+		lda a32+2
+		adc #0
+		sta a32+2
+		lda a32+3
+		adc #0
+		sta a32+3
+.endmacro
+
 .macro _inc32 val
 		.local @l1
 		inc val + 0
