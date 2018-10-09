@@ -1132,6 +1132,8 @@ fat_check_signature:
 @l2:	rts
 
 
+		; in:
+		;	X - file descriptor
 		; out:
 		;	Z=1 (A=0) if no blocks to read (file has zero length)
 __calc_blocks: ;blocks = filesize / BLOCKSIZE -> filesize >> 9 (div 512) +1 if filesize LSB is not 0
@@ -1157,7 +1159,7 @@ __calc_blocks: ;blocks = filesize / BLOCKSIZE -> filesize >> 9 (div 512) +1 if f
 		ora blocks+0
 		debug16 "cbl", blocks
 		rts
-
+		
 		; in:
 		;	X - file descriptor
 		; out:

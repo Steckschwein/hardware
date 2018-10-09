@@ -3,7 +3,7 @@
 	.include "common.inc"
 	.include "errno.inc"
 	.include "zeropage.inc"
-	
+
 	.import parse_header
 	
 ;.import asmunit_chrout
@@ -31,11 +31,18 @@
 	
 	brk
 
+.export krn_primm=mock
 .export vdp_bgcolor=mock
 .export hexout=mock
 .export vdp_display_off=mock
 .export vdp_gfx7_on=mock
-	
+.export krn_open=mock, krn_fread=mock, krn_close=mock
+.export krn_textui_enable=mock
+.export krn_textui_disable=mock
+.export krn_textui_init=mock
+.export krn_display_off=mock
+.export krn_getkey=mock
+
 mock:
 	rts
 

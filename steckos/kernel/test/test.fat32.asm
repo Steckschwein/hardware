@@ -95,9 +95,10 @@
 		assertA EOK
 		assertX (1*FD_Entry_Size)
 		assertY 1
-		assert32 $00006968, lba_addr ; expect $67fe + (clnr * sec/cl) => $67fe + $e8 * 1 = $68e6		
+		assert32 $00006968, lba_addr ; expect $67fe + (clnr * sec/cl) => $67fe + $016a * 1= $6968
 		assert16 data_read+$0200, read_blkptr
-		assert8 1, fd_area+(1*FD_Entry_Size)+F32_fd::offset+0		
+		assert32 $16a, fd_area+(1*FD_Entry_Size)+F32_fd::CurrentCluster
+		assert8 1, fd_area+(1*FD_Entry_Size)+F32_fd::offset
 		
 ; -------------------		
 		setup "fat_fread 2 blocks 1sec/cl"
@@ -109,13 +110,29 @@
 		assertA EOK
 		assertX (1*FD_Entry_Size)
 		assertY 2
-;		assert32 $000068e8, lba_addr ; expect $67fe + (clnr * sec/cl) +2blocks => $67fe + $e8 * 1 + 2= $68e8
+		assert32 $00006969, lba_addr ; expect $67fe + (clnr * sec/cl) => $67fe + $016b * 1= $6969
+		assert32 $16b, fd_area+(1*FD_Entry_Size)+F32_fd::CurrentCluster
 ;		assert16 data_read+$0200, read_blkptr
-		assert8 1, fd_area+(1*FD_Entry_Size)+F32_fd::offset+0
+;		assert8 1, fd_area+(1*FD_Entry_Size)+F32_fd::offset+0
+
+; -------------------		
+		setup "fat_fread 4 blocks 1sec/cl"
+		SetVector data_read, read_blkptr
+		ldy #2	; 2 blocks
+		ldx #(1*FD_Entry_Size)
+		jsr fat_fread
+		assertZero 1
+		assertA EOK
+		assertX (1*FD_Entry_Size)
+		assertY 4
+		assert32 $0000696b, lba_addr ; expect $67fe + (clnr * sec/cl) => $67fe + $016d * 1= $696b
+		assert32 $16d, fd_area+(1*FD_Entry_Size)+F32_fd::CurrentCluster
 		
 		brk
 
 setUp:
+	.define test_start_cluster	$016a
+	
 	lda #1
 	sta volumeID+VolumeID::BPB + BPB::SecPerClus
 
@@ -127,7 +144,6 @@ setUp:
 	set32 fd_area+(0*FD_Entry_Size)+F32_fd::CurrentCluster, 0
 	set16 fd_area+(0*FD_Entry_Size)+F32_fd::offset, 0
 	
-.define test_start_cluster	$016a
 	;setup fd1 as with test cluster
 	set32 fd_area+(1*FD_Entry_Size)+F32_fd::CurrentCluster, test_start_cluster
 	set16 fd_area+(1*FD_Entry_Size)+F32_fd::offset, 0

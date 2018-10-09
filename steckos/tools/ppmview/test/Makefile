@@ -1,6 +1,6 @@
 DEFINES=-Dasmunit_char_out=0x200
 ADDRESS=0x1000
-CA65FLAGS=--include-dir ../../../../asmunit --include-dir ../../../asminc $(DEFINES)
+CA65FLAGS=--include-dir ../../../../asmunit --include-dir ../../../asminc --include-dir ../../../kernel $(DEFINES)
 LIBS=../../../tools/lib/toollib.a ../../../../asmunit/asmunit.a
 LDFLAGS=--config test.cfg $(DEFINES)
 

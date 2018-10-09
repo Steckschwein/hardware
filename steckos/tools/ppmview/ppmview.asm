@@ -29,7 +29,19 @@
 .include "appstart.inc"
 appstart $1000
 
-.export char_out=krn_chrout
+.export krn_open, krn_fread, krn_close
+.export krn_primm
+.export krn_textui_enable
+.export krn_textui_disable
+.export krn_textui_init
+.export krn_display_off
+.export krn_getkey
+
+.export char_out=krn_chrout  
+
+.export ppmdata
+.export ppm_width
+.export ppm_height
 
 .code
 		.import ppmview_main
@@ -37,7 +49,8 @@ appstart $1000
 		jmp (retvec)
 		
 .segment "DATA"
-.export ppmdata
+ppm_width: .res 1, 0
+ppm_height: .res 1, 0 
 ppmdata:
 
 .segment "STARTUP"

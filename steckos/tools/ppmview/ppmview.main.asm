@@ -26,9 +26,9 @@
 .setcpu "65c02"
 .include "common.inc"
 .include "vdp.inc"
+.include "fat32.inc"
 .include "fcntl.inc"
 .include "zeropage.inc"
-.include "kernel_jumptable.inc"
 
 .importzp ptr2, ptr3
 ;.importzp tmp, tmp4
@@ -40,6 +40,15 @@
 .import vdp_memcpy
 .import vdp_mode_sprites_off
 .import vdp_bgcolor
+
+.import krn_open, krn_fread, krn_close
+.import krn_primm
+.import krn_textui_enable
+.import krn_textui_disable
+.import krn_textui_init
+.import krn_display_off
+.import krn_getkey
+
 
 .import ppmdata
 .import ppm_width
@@ -57,22 +66,26 @@
 ppmview_main:
 		lda paramptr
 		ldx paramptr+1
+;		SetVector filename, paramptr
+;		lda paramptr
+;		ldx paramptr+1
+		
 		ldy #O_RDONLY
 		jsr krn_open
-		bne @err
-
+		bne @io_error
 		stx fd
 
-		SetVector ppmdata, read_blkptr
-		ldy #01 ; 1 block first
-		jsr krn_fread
-		bne @err
+		jsr read_blocks
+		bne @io_error
 
-		jsr parse_header
-		bne @exit
-
+		jsr parse_header					; return with offset to first data byte
+		bne @invalid_ppm
+		
+		jsr load_image
+		bne @io_error
+		
 		bra @exit
-
+		
 		jsr	krn_textui_disable			;disable textui
 		jsr	gfxui_on
 		keyin
@@ -83,10 +96,15 @@ ppmview_main:
 		jsr	krn_textui_enable
 		bra @exit
 
-@err:
+@invalid_ppm:
+		jsr krn_primm
+		.asciiz "Not a valid ppm file! Must be type P6 with size 256x192px."
+		bra @exit
+		
+@io_error:
 		jsr krn_primm
 		.asciiz " file error, code: "
-		jsr hexout
+		jmp hexout
 @exit:
 		ldx fd
 		cmp #$ff
@@ -95,8 +113,52 @@ ppmview_main:
 @l_exit:
 		jmp (retvec)
 
-PPM_P6:	.byte "P6"
+read_blocks:
+		ldy #03 ; 3 blocks at once, cause of the ppm header and alignment
+		SetVector ppmdata, read_blkptr
+		ldx fd
+		jmp krn_fread
+		
+load_image:
+		;512byte/block * 3 => 1536byte => div 256 => 6 pixel lines => height / 6 => height / (2*2 + 1*2) => height / 2 * (2+1)
+		jsr __calc_blocks
 
+@load_image_next:		
+		lda blocks+2
+		jsr hexout
+		lda blocks+1
+		jsr hexout
+		lda blocks+0
+		jsr hexout
+		
+		jsr read_blocks
+		bne @load_image_exit
+		tya
+		jsr hexout
+		cpy #0	; no blocks read
+		beq @load_image_exit
+		
+:		jsr dec_blocks
+		beq @load_image_exit ; all read
+		dey
+		bne :-
+		bra @load_image_next
+@load_image_exit:		
+		rts
+
+dec_blocks:
+		lda blocks+0
+		bne @l0
+		lda blocks+1
+		bne @l1
+		dec blocks+2
+@l1:	dec blocks+1
+@l0:	dec blocks+0
+		lda blocks+2	
+		ora blocks+1
+		ora blocks+0	;Z=1 if zero
+		rts
+		
 parse_header:
 		ldy #0
 		jsr parse_string
@@ -120,8 +182,6 @@ parse_header:
 		lda #0
 		rts
 @l_not_ppm:
-;		jsr krn_primm
-;		.asciiz " Not valid ppm file!"
 		lda #$ff
 		rts
 
@@ -169,10 +229,10 @@ blend_isr:
 		bpl @0
 		save
 
-		lda	#%11100000
+		lda #Dark_Yellow
 		jsr vdp_bgcolor
 
-		lda	#Black
+		lda #Black
 		jsr vdp_bgcolor
 
 		restore
@@ -180,15 +240,10 @@ blend_isr:
 		rti
 
 gfxui_on:
-    sei
+	sei
 	jsr vdp_display_off			;display off
 
-	lda #v_reg8_SPD | v_reg8_VR	;
-	ldy #v_reg8
-	vdp_sreg
-	vnops
-
-	jsr vdp_gfx7_on			    ;enable gfx7 mode
+	jsr vdp_gfx7_on			   ;enable gfx7 mode
 
 	lda #<.HIWORD(ADDRESS_GFX7_SCREEN<<3)
 	ldy #v_reg14
@@ -198,15 +253,15 @@ gfxui_on:
 	ldy #(WRITE_ADDRESS + >.LOWORD(ADDRESS_GFX7_SCREEN))
 	vdp_sreg
 
-    copypointer  $fffe, irqsafe
-    SetVector  blend_isr, $fffe
+	copypointer  $fffe, irqsafe
+	SetVector  blend_isr, $fffe
 
 	lda #%00000000	; reset vbank - TODO FIXME, kernel has to make sure that correct video adress is set for all vram operations, use V9958 flag
 	ldy #v_reg14
 	vdp_sreg
 
-    cli
-    rts
+	cli
+	rts
 
 gfxui_off:
     sei
@@ -215,7 +270,34 @@ gfxui_off:
     cli
     rts
 
+	; TODO FIXME => lib
+__calc_blocks: ;blocks = filesize / BLOCKSIZE -> filesize >> 9 (div 512) +1 if filesize LSB is not 0
+		lda fd_area + F32_fd::FileSize + 3,x
+		lsr
+		sta blocks + 2
+		lda fd_area + F32_fd::FileSize + 2,x
+		ror
+		sta blocks + 1
+		lda fd_area + F32_fd::FileSize + 1,x
+		ror
+		sta blocks + 0
+		bcs @l1
+		lda fd_area + F32_fd::FileSize + 0,x
+		beq @l2
+@l1:	inc blocks
+		bne @l2
+		inc blocks+1
+		bne @l2
+		inc blocks+2
+@l2:	lda blocks+2
+		ora blocks+1
+		ora blocks+0
+		rts
+		
 m_vdp_nopslide
+
+filename:
+	.asciiz "felix.ppm"
 
 irqsafe: .res 2, 0
 ; TODO FIXME clarify BSS segment voodo
