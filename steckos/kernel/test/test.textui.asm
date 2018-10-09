@@ -4,6 +4,9 @@
 	.import textui_chrout, textui_put
 	.import textui_update_crs_ptr, textui_crsxy
 
+	.import asmunit_chrout
+	.export krn_chrout=asmunit_chrout
+	
 .segment "KERNEL"	; test must be placed into kernel segment, cuz we wanna use the same linker config
 
 	test_name "textui_crsxy"

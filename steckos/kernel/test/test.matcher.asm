@@ -10,6 +10,9 @@
 
 	.include "asmunit.inc" ; test api
 	
+	.import asmunit_chrout
+	.export krn_chrout=asmunit_chrout
+	
 .macro assertUserInput user_input, dir_entry, expect
 	.local @input
 	.local @entry

@@ -8,6 +8,9 @@
 	.import string_fat_mask		; uut
 	.import string_fat_name		; uut
 	
+	.import asmunit_chrout
+	.export krn_chrout=asmunit_chrout
+	
 .segment "KERNEL"	; test must be placed into kernel segment, cuz we wanna use the same linker config
 
 	test_name "string_fat_mask"
