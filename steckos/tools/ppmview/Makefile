@@ -23,4 +23,4 @@ clean:
 	dcc6502 -o 0x0ffe -d -n -c $< > $@ 
 	
 %: %.prg
-	../../transfer.py $< -s 0x1000
+	../../../transfer.py $< -s 0x1000

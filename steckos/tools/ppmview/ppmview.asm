@@ -47,10 +47,11 @@ appstart $1000
 		.import ppmview_main
 		jsr ppmview_main
 		jmp (retvec)
-		
-.segment "DATA"
+
 ppm_width: .res 1, 0
 ppm_height: .res 1, 0 
-ppmdata:
+		
+.segment "DATA"
+ppmdata: .byte $ff, $aa
 
 .segment "STARTUP"

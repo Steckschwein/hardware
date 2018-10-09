@@ -75,6 +75,9 @@ ppmview_main:
 		bne @io_error
 		stx fd
 
+		;512byte/block * 3 => 1536byte => div 256 => 6 pixel lines => height / 6 => height / (2*2 + 1*2) => height / 2 * (2+1)
+		jsr __calc_blocks
+
 		jsr read_blocks
 		bne @io_error
 
@@ -98,13 +101,13 @@ ppmview_main:
 
 @invalid_ppm:
 		jsr krn_primm
-		.asciiz "Not a valid ppm file! Must be type P6 with size 256x192px."
+		.byte $0a,"Not a valid ppm file! Must be type P6 with size 256x192px.",0
 		bra @exit
 		
 @io_error:
 		jsr krn_primm
-		.asciiz " file error, code: "
-		jmp hexout
+		.byte $0a,"file error, code: ",0
+		jsr hexout
 @exit:
 		ldx fd
 		cmp #$ff
@@ -114,36 +117,33 @@ ppmview_main:
 		jmp (retvec)
 
 read_blocks:
-		ldy #03 ; 3 blocks at once, cause of the ppm header and alignment
-		SetVector ppmdata, read_blkptr
-		ldx fd
-		jmp krn_fread
-		
-load_image:
-		;512byte/block * 3 => 1536byte => div 256 => 6 pixel lines => height / 6 => height / (2*2 + 1*2) => height / 2 * (2+1)
-		jsr __calc_blocks
-
-@load_image_next:		
 		lda blocks+2
 		jsr hexout
 		lda blocks+1
 		jsr hexout
 		lda blocks+0
 		jsr hexout
-		
-		jsr read_blocks
-		bne @load_image_exit
+
+		ldy #3 ; 3 blocks at once, cause of the ppm header and alignment
+		SetVector ppmdata, read_blkptr
+		ldx fd
+		jsr krn_fread
+		bne @l_exit
 		tya
 		jsr hexout
-		cpy #0	; no blocks read
-		beq @load_image_exit
-		
+		cpy #0	; no blocks where read
+		beq @l_exit
 :		jsr dec_blocks
-		beq @load_image_exit ; all read
+		beq @l_exit ; zero blocks reached?
 		dey
 		bne :-
-		bra @load_image_next
-@load_image_exit:		
+@l_exit:
+		rts
+		
+load_image:
+		jsr read_blocks
+		;beq load_image
+		
 		rts
 
 dec_blocks:

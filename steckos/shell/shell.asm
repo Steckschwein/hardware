@@ -28,6 +28,8 @@ tmp5    = $a2
 .include "../kernel/kernel.inc"
 .include "../kernel/kernel_jumptable.inc"
 
+.import hexout
+
 .include "appstart.inc"
 appstart $d800
 
@@ -54,24 +56,31 @@ startaddr		= $d9
 ;---------------------------------------------------------------------------------------------------------
 
 init:
-		SetVector mainloop, retvec
+		SetVector exit_from_prg, retvec
 		SetVector buf, bufptr
 		SetVector msgbuf, msgptr
 
-
-hello:
-		crlf
 		jsr krn_primm
-		.byte "SteckShell "
+		.byte $0a, "SteckShell "
 		.include "version.inc"
 		.byte $00
 		crlf
-
+		
+		bra mainloop
+		
+exit_from_prg:
+		cmp #0
+		beq mainloop
+		pha
+		jsr krn_primm
+		.byte $0a,"Exit: ",0
+		pla
+		jsr krn_chrout
+		
 mainloop:
 		cld
 		crlf
 		; output current path
-
 		lda	#<msgbuf
 		ldx #>msgbuf
 		ldy	#$ff
