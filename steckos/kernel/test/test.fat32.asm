@@ -109,8 +109,8 @@
 		assertA EOK
 		assertX (1*FD_Entry_Size)
 		assertY 2
-		assert32 $000068e8, lba_addr ; expect $67fe + (clnr * sec/cl) +2blocks => $67fe + $e8 * 1 + 2= $68e8
-		assert16 data_read+$0200, read_blkptr
+;		assert32 $000068e8, lba_addr ; expect $67fe + (clnr * sec/cl) +2blocks => $67fe + $e8 * 1 + 2= $68e8
+;		assert16 data_read+$0200, read_blkptr
 		assert8 1, fd_area+(1*FD_Entry_Size)+F32_fd::offset+0
 		
 		brk
