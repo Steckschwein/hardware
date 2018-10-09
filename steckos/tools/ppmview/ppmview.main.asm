@@ -70,6 +70,8 @@ ppmview_main:
 ;		lda paramptr
 ;		ldx paramptr+1
 		
+		stz fd
+		
 		ldy #O_RDONLY
 		jsr krn_open
 		bne @io_error
@@ -80,14 +82,15 @@ ppmview_main:
 
 		jsr read_blocks
 		bne @io_error
-
+		jsr adjust_blocks
+		
 		jsr parse_header					; return with offset to first data byte
 		bne @invalid_ppm
 		
 		jsr load_image
 		bne @io_error
 		
-		bra @exit
+		bra @close_exit
 		
 		jsr	krn_textui_disable			;disable textui
 		jsr	gfxui_on
@@ -97,23 +100,24 @@ ppmview_main:
 		jsr	krn_display_off			;restore textui
 		jsr	krn_textui_init
 		jsr	krn_textui_enable
-		bra @exit
+		bra @close_exit
 
 @invalid_ppm:
 		jsr krn_primm
 		.byte $0a,"Not a valid ppm file! Must be type P6 with size 256x192px.",0
-		bra @exit
+		bra @close_exit
 		
 @io_error:
+		pha
 		jsr krn_primm
-		.byte $0a,"file error, code: ",0
+		.byte $0a,"i/o error, code: ",0
+		pla
 		jsr hexout
-@exit:
+@close_exit:
 		ldx fd
-		cmp #$ff
-		beq @l_exit
+		beq l_exit
 		jsr krn_close
-@l_exit:
+l_exit:
 		jmp (retvec)
 
 read_blocks:
@@ -124,26 +128,33 @@ read_blocks:
 		lda blocks+0
 		jsr hexout
 
-		ldy #3 ; 3 blocks at once, cause of the ppm header and alignment
 		SetVector ppmdata, read_blkptr
 		ldx fd
-		jsr krn_fread
-		bne @l_exit
+		ldy #3 ; 3 blocks at once, cause of the ppm header and alignment
+		jmp krn_fread
+		
+adjust_blocks:
+		phy
 		tya
 		jsr hexout
+		ply
 		cpy #0	; no blocks where read
 		beq @l_exit
-:		jsr dec_blocks
-		beq @l_exit ; zero blocks reached?
+@l:	jsr dec_blocks
+		beq @l_exit ; zero blocks reached
 		dey
-		bne :-
+		bne @l
+		lda #$ff	; more to go
 @l_exit:
 		rts
-		
+
 load_image:
 		jsr read_blocks
-		;beq load_image
-		
+		bne @load_image_exit
+		jsr adjust_blocks
+;		bne @load_image
+		lda #0
+@load_image_exit:		
 		rts
 
 dec_blocks:
