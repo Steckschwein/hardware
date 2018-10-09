@@ -432,9 +432,12 @@ int main(int argc, char* argv[]){
 	//char filename[12] = "96K     DAT\0";
 	//char filename[12] = "8192K   DAT\0";
 	char filename[12] = "2048    DAT\0";
+	//char filename[12] = "1024    DAT\0";
 /*	char filename[12] = "TEST    BIN\0";
 	char filename[12] = "PIC1    CFG\0";
 */	
+//	char filename[12] = "FELIX   PPM\0";
+
 	fd = fopen("/dev/sdb", "rb+");
 	if(fd==NULL){
 		fprintf(stderr, "cannot open...");

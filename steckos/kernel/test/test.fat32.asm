@@ -112,13 +112,13 @@
 		assertY 2
 		assert32 $00006969, lba_addr ; expect $67fe + (clnr * sec/cl) => $67fe + $016b * 1= $6969
 		assert32 $16b, fd_area+(1*FD_Entry_Size)+F32_fd::CurrentCluster
-;		assert16 data_read+$0200, read_blkptr
-;		assert8 1, fd_area+(1*FD_Entry_Size)+F32_fd::offset+0
+		assert16 data_read+$0400, read_blkptr ; expect read_ptr was increased 2blocks, means 4*$100
+		assert8 1, fd_area+(1*FD_Entry_Size)+F32_fd::offset+0 ; still offset 1, we have a 1 sec/cl fat geometry
 
 ; -------------------		
 		setup "fat_fread 4 blocks 1sec/cl"
 		SetVector data_read, read_blkptr
-		ldy #2	; 2 blocks
+		ldy #4	; 2 blocks
 		ldx #(1*FD_Entry_Size)
 		jsr fat_fread
 		assertZero 1
@@ -127,6 +127,8 @@
 		assertY 4
 		assert32 $0000696b, lba_addr ; expect $67fe + (clnr * sec/cl) => $67fe + $016d * 1= $696b
 		assert32 $16d, fd_area+(1*FD_Entry_Size)+F32_fd::CurrentCluster
+		assert16 data_read+$0800, read_blkptr ; expect read_ptr was increased 4blocks, means 8*$100
+		assert8 1, fd_area+(1*FD_Entry_Size)+F32_fd::offset+0 ; still offset 1, we have a 1 sec/cl fat geometry
 		
 		brk
 
@@ -174,8 +176,9 @@ mock_read_block:
 	cmp32 lba_addr, $2980	;fat block $2980 read?
 	bne :+
 	;simulate fat block read, just fill some values which are reached if the fat32 implementation is correct ;)
-	set32 block_fat+(test_start_cluster<<2 & (sd_blocksize-1)), (test_start_cluster+1)
-	assert32 $016b, block_fat+$01a8
+	set32 block_fat+((test_start_cluster+0)<<2 & (sd_blocksize-1)), (test_start_cluster+1) ; build the chain
+	set32 block_fat+((test_start_cluster+1)<<2 & (sd_blocksize-1)), (test_start_cluster+2)
+	set32 block_fat+((test_start_cluster+2)<<2 & (sd_blocksize-1)), (test_start_cluster+3)
 :		
 	plx
 	inc read_blkptr+1	; same behaviour as real implementation

@@ -127,7 +127,6 @@ fat_fread:
 		
 		copypointer read_blkptr, krn_ptr1					; backup read_blkptr
 		jsr __fat_read_cluster_block_and_select			; read fat block of the current cluster
-		debug "f_rcbs"
 		bne @l_exit													; read error...
 		bcs @l_exit													; EOC reached?		
 		jsr __fat_next_cln										; select next cluster
@@ -799,23 +798,24 @@ __fat_read_cluster_block_and_select:
 		jsr __fat_read_block
 		bne @l_exit
 		jsr __fat_isroot							; is root clnr?
-		bne @l_clnr_page
+		bne @l_clnr_fd
 		lda volumeID + VolumeID::EBPB + EBPB::RootClus+0
-;		bra @l_clnr_page
-;		lda fd_area+F32_fd::CurrentCluster+0,x 	; offset within block_fat, clnr<<2 (* 4)
+		bra @l_clnr_page
+@l_clnr_fd:
+		lda fd_area+F32_fd::CurrentCluster+0,x 	; offset within block_fat, clnr<<2 (* 4)		
 @l_clnr_page:
 		bit #$40										; clnr within 2nd page of the 512 byte block ?
-		bne @l_clnr
-		ldy #>block_fat							; no, set read_blkptr to start of block_fat
+		beq @l_clnr
+		ldy #>(block_fat+$0100)					; yes, set read_blkptr to 2nd page of block_fat
 		sty read_blkptr+1
 @l_clnr:
-		debug16 "f_rcbs", read_blkptr
 		asl											; block offset = clnr*4
 		asl
 		tay
 		jsr __fat_is_cln_eoc						; C is returned accordingly
 		lda #EOK
 @l_exit:
+		debug16 "f_rcbs", read_blkptr
 		rts
 
 
