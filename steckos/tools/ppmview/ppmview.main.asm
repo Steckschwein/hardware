@@ -83,30 +83,30 @@ ppmview_main:
 		jsr read_blocks
 		bne @io_error
 		
-;		jsr adjust_blocks
+		jsr adjust_blocks
 ;		
 		jsr parse_header					; return with offset to first data byte
 		bne @invalid_ppm
 
-		jsr load_image
-		bne @io_error
-
-		jsr	krn_textui_disable			;disable textui
 		jsr	gfxui_on
-		
-		keyin
-		jsr	gfxui_off
 
-		jsr	krn_display_off			;restore textui
-		jsr	krn_textui_init
-		jsr	krn_textui_enable
+		jsr load_image
+		bne @gfx_io_error
+		
+;		keyin
+		
+		jsr	gfxui_off
 		bra @close_exit
 
 @invalid_ppm:
 		jsr krn_primm
 		.byte $0a,"Not a valid ppm file! Must be type P6 with size 256x192px.",0
 		bra @close_exit
-		
+
+@gfx_io_error:
+		pha
+		jsr gfxui_off
+		pla
 @io_error:
 		pha
 		jsr krn_primm
@@ -134,10 +134,10 @@ read_blocks:
 		jmp krn_fread
 		
 adjust_blocks:
-		phy
-		tya
-		jsr hexout
-		ply
+;		phy
+;		tya
+;		jsr hexout
+;		ply
 		cpy #0	; no blocks where read
 		beq @l_exit
 @l:	jsr dec_blocks
@@ -150,12 +150,24 @@ adjust_blocks:
 
 load_image:
 		jsr read_blocks
-;		jsr adjust_blocks
 		bne @l_exit
-		cpy #0
+		jsr adjust_blocks
 		bne load_image
 @l_exit:
 		rts
+
+	lda #<.HIWORD(ADDRESS_GFX7_SCREEN<<3)
+	ldy #v_reg14
+	vdp_sreg
+	vnops
+	lda #<.LOWORD(ADDRESS_GFX7_SCREEN)
+	ldy #(WRITE_ADDRESS + >.LOWORD(ADDRESS_GFX7_SCREEN))
+	vdp_sreg
+
+	lda #%00000000	; reset vbank - TODO FIXME, kernel has to make sure that correct video adress is set for all vram operations, use V9958 flag
+	ldy #v_reg14
+	vdp_sreg	 
+;	vdp_reg 14,0
 
 dec_blocks:
 		lda blocks+0
@@ -254,37 +266,30 @@ blend_isr:
 		rti
 
 gfxui_on:
+	
+	jsr	krn_textui_disable			;disable textui
+
 	sei
 	jsr vdp_display_off			;display off
 
 	jsr vdp_gfx7_on			   ;enable gfx7 mode
 
-
 	copypointer  $fffe, irqsafe
 	SetVector  blend_isr, $fffe
-
-	lda #<.HIWORD(ADDRESS_GFX7_SCREEN<<3)
-	ldy #v_reg14
-	vdp_sreg
-	vnops
-	lda #<.LOWORD(ADDRESS_GFX7_SCREEN)
-	ldy #(WRITE_ADDRESS + >.LOWORD(ADDRESS_GFX7_SCREEN))
-	vdp_sreg
 	
 	cli
 	rts
 
 gfxui_off:
-    sei
+		sei
+		copypointer  irqsafe, $fffe
+		cli
+		
+		jsr	krn_display_off			;restore textui
+		jsr	krn_textui_init
+		jsr	krn_textui_enable
 	 
-    copypointer  irqsafe, $fffe
-	 
-	lda #%00000000	; reset vbank - TODO FIXME, kernel has to make sure that correct video adress is set for all vram operations, use V9958 flag
-	ldy #v_reg14
-	vdp_sreg	 
-	 
-    cli
-    rts
+		rts
 
 	; TODO FIXME => lib
 __calc_blocks: ;blocks = filesize / BLOCKSIZE -> filesize >> 9 (div 512) +1 if filesize LSB is not 0
