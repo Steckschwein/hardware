@@ -86,7 +86,7 @@
 		assertY 0					; nothing read		
 		
 ; -------------------		
-		setup "fat_fread 1 blocks 1sec/cl"
+		setup "fat_fread 1 blocks 1/1"
 		SetVector data_read, read_blkptr
 		ldy #1
 		ldx #(1*FD_Entry_Size)
@@ -101,7 +101,7 @@
 		assert8 1, fd_area+(1*FD_Entry_Size)+F32_fd::offset
 		
 ; -------------------		
-		setup "fat_fread 2 blocks 1sec/cl"
+		setup "fat_fread 2 blocks 2/1"
 		SetVector data_read, read_blkptr
 		ldy #2	; 2 blocks
 		ldx #(1*FD_Entry_Size)
@@ -116,9 +116,9 @@
 		assert8 1, fd_area+(1*FD_Entry_Size)+F32_fd::offset+0 ; still offset 1, we have a 1 sec/cl fat geometry
 
 ; -------------------		
-		setup "fat_fread 4 blocks 1sec/cl"
+		setup "fat_fread 4 blocks 4/1"
 		SetVector data_read, read_blkptr
-		ldy #4	; 2 blocks
+		ldy #4	; 4 blocks at once
 		ldx #(1*FD_Entry_Size)
 		jsr fat_fread
 		assertZero 1
@@ -129,6 +129,53 @@
 		assert32 $16d, fd_area+(1*FD_Entry_Size)+F32_fd::CurrentCluster
 		assert16 data_read+$0800, read_blkptr ; expect read_ptr was increased 4blocks, means 8*$100
 		assert8 1, fd_area+(1*FD_Entry_Size)+F32_fd::offset+0 ; still offset 1, we have a 1 sec/cl fat geometry
+		
+; -------------------		
+		setup "fat_fread 4 blocks 1/1"
+		SetVector data_read, read_blkptr
+		ldy #1
+		ldx #(1*FD_Entry_Size)
+		jsr fat_fread
+		assertZero 1
+		assertA EOK
+		assertX (1*FD_Entry_Size)
+		assertY 1
+		assert32 $00006968, lba_addr ; expect $67fe + (clnr * sec/cl) => $67fe + $016a * 1= $6968 - no new cluster selected
+		assert32 $16a, fd_area+(1*FD_Entry_Size)+F32_fd::CurrentCluster
+		assert16 data_read+$0200, read_blkptr ; expect read_ptr was increased 4blocks, means 8*$100
+		assert8 1, fd_area+(1*FD_Entry_Size)+F32_fd::offset+0 ; still offset 1, we have a 1 sec/cl fat geometry
+		
+		jsr fat_fread
+		assertZero 1
+		assertA EOK
+		assertX (1*FD_Entry_Size)
+		assertY 1
+		assert32 $00006969, lba_addr ; expect $67fe + (clnr * sec/cl) => $67fe + $016a * 1= $6968 - no new cluster selected
+		assert32 $16b, fd_area+(1*FD_Entry_Size)+F32_fd::CurrentCluster
+		
+		jsr fat_fread
+		assertZero 1
+		assertA EOK
+		assertX (1*FD_Entry_Size)
+		assertY 1
+		assert32 $0000696a, lba_addr ; expect $67fe + (clnr * sec/cl) => $67fe + $016a * 1= $6968 - no new cluster selected
+		assert32 $16c, fd_area+(1*FD_Entry_Size)+F32_fd::CurrentCluster
+		
+		jsr fat_fread
+		assertZero 1
+		assertA EOK
+		assertX (1*FD_Entry_Size)
+		assertY 1
+		assert32 $0000696b, lba_addr ; expect $67fe + (clnr * sec/cl) => $67fe + $016a * 1= $6968 - no new cluster selected
+		assert32 $16d, fd_area+(1*FD_Entry_Size)+F32_fd::CurrentCluster
+		
+		; EOC expected here, 0 blocks read
+		jsr fat_fread
+		assertZero 1
+		assertA EOK
+		assertX (1*FD_Entry_Size)
+		assertY 0
+		assert32 $16d, fd_area+(1*FD_Entry_Size)+F32_fd::CurrentCluster ; still the last one
 		
 		brk
 
@@ -179,7 +226,9 @@ mock_read_block:
 	set32 block_fat+((test_start_cluster+0)<<2 & (sd_blocksize-1)), (test_start_cluster+1) ; build the chain
 	set32 block_fat+((test_start_cluster+1)<<2 & (sd_blocksize-1)), (test_start_cluster+2)
 	set32 block_fat+((test_start_cluster+2)<<2 & (sd_blocksize-1)), (test_start_cluster+3)
-:		
+	set32 block_fat+((test_start_cluster+3)<<2 & (sd_blocksize-1)), FAT_EOC
+:
+	stz krn_tmp ; mock behaviour, the real sd_read_block uses krn_tmp
 	plx
 	inc read_blkptr+1	; same behaviour as real implementation
 	lda #EOK

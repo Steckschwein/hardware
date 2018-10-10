@@ -183,7 +183,9 @@ DIR_Entry_Deleted            = $e5
    Attr           .byte;	(1bt)
    DirEntryLBA    .dword;	(4bt)	LBA of the block where the dir entry of the file is located
    DirEntryPos    .byte;	(1bt)	block offset within the block (DirEntryPos * DIR_Entry_Size)
-	offset			.word;	(2bt) 9Bit (MSB) offset within block, 7Bit (LSB) block number of the CurrentCluster
+	offset			.byte;	(1bt) 7Bit block number of the CurrentCluster
+
+;	TODO FIXME offset			.word;	(2bt) 9Bit (MSB) offset within block, 7Bit (LSB) block number of the CurrentCluster
 	
 ;   SeekPos        .dword;	(4bt) seek position within the opened file
 ;   openFlags     .byte; +1 flags during open

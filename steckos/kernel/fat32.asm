@@ -97,38 +97,27 @@ __fat_fseek:
 		; 	Y - number of blocks which where successfully read
 		;	TODO FIXME - how to give the client a hint how many bytes where read => 
 fat_fread:
-;- 32bit seekpos im fd mitführen und bei read/write updaten
-;- vor jedem read/write prüfen ob "seekpos dirty"
-;- - wenn dirty, dann seekpos zerlegen und 
-;    - cluster nr berechnen
-; 	  - block nr im cluster berechnen
-; 	  - offset im block
-;- + antworten der akt. seek pos ist billig, seekpos aus fd antworten
-;- + setzen der seek pos ist billig
-;-   - update seekpos in fd
-;-   - setzen "seekpos dirty"		
 		jsr __fat_isOpen
-		bne :+
+		bne @_l_read_start
 		lda #EINVAL
 		rts
-:		
-		phy 															; safe requested block number
-		sty krn_tmp3												; init counter
+@_l_read_start:
+		sty krn_tmp3												; safe requested block number
+		stz krn_tmp2												; init counter
 @_l_read_loop:
-		dec krn_tmp3
-		bmi @l_exit_ok
-		
 		debug "lp"
+		ldy krn_tmp2
+		cpy krn_tmp3
+		beq @l_exit_ok
 		
-		lda fd_area+F32_fd::offset+0,x
-		and #$7f														; mask block number
+		lda fd_area+F32_fd::offset,x
 		cmp volumeID+VolumeID::BPB + BPB::SecPerClus		; last block of cluster reached?
 		bne @_l_read												; no, go on reading...
 		
 		copypointer read_blkptr, krn_ptr1					; backup read_blkptr
 		jsr __fat_read_cluster_block_and_select			; read fat block of the current cluster
-		bne @l_exit													; read error...
-		bcs @l_exit													; EOC reached?		
+		bne @l_exit_err											; read error...
+		bcs @l_exit													; EOC reached?	return ok, and block counter
 		jsr __fat_next_cln										; select next cluster
 		stz fd_area+F32_fd::offset+0,x						; and reset offset within cluster		
 		copypointer krn_ptr1, read_blkptr					; restore read_blkptr
@@ -136,17 +125,18 @@ fat_fread:
 @_l_read:
 		jsr __calc_lba_addr
 		jsr __fat_read_block
-		bne @l_exit
+		bne @l_exit_err
 		inc read_blkptr+1											; read address + $0200 (block size)
 		inc read_blkptr+1													
 		inc fd_area+F32_fd::offset+0,x						; inc block counter
+		inc krn_tmp2
 		bra @_l_read_loop
+@l_exit:
+		ldy krn_tmp2
 @l_exit_ok:
 		lda #EOK														; A=0 (EOK)
-@l_exit:
-		ply
-		cmp #0
-		rts
+@l_exit_err:
+		rts		
 
 
 		;	@deprecated - use fat_read_blocks instead, just for backward compatibility
@@ -1213,7 +1203,6 @@ __calc_lba_addr:
 		.endrepeat
 		
 		lda fd_area+F32_fd::offset+0,x			; load the current block counter
-		and #$7f											; mask them and
 		adc lba_addr+0									; add to lba_addr
 		sta lba_addr+0
 		bcc :+

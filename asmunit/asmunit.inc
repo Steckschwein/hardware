@@ -68,19 +68,21 @@ tst_bytes		= $0108
 .endmacro
 
 .macro cmp16 address, _16Bit
+	.local @l_exit
 	lda address+0
 	cmp #<_16Bit
-	bne :+
+	bne @l_exit
 	lda address+1
 	cmp #>_16Bit
-:
+@l_exit:
 .endmacro
 
 .macro cmp32 address, _32Bit
+	.local @l_exit
 	cmp16 address+0, (_32Bit & $ffff)
-	bne :+
+	bne @l_exit
 	cmp16 address+2, (_32Bit>>16)
-:
+@l_exit:
 .endmacro
 
 .macro set16 address, _16bit
