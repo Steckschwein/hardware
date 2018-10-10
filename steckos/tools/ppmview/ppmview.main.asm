@@ -82,18 +82,18 @@ ppmview_main:
 
 		jsr read_blocks
 		bne @io_error
-		jsr adjust_blocks
 		
+;		jsr adjust_blocks
+;		
 		jsr parse_header					; return with offset to first data byte
 		bne @invalid_ppm
-		
+
 		jsr load_image
 		bne @io_error
-		
-		bra @close_exit
-		
+
 		jsr	krn_textui_disable			;disable textui
 		jsr	gfxui_on
+		
 		keyin
 		jsr	gfxui_off
 
@@ -150,11 +150,11 @@ adjust_blocks:
 
 load_image:
 		jsr read_blocks
-		bne @load_image_exit
-		jsr adjust_blocks
-;		bne @load_image
-		lda #0
-@load_image_exit:		
+;		jsr adjust_blocks
+		bne @l_exit
+		cpy #0
+		bne load_image
+@l_exit:
 		rts
 
 dec_blocks:
@@ -236,18 +236,21 @@ parse_string:
 		rts
 
 blend_isr:
-		bit a_vreg
-		bpl @0
 		save
-
+		
 		lda #Dark_Yellow
 		jsr vdp_bgcolor
-
+		
+		bit a_vreg
+		bpl @0
+		
+		; irq Payload here
+		
+@0:
 		lda #Black
 		jsr vdp_bgcolor
-
+		
 		restore
-@0:
 		rti
 
 gfxui_on:
@@ -256,6 +259,10 @@ gfxui_on:
 
 	jsr vdp_gfx7_on			   ;enable gfx7 mode
 
+
+	copypointer  $fffe, irqsafe
+	SetVector  blend_isr, $fffe
+
 	lda #<.HIWORD(ADDRESS_GFX7_SCREEN<<3)
 	ldy #v_reg14
 	vdp_sreg
@@ -263,21 +270,19 @@ gfxui_on:
 	lda #<.LOWORD(ADDRESS_GFX7_SCREEN)
 	ldy #(WRITE_ADDRESS + >.LOWORD(ADDRESS_GFX7_SCREEN))
 	vdp_sreg
-
-	copypointer  $fffe, irqsafe
-	SetVector  blend_isr, $fffe
-
-	lda #%00000000	; reset vbank - TODO FIXME, kernel has to make sure that correct video adress is set for all vram operations, use V9958 flag
-	ldy #v_reg14
-	vdp_sreg
-
+	
 	cli
 	rts
 
 gfxui_off:
     sei
-
+	 
     copypointer  irqsafe, $fffe
+	 
+	lda #%00000000	; reset vbank - TODO FIXME, kernel has to make sure that correct video adress is set for all vram operations, use V9958 flag
+	ldy #v_reg14
+	vdp_sreg	 
+	 
     cli
     rts
 
@@ -307,11 +312,8 @@ __calc_blocks: ;blocks = filesize / BLOCKSIZE -> filesize >> 9 (div 512) +1 if f
 		
 m_vdp_nopslide
 
-filename:
-	.asciiz "felix.ppm"
-
 irqsafe: .res 2, 0
 ; TODO FIXME clarify BSS segment voodo
-fd:		.res 1, $ff
-buffer:	.res 8, 0
+fd: .res 1, 0
 tmp: .res 0
+buffer: .res 8, 0

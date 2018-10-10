@@ -39,7 +39,7 @@ vdp_init_bytes_gfx7:
 			.byte $0
 			.byte $ff
 			.byte $3f
-			.byte $00 ; border color
+			.byte Black ; border color
 			.byte v_reg8_SPD | v_reg8_VR	; SPD - sprite disabled, VR - 64k VRAM
 			.byte 0;			v_reg9_ln	//TODO FIXME ntsc off => gfx_off
 
