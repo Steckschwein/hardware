@@ -219,7 +219,7 @@ byte_to_grb:
 set_screen_addr:
 		lda #<.HIWORD(ADDRESS_GFX7_SCREEN<<2)
 		ldy #v_reg14
-		vdp_sreg		
+		vdp_sreg
 		lda #<.LOWORD(ADDRESS_GFX7_SCREEN)	;reset vram address ptr
 		ldy #(WRITE_ADDRESS + >.LOWORD(ADDRESS_GFX7_SCREEN))
 		vdp_sreg	
@@ -252,16 +252,17 @@ dec_blocks:
 		rts
 		
 parse_header:
-		ldy #0
-		jsr parse_string
-
 		lda #'P'
-		cmp buffer
+		cmp ppmdata
 		bne @l_invalid_ppm
 		lda #'6'
-		cmp buffer+1
+		cmp ppmdata+1
 		bne @l_invalid_ppm
+
+		ldy #0
+		jsr parse_string		;skip "P6"
 		
+		jsr parse_until_size	;skip until <width> <height>
 		jsr parse_int	;width
 		cmp #<MAX_WIDTH
 		bne @l_invalid_ppm
@@ -269,10 +270,10 @@ parse_header:
 		jsr parse_int	;height
 		cmp #MAX_HEIGHT
 		bcs @l_invalid_ppm
-		sta ppm_height
+		sta ppm_height		
 		jsr parse_int	;depth
 		cmp #COLOR_DEPTH
-		bne @l_exit
+		bne @l_exit		
 		lda #0
 		rts
 @l_invalid_ppm:		
@@ -280,23 +281,36 @@ parse_header:
 @l_exit:
 		rts
 
-parse_int:
+parse_until_size:
+		lda ppmdata, y
+		cmp #'#'				; skip comments
+		bne @l		
 		jsr parse_string
-
-		ldx #0
-@ll:
-		lda buffer, x
-		beq :+
-;		jsr char_out
-		inx 
-		bne @ll
-:		
+		bra parse_until_size
+@l:	
+		rts
 		
+parse_int:
+		lda #$0a
+		jsr char_out
+;		ldx #0
+@ll:
+;		lda buffer, x
+;		beq :+
+;		jsr char_out
+;		inx 
+;		bne @ll
+:		
+;		ldx #0
 		stz tmp
-		ldx #0
+;		ldx #0
 @l_toi:
-		lda buffer, x
-		beq @l_end
+		lda ppmdata, y
+		cmp #'0'
+		bcc @l_end
+		cmp #'9'+1
+		bcs @l_end
+		jsr char_out
 		pha		;n*10 => n*2 + n*8
 		lda tmp
 		asl
@@ -311,23 +325,24 @@ parse_int:
 		clc
 		adc tmp
 		sta tmp
-		inx
+		iny
 		bne @l_toi
 @l_end:
+		iny
 		lda tmp
 		rts
 
 parse_string:
 		ldx #0
 @l0:	lda ppmdata, y
-		cmp #$20+1		; <= $20 - control characters are treat as whitespace
+		cmp #$20		; < $20 - control characters are treat as whitespace
 		bcc @le
-		sta buffer, x
-		inx
+;		sta buffer, x
+;		inx
 		iny
 		bne @l0
 @le:	iny
-		stz buffer, x
+;		stz buffer, x
 		rts
 
 blend_isr:
