@@ -268,7 +268,7 @@ parse_header:
 		bne @l_invalid_ppm
 		sta ppm_width
 		jsr parse_int	;height
-		cmp #MAX_HEIGHT
+		cmp #MAX_HEIGHT+1
 		bcs @l_invalid_ppm
 		sta ppm_height		
 		jsr parse_int	;depth
@@ -291,26 +291,16 @@ parse_until_size:
 		rts
 		
 parse_int:
-		lda #$0a
-		jsr char_out
-;		ldx #0
-@ll:
-;		lda buffer, x
-;		beq :+
+;		lda #$0a
 ;		jsr char_out
-;		inx 
-;		bne @ll
-:		
-;		ldx #0
 		stz tmp
-;		ldx #0
 @l_toi:
 		lda ppmdata, y
 		cmp #'0'
 		bcc @l_end
 		cmp #'9'+1
 		bcs @l_end
-		jsr char_out
+;		jsr char_out
 		pha		;n*10 => n*2 + n*8
 		lda tmp
 		asl

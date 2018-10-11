@@ -50,7 +50,7 @@
 	assertZero 1		;
 	assertA 0
 	assert8 <256, ppm_width
-	assert8 178, ppm_height	
+	assert8 192, ppm_height	
 	
 	test "byte_to_grb"
  	SetVector ppmdata, read_blkptr
@@ -99,7 +99,7 @@ test_ppm_header_notppm:
 test_ppm_header_wrong_height:
 	.byte "P6",$0a,"256 193",$0a,"255",$0a
 test_ppm_header_comment:
-	.byte "P6",$0a,"#Compressed with JPEG Optimizer 4.00, www.xat.com",$0a,"#comment 2",$0a,"256 178",$0a,"255",$0a
+	.byte "P6",$0a,"#Compressed with JPEG Optimizer 4.00, www.xat.com",$0a,"#comment 2",$0a,"256 192",$0a,"255",$0a
 
 test_ppm_data:	; ppm RGB => GRB 3,3,2
 	.byte $0, $0, $0		;0
