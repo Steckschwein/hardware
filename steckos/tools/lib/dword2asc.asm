@@ -190,7 +190,7 @@ binstr15: dec wrkspc02+1        ;numerals=numerals-1
          ldy #>strbuf          ;converted string MSB
          clc                   ;all okay
          rts
-		 
+
 ;================================================================================
 ;
 ;CONVERT PFAC INTO BCD

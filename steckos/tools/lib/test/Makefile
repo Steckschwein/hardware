@@ -5,7 +5,7 @@ LDFLAGS=--config ../../../../asmunit/asmunit.cfg $(LIBS) $(DEFINES)
 
 .PHONY: all clean
 
-all: test_hexout test_bin2dual test_bin2asc test_rot13 test_sqrt8
+all: test_hexout test_bin2dual test_bin2asc test_rot13 test_sqrt8 test_dword2asc
 
 clean:
 	rm -f *.bin *.o *.dis *.log
