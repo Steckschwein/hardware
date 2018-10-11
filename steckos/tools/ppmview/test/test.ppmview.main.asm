@@ -4,31 +4,65 @@
 	.include "errno.inc"
 	.include "zeropage.inc"
 
-	.import parse_header
+	.importzp ptr2
+
+	.import parse_header	
+	.import byte_to_grb
 	
-;.import asmunit_chrout
-;krn_chrout=asmunit_chrout
-;.export krn_chrout
+	.import asmunit_chrout
+	.export char_out=asmunit_chrout	; TODO FIXME causes a linker warning
 
 .export ppmdata
 .export ppm_width
 .export ppm_height
 
+.macro test label
+	test_name label
+	stz ppm_width
+	stz ppm_height
+.endmacro
+
 .code
-	test_name "parse_header not ppm"
-	
+
+	test "parse_header not ppm"	
 	jsr parse_header
 	assertZero 0		;error
 	assertA $ff
 	
-	test_name "parse_header ppm"
-	m_memcpy ppm_header, ppmdata, 16
+	test "parse_header height"
+	m_memcpy test_ppm_header_height, ppmdata, 16
+	jsr parse_header
+	assertZero 0		;error
+	assertA $ff
+
+	test "parse_header valid"
+	m_memcpy test_ppm_header, ppmdata, 16
 	jsr parse_header
 	assertZero 1		;
 	assertA 0
 	assert8 <256, ppm_width
 	assert8 171, ppm_height
 	
+	test "byte_to_grb"
+ 	SetVector ppmdata, read_blkptr
+	m_memcpy test_ppm_data, ppmdata, 32
+	
+	ldy #0
+	jsr byte_to_grb
+	assertA 0
+
+	jsr byte_to_grb
+	assertA $ff
+	
+	jsr byte_to_grb
+	assertA $ff
+	
+	jsr byte_to_grb
+	assertA $49
+
+	jsr byte_to_grb
+	assertA $51
+
 	brk
 
 .export krn_primm=mock
@@ -46,10 +80,20 @@
 mock:
 	rts
 
-ppm_header:
-	.byte "P6",$0a,"256 171",$0a,"255"
+test_ppm_header:
+	.byte "P6",$0a,"256 171",$0a,"255",$0a
+test_ppm_header_height:
+	.byte "P6",$0a,"256 193",$0a,"255",$0a
 
-ppmdata: .res 32,0
+test_ppm_data:	; ppm RGB => GRB 3,3,2
+	.byte $0, $0, $0		;0
+	.byte $ff, $ff, $ff	;$ff
+	.byte $e0, $e0, $c0	;$ff
+	.byte $40, $40, $40	;$49
+	.byte $80, $40, $40	;$51
+
+	
 ppm_width: .res 1, 0
 ppm_height: .res 1, 0 
+ppmdata: .res 32,0
 .segment "ASMUNIT"

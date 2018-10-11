@@ -30,7 +30,7 @@
 .include "fcntl.inc"
 .include "zeropage.inc"
 
-.importzp ptr2, ptr3
+.importzp ptr2
 ;.importzp tmp, tmp4
 
 .import hexout
@@ -48,7 +48,7 @@
 .import krn_textui_init
 .import krn_display_off
 .import krn_getkey
-
+.import char_out
 
 .import ppmdata
 .import ppm_width
@@ -58,9 +58,11 @@
 
 ; for TEST purpose
 .export parse_header
+.export byte_to_grb
 
 .define MAX_WIDTH 256
 .define MAX_HEIGHT 192
+.define COLOR_DEPTH 255
 
 .code
 ppmview_main:
@@ -153,7 +155,7 @@ adjust_blocks:
 		rts
 
 load_image:
-		jsr load_vram
+		jsr blocks_to_vram
 		
 		lda ppmdata
 		jsr hexout
@@ -165,7 +167,7 @@ load_image:
 @l_exit:
 		rts
 
-load_vram:
+blocks_to_vram:
 		sei	;critical section
 		
 		lda #<.HIWORD(ADDRESS_GFX7_SCREEN<<2)
@@ -175,14 +177,11 @@ load_vram:
 		lda #<.LOWORD(ADDRESS_GFX7_SCREEN)
 		ldy #(WRITE_ADDRESS + >.LOWORD(ADDRESS_GFX7_SCREEN))
 		vdp_sreg	
-		
-		ldy #0		
-@l_mem:
-		vnops
-		lda ppmdata+$0200,y
-		sta a_vram
-		iny
-		bne @l_mem
+
+		ldy #0
+		jsr block_to_vram
+		jsr block_to_vram
+		jsr block_to_vram
 		
 		lda #%00000000	; reset vbank - TODO FIXME, kernel has to make sure that correct video adress is set for all vram operations, use V9958 flag
 		ldy #v_reg14
@@ -190,6 +189,38 @@ load_vram:
 		;	vdp_reg 14,0
 		
 		cli
+		rts
+
+block_to_vram:
+@l_mem:
+		vnops
+		jsr byte_to_grb
+		sta a_vram
+		iny
+		bne @l_mem
+		inc read_blkptr+1
+		rts
+			
+byte_to_grb:
+		lda (read_blkptr),y	;R
+		and #$e0
+		lsr
+		lsr
+		lsr
+		sta tmp
+		iny
+		lda (read_blkptr),y	;G
+		and #$e0
+		ora tmp
+		sta tmp
+		iny
+		lda (read_blkptr),y	;B
+		rol
+		rol
+		rol
+		and #$03		;bit 1,0
+		ora tmp
+		iny
 		rts
 		
 dec_blocks:
@@ -211,33 +242,46 @@ parse_header:
 
 		lda #'P'
 		cmp buffer
-		bne @l_not_ppm
+		bne @l_invalid_ppm
 		lda #'6'
 		cmp buffer+1
-		bne @l_not_ppm
+		bne @l_invalid_ppm
 		
 		jsr parse_int	;width
 		cmp #<MAX_WIDTH
-		bne @l_not_ppm
+		bne @l_invalid_ppm
 		sta ppm_width
 		jsr parse_int	;height
 		cmp #MAX_HEIGHT
-		bcs @l_not_ppm
+		bcs @l_invalid_ppm
 		sta ppm_height
 		jsr parse_int	;depth
+		cmp #COLOR_DEPTH
+		bne @l_exit
 		lda #0
 		rts
-@l_not_ppm:
+@l_invalid_ppm:		
 		lda #$ff
+@l_exit:
 		rts
 
 parse_int:
 		jsr parse_string
+
+		ldx #0
+@ll:
+		lda buffer, x
+		beq :+
+		jsr char_out
+		inx 
+		bne @ll
+:		
+		
 		stz tmp
 		ldx #0
-:
+@l_toi:
 		lda buffer, x
-		beq :+		
+		beq @l_end
 		pha		;n*10 => n*2 + n*8
 		lda tmp
 		asl
@@ -253,8 +297,9 @@ parse_int:
 		adc tmp
 		sta tmp
 		inx
-		bne :-	
-:		lda tmp
+		bne @l_toi
+@l_end:
+		lda tmp
 		rts
 
 parse_string:
@@ -346,5 +391,5 @@ m_vdp_nopslide
 irqsafe: .res 2, 0
 ; TODO FIXME clarify BSS segment voodo
 fd: .res 1, 0
-tmp: .res 0
+tmp: .res 1, 0
 buffer: .res 8, 0

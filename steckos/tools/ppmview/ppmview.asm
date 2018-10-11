@@ -36,8 +36,7 @@ appstart $1000
 .export krn_textui_init
 .export krn_display_off
 .export krn_getkey
-
-.export char_out=krn_chrout  
+.export char_out=krn_chrout
 
 .export ppmdata
 .export ppm_width
