@@ -48,6 +48,7 @@ main:
 
 		keyin
 
+		lda 	#0
 ;		jsr 	vdp_gfx7_blank
 
 ;		keyin

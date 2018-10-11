@@ -80,6 +80,10 @@ vdp_gfx7_blank:
 	ror
 	bcs @wait
 
+	lda #%00000000	; reset vbank - TODO FIXME, kernel has to make sure that correct video adress is set for all vram operations, use V9958 flag
+	ldy #v_reg14
+	vdp_sreg
+	
 	plx
 	rts
 

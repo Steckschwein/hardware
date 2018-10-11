@@ -79,7 +79,11 @@ ppmview_main:
 
 		;512byte/block * 3 => 1536byte => div 256 => 6 pixel lines => height / 6 => height / (2*2 + 1*2) => height / 2 * (2+1)
 		jsr __calc_blocks
-
+		stz blocks+2
+		stz blocks+1
+		lda #6
+		sta blocks+0
+		
 		jsr read_blocks
 		bne @io_error
 		
@@ -93,9 +97,9 @@ ppmview_main:
 		jsr load_image
 		bne @gfx_io_error
 		
-;		keyin
+		keyin
+		jsr gfxui_off
 		
-		jsr	gfxui_off
 		bra @close_exit
 
 @invalid_ppm:
@@ -122,11 +126,11 @@ l_exit:
 
 read_blocks:
 		lda blocks+2
-		jsr hexout
+;		jsr hexout
 		lda blocks+1
-		jsr hexout
+;		jsr hexout
 		lda blocks+0
-		jsr hexout
+;		jsr hexout
 
 		SetVector ppmdata, read_blkptr
 		ldx fd
@@ -149,6 +153,11 @@ adjust_blocks:
 		rts
 
 load_image:
+		jsr load_vram
+		
+		lda ppmdata
+		jsr hexout
+		
 		jsr read_blocks
 		bne @l_exit
 		jsr adjust_blocks
@@ -156,19 +165,33 @@ load_image:
 @l_exit:
 		rts
 
-	lda #<.HIWORD(ADDRESS_GFX7_SCREEN<<3)
-	ldy #v_reg14
-	vdp_sreg
-	vnops
-	lda #<.LOWORD(ADDRESS_GFX7_SCREEN)
-	ldy #(WRITE_ADDRESS + >.LOWORD(ADDRESS_GFX7_SCREEN))
-	vdp_sreg
-
-	lda #%00000000	; reset vbank - TODO FIXME, kernel has to make sure that correct video adress is set for all vram operations, use V9958 flag
-	ldy #v_reg14
-	vdp_sreg	 
-;	vdp_reg 14,0
-
+load_vram:
+		sei	;critical section
+		
+		lda #<.HIWORD(ADDRESS_GFX7_SCREEN<<2)
+		ldy #v_reg14
+		vdp_sreg
+		vnops
+		lda #<.LOWORD(ADDRESS_GFX7_SCREEN)
+		ldy #(WRITE_ADDRESS + >.LOWORD(ADDRESS_GFX7_SCREEN))
+		vdp_sreg	
+		
+		ldy #0		
+@l_mem:
+		vnops
+		lda ppmdata+$0200,y
+		sta a_vram
+		iny
+		bne @l_mem
+		
+		lda #%00000000	; reset vbank - TODO FIXME, kernel has to make sure that correct video adress is set for all vram operations, use V9958 flag
+		ldy #v_reg14
+		vdp_sreg	 
+		;	vdp_reg 14,0
+		
+		cli
+		rts
+		
 dec_blocks:
 		lda blocks+0
 		bne @l0
@@ -265,24 +288,27 @@ blend_isr:
 		restore
 		rti
 
-gfxui_on:
-	
+gfxui_on:	
 	jsr	krn_textui_disable			;disable textui
 
 	sei
 	jsr vdp_display_off			;display off
-
 	jsr vdp_gfx7_on			   ;enable gfx7 mode
+
+	;lda #0
+	;jsr vdp_gfx7_blank		   ;blank
 
 	copypointer  $fffe, irqsafe
 	SetVector  blend_isr, $fffe
-	
+
 	cli
 	rts
 
 gfxui_off:
 		sei
+		
 		copypointer  irqsafe, $fffe
+		
 		cli
 		
 		jsr	krn_display_off			;restore textui
