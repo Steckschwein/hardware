@@ -42,8 +42,9 @@ appstart $1000
 .export ppm_width
 .export ppm_height
 
+.import ppmview_main
+
 .code
-		.import ppmview_main
 		jsr ppmview_main
 		jmp (retvec)
 
@@ -51,6 +52,6 @@ ppm_width: .res 1, 0
 ppm_height: .res 1, 0 
 		
 .segment "DATA"
-ppmdata: .byte $ff, $aa
+ppmdata:
 
 .segment "STARTUP"

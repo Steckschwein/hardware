@@ -81,20 +81,21 @@ ppmview_main:
 
 		;512byte/block * 3 => 1536byte => div 256 => 6 pixel lines => height / 6 => height / (2*2 + 1*2) => height / 2 * (2+1)
 		jsr __calc_blocks
-		stz blocks+2
-		stz blocks+1
-		lda #6
-		sta blocks+0
+;		stz blocks+2
+;		stz blocks+1
+;		lda #192
+;		sta blocks+0
 		
 		jsr read_blocks
 		bne @io_error
 		
 		jsr adjust_blocks
 ;		
-		jsr parse_header					; return with offset to first data byte
+		jsr parse_header					; Y - return with offset to first data byte
 		bne @invalid_ppm
-
-		jsr	gfxui_on
+		sty data_offset
+		
+		jsr gfxui_on
 
 		jsr load_image
 		bne @gfx_io_error
@@ -155,74 +156,88 @@ adjust_blocks:
 		rts
 
 load_image:
-		jsr blocks_to_vram
+		sei	;critical section
+
+		lda #$c9
+		;jsr vdp_gfx7_blank ; TODO FIXME does not work
+		jsr screen_blank
 		
-		lda ppmdata
+		jsr set_screen_addr
+		
+		ldy data_offset ; Y - data offset
 		jsr hexout
+@loop:
+		SetVector ppmdata, read_blkptr ; reset ptr		
+		jsr blocks_to_vram
 		
 		jsr read_blocks
 		bne @l_exit
 		jsr adjust_blocks
-		bne load_image
+		bne @loop
 @l_exit:
-		rts
 
-blocks_to_vram:
-		sei	;critical section
-		
-		lda #<.HIWORD(ADDRESS_GFX7_SCREEN<<2)
-		ldy #v_reg14
-		vdp_sreg
-		vnops
-		lda #<.LOWORD(ADDRESS_GFX7_SCREEN)
-		ldy #(WRITE_ADDRESS + >.LOWORD(ADDRESS_GFX7_SCREEN))
-		vdp_sreg	
-
-		ldy #0
-		jsr block_to_vram
-		jsr block_to_vram
-		jsr block_to_vram
-		
-		lda #%00000000	; reset vbank - TODO FIXME, kernel has to make sure that correct video adress is set for all vram operations, use V9958 flag
-		ldy #v_reg14
-		vdp_sreg	 
-		;	vdp_reg 14,0
-		
 		cli
 		rts
 
-block_to_vram:
+blocks_to_vram:
 @l_mem:
-		vnops
 		jsr byte_to_grb
 		sta a_vram
-		iny
+;		jsr hexout
+		lda read_blkptr+1
+		cmp #>(ppmdata+(3*$200))	;end of 3 blocks reached?
 		bne @l_mem
-		inc read_blkptr+1
 		rts
 			
+next_byte:
+		lda (read_blkptr),y
+		iny
+		bne @l_exit
+		inc read_blkptr+1
+@l_exit:
+		rts
+		
 byte_to_grb:
-		lda (read_blkptr),y	;R
+		jsr next_byte	;R
 		and #$e0
 		lsr
 		lsr
 		lsr
 		sta tmp
-		iny
-		lda (read_blkptr),y	;G
+		jsr next_byte	;G
 		and #$e0
 		ora tmp
 		sta tmp
-		iny
-		lda (read_blkptr),y	;B
+		jsr next_byte	;G
 		rol
 		rol
 		rol
 		and #$03		;bit 1,0
 		ora tmp
-		iny
 		rts
 		
+set_screen_addr:
+		lda #<.HIWORD(ADDRESS_GFX7_SCREEN<<2)
+		ldy #v_reg14
+		vdp_sreg		
+		lda #<.LOWORD(ADDRESS_GFX7_SCREEN)	;reset vram address ptr
+		ldy #(WRITE_ADDRESS + >.LOWORD(ADDRESS_GFX7_SCREEN))
+		vdp_sreg	
+		rts
+		
+screen_blank:
+		jsr set_screen_addr
+		ldx #212
+		ldy #0
+@l0:
+		vnops
+		sta a_vram
+		iny
+		bne @l0
+		dex
+		bne @l0
+		rts
+			
 dec_blocks:
 		lda blocks+0
 		bne @l0
@@ -272,7 +287,7 @@ parse_int:
 @ll:
 		lda buffer, x
 		beq :+
-		jsr char_out
+;		jsr char_out
 		inx 
 		bne @ll
 :		
@@ -340,9 +355,6 @@ gfxui_on:
 	jsr vdp_display_off			;display off
 	jsr vdp_gfx7_on			   ;enable gfx7 mode
 
-	;lda #0
-	;jsr vdp_gfx7_blank		   ;blank
-
 	copypointer  $fffe, irqsafe
 	SetVector  blend_isr, $fffe
 
@@ -351,6 +363,10 @@ gfxui_on:
 
 gfxui_off:
 		sei
+		
+		lda #%00000000	; reset vbank - TODO FIXME, kernel has to make sure that correct video adress is set for all vram operations, use V9958 flag
+		ldy #v_reg14
+		vdp_sreg	
 		
 		copypointer  irqsafe, $fffe
 		
@@ -390,6 +406,7 @@ m_vdp_nopslide
 
 irqsafe: .res 2, 0
 ; TODO FIXME clarify BSS segment voodo
+data_offset: .res 1, 0
 fd: .res 1, 0
 tmp: .res 1, 0
 buffer: .res 8, 0
