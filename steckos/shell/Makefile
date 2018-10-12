@@ -1,6 +1,6 @@
 CPU=65c02
 ASM_INCLUDE=../asminc
-LDFLAGS=--config ../kernel/steckosapp.cfg ../tools/lib/toollib.a
+LDFLAGS=--config ../kernel/steckosapp.cfg
 #DEBUG=-DDEBUG
 
 .PHONY: all clean

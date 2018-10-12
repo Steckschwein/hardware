@@ -28,8 +28,6 @@ tmp5    = $a2
 .include "../kernel/kernel.inc"
 .include "../kernel/kernel_jumptable.inc"
 
-.import hexout
-
 .include "appstart.inc"
 appstart $d800
 
@@ -65,9 +63,9 @@ init:
 		.include "version.inc"
 		.byte $00
 		crlf
-		
+
 		bra mainloop
-		
+
 exit_from_prg:
 		cmp #0
 		beq mainloop
@@ -76,7 +74,7 @@ exit_from_prg:
 		.byte $0a,"Exit: ",0
 		pla
 		jsr krn_chrout
-		
+
 mainloop:
 		cld
 		crlf
