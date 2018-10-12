@@ -59,7 +59,7 @@ init:
 		SetVector msgbuf, msgptr
 
 		jsr krn_primm
-		.byte $0a, "SteckShell "
+		.byte $0a, "steckOS Shell "
 		.include "version.inc"
 		.byte $00
 		crlf
