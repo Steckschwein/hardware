@@ -4,13 +4,13 @@
 
 .include "../tools.inc"
 
-.export print_filename, print_fat_date, print_fat_time
-.import b2ad
+.export print_filename, print_fat_date, print_fat_time, print_filesize
+.import b2ad, dword2asc, char_out
 .segment "CODE"
 print_filename:
 		ldy #F32DirEntry::Name
 @l1:	lda (dirptr),y
-		jsr krn_chrout
+		jsr char_out
 		iny
 		cpy #$0b
 		bne @l1
@@ -22,7 +22,7 @@ print_fat_date:
 		jsr b2ad
 
 		lda #'.'
-		jsr krn_chrout
+		jsr char_out
 
 		; month
 		iny
@@ -40,7 +40,7 @@ print_fat_date:
 		jsr b2ad
 
 		lda #'.'
-		jsr krn_chrout
+		jsr char_out
 
 
 		txa
@@ -64,7 +64,7 @@ print_fat_time:
 		jsr b2ad
 
 		lda #':'
-		jsr krn_chrout
+		jsr char_out
 
 
 		txa
@@ -81,11 +81,36 @@ print_fat_time:
 		jsr b2ad
 
 		lda #':'
-		jsr krn_chrout
+		jsr char_out
 
 		lda (dirptr),y
 		and #%00011111
 
 		jsr b2ad
 
+		rts
+
+print_filesize:
+		phy
+		lda dirptr
+	    clc
+	    adc #F32DirEntry::FileSize
+	    tax
+	    lda dirptr +1
+	    adc #0
+	    tay
+
+	    lda #' '
+	    jsr dword2asc
+
+		stx $0a
+	    sty $0b
+	    ldy #0
+	@l2:
+	    lda ($0a),y
+	    jsr char_out
+	    iny
+	    cpy #$06
+	    bne @l2
+		ply
 		rts
