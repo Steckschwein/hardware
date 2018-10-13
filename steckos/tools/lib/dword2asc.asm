@@ -306,8 +306,8 @@ facbcd02: sta wrkspc01,x        ;clear final result
          bpl facbcd02
 ;
          inc wrkspc02+s_wrkspc-1
-         ;php                   ;!!! uncomment for NMOS MPU !!!
-         ;sei                   ;!!! uncomment for NMOS MPU !!!
+         php                   ;!!! uncomment for NMOS MPU !!!
+         ; sei                   ;!!! uncomment for NMOS MPU !!!
          sed                   ;select decimal mode
          ldy #m_bits-1         ;bits to convert -1
 ;
@@ -342,7 +342,7 @@ facbcd07: lda wrkspc02,x        ;scratchpad
          dey
          bpl facbcd03          ;next operand bit
 ;
-         ;plp                   ;!!! uncomment for NMOS MPU !!!
+         plp                   ;!!! uncomment for NMOS MPU !!!
          ldx #0
 ;
 facbcd08: pla                   ;operand
