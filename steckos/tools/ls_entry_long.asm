@@ -38,8 +38,7 @@ dir_show_entry:
 		pha
 		jsr print_filename
 
-		lda #' '
-		jsr krn_chrout
+
 
 		ldy #F32DirEntry::Attr
 		lda (dirptr),y

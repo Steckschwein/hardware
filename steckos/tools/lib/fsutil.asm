@@ -92,7 +92,6 @@ print_fat_time:
 
 		rts
 
-.import hexout
 print_filesize:
 		phy
 		lda dirptr
@@ -110,7 +109,7 @@ print_filesize:
 		sty $0b
 
 		sta tmp0
-		lda #$06
+		lda #$04
 		sec
 		sbc tmp0
 		tax
