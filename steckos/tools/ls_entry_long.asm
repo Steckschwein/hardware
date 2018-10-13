@@ -44,7 +44,6 @@ dir_show_entry:
 		ldy #F32DirEntry::Attr
 		lda (dirptr),y
 
-
 		bit #DIR_Attr_Mask_Dir
 		beq @l
 		jsr krn_primm
@@ -53,21 +52,12 @@ dir_show_entry:
 		bra @date				; no point displaying directory size as its always zeros
 								; just print some spaces and skip to date display
 @l:
-		ldy #F32DirEntry::FileSize +1
-		lda (dirptr),y
-		tax
-		dey
-		;ldy #F32DirEntry::FileSize
-		lda (dirptr),y
-.import dpb2ad
-		jsr dpb2ad
-		; jsr print_filesize
+		jsr print_filesize
 
 		lda #' '
 		jsr krn_chrout
 		inc files
 @date:
-		ldy #F32DirEntry::WrtDate
 		jsr print_fat_date
 
 
@@ -75,11 +65,9 @@ dir_show_entry:
 		jsr krn_chrout
 
 
-		ldy #F32DirEntry::WrtTime +1
 		jsr print_fat_time
         crlf
-
-
+		
 		pla
 		rts
 

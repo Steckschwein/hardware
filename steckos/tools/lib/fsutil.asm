@@ -17,6 +17,7 @@ print_filename:
 		rts
 
 print_fat_date:
+		ldy #F32DirEntry::WrtDate
 		lda (dirptr),y
 		and #%00011111
 		jsr b2ad
@@ -55,6 +56,7 @@ print_fat_date:
 		rts
 
 print_fat_time:
+		ldy #F32DirEntry::WrtTime +1
 		lda (dirptr),y
 		tax
 		lsr
@@ -90,6 +92,7 @@ print_fat_time:
 
 		rts
 
+.import hexout
 print_filesize:
 		phy
 		lda dirptr
@@ -106,7 +109,7 @@ print_filesize:
 		stx $0a
 	    sty $0b
 	    ldy #0
-	@l2:
+@l2:
 	    lda ($0a),y
 	    jsr char_out
 	    iny
