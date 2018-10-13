@@ -1,6 +1,6 @@
 ; MIT License
 ;
-; Copyright (c) 2018 Thomas Woinke, Marko Lauke, www.steckschein.de
+; Copyright (c) 2018 Thomas Woinke, Marko Lauke, www.steckschwein.de
 ;
 ; Permission is hereby granted, free of charge, to any person obtaining a copy
 ; of this software and associated documentation files (the "Software"), to deal
@@ -28,9 +28,11 @@
 .include "tools.inc"
 
 
-.import b2ad, dpb2ad, print_fat_date, print_fat_time
-.import print_filename, files, dirs
+.import print_fat_date, print_fat_time, print_filesize, print_filename
+.import files, dirs
+.import char_out
 .export dir_show_entry, pagecnt, entries_per_page, dir_attrib_mask
+
 
 dir_show_entry:
 		pha
@@ -57,8 +59,9 @@ dir_show_entry:
 		dey
 		;ldy #F32DirEntry::FileSize
 		lda (dirptr),y
-
+.import dpb2ad
 		jsr dpb2ad
+		; jsr print_filesize
 
 		lda #' '
 		jsr krn_chrout
@@ -79,7 +82,6 @@ dir_show_entry:
 
 		pla
 		rts
-
 
 
 entries = 23
