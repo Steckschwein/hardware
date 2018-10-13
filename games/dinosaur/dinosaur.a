@@ -249,18 +249,18 @@ memctl = $0230
 	lda	#.CHAR_LAST_FG							; test cacti chars
 	cmp	.screen+(.DINOSAUR_X/8)+1
 	bcs	+
+	ldx	#(.DINOSAUR_Y-3*8+.DINOSAUR_HEIGHT)		; 3x8px height cacti char
 	cmp	.screen+(.DINOSAUR_X/8)+2
 	bcs	+
-	ldx	#(.DINOSAUR_Y-3*8+.DINOSAUR_HEIGHT)		; 3x8px height cacti char
+	ldx	#(.DINOSAUR_Y-2*8+.DINOSAUR_HEIGHT)		; 2x8px height cacti char
 	cmp	.screen+(.DINOSAUR_X/8)+1+32*1
 	bcs	+
-	ldx	#(.DINOSAUR_Y-2*8+.DINOSAUR_HEIGHT)		; 2x8px height cacti char
-	cmp	.screen+(.DINOSAUR_X/8)+32*2
+	cmp	.screen+(.DINOSAUR_X/8)+0+32*2
 	bcs	+
 	rts
 +
-	txa
-	cmp	.sprite_tab+1*4					; test the y pos of the lower sprites, sufficient for collision
+	txa											; x was set above
+	cmp	.sprite_tab+1*4							; test the y pos of the lower sprites, sufficient for collision - we jump on the cacti
 	bcc	+
 	beq	+
 	cmp	.sprite_tab+3*4
@@ -268,23 +268,25 @@ memctl = $0230
 	beq	+
 
 	;detect collision - pterodactyl
+	lda	#(.DINOSAUR_X)
+	cmp	.sprite_tab_enemy
 
-
-    rts
+	rts
 
 +	lda	#.DINOSAUR_DEAD
 	sta .dinosaur_state
 
 .game_over
-	jsr	.get_joy_status
-	and	#JOY_FIRE		;if fire is pressed set bit
-	beq	+
-    jsr krn_getkey
+	jsr .get_joy_status
+	and #JOY_FIRE		;if fire is pressed set bit
+	beq +
+	jsr krn_getkey
 	cmp #$20    ; space ?
 	bne ++
-+	lda	#.STATUS_JOY_PRESSED | .STATUS_GAME_OVER
-	bra	+++
-++	lda	#.STATUS_GAME_OVER
++	lda #.STATUS_JOY_PRESSED | .STATUS_GAME_OVER
+	bra .set_state
+++	lda #.STATUS_GAME_OVER
+.set_state
 	sta .game_state
 
 +++	+SetVector .text_game_over, addr
@@ -309,7 +311,7 @@ memctl = $0230
 +	rts
 
 .get_joy_status
-	lda	#.JOY_PORT		;select joy port
+	lda	#.JOY_PORT	;select joy port
 	sta	via1porta
 	lda	via1porta		;read port input
 	rts
@@ -490,7 +492,7 @@ memctl = $0230
 	lda	.game_state
 	and #!.STATUS_JOY_PRESSED
 	sta .game_state
-    jsr krn_getkey
+	jsr krn_getkey
 	cmp #$20    ; space ?
 	bne +++
 
@@ -500,7 +502,8 @@ memctl = $0230
 
 	jsr .new_game
 
-+++	jsr	.update_vram
++++	
+	jsr	.update_vram
 	inc	.frame_cnt
 
 	lda	#Black
