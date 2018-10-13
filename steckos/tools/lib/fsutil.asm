@@ -109,7 +109,7 @@ print_filesize:
 		sty $0b
 
 		sta tmp0
-		lda #$04
+		lda #$06
 		sec
 		sbc tmp0
 		tax
