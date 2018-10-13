@@ -19,7 +19,10 @@ all: dinosaur.prg
 clean:
 	rm -f *.prg *.labels *.res 
 
-%.prg: %.a ${ACME}/t9929.h.a ${ACME}/*.lib.a *.res 
+gfx.res: *.res
+	
+	
+%.prg: %.a ${ACME}/t9929.h.a ${ACME}/*.lib.a *.res
 	acme -v -f cbm --cpu 65c02 -o $@ $<
 
 transfer: all
