@@ -124,7 +124,7 @@ print_filesize:
 	    lda ($0a),y
 	    jsr char_out
 	    iny
-	    cpy #$06
+	    cpy tmp0
 	    bne @l2
 		ply
 		rts
