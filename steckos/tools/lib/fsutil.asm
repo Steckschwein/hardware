@@ -106,8 +106,20 @@ print_filesize:
 	    lda #' '
 	    jsr dword2asc
 
-		stx $0a
-	    sty $0b
+ 		stx $0a
+		sty $0b
+
+		sta tmp0
+		lda #$06
+		sec
+		sbc tmp0
+		tax
+@l0:
+		lda #' '
+		jsr char_out
+		dex
+		bpl @l0
+
 	    ldy #0
 @l2:
 	    lda ($0a),y
