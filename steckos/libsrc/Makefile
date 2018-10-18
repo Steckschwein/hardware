@@ -1,6 +1,8 @@
 TARGET=steckschwein-kernel
 TARGET_SYS=none
 	
+DEFINES+=-DV9958
+
 .PHONY: all mostlyclean clean install zip lib $(TARGET)
 
 .SUFFIXES:
@@ -34,7 +36,7 @@ mostlyclean:
 	$(call RMDIR,../libwrk)
 
 
-CA65FLAGS = --cpu 65c02 --include-dir ../asminc
+CA65FLAGS = --cpu 65c02 --include-dir ../asminc $(DEFINES)
 CC65FLAGS = -Or -W error
 
 SRCDIR=.

@@ -77,7 +77,8 @@ main:
 		ldx #>paramptr
 		jsr krn_strout
 
-l2:		jmp (retvec)
+l2:		
+		jmp (retvec)
 
 row=$100
 gfxui_blend_off:
@@ -112,7 +113,8 @@ l3:
 @c:
 	lda color,y
 	and tmp2
-	vdp_wait_s
+	vdp_wait_l 10
+	
 	sta a_vram
 	iny
 	cpy tmp1
@@ -145,7 +147,8 @@ l3:
 @c2:
 	lda color+row,y
 	and tmp2
-	vdp_wait_s
+	vdp_wait_l 10
+	
 	sta a_vram
 	iny
 	cpy tmp4
@@ -189,12 +192,15 @@ blend_isr:
 gfxui_on:
 	sei
 	jsr vdp_display_off			;display off
+
+	vdp_sreg	#%00000000, #v_reg14	; reset vbank - TODO FIXME, kernel has to make sure that correct video adress is set for all vram operations, use V9958 flag		
+	vdp_sreg #<.HIWORD(ADDRESS_GFX2_SCREEN<<2), #v_reg14
+	
 	jsr vdp_mode_sprites_off	;sprites off
 
 	lda #Black<<4|Black
 	jsr vdp_gfx2_blank
-    ;jsr vdp_fill_name_table
-
+	 
 	vdp_sreg	#<ADDRESS_GFX2_PATTERN, #WRITE_ADDRESS + >ADDRESS_GFX2_PATTERN
 	SetVector  content, vdp_ptr    ; only load the pattern data, leave colors black to blend them later
 	ldx #$18	;6k bitmap - $1800
@@ -219,7 +225,7 @@ tmp5:	.res 1
 
 .data
 content: ; 6K raw data
-			.res $100 * $18			
+			.res $1800, 0
 color:	; 6K raw color data
 
 .segment "STARTUP"

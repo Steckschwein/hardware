@@ -41,7 +41,7 @@ vdp_gfx7_on:
 			sta vdp_ptr
 			lda #>vdp_init_bytes_gfx7
 			sta vdp_ptr+1
-			lda #(vdp_init_bytes_gfx7_end-vdp_init_bytes_gfx7)
+			lda #<(vdp_init_bytes_gfx7_end-vdp_init_bytes_gfx7)-1
 			jmp vdp_init_reg
 					
 vdp_init_bytes_gfx7:

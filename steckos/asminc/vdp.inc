@@ -162,7 +162,7 @@ ADDRESS_GFX1_COLOR		=$1b80
 ADDRESS_GFX1_SPRITE		=ADDRESS_GFX_SPRITE
 ADDRESS_GFX1_SPRITE_PATTERN=$1000;
 
-ADDRESS_GFX2_SCREEN			=$1800			; name table
+ADDRESS_GFX2_SCREEN		=$1800			; name table
 ADDRESS_GFX2_PATTERN		=$0000
 ADDRESS_GFX2_COLOR			=$2000
 ADDRESS_GFX2_SPRITE			=ADDRESS_GFX_SPRITE
@@ -181,49 +181,68 @@ ADDRESS_GFX_MC_SPRITE_PATTERN	=ADDRESS_GFX2_PATTERN	; sprite pattern
 
 .define CLOCK_SPEED_MHZ 8
 
+; long delay with 6+2 2µs wait
+MAX_NOPS_8M = (6 * 1000 / (1000 / CLOCK_SPEED_MHZ)) / 2 ; eg. 8Mhz, means 125ns per cycle. so wait 6µs = 6000ns => 6000ns / 125ns = 48cl / 2 => 24 NOP
+; short delay with for 2µs wait
+MAX_NOPS_2M = (2 * 1000 / (1000 / CLOCK_SPEED_MHZ) - 12) / 2 ; - 12 => jsr/rts = 2*6cl = 12cl must be subtract
+
 .macro m_vdp_nopslide
 ; NOTE!!!
 ; - min TMS9929 wait 2µs between writes => 8Mhz => 16cl
 ; - min TMS9938/58 wait 2µs between 2 byte writes and wait 8µs before 3rd byte and all n'th byte writes
-vdp_nopslide_8m:			
+vdp_nopslide_8m:
 			; long delay with 6+2 2µs wait
-			.repeat (6 * 1000 / (1000 / CLOCK_SPEED_MHZ)) / 2 ; eg. 8Mhz, means 125ns per cycle. so wait 6µs = 6000ns => 6000ns / 125ns = 48cl / 2 => 24 NOP
+			.repeat MAX_NOPS_8M
 			nop
 			.endrepeat
-vdp_nopslide_2m:	; short delay with for 2µs wait
-			.repeat (2 * 1000 / (1000 / CLOCK_SPEED_MHZ) - 12) / 2 ; - 12 => jsr/rts = 2*6cl = 12cl must be subtract
+vdp_nopslide_2m:	
+			.repeat MAX_NOPS_2M
 			nop
 			.endrepeat
 			rts
 .endmacro
 
 .macro vnops
-		.ifndef vdp_nopslide_8m
-			.import vdp_nopslide_8m
-		.endif
 		vdp_wait_l
 .endmacro
 
-.macro vdp_wait_s
+.macro vdp_wait_s _wasted_cycles
+		.local _wasted_cycles
 		.ifndef vdp_nopslide_2m
 			.import vdp_nopslide_2m
 		.endif
-		jsr vdp_nopslide_2m
+		.if(.paramcount > 0)
+			.assert _wasted_cycles >= 0 && (_wasted_cycles / 2) <= MAX_NOPS_2M, error, .concat("parameter <wasted cycles> must be 0<= ", .string(_wasted_cycles/2), " <= ", .string(MAX_NOPS_2M))
+			jsr vdp_nopslide_2m + (_wasted_cycles / 2) ; add number of wasted clycle, we calculate the jsr offset to remaining nops
+		.else
+			jsr vdp_nopslide_2m
+		.endif
 .endmacro
 
-.macro vdp_wait_l
-		jsr vdp_nopslide_8m
+.macro vdp_wait_l _wasted_cycles	; amount of cycles already wasted in rang [-n..0]
+		.local _wasted_cycles
+		.ifndef vdp_nopslide_8m
+			.import vdp_nopslide_8m
+		.endif
+		.if(.paramcount > 0)
+			.assert _wasted_cycles >= 0 && (_wasted_cycles / 2) <= MAX_NOPS_8M, error, .concat("parameter <wasted cycles> must be 0<= ", .string(_wasted_cycles/2), " <= ")
+			jsr vdp_nopslide_8m + (_wasted_cycles / 2) ; add number of wasted clycle, we calculate the jsr offset to remaining nops
+		.else
+			jsr vdp_nopslide_8m
+		.endif
 .endmacro
 
 .macro vdp_sreg _1st, _2nd
-		.if(.paramcount <> 2);no args, use the legacy call
-			sta	a_vreg
-			vnops
-			sty	a_vreg
-		.else					; otherwise use the new api call, with fewer nops for register writes
+		.local _1st
+		.local _2nd
+		.if(.paramcount <> 2)	;no args, use the legacy call
+			sta a_vreg
+			vdp_wait_s 2
+			sty a_vreg
+		.else							; otherwise use the new api call, with fewer nops for register writes
 			lda _1st
 			sta a_vreg
-			vdp_wait_s
+			vdp_wait_s 2
 			lda _2nd
 			sta a_vreg
 		.endif
@@ -232,7 +251,7 @@ vdp_nopslide_2m:	; short delay with for 2µs wait
 .macro vdp_reg reg, val
 			lda #val
 			sta	a_vreg
-			vdp_wait_s
+			vdp_wait_s 2
 			lda #$80 + reg
 			sta	a_vreg
 .endmacro

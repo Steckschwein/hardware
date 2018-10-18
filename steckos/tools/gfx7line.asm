@@ -110,9 +110,6 @@ gfxui_on:
 	jsr vdp_display_off			;display off
 	jsr vdp_mode_sprites_off	;sprites off
 
-	vdp_reg 8, v_reg8_SPD | v_reg8_VR
-	vnops
-
 ;	lines
 	vdp_reg 9, v_reg9_ln;|v_reg9_il
 
@@ -121,11 +118,10 @@ gfxui_on:
 	vdp_reg 14, <.HIWORD(ADDRESS_GFX7_SCREEN<<2)
 	vnops
 
-	vdp_reg (WRITE_ADDRESS + >.LOWORD(ADDRESS_GFX7_SCREEN)), <.LOWORD(ADDRESS_GFX7_SCREEN)
+	vdp_sreg <.LOWORD(ADDRESS_GFX7_SCREEN), (WRITE_ADDRESS + >.LOWORD(ADDRESS_GFX7_SCREEN))
 	vnops
-
 	lda #%00000011
-	jsr vdp_gfx7_blank
+;	jsr vdp_gfx7_blank
 
 @loop:
 	vnops
@@ -206,12 +202,5 @@ vdp_gfx7_line:
 	plx
 	rts
 
-
-
-
-m_vdp_nopslide
-
 irqsafe: .res 2, 0
-
-
  .segment "STARTUP"

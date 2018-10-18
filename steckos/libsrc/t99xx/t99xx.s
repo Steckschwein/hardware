@@ -43,7 +43,7 @@ vdp_display_off:
 ;	jsr	.vdp_wait_blank
 		lda #v_reg1_16k	;enable 16K? ram, disable screen
 		sta a_vreg
-		vnops
+		vdp_wait_s 2
 		lda #v_reg1
 		sta a_vreg
 		rts
@@ -52,10 +52,10 @@ vdp_mode_sprites_off:
 		vdp_sreg #<ADDRESS_GFX_SPRITE, #WRITE_ADDRESS + >ADDRESS_GFX_SPRITE
 		lda	#$d0					;sprites off, at least y=$d0 will disable the sprite subsystem
 		ldx	#32*4					;32 sprites / 4 byte each
-@0:	vnops          	;2
+@0:	vdp_wait_l 6
 		dex             ;2
 		sta   a_vram    ;4
-		bne	@0           ;3
+		bne	@0        ;3
 		rts
 	
 ; setup video registers upon given table
@@ -66,27 +66,16 @@ vdp_init_reg:
 			tay			; y offset into init table
 			ora #$80		; bit 7 = 1 => register write
 			tax
-@l:		lda (vdp_ptr),y
+@l:		vdp_wait_s 4
+			lda (vdp_ptr),y ; 5c
 			sta a_vreg
 			vdp_wait_s
 			stx a_vreg
-			dex
-			dey
-			bpl @l
+			dex				;2c
+			dey				;2c
+			bpl @l 			;3c
 			rts
 			
-		ldy #$00
-		ldx #v_reg0
-@0:	lda (vdp_ptr),y
-		sta a_vreg
-		iny
-		vnops
-		stx a_vreg
-		inx
-		cpy	#$08
-		bne @0
-		rts
-
 vdp_wait_blank:
 			php
 			sei
@@ -103,7 +92,7 @@ vdp_wait_blank:
 vdp_bgcolor:
 	sta   a_vreg
 	lda   #v_reg7
-	vdp_wait_s
+	vdp_wait_s 2
 	sta   a_vreg
 	rts
 
@@ -111,11 +100,11 @@ vdp_fill:
 ;	input:
 ;		.A - byte to fill
 ;		.X - amount of 256byte blocks (page counter)
-			ldy   #0      ;2
-@0:		vnops          ;2
+			ldy   #0    
+@0:		vdp_wait_l 6
 			iny             ;2
-			sta   a_vram 
-			bne   @0         ;3
+			sta   a_vram 	 ;
+			bne   @0        ;3
 			dex
 			bne   @0
 			rts
@@ -124,21 +113,21 @@ vdp_fills:
 ;	in:
 ;		.X - amount of bytes
 ;
-@0:	vnops          	;2
-		dex             ;2
-		sta a_vram    ;4
-		bne	@0           ;3
+@0:	vdp_wait_l 6  	;2
+		dex            ;2
+		sta a_vram     ;4
+		bne	@0       ;3
 		rts
 			
 ;	input:
 ;  	.X - amount of 256byte blocks (page counter)
 ;		vdp_ptr to source data
 vdp_memcpy:
-		ldy #0      ;2
-@l1:	vdp_wait_l  ; TODO FIXME try vdp_wait_s here
+		ldy #0      	 ;2
+@l1:	vdp_wait_l 8  ; TODO FIXME try vdp_wait_s here
 		lda (vdp_ptr),y ;5
 		iny             ;2
-		sta a_vram    ;1 opcode fetch
+		sta a_vram    	 ;1 opcode fetch
 		bne @l1         ;3
 		inc vdp_ptr+1
 		dex
@@ -149,10 +138,10 @@ vdp_memcpy:
 ;  	.X - amount of bytes to copy
 vdp_memcpys:
 		ldy   #0
-@0:	vnops
-		lda   (vdp_ptr),y ;5
-		sta a_vram    ;4
+@0:	vdp_wait_l 12
+		lda (vdp_ptr),y ;5
+		sta a_vram    	 ;1+3
 		iny             ;2
 		dex             ;2
-		bne	@0
+		bne	@0			 ;3
 		rts

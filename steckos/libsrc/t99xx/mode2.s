@@ -34,46 +34,42 @@
 ;	gfx 2 - each pixel can be addressed - e.g. for image
 ;	
 vdp_gfx2_on:
-			jsr vdp_fill_name_table
-			
 			lda #<vdp_init_bytes_gfx2
 			sta vdp_ptr
 			lda #>vdp_init_bytes_gfx2
 			sta vdp_ptr+1
-			lda #(vdp_init_bytes_gfx2_end-vdp_init_bytes_gfx2)
-			jmp vdp_init_reg
-			
-
-			jsr vdp_fill_name_table
-			lda #<vdp_init_bytes_gfx2
-			sta vdp_ptr
-			lda #>vdp_init_bytes_gfx2
-			sta vdp_tmp+1
-			jmp vdp_init_reg
+			lda #<(vdp_init_bytes_gfx2_end-vdp_init_bytes_gfx2)-1
+			jsr vdp_init_reg
+			jmp vdp_fill_name_table
 
 vdp_fill_name_table:
 			;set 768 different patterns --> name table			
 			vdp_sreg #<ADDRESS_GFX2_SCREEN, #WRITE_ADDRESS+ >ADDRESS_GFX2_SCREEN
 			ldy #$03
 			ldx #$00
-@0:		vdp_wait_l			
+@0:		vdp_wait_l 6
 			stx	a_vram  ;
-			inx         ;2
+			inx         	;2
 			bne	@0       ;3
 			dey
 			bne	@0
 			rts
 
 vdp_init_bytes_gfx2:
-			.byte 	v_reg0_m3		; 
-			.byte 	v_reg1_16k|v_reg1_display_on|v_reg1_spr_size |v_reg1_int
-			.byte 	(ADDRESS_GFX2_SCREEN / $400)	; name table - value * $400
+			.byte v_reg0_m3		; 
+			.byte v_reg1_16k|v_reg1_display_on|v_reg1_spr_size |v_reg1_int
+			.byte (ADDRESS_GFX2_SCREEN / $400)	; name table - value * $400
 			.byte	$ff				; color table setting for gfx mode 2 --> only Bit 7 is taken into account 0 => at vram $0000, 1 => at vram $2000, Bit 6-0 AND to character number
-			.byte	$03 			; pattern table - either at vram $0000 (Bit 2 = 0) or at vram $2000 (Bit 2=1), Bit 0,1 are AND to select the pattern array
+			.byte	$03 				; pattern table - either at vram $0000 (Bit 2 = 0) or at vram $2000 (Bit 2=1), Bit 0,1 are AND to select the pattern array
 			.byte	(ADDRESS_GFX2_SPRITE / $80)	; sprite attribute table - value * $80 --> offset in VRAM
 			.byte	(ADDRESS_GFX2_SPRITE_PATTERN / $800)	; sprite pattern table - value * $800  --> offset in VRAM
 			.byte	Black
+	.ifdef V9958
+			.byte v_reg8_VR	; VR - 64k VRAM TODO set per define
+			.byte 0
+	.endif
 vdp_init_bytes_gfx2_end:
+
 ;
 ; blank gfx mode 2 with 
 ; 	.A - color to fill [0..f]
@@ -82,11 +78,11 @@ vdp_gfx2_blank:		; 2 x 6K
 	tax
 	vdp_sreg #<ADDRESS_GFX2_COLOR, #WRITE_ADDRESS + >ADDRESS_GFX2_COLOR
 	txa
-	ldx #24		;6144 byte color map
+	ldx #$18		;$1800 byte color map
 	jsr vdp_fill
 	
 	vdp_sreg #<ADDRESS_GFX2_PATTERN, #WRITE_ADDRESS + >ADDRESS_GFX2_PATTERN
-	ldx #24		;6144 byte pattern map
+	ldx #$18		;$1800 byte pattern map
 	lda #0
 	jsr vdp_fill
 	
@@ -138,7 +134,7 @@ vdp_gfx2_set_pixel:
 		nop						;2
 		nop						;2
 		sta	a_vreg
-		vnops
+		vdp_wait_l
 		stx a_vram	;set vdp vram address high byte
 vdp_gfx2_set_pixel_e:
 		rts
