@@ -112,12 +112,12 @@ print_filesize:
 		lda #$06
 		sec
 		sbc tmp0
-		tax
-@l0:
-		lda #' '
-		jsr char_out
-		dex
-		bpl @l0
+; 		tax
+; @l0:
+; 		lda #' '
+; 		jsr char_out
+; 		dex
+; 		bpl @l0
 
 	    ldy #0
 @l2:
