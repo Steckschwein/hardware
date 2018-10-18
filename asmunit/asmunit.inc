@@ -28,6 +28,8 @@
 .define _FLAG_C1 "C=1"
 .define _FLAG_Z0 "Z=0"
 .define _FLAG_Z1 "Z=1"
+.define _FLAG_D0 "D=0"
+.define _FLAG_D1 "D=1"
 
 .define	_EXPECT_MAX_LENGTH 32
 
@@ -158,10 +160,33 @@ tst_bytes		= $0108
 .endmacro
 
 ;
+; assertD 0 => expect decimal mode not set
+; assertD 1 => expect decimal mode is set
+;
+.macro assertD expect
+	fail "TODO not implemented yet!!!"
+	.assert expect = 0 || expect = 1, error, "Invalid expect, must be 0 or 1!"
+	.if expect
+		.import asmunit_l_flag_d0
+		 asmunit_assertFlag asmunit_l_flag_d0, _FLAG_D1
+	.else
+		.import asmunit_l_flag_d1
+		 asmunit_assertFlag asmunit_l_flag_d1, _FLAG_D0	
+	.endif
+		bra :++
+:		_pass
+:
+.endmacro
+
+.macro assertCarry expect
+	assertC expect
+.endmacro
+
+;
 ; assertCarry 0 => expect carry cleared
 ; assertCarry 1 => expect carry set
 ;
-.macro assertCarry expect
+.macro assertC expect
 	.assert expect = 0 || expect = 1, error, "Invalid expect, must be 0 or 1!"
 	.if expect
 		bcs :+
@@ -177,11 +202,15 @@ tst_bytes		= $0108
 :
 .endmacro
 
+.macro assertZero expect
+	assertZ expect
+.endmacro
+
 ;
 ; assertZero 0 => expect zero cleared
 ; assertZero 1 => expect zero set
 ;
-.macro assertZero expect
+.macro assertZ expect
 	.assert expect = 0 || expect = 1, error, "Invalid expect, must be 0 or 1!"
 	.if expect
 		beq :+

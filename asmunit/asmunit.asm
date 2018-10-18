@@ -257,3 +257,5 @@ asmunit_l_flag_c0:		.byte _FLAG_C0
 asmunit_l_flag_c1:		.byte _FLAG_C1
 asmunit_l_flag_z0:		.byte _FLAG_Z0
 asmunit_l_flag_z1:		.byte _FLAG_Z1
+asmunit_l_flag_d0:		.byte _FLAG_D0
+asmunit_l_flag_d1:		.byte _FLAG_D1
