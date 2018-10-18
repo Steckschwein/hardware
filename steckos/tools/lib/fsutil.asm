@@ -93,6 +93,9 @@ print_fat_time:
 		rts
 
 print_filesize:
+		lda #' '
+		jsr char_out
+
 		phy
 		lda dirptr
 	    clc
@@ -112,9 +115,10 @@ print_filesize:
 		lda #$06
 		sec
 		sbc tmp0
+		; beq @l2
 ; 		tax
-; @l0:
 ; 		lda #' '
+; @l0:
 ; 		jsr char_out
 ; 		dex
 ; 		bpl @l0
