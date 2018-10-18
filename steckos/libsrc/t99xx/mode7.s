@@ -1,11 +1,30 @@
+; MIT License
+;
+; Copyright (c) 2018 Thomas Woinke, Marko Lauke, www.steckschwein.de
+;
+; Permission is hereby granted, free of charge, to any person obtaining a copy
+; of this software and associated documentation files (the "Software"), to deal
+; in the Software without restriction, including without limitation the rights
+; to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+; copies of the Software, and to permit persons to whom the Software is
+; furnished to do so, subject to the following conditions:
+;
+; The above copyright notice and this permission notice shall be included in all
+; copies or substantial portions of the Software.
+;
+; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+; AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+; SOFTWARE.
+
 .include "vdp.inc"
 
-; TODO FIXME conflicts with ehbasic zeropage locations - use steckschwein specific zeropage.s not the cc65....runtime/zeropage.s definition
-;.importzp ptr1
-;.importzp tmp1
-
 .import vdp_init_reg
-.import vdp_nopslide
+.import vdp_nopslide_2m
+.import vdp_nopslide_8m
 .import vdp_fill
 
 .export vdp_gfx7_on
@@ -18,19 +37,13 @@
 ;	gfx 7 - each pixel can be addressed - e.g. for image
 ;
 vdp_gfx7_on:
-			lda #v_reg9 ;	from register number down to reg0
-			tax
-			and #$7f		;	unmask offset
-			tay
-@0:		lda vdp_init_bytes_gfx7,y
-			sta a_vreg
-			vnops
-			stx a_vreg
-			dex
-			dey
-			bpl @0
-			rts
-		
+			lda #<vdp_init_bytes_gfx7
+			sta vdp_ptr
+			lda #>vdp_init_bytes_gfx7
+			sta vdp_ptr+1
+			lda #(vdp_init_bytes_gfx7_end-vdp_init_bytes_gfx7)
+			jmp vdp_init_reg
+					
 vdp_init_bytes_gfx7:
 			.byte v_reg0_m5|v_reg0_m4|v_reg0_m3									; reg0 mode bits
 			.byte v_reg1_display_on|v_reg1_spr_size |v_reg1_int 				; TODO FIXME verify v_reg1_16k t9929 specific, therefore 0
@@ -42,7 +55,7 @@ vdp_init_bytes_gfx7:
 			.byte Black ; border color
 			.byte v_reg8_SPD | v_reg8_VR	; SPD - sprite disabled, VR - 64k VRAM
 			.byte 0;			v_reg9_ln	//TODO FIXME ntsc off => gfx_off
-
+vdp_init_bytes_gfx7_end:
 ;
 ; blank gfx mode 7 with
 ; 	A - color to fill (RGB) 3+3+2)
@@ -52,17 +65,10 @@ vdp_gfx7_blank:
 	
 	sta colour
 	
-	lda #<.HIWORD(ADDRESS_GFX7_SCREEN<<2)
-	ldy #v_reg14
-	vdp_sreg
-	vnops
-	lda #<.LOWORD(ADDRESS_GFX7_SCREEN)
-	ldy #(WRITE_ADDRESS + >.LOWORD(ADDRESS_GFX7_SCREEN))
-	vdp_sreg
-	vnops
+	vdp_sreg #<.HIWORD(ADDRESS_GFX7_SCREEN<<2),#v_reg14
+	vdp_sreg #<.LOWORD(ADDRESS_GFX7_SCREEN), #(WRITE_ADDRESS + >.LOWORD(ADDRESS_GFX7_SCREEN))
 	
-	vdp_reg 17,36
-
+	vdp_sreg 36, #v_reg17
 	ldx #0
 @loop:
 	vnops
@@ -92,19 +98,6 @@ colour:
 	.byte %00011100 ; colour
 	.byte $00 ; destination memory, x direction, y direction, yada yada
 	.byte v_cmd_hmmv ; command
-	
-; vdp_gfx7_blank:		; 2 x 6K
-; 			ldx #212
-; 			ldy #0
-; @l0:
-; 			vnops
-; 			sta a_vram
-; 			iny
-; 			bne @l0
-; 			dex
-; 			bne @l0
-; 			rts
-
 
 ;	X - x coordinate [0..ff]
 ;	Y - y coordinate [0..bf]
@@ -116,7 +109,7 @@ vdp_gfx7_set_pixel:
          tya
          and #$3f                   ; A13-A8 vram address highbyte
          ora #WRITE_ADDRESS
-         vnops                      ; TODO FIXME code reorder, avoid vnops
+         vdp_wait_s                 ; TODO FIXME code reorder, avoid vnops
          sta a_vreg
          tya                        ; A16-A14 bank select via reg#14
          rol
@@ -125,10 +118,10 @@ vdp_gfx7_set_pixel:
          and #$03
          ora #<.HIWORD(ADDRESS_GFX7_SCREEN<<2)
          sta a_vreg
-         vnops
+         vdp_wait_s
          lda #v_reg14
          sta a_vreg
-         vnops
+         vdp_wait_l
          pla
          sta a_vram                 ; set color
          rts

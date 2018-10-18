@@ -12,6 +12,8 @@
 	.import asmunit_chrout
 	.export char_out=asmunit_chrout	; TODO FIXME causes a linker warning
 
+
+; from ppmview	
 .export ppmdata
 .export ppm_width
 .export ppm_height
@@ -24,26 +26,37 @@
 
 .code
 
+;-------------	
+	test "parse_header valid"
+	m_memcpy test_ppm_header_valid, ppmdata, 16
+	jsr parse_header
+	assertZero 1		;
+	assertA 0
+	assert8 <256, ppm_width
+	assert8 171, ppm_height
+
+;-------------	
 	test "parse_header not ppm"	
 	m_memcpy test_ppm_header_notppm, ppmdata, 16
 	jsr parse_header
 	assertZero 0		;error
 	assertA $ff
 	
+;-------------	
 	test "parse_header wrong height"
 	m_memcpy test_ppm_header_wrong_height, ppmdata, 16
 	jsr parse_header
 	assertZero 0		;error
 	assertA $ff
 
-	test "parse_header valid"
-	m_memcpy test_ppm_header, ppmdata, 16
-	jsr parse_header
-	assertZero 1		;
-	assertA 0
-	assert8 <256, ppm_width
-	assert8 171, ppm_height
+;-------------	
+	test "parse_header wrong depth"
+	m_memcpy test_ppm_header_wrong_depth, ppmdata, 16
+	jsr parse_header	
+	assertZero 0		;error
+	assertA $ff
 	
+;-------------	
 	test "parse_header with comment"
 	m_memcpy test_ppm_header_comment, ppmdata, 127
 	jsr parse_header
@@ -92,12 +105,14 @@
 mock:
 	rts
 
-test_ppm_header:
+test_ppm_header_valid:
 	.byte "P6",$0a,"256 171",$0a,"255",$0a
 test_ppm_header_notppm:
 	.byte "P3",$0a,"256 171",$0a,"255",$0a
 test_ppm_header_wrong_height:
 	.byte "P6",$0a,"256 193",$0a,"255",$0a
+test_ppm_header_wrong_depth:
+	.byte "P6",$0a,"256 192",$0a,"65535",$0a
 test_ppm_header_comment:
 	.byte "P6",$0a,"#Compressed with JPEG Optimizer 4.00, www.xat.com",$0a,"#comment 2",$0a,"256 192",$0a,"255",$0a
 

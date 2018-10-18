@@ -1,43 +1,58 @@
+; MIT License
+;
+; Copyright (c) 2018 Thomas Woinke, Marko Lauke, www.steckschwein.de
+;
+; Permission is hereby granted, free of charge, to any person obtaining a copy
+; of this software and associated documentation files (the "Software"), to deal
+; in the Software without restriction, including without limitation the rights
+; to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+; copies of the Software, and to permit persons to whom the Software is
+; furnished to do so, subject to the following conditions:
+;
+; The above copyright notice and this permission notice shall be included in all
+; copies or substantial portions of the Software.
+;
+; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+; AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+; SOFTWARE.
+
 .include "vdp.inc"
 
-.export	vdp_display_off
-.export	vdp_init_reg
-.export	vdp_bgcolor
-.export	vdp_nopslide
-.export	vdp_fills, vdp_fill
-.export	vdp_mode_sprites_off
-.export	vdp_memcpys, vdp_memcpy
+.export vdp_display_off
+.export vdp_init_reg
+.export vdp_bgcolor
+.export vdp_fills, vdp_fill
+.export vdp_mode_sprites_off
+.export vdp_memcpys, vdp_memcpy
+.export vdp_nopslide_8m
+.export vdp_nopslide_2m
 
 .code
-;
-;	TODO	
-;		improve some functions,  avoid nop for vdp write delay 2µs by opcode reordering
-;		investigate the difference between wdc and rockwell if no nop is used
-;
+
 m_vdp_nopslide
 
 vdp_irq_off:
-		lda #v_reg1_16k|v_reg1_display_on|v_reg1_spr_size	;switch interupt off
-		ldy	#v_reg1
-		vdp_sreg
+		vdp_sreg #v_reg1_16k|v_reg1_display_on|v_reg1_spr_size, #v_reg1	;switch interupt off
 		rts
 
 vdp_display_off:
 ;	jsr	.vdp_wait_blank
-		lda		#v_reg1_16k	;enable 16K ram, disable screen
-		sta 	a_vreg
+		lda #v_reg1_16k	;enable 16K? ram, disable screen
+		sta a_vreg
 		vnops
-		lda	  	#v_reg1
-		sta   	a_vreg
+		lda #v_reg1
+		sta a_vreg
 		rts
 
 vdp_mode_sprites_off:
-		lda	#<ADDRESS_GFX_SPRITE
-		ldy	#WRITE_ADDRESS + >ADDRESS_GFX_SPRITE
-		vdp_sreg
+		vdp_sreg #<ADDRESS_GFX_SPRITE, #WRITE_ADDRESS + >ADDRESS_GFX_SPRITE
 		lda	#$d0					;sprites off, at least y=$d0 will disable the sprite subsystem
-		ldx	#32*4
-@0:		vnops          	;2
+		ldx	#32*4					;32 sprites / 4 byte each
+@0:	vnops          	;2
 		dex             ;2
 		sta   a_vram    ;4
 		bne	@0           ;3
@@ -45,11 +60,24 @@ vdp_mode_sprites_off:
 	
 ; setup video registers upon given table
 ;	in:
-;		ptr1 - pointer set to vdp init table for al 8 vdp registers
+;		.A - length of init table
+;		vdp_ptr - pointer set to vdp init table for al 8 vdp registers
 vdp_init_reg:
-		ldy	#$00
-		ldx	#v_reg0
-@0:		lda (ptr1),y
+			tay			; y offset into init table
+			ora #$80		; bit 7 = 1 => register write
+			tax
+@l:		lda (vdp_ptr),y
+			sta a_vreg
+			vdp_wait_s
+			stx a_vreg
+			dex
+			dey
+			bpl @l
+			rts
+			
+		ldy #$00
+		ldx #v_reg0
+@0:	lda (vdp_ptr),y
 		sta a_vreg
 		iny
 		vnops
@@ -75,69 +103,55 @@ vdp_wait_blank:
 vdp_bgcolor:
 	sta   a_vreg
 	lda   #v_reg7
-	vnops
+	vdp_wait_s
 	sta   a_vreg
 	rts
 
 vdp_fill:
 ;	input:
-;		a/y - vram adress
-;		x - amount of 256byte blocks (page counter)
-;		tmp1 - pattern
-			vdp_sreg
+;		.A - byte to fill
+;		.X - amount of 256byte blocks (page counter)
 			ldy   #0      ;2
-			lda tmp1
-@0:			vnops          ;2
+@0:		vnops          ;2
 			iny             ;2
-			sta   a_vram    ;
+			sta   a_vram 
 			bne   @0         ;3
 			dex
 			bne   @0
 			rts
 	
 vdp_fills:
-;	input:
-;		a/y - vram adress
-;		x - amount of bytes
-;		tmp1 - fill value
-			vdp_sreg
-			lda tmp1
-@0:			vnops          	;2
-			dex             ;2
-			sta a_vram    ;4
-			bne	@0           ;3
-			rts
+;	in:
+;		.X - amount of bytes
+;
+@0:	vnops          	;2
+		dex             ;2
+		sta a_vram    ;4
+		bne	@0           ;3
+		rts
 			
 ;	input:
-;	A(ptr1) to data
-;	a - low byte vram adress
-;	y - high byte vram adress
-;  	x - amount of 256byte blocks (page counter)
+;  	.X - amount of 256byte blocks (page counter)
+;		vdp_ptr to source data
 vdp_memcpy:
-		vdp_sreg
-		ldy   #$00      ;2
-@l1:	lda   (ptr1),y ;5
+		ldy #0      ;2
+@l1:	vdp_wait_l  ; TODO FIXME try vdp_wait_s here
+		lda (vdp_ptr),y ;5
 		iny             ;2
-		vnops
-		sta   a_vram    ;1 opcode fetch
-		
-		bne   @l1         ;3
-		inc   ptr1+1
+		sta a_vram    ;1 opcode fetch
+		bne @l1         ;3
+		inc vdp_ptr+1
 		dex
-		bne   @l1
+		bne @l1
 		rts
 		
 ;	input:
-;	A(ptr1) to data
-;	a - low byte vram adress
-;	y - high byte vram adress
-;  	x - amount of bytes to copy
+;  	.X - amount of bytes to copy
 vdp_memcpys:
-		vdp_sreg
 		ldy   #0
-@0:		lda   (ptr1),y ;5
-		vnops
-		sta   a_vram    ;4
+@0:	vnops
+		lda   (vdp_ptr),y ;5
+		sta a_vram    ;4
 		iny             ;2
 		dex             ;2
 		bne	@0

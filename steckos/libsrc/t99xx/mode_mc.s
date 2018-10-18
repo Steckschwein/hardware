@@ -1,11 +1,29 @@
+; MIT License
+;
+; Copyright (c) 2018 Thomas Woinke, Marko Lauke, www.steckschwein.de
+;
+; Permission is hereby granted, free of charge, to any person obtaining a copy
+; of this software and associated documentation files (the "Software"), to deal
+; in the Software without restriction, including without limitation the rights
+; to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+; copies of the Software, and to permit persons to whom the Software is
+; furnished to do so, subject to the following conditions:
+;
+; The above copyright notice and this permission notice shall be included in all
+; copies or substantial portions of the Software.
+;
+; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+; AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+; SOFTWARE.
+
 .include "vdp.inc"
 
-; TODO FIXME conflicts with ehbasic zeropage locations - use steckschwein specific zeropage.s not the cc65....runtime/zeropage.s definition
-;.importzp ptr1
-;.importzp tmp1, tmp2
-
-.import	vdp_init_reg
-.import vdp_nopslide
+.import vdp_init_reg
+.import vdp_nopslide_8m
 .import vdp_fill
 
 .export vdp_mc_on
@@ -20,38 +38,38 @@
 vdp_mc_on:
 			jsr vdp_mc_init_screen
 			lda #<vdp_mc_init_bytes
-			sta ptr1
+			sta vdp_ptr
 			lda #>vdp_mc_init_bytes
-			sta ptr1+1
+			sta vdp_ptr+1
 			jmp vdp_init_reg
 
 ;
 ;
 ;
 vdp_mc_init_screen:
-			lda	#<ADDRESS_GFX_MC_SCREEN
-			ldy	#WRITE_ADDRESS+ >ADDRESS_GFX_MC_SCREEN
+			lda #<ADDRESS_GFX_MC_SCREEN
+			ldy #WRITE_ADDRESS+ >ADDRESS_GFX_MC_SCREEN
 			vdp_sreg
-			stz tmp2
+			stz vdp_tmp
 			lda #32
-			sta tmp1
+			sta vdp_tmp
 @l1:		ldy #0
-@l2:		ldx	tmp2
+@l2:		ldx vdp_tmp
 @l3:		vnops
 			stx a_vram
 			inx
-			cpx	tmp1
-			bne	@l3
+			cpx vdp_tmp
+			bne @l3
 			iny
 			cpy #4		; 4 rows filled ?
-			bne	@l2
-			cpx	#32*6	; 6 pages overall
+			bne @l2
+			cpx #32*6	; 6 pages overall
 			beq @le
-			stx tmp2	; next
+			stx vdp_tmp	; next
 			clc
 			txa
 			adc #32
-			sta tmp1
+			sta vdp_tmp
 			bra @l1
 @le:		rts
 
@@ -60,7 +78,7 @@ vdp_mc_init_screen:
 ; 	A - color to blank
 ;
 vdp_mc_blank:
-			sta	tmp1
+			sta	vdp_tmp
 			lda	#<ADDRESS_GFX_MC_PATTERN
 			ldy	#WRITE_ADDRESS+ >ADDRESS_GFX_MC_PATTERN
 			ldx #(1536/256)
@@ -78,19 +96,19 @@ vdp_mc_blank:
 ;
 vdp_mc_set_pixel:
 		and #$0f				;only the 16 colors
-		sta tmp1				;safe color
+		sta vdp_tmp				;safe color
 
 		txa
 		and #$3e				; x div 2 * 8 => x div 2 * 2 * 2 * 2 => lsr, asl, asl, asl => lsr,asl = and #3e ($3f - x boundary), asl, asl
 		asl
 		asl
-		sta tmp2
+		sta vdp_tmp
 
 		tya
 		and	#$07				; y mod 8
-		ora	tmp2				; with x
+		ora	vdp_tmp				; with x
 		sta	a_vreg				;4 set vdp vram address low byte
-		sta	tmp2				;3 safe vram address low byte for write
+		sta	vdp_tmp				;3 safe vram address low byte for write
 
 		; high byte vram address - div 8, result is vram address "page" $0000, $0100, ... until $05ff
 		tya						;2
@@ -109,21 +127,21 @@ vdp_mc_set_pixel:
 		lda #$f0				;2
 		and a_vram				;4
 		bra l2					;3
-l1:		lda tmp1				;3
+l1:	lda vdp_tmp				;3
 		asl						;2
 		asl						;2
 		asl						;2
 		asl						;2
-		sta tmp1
+		sta vdp_tmp
 		lda #$0f
 		and a_vram
 l2:
-		ora tmp1				;3
+		ora vdp_tmp				;3
 		;nop						;2
 		;nop						;2
 		;nop						;2
         vnops
-		ldx tmp2				;3
+		ldx vdp_tmp				;3
 		stx	a_vreg				;4 setup write adress
 		;nop						;2
 		;nop						;2

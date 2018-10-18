@@ -1,6 +1,6 @@
 ; MIT License
 ;
-; Copyright (c) 2018 Thomas Woinke, Marko Lauke, www.steckschein.de
+; Copyright (c) 2018 Thomas Woinke, Marko Lauke, www.steckschwein.de
 ;
 ; Permission is hereby granted, free of charge, to any person obtaining a copy
 ; of this software and associated documentation files (the "Software"), to deal
@@ -20,11 +20,8 @@
 ; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ; SOFTWARE.
 
-; TODO FIXME conflicts with ehbasic zeropage locations - use steckschwein specific zeropage.s not the cc65....runtime/zeropage.s definition
-tmp1=$e0
-tmp2=$e1
-ptr1=$e2
-
+vdp_ptr=$e0
+vdp_tmp=$e2
 
 a_vdp		= $0220
 a_vram		= a_vdp
@@ -182,38 +179,60 @@ ADDRESS_GFX_MC_PATTERN			=ADDRESS_GFX2_PATTERN	; pattern table
 ADDRESS_GFX_MC_SPRITE			=ADDRESS_GFX2_SPRITE	; sprite attributes
 ADDRESS_GFX_MC_SPRITE_PATTERN	=ADDRESS_GFX2_PATTERN	; sprite pattern
 
-; vnops - 16cl -> 8Mhz -> 2Âµs, the min vdp wait
-.macro	vnops
-		jsr vdp_nopslide	;6cl
-.endmacro
+.define CLOCK_SPEED_MHZ 8
 
 .macro m_vdp_nopslide
-vdp_nopslide:
-
-			; 8µs = 8000ns = 64 * 125ns
-			; nop = 2cl
-			; 8µs = 23 nop
-			; jsr = 6cl
-			; rts = 6cl
-			; 32 - 12 = 20
-			.repeat 20 ; clockspeed * 1000 / 125 / 2 - 12
+; NOTE!!!
+; - min TMS9929 wait 2µs between writes => 8Mhz => 16cl
+; - min TMS9938/58 wait 2µs between 2 byte writes and wait 8µs before 3rd byte and all n'th byte writes
+vdp_nopslide_8m:			
+			; long delay with 6+2 2µs wait
+			.repeat (6 * 1000 / (1000 / CLOCK_SPEED_MHZ)) / 2 ; eg. 8Mhz, means 125ns per cycle. so wait 6µs = 6000ns => 6000ns / 125ns = 48cl / 2 => 24 NOP
 			nop
 			.endrepeat
-
-
-			rts			;6cl
+vdp_nopslide_2m:	; short delay with for 2µs wait
+			.repeat (2 * 1000 / (1000 / CLOCK_SPEED_MHZ) - 12) / 2 ; - 12 => jsr/rts = 2*6cl = 12cl must be subtract
+			nop
+			.endrepeat
+			rts
 .endmacro
 
-.macro vdp_sreg
+.macro vnops
+		.ifndef vdp_nopslide_8m
+			.import vdp_nopslide_8m
+		.endif
+		vdp_wait_l
+.endmacro
+
+.macro vdp_wait_s
+		.ifndef vdp_nopslide_2m
+			.import vdp_nopslide_2m
+		.endif
+		jsr vdp_nopslide_2m
+.endmacro
+
+.macro vdp_wait_l
+		jsr vdp_nopslide_8m
+.endmacro
+
+.macro vdp_sreg _1st, _2nd
+		.if(.paramcount <> 2);no args, use the legacy call
 			sta	a_vreg
 			vnops
 			sty	a_vreg
+		.else					; otherwise use the new api call, with fewer nops for register writes
+			lda _1st
+			sta a_vreg
+			vdp_wait_s
+			lda _2nd
+			sta a_vreg
+		.endif
 .endmacro
 
 .macro vdp_reg reg, val
 			lda #val
 			sta	a_vreg
-			vnops
+			vdp_wait_s
 			lda #$80 + reg
 			sta	a_vreg
 .endmacro

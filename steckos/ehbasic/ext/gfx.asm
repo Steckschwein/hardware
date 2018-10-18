@@ -101,11 +101,9 @@ GFX_7_Plot:
 		vnops
 		lda #v_reg14
 		sta a_vreg
-
+		
 		cli
-		rts
-
-m_vdp_nopslide
+		rts		
 
 GFX_Plot_Prepare:
 		JSR LAB_GTBY	; Get byte parameter and ensure numeric type, else do type mismatch error. Return the byte in X.

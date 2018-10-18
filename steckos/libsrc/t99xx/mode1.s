@@ -1,11 +1,30 @@
+; MIT License
+;
+; Copyright (c) 2018 Thomas Woinke, Marko Lauke, www.steckschwein.de
+;
+; Permission is hereby granted, free of charge, to any person obtaining a copy
+; of this software and associated documentation files (the "Software"), to deal
+; in the Software without restriction, including without limitation the rights
+; to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+; copies of the Software, and to permit persons to whom the Software is
+; furnished to do so, subject to the following conditions:
+;
+; The above copyright notice and this permission notice shall be included in all
+; copies or substantial portions of the Software.
+;
+; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+; AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+; SOFTWARE.
+
 .include "vdp.inc"
 
-; TODO FIXME conflicts with ehbasic zeropage locations - use steckschwein specific zeropage.s not the cc65....runtime/zeropage.s definition
-;.importzp ptr1
-
-.import	vdp_init_reg
-.import vdp_nopslide
+.import vdp_init_reg
 .import vdp_fills, vdp_fill
+.import vdp_nopslide_8m
 
 .export vdp_gfx1_blank
 .export vdp_gfx1_on
@@ -13,11 +32,11 @@
 .code
 
 vdp_gfx1_blank:		; 3 x 256 bytes
-	ldx	#$03
-	lda	#' '					;fill vram screen with blank
-	sta tmp1
 	lda	#<ADDRESS_GFX1_SCREEN
 	ldy	#WRITE_ADDRESS + >ADDRESS_GFX1_SCREEN
+	vdp_sreg
+	ldx	#$03
+	lda	#' '					;fill vram screen with blank
 	jmp	vdp_fill
 
 vdp_init_bytes_gfx1:
@@ -34,13 +53,15 @@ vdp_init_bytes_gfx1:
 ;	gfx mode 1 - 32x24 character mode, 16 colors with same color for 8 characters in a block
 ;
 vdp_gfx1_on:
-	sta tmp1									;TODO FIXME color value to stack
+	tax
 	lda	#<ADDRESS_GFX1_COLOR
 	ldy	#WRITE_ADDRESS + >ADDRESS_GFX1_COLOR	;color vram
-	ldx	#$20		;32 colors
-	jsr	vdp_fills
-	lda	#<vdp_init_bytes_gfx1
-	sta ptr1
-	lda	#>vdp_init_bytes_gfx1
-	sta ptr1+1
-	jmp	vdp_init_reg
+	vdp_sreg
+	txa
+	ldx #$20		;32 colors
+	jsr vdp_fills
+	lda #<vdp_init_bytes_gfx1
+	sta vdp_ptr
+	lda #>vdp_init_bytes_gfx1
+	sta vdp_ptr+1
+	jmp vdp_init_reg

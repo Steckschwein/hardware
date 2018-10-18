@@ -147,7 +147,7 @@ textui_init0:
       stz screen_write_lock               ;reset write lock
       jsr textui_enable
 textui_init:
-		jmp	vdp_mode_text
+		jmp vdp_mode_text
 
 textui_blank:
 		ldx #0

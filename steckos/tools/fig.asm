@@ -27,9 +27,8 @@
 .include "kernel_jumptable.inc"
 .include "appstart.inc"
 
-
-.importzp ptr2, ptr3
-.importzp tmp3, tmp4
+.importzp ptr1, ptr2, ptr3
+.importzp tmp1, tmp3, tmp4
 
 .import vdp_gfx2_on
 .import vdp_gfx2_blank
@@ -39,7 +38,7 @@
 .import vdp_bgcolor
 
 
-	appstart $1000
+appstart $1000
 
 content = $2000
 color=content+$1800
@@ -103,6 +102,7 @@ gfxui_on:
    SetVector  content, ptr1
 	lda	#<ADDRESS_GFX2_PATTERN
 	ldy	#WRITE_ADDRESS + >ADDRESS_GFX2_PATTERN
+	vdp_sreg
 	ldx	#$18	;6k bitmap - $1800
 	jsr	vdp_memcpy					;load the pic data
 
@@ -125,7 +125,5 @@ gfxui_off:
     copypointer  irqsafe, $fffe
     cli
     rts
-
-m_vdp_nopslide
 
 irqsafe: .res 2, 0

@@ -46,6 +46,9 @@ toollib:
 %.prg: %.o toollib ../lib/steckschwein-kernel.lib
 	ld65 $< $(LDFLAGS) $(TOOLLIB) -o $@
 
+%.dis: %.prg
+	dcc6502 -o 0x0ffe -d -n -c $< > $@ 
+
 ls.prg: toollib ls.o ls_entry_short.o
 	cl65 $(CA65FLAGS) --target none --config ../kernel/steckosapp.cfg ls.o ls_entry_short.o $(TOOLLIB) -o ls.prg
 ll.prg: toollib ls.o ls_entry_long.o

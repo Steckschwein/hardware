@@ -118,11 +118,9 @@ gfxui_off:
    cli
    rts
 
-m_vdp_nopslide
-
 irqsafe: .res 2, 0
 
-.align 256,0
+.data
 
 sintable:
 .byte 105, 110, 114, 119, 124, 128, 132, 136

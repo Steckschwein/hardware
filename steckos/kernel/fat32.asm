@@ -104,7 +104,6 @@ fat_fread:
 		sty krn_tmp3												; safe requested block number
 		stz krn_tmp2												; init counter
 @_l_read_loop:
-		debug "lp"
 		ldy krn_tmp2
 		cpy krn_tmp3
 		beq @l_exit_ok

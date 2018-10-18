@@ -22,6 +22,7 @@
 
 ;
 ; use imagemagick $convert <image> -geometry 256 -colort 256 <image.ppm>
+; convert.exe <file>.pdf[page] -resize 256x192^ -gravity center -crop x192+0+0 +repage pic.ppm
 ;
 .setcpu "65c02"
 .include "common.inc"
@@ -31,7 +32,6 @@
 .include "zeropage.inc"
 
 .importzp ptr2
-;.importzp tmp, tmp4
 
 .import hexout
 .import vdp_gfx7_on
@@ -63,6 +63,7 @@
 .define MAX_WIDTH 256
 .define MAX_HEIGHT 192
 .define COLOR_DEPTH 255
+.define BLOCK_BUFFER 1 ; as multiple of 3 * 512 byte, so 1 means $600 bytes memory are used
 
 .code
 ppmview_main:
@@ -107,7 +108,7 @@ ppmview_main:
 
 @invalid_ppm:
 		jsr krn_primm
-		.byte $0a,"Not a valid ppm file! Must be type P6 with size 256x192px.",0
+		.byte $0a,"Not a valid ppm file! Must be type P6 with size 256x192px and 8bpp.",0
 		bra @close_exit
 
 @gfx_io_error:
@@ -137,14 +138,10 @@ read_blocks:
 
 		SetVector ppmdata, read_blkptr
 		ldx fd
-		ldy #3 ; 3 blocks at once, cause of the ppm header and alignment
+		ldy #(3*BLOCK_BUFFER) ; multiples of 3 blocks at once, cause of the ppm header and alignment
 		jmp krn_fread
 		
 adjust_blocks:
-;		phy
-;		tya
-;		jsr hexout
-;		ply
 		cpy #0	; no blocks where read
 		beq @l_exit
 @l:	jsr dec_blocks
@@ -185,7 +182,7 @@ blocks_to_vram:
 		sta a_vram
 ;		jsr hexout
 		lda read_blkptr+1
-		cmp #>(ppmdata+(3*$200))	;end of 3 blocks reached?
+		cmp #>(ppmdata+(BLOCK_BUFFER*3*$200))	;end of 3 blocks reached?
 		bne @l_mem
 		rts
 			
@@ -230,7 +227,7 @@ screen_blank:
 		ldx #212
 		ldy #0
 @l0:
-		vnops
+		vdp_wait_l
 		sta a_vram
 		iny
 		bne @l0
@@ -270,10 +267,16 @@ parse_header:
 		jsr parse_int	;height
 		cmp #MAX_HEIGHT+1
 		bcs @l_invalid_ppm
-		sta ppm_height		
+		sta ppm_height
+		sty tmp2;safe y offset, to check how many chars are consumed during parse
 		jsr parse_int	;depth
 		cmp #COLOR_DEPTH
-		bne @l_exit		
+		bne @l_exit
+		tya
+		sec
+		sbc tmp2
+		cmp #4+1 ; check that 3 digits + 1 delimiter was parsed, so number is <=3 digits
+		bcs @l_invalid_ppm
 		lda #0
 		rts
 @l_invalid_ppm:		
@@ -291,8 +294,6 @@ parse_until_size:
 		rts
 		
 parse_int:
-;		lda #$0a
-;		jsr char_out
 		stz tmp
 @l_toi:
 		lda ppmdata, y
@@ -300,7 +301,6 @@ parse_int:
 		bcc @l_end
 		cmp #'9'+1
 		bcs @l_end
-;		jsr char_out
 		pha		;n*10 => n*2 + n*8
 		lda tmp
 		asl
@@ -369,9 +369,7 @@ gfxui_on:
 gfxui_off:
 		sei
 		
-		lda #%00000000	; reset vbank - TODO FIXME, kernel has to make sure that correct video adress is set for all vram operations, use V9958 flag
-		ldy #v_reg14
-		vdp_sreg	
+		vdp_sreg	#%00000000, #v_reg14	; reset vbank - TODO FIXME, kernel has to make sure that correct video adress is set for all vram operations, use V9958 flag		
 		
 		copypointer  irqsafe, $fffe
 		
@@ -406,12 +404,11 @@ __calc_blocks: ;blocks = filesize / BLOCKSIZE -> filesize >> 9 (div 512) +1 if f
 		ora blocks+1
 		ora blocks+0
 		rts
-		
-m_vdp_nopslide
 
 irqsafe: .res 2, 0
 ; TODO FIXME clarify BSS segment voodo
 data_offset: .res 1, 0
 fd: .res 1, 0
 tmp: .res 1, 0
+tmp2: .res 1, 0
 buffer: .res 8, 0

@@ -222,4 +222,4 @@ fd_area					= $0380 ; File descriptor area until $0400
 sd_blktarget			= $0400
 block_data				= sd_blktarget
 block_fat				= block_data+sd_blocksize
-
+;block_fat_lba_addr	= 

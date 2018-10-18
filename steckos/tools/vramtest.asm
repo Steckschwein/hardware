@@ -161,5 +161,3 @@ pattern_e:
 adr_h_w:	.res 2
 adr_h_r:	.res 2
 vbank:	 	.res 1
-
-m_vdp_nopslide

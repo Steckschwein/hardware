@@ -1,6 +1,6 @@
 ; MIT License
 ;
-; Copyright (c) 2018 Thomas Woinke, Marko Lauke, www.steckschein.de
+; Copyright (c) 2018 Thomas Woinke, Marko Lauke, www.steckschwein.de
 ;
 ; Permission is hereby granted, free of charge, to any person obtaining a copy
 ; of this software and associated documentation files (the "Software"), to deal
@@ -27,8 +27,7 @@
 .include "kernel_jumptable.inc"
 .include "appstart.inc"
 
-
-.importzp ptr2, ptr3
+.importzp ptr1, ptr2, ptr3
 .importzp tmp3, tmp4
 
 .import vdp_gfx7_on
@@ -131,8 +130,6 @@ gfxui_off:
     copypointer  irqsafe, $fffe
     cli
     rts
-
-m_vdp_nopslide
 
 irqsafe: .res 2, 0
 

@@ -1,11 +1,28 @@
+; MIT License
+;
+; Copyright (c) 2018 Thomas Woinke, Marko Lauke, www.steckschwein.de
+;
+; Permission is hereby granted, free of charge, to any person obtaining a copy
+; of this software and associated documentation files (the "Software"), to deal
+; in the Software without restriction, including without limitation the rights
+; to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+; copies of the Software, and to permit persons to whom the Software is
+; furnished to do so, subject to the following conditions:
+;
+; The above copyright notice and this permission notice shall be included in all
+; copies or substantial portions of the Software.
+;
+; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+; AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+; SOFTWARE.
+
 .include "vdp.inc"
 
-; TODO FIXME conflicts with ehbasic zeropage locaitons - use steckschwein specific zeropage.s not the cc65....runtime/zeropage.s definition
-;.importzp ptr1
-;.importzp tmp1
-
-.import	vdp_init_reg
-.import vdp_nopslide
+.import vdp_init_reg
 .import vdp_fill
 
 .export vdp_gfx2_on
@@ -18,20 +35,28 @@
 ;	
 vdp_gfx2_on:
 			jsr vdp_fill_name_table
+			
 			lda #<vdp_init_bytes_gfx2
-			sta ptr1
+			sta vdp_ptr
 			lda #>vdp_init_bytes_gfx2
-			sta ptr1+1
-			jmp	vdp_init_reg
+			sta vdp_ptr+1
+			lda #(vdp_init_bytes_gfx2_end-vdp_init_bytes_gfx2)
+			jmp vdp_init_reg
+			
+
+			jsr vdp_fill_name_table
+			lda #<vdp_init_bytes_gfx2
+			sta vdp_ptr
+			lda #>vdp_init_bytes_gfx2
+			sta vdp_tmp+1
+			jmp vdp_init_reg
 
 vdp_fill_name_table:
-			;set 768 different patterns --> name table
-			lda	#<ADDRESS_GFX2_SCREEN
-			ldy	#WRITE_ADDRESS+ >ADDRESS_GFX2_SCREEN
-			vdp_sreg
-			ldy	#$03
-			ldx	#$00
-@0:			vnops
+			;set 768 different patterns --> name table			
+			vdp_sreg #<ADDRESS_GFX2_SCREEN, #WRITE_ADDRESS+ >ADDRESS_GFX2_SCREEN
+			ldy #$03
+			ldx #$00
+@0:		vdp_wait_l			
 			stx	a_vram  ;
 			inx         ;2
 			bne	@0       ;3
@@ -48,26 +73,27 @@ vdp_init_bytes_gfx2:
 			.byte	(ADDRESS_GFX2_SPRITE / $80)	; sprite attribute table - value * $80 --> offset in VRAM
 			.byte	(ADDRESS_GFX2_SPRITE_PATTERN / $800)	; sprite pattern table - value * $800  --> offset in VRAM
 			.byte	Black
-			
+vdp_init_bytes_gfx2_end:
 ;
 ; blank gfx mode 2 with 
-; 	A - color to fill [0..f]
+; 	.A - color to fill [0..f]
 ;    
 vdp_gfx2_blank:		; 2 x 6K
-	sta tmp1
-	lda #<ADDRESS_GFX2_COLOR
-	ldy #WRITE_ADDRESS + >ADDRESS_GFX2_COLOR
-	ldx	#24		;6144 byte color map
-	jsr	vdp_fill
-	stz tmp1	;
-	lda #<ADDRESS_GFX2_PATTERN
-	ldy #WRITE_ADDRESS + >ADDRESS_GFX2_PATTERN
-	ldx	#24		;6144 byte pattern map
-	jsr	vdp_fill
-	lda #<ADDRESS_GFX2_SCREEN
-	ldy #WRITE_ADDRESS + >ADDRESS_GFX2_SCREEN
-	ldx	#3		;768 byte screen map
-	jmp	vdp_fill
+	tax
+	vdp_sreg #<ADDRESS_GFX2_COLOR, #WRITE_ADDRESS + >ADDRESS_GFX2_COLOR
+	txa
+	ldx #24		;6144 byte color map
+	jsr vdp_fill
+	
+	vdp_sreg #<ADDRESS_GFX2_PATTERN, #WRITE_ADDRESS + >ADDRESS_GFX2_PATTERN
+	ldx #24		;6144 byte pattern map
+	lda #0
+	jsr vdp_fill
+	
+	vdp_sreg #<ADDRESS_GFX2_SCREEN, #WRITE_ADDRESS + >ADDRESS_GFX2_SCREEN
+	ldx #3		;768 byte screen map
+	lda #0
+	jmp vdp_fill
 	
 ;	set pixel to gfx2 mode screen
 ;
@@ -78,16 +104,15 @@ vdp_gfx2_blank:		; 2 x 6K
 ; 	VRAM ADDRESS = 8(INT(X DIV 8)) + 256(INT(Y DIV 8)) + (Y MOD 8)
 vdp_gfx2_set_pixel:
 		beq vdp_gfx2_set_pixel_e	; 0 - not set, leave blank
-;		sta tmp1					; otherwise go on and set pixel
 		; calculate low byte vram adress	
 		txa						;2
 		and	#$f8
-		sta	tmp2
+		sta	vdp_tmp
 		tya
 		and	#$07
-		ora	tmp2
+		ora	vdp_tmp
 		sta	a_vreg	;4 set vdp vram address low byte
-		sta	tmp2	;3 safe vram low byte
+		sta	vdp_tmp	;3 safe vram low byte
 		
 		; high byte vram address - div 8, result is vram address "page" $0000, $0100, ...
 		tya						;2
@@ -102,13 +127,12 @@ vdp_gfx2_set_pixel:
 		and	#$07				;2
 		tax						;2
 		lda	bitmask,x			;4
-;		and tmp1				;3
 		ora	a_vram				;4 read current byte in vram and OR with new pixel
 		tax						;2 or value to x
 		nop						;2
 		nop						;2
 		nop						;2
-		lda	tmp2				;2
+		lda	vdp_tmp			;2
 		sta a_vreg
 		tya						;2
 		nop						;2

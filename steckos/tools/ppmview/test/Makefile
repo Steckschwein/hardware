@@ -1,6 +1,6 @@
 DEFINES=-Dasmunit_char_out=0x200
 ADDRESS=0x1000
-CA65FLAGS=--include-dir ../../../../asmunit --include-dir ../../../asminc --include-dir ../../../kernel $(DEFINES)
+CA65FLAGS=--include-dir ../ --include-dir ../../../../asmunit --include-dir ../../../asminc --include-dir ../../../kernel $(DEFINES)
 LIBS=../../../tools/lib/toollib.a ../../../../asmunit/asmunit.a ../../../lib/steckschwein-kernel.lib
 LDFLAGS=--config test.cfg $(DEFINES)
 
@@ -15,10 +15,7 @@ clean:
 	ca65 $(CA65FLAGS) $(@:.o=.asm)
 
 test.%.bin: test.%.o $(LIBS) $(<:test.%=%)
-	ld65 $(LDFLAGS) $< $(LIBS) ../$(<:test.%=%) -o $@
-
-%.prg: %.o $(LIBS)
-	ld65 $(LDFLAGS_PRG) $< $(LIBS_PRG) -o $@
+	ld65 $(LDFLAGS) $< ../$(<:test.%=%) $(LIBS) -o $@
 
 %.dis: %.bin
 	dcc6502 -o $(ADDRESS) -d -n -c $< > $@

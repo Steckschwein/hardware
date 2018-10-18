@@ -34,14 +34,16 @@
 	.endif
 .endif
 
+m_vdp_nopslide
+
 vdp_display_off:
-        SyncBlank
-        vnops
-		lda		#v_reg1_16k	;enable 16K ram, disable screen
-		sta 	a_vreg
+		SyncBlank
+      vnops
+		lda #v_reg1_16k	;enable 16K ram, disable screen
+		sta a_vreg
 		vnops
-		lda	  	#v_reg1
-		sta   	a_vreg
+		lda #v_reg1
+		sta a_vreg
 		rts
 
 ;	input:
@@ -69,10 +71,8 @@ vdp_memcpy:
 vdp_mode_text:
 
 .ifdef V9958
-	; enable V9958 wait state generator
-	lda #1<<2
-	ldy #v_reg25
-	vdp_sreg
+	; enable V9958 /WAIT pin
+	vdp_sreg #v_reg25_wait, #v_reg25
 .endif
 
 	SetVector vdp_init_bytes_text, adrl
@@ -118,5 +118,3 @@ vdp_bgcolor:
 	vnops
 	sta   a_vreg
 	rts
-
-m_vdp_nopslide
