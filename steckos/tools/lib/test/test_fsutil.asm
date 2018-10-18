@@ -20,7 +20,7 @@
     ldy #42
 
     jsr print_filesize
-    assertOut "246543"
+    assertOut "  246543"
     assertY 42
     assert16 direntry, dirptr
 

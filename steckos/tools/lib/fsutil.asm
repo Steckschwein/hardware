@@ -116,12 +116,12 @@ print_filesize:
 		sec
 		sbc tmp0
 		; beq @l2
-; 		tax
-; 		lda #' '
-; @l0:
-; 		jsr char_out
-; 		dex
-; 		bpl @l0
+		tax
+		lda #' '
+@l0:
+		jsr char_out
+		dex
+		bpl @l0
 
 	    ldy #0
 @l2:
