@@ -193,15 +193,15 @@ gfxui_on:
 	sei
 	jsr vdp_display_off			;display off
 
-	vdp_sreg	#%00000000, #v_reg14	; reset vbank - TODO FIXME, kernel has to make sure that correct video adress is set for all vram operations, use V9958 flag		
-	vdp_sreg #<.HIWORD(ADDRESS_GFX2_SCREEN<<2), #v_reg14
+	vdp_sreg	%00000000, v_reg14	; reset vbank - TODO FIXME, kernel has to make sure that correct video adress is set for all vram operations, use V9958 flag		
+	vdp_sreg <.HIWORD(ADDRESS_GFX2_SCREEN<<2), v_reg14
 	
 	jsr vdp_mode_sprites_off	;sprites off
 
 	lda #Black<<4|Black
 	jsr vdp_gfx2_blank
 	 
-	vdp_sreg	#<ADDRESS_GFX2_PATTERN, #WRITE_ADDRESS + >ADDRESS_GFX2_PATTERN
+	vdp_sreg	<ADDRESS_GFX2_PATTERN, WRITE_ADDRESS + >ADDRESS_GFX2_PATTERN
 	SetVector  content, vdp_ptr    ; only load the pattern data, leave colors black to blend them later
 	ldx #$18	;6k bitmap - $1800
 	jsr vdp_memcpy					;load the pic data

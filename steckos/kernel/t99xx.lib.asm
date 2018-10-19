@@ -67,9 +67,9 @@ vdp_memcpy:
 ;
 vdp_mode_text:
 .ifdef V9958
-	vdp_sreg #<.HIWORD(ADDRESS_GFX1_SCREEN<<2), #v_reg14
+	vdp_sreg <.HIWORD(ADDRESS_GFX1_SCREEN<<2), v_reg14
 	; enable V9958 /WAIT pin
-	vdp_sreg #v_reg25_wait, #v_reg25
+	vdp_sreg v_reg25_wait, v_reg25
 .endif
 	ldy	#$00
 	ldx	#v_reg0
