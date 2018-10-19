@@ -115,16 +115,10 @@ gfxui_on:
 
 	jsr vdp_gfx7_on			    ;enable gfx7 mode
 
-	vdp_reg 14, <.HIWORD(ADDRESS_GFX7_SCREEN<<2)
-	vnops
-
-	vdp_sreg <.LOWORD(ADDRESS_GFX7_SCREEN), (WRITE_ADDRESS + >.LOWORD(ADDRESS_GFX7_SCREEN))
-	vnops
 	lda #%00000011
-;	jsr vdp_gfx7_blank
+	jsr vdp_gfx7_blank
 
 @loop:
-	vnops
 	lda #$ff
 	jsr vdp_gfx7_line
 

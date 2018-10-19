@@ -36,7 +36,7 @@
 m_vdp_nopslide
 
 vdp_irq_off:
-		vdp_sreg #v_reg1_16k|v_reg1_display_on|v_reg1_spr_size, #v_reg1	;switch interupt off
+		vdp_sreg v_reg1_16k|v_reg1_display_on|v_reg1_spr_size, v_reg1	;switch interupt off
 		rts
 
 vdp_display_off:
@@ -48,7 +48,7 @@ vdp_display_off:
 		rts
 
 vdp_mode_sprites_off:
-		vdp_sreg #<ADDRESS_GFX_SPRITE, #WRITE_ADDRESS + >ADDRESS_GFX_SPRITE
+		vdp_sreg <ADDRESS_GFX_SPRITE, WRITE_ADDRESS + >ADDRESS_GFX_SPRITE
 		lda	#$d0					;sprites off, at least y=$d0 will disable the sprite subsystem
 		ldx	#32*4					;32 sprites / 4 byte each
 @0:	vdp_wait_l 6

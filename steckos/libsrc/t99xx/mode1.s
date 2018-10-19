@@ -32,9 +32,7 @@
 .code
 
 vdp_gfx1_blank:		; 3 x 256 bytes
-	lda	#<ADDRESS_GFX1_SCREEN
-	ldy	#WRITE_ADDRESS + >ADDRESS_GFX1_SCREEN
-	vdp_sreg
+	vdp_sreg <ADDRESS_GFX1_SCREEN, WRITE_ADDRESS + >ADDRESS_GFX1_SCREEN
 	ldx	#$03
 	lda	#' '					;fill vram screen with blank
 	jmp	vdp_fill
@@ -54,9 +52,7 @@ vdp_init_bytes_gfx1:
 ;
 vdp_gfx1_on:
 	tax
-	lda	#<ADDRESS_GFX1_COLOR
-	ldy	#WRITE_ADDRESS + >ADDRESS_GFX1_COLOR	;color vram
-	vdp_sreg
+	vdp_sreg <ADDRESS_GFX1_COLOR, WRITE_ADDRESS + >ADDRESS_GFX1_COLOR	;color vram
 	txa
 	ldx #$20		;32 colors
 	jsr vdp_fills

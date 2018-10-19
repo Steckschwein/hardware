@@ -86,9 +86,8 @@ gfxui_on:
 
 	jsr vdp_gfx7_on			    ;enable gfx7 mode
 
-;	lda #%00000011
-;	jsr vdp_gfx7_blank
-	vnops
+	lda #%00000011
+	jsr vdp_gfx7_blank
 
 	lda #$ff
 	ldx #0

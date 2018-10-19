@@ -26,6 +26,7 @@ vdp_tmp=$e2
 a_vdp		= $0220
 a_vram		= a_vdp
 a_vreg		= a_vdp+1
+a_vregpal	= a_vdp+2
 a_vregi		= a_vdp+3
 
 
@@ -50,6 +51,8 @@ v_reg9_ln 			= 1<<7  ; lines - 212 lines if 1, 192 lines if 0
 v_reg9_il			= 1<<3	; interlace
 
 v_reg9_nt			= 1<<1	; ntsc/pal
+
+v_reg17_aii			= 1<<7	; auto increment
 
 v_reg25_wait 		= 1<<2
 v_reg25_cmd 		= 1<<6
@@ -242,20 +245,21 @@ vdp_nopslide_2m:
 			sty a_vreg
 		.else							; otherwise use the new api call, with fewer nops for register writes
 			vdp_wait_s 2
-			lda _1st
+			lda # _1st
 			sta a_vreg
 			vdp_wait_s 2
-			lda _2nd
+			lda # _2nd
 			sta a_vreg
 		.endif
 .endmacro
 
 .macro vdp_reg reg, val
+			vdp_wait_s 2
 			lda #val
-			sta	a_vreg
+			sta a_vreg
 			vdp_wait_s 2
 			lda #$80 + reg
-			sta	a_vreg
+			sta a_vreg
 .endmacro
 
 

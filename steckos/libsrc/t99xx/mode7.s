@@ -54,34 +54,31 @@ vdp_init_bytes_gfx7:
 			.byte $3f
 			.byte Black ; border color
 			.byte v_reg8_SPD | v_reg8_VR	; SPD - sprite disabled, VR - 64k VRAM
-			.byte 0;			v_reg9_ln	//TODO FIXME ntsc off => gfx_off
+			.byte 0;v_reg9_ln	;//TODO FIXME ntsc off => gfx_off
 vdp_init_bytes_gfx7_end:
 ;
 ; blank gfx mode 7 with
-; 	A - color to fill (RGB) 3+3+2)
+; 	A - color to fill in GRB (3+3+2)
 ;
 vdp_gfx7_blank:
 	phx
 	
 	sta colour
 	
-	vdp_sreg #<.HIWORD(ADDRESS_GFX7_SCREEN<<2),#v_reg14
-	vdp_sreg #<.LOWORD(ADDRESS_GFX7_SCREEN), #(WRITE_ADDRESS + >.LOWORD(ADDRESS_GFX7_SCREEN))
-	
-	vdp_sreg 36, #v_reg17
+	vdp_sreg <.HIWORD(ADDRESS_GFX7_SCREEN<<2), v_reg14
+	vdp_sreg <.LOWORD(ADDRESS_GFX7_SCREEN), (WRITE_ADDRESS + >.LOWORD(ADDRESS_GFX7_SCREEN))
+	vdp_sreg 36, v_reg17 ; set reg index to #36
 	ldx #0
 @loop:
-	vnops
+	vdp_wait_s 4
 	lda data,x
 	sta a_vregi
 	inx
 	cpx #12
 	bne @loop
 
-	vnops
-	vdp_reg 15,2
+	vdp_sreg 2, v_reg15
 @wait:
-	vnops
 	lda a_vreg
 	ror
 	bcs @wait
@@ -91,8 +88,8 @@ vdp_gfx7_blank:
 
 data:
 	.word 0 ;x
-	.word 256 ;y
-	.word 256 ; len x
+	.word (ADDRESS_GFX7_SCREEN / $0100) ;y - from page offset
+	.word 255 ; len x
 	.word 212 ; len y
 colour:
 	.byte %00011100 ; colour

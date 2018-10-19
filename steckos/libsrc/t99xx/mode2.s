@@ -44,7 +44,7 @@ vdp_gfx2_on:
 
 vdp_fill_name_table:
 			;set 768 different patterns --> name table			
-			vdp_sreg #<ADDRESS_GFX2_SCREEN, #WRITE_ADDRESS+ >ADDRESS_GFX2_SCREEN
+			vdp_sreg <ADDRESS_GFX2_SCREEN, WRITE_ADDRESS+ >ADDRESS_GFX2_SCREEN
 			ldy #$03
 			ldx #$00
 @0:		vdp_wait_l 6	;
@@ -76,17 +76,17 @@ vdp_init_bytes_gfx2_end:
 ;    
 vdp_gfx2_blank:		; 2 x 6K
 	tax
-	vdp_sreg #<ADDRESS_GFX2_COLOR, #WRITE_ADDRESS + >ADDRESS_GFX2_COLOR
+	vdp_sreg <ADDRESS_GFX2_COLOR, WRITE_ADDRESS + >ADDRESS_GFX2_COLOR
 	txa
 	ldx #$18		;$1800 byte color map
 	jsr vdp_fill
 	
-	vdp_sreg #<ADDRESS_GFX2_PATTERN, #WRITE_ADDRESS + >ADDRESS_GFX2_PATTERN
+	vdp_sreg <ADDRESS_GFX2_PATTERN, WRITE_ADDRESS + >ADDRESS_GFX2_PATTERN
 	ldx #$18		;$1800 byte pattern map
 	lda #0
 	jsr vdp_fill
 	
-	vdp_sreg #<ADDRESS_GFX2_SCREEN, #WRITE_ADDRESS + >ADDRESS_GFX2_SCREEN
+	vdp_sreg <ADDRESS_GFX2_SCREEN, WRITE_ADDRESS + >ADDRESS_GFX2_SCREEN
 	ldx #3		;768 byte screen map
 	lda #0
 	jmp vdp_fill
