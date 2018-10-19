@@ -368,8 +368,6 @@ gfxui_on:
 gfxui_off:
 		sei
 		
-		vdp_sreg	#%00000000, #v_reg14	; reset vbank - TODO FIXME, kernel has to make sure that correct video adress is set for all vram operations, use V9958 flag		
-		
 		copypointer  irqsafe, $fffe
 		
 		cli

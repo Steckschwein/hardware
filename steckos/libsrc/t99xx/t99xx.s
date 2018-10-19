@@ -40,7 +40,6 @@ vdp_irq_off:
 		rts
 
 vdp_display_off:
-;	jsr	.vdp_wait_blank
 		lda #v_reg1_16k	;enable 16K? ram, disable screen
 		sta a_vreg
 		vdp_wait_s 2
@@ -113,7 +112,7 @@ vdp_fills:
 ;	in:
 ;		.X - amount of bytes
 ;
-@0:	vdp_wait_l 6  	;2
+@0:	vdp_wait_l 6  	;3 + 2 + 1 opcode fetch
 		dex            ;2
 		sta a_vram     ;4
 		bne	@0       ;3
@@ -123,11 +122,11 @@ vdp_fills:
 ;  	.X - amount of 256byte blocks (page counter)
 ;		vdp_ptr to source data
 vdp_memcpy:
-		ldy #0      	 ;2
-@l1:	vdp_wait_l 8  ; TODO FIXME try vdp_wait_s here
+		ldy #0      	 
+@l1:	vdp_wait_l 11 	 ;3 + 5 + 2 + 1 opcode fetch
 		lda (vdp_ptr),y ;5
 		iny             ;2
-		sta a_vram    	 ;1 opcode fetch
+		sta a_vram    	 ;1
 		bne @l1         ;3
 		inc vdp_ptr+1
 		dex
@@ -138,7 +137,7 @@ vdp_memcpy:
 ;  	.X - amount of bytes to copy
 vdp_memcpys:
 		ldy   #0
-@0:	vdp_wait_l 12
+@0:	vdp_wait_l 13	 ;2 + 2 + 3 + 5 + 1 opcode fetch
 		lda (vdp_ptr),y ;5
 		sta a_vram    	 ;1+3
 		iny             ;2

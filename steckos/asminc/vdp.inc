@@ -236,10 +236,12 @@ vdp_nopslide_2m:
 		.local _1st
 		.local _2nd
 		.if(.paramcount <> 2)	;no args, use the legacy call
+			vdp_wait_s
 			sta a_vreg
-			vdp_wait_s 2
+			vdp_wait_s
 			sty a_vreg
 		.else							; otherwise use the new api call, with fewer nops for register writes
+			vdp_wait_s 2
 			lda _1st
 			sta a_vreg
 			vdp_wait_s 2

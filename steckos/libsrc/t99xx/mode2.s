@@ -47,8 +47,8 @@ vdp_fill_name_table:
 			vdp_sreg #<ADDRESS_GFX2_SCREEN, #WRITE_ADDRESS+ >ADDRESS_GFX2_SCREEN
 			ldy #$03
 			ldx #$00
-@0:		vdp_wait_l 6
-			stx	a_vram  ;
+@0:		vdp_wait_l 6	;
+			stx	a_vram   ;1
 			inx         	;2
 			bne	@0       ;3
 			dey
