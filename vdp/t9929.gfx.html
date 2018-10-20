@@ -6,7 +6,7 @@
             16*16 = 256
         -->
         <p>            
-            <canvas id="pane" width="192" height="144" style="border: 1px solid #000000;"/>
+            <canvas id="pane" width="256" height="192" style="border: 1px solid #000000;"/>
         </p>
         <p>
             Pixel: <span id="pxLabel">0</span>
@@ -512,7 +512,19 @@
         var sx=1;
         var sz=1;
         
-        for(var f=0,fc=ship.v_f[1];f<fc;f++){
+		  var linexl = [];
+		  var linexh = [];
+		  var lineyl = [];
+		  var lineyh = [];
+
+		  var linemjl = [];
+		  var linemjh = [];
+		  var linemil = [];
+		  var linemih = [];
+		  
+		  var linemode = [];
+		  
+       l1: for(var f=0,fc=ship.v_f[1];f<fc;f++){
             var fe = ship.faces[f];
             var n=[1,1];
             for(var vi=0;vi<fe[4];vi++){
@@ -523,6 +535,9 @@
                 
                 vts = f_transform(f_rotate(f_scale(f_2d(vts, n), scale), degree), trans);
                 vtt = f_transform(f_rotate(f_scale(f_2d(vtt, n), scale), degree), trans);
+					 
+              //  vts = f_transform(f_scale(f_2d(vts, n), scale), trans);
+                //vtt = f_transform(f_scale(f_2d(vtt, n), scale), trans);
 				
                 //vts = f_transform(f_perspective(vts, degree, scale));
                 //vtt = f_transform(f_perspective(vtt, degree, scale));
@@ -533,9 +548,50 @@
                 var y1 = vtt[1];
                 
                 incLine(x,y, x1, y1, color);
+					 //mlaLine(x,y, x1, y1);
                 //console.log("f: " + f + " v_ix: " + vs_ix +" x: " +x + " y: "+ y + " x1:" + x1 + " y1: "+ y1);
+					 dy = Math.abs(y1-y);
+					 dx = Math.abs(x1-x);
+					 lmode = (dy >= dx ? 1 : 0)<<0 | (x > x1 ? 1 : 0)<<2 | (y > y1 ? 1 : 0)<<3 ;
+					 
+					 if(dy > dx){
+						mj = dy;
+						mi = dx;
+					 }else{
+						mj = dx;
+						mi = dy;
+					 }
+					 
+					 linexl = linexl.concat([x & 0xff]);
+					 linexh = linexh.concat([x>>8 & 0xff]);
+					 lineyl = lineyl.concat([y & 0xff]);
+					 lineyh = lineyh.concat([y>>8 & 0xff]);
+					 linemjl = linemjl.concat([mj & 0xff]);
+					 linemjh = linemjh.concat([mj>>8 & 0xff]);
+					 linemil = linemil.concat([mi & 0xff]);
+					 linemih = linemih.concat([mi>>8 & 0xff]);
+					 
+					 linemode = linemode.concat([lmode & 0xff]);
+//					 console.log(".word " + x + ", " + (256 + y) + ", " + dx + ", "+ dy);
+//					 console.log(".byte " + dest);
+					//break l1;
             }
+				
         }      
+		  console.log("xl: .byte " + linexl)
+//		  console.log("xh: .byte " + linexh)
+		  console.log(".align 256")
+		  console.log("yl: .byte " + lineyl)
+//		  console.log("yh: .byte " + lineyh)
+		  console.log(".align 256")
+		  console.log("dxl: .byte " + linemjl)
+//		  console.log("dxh: .byte " + linemjh)
+		  console.log(".align 256")
+		  console.log("dyl: .byte " + linemil)
+//		  console.log("dyh: .byte " + linemih)
+		  console.log(".align 256")
+		  console.log("mode: .byte " + linemode)
+		  console.log(linemode.length);
     }    
     
 	function f_perspective(v, d, s){
@@ -831,13 +887,13 @@
         eraseShip(ship,txy,degree, scale);
         if(scale<0.5)
             scale+=0.001;
-        degree++;
+        //degree++;
         drawShip(ship,txy,degree, scale);
         repaint();
     }
-    scale=0.0;
-    degree=0;
-    txy=[96,70];
+    scale=0.4;
+    degree=190;
+    txy=[120,100];
     ship=cobra;
     /*
     incLine(10,20,100,80);
@@ -846,9 +902,9 @@
     incLine(60,80,10,20);
     incLine(0,0,255,191);
     */
-    scale="0.5"
-    //drawShip(ship,txy,degree, scale);
-    setInterval(animate, 10);    
+//    scale="0.3"
+   drawShip(ship,txy,degree, scale);
+   //setInterval(animate, 13);    
 	//linebench();
     
     repaint();

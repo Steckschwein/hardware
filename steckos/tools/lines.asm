@@ -27,8 +27,7 @@
 .include "kernel_jumptable.inc"
 .include "appstart.inc"
 
-
-
+.importzp ptr1
 
 .import vdp_gfx7_on
 .import vdp_gfx7_blank
@@ -37,38 +36,13 @@
 .import vdp_memcpy
 .import vdp_mode_sprites_off
 .import vdp_bgcolor
+.import vdp_wait_cmd
 
 appstart $1000
 
-
-pt_x = $10
-pt_y = $12
-ht_x = $14
-ht_y = $16
-
+bg_color = %00000011
 .code
 main:
-		lda #0
-		sta pt_x
-		stz pt_x+1
-
-		; lda #100
-		sta pt_y
-		lda #$01
-		sta pt_y+1
-
-		lda #255
-		sta ht_x
-		lda #0
-		sta ht_x+1
-
-		lda #212
-		sta ht_y
-		lda #0
-		sta ht_y+1
-
-		ldx #21
-
 		jsr	krn_textui_disable			;disable textui
 		jsr	gfxui_on
 
@@ -76,33 +50,115 @@ main:
 
 		jsr	gfxui_off
 
-		jsr	krn_display_off			;restore textui
-		jsr	krn_textui_init
-		jsr	krn_textui_enable
+		jsr krn_display_off			;restore textui
+		jsr krn_textui_init
+		jsr krn_textui_enable
 		bit a_vreg ; acknowledge any vdp interrupts before re-enabling interrupts
-
-		cli
-
+		
 		jmp (retvec)
 
-blend_isr:
-	pha
-	vdp_reg 15,0
-	vnops
-    bit a_vreg
-    bpl @0
+draw_vertices:
+	vdp_sreg 2, v_reg15
+	ldy vertices_size	
+@l:
+	jsr vdp_gfx7_line
+	dey
+	bpl @l
+	vdp_sreg 0, v_reg15
+	rts
 
-	lda	#%11100000
+animate_vertices:
+	ldx #59
+@l_move:
+	inc xl,x
+	dex
+	bpl @l_move
+	rts
+	
+vdp_isr:
+	save 
+	
+	vdp_sreg 0, 15	; status register index
+	vdp_wait_s
+   bit a_vreg
+   bpl @0
+
+	lda #%11100000
 	jsr vdp_bgcolor
+		
+	lda #bg_color
+	sta color
+;	jsr draw_vertices
 
-	lda	#Black
+;	jsr animate_vertices	
+	
+	lda #$ff
+	sta color
+	jsr draw_vertices
+		
+;	inc yl,x
+;	inc dxl,x
+;	inc dyl,x
+	
+	lda #Black
 	jsr vdp_bgcolor
-
-
 @0:
-	pla
+	restore
 	rti
 
+vdp_gfx7_line:
+	
+	lda #%000111000
+	jsr vdp_bgcolor
+	
+	vdp_sreg 36, v_reg17
+	
+	vdp_wait_s 4
+	lda xl,y
+	sta a_vregi
+	vdp_wait_s 2
+	lda #0
+	sta a_vregi
+	vdp_wait_s 4
+	lda yl,y
+	sta a_vregi
+	vdp_wait_s 2
+	lda #$01
+	sta a_vregi
+	vdp_wait_s 4
+	lda dxl,y
+	sta a_vregi
+	vdp_wait_s 2
+	lda #0
+	sta a_vregi
+	vdp_wait_s 4
+	lda dyl,y
+	sta a_vregi
+	vdp_wait_s 2
+	lda #0
+	sta a_vregi
+
+	vdp_wait_s 4		;color
+	lda color
+	sta a_vregi
+
+	vdp_wait_s 4
+	lda mode,y
+	sta a_vregi
+
+	vdp_wait_s 2
+	lda #v_cmd_line
+	sta a_vregi
+
+	lda #%11111100
+	jsr vdp_bgcolor
+@wait:
+;	vdp_wait_l 4
+	lda a_vreg
+	ror
+	bcs @wait
+	rts
+		
 
 gfxui_on:
 	sei
@@ -114,28 +170,8 @@ gfxui_on:
 	lda #%00000011
 	jsr vdp_gfx7_blank
 
-@loop:
-	lda #$ff
-	jsr vdp_gfx7_line
-
-
-	dec ht_y
-	dec ht_y
-	dec ht_y
-	dec ht_y
-	dec ht_y
-	dec ht_y
-	dec ht_y
-	dec ht_y
-	dec ht_y
-	dec ht_y
-	dec ht_y
-	dec ht_y
-
-	dex
-	bne @loop
 	copypointer  $fffe, irqsafe
-	SetVector  blend_isr, $fffe
+	SetVector  vdp_isr, $fffe
 
 	cli
 	rts
@@ -148,44 +184,10 @@ gfxui_off:
     cli
     rts
 
-vdp_gfx7_line:
-	phx
-	pha
-
-	vdp_reg 17,36
-
-	ldx #0
-@loop:
-	vnops
-	lda pt_x,x
-	sta a_vregi
-	inx
-	cpx #8
-	bne @loop
-
-	vnops
-	pla
-	sta a_vregi
-
-	vnops
-	lda #0
-	sta a_vregi
-
-	vnops
-	lda #v_cmd_line
-	sta a_vregi
-
-	vnops
-
-	vdp_reg 15,2
-@wait:
-	vnops
-	lda a_vreg
-	ror
-	bcs @wait
-
-	plx
-	rts
-
+color: .res 1,$ff
 irqsafe: .res 2, 0
+.data
+.include "lines_data.inc"
+
+vertices_end:
  .segment "STARTUP"

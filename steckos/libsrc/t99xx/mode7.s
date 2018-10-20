@@ -32,6 +32,8 @@
 .export vdp_gfx7_set_pixel
 .export vdp_gfx7_set_pixel_cmd
 
+.export vdp_wait_cmd
+
 .code
 ;
 ;	gfx 7 - each pixel can be addressed - e.g. for image
@@ -77,12 +79,8 @@ vdp_gfx7_blank:
 	cpx #12
 	bne @loop
 
-	vdp_sreg 2, v_reg15
-@wait:
-	lda a_vreg
-	ror
-	bcs @wait
-
+	jsr vdp_wait_cmd
+		
 	plx
 	rts
 
@@ -123,6 +121,16 @@ vdp_gfx7_set_pixel:
          sta a_vram                 ; set color
          rts
 
+vdp_wait_cmd:
+		vdp_sreg 2, v_reg15
+@wait:
+		vdp_wait_l 4
+		lda a_vreg
+		ror
+		bcs @wait
+		vdp_sreg 0, v_reg15
+		rts
+	
 ;	set pixel to gfx7 using v9958 command engine
 ;
 ;	X - x coordinate [0..ff]

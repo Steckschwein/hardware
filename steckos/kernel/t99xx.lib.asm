@@ -37,11 +37,7 @@
 m_vdp_nopslide
 
 vdp_display_off:
-		lda #v_reg1_16k	;enable 16K ram, disable screen
-		sta a_vreg
-		vdp_wait_s 2
-		lda #v_reg1
-		sta a_vreg
+		vdp_sreg v_reg1, v_reg1_16k
 		rts
 
 ;	input:
@@ -71,7 +67,7 @@ vdp_mode_text:
 	; enable V9958 /WAIT pin
 	vdp_sreg v_reg25_wait, v_reg25
 .endif
-	ldy	#$00
+	ldy	#0
 	ldx	#v_reg0
 @l1:
 	lda vdp_init_bytes_text,y
