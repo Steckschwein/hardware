@@ -87,7 +87,7 @@ vdp_gfx7_blank:
 data:
 	.word 0 ;x
 	.word (ADDRESS_GFX7_SCREEN / $0100) ;y - from page offset
-	.word 255 ; len x
+	.word 256 ; len x
 	.word 212 ; len y
 colour:
 	.byte %00011100 ; colour

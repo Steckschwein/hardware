@@ -66,14 +66,10 @@
 
 .code
 ppmview_main:
-		lda paramptr
-		ldx paramptr+1
-;		SetVector filename, paramptr
-;		lda paramptr
-;		ldx paramptr+1
-		
 		stz fd
 		
+		lda paramptr
+		ldx paramptr+1
 		ldy #O_RDONLY
 		jsr krn_open
 		bne @io_error
@@ -81,17 +77,11 @@ ppmview_main:
 
 		;512byte/block * 3 => 1536byte => div 256 => 6 pixel lines => height / 6 => height / (2*2 + 1*2) => height / 2 * (2+1)
 		jsr __calc_blocks
-;		stz blocks+2
-;		stz blocks+1
-;		lda #192
-;		sta blocks+0
 		
 		jsr read_blocks
 		bne @io_error
 		
-		jsr adjust_blocks
-;		
-		jsr parse_header					; Y - return with offset to first data byte
+		jsr parse_header					; .Y - return with offset to first data byte
 		bne @invalid_ppm
 		sty data_offset
 		
@@ -128,69 +118,72 @@ l_exit:
 		jmp (retvec)
 
 read_blocks:
-		lda blocks+2
-;		jsr hexout
-		lda blocks+1
-;		jsr hexout
-		lda blocks+0
-;		jsr hexout
 
 		SetVector ppmdata, read_blkptr
 		ldx fd
 		ldy #(3*BLOCK_BUFFER) ; multiples of 3 blocks at once, cause of the ppm header and alignment
-		jmp krn_fread
-		
-adjust_blocks:
-		cpy #0	; no blocks where read
-		beq @l_exit
-@l:	jsr dec_blocks
-		beq @l_exit ; zero blocks reached
-		dey
-		bne @l
-		lda #$ff	; more to go
-@l_exit:
-		rts
+		jmp krn_fread		
 
 load_image:
-		sei	;critical section
-
-		lda #$c9
-		;jsr vdp_gfx7_blank ; TODO FIXME does not work
-		jsr screen_blank
+		stz cols
+		stz rows
 		
-		jsr set_screen_addr
+		sei	;critical section, acoid vdp irq here
+			lda #%00000000
+			jsr vdp_gfx7_blank
+			jsr set_screen_addr
+		cli
 		
-		ldy data_offset ; Y - data offset
-		jsr hexout
+		ldy data_offset ; .Y - data offset
 @loop:
-		SetVector ppmdata, read_blkptr ; reset ptr		
+		SetVector ppmdata, read_blkptr ; reset ptr to begin of buffer	
 		jsr blocks_to_vram
 		
 		jsr read_blocks
 		bne @l_exit
+		cpy #0	; no blocks where read
+		beq @l_exit
 		jsr adjust_blocks
-		bne @loop
+		bra @loop
 @l_exit:
-
-		cli
 		rts
-
+		
+adjust_blocks:
+@l:	jsr dec_blocks
+		beq @l_exit ; zero blocks reached
+		dey
+		bne @l
+@l_exit:
+		rts
+		
 blocks_to_vram:
-@l_mem:
 		jsr byte_to_grb
 		sta a_vram
 ;		jsr hexout
+		inc cols
+		lda cols
+		cmp ppm_width
+		bne @l1
+		stz cols
+		inc rows
+		lda rows
+;		jsr hexout
+		cmp ppm_height
+		beq @l_exit
+@l1:
 		lda read_blkptr+1
 		cmp #>(ppmdata+(BLOCK_BUFFER*3*$200))	;end of 3 blocks reached?
-		bne @l_mem
+		bne blocks_to_vram
+@l_exit:
 		rts
 			
 next_byte:
 		lda (read_blkptr),y
 		iny
-		bne @l_exit
+		beq @l_inc
+		rts		
+@l_inc:
 		inc read_blkptr+1
-@l_exit:
 		rts
 		
 byte_to_grb:
@@ -208,32 +201,15 @@ byte_to_grb:
 		rol
 		rol
 		rol
-		and #$03		;bit 1,0
+		and #$03		;blue - bit 1,0
 		ora tmp
 		rts
 		
 set_screen_addr:
-		lda #<.HIWORD(ADDRESS_GFX7_SCREEN<<2)
-		ldy #v_reg14
-		vdp_sreg
-		lda #<.LOWORD(ADDRESS_GFX7_SCREEN)	;reset vram address ptr
-		ldy #(WRITE_ADDRESS + >.LOWORD(ADDRESS_GFX7_SCREEN))
-		vdp_sreg	
+		vdp_sreg <.HIWORD(ADDRESS_GFX7_SCREEN<<2), v_reg14
+		vdp_sreg <.LOWORD(ADDRESS_GFX7_SCREEN), (WRITE_ADDRESS + >.LOWORD(ADDRESS_GFX7_SCREEN))
 		rts
 		
-screen_blank:
-		jsr set_screen_addr
-		ldx #212
-		ldy #0
-@l0:
-		vdp_wait_l
-		sta a_vram
-		iny
-		bne @l0
-		dex
-		bne @l0
-		rts
-			
 dec_blocks:
 		lda blocks+0
 		bne @l0
@@ -326,50 +302,46 @@ parse_string:
 @l0:	lda ppmdata, y
 		cmp #$20		; < $20 - control characters are treat as whitespace
 		bcc @le
-;		sta buffer, x
-;		inx
 		iny
 		bne @l0
 @le:	iny
-;		stz buffer, x
 		rts
 
 blend_isr:
+		bit a_vreg
+		bpl @0
+		
 		save
 		
 		lda #Dark_Yellow
 		jsr vdp_bgcolor
 		
-		bit a_vreg
-		bpl @0
-		
 		; irq Payload here
 		
-@0:
 		lda #Black
 		jsr vdp_bgcolor
 		
 		restore
+		
+@0:
 		rti
 
 gfxui_on:	
-	jsr	krn_textui_disable			;disable textui
+		jsr krn_textui_disable			;disable textui
 
-	sei
-	jsr vdp_display_off			;display off
-	jsr vdp_gfx7_on			   ;enable gfx7 mode
+		sei
+		jsr vdp_display_off			;display off
+		jsr vdp_gfx7_on			   ;enable gfx7 mode
 
-	copypointer  $fffe, irqsafe
-	SetVector  blend_isr, $fffe
+		copypointer  $fffe, irqsafe
+		SetVector  blend_isr, $fffe
 
-	cli
-	rts
+		cli
+		rts
 
 gfxui_off:
 		sei
-		
 		copypointer  irqsafe, $fffe
-		
 		cli
 		
 		jsr	krn_display_off			;restore textui
@@ -405,6 +377,8 @@ __calc_blocks: ;blocks = filesize / BLOCKSIZE -> filesize >> 9 (div 512) +1 if f
 irqsafe: .res 2, 0
 ; TODO FIXME clarify BSS segment voodo
 data_offset: .res 1, 0
+cols: .res 1, 0
+rows: .res 1, 0
 fd: .res 1, 0
 tmp: .res 1, 0
 tmp2: .res 1, 0
