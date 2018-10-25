@@ -22,7 +22,7 @@
 
 ;
 ; use imagemagick $convert <image> -geometry 256 -colort 256 <image.ppm>
-; convert.exe <file>.pdf[page] -resize 256x192^ -gravity center -crop x192+0+0 +repage pic.ppm
+; convert.exe <file>.pdf[page] -resize 256x212^ -gravity center -crop x212+0+0 +repage pic.ppm
 ;
 .setcpu "65c02"
 .include "common.inc"
@@ -60,7 +60,7 @@
 .export byte_to_grb
 
 .define MAX_WIDTH 256
-.define MAX_HEIGHT 192
+.define MAX_HEIGHT 212
 .define COLOR_DEPTH 255
 .define BLOCK_BUFFER 1 ; as multiple of 3 * 512 byte, so 1 means $600 bytes memory are used
 
@@ -70,6 +70,9 @@ ppmview_main:
 		
 		lda paramptr
 		ldx paramptr+1
+;		lda #<filename
+;		ldx #>filename
+		
 		ldy #O_RDONLY
 		jsr krn_open
 		bne @io_error
@@ -89,15 +92,16 @@ ppmview_main:
 
 		jsr load_image
 		bne @gfx_io_error
-		
+
 		keyin
+		
 		jsr gfxui_off
 		
 		bra @close_exit
 
 @invalid_ppm:
 		jsr krn_primm
-		.byte $0a,"Not a valid ppm file! Must be type P6 with size 256x192px and 8bpp.",0
+		.byte $0a,"Not a valid ppm file! Must be type P6 with max. ", .string(MAX_WIDTH), "x", .string(MAX_HEIGHT), "px and 8bpp colors.",0
 		bra @close_exit
 
 @gfx_io_error:
@@ -112,13 +116,16 @@ ppmview_main:
 		jsr hexout
 @close_exit:
 		ldx fd
-		beq l_exit
+		beq @l_exit
 		jsr krn_close
-l_exit:
+@l_exit:
 		jmp (retvec)
 
+filename:
+;	.asciiz "pic22.ppm"
+;	.asciiz "felix.ppm"
+				
 read_blocks:
-
 		SetVector ppmdata, read_blkptr
 		ldx fd
 		ldy #(3*BLOCK_BUFFER) ; multiples of 3 blocks at once, cause of the ppm header and alignment
@@ -128,11 +135,7 @@ load_image:
 		stz cols
 		stz rows
 		
-		sei	;critical section, acoid vdp irq here
-			lda #%00000000
-			jsr vdp_gfx7_blank
-			jsr set_screen_addr
-		cli
+		jsr set_screen_addr	; initial vram address
 		
 		ldy data_offset ; .Y - data offset
 @loop:
@@ -170,6 +173,7 @@ blocks_to_vram:
 ;		jsr hexout
 		cmp ppm_height
 		beq @l_exit
+		jsr set_screen_addr
 @l1:
 		lda read_blkptr+1
 		cmp #>(ppmdata+(BLOCK_BUFFER*3*$200))	;end of 3 blocks reached?
@@ -205,10 +209,46 @@ byte_to_grb:
 		ora tmp
 		rts
 		
-set_screen_addr:
-		vdp_sreg <.HIWORD(ADDRESS_GFX7_SCREEN<<2), v_reg14
-		vdp_sreg <.LOWORD(ADDRESS_GFX7_SCREEN), (WRITE_ADDRESS + >.LOWORD(ADDRESS_GFX7_SCREEN))
+wait_key:
+		stz tmp
+@l_l1:
+		sei
+		lda tmp
+		ldy #v_reg23
+		vdp_sreg
+		cli
+		
+		dec tmp
+		
+		keyin
+		cmp #'q'
+		bne @l_l1
 		rts
+		
+set_screen_addr:
+		sei	;critical section, avoid vdp irq here
+		lda cols
+;		vdp_sreg <.HIWORD(ADDRESS_GFX7_SCREEN<<2), v_reg14
+;		vdp_sreg <.LOWORD(ADDRESS_GFX7_SCREEN), WRITE_ADDRESS + >.LOWORD(ADDRESS_GFX7_SCREEN)
+		sta a_vreg                 ; A7-A0 vram address low byte
+		lda rows
+		and #$3f                   ; A13-A8 vram address highbyte
+		ora #WRITE_ADDRESS
+		vdp_wait_s 4
+		sta a_vreg
+		lda rows                   ; A16-A14 bank select via reg#14
+		rol
+		rol
+		rol
+		and #$03
+		ora #<.HIWORD(ADDRESS_GFX7_SCREEN<<2)
+		vdp_wait_s
+		sta a_vreg
+		vdp_wait_s 2
+		lda #v_reg14
+		sta a_vreg
+		cli
+		rts		
 		
 dec_blocks:
 		lda blocks+0
@@ -237,7 +277,7 @@ parse_header:
 		jsr parse_until_size	;skip until <width> <height>
 		jsr parse_int	;width
 		cmp #<MAX_WIDTH
-		bne @l_invalid_ppm
+		bcc @l_invalid_ppm ;
 		sta ppm_width
 		jsr parse_int	;height
 		cmp #MAX_HEIGHT+1
@@ -254,7 +294,7 @@ parse_header:
 		bcs @l_invalid_ppm
 		lda #0
 		rts
-@l_invalid_ppm:		
+@l_invalid_ppm:
 		lda #$ff
 @l_exit:
 		rts
@@ -306,14 +346,14 @@ parse_string:
 		bne @l0
 @le:	iny
 		rts
-
+			
 blend_isr:
+		vdp_wait_s
 		bit a_vreg
 		bpl @0
-		
 		save
 		
-		lda #Dark_Yellow
+		lda #%01001010
 		jsr vdp_bgcolor
 		
 		; irq Payload here
@@ -321,8 +361,7 @@ blend_isr:
 		lda #Black
 		jsr vdp_bgcolor
 		
-		restore
-		
+		restore		
 @0:
 		rti
 
@@ -333,6 +372,11 @@ gfxui_on:
 		jsr vdp_display_off			;display off
 		jsr vdp_gfx7_on			   ;enable gfx7 mode
 
+		vdp_sreg v_reg9_ln, v_reg9
+		
+		lda #%00000000
+		jsr vdp_gfx7_blank
+
 		copypointer  $fffe, irqsafe
 		SetVector  blend_isr, $fffe
 
@@ -341,6 +385,9 @@ gfxui_on:
 
 gfxui_off:
 		sei
+		
+		vdp_sreg 0, v_reg9
+		
 		copypointer  irqsafe, $fffe
 		cli
 		
@@ -349,7 +396,7 @@ gfxui_off:
 		jsr	krn_textui_enable
 	 
 		rts
-
+		
 	; TODO FIXME => lib
 __calc_blocks: ;blocks = filesize / BLOCKSIZE -> filesize >> 9 (div 512) +1 if filesize LSB is not 0
 		lda fd_area + F32_fd::FileSize + 3,x
@@ -373,13 +420,11 @@ __calc_blocks: ;blocks = filesize / BLOCKSIZE -> filesize >> 9 (div 512) +1 if f
 		ora blocks+1
 		ora blocks+0
 		rts
-
-irqsafe: .res 2, 0
-; TODO FIXME clarify BSS segment voodo
+		
 data_offset: .res 1, 0
 cols: .res 1, 0
 rows: .res 1, 0
 fd: .res 1, 0
 tmp: .res 1, 0
 tmp2: .res 1, 0
-buffer: .res 8, 0
+irqsafe: .res 2, 0
