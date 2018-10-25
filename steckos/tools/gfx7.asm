@@ -32,10 +32,8 @@
 
 .import vdp_gfx7_on
 .import vdp_gfx7_blank
-.import vdp_gfx7_set_pixel
 
 .import vdp_display_off
-.import vdp_memcpy
 .import vdp_mode_sprites_off
 .import vdp_bgcolor
 
@@ -44,16 +42,13 @@ appstart $1000
 
 .code
 main:
-		jsr	krn_textui_disable			;disable textui
+		jsr krn_textui_disable			;disable textui
 
 		jsr gfxui_on
 
-		keyin
-		
-		jsr fill_setpixel
-		;jsr load_image
-		
-		keyin
+		jsr load_image
+
+		keyin		
 
 		jsr	gfxui_off
 
@@ -64,22 +59,21 @@ main:
 		jmp (retvec)
 
 blend_isr:
+		save
+		
 		vdp_sreg 0, v_reg15
-		vdp_wait_l
-		vdp_wait_l
+		vdp_wait_s
 		bit a_vreg
 		bpl @0
 	
-		save
-
 		lda #%01001011
 		jsr vdp_bgcolor
 	
 		lda	#Black
 		jsr vdp_bgcolor
 
-		restore
 @0:
+		restore
 		rti
 		
 load_image:

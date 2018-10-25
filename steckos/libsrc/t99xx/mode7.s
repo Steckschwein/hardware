@@ -101,23 +101,26 @@ colour:
 ; 	VRAM ADDRESS = X + 256*Y
 vdp_gfx7_set_pixel:
 			sei
-         pha
          stx a_vreg                 ; A7-A0 vram address low byte
+         pha
          tya
          and #$3f                   ; A13-A8 vram address highbyte
          ora #WRITE_ADDRESS
-         vdp_wait_s 4               ; TODO FIXME code reorder, avoid vnops
+         nop
+			nop
+			nop
+			nop
          sta a_vreg
-         tya                        ; A16-A14 bank select via reg#14
-         rol
-         rol
-         rol
+         asl								; A16-A14 bank select via reg#14
+         asl
+         asl
          and #$03
          ora #<.HIWORD(ADDRESS_GFX7_SCREEN<<2)
          nop
 			nop
+			nop
 			sta a_vreg
-         vdp_wait_s 4
+         vdp_wait_s 2
          lda #v_reg14
          sta a_vreg
          vdp_wait_l 2
