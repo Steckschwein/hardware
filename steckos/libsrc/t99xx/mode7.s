@@ -98,10 +98,11 @@ colour:
 ;	.X - x coordinate [0..ff]
 ;	.Y - y coordinate [0..bf]
 ;	.A - color GRB [0..ff] as 332
-; 	VRAM ADDRESS = X + 256*Y
+; 	VRAM ADDRESS = .X + 256*.Y
+	
 vdp_gfx7_set_pixel:
 			sei
-         stx a_vreg                 ; A7-A0 vram address low byte
+			stx a_vreg                 ; A7-A0 vram address low byte
          pha
          tya
          and #$3f                   ; A13-A8 vram address highbyte
@@ -111,13 +112,13 @@ vdp_gfx7_set_pixel:
 			nop
 			nop
          sta a_vreg
-         asl								; A16-A14 bank select via reg#14
-         asl
-         asl
-         and #$03
+			tya
+			rol								; A16-A14 bank select via reg#14, rol over carry
+         rol
+         rol
+			and #$03
          ora #<.HIWORD(ADDRESS_GFX7_SCREEN<<2)
          nop
-			nop
 			nop
 			sta a_vreg
          vdp_wait_s 2

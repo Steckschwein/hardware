@@ -73,10 +73,8 @@ GFX_7_On:
 		jsr krn_display_off
 
 		jsr vdp_gfx7_on
-;		vnops
-;		lda #$00
-;		jsr vdp_gfx7_blank
-		vnops
+		lda #0
+		jsr vdp_gfx7_blank
 
 		cli
 		rts
@@ -90,18 +88,12 @@ GFX_MC_Plot:
 		jmp vdp_mc_set_pixel
 
 GFX_7_Plot:
-		jsr GFX_Plot_Prepare
-		sei
+		jsr GFX_Plot_Prepare		
 		jsr vdp_gfx7_set_pixel
-
-		vnops
-		lda #<.HIWORD(ADDRESS_GFX1_SCREEN<<2)
-		lda #0
-		sta a_vreg
-		vnops
-		lda #v_reg14
-		sta a_vreg
 		
+		sei
+		vdp_wait_l
+		vdp_sreg <.HIWORD(ADDRESS_GFX1_SCREEN<<2), v_reg14
 		cli
 		rts		
 
