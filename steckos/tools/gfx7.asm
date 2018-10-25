@@ -32,10 +32,13 @@
 
 .import vdp_gfx7_on
 .import vdp_gfx7_blank
+.import vdp_gfx7_set_pixel
+
 .import vdp_display_off
 .import vdp_memcpy
 .import vdp_mode_sprites_off
 .import vdp_bgcolor
+
 
 appstart $1000
 
@@ -43,99 +46,92 @@ appstart $1000
 main:
 		jsr	krn_textui_disable			;disable textui
 
-		jsr	gfxui_on
+		jsr gfxui_on
 
 		keyin
-
-		lda 	#0
-;		jsr 	vdp_gfx7_blank
-
-;		keyin
+		
+		jsr fill_setpixel
+		;jsr load_image
+		
+		keyin
 
 		jsr	gfxui_off
 
 		jsr	krn_display_off			;restore textui
 		jsr	krn_textui_init
 		jsr	krn_textui_enable
-		cli
 
 		jmp (retvec)
 
-row=$100
 blend_isr:
-    bit a_vreg
-    bpl @0
-	; save
+		vdp_sreg 0, v_reg15
+		vdp_wait_l
+		vdp_wait_l
+		bit a_vreg
+		bpl @0
+	
+		save
 
-    ; lda	#%11100000
-	; jsr vdp_bgcolor
-	;
-    ; lda	#Black
-	; jsr vdp_bgcolor
+		lda #%01001011
+		jsr vdp_bgcolor
+	
+		lda	#Black
+		jsr vdp_bgcolor
 
-	; restore
+		restore
 @0:
 		rti
-
-gfxui_on:
-   sei
-	jsr vdp_display_off			;display off
-	jsr vdp_mode_sprites_off	;sprites off
-
-	jsr vdp_gfx7_on			    ;enable gfx7 mode
-
-	lda #<.HIWORD(ADDRESS_GFX7_SCREEN<<2)
-	ldy #v_reg14
-	vdp_sreg
-	vnops
-	lda #<.LOWORD(ADDRESS_GFX7_SCREEN)
-	ldy #(WRITE_ADDRESS + >.LOWORD(ADDRESS_GFX7_SCREEN))
-	vdp_sreg
-
-	SetVector	rgbdata, ptr1
-	ldx #212
-	ldy #0
+		
+load_image:
+		sei
+		vdp_wait_s
+		vdp_sreg <.HIWORD(ADDRESS_GFX7_SCREEN<<2), v_reg14
+		vdp_sreg <.LOWORD(ADDRESS_GFX7_SCREEN), WRITE_ADDRESS + >.LOWORD(ADDRESS_GFX7_SCREEN)
+		cli
+		SetVector	rgbdata, ptr1
+		ldx #212
+		ldy #0
 @l0:
-	vnops
-	lda (ptr1),y
-	sta a_vram
-	iny
-	bne @l0
-	inc ptr1+1
-	dex
-	bne @l0
+		vdp_wait_l 10
+		lda (ptr1),y
+		sta a_vram
+		iny
+		bne @l0
+		inc ptr1+1
+		dex
+		bne @l0
+		rts 
+		
+gfxui_on:
+		sei
+		jsr vdp_display_off			;display off
+		jsr vdp_mode_sprites_off	;sprites off
 
-; 	ldx #192-171
-; @lerase:
-; 	vnops
-; 	stz a_vram
-; 	iny
-; 	bne @lerase
-; 	dex
-; 	bne @lerase
+		jsr vdp_gfx7_on			    ;enable gfx7 mode
 
-    copypointer  $fffe, irqsafe
-    SetVector  blend_isr, $fffe
+		lda 	#0
+		jsr 	vdp_gfx7_blank
+		
+		copypointer  $fffe, irqsafe
+		SetVector  blend_isr, $fffe
 
-	lda #%00000000	; reset vbank - TODO FIXME, kernel has to make sure that correct video adress is set for all vram operations, use V9958 flag
-	ldy #v_reg14
-	vdp_sreg
-
-    cli
-    rts
+		cli
+		rts
 
 gfxui_off:
-    sei
+	sei
+	copypointer  irqsafe, $fffe
 
-    copypointer  irqsafe, $fffe
-    cli
-    rts
+	lda 	#0
+	jsr 	vdp_gfx7_blank
+	 
+	cli
+	rts
 
 irqsafe: .res 2, 0
 
-.align 256,0
+.data
 rgbdata:
 .incbin "felix.ppm.raw"
-
 
 .segment "STARTUP"

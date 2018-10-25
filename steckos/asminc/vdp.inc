@@ -72,14 +72,16 @@ v_reg4 	= $84
 v_reg5 	= $80 + 	5
 v_reg6 	= $80	+	6
 v_reg7  = $80	+	7
+; start of V9938/V9958 register set
 v_reg8  = $80	+	8
 v_reg9  = $80	+	9
-
 v_reg11	= $80 + 11
 v_reg14	= $80 + 14
 v_reg15	= $80 + 15
 
 v_reg17	= $80 + 17
+v_reg18	= $80 + 18	; display adjust
+v_reg23	= $80 + 23	; vertical offset
 
 v_reg25 = $80 + 25
 
@@ -186,13 +188,12 @@ ADDRESS_GFX_MC_SPRITE_PATTERN	=ADDRESS_GFX2_PATTERN	; sprite pattern
 
 ; long delay with 6+2 2µs wait
 MAX_NOPS_8M = (6 * 1000 / (1000 / CLOCK_SPEED_MHZ)) / 2 ; eg. 8Mhz, means 125ns per cycle. so wait 6µs = 6000ns => 6000ns / 125ns = 48cl / 2 => 24 NOP
-; short delay with for 2µs wait
+; short delay with 2µs wait
 MAX_NOPS_2M = (2 * 1000 / (1000 / CLOCK_SPEED_MHZ) - 12) / 2 ; - 12 => jsr/rts = 2*6cl = 12cl must be subtract
 
 .macro m_vdp_nopslide
 ; NOTE!!!
-; - min TMS9929 wait 2µs between writes => 8Mhz => 16cl
-; - min TMS9938/58 wait 2µs between 2 byte writes and wait 8µs before 3rd byte and all n'th byte writes
+; - TMS9929 and V9938/V9958 wait 2µs between 2 byte writes and 8µs for the 3rd and n'th byte write and wait 8µs before 3rd byte and all n'th byte writes
 vdp_nopslide_8m:
 			; long delay with 6+2 2µs wait
 			.repeat MAX_NOPS_8M
@@ -238,7 +239,7 @@ vdp_nopslide_2m:
 .macro vdp_sreg _1st, _2nd
 		.local _1st
 		.local _2nd
-		.if(.paramcount <> 2)	;no args, use the legacy call
+		.if(.paramcount <> 2)	;no macro args, use the A/Y parameter call
 			vdp_wait_s
 			sta a_vreg
 			vdp_wait_s
@@ -250,7 +251,7 @@ vdp_nopslide_2m:
 			vdp_wait_s 2
 			lda # _2nd
 			sta a_vreg
-		.endif
+			.endif
 .endmacro
 
 .macro vdp_reg reg, val

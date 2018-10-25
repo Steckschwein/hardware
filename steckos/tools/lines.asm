@@ -31,7 +31,6 @@
 
 .import vdp_gfx7_on
 .import vdp_gfx7_blank
-.import vdp_gfx7_set_pixel
 .import vdp_display_off
 .import vdp_memcpy
 .import vdp_mode_sprites_off

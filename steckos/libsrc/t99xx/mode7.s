@@ -43,6 +43,7 @@ vdp_gfx7_on:
 			sta vdp_ptr
 			lda #>vdp_init_bytes_gfx7
 			sta vdp_ptr+1
+			vdp_sreg 0, v_reg23	; reset vertical scroll
 			lda #<(vdp_init_bytes_gfx7_end-vdp_init_bytes_gfx7)-1
 			jmp vdp_init_reg
 					
@@ -94,17 +95,18 @@ colour:
 	.byte $00 ; destination memory, x direction, y direction, yada yada
 	.byte v_cmd_hmmv ; command
 
-;	X - x coordinate [0..ff]
-;	Y - y coordinate [0..bf]
-;	A - color GRB [0..ff] as 332
+;	.X - x coordinate [0..ff]
+;	.Y - y coordinate [0..bf]
+;	.A - color GRB [0..ff] as 332
 ; 	VRAM ADDRESS = X + 256*Y
 vdp_gfx7_set_pixel:
+			sei
          pha
          stx a_vreg                 ; A7-A0 vram address low byte
          tya
          and #$3f                   ; A13-A8 vram address highbyte
          ora #WRITE_ADDRESS
-         vdp_wait_s                 ; TODO FIXME code reorder, avoid vnops
+         vdp_wait_s 4               ; TODO FIXME code reorder, avoid vnops
          sta a_vreg
          tya                        ; A16-A14 bank select via reg#14
          rol
@@ -112,14 +114,17 @@ vdp_gfx7_set_pixel:
          rol
          and #$03
          ora #<.HIWORD(ADDRESS_GFX7_SCREEN<<2)
-         sta a_vreg
-         vdp_wait_s
+         nop
+			nop
+			sta a_vreg
+         vdp_wait_s 4
          lda #v_reg14
          sta a_vreg
-         vdp_wait_l
+         vdp_wait_l 2
          pla
          sta a_vram                 ; set color
-         rts
+         cli
+			rts
 
 vdp_wait_cmd:
 		vdp_sreg 2, v_reg15
@@ -141,47 +146,46 @@ vdp_wait_cmd:
 vdp_gfx7_set_pixel_cmd:
 		pha
 		pha
-
+		
+		sei
 		vdp_reg 17,36
-		vnops
+		
+		vdp_wait_s
 		stx a_vregi
-		vnops
 
 		; dummy highbyte
-		lda #0
-		sta a_vregi
-		vnops
+		vdp_wait_s
+		stz a_vregi
 
+		vdp_wait_s
 		sty a_vregi
 		vnops
 
 		; dummy highbyte
-		lda #1
+		vdp_wait_s 2
+		lda #$01
 		sta a_vregi
-		vnops
 
+		vdp_wait_s
 		vdp_reg 17,44
 
 		pla
 		;	colour
 		;	GGGRRRBB
+		vdp_wait_s 2
 		sta a_vregi
-		vnops
 
+		vdp_wait_s 2
 		lda #$0
 		sta a_vregi
-		vnops
 
+		vdp_wait_s 2
 		lda #v_cmd_pset
 		sta a_vregi
-		vnops
-
-		vdp_reg 15,2
-@wait:
-		vnops
-		lda a_vreg
-		ror
-		bcs @wait
+		
+		vdp_wait_s 4
+		jsr vdp_wait_cmd
 
 		pla
+		cli
 		rts
