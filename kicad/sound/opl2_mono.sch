@@ -650,4 +650,5 @@ Text Label 5350 3600 0    60   ~ 0
 NoConn ~ 5250 4000
 NoConn ~ 5250 4200
 NoConn ~ 4400 2950
+NoConn ~ 1000 1050
 $EndSCHEMATC
