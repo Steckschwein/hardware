@@ -4,15 +4,16 @@ RDYGEN
 Clock VDP UART  ROM  SND IO01 IO02 IO03 Clear GND
 /OE   RDY   W1   W2   NC   NC   NC   Q1    Q0 VCC
 
-W2	= /SND
-W1 = W2
-	+ /ROM 			; /ROM wait state if ROM is cs
+;W2	= /SND
+W1 =  /ROM 			; /ROM wait state if ROM is cs
 	+ /VDP			; /VDP wait state if VDP is cs
+	+ /SND			; /SND wait state if SND is cs
 
 Q0.R 	= W1 * /Q0 * /Q1 * Clear
-	+ W2 * /Q0 * /Q1 * Clear
+;	+ W2 * /Q0 * /Q1 * Clear
 
-Q1.R 	= W2 * /Q1 * Q0 * Clear
+;Q1.R 	= W2 * /Q1 * Q0 * Clear
+Q1.R 	= /Q1 * Q0 * Clear
 
 
 RDY.T 	= /Q0 * /Q1
