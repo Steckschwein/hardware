@@ -9,7 +9,6 @@ TOOLLIB=lib/toollib.a
 all: ls.prg ll.prg \
 	stat.prg fsinfo.prg attrib.prg rename.prg \
 	help.prg \
-	setdate.prg date.prg \
 	nvram.prg uname.prg \
 	clear.prg \
 	view.prg \
@@ -47,7 +46,7 @@ toollib:
 	ld65 $< $(LDFLAGS) $(TOOLLIB) -o $@
 
 %.dis: %.prg
-	dcc6502 -o 0x0ffe -d -n -c $< > $@ 
+	dcc6502 -o 0x0ffe -d -n -c $< > $@
 
 ls.prg: toollib ls.o ls_entry_short.o
 	cl65 $(CA65FLAGS) --target none --config ../kernel/steckosapp.cfg ls.o ls_entry_short.o $(TOOLLIB) -o ls.prg
