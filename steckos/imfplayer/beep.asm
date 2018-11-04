@@ -58,6 +58,7 @@ __LOADADDR__ = $1000
     ; Turn the voice on; set the octave and freq MSB
     ;oplSetReg1 $B0, $31
 ;
+    save
     ldx #0
 loop:
     lda reglist,x
@@ -95,6 +96,7 @@ delay:
 
     oplSetReg1 $B0, $11
 
+    restore
     jmp (retvec)
 reglist:
     .byte $20, $40, $60, $80, $a0, $23, $43, $63, $83, $b0, $00
