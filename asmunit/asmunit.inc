@@ -1,6 +1,6 @@
 ; MIT License
 ;
-; Copyright (c) 2018 Thomas Woinke, Marko Lauke, www.steckschein.de
+; Copyright (c) 2018 Thomas Woinke, Marko Lauke, www.steckschwein.de
 ;
 ; Permission is hereby granted, free of charge, to any person obtaining a copy
 ; of this software and associated documentation files (the "Software"), to deal
@@ -30,17 +30,23 @@
 .define _FLAG_Z1 "Z=1"
 .define _FLAG_D0 "D=0"
 .define _FLAG_D1 "D=1"
+.define _FLAG_N0 "N=0"
+.define _FLAG_N1 "N=1"
 
-.define	_EXPECT_MAX_LENGTH 32
+.define	_EXPECT_MAX_LENGTH 255
 
-;.define	_OUTPUT_STRING 1<<7	; string or number
-;.define	_OUTPUT_MODE	1<<6	; 
+.define _FORMAT_STRING 1<<7 	; bit 7 set output string, number otherwise
 
-.define _OUTPUT_NUMBER 0
-.define _OUTPUT_FAIL 1<<6
-.define _OUTPUT_STRING 1<<7
-.define _OUTPUT_TESTNAME 1<<7 | 1<<6
+.define _MODE_ASSERT_EQ 0		; 
+.define _MODE_ASSERT_LEQ 1<<0 ; assert input with less or equal (<=) the expectation
+.define _MODE_FAIL 1<<1
+.define _MODE_TESTNAME 1<<2
 
+
+_tst_ptr=$0					;
+_tst_inp_ptr=$2			;
+
+asmunit_addr_instrument = $0202
 
 tst_acc			= $0100	; we use the lower part of the stack as temp space assuming the stack is almost not complety exhausted... hopefully :P
 tst_xreg			= $0101
@@ -48,26 +54,7 @@ tst_yreg			= $0102
 tst_status		= $0103
 tst_save_ptr	= $0104 ; to save and restore the _tst_ptr
 tst_return_ptr	= $0106 ; to save and restore the _tst_exp_ptr and to build the return vector
-tst_bytes		= $0108
-
-;.import asmunit_print
-;.import asmunit_assert
-;.import asmunit_l_flag_c0
-;.import asmunit_l_flag_c1
-;.import asmunit_l_flag_z0
-;.import asmunit_l_flag_z1
-;.import asmunit_char_out_buffer
-;.import asmunit_char_out_ptr
-
-.macro _message label, mode
-	.import asmunit_assert
-	.local @labelAddress
-	.assert .strlen(label) <= _EXPECT_MAX_LENGTH, error, "Expectation argument exceeds limit!"
-	jsr  asmunit_assert
-	.word @labelAddress
-	.byte mode | .strlen(label)
-@labelAddress: .byte label
-.endmacro
+tst_bytes		= $0108 ; amount of bytes to test
 
 .macro cmp16 address, _16Bit
 	.local @l_exit
@@ -99,12 +86,33 @@ tst_bytes		= $0108
 	set16 address+2, (_32Bit>>16)
 .endmacro
 
-.macro test_name label
-	_message label, _OUTPUT_TESTNAME
+.macro _message label, mode
+	.import asmunit_assert
+	.local @labelAddress
+	.assert .strlen(label) <= _EXPECT_MAX_LENGTH, error, "Expectation argument exceeds limit!"
+	jsr asmunit_assert
+	.byte mode | _FORMAT_STRING
+	.word @labelAddress
+	.byte .strlen(label)
+@labelAddress: .byte label
 .endmacro
 
-.macro fail error
-	_message error, _OUTPUT_FAIL
+.macro test_begin label
+	test_name label
+.endmacro
+
+.macro test_end
+	brk
+.endmacro
+
+.macro test_name label
+	.local test_addr
+	.export test_addr=*
+	_message .concat("[", label, "]"), _MODE_TESTNAME
+.endmacro
+
+.macro fail message
+	_message message, _MODE_FAIL
 .endmacro
 
 .macro assertX expect
@@ -125,7 +133,8 @@ tst_bytes		= $0108
 
 .macro assert8 expect8, address
 	.import asmunit_assert
-	jsr  asmunit_assert
+	jsr asmunit_assert
+	.byte _MODE_ASSERT_EQ
 	.word address
 	.byte 1
 	.byte expect8
@@ -133,7 +142,8 @@ tst_bytes		= $0108
 
 .macro assert16 expect16, address
 	.import asmunit_assert
-	jsr  asmunit_assert
+	jsr asmunit_assert
+	.byte _MODE_ASSERT_EQ
 	.word address
 	.byte 2
 	.word expect16
@@ -141,17 +151,19 @@ tst_bytes		= $0108
 
 .macro assert32 expect32, address
 	.import asmunit_assert
-	jsr  asmunit_assert
+	jsr asmunit_assert
+	.byte _MODE_ASSERT_EQ
 	.word address
 	.byte 4
 	.dword expect32
 .endmacro
 
-.macro  asmunit_assertFlag labelAddress, labelSymbol
+.macro asmunit_assertFlag labelAddress, labelSymbol
 	.import asmunit_assert
-	jsr  asmunit_assert
+	jsr asmunit_assert
+	.byte _MODE_ASSERT_EQ | _FORMAT_STRING
 	.word labelAddress
-	.byte _OUTPUT_STRING | .strlen(labelSymbol)
+	.byte .strlen(labelSymbol)
 	.byte labelSymbol
 .endmacro
 
@@ -168,13 +180,13 @@ tst_bytes		= $0108
 	.assert expect = 0 || expect = 1, error, "Invalid expect, must be 0 or 1!"
 	.if expect
 		.import asmunit_l_flag_d0
-		 asmunit_assertFlag asmunit_l_flag_d0, _FLAG_D1
+		 asmunit_assertFlag asmunit_l_flag_d0, _FLAG_D1 ; force a fail here
 	.else
 		.import asmunit_l_flag_d1
 		 asmunit_assertFlag asmunit_l_flag_d1, _FLAG_D0	
 	.endif
-		bra :++
-:		_pass
+;		bra :++
+;:		_pass
 :
 .endmacro
 
@@ -191,14 +203,14 @@ tst_bytes		= $0108
 	.if expect
 		bcs :+
 		.import asmunit_l_flag_c0
-		 asmunit_assertFlag asmunit_l_flag_c0, _FLAG_C1
+		asmunit_assertFlag asmunit_l_flag_c0, _FLAG_C1 ; force a fail by compare inverse
 	.else
 		bcc :+
 		.import asmunit_l_flag_c1
-		 asmunit_assertFlag asmunit_l_flag_c1, _FLAG_C0
+		asmunit_assertFlag asmunit_l_flag_c1, _FLAG_C0 ; force a fail by compare inverse
 	.endif
-		bra :++
-:		_pass
+;	bra :++
+;:	_pass
 :
 .endmacro
 
@@ -215,37 +227,62 @@ tst_bytes		= $0108
 	.if expect
 		beq :+
 		.import asmunit_l_flag_z0
-		 asmunit_assertFlag asmunit_l_flag_z0, _FLAG_Z1
+		 asmunit_assertFlag asmunit_l_flag_z0, _FLAG_Z1 ; force a fail by compare inverse
 	.else
 		bne :+
 		.import asmunit_l_flag_z1
-		 asmunit_assertFlag asmunit_l_flag_z1, _FLAG_Z0
+		 asmunit_assertFlag asmunit_l_flag_z1, _FLAG_Z0	; force a fail by compare inverse
 	.endif
-		bra :++
-:		_pass
+;		bra :++
+;:		_pass
 :
 .endmacro
 
 .macro assertString expect, address
+	.assert .strlen(expect) <= _EXPECT_MAX_LENGTH, error, "Expectation argument exceeds limit!"
 	.import asmunit_assert
 	jsr asmunit_assert
+	.byte _MODE_ASSERT_EQ | _FORMAT_STRING
 	.word address
-	.assert .strlen(expect) <= _EXPECT_MAX_LENGTH, error, "Expectation argument exceeds limit!"
-	.byte _OUTPUT_STRING | .strlen(expect)
+	.byte .strlen(expect)
 	.byte expect
 .endmacro
 
 .macro assertOut expect
+	.assert .strlen(expect) <= _EXPECT_MAX_LENGTH, error, "Expectation argument exceeds limit of test output buffer!"
+	
 	.import asmunit_assert
 	.import asmunit_char_out_buffer
-	.import asmunit_char_out_ptr
+	.import asmunit_char_out_ix
 	
-	.assert .strlen(expect) <= _EXPECT_MAX_LENGTH, error, "Expectation argument exceeds limit of test output buffer!"
-	stz asmunit_char_out_ptr					; reset asmunit_char_out_buffer	before test - TODO FIXME maybe a dedicated macro?!?
+	stz asmunit_char_out_ix		; reset asmunit_char_out_buffer	before test - TODO FIXME maybe a dedicated macro?!?
 	jsr asmunit_assert
+	.byte _MODE_ASSERT_EQ | _FORMAT_STRING
 	.word asmunit_char_out_buffer
-	.byte _OUTPUT_STRING | .strlen(expect)
+	.byte .strlen(expect)
 	.byte expect
+.endmacro
+
+;
+; functional testing 
+;
+.macro resetCycles
+	stz asmunit_addr_instrument	; write a #1 to <asmunit_addr_instrument>, it's hooked by the py65 memory observer and will update the internal cycle counter to the current cycle counter
+.endmacro
+
+.macro assertCycles cycles
+	.import asmunit_assert
+	lda asmunit_addr_instrument	; write a #0 will result in write the current cycle counter to memory we can assert afterwards - the cycle counter is the difference from current - last one
+	jsr asmunit_assert
+	.byte _MODE_ASSERT_LEQ			; compare cycles less or equal
+	.word asmunit_addr_instrument+1 ; addr of cycle counter
+	.byte 4
+	; cycles are stored in big endian, since we want to compare from MSB down to LSB to achieve "measured cycles <= expected cycles" 
+	.byte >.HIWORD(cycles)
+	.byte <.HIWORD(cycles)
+	.byte >.LOWORD(cycles)
+	.byte <.LOWORD(cycles)
+	
 .endmacro
 
 .endif
