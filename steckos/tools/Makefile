@@ -3,28 +3,11 @@ CA65FLAGS=--include-dir ../asminc --include-dir ../kernel
 LDFLAGS=--config ../steckos-c-app.cfg ../lib/steckschwein-kernel.lib
 ASM_INCLUDE=--include-dir ../steckos/kernel --include-dir ../steckos/asminc
 TOOLLIB=lib/toollib.a
+TOOLS=ls.prg ll.prg stat.prg fsinfo.prg attrib.prg rename.prg help.prg nvram.prg uname.prg clear.prg view.prg echo.prg od.prg touch.prg rmdir.prg mkdir.prg cp.prg pwd.prg rm.prg du.prg keycode.prg hello.prg fig.prg vramtest.prg wozmon.prg
 
 .PHONY: all clean
 
-all: ls.prg ll.prg \
-	stat.prg fsinfo.prg attrib.prg rename.prg \
-	help.prg \
-	nvram.prg uname.prg \
-	clear.prg \
-	view.prg \
-	echo.prg \
-	od.prg \
-	touch.prg \
-	rmdir.prg mkdir.prg \
-	cp.prg pwd.prg rm.prg \
-	du.prg \
-	keycode.prg \
-	hello.prg \
-	fibo.prg \
-	gfx7.prg \
-	fig.prg \
-	vramtest.prg \
-	wozmon.prg
+all: $(TOOLS)
 
 clean:
 	rm -f *.prg *.s *.o toollib.a
