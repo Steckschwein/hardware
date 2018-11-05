@@ -1,7 +1,6 @@
 DEFINES=-Dasmunit_char_out=0x200
 CA65FLAGS=$(DEFINES)
-LIBS=asmunit.a
-LDFLAGS=--config asmunit.cfg $(LIBS) $(DEFINES)
+LDFLAGS=--config asmunit.cfg $(DEFINES)
 OBJS=asmunit.o
 
 .PHONY: all clean test
@@ -11,7 +10,7 @@ all: test asmunit.a
 test: test.asmunit
 
 clean:
-	rm -f *.o toollib.a
+	rm -f *.o *.a
 
 %.o: %.asm asmunit.inc
 	ca65 $(CA65FLAGS) $(@:.o=.asm)
