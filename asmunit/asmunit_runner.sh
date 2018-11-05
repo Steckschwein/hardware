@@ -1,5 +1,16 @@
 #!/bin/bash
 
+pythonbin=`which python`
+if [ -z "${pythonbin}" ];then
+	echo "python not found!"
+	exit -1
+fi
+pyversion=$(${pythonbin} --version 2>&1 | cut -d '.' -f1)
+if ! [[ ${pyversion} =~ 3.* ]]; then
+	echo "${pyversion} detected, 3.x required!"
+	exit -1
+fi
+
 output=0x0200	# use steckschwein i/o area as default to avoid conflicts. on steckschwein, code are never placed here
 dir=`dirname $0`
 if [ -z "$1" ]; then
