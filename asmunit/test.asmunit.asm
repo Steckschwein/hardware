@@ -78,7 +78,7 @@
 	assertString "65C02", _string
 
 	test_name "asmunit fail"	
-	fail"raised a failexplicitly!"
+	fail"raised a fail explicitly!"
 	
 	test_name "asmunit assertCycles"	
 	resetCycles
