@@ -26,8 +26,7 @@ if [ -z ${address} ]; then
 	address="$1000"
 fi
 binary=$1
-# python => python >=3.x required
-python ${dir}/asmunit.monitor.py -m 65c02 --output $output <<EOUNIT
+${pythonbin} ${dir}/asmunit.monitor.py -m 65c02 --output $output <<EOUNIT
 .load "${binary}" ${address}
 .goto ${address}
 EOUNIT
