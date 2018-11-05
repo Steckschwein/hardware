@@ -3,6 +3,9 @@
 .import sqrt8					; uut
 
 .code
+
+	test "sqrt8"
+	
 	ldx #$00
 	lda	#25
 	sta $20

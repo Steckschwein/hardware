@@ -2,37 +2,41 @@
 
 	.import b2ad2				; uut
 	.import b2ad				; uut
-	.import dpb2ad
+	.import dpb2ad				; uut
 
 .code
-    ldx #0
-    ldy #0
+	
+		test "b2ad"
+		
+		ldx #0
+		ldy #0
 
-	lda	#42
-	jsr	b2ad
+		lda	#42
+		jsr	b2ad
 
-	assertOut "42"	; assert outpuz
-    assertX 0
-    assertY 0
+		assertOut "42"	; assert outpuz
+		assertX 0
+		assertY 0
 
-	lda	#042
-	jsr	b2ad2
+		test "b2ad2"
 
-	assertOut "042"	; assert outpuz
-    assertX 0
-    assertY 0
+		lda	#42
+		jsr	b2ad2
 
-	lda	#255
-	jsr	b2ad2
+		assertOut "042"	; assert outpuz
+		assertX 0
+		assertY 0
 
-	assertOut "255"	; assert outpuz
+		lda	#255
+		jsr	b2ad2
+		assertOut "255"	; assert outpuz
 
-	lda	#255
-	ldx	#255
-	jsr	dpb2ad
+		test "dpb2ad"
+		lda	#255
+		ldx	#255
+		jsr	dpb2ad
 
-	assertOut "65535"	; assert outpuz
-
+		assertOut "65535"	; assert outpuz
 
 
 	; lda	#$e7

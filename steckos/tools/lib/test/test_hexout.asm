@@ -4,7 +4,7 @@
 	
 .code
 
-	test_name "hexout"
+	test "hexout"
 
 	lda	#$7e
 	jsr	hexout

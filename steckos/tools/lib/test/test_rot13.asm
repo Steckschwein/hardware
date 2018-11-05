@@ -3,6 +3,9 @@
 .import rot13					; uut
 
 .code
+
+	test "rot13"
+	
     ldx #$00
     ldy #$00
 	lda	#'A'

@@ -3,6 +3,9 @@
 .import bin2dual					; uut
 
 .code
+
+	test "bin2dual"
+	
 	lda #$ff
 	ldx #$00
 	jsr bin2dual

@@ -4,6 +4,9 @@
 .import char_out
 
 .code
+	
+	test "dword2asc"
+
     ldx #<operand
     ldy #>operand
 

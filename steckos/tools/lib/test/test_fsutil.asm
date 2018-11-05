@@ -14,7 +14,7 @@
     lda #>direntry
     sta dirptr+1
 
-    test_name "fat_entry_filesize"
+    test "fat_entry_filesize"
 
 
     ldy #42
@@ -24,19 +24,19 @@
     assertY 42
     assert16 direntry, dirptr
 
-    test_name "fat_entry_wrtdate"
+    test "fat_entry_wrtdate"
 
     jsr print_fat_date
     assertY F32DirEntry::WrtDate
     assertOut "00.0"
 
-    test_name "fat_entry_wrttime"
+    test "fat_entry_wrttime"
 
     jsr print_fat_time
     assertOut "00:0"
 
 
-    test_name "fat_entry_filename"
+    test "fat_entry_filename"
 
     jsr print_filename
     assertOut "FOOBAR  BAZ"
