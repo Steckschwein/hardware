@@ -11,9 +11,8 @@ fi
 _ts=$(date +%s%N)
 $dir/asmunit_runner.sh $1 $2 > $logfile
 _tt=$((($(date +%s%N) - $_ts)/1000000))
-test_ok=`grep "PASS" $logfile | wc -l`
 test_fail=`grep "FAIL" $logfile | wc -l`
-tests=`expr $test_ok + $test_fail`
+tests=$(grep "\[.*\]" $logfile | wc -l)
 
 TARGET_DIR=target/test-reports
 
