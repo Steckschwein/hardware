@@ -110,8 +110,6 @@ tst_bytes		= $0108 ; amount of bytes to test
 .endmacro
 
 .macro test label
-	.local test_addr
-	.export test_addr=*
 	_message .concat("[", label, "]"), _MODE_TESTNAME
 .endmacro
 

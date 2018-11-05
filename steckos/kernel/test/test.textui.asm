@@ -9,7 +9,7 @@
 	
 .segment "KERNEL"	; test must be placed into kernel segment, cuz we wanna use the same linker config
 
-	test_name "textui_crsxy"
+	test "textui_crsxy"
 		
 		ldx #0
 		ldy #0

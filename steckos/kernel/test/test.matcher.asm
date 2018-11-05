@@ -20,7 +20,7 @@
 @entry: .byte dir_entry,0
 @input: .byte user_input,0
 :
-	test_name .concat("[", user_input, "] [", dir_entry, "]");
+	test .concat("[", user_input, "] [", dir_entry, "]");
 	SetVector fat_dirname_mask, krn_ptr2    ; ouput
 	SetVector @input, filenameptr
 	jsr string_fat_mask

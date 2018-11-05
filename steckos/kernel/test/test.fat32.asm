@@ -16,7 +16,7 @@
 	krn_chrout=asmunit_chrout
 	
 .macro setup testname
-		test_name testname
+		test testname
 		jsr setUp
 .endmacro
 	

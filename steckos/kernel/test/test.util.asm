@@ -13,7 +13,7 @@
 	
 .segment "KERNEL"	; test must be placed into kernel segment, cuz we wanna use the same linker config
 
-	test_name "string_fat_mask"
+	test "string_fat_mask"
 	SetVector output, krn_ptr2	; ouput
 
 	SetVector test_data_01, filenameptr
