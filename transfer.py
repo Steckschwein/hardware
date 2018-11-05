@@ -11,20 +11,18 @@ import binascii
 import serial.tools.list_ports
 
 def main():
-	ports = list(serial.tools.list_ports.grep("^/dev/cu.usbserial*|/dev/tty*"))
-
-	device = None
-	if device == None and len(ports)>0:
-		try:
-			device = ports[0][0]
-		except KeyError:
-			pass		
-		
+	try:
+		device = os.environ['TRANSFER_DEVICE']
+	except KeyError:
+		pass
+			
 	if device == None:
-		try:
-			device = os.environ['TRANSFER_DEVICE']
-		except KeyError:
-			pass
+		ports = list(serial.tools.list_ports.grep("^/dev/cu.usbserial*|/dev/tty*"))
+		if len(ports)>0:
+			try:
+				device = ports[0][0]
+			except KeyError:
+				pass
 
 	parser = argparse.ArgumentParser(description='transfer binary via serial interface')
 	parser.add_argument('-d', '--device', help="serial device. can also be set with environment variable TRANSFER_DEVICE.", required=(device==None), default=device)
@@ -37,11 +35,11 @@ def main():
 
 
 	try:
-		with open(args.filename, 'r') as content_file:
+		with open(args.filename, 'rb') as content_file:
 			content = content_file.read()
 
 	except IOError:	
-		print "%s: file '%s' not found" % (sys.argv[0], args.filename, )
+		print("%s: file '%s' not found" % (sys.argv[0], args.filename, ))
 		sys.exit(1)
 
 
@@ -57,7 +55,7 @@ def main():
 			timeout=5
 		)
 	except serial.serialutil.SerialException:
-		print "Error opening serial device %s" % (args.device, )
+		print("Error opening serial device %s" % (args.device, ))
 		sys.exit(1)
 		
 
@@ -75,23 +73,23 @@ def main():
 
 	length = len(content)
 
-	print "Startaddress : 0x%04x (%d)" % (startaddr, startaddr)
-	print "Length    	: 0x%04x (%d) bytes" % (length, length)
+	print ("Startaddress : 0x%04x (%d)" % (startaddr, startaddr))
+	print ("Length    	: 0x%04x (%d) bytes" % (length, length))
 
 	ser.flushOutput()
 
 	bytes = ser.write(struct.pack('<H', startaddr))
 	if ser.read(2) == 'OK':
-		print "Start address %d bytes" % (bytes, )
+		print ("Start address %d bytes" % (bytes, ))
 
 	bytes = ser.write(struct.pack('<H', length))
 	if ser.read(2) == 'OK':
-		print "Length %d bytes" % (bytes, )
+		print ("Length %d bytes" % (bytes, ))
 			
 	bytes = ser.write(content)
 	if ser.read(2) == 'OK':
-		print "Length %d bytes" % (bytes, )
-		print "Bytes transferred: %d" % (bytes, )
+		print ("Length %d bytes" % (bytes, ))
+		print ("Bytes transferred: %d" % (bytes, ))
 
 	ser.close()
 
