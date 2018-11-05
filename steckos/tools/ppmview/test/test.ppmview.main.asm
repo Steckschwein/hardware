@@ -18,7 +18,7 @@
 .export ppm_width
 .export ppm_height
 
-.macro test label
+.macro setup label
 	test_name label
 	stz ppm_width
 	stz ppm_height
@@ -27,7 +27,7 @@
 .code
 
 ;-------------	
-	test "parse_header valid"
+	setup "parse_header valid"
 	m_memcpy test_ppm_header_valid, ppmdata, 16
 	jsr parse_header
 	assertZero 1		;
@@ -36,28 +36,28 @@
 	assert8 212, ppm_height
 
 ;-------------	
-	test "parse_header not ppm"	
+	setup "parse_header not ppm"	
 	m_memcpy test_ppm_header_notppm, ppmdata, 16
 	jsr parse_header
 	assertZero 0		;error
 	assertA $ff
 	
 ;-------------	
-	test "parse_header wrong height"
+	setup "parse_header wrong height"
 	m_memcpy test_ppm_header_wrong_height, ppmdata, 16
 	jsr parse_header
 	assertZero 0		;error
 	assertA $ff
 
 ;-------------	
-	test "parse_header wrong depth"
+	setup "parse_header wrong depth"
 	m_memcpy test_ppm_header_wrong_depth, ppmdata, 16
 	jsr parse_header	
 	assertZero 0		;error
 	assertA $ff
 	
 ;-------------	
-	test "parse_header with comment"
+	setup "parse_header with comment"
 	m_memcpy test_ppm_header_comment, ppmdata, 127
 	jsr parse_header
 	assertZero 1		;
@@ -65,7 +65,7 @@
 	assert8 <256, ppm_width
 	assert8 192, ppm_height	
 	
-	test "byte_to_grb"
+	setup "byte_to_grb"
  	SetVector ppmdata, read_blkptr
 	m_memcpy test_ppm_data, ppmdata, 32
 	
