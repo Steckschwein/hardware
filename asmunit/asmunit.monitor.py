@@ -27,9 +27,8 @@ import py65.monitor
 class AsmunitMonitor(py65.monitor.Monitor):
 
     def _install_mpu_observers(self, getc_addr, putc_addr):
-        instrument_addr = 0x0202
-		  
         super(AsmunitMonitor, self)._install_mpu_observers(getc_addr, putc_addr)
+        instrument_addr = 0x0202
         def writeCycles(address, cycles):
            #self.stdout.write("\nwriteCycles: %x %x\n" % (self._mpu.processorCycles, cycles))
            self._mpu.memory[instrument_addr+1] = cycles>>24 & 0xff				
