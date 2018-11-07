@@ -26,3 +26,4 @@ asmunit.a: $(OBJS) test.asmunit
 
 test.%: test.%.bin
 	./asmunit_wrapper.sh $@.bin 1000 false # false - do not fail on error here
+	diff $@.bin.log $@.bin.expect

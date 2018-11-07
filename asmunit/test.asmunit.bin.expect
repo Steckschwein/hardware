@@ -1,0 +1,35 @@
+.Wrote +1382 bytes from $1000 to $1565
+
+        PC  AC XR YR SP NV-BDIZC
+65C02: 0000 00 00 00 ff 00110000
+.
+[asmunit assertA]
+FAIL - $01 found, but expected $ef
+[asmunit assertX]
+FAIL - $e9 found, but expected $ab
+[asmunit assertY]
+FAIL - $9e found, but expected $cd
+[asmunit assertC]
+FAIL - C=0 found, but expected C=1
+FAIL - C=1 found, but expected C=0
+[asmunit assertZ]
+FAIL - Z=1 found, but expected Z=0
+FAIL - Z=0 found, but expected Z=1
+[asmunit assert8]
+FAIL - $08 found, but expected $12
+[asmunit assert16]
+FAIL - $0816 found, but expected $3412
+[asmunit assert32]
+FAIL - $08162432 found, but expected $78563412
+[asmunit assertOut]
+FAIL - x found, but expected X
+[asmunit assertString]
+FAIL - 65c02 found, but expected 65C02
+[asmunit fail]
+FAIL - raised a fail explicitly!
+[asmunit assertCycles]
+FAIL - $00000002 found, but expected $00000001
+FAIL - $0000000e found, but expected $0000000d
+        PC  AC XR YR SP NV-BDIZC
+65C02: 12d2 0e e9 9e ff 00110001
+.
