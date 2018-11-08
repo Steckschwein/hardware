@@ -1,4 +1,3 @@
-
 // MIT License
 //
 // Copyright (c) 2018 Thomas Woinke, Marko Lauke, www.steckschwein.de
@@ -68,7 +67,11 @@ unsigned int substr2int(unsigned char *s, unsigned short b, unsigned short l){
 }
 
 int main (int argc, char *argv[]){
-	time_t t = _systime();
+    struct timespec ts;    
+	time_t t;
+    
+    clock_gettime(CLOCK_REALTIME, &ts);
+    t = ts.tv_sec;
 	if(argc > 1){
 		struct tm *tm = localtime(&t);
 		char *datestr = argv[1];
@@ -84,7 +87,7 @@ int main (int argc, char *argv[]){
 		//parse date from input
 		// cprintf ("\n%d.%d.%d %d:%d:%d\n", tm->tm_mday, tm->tm_mon, tm->tm_year, tm->tm_hour, tm->tm_min, tm->tm_sec);
 		set_clock(tm);
-		t = _systime();
+		clock_gettime(CLOCK_REALTIME, &ts);
 		cprintf("\nset to %s\n", asctime(localtime(&t)));
 	}else
 		cprintf("\nusage: %s [yyyymmdd]HHMMss\n", argv[0]);

@@ -1,6 +1,6 @@
 ; MIT License
 ;
-; Copyright (c) 2018 Thomas Woinke, Marko Lauke, www.steckschein.de
+; Copyright (c) 2018 Thomas Woinke, Marko Lauke, www.steckschwein.de
 ;
 ; Permission is hereby granted, free of charge, to any person obtaining a copy
 ; of this software and associated documentation files (the "Software"), to deal
@@ -37,3 +37,6 @@
 ;----------------------------------------------------------------------------
 ; last known timestamp with date set to 1970-01-01
 rtc_systime_t = $0300
+
+; read rtc
+rtc_read = 0

@@ -4,7 +4,7 @@ LDFLAGS=--config ../steckos-c-app.cfg ../lib/steckschwein-kernel.lib
 LIBS=../lib/steckschwein-kernel.lib
 TOOLLIB=../tools/lib/toollib.a
 
-all: mainarg.prg coniotst.prg
+all: mainarg.prg coniotst.prg time-test.prg
 
 .PHONY: clean
 

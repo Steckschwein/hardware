@@ -4,8 +4,10 @@
 
 int main (void)
 {
-    time_t t = _systime();
-    cprintf ("%s\n", asctime(localtime(&t)));
+    struct timespec ts;
+    
+    clock_gettime(CLOCK_REALTIME, &ts);
+    cprintf ("%s\n", asctime(localtime(&ts.tv_sec)));
    
     return EXIT_SUCCESS;
 }

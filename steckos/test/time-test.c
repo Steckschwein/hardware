@@ -5,7 +5,6 @@
 
 void set_clock()
 {
-    
     spi_select_rtc();
 	spi_write(0x80);
     spi_write(0x00);
@@ -20,6 +19,7 @@ void set_clock()
 int main (void)
 {
     struct tm tm;
+    struct timespec ts;
     time_t t;
     char   buf[64];
     char c;
@@ -37,20 +37,19 @@ int main (void)
 
     /* Convert this broken down time into a time_t and back */
     t = mktime (&tm);
-    cprintf ("\n\r");
-    cprintf ("Test passes if the following lines are"
-            "all identical:\n\r");
-    cprintf ("3DD173D1 - Tue Nov 12 21:34:09 2002\n\r");
-    cprintf ("%08lX - %s\n\r", t, asctime (&tm));
-    cprintf ("%08lX - %s\n\r", t, asctime (gmtime (&t)));
+    cprintf ("\n");
+    cprintf ("Test passes if the following lines are all identical:\n");
+    cprintf ("3DD173D1 - Tue Nov 12 21:34:09 2002\n");
+    cprintf ("%08lX - %s\n", t, asctime (&tm));
+    cprintf ("%08lX - %s\n", t, asctime (gmtime (&t)));
     strftime (buf, sizeof (buf), "%c", &tm);
-    cprintf ("%08lX - %s\n\r", t, buf);
+    cprintf ("%08lX - %s\n", t, buf);
     strftime (buf, sizeof (buf), "%a %b %d %H:%M:%S %Y", &tm);
-    cprintf ("%08lX - %s\n\r", t, buf);
+    cprintf ("%08lX - %s\n", t, buf);
 
     while(1){
-        t = _systime();
-        cprintf ("%08lX - %s\n\r", t, asctime (gmtime (&t)));    
+        clock_gettime(CLOCK_REALTIME, &ts);
+        cprintf ("%8lX - %s\n", ts.tv_sec, asctime (gmtime (&ts.tv_sec)));
         c = cgetc();
         if(c=='c')
             break;
