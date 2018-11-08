@@ -33,26 +33,27 @@
 
 appstart $1000
 
-VRAM_START=$0000
+VRAM_START=$4000 ; start from bank 1
 
 main:
-	lda	#v_reg8_SPD | v_reg8_VR
+	lda	#v_reg8_VR ;64K
 	sta a_vreg
+    vdp_wait_s
 	lda #v_reg8
 	sta a_vreg
 
 	jsr krn_primm
-	.byte $0a, "Video Mem:$",0
+	.byte $0a, "Video Mem - Bank:$   Address:$",0
 
-	lda #1		; start at vram $4000
+	lda #<(VRAM_START>>14)
 	sta vbank
 
 lbank:
-	lda #(WRITE_ADDRESS+>VRAM_START)
+	lda #(WRITE_ADDRESS|>(VRAM_START & $3fff))
 	sta adr_h_w
-	ldx #>VRAM_START
+	ldx #>(VRAM_START & $3fff)
 	stx adr_h_r
-	ldy #<VRAM_START
+	ldy #<(VRAM_START & $3fff)
 	jsr mem_ca
 l2:
 	tya
@@ -63,19 +64,18 @@ l2:
 	jsr set_vaddr
 	ply
 	lda pattern, x
-	vnops
+	vdp_wait_l 10
 	sta a_vram
 	tya
 	phy
-	vnops
 	ldy adr_h_r
-	jsr set_vaddr
-	ply
-	vnops
-
+	vdp_wait_l 12
+    jsr set_vaddr
+    ply	
+    vdp_wait_l 8    
 	lda a_vram
 
-	jsr rset_vbank		; reset vbank - TODO FIXME, kernel has to make sure that correct video adress is set for all vram operations, use V9958 flag
+	jsr rset_vbank		; reset vbank - TODO FIXME, kernel has to make sure that correct video address is set for all vram operations, use V9958 flag
 	cli
 
 	cmp pattern, x
@@ -118,13 +118,14 @@ l3:	pha            	;save erroneous pattern
 
 mem_ca:	; output value
 	phy            	;save vram adress low byte
-	ldx #11			; offset output
+	ldx #18			; offset output
 	ldy crs_y
 	jsr krn_textui_crsxy
 	lda vbank
 	jsr hexout
-	lda   #' '
-	jsr   krn_chrout
+	ldx #30			; offset output
+	ldy crs_y
+	jsr krn_textui_crsxy
 	lda adr_h_r
 	jsr hexout
 	pla
@@ -138,7 +139,6 @@ set_vaddr:
 	lda vbank
 	ldy #v_reg14
 	vdp_sreg
-	vnops
 	ply
 	pla
 	vdp_sreg
@@ -155,9 +155,11 @@ rset_vbank:
 	rts
 
 
-pattern:  .byte $f0,$0f,$96,$69,$a9,$9a,$00,$ff
+pattern:  .byte $f0,$0f,$96,$69,$a9,$9a,$10,$01
 pattern_e:
 
 adr_h_w:	.res 2
 adr_h_r:	.res 2
 vbank:	 	.res 1
+
+.segment "STARTUP"
