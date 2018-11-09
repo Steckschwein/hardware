@@ -10,8 +10,6 @@
 	.import byte_to_grb
 	
 	.import asmunit_chrout
-	.export char_out=asmunit_chrout	; TODO FIXME causes a linker warning
-
 
 ; from ppmview	
 .export ppmdata
@@ -91,10 +89,7 @@
 	brk
 
 .export krn_primm=mock
-.export vdp_bgcolor=mock
 .export hexout=mock
-.export vdp_display_off=mock
-.export vdp_gfx7_on=mock
 .export krn_open=mock, krn_fread=mock, krn_close=mock
 .export krn_textui_enable=mock
 .export krn_textui_disable=mock
