@@ -49,7 +49,7 @@
 ; Destructive: A, X, Y
 ;---------------------------------------------------------------------
 init_sdcard:
-			; 80 Taktzyklen
+			; 74 SPI clock cycles - !!!Note: spi clock cycle should be in range 100-400Khz!!!
 			ldx #74
 
 			; set ALL CS lines and DO to HIGH

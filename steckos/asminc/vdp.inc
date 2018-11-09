@@ -54,8 +54,11 @@ v_reg9_nt			= 1<<1	; ntsc/pal
 
 v_reg17_aii			= 1<<7	; auto increment
 
+v_reg25_sp2 		= 1<<0
+v_reg25_msk 		= 1<<1
 v_reg25_wait 		= 1<<2
 v_reg25_cmd 		= 1<<6
+
 
 v_reg45_mxc = 1<<6
 v_reg45_mxd = 1<<5
@@ -83,7 +86,10 @@ v_reg17	= $80 + 17
 v_reg18	= $80 + 18	; display adjust
 v_reg23	= $80 + 23	; vertical offset
 
+; V9958 specific
 v_reg25 = $80 + 25
+v_reg26 = $80 + 26  ; horizonatl scroll register, bit 5-0, scroll 8 dot units (character)
+v_reg27 = $80 + 27  ; horizonatl scroll register bit 2-0, scroll dot units
 
 v_reg36 = $80 + 36
 v_reg37 = $80 + 37
