@@ -4,6 +4,8 @@ LIBS=../lib/toollib.a ../../lib/steckschwein-kernel.lib
 TEST_LIBS=$(LIBS) ../../../asmunit/asmunit.a
 TEST_LDFLAGS=--config test.cfg -Dasmunit_char_out=0x200
 
+ADDRESS=0x1000
+
 .PHONY: all clean
 
 
@@ -28,4 +30,4 @@ test.%: test.%.bin
 	dcc6502 -o 0x0ffe -d -n -c $< > $@ 
 	
 %: %.prg
-	../../../transfer.py $< -s 0x1000
+	../../../transfer.py $< -s $(ADDRESS)
