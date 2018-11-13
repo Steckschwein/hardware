@@ -1,4 +1,4 @@
-update=Sun 04 Nov 2018 07:18:24 PM CET
+update=Tue 06 Nov 2018 09:11:42 PM CET
 version=1
 last_client=kicad
 [cvpcb]
@@ -55,3 +55,4 @@ LibName10=osc
 LibName11=mini_din
 LibName12=steckschwein
 LibName13=yamaha_opl
+LibName14=w_connectors
