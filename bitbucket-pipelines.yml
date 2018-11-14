@@ -10,3 +10,8 @@ pipelines:
     - step:
         script:
           - echo "Everything is awesome!"
+          - echo "test" > /tmp/foo.txt
+    - step:
+        script:
+          - cat /tmp/foo.txt
+
