@@ -333,10 +333,6 @@ Text Label 10800 2900 0    60   ~ 0
 /RAS
 Text Label 6350 1850 0    60   ~ 0
 R/W
-Text Label 8550 1450 0    60   ~ 0
-R/W
-Text Label 8500 2600 0    60   ~ 0
-R/W
 Text Label 10850 2600 0    60   ~ 0
 R/W
 Text Label 10850 1450 0    60   ~ 0
@@ -519,94 +515,94 @@ $EndComp
 $Comp
 L VCC #PWR010
 U 1 1 5A849B3A
-P 2200 700
-F 0 "#PWR010" H 2200 800 30  0001 C CNN
-F 1 "VCC" H 2200 800 30  0000 C CNN
-F 2 "" H 2200 700 60  0000 C CNN
-F 3 "" H 2200 700 60  0000 C CNN
-	1    2200 700 
+P 3200 7100
+F 0 "#PWR010" H 3200 7200 30  0001 C CNN
+F 1 "VCC" H 3200 7200 30  0000 C CNN
+F 2 "" H 3200 7100 60  0000 C CNN
+F 3 "" H 3200 7100 60  0000 C CNN
+	1    3200 7100
 	1    0    0    -1  
 $EndComp
 $Comp
 L GND-RESCUE-v9958 #PWR011
 U 1 1 5A849BF6
-P 2200 1300
-F 0 "#PWR011" H 2200 1300 30  0001 C CNN
-F 1 "GND" H 2200 1230 30  0001 C CNN
-F 2 "" H 2200 1300 60  0000 C CNN
-F 3 "" H 2200 1300 60  0000 C CNN
-	1    2200 1300
+P 3200 7700
+F 0 "#PWR011" H 3200 7700 30  0001 C CNN
+F 1 "GND" H 3200 7630 30  0001 C CNN
+F 2 "" H 3200 7700 60  0000 C CNN
+F 3 "" H 3200 7700 60  0000 C CNN
+	1    3200 7700
 	1    0    0    -1  
 $EndComp
 $Comp
 L C C3
 U 1 1 5A84A455
-P 2400 950
-F 0 "C3" H 2425 1050 50  0000 L CNN
-F 1 "100n" H 2425 850 50  0000 L CNN
-F 2 "Capacitors_ThroughHole:C_Disc_D3.0mm_W1.6mm_P2.50mm" H 2438 800 50  0001 C CNN
-F 3 "" H 2400 950 50  0001 C CNN
-	1    2400 950 
+P 3400 7350
+F 0 "C3" H 3425 7450 50  0000 L CNN
+F 1 "100n" H 3425 7250 50  0000 L CNN
+F 2 "Capacitors_ThroughHole:C_Disc_D3.0mm_W1.6mm_P2.50mm" H 3438 7200 50  0001 C CNN
+F 3 "" H 3400 7350 50  0001 C CNN
+	1    3400 7350
 	1    0    0    -1  
 $EndComp
 $Comp
 L C C4
 U 1 1 5A84B161
-P 2700 950
-F 0 "C4" H 2725 1050 50  0000 L CNN
-F 1 "100n" H 2725 850 50  0000 L CNN
-F 2 "Capacitors_ThroughHole:C_Disc_D3.0mm_W1.6mm_P2.50mm" H 2738 800 50  0001 C CNN
-F 3 "" H 2700 950 50  0001 C CNN
-	1    2700 950 
+P 3700 7350
+F 0 "C4" H 3725 7450 50  0000 L CNN
+F 1 "100n" H 3725 7250 50  0000 L CNN
+F 2 "Capacitors_ThroughHole:C_Disc_D3.0mm_W1.6mm_P2.50mm" H 3738 7200 50  0001 C CNN
+F 3 "" H 3700 7350 50  0001 C CNN
+	1    3700 7350
 	1    0    0    -1  
 $EndComp
 $Comp
 L C C5
 U 1 1 5A84B232
-P 3000 950
-F 0 "C5" H 3025 1050 50  0000 L CNN
-F 1 "100n" H 3025 850 50  0000 L CNN
-F 2 "Capacitors_ThroughHole:C_Disc_D3.0mm_W1.6mm_P2.50mm" H 3038 800 50  0001 C CNN
-F 3 "" H 3000 950 50  0001 C CNN
-	1    3000 950 
+P 4000 7350
+F 0 "C5" H 4025 7450 50  0000 L CNN
+F 1 "100n" H 4025 7250 50  0000 L CNN
+F 2 "Capacitors_ThroughHole:C_Disc_D3.0mm_W1.6mm_P2.50mm" H 4038 7200 50  0001 C CNN
+F 3 "" H 4000 7350 50  0001 C CNN
+	1    4000 7350
 	1    0    0    -1  
 $EndComp
 $Comp
 L C C6
 U 1 1 5A84B308
-P 3300 950
-F 0 "C6" H 3325 1050 50  0000 L CNN
-F 1 "100n" H 3325 850 50  0000 L CNN
-F 2 "Capacitors_ThroughHole:C_Disc_D3.0mm_W1.6mm_P2.50mm" H 3338 800 50  0001 C CNN
-F 3 "" H 3300 950 50  0001 C CNN
-	1    3300 950 
+P 4300 7350
+F 0 "C6" H 4325 7450 50  0000 L CNN
+F 1 "100n" H 4325 7250 50  0000 L CNN
+F 2 "Capacitors_ThroughHole:C_Disc_D3.0mm_W1.6mm_P2.50mm" H 4338 7200 50  0001 C CNN
+F 3 "" H 4300 7350 50  0001 C CNN
+	1    4300 7350
 	1    0    0    -1  
 $EndComp
 $Comp
 L C C7
 U 1 1 5A84B3DF
-P 3600 950
-F 0 "C7" H 3625 1050 50  0000 L CNN
-F 1 "100n" H 3625 850 50  0000 L CNN
-F 2 "Capacitors_ThroughHole:C_Disc_D3.0mm_W1.6mm_P2.50mm" H 3638 800 50  0001 C CNN
-F 3 "" H 3600 950 50  0001 C CNN
-	1    3600 950 
+P 4600 7350
+F 0 "C7" H 4625 7450 50  0000 L CNN
+F 1 "100n" H 4625 7250 50  0000 L CNN
+F 2 "Capacitors_ThroughHole:C_Disc_D3.0mm_W1.6mm_P2.50mm" H 4638 7200 50  0001 C CNN
+F 3 "" H 4600 7350 50  0001 C CNN
+	1    4600 7350
 	1    0    0    -1  
 $EndComp
 $Comp
 L C C8
 U 1 1 5A84B731
-P 3900 950
-F 0 "C8" H 3925 1050 50  0000 L CNN
-F 1 "100n" H 3925 850 50  0000 L CNN
-F 2 "Capacitors_ThroughHole:C_Disc_D3.0mm_W1.6mm_P2.50mm" H 3938 800 50  0001 C CNN
-F 3 "" H 3900 950 50  0001 C CNN
-	1    3900 950 
+P 4900 7350
+F 0 "C8" H 4925 7450 50  0000 L CNN
+F 1 "100n" H 4925 7250 50  0000 L CNN
+F 2 "Capacitors_ThroughHole:C_Disc_D3.0mm_W1.6mm_P2.50mm" H 4938 7200 50  0001 C CNN
+F 3 "" H 4900 7350 50  0001 C CNN
+	1    4900 7350
 	1    0    0    -1  
 $EndComp
-Text Label 2250 800  0    60   ~ 0
+Text Label 3250 7200 0    60   ~ 0
 VCC
-Text Label 2200 1100 0    60   ~ 0
+Text Label 3200 7500 0    60   ~ 0
 GND
 NoConn ~ 6200 1300
 $Comp
@@ -769,7 +765,7 @@ Text Label 9300 2800 0    60   ~ 0
 AD6
 Text Label 9300 2900 0    60   ~ 0
 AD7
-Text Label 3900 1250 1    60   ~ 0
+Text Label 4900 7650 1    60   ~ 0
 VSS
 $Comp
 L 74LS139 U1
@@ -948,10 +944,6 @@ Wire Wire Line
 Wire Wire Line
 	10750 1450 11050 1450
 Wire Wire Line
-	8700 2600 8450 2600
-Wire Wire Line
-	8450 1450 8700 1450
-Wire Wire Line
 	8450 1550 8500 1550
 Wire Wire Line
 	8500 1550 8500 1850
@@ -1098,23 +1090,23 @@ Wire Wire Line
 Wire Wire Line
 	6300 1200 6200 1200
 Wire Wire Line
-	2200 1300 2200 1100
+	3200 7700 3200 7500
 Wire Wire Line
-	2200 1100 4500 1100
-Connection ~ 2400 1100
+	3200 7500 5750 7500
+Connection ~ 3400 7500
 Wire Wire Line
-	2200 700  2200 800 
+	3200 7100 3200 7200
 Wire Wire Line
-	2200 800  4500 800 
-Connection ~ 2400 800 
-Connection ~ 2700 800 
-Connection ~ 3000 800 
-Connection ~ 3300 800 
-Connection ~ 3600 800 
-Connection ~ 2700 1100
-Connection ~ 3000 1100
-Connection ~ 3300 1100
-Connection ~ 3600 1100
+	3200 7200 5750 7200
+Connection ~ 3400 7200
+Connection ~ 3700 7200
+Connection ~ 4000 7200
+Connection ~ 4300 7200
+Connection ~ 4600 7200
+Connection ~ 3700 7500
+Connection ~ 4000 7500
+Connection ~ 4300 7500
+Connection ~ 4600 7500
 Wire Wire Line
 	4550 2000 4650 2000
 Wire Wire Line
@@ -1192,7 +1184,7 @@ Wire Wire Line
 Wire Wire Line
 	9450 2900 9300 2900
 Wire Wire Line
-	3900 1100 3900 1300
+	4900 7500 4900 7700
 Wire Wire Line
 	1650 3150 1950 3150
 Wire Wire Line
@@ -1533,29 +1525,29 @@ Text Label 6300 1750 0    60   ~ 0
 $Comp
 L C C9
 U 1 1 5BE31936
-P 4200 950
-F 0 "C9" H 4225 1050 50  0000 L CNN
-F 1 "100n" H 4225 850 50  0000 L CNN
-F 2 "Capacitors_ThroughHole:C_Disc_D3.0mm_W1.6mm_P2.50mm" H 4238 800 50  0001 C CNN
-F 3 "" H 4200 950 50  0001 C CNN
-	1    4200 950 
+P 5200 7350
+F 0 "C9" H 5225 7450 50  0000 L CNN
+F 1 "100n" H 5225 7250 50  0000 L CNN
+F 2 "Capacitors_ThroughHole:C_Disc_D3.0mm_W1.6mm_P2.50mm" H 5238 7200 50  0001 C CNN
+F 3 "" H 5200 7350 50  0001 C CNN
+	1    5200 7350
 	1    0    0    -1  
 $EndComp
 $Comp
 L C C10
 U 1 1 5BE31A15
-P 4500 950
-F 0 "C10" H 4525 1050 50  0000 L CNN
-F 1 "100n" H 4525 850 50  0000 L CNN
-F 2 "Capacitors_ThroughHole:C_Disc_D3.0mm_W1.6mm_P2.50mm" H 4538 800 50  0001 C CNN
-F 3 "" H 4500 950 50  0001 C CNN
-	1    4500 950 
+P 5500 7350
+F 0 "C10" H 5525 7450 50  0000 L CNN
+F 1 "100n" H 5525 7250 50  0000 L CNN
+F 2 "Capacitors_ThroughHole:C_Disc_D3.0mm_W1.6mm_P2.50mm" H 5538 7200 50  0001 C CNN
+F 3 "" H 5500 7350 50  0001 C CNN
+	1    5500 7350
 	1    0    0    -1  
 $EndComp
-Connection ~ 3900 800 
-Connection ~ 4200 800 
-Connection ~ 3900 1100
-Connection ~ 4200 1100
+Connection ~ 4900 7200
+Connection ~ 5200 7200
+Connection ~ 4900 7500
+Connection ~ 5200 7500
 Wire Wire Line
 	3250 5650 2950 5650
 Wire Wire Line
@@ -1566,4 +1558,25 @@ Wire Wire Line
 	6800 6650 6800 4250
 Wire Wire Line
 	6800 4250 7250 4250
+Wire Wire Line
+	8450 1450 8700 1450
+Text Label 8500 1450 0    60   ~ 0
+R/W
+Wire Wire Line
+	8450 2600 8700 2600
+Text Label 8500 2600 0    60   ~ 0
+R/W
+$Comp
+L C C28
+U 1 1 5BF21DF3
+P 5750 7350
+F 0 "C28" H 5775 7450 50  0000 L CNN
+F 1 "100n" H 5775 7250 50  0000 L CNN
+F 2 "Capacitors_ThroughHole:C_Disc_D3.0mm_W1.6mm_P2.50mm" H 5788 7200 50  0001 C CNN
+F 3 "" H 5750 7350 50  0001 C CNN
+	1    5750 7350
+	1    0    0    -1  
+$EndComp
+Connection ~ 5500 7200
+Connection ~ 5500 7500
 $EndSCHEMATC

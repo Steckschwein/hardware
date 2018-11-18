@@ -471,4 +471,5 @@ Wire Wire Line
 Connection ~ 10150 3950
 Text HLabel 10150 3700 1    60   Output ~ 0
 AUDIO_OUT
+Connection ~ 5450 2850
 $EndSCHEMATC

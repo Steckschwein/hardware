@@ -458,17 +458,12 @@ Text GLabel 8000 2450 0    60   Input ~ 0
 /CS_IO2
 Text GLabel 8000 2600 0    60   Input ~ 0
 /CS_IO1
-Text GLabel 8000 2750 0    60   Input ~ 0
-/CS_IO0
 Wire Wire Line
 	8000 2450 8100 2450
 Wire Wire Line
 	8000 2600 8100 2600
-Wire Wire Line
-	8000 2750 8100 2750
 NoConn ~ 8100 2450
 NoConn ~ 8100 2600
-NoConn ~ 8100 2750
 Text GLabel 8000 2900 0    60   Input ~ 0
 /CS_UART
 Wire Wire Line
