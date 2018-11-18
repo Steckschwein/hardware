@@ -447,14 +447,6 @@ F 3 "" H 4600 3650 30  0000 C CNN
 	1    4600 3650
 	0    -1   -1   0   
 $EndComp
-Text Label 7000 2550 1    60   ~ 0
-R_OUT
-Text Label 7250 2550 1    60   ~ 0
-G_OUT
-Text Label 7500 2550 1    60   ~ 0
-B_OUT
-Text Label 7750 2600 1    60   ~ 0
-CV_OUT
 Text Label 6850 4250 1    60   ~ 0
 C_OUT
 Text Label 7100 4250 1    60   ~ 0
@@ -668,11 +660,11 @@ Wire Wire Line
 Wire Wire Line
 	4350 3650 4250 3650
 Wire Wire Line
-	7000 2500 7000 2300
+	7000 1350 7000 2500
 Wire Wire Line
-	7250 2500 7250 2300
+	7250 2000 7250 2500
 Wire Wire Line
-	7500 2500 7500 2300
+	7500 1550 7500 2500
 Wire Wire Line
 	7750 2500 7750 2300
 Wire Wire Line
@@ -738,29 +730,17 @@ AUDIO_OUT
 Wire Wire Line
 	7150 1150 6800 1150
 Wire Wire Line
-	7150 1350 6800 1350
-Wire Wire Line
 	7450 950  7450 850 
 Wire Wire Line
 	7450 850  7100 850 
 Wire Wire Line
 	7750 1150 8100 1150
 Wire Wire Line
-	7750 1250 8100 1250
+	7750 1250 8900 1250
 Wire Wire Line
-	7750 1350 8100 1350
-Text Label 7800 1250 0    60   ~ 0
-CV_OUT
-Text Label 7800 1350 0    60   ~ 0
-CV_OUT
-Text Label 6800 1350 0    60   ~ 0
-R_OUT
+	7750 1350 8400 1350
 Text Label 7850 1150 0    60   ~ 0
 G_OUT
-Wire Wire Line
-	7450 1550 8100 1550
-Text Label 7850 1550 0    60   ~ 0
-B_OUT
 $Comp
 L VCC #PWR052
 U 1 1 5BE1EA79
@@ -799,7 +779,17 @@ $EndComp
 Wire Wire Line
 	9050 1450 9050 1600
 Wire Wire Line
-	8900 1250 8550 1250
-Text Label 8550 1250 0    60   ~ 0
-CV_OUT
+	7750 2300 8400 2300
+Wire Wire Line
+	8400 2300 8400 1250
+Connection ~ 8400 1350
+Wire Wire Line
+	7450 1550 7500 1550
+Wire Wire Line
+	7250 2000 8100 2000
+Wire Wire Line
+	8100 2000 8100 1150
+Wire Wire Line
+	7000 1350 7150 1350
+Connection ~ 8400 1250
 $EndSCHEMATC
