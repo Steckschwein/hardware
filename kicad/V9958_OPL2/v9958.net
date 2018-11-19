@@ -1,7 +1,7 @@
 (export (version D)
   (design
     (source /home/dommas/steckschwein-code/kicad/V9958_OPL2/v9958.sch)
-    (date "Sun 18 Nov 2018 09:30:13 PM CET")
+    (date "Mon 19 Nov 2018 06:32:25 PM CET")
     (tool "Eeschema 4.0.7-e2-6376~61~ubuntu18.04.1")
     (sheet (number 1) (name /) (tstamps /)
       (title_block
@@ -98,7 +98,7 @@
       (tstamp 5A821D05))
     (comp (ref JP1)
       (value JUMPER)
-      (footprint Pin_Headers:Pin_Header_Straight_1x02)
+      (footprint Pin_Headers:Pin_Header_Straight_1x02_Pitch2.54mm)
       (libsource (lib v9958-cache) (part JUMPER))
       (sheetpath (names /) (tstamps /))
       (tstamp 5A825872))
@@ -825,6 +825,10 @@
   (libraries
     (library (logical device)
       (uri /usr/share/kicad/library/device.lib))
+    (library (logical conn)
+      (uri /usr/share/kicad/library/conn.lib))
+    (library (logical linear)
+      (uri /usr/share/kicad/library/linear.lib))
     (library (logical 74xx)
       (uri /usr/share/kicad/library/74xx.lib))
     (library (logical dram)
@@ -838,11 +842,7 @@
     (library (logical mini_din)
       (uri /home/dommas/steckschwein-code/kicad/lbr/mini_din.lib))
     (library (logical v9958-cache)
-      (uri /home/dommas/steckschwein-code/kicad/V9958_OPL2/v9958-cache.lib))
-    (library (logical conn)
-      (uri /usr/share/kicad/library/conn.lib))
-    (library (logical linear)
-      (uri /usr/share/kicad/library/linear.lib)))
+      (uri /home/dommas/steckschwein-code/kicad/V9958_OPL2/v9958-cache.lib)))
   (nets
     (net (code 1) (name /CS_VDP)
       (node (ref P5) (pin 24))
