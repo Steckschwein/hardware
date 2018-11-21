@@ -314,7 +314,7 @@ U 1 1 5A825872
 P 4000 1800
 F 0 "JP1" H 4000 1950 50  0000 C CNN
 F 1 "JUMPER" H 4000 1720 50  0000 C CNN
-F 2 "Pin_Headers:Pin_Header_Straight_1x02" H 4000 1800 50  0001 C CNN
+F 2 "Pin_Headers:Pin_Header_Straight_1x02_Pitch2.54mm" H 4000 1800 50  0001 C CNN
 F 3 "" H 4000 1800 50  0000 C CNN
 	1    4000 1800
 	1    0    0    -1  
@@ -1129,8 +1129,6 @@ Wire Wire Line
 	7000 1650 7150 1650
 Wire Wire Line
 	7150 1750 7000 1750
-Wire Bus Line
-	6900 2100 6900 2800
 Wire Wire Line
 	7000 2200 7150 2200
 Wire Wire Line
