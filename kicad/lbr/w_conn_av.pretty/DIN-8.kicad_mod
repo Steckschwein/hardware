@@ -1,4 +1,4 @@
-(module DIN-8 (layer F.Cu) (tedit 5BEBEFD1)
+(module DIN-8 (layer F.Cu) (tedit 5BF84AF2)
   (fp_text reference CN1 (at -10.67 -2.83 270) (layer F.SilkS)
     (effects (font (size 1 1) (thickness 0.15)))
   )
@@ -21,4 +21,6 @@
   (pad 2 thru_hole circle (at 0 0) (size 2.3 2.3) (drill 1.2) (layers *.Cu *.Mask))
   (pad 1 thru_hole circle (at -7.5 0) (size 2.3 2.3) (drill 1.2) (layers *.Cu *.Mask))
   (pad 8 thru_hole circle (at 0 5) (size 2.3 2.3) (drill 1.2) (layers *.Cu *.Mask))
+  (pad "" thru_hole circle (at -5.08 -9.906) (size 2.3 2.3) (drill 1.2) (layers *.Cu *.Mask))
+  (pad "" thru_hole circle (at 5.08 -9.906) (size 2.3 2.3) (drill 1.2) (layers *.Cu *.Mask))
 )
