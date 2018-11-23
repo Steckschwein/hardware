@@ -42,6 +42,7 @@ CC65FLAGS = -Or -W error
 SRCDIR=.
 SRCDIRS = $(SRCDIR)
 SRCDIRS +=  t99xx
+SRCDIRS +=  joystick
 SRCDIRS +=  $(CC65_HOME)/libsrc/conio     	\
 			$(CC65_HOME)/libsrc/runtime	 	\
 			$(CC65_HOME)/libsrc/zlib		\

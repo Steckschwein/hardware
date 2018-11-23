@@ -39,8 +39,10 @@ text_mode_40 = 1
 .import init_uart, uart_tx, uart_rx, uart_rx_nowait
 .import textui_init0, textui_update_screen, textui_chrout, textui_put
 .import getkey
-.import textui_enable, textui_disable, vdp_display_off,  textui_blank, textui_update_crs_ptr, textui_crsxy, textui_scroll_up
+.import textui_enable, textui_disable, vdp_display_off,  textui_blank, textui_update_crs_ptr, textui_crsxy, textui_scroll_up, textui_cursor_onoff
+
 .import init_sdcard
+
 .import fat_mount, fat_open, fat_close, fat_close_all, fat_read, fat_find_first, fat_find_next
 .import fat_mkdir, fat_chdir, fat_rmdir
 .import fat_unlink
@@ -144,10 +146,8 @@ do_irq:
 	bit	a_vreg
 	bpl @exit	   ; VDP IRQ flag set?
 	jsr	textui_update_screen
-
-@exit:
 	jsr call_user_isr
-
+@exit:
 	restore
 	rti
 
@@ -361,8 +361,8 @@ krn_textui_clrscr_ptr:      jmp textui_blank
 .export krn_fseek
 krn_fseek:						jmp fat_fseek
 
-dummy:	jmp dummy
-
+.export krn_textui_crs_onoff
+krn_textui_crs_onoff:   jmp textui_cursor_onoff
 
 .export krn_init_sdcard
 krn_init_sdcard:		jmp init_sdcard

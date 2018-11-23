@@ -99,14 +99,14 @@ vdp_fill:
 ;	input:
 ;		.A - byte to fill
 ;		.X - amount of 256byte blocks (page counter)
-			ldy   #0    
-@0:		vdp_wait_l 6
-			iny             ;2
-			sta   a_vram 	 ;
-			bne   @0        ;3
-			dex
-			bne   @0
-			rts
+        ldy   #0    
+@0:     vdp_wait_l 6
+        iny             ;2
+        sta a_vram 	 ;
+        bne @0        ;3
+        dex
+        bne @0
+        rts
 	
 vdp_fills:
 ;	in:

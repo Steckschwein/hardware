@@ -48,9 +48,9 @@ vdp_display_off:
 vdp_memcpy:
 		vdp_sreg
 		ldy #$00     ;2
-@l1:	lda (addr),y ;5
+@l1:	vdp_wait_l	10
+        lda (addr),y ;5
 		iny          ;2
-		vdp_wait_l	10
 		sta a_vram    ;1 opcode fetch
 		bne @l1      ;3
 		inc adrh

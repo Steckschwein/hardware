@@ -37,28 +37,26 @@
 ;
 vdp_mc_on:
 			jsr vdp_mc_init_screen
-			lda #<vdp_mc_init_bytes
+			lda #<vdp_init_bytes_mc
 			sta vdp_ptr
-			lda #>vdp_mc_init_bytes
+			lda #>vdp_init_bytes_mc
 			sta vdp_ptr+1
+			lda #<(vdp_init_bytes_mc_end-vdp_init_bytes_mc)-1
 			jmp vdp_init_reg
-
 ;
-;
+; init mc screen to provide
 ;
 vdp_mc_init_screen:
-			lda #<ADDRESS_GFX_MC_SCREEN
-			ldy #WRITE_ADDRESS+ >ADDRESS_GFX_MC_SCREEN
-			vdp_sreg
+			vdp_sreg <ADDRESS_GFX_MC_SCREEN, WRITE_ADDRESS+>ADDRESS_GFX_MC_SCREEN
 			stz vdp_tmp
 			lda #32
-			sta vdp_tmp
+			sta vdp_tmp+1
 @l1:		ldy #0
 @l2:		ldx vdp_tmp
-@l3:		vnops
+@l3:		vdp_wait_l 6
 			stx a_vram
 			inx
-			cpx vdp_tmp
+			cpx vdp_tmp+1
 			bne @l3
 			iny
 			cpy #4		; 4 rows filled ?
@@ -69,7 +67,7 @@ vdp_mc_init_screen:
 			clc
 			txa
 			adc #32
-			sta vdp_tmp
+			sta vdp_tmp+1
 			bra @l1
 @le:		rts
 
@@ -78,10 +76,9 @@ vdp_mc_init_screen:
 ; 	A - color to blank
 ;
 vdp_mc_blank:
-			sta	vdp_tmp
-			lda	#<ADDRESS_GFX_MC_PATTERN
-			ldy	#WRITE_ADDRESS+ >ADDRESS_GFX_MC_PATTERN
+			vdp_sreg <ADDRESS_GFX_MC_PATTERN, WRITE_ADDRESS+>ADDRESS_GFX_MC_PATTERN
 			ldx #(1536/256)
+            lda #0
 			jmp vdp_fill
 
 ;	set pixel to mc screen
@@ -91,12 +88,14 @@ vdp_mc_blank:
 ;	A - color [0..f]
 ;
 ; 	VRAM ADDRESS = 8(INT(X DIV 2)) + 256(INT(Y DIV 8)) + (Y MOD 8)
-;
-; 	TODO FIXME 9929 timing support, should we differentiate ?!? /MLA
+;   !!! NOTE !!! mc screen vram adress is assumed to be at $0000 (ADDRESS_GFX_MC_PATTERN)
 ;
 vdp_mc_set_pixel:
+        phx
+        phy
+        
 		and #$0f				;only the 16 colors
-		sta vdp_tmp				;safe color
+		sta vdp_tmp+1			;safe color
 
 		txa
 		and #$3e				; x div 2 * 8 => x div 2 * 2 * 2 * 2 => lsr, asl, asl, asl => lsr,asl = and #3e ($3f - x boundary), asl, asl
@@ -115,50 +114,49 @@ vdp_mc_set_pixel:
 		lsr						;2
 		lsr						;2
 		lsr						;2
-		sta	a_vreg				;set vdp vram address high byte
+		vdp_wait_l 10
+        sta	a_vreg				;set vdp vram address high byte
 		ora #WRITE_ADDRESS		;2 adjust for write
 		tay						;2 safe vram high byte for write in y
 
 		txa						;2
 		bit #1					;3 test color shift required, upper nibble?
 		beq l1					;2/3
-		;nop						;2
-		vnops
+        
 		lda #$f0				;2
-		and a_vram				;4
-		bra l2					;3
-l1:	lda vdp_tmp				;3
+        bra l2					;3
+l1:	    lda vdp_tmp+1				;3
 		asl						;2
 		asl						;2
 		asl						;2
 		asl						;2
-		sta vdp_tmp
+		sta vdp_tmp+1
 		lda #$0f
-		and a_vram
 l2:
-		ora vdp_tmp				;3
-		;nop						;2
-		;nop						;2
-		;nop						;2
-        vnops
+        vdp_wait_l 14
+        and a_vram
+		ora vdp_tmp+1
+        
 		ldx vdp_tmp				;3
-		stx	a_vreg				;4 setup write adress
-		;nop						;2
-		;nop						;2
-		;nop						;2
-		vnops
-		sty a_vreg
-		vnops
+		vdp_wait_l 5
+        stx	a_vreg				;4 setup write adress
+		vdp_wait_s
+        sty a_vreg
+		vdp_wait_l
 		sta a_vram
-
+        
+        ply
+        plx
+        
 		rts
 
-vdp_mc_init_bytes:
+vdp_init_bytes_mc:
 			.byte 	0		;
-			.byte 	v_reg1_16k|v_reg1_display_on|v_reg1_m2|v_reg1_spr_size;|v_reg1_int
+			.byte 	v_reg1_16k|v_reg1_display_on|v_reg1_m2|v_reg1_spr_size|v_reg1_int
 			.byte 	(ADDRESS_GFX_MC_SCREEN / $400)		; name table - value * $400 -> 3 * 256 pattern names (3 pages)
 			.byte	$ff									; color table not used in multicolor mode
 			.byte	(ADDRESS_GFX_MC_PATTERN / $800) 	; pattern table, 1536 byte - 3 * 256
 			.byte	(ADDRESS_GFX_MC_SPRITE / $80)	; sprite attribute table - value * $80 --> offset in VRAM
 			.byte	(ADDRESS_GFX_MC_SPRITE_PATTERN / $800)	; sprite pattern table - value * $800  --> offset in VRAM
 			.byte	Black
+vdp_init_bytes_mc_end:

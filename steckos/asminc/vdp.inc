@@ -47,9 +47,8 @@ v_reg1_spr_mag		= 1<<0
 v_reg8_VR			= 1<<3	; 0/1 16k/64k video ram
 v_reg8_SPD			= 1<<1	; 0/1 sprites enabled/disabled
 
-v_reg9_ln 			= 1<<7  ; lines - 212 lines if 1, 192 lines if 0
+v_reg9_ln 			= 1<<7  ; lines - 0 - 192 lines, 1 - 212 lines
 v_reg9_il			= 1<<3	; interlace
-
 v_reg9_nt			= 1<<1	; ntsc/pal
 
 v_reg17_aii			= 1<<7	; auto increment
@@ -139,10 +138,10 @@ v_log_tor	= %00001010 ; if SC=0 then DC=DC else DC=SC OR DC
 v_log_teor	= %00001011 ; if SC=0 then DC=DC else DC=/SC AND DC OR SC AND /DC
 v_log_tnot	= %00001100 ; if SC=0 then DC=DC else DC=/SC
 
-SP_Y=0
-SP_X=1
-SP_N=2
-SP_C=3
+SPRITE_Y=0
+SPRITE_X=1
+SPRITE_N=2
+SPRITE_C=3
 
 SPRITE_INVISIBLE=$bf
 SPRITE_OFF=$d0
@@ -173,7 +172,7 @@ ADDRESS_GFX1_COLOR		=$1b80
 ADDRESS_GFX1_SPRITE		=ADDRESS_GFX_SPRITE
 ADDRESS_GFX1_SPRITE_PATTERN=$1000;
 
-ADDRESS_GFX2_SCREEN		=$1800			; name table
+ADDRESS_GFX2_SCREEN		    =$1800			; name table
 ADDRESS_GFX2_PATTERN		=$0000
 ADDRESS_GFX2_COLOR			=$2000
 ADDRESS_GFX2_SPRITE			=ADDRESS_GFX_SPRITE
@@ -183,12 +182,12 @@ ADDRESS_GFX6_SCREEN			=ADDRESS_GFX1_SCREEN			; screen
 
 ADDRESS_GFX7_SCREEN			=$10000							; 2nd 64 RAM
 ADDRESS_GFX7_SPRITE			=ADDRESS_GFX_SPRITE
-ADDRESS_GFX7_SPRITE_PATTERN=ADDRESS_GFX1_SPRITE_PATTERN
+ADDRESS_GFX7_SPRITE_PATTERN =ADDRESS_GFX1_SPRITE_PATTERN
 
 ADDRESS_GFX_MC_SCREEN			=ADDRESS_GFX2_SCREEN	; name table
 ADDRESS_GFX_MC_PATTERN			=ADDRESS_GFX2_PATTERN	; pattern table
 ADDRESS_GFX_MC_SPRITE			=ADDRESS_GFX2_SPRITE	; sprite attributes
-ADDRESS_GFX_MC_SPRITE_PATTERN	=ADDRESS_GFX2_PATTERN	; sprite pattern
+ADDRESS_GFX_MC_SPRITE_PATTERN	=ADDRESS_GFX1_SPRITE_PATTERN	; sprite pattern
 
 .define CLOCK_SPEED_MHZ 8
 
@@ -252,10 +251,10 @@ vdp_nopslide_2m:
 			sty a_vreg
 		.else							; otherwise use the new api call, with fewer nops for register writes
 			vdp_wait_s 2
-			lda # _1st
+			lda #_1st
 			sta a_vreg
 			vdp_wait_s 2
-			lda # _2nd
+			lda #_2nd
 			sta a_vreg
 			.endif
 .endmacro
