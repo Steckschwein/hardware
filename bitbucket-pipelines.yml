@@ -12,5 +12,5 @@ pipelines:
           - cd asmunit
           - make clean all
           - export CC65_HOME=/cc65
-          - cd steckos
+          - cd ../steckos
           - make clean all
