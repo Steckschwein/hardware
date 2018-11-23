@@ -9,12 +9,8 @@ pipelines:
   default:
     - step:
         script:
-          - cd asmunit
-          - make clean all
+          - ( cd asmunit && make clean all )
           - export CC65_HOME=/cc65
-          - cd ../steckos
-          - make clean all
-          - cd tools/lib/test
-          - make clean all
-          - cd ../../../steckos/kernel/test
-          - make clean all
+          - ( cd steckos && make clean all )
+          - ( cd steckos/tools/lib/test && make clean all )
+          - ( cd steckos/kernel/test && make clean all )
