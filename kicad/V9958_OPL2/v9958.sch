@@ -1092,12 +1092,12 @@ Wire Wire Line
 Wire Wire Line
 	3200 7700 3200 7500
 Wire Wire Line
-	3200 7500 5750 7500
+	3200 7500 6050 7500
 Connection ~ 3400 7500
 Wire Wire Line
 	3200 7100 3200 7200
 Wire Wire Line
-	3200 7200 5750 7200
+	3200 7200 6050 7200
 Connection ~ 3400 7200
 Connection ~ 3700 7200
 Connection ~ 4000 7200
@@ -1577,4 +1577,17 @@ F 3 "" H 5750 7350 50  0001 C CNN
 $EndComp
 Connection ~ 5500 7200
 Connection ~ 5500 7500
+$Comp
+L C C29
+U 1 1 5BF84816
+P 6050 7350
+F 0 "C29" H 6075 7450 50  0000 L CNN
+F 1 "100n" H 6075 7250 50  0000 L CNN
+F 2 "Capacitors_ThroughHole:C_Disc_D3.0mm_W1.6mm_P2.50mm" H 6088 7200 50  0001 C CNN
+F 3 "" H 6050 7350 50  0001 C CNN
+	1    6050 7350
+	1    0    0    -1  
+$EndComp
+Connection ~ 5750 7200
+Connection ~ 5750 7500
 $EndSCHEMATC
