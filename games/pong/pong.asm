@@ -28,18 +28,10 @@ main:
         
         sei
         jsr init_pong
-        
         copypointer user_isr, safe_isr
         SetVector game_isr, user_isr
         cli        
         
-;       lda #0
-:
-;       jsr char_out
-;        inc
-;       bne :-
-        
-;		jsr draw_number_r
         jsr ResetGame
 
 		keyin
@@ -62,6 +54,7 @@ init_pong:
         jsr vdp_mc_blank
         jsr vdp_mc_on
         vdp_sreg v_reg1_16k|v_reg1_display_on|v_reg1_m2|v_reg1_spr_size|v_reg1_spr_mag|v_reg1_int, v_reg1 ; big sprites
+        vdp_sreg v_reg8_VR, v_reg8; make sure sprites are enabled
         vdp_sreg $0, v_reg23
         vdp_sreg $0, v_reg18
         
@@ -150,10 +143,10 @@ scoreBackground=10
   ;.org $C000 
 ResetGame:	
 ;;;Set some initial ball stats
-  LDA #$00
+  LDA #0
   STA balldown
   STA ballright
-  LDA #$01
+  LDA #1
   STA ballup
   STA ballleft
   
@@ -444,7 +437,7 @@ MovePaddle1Down:
   CMP #BOTTOMWALLOFFS ;; Check if we have hit top wall
 
   BCS MovePaddle1DownDone ;; If so, skip
-
+  
   INC paddle1ytop ;; Decrement position
   INC paddle1ytop ;; Decrement position
 MovePaddle1DownDone:
@@ -570,8 +563,7 @@ draw_digit:
         sta ptr1
         lda #>digits
         sta ptr1+1
-;        SetVector digits, ptr1
-
+        
         ldy #0
 @score_l0:
         ldx #0
@@ -600,9 +592,9 @@ draw_digit:
         cpy #8
         bne @score_l0
         rts
-DrawScore:
 
-        LDX scoreBackground
+DrawScore:
+        LDX #scoreBackground
         lda score1
         ;; Check if score equals or exceeds 10
         cmp #10
@@ -635,7 +627,7 @@ DrawScore:
 ;  LDA #$3C
  ; STA $2006             ; write the low byte of $2000 address
 
-        LDX scoreBackground
+        LDX #scoreBackground
         lda score2
         ;; Check if score equals or exceeds 10
         cmp #10
@@ -646,7 +638,7 @@ DrawScore:
         pha
         ;STX $2007             ; write to PPU
         txa
-        ldx #36
+        ldx #35
         ldy #2
         jsr draw_digit
         
@@ -656,7 +648,7 @@ DrawScore:
       ;; Store first digit
       ;STY $2007
         ;lda #2    
-        ldx #42
+        ldx #41
         ldy #2
         jsr draw_digit
  
@@ -765,7 +757,8 @@ bitmask:
 
 .data
 digits:
-.byte $f8, $88, $88, $88, $88, $88, $88, $f8;
+;.byte $f8, $88, $88, $88, $88, $88, $88, $f8;
+.byte $f0, $90, $90, $90, $90, $90, $90, $f0;
 ;#####...
 ;#...#...
 ;#...#...
