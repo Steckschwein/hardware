@@ -1,16 +1,16 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <conio.h>  
+//#include <conio.h>  
 
 #define limit 20
 
 static int minus(unsigned int a, unsigned int b){
-	cprintf("%d - %d = ", a, b);
+	printf("%d - %d = ", a, b);
 	return (a-b);
 }
 
 static int plus(unsigned int a, unsigned int b){
-	cprintf("%d + %d = ", a, b);
+	printf("%d + %d = ", a, b);
 	return (a+b);
 }
 
@@ -21,14 +21,14 @@ void rechne(int (*calc)(unsigned int, unsigned int)){
 		unsigned int expected;
 		unsigned int input;
 		unsigned int points = 0;
-		cprintf("10 Aufgaben...\n");
+		printf("10 Aufgaben...\n");
 		for (i=1;i<=10;i++){
-			cprintf("%d. Aufgabe: ", i);
+			printf("%d. Aufgabe: ", i);
 			a = rand() % limit;
 			b = rand() % limit;
 			expected = calc(a, b);//use func pointer :P
-			cscanf("%d", &input);
-            cprintf("%d ", input);
+			scanf("%d", &input);
+            printf("%d ", input);
 			if(expected == input){
 				cprintf("\nRichtig.\n");
 				points++;
@@ -51,7 +51,7 @@ int main (int argc, const char* argv[]){
         cprintf("+ addition\n");
         cprintf("- subtraktion\n");
         cprintf("e exit\n");
-    }while((c = cgetc()) != 'e');
+    }while((c = getc(stdin)) != 'e');
     
     return EXIT_SUCCESS;
 }
