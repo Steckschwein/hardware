@@ -10,7 +10,7 @@ all: test asmunit.a
 test: test.asmunit
 
 clean:
-	rm -f *.o *.a
+	rm -f *.o *.a *.log
 
 %.o: %.asm asmunit.inc
 	ca65 $(CA65FLAGS) $(@:.o=.asm)

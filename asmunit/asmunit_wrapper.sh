@@ -2,17 +2,16 @@
 
 dir=`dirname $0`
 logfile=$1.log
-failonerror=true
-
-if [ "${3}" = "false" ]; then
-    exit 0;
-fi
 
 _ts=$(date +%s%N)
 $dir/asmunit_runner.sh $1 $2 > $logfile
 _tt=$((($(date +%s%N) - $_ts)/1000000))
 test_fail=`grep "FAIL" $logfile | wc -l`
 tests=$(grep "\[.*\]" $logfile | wc -l)
+
+if [ "${3}" = false ]; then
+    exit 0
+fi
 
 TARGET_DIR=target/test-reports
 
