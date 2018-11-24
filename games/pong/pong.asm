@@ -20,8 +20,6 @@ appstart $1000
 .define BORDER_COLOR COLOR
 .define IRQ_VEC $fffe
 
-.export char_out=krn_chrout
-
 .code
 main:
         jsr krn_textui_disable
@@ -39,8 +37,7 @@ main:
         copypointer safe_isr, user_isr
         cli
         
-        ; restore screen size
-        vdp_sreg 0, v_reg9
+        vdp_sreg 0, v_reg9  ; restore screen size
         
 		jsr	krn_textui_init
         jsr krn_textui_enable
@@ -92,6 +89,7 @@ init_pong:
 ;; DECLARE SOME VARIABLES HERE
 ;  .resset $0000  ;;start variables at ram location 0
   
+frame_count:    .res 1,0
 gamestate:  .res 1  ; .res 1 means reserve one byte of space
 ballx:      .res 1  ; ball horizontal position
 bally:      .res 1  ; ball vertical position
@@ -101,9 +99,11 @@ ballleft:   .res 1  ; 1 = ball moving left
 ballright:  .res 1  ; 1 = ball moving right
 ballspeedx: .res 1  ; ball horizontal speed per frame
 ballspeedy: .res 1  ; ball vertical speed per frame
-paddle1ytop:   .res 1  ; player 1 paddle top vertical position
-paddle2ytop:   .res 1  ; player 2 paddle bottom vertical position
-buttons1:   .res 1  ; player 1 gamepad buttons, one bit per button
+paddle1ytop:    .res 1  ; player 1 paddle top vertical position
+paddle1_velo:   .res 1
+paddle2ytop:    .res 1  ; player 2 paddle bottom vertical position
+paddle2_velo:   .res 1
+buttons1:       .res 1  ; player 1 gamepad buttons, one bit per button
 buttons2:   .res 1  ; player 2 gamepad buttons, one bit per button
 score1:     .res 1  ; player 1 score, 0-15
 score2:     .res 1  ; player 2 score, 0-15
@@ -116,10 +116,10 @@ STATEGAMEOVER  = $02  ; displaying game over screen
 RIGHTWALL      = $Fe  ; when ball reaches one of these, do something
 RIGHTWALLOFFS  = PADDLE2X-2*3
 
-TOPWALL        = $4
+TOPWALL        = $8
 BOTTOMWALL     = $b8
 
-BOTTOMWALLOFFS = $9e
+BOTTOMWALLOFFS = $a2
 
 LEFTWALL       = $02
 LEFTWALLOFFS   = PADDLE1X+2*3
@@ -164,6 +164,9 @@ ResetGame:
   STA score1
   STA score2
 
+        stz paddle1_velo
+        stz paddle2_velo
+  
 ;;; Set initial paddle state
   LDA #$60
   STA paddle1ytop
@@ -172,77 +175,51 @@ ResetGame:
 ;;:Set starting game state
   LDA #STATEPLAYING
   STA gamestate
-              
-;  LDA #%10010000   ; enable NMI, sprites from Pattern Table 0, background from Pattern Table 1
-;  STA $2000
-
-;  LDA #%00011110   ; enable sprites, enable background, no clipping on left side
-;  STA $2001
 
   rts
 
-;Forever:
- ; JMP Forever     ;jump back to Forever, infinite loop, waiting for NMI
-  
 game_isr:
 ;    lda #Dark_Yellow
  ;   jsr vdp_bgcolor
-
-  ;;This is the PPU clean up section, so rendering the next frame starts properly.
-;  LDA #%10010000   ; enable NMI, sprites from Pattern Table 0, background from Pattern Table 1
- ; STA $2000
-  ;LDA #%00011110   ; enable sprites, disable background, no clipping on left side
-  ;STA $2001
-;  LDA #$00        ;;tell the ppu there is no background scrolling
- ; STA $2005
-  ;STA $2005
     
-  ;;;all graphics updates done by here, run game engine
-  JSR ReadController1  ;;get the current button data for player 1
-  JSR ReadController2  ;;get the current button data for player 2
-  
-;    .import hexout
-   ; lda buttons1
- ;   jsr hexout
-  ;  lda #' '
-  ;  jsr char_out
- ;   lda buttons2
-   ; jsr hexout
-;    lda #$0d
-    ;jsr char_out
-
-GameEngine:  
-  LDA gamestate
-  CMP #STATETITLE
-  BEQ EngineTitle    ;;game is displaying title screen
+        inc frame_count
     
-  LDA gamestate
-  CMP #STATEGAMEOVER
-  BEQ EngineGameOver  ;;game is displaying ending screen
-  
-  LDA gamestate
-  CMP #STATEPLAYING
-  BEQ EnginePlaying   ;;game is playing
-GameEngineDone:  
-  
-    JSR UpdateSprites  ;;set ball/paddle sprites from positions
+        ;;;all graphics updates done by here, run game engine
+        JSR ReadController1  ;;get the current button data for player 1
+        JSR ReadController2  ;;get the current button data for player 2
 
-    vdp_sreg <ADDRESS_GFX1_SPRITE, WRITE_ADDRESS + >ADDRESS_GFX1_SPRITE
-    ldx #0
-:   vdp_wait_l 10
-    lda sprites, x
-    sta a_vram
-    inx
-    cpx #3*4+1
-    bne :-   
+        GameEngine:  
+        LDA gamestate
+        CMP #STATETITLE
+        BEQ EngineTitle    ;;game is displaying title screen
 
-    JSR DrawScore
+        LDA gamestate
+        CMP #STATEGAMEOVER
+        BEQ EngineGameOver  ;;game is displaying ending screen
 
-    lda #Medium_Green<<4|Black
-    jsr vdp_bgcolor
+        LDA gamestate
+        CMP #STATEPLAYING
+        BEQ EnginePlaying   ;;game is playing
+        GameEngineDone:  
 
-    rts
-    ;RTI             ; return from interrupt  
+        JSR UpdateSprites  ;;set ball/paddle sprites from positions
+
+        vdp_sreg <ADDRESS_GFX1_SPRITE, WRITE_ADDRESS + >ADDRESS_GFX1_SPRITE
+        ldx #0
+:       vdp_wait_l 10
+        lda sprites, x
+        sta a_vram
+        inx
+        cpx #3*4+1
+        bne :-   
+
+        JSR DrawScore
+
+        lda #Medium_Green<<4|Black
+        jsr vdp_bgcolor
+
+        rts
+        ;RTI             ; return from interrupt  
 ;;;;;;;;
  
 EngineTitle:
@@ -264,12 +241,6 @@ EngineGameOver:
   ;;  turn screen on
 
 ;;;  Draw game over text
-  ;LDA $2002             ; read PPU status to reset the high/low latch
-;  LDA #$21
-  ;STA $2006             ; write the high byte of $2000 address
- ; LDA #$4B
-;  STA $2006             ; write the low byte of $2000 address
-
   LDX #$00
 DrawGameOverLine1:
   ;LDA endingMessageLine1, x
@@ -411,67 +382,94 @@ MoveBallDownDone:
 
 MovePaddle1Up:
   ;;if up button pressed
-  LDA buttons1
-  AND #JOY_UP;%00001000
-  bne MovePaddle1UpDone ;; not pressed, skip
+        LDA buttons1
+        AND #JOY_UP;%00001000
+        bne MovePaddle1UpDone ;; not pressed, skip
 
-  LDA paddle1ytop 
-  CMP #TOPWALL ;; Check if we have hit top wall
+        ldx paddle1_velo
+:        
+        LDA paddle1ytop
+        CMP #TOPWALL ;; Check if we have hit top wall
+        BCC MovePaddle1Reset ;; If so, skip
 
-  BCC MovePaddle1UpDone ;; If so, skip
-
-  DEC paddle1ytop ;; Decrement position	
-  DEC paddle1ytop ;; Decrement position	
+        DEC paddle1ytop ;; Decrement position	
+        dex
+        bpl :-
+        bra MovePaddle1IncVelo
 MovePaddle1UpDone:
 
 MovePaddle1Down:
   ;;if down button pressed
   ;;  if paddle bottom < bottom wall
   ;;    move paddle top and bottom down
-  LDA buttons1
-  AND #JOY_DOWN;%00000100
-  bne MovePaddle1DownDone ;; not pressed, skip
+        LDA buttons1
+        AND #JOY_DOWN;%00000100
+        bne MovePaddle1Reset ;; not pressed, skip
 
-  LDA paddle1ytop 
-  CMP #BOTTOMWALLOFFS ;; Check if we have hit top wall
-
-  BCS MovePaddle1DownDone ;; If so, skip
+        ldx paddle1_velo
+:       LDA paddle1ytop 
+        CMP #BOTTOMWALLOFFS ;; Check if we have hit top wall
+        BCS MovePaddle1Reset ;; If so, skip
   
-  INC paddle1ytop ;; Decrement position
-  INC paddle1ytop ;; Decrement position
-MovePaddle1DownDone:
+        INC paddle1ytop ;; Decrement position
+        dex
+        bpl :-
+        
+MovePaddle1IncVelo:
+        lda frame_count
+        and #$1
+        bne MovePaddle1Done
+        inc paddle1_velo
+        bra MovePaddle1Done
+MovePaddle1Reset:
+        stz paddle1_velo        
+MovePaddle1Done:
 
 MovePaddle2Up:
   ;;if up button pressed
-  LDA buttons2
-  AND #JOY_UP;%00001000
-  bne MovePaddle2UpDone ;; not pressed, skip
+        LDA buttons2
+        AND #JOY_UP;%00001000
+        bne MovePaddle2UpDone ;; not pressed, skip
 
-  LDA paddle2ytop 
-  CMP #TOPWALL ;; Check if we have hit top wall
+        ldx paddle2_velo
+:        
+        LDA paddle2ytop
+        CMP #TOPWALL ;; Check if we have hit top wall
+        BCC MovePaddle2Reset ;; If so, skip
 
-  BCC MovePaddle2UpDone ;; If so, skip
-
-  DEC paddle2ytop ;; Decrement position	
-  DEC paddle2ytop ;; Decrement position	
+        DEC paddle2ytop ;; Decrement position	
+        dex
+        bpl :-
+        bra MovePaddle2IncVelo
 MovePaddle2UpDone:
 
 MovePaddle2Down:
   ;;if down button pressed
   ;;  if paddle bottom < bottom wall
   ;;    move paddle top and bottom down
-  LDA buttons2
-  AND #JOY_DOWN;%00000100
-  bne MovePaddle2DownDone ;; not pressed, skip
+        LDA buttons2
+        AND #JOY_DOWN;%00000100
+        bne MovePaddle2Reset ;; not pressed, skip
 
-  LDA paddle2ytop 
-  CMP #BOTTOMWALLOFFS ;; Check if we have hit top wall
+        ldx paddle2_velo
+:       LDA paddle2ytop 
+        CMP #BOTTOMWALLOFFS ;; Check if we have hit top wall
+        BCS MovePaddle2Reset ;; If so, skip
+  
+        INC paddle2ytop ;; Decrement position
+        dex
+        bpl :-
+        
+MovePaddle2IncVelo:
+        lda frame_count
+        and #$1
+        bne MovePaddle2Done
+        inc paddle2_velo
+        bra MovePaddle2Done
+MovePaddle2Reset:
+        stz paddle2_velo        
+MovePaddle2Done:
 
-  BCS MovePaddle2DownDone ;; If so, skip
-
-  INC paddle2ytop ;; Decrement position
-  INC paddle2ytop ;; Decrement position
-MovePaddle2DownDone:
 	
 CheckPaddle1Collision:
   ;;if ball x < paddle1x
@@ -609,23 +607,14 @@ DrawScore:
         jsr draw_digit
         
         pla
-    ;  STX $2007             ; write to PPU
 
       ;; Store first digit
-      ;STY $2007
-        ;lda #2    
         ldx #24
         ldy #2
         jsr draw_digit
 
   
   ;; Draw player 2 score  
-;  LDA $2002             ; read PPU status to reset the high/low latch
- ; LDA #$20
-  ;STA $2006             ; write the high byte of $2000 address
-;  LDA #$3C
- ; STA $2006             ; write the low byte of $2000 address
-
         LDX #scoreBackground
         lda score2
         ;; Check if score equals or exceeds 10
@@ -666,15 +655,6 @@ ReadController2:
     rts
           
 ;;;;;;;;;;;;;;  
-  
-;  .bank 1
- ; .org $E000
-palette:
-;;;   Palette 3        Palette 2        Palette 1        Palette 0
-;;;   Color 0, 1, 2, 3
-  .byte $22,$29,$1A,$0F, $23,$37,$18,$0F, $22,$30,$21,$0F, $0C,$0C,$17,$0F   ;;background palette
-  .byte $22,$1C,$15,$14, $22,$02,$38,$3C, $22,$10,$15,$07, $37,$36,$38,$2D   ;;sprite palette
-
 sprites:
      ;vert horiz tile attr 
 sprites_paddle1:
@@ -711,37 +691,7 @@ sprite_data:
   .byte 0,0,0,0,0,0,0,0,0
   
 
-mainBackground:
-  .byte $25
-
-wallBackground:
-  .byte $47
-
-;;; 273 267 279 271 293 281 288 271 284
-;;; 17  11   34  15  37  25  32  15  28
-;;; 11  0B   22  0F  25  19  20  0F  1C
-;;; 282 278 267 291 271 284 293 ??? 293 289 281 280
-;;;  26  22  11  35  15  28  37 ???  37  33  25  24
-;;;  1A  16  0B  23  0F  1C  25  01  25  21  19  18    
-	
-attribute:
-  .byte %00001000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000000, %00000010
-
-;  .org $FFFA     ;first of the three vectors starts here
- ; .dw NMI        ;when an NMI happens (once per frame if enabled) the 
-                   ;processor will jump to the label NMI:
-  ;.dw RESET      ;when the processor first turns on or is reset, it will jump
-                   ;to the label RESET:
-  ;.dw 0          ;external interrupt IRQ is not used in this tutorial
-  
-  
-;;;;;;;;;;;;;;  
-  
-  
- ; .bank 2
-;  .org $0000
- ; .incbin "mario.chr"   ;includes 8KB graphics file from SMB1
-	
+;;;;;;;;;;;;;;
 bitmask:
     .byte $80,$40,$20,$10,$08,$04
 
@@ -855,4 +805,11 @@ digits:
 ;........
 ;........
 ;........
+;G A M E O V E R
+.byte 0,0,0,0,0,0,0,0 
+.byte 0,0,0,0,0,0,0,0
+.byte 0,0,0,0,0,0,0,0
+.byte 0,0,0,0,0,0,0,0
+.byte 0,0,0,0,0,0,0,0
+
 .segment "STARTUP"
