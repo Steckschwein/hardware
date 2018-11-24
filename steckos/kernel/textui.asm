@@ -231,13 +231,13 @@ textui_update_screen:
         sta    screen_status
 
 @l1:
-;        lda    #Medium_Green<<4|Black
- ;       jsr    vdp_bgcolor
+        lda    #Medium_Green<<4|Black
+        jsr    vdp_bgcolor
         rts
 
 textui_scroll_up:
         phx
-        ldx    #$00
+        ldx    #0
 @l1:    lda    screen_buffer+$000+COLS,x
         sta    screen_buffer+$000,x
         inx
@@ -250,21 +250,18 @@ textui_scroll_up:
         sta    screen_buffer+$200,x
         inx
         bne    @l3
+.ifndef COLS80
+@le:    lda    screen_buffer+$300+COLS,x
+        sta    screen_buffer+$300,x
+        inx
+        cpx #<(COLS * ROWS)
+        bne @le
+.endif        
+.ifdef COLS80
 @l4:    lda    screen_buffer+$300+COLS,x
         sta    screen_buffer+$300,x
+        inx
         bne    @l4
-;.ifndef COLS80
-;@le:    lda    screen_buffer+$300+COLS,x
- ;       sta    screen_buffer+$300,x
-  ;      inx
-   ;     cpx #<(COLS * ROWS)
-    ;    bne    @le
-;.endif
-.ifdef COLS80
-;@l4:    lda    screen_buffer+$300+COLS,x
- ;       sta    screen_buffer+$300,x
-  ;      inx
-   ;     bne    @l4
 @l5:    lda    screen_buffer+$400+COLS,x
         sta    screen_buffer+$400,x
         inx
@@ -281,9 +278,8 @@ textui_scroll_up:
         sta    screen_buffer+$700,x
         inx
         cpx #<(COLS * ROWS)
-        bne    @le
+        bne @le
 .endif
-
         plx
         rts
 
