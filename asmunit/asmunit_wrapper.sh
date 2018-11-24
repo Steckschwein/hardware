@@ -5,7 +5,7 @@ logfile=$1.log
 failonerror=true
 
 if [ "${3}" = "false" ]; then
-	failonerror=false
+    exit 0;
 fi
 
 _ts=$(date +%s%N)
@@ -39,8 +39,6 @@ echo "</testsuite>" >> ${TARGET_DIR}/${1}.xml
 echo "Tests run: "${tests}", Failures: ${test_fail}"
 if [ -n "`grep FAIL $logfile`" ] ; then
 	cat $logfile
-	if [ $failonerror = true ]; then
-		exit 1
-	fi
 fi
+
 exit 0
