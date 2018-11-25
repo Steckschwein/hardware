@@ -59,6 +59,7 @@ init:
 		SetVector exit_from_prg, retvec
 		SetVector buf, bufptr
 		SetVector msgbuf, msgptr
+		SetVector PATH, pathptr
 
 		jsr krn_primm
 		.byte $0a, "steckOS Shell "
@@ -69,13 +70,13 @@ init:
 		bra mainloop
 
 exit_from_prg:
-		cmp #0
-		beq mainloop
-		pha
-		jsr krn_primm
-		.byte $0a,"Exit: ",0
-		pla
-		jsr krn_chrout
+		; cmp #0
+		; beq mainloop
+		; pha
+		; jsr krn_primm
+		; .byte $0a,"Exit: ",0
+		; pla
+		; jsr krn_chrout
 
 mainloop:
 		cld
@@ -261,7 +262,7 @@ printbuf:
 		jsr krn_chrout
 		iny
 		bra @l1
-@l2:		rts
+@l2:	rts
 
 
 cmdlist:
@@ -338,7 +339,6 @@ run:
 		jmp mainloop
 
 @l1:
-		SetVector PATH, pathptr
 		stz tmp0
 @try_path:
 		ldx #0
@@ -506,7 +506,7 @@ upload:
 		jmp (startaddr)
 
 
-PATH:		.asciiz "/bin/:/sbin/:/usr/bin/"
+PATH:		.asciiz "./:/bin/:/sbin/:/usr/bin/"
 APPEXT:		.asciiz ".PRG"
 tmpbuf:
 buf = tmpbuf + 64
