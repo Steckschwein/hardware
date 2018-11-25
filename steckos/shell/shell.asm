@@ -24,6 +24,8 @@ tmp0    = $a0
 tmp1    = $a1
 tmp5    = $a2
 
+prompt  = $af
+
 .include "common.inc"
 .include "../kernel/kernel.inc"
 .include "../kernel/kernel_jumptable.inc"
@@ -78,6 +80,8 @@ exit_from_prg:
 mainloop:
 		cld
 		crlf
+        lda #'['
+		jsr krn_chrout
 		; output current path
 		lda	#<msgbuf
 		ldx #>msgbuf
@@ -88,9 +92,11 @@ mainloop:
 		lda #<msgbuf
 		ldx #>msgbuf
 		jsr krn_strout
+        lda #']'
+		jsr krn_chrout
 @nocwd:
 		; output prompt character
-		lda #'>'
+		lda #prompt
 		jsr krn_chrout
 
 		; reset input buffer
