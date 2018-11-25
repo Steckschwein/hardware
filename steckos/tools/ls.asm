@@ -35,8 +35,6 @@
 appstart $1000
 main:
 
-		; lda #$04
-		; sta cnt
 l1:
 		crlf
 		SetVector pattern, filenameptr
@@ -97,17 +95,17 @@ l1:
 		bra @l3
 @l5:
 
-		lda files
-		beq @dirs
-		jsr b2ad2
-		jsr krn_primm
-		.byte " file(s)",$0a,$00
-@dirs:
-		lda dirs
-		beq @end
-		jsr b2ad2
-		jsr krn_primm
-		.byte " dir(s)",$0a,$00
+; 		lda files
+; 		beq @dirs
+; 		jsr b2ad2
+; 		jsr krn_primm
+; 		.byte " file(s)",$0a,$00
+; @dirs:
+; 		lda dirs
+; 		beq @end
+; 		jsr b2ad2
+; 		jsr krn_primm
+; 		.byte " dir(s)",$0a,$00
 
 @end:
 
