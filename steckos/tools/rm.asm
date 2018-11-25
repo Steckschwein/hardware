@@ -37,8 +37,6 @@ appstart $1000
     	jsr krn_unlink
 		bne @errmsg
 
-		jsr krn_primm
-		.byte $0a," rm ok",$00
 @exit:
 		jmp (retvec)
 
