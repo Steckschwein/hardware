@@ -79,26 +79,6 @@ kern_init:
 
 	cli
 
-    lda #27
-    jsr ansi_chrout
-    lda #'['
-    jsr ansi_chrout
-    lda #'x'
-    jsr ansi_chrout
-    lda #'y'
-    jsr ansi_chrout
-    lda #'z'
-    jsr ansi_chrout
-    lda $00
-    jsr textui_chrout
-    lda $01
-    jsr textui_chrout
-    lda $02
-    jsr textui_chrout
-
-@foo:
-    jmp @foo
-
 	jsr primm
 	.byte $d5,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$b8,$0a
 	.byte $b3," steckOS Kernel "
