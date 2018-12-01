@@ -5,13 +5,13 @@ CA65FLAGS=--include-dir ../../../asmunit --include-dir ../../asminc --include-di
 LIBS=../t99xx.lib.o ../debug.o ../../../asmunit/asmunit.a
 LDFLAGS=--config test.cfg $(DEFINES)
 
-# testing purpose of kernel api from client point of view 
+# testing purpose of kernel api from client point of view
 LIBS_PRG=../../tools/lib/toollib.a
-LDFLAGS_PRG=--config ../../steckos-c-app.cfg 
+LDFLAGS_PRG=--config ../../steckos-c-app.cfg
 
 .PHONY: all clean
 
-all: test.util test.textui test.matcher test.fat32
+all: test.util test.textui test.matcher test.fat32 test.ansi
 
 clean:
 	rm -f *.prg *.bin *.o *.dis *.log
@@ -24,7 +24,7 @@ test.%.bin: test.%.o $(LIBS) $(<:test.%=%)
 
 test.matcher.bin: test.matcher.o ../matcher.o ../util.o $(LIBS)
 	ld65 $(LDFLAGS) $< $(LIBS) ../matcher.o ../util.o -o $@
-	
+
 %.prg: %.o $(LIBS)
 	ld65 $(LDFLAGS_PRG) $< $(LIBS_PRG) -o $@
 
@@ -33,11 +33,11 @@ test.matcher.bin: test.matcher.o ../matcher.o ../util.o $(LIBS)
 
 %.dbg: %.bin
 	py65mon -m 65c02 --output 0x0200 $< $(KERNEL_ADDRESS)
-	
-#../util.o ../textui.o ../fat32.o 
-	
+
+#../util.o ../textui.o ../fat32.o
+
 test.%: test.%.bin
 	../../../asmunit/asmunit_wrapper.sh $@.bin $(KERNEL_ADDRESS)
-		
+
 %: %.prg
 	../../../transfer.py $<

@@ -59,6 +59,8 @@ dirptr 	    		= $f2 	; 2 byte
 read_blkptr  		= $f4
 write_blkptr 		= $f6
 sd_tmp	     		= $f8
+ansi_state          = $f9
+ansi_index          = $fa
 
 lba_addr 			= $0280		; 4 bytes
 blocks				= $0284		; 3 bytes blocks to read, 3 bytes sufficient to address 4GB -> 4294967296 >> 9 = 8388608 ($800000) max blocks/file

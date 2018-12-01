@@ -55,6 +55,7 @@ text_mode_40 = 1
 
 .import execv
 .import strout, primm
+.import ansi_chrout
 
 kern_init:
 	sei
@@ -77,6 +78,26 @@ kern_init:
 	jsr textui_init0
 
 	cli
+
+    lda #27
+    jsr ansi_chrout
+    lda #'['
+    jsr ansi_chrout
+    lda #'x'
+    jsr ansi_chrout
+    lda #'y'
+    jsr ansi_chrout
+    lda #'z'
+    jsr ansi_chrout
+    lda $00
+    jsr textui_chrout
+    lda $01
+    jsr textui_chrout
+    lda $02
+    jsr textui_chrout
+
+@foo:
+    jmp @foo
 
 	jsr primm
 	.byte $d5,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$b8,$0a
