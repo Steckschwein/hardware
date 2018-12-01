@@ -42,6 +42,10 @@ ansi_chrout:
 @n:
     cmp #$39
     bcc @store
+
+    cmp #';'
+    beq @store
+    
     stz ansi_state
     rts
 
