@@ -189,8 +189,9 @@ _assert_fail_expect:
 		sta _tst_inp_ptr
 		jsr _out_ptr							; expected ...
 		
-		bra l_return		
+		bra l_return
 		brk										; fail immediately, we will end up in monitor
+        
 
 _out_ptr:
 		phx
@@ -257,7 +258,25 @@ _hexdigit:
 asmunit_chrout:
 		sta asmunit_char_out
 		rts
-				
+
+.export tst_yreg
+.export tst_acc
+.export tst_xreg
+.export tst_yreg
+.export tst_status
+.export tst_save_ptr
+.export tst_return_ptr
+.export tst_bytes
+
+tst_acc:        .res 1
+tst_xreg:		.res 1
+tst_yreg:		.res 1
+tst_status:		.res 1
+tst_save_ptr:	.res 2
+tst_return_ptr:	.res 2
+tst_bytes:		.res 1
+
+        
 _l_messages:
 _l_msg_pass:	 		.byte _l_msg_fail-_l_msg_pass-1,	$0a,"PASS"
 _l_msg_fail: 			.byte _l_msg_fail_exp-_l_msg_fail-1, $0a, "FAIL - "

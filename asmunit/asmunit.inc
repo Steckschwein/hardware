@@ -43,18 +43,10 @@
 .define _MODE_TESTNAME 1<<2
 
 
-_tst_ptr=$0					;
-_tst_inp_ptr=$2			;
+_tst_ptr=$0
+_tst_inp_ptr=$2
 
 asmunit_addr_instrument = $0202
-
-tst_acc			= $0100	; we use the lower part of the stack as temp space assuming the stack is almost not complety exhausted... hopefully :P
-tst_xreg			= $0101
-tst_yreg			= $0102
-tst_status		= $0103
-tst_save_ptr	= $0104 ; to save and restore the _tst_ptr
-tst_return_ptr	= $0106 ; to save and restore the _tst_exp_ptr and to build the return vector
-tst_bytes		= $0108 ; amount of bytes to test
 
 .macro cmp16 address, _16Bit
 	.local @l_exit
@@ -118,18 +110,22 @@ tst_bytes		= $0108 ; amount of bytes to test
 .endmacro
 
 .macro assertX expect
+    .import tst_xreg
 	assert8 expect, tst_xreg
 .endmacro
 
 .macro assertY expect
+    .import tst_yreg
 	assert8 expect, tst_yreg
 .endmacro
 
 .macro assertA expect
+    .import tst_acc
 	assert8 expect, tst_acc
 .endmacro
 
 .macro assertCPU expect
+    .import tst_status
 	assert8 expect, tst_status
 .endmacro
 
