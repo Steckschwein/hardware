@@ -64,9 +64,6 @@ ansi_chrout:
     and #%11001111
     pha
 
-    ; clear ansi_param1 / NOT NEEDED ANYMORE
-    lda #0
-    sta ansi_param1,x
 
     ; bit 0 of ansi_state set?
     ; no? multiply by 10, then store to ansi_param1
