@@ -46,8 +46,12 @@ ansi_chrout:
     cmp #';'
     bne @cont
     inc ansi_index
+    rts
 @cont:
 
+    ; TODO
+    ; Is alphanumeric?
+    ; end sequence and execute requested action
     stz ansi_state
     rts
 @store:
@@ -55,21 +59,25 @@ ansi_chrout:
     phx
     phy
     ldx ansi_index
+
+    ; Convert digit in A to binary
     and #%11001111
-
-
     pha
+
+    ; clear ansi_param1 / NOT NEEDED ANYMORE
     lda #0
     sta ansi_param1,x
+
+    ; bit 0 of ansi_state set?
+    ; no? multiply by 10, then store to ansi_param1
+    ; yes? skip multiplication, and add to ansi_param1
     lda ansi_state
     ror
     bcs @skip_mul
-    ; cmp #$40
-    ; bne @skip_mul
-    ply
 
-    lda multable,y
-    inc ansi_state
+    ply
+    lda multable,y ; get multiple of A (now in Y) into A
+    inc ansi_state ; set bit 0 of ansi_state to indicate the first digit has been processed
     bra @end
 @skip_mul:
     pla
