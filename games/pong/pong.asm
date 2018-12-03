@@ -12,7 +12,7 @@
 .import vdp_mc_blank
 .import vdp_mc_set_pixel
 .import	vdp_bgcolor
-.import	joy_read
+.import	read_joystick
 
 appstart $1000
 
@@ -54,6 +54,7 @@ init_pong:
         vdp_sreg v_reg8_VR, v_reg8; make sure sprites are enabled
         vdp_sreg $0, v_reg23
         vdp_sreg $0, v_reg18
+        vdp_sreg v_reg25_wait|v_reg25_cmd, v_reg25
         
 		ldx #63
 @l1:	ldy #0
@@ -215,8 +216,8 @@ game_isr:
 
         JSR DrawScore
 
-        lda #Medium_Green<<4|Black
-        jsr vdp_bgcolor
+;        lda #Medium_Green<<4|Black
+ ;       jsr vdp_bgcolor
 
         rts
         ;RTI             ; return from interrupt  
@@ -644,13 +645,13 @@ DrawScore:
  
 ReadController1:
     lda #JOY_PORT1
-    jsr joy_read
+    jsr read_joystick
     sta buttons1
     rts
   
 ReadController2:
     lda #JOY_PORT2
-    jsr joy_read
+    jsr read_joystick
     sta buttons2
     rts
           
@@ -689,7 +690,6 @@ sprite_data:
   .byte 0,0,0,0,0,0,0,0
   .byte 0,0,0,0,0,0,0,0,0
   .byte 0,0,0,0,0,0,0,0,0
-  
 
 ;;;;;;;;;;;;;;
 bitmask:
@@ -734,11 +734,11 @@ digits:
 ;#.......
 ;#.......
 ;####....
-.byte $f0, $10, $10, $70, $10, $10, $10, $f0;
+.byte $f0, $10, $10, $f0, $10, $10, $10, $f0;
 ;####....
 ;...#....
 ;...#....
-;.###....
+;####....
 ;...#....
 ;...#....
 ;...#....
