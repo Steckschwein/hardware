@@ -55,19 +55,25 @@
 	assert8 $00, ansi_index
 
 
-	;
-	; lda #';'
-	; jsr ansi_chrout
-	;
-	; assert8 $40, ansi_state
-	; ; assert8 $02, ansi_index
-	;
-	;
-	; lda #'A'
-	; jsr ansi_chrout
-	;
-	; assert8 $00, ansi_state
-	; ; assert8 $02, ansi_index
+
+	lda #';'
+	jsr ansi_chrout
+
+	assert8 $40, ansi_state
+	assert8 $01, ansi_index
+
+	lda #'2'
+	jsr ansi_chrout
+
+	assert8 $41, ansi_state
+	assert8 20, ansi_param2
+
+	lda #'3'
+	jsr ansi_chrout
+
+	assert8 $41, ansi_state
+	assert8 23, ansi_param2
+
 
 	brk
 

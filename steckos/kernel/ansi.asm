@@ -46,6 +46,7 @@ ansi_chrout:
     cmp #';'
     bne @cont
     inc ansi_index
+    dec ansi_state
     rts
 @cont:
 
