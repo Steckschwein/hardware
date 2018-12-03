@@ -73,13 +73,11 @@ ansi_chrout:
     bcc @skip
 
     ldy ansi_param1,x
-    lda multable,y ; get multiple of A (now in Y) into A
-    sta ansi_param1,x
     clc
     pla
-    adc ansi_param1,x
+    adc multable,y
     sta ansi_param1,x
-
+    
     bra @end
 @skip:
     pla
