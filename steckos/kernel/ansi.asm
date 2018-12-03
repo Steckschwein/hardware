@@ -35,12 +35,12 @@ ansi_chrout:
     rts
 @store_csi_byte:
     ; number? $30-$39
-    cmp #$30
+    cmp #'0'
     bcs @n
     stz ansi_state
     rts
 @n:
-    cmp #$39
+    cmp #'9'+1
     bcc @store
 
     cmp #';'
@@ -64,7 +64,6 @@ ansi_chrout:
     ; Convert digit in A to binary
     and #%11001111
     pha
-
 
     ; bit 0 of ansi_state set?
     ; no? multiply by 10, then store to ansi_param1

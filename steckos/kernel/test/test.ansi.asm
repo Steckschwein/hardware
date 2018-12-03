@@ -3,8 +3,6 @@
 	.include "common.inc"
 	.include "zeropage.inc"
 
-	.include "fat32.inc"
-
 	.import ansi_chrout	; uut
 
 	.include "asmunit.inc" ; test api
@@ -27,6 +25,8 @@
 	assertA 'A'
 	assert8 $00, ansi_state
 
+    test_name "ansi_chrout esc"
+    
 	lda #27
 	jsr ansi_chrout
 
@@ -34,12 +34,12 @@
 
 	lda #'['
 	jsr ansi_chrout
-
+    
 	assert8 $40, ansi_state
-	; assert8 $00, ansi_index
-
+	assert8 $00, ansi_index
+    
 	lda #'5'
-	jsr ansi_chrout
+    jsr ansi_chrout
 
 	assertA 50
 	assert8 50, ansi_param1
@@ -50,11 +50,9 @@
 	jsr ansi_chrout
 
 	;assertA 2
-	assert8 52, ansi_param1
-	assert8 $41, ansi_state
 	assert8 $00, ansi_index
-
-
+	assert8 $41, ansi_state
+	assert8 52, ansi_param1
 
 	lda #';'
 	jsr ansi_chrout
