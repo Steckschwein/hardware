@@ -25,8 +25,8 @@
 .import char_out
 	
 	test_name "asmunit assertA"
-	lda #1
-	assertA 1
+	lda #27
+	assertA 27
 	assertA $ef	; expect fail
 	
 	test_name "asmunit assertX"

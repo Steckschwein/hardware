@@ -4,7 +4,7 @@
 65C02: 0000 00 00 00 ff 00110000
 .
 [asmunit assertA]
-FAIL - $01 found, but expected $ef
+FAIL - $1b found, but expected $ef
 [asmunit assertX]
 FAIL - $e9 found, but expected $ab
 [asmunit assertY]

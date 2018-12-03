@@ -13,6 +13,11 @@ if [ "${3}" = false ]; then
     exit 0
 fi
 
+if [ "${tests}" -eq 0 ]; then
+    echo "No Unit tests found. Make sure at least one test exists within ${1} and is labeled via test_name <name of test>!" >&2
+    exit 1
+fi
+
 TARGET_DIR=target/test-reports
 
 mkdir -p ${TARGET_DIR}
