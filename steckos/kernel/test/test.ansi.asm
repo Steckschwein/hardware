@@ -36,27 +36,38 @@
 	jsr ansi_chrout
 
 	assert8 $40, ansi_state
-	assert8 $00, ansi_index
+	; assert8 $00, ansi_index
 
 	lda #'5'
 	jsr ansi_chrout
 
-	assert8 $40, ansi_state
-	assert8 $01, ansi_index
+	assertA 50
+	assert8 50, ansi_param1
+	assert8 $41, ansi_state
+	assert8 $00, ansi_index
 
-	lda #';'
+	lda #'2'
 	jsr ansi_chrout
 
-	assert8 $40, ansi_state
-	assert8 $02, ansi_index
+	;assertA 2
+	assert8 52, ansi_param1
+	assert8 $41, ansi_state
+	assert8 $00, ansi_index
 
 
-	lda #'A'
-	jsr ansi_chrout
-
-	assert8 $00, ansi_state
-	assert8 $02, ansi_index
-
+	;
+	; lda #';'
+	; jsr ansi_chrout
+	;
+	; assert8 $40, ansi_state
+	; ; assert8 $02, ansi_index
+	;
+	;
+	; lda #'A'
+	; jsr ansi_chrout
+	;
+	; assert8 $00, ansi_state
+	; ; assert8 $02, ansi_index
 
 	brk
 
