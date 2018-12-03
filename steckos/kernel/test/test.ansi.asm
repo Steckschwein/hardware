@@ -26,7 +26,7 @@
 	assert8 $00, ansi_state
 
     test_name "ansi_chrout esc"
-    
+
 	lda #27
 	jsr ansi_chrout
 
@@ -34,15 +34,15 @@
 
 	lda #'['
 	jsr ansi_chrout
-    
+
 	assert8 $40, ansi_state
 	assert8 $00, ansi_index
-    
+
 	lda #'5'
     jsr ansi_chrout
 
-	assertA 50
-	assert8 50, ansi_param1
+	assertA 5
+	assert8 5, ansi_param1
 	assert8 $41, ansi_state
 	assert8 $00, ansi_index
 
@@ -64,7 +64,7 @@
 	jsr ansi_chrout
 
 	assert8 $41, ansi_state
-	assert8 20, ansi_param2
+	assert8 2, ansi_param2
 
 	lda #'3'
 	jsr ansi_chrout

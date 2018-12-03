@@ -70,18 +70,23 @@ ansi_chrout:
     ; yes? skip multiplication, and add to ansi_param1
     lda ansi_state
     ror
-    bcs @skip_mul
+    bcc @skip
 
-    ply
+    ldy ansi_param1,x
     lda multable,y ; get multiple of A (now in Y) into A
-    inc ansi_state ; set bit 0 of ansi_state to indicate the first digit has been processed
-    bra @end
-@skip_mul:
-    pla
-    clc
-    adc ansi_param1,x
-@end:
     sta ansi_param1,x
+    clc
+    pla
+    adc ansi_param1,x
+    sta ansi_param1,x
+
+    bra @end
+@skip:
+    pla
+    sta ansi_param1,x
+    inc ansi_state ; set bit 0 of ansi_state to indicate the first digit has been processed
+
+@end:
     ply
     plx
     rts
