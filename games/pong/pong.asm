@@ -115,21 +115,21 @@ STATEPLAYING   = $01  ; move paddles/ball, check for collisions
 STATEGAMEOVER  = $02  ; displaying game over screen
   
 RIGHTWALL      = $Fe  ; when ball reaches one of these, do something
-RIGHTWALLOFFS  = PADDLE2X-2*3
+RIGHTWALLOFFS  = PADDLE2X-(2*(3+1)) ; magnified sprite *2, 3 - 3px of '0' in paddle shape and 1px to bring ball exactly on paddle
 
-TOPWALL        = $8
+TOPWALL        = $1
 BOTTOMWALL     = $b8
 
 BOTTOMWALLOFFS = $a2
 
 LEFTWALL       = $02
-LEFTWALLOFFS   = PADDLE1X+2*3
+LEFTWALLOFFS   = PADDLE1X+(2*(3+1))
   
 PADDLE1X       = $08  ; horizontal position for paddles, doesnt move
 PADDLE2X       = $F0
 
-;PADDLE_LEN_SPR = $04
-PADDLE_LEN_PIXELS = 20
+PADDLE_WIDTH = 4
+PADDLE_HEIGHT = 20
 
 BALL_Y_START_POS = $5c
 BALL_X_START_POS = $7a
@@ -482,6 +482,9 @@ CheckPaddle1Collision:
   CMP #LEFTWALLOFFS
   BCS CheckPaddle1CollisionDone
 
+  cmp #LEFTWALLOFFS-PADDLE_WIDTH
+  bcc CheckPaddle1CollisionDone
+  
   ;; Check if ball is above paddle
   LDA bally
   CMP paddle1ytop
@@ -490,7 +493,7 @@ CheckPaddle1Collision:
   ;; Check if ball is below paddle
   LDA paddle1ytop
   CLC
-  ADC #PADDLE_LEN_PIXELS
+  ADC #PADDLE_HEIGHT
   CMP bally
   BCC CheckPaddle1CollisionDone
 
@@ -510,7 +513,10 @@ CheckPaddle2Collision:
   LDA ballx
   CMP #RIGHTWALLOFFS
   BCC CheckPaddle2CollisionDone
-
+  
+  cmp #RIGHTWALLOFFS+PADDLE_WIDTH
+  bcs CheckPaddle2CollisionDone
+  
   ;; Check if ball is above paddle
   LDA bally
   CMP paddle2ytop
@@ -519,7 +525,7 @@ CheckPaddle2Collision:
   ;; Check if ball is below paddle
   LDA paddle2ytop
   CLC
-  ADC #PADDLE_LEN_PIXELS
+  ADC #PADDLE_HEIGHT
   CMP bally
   BCC CheckPaddle2CollisionDone
 
@@ -667,18 +673,18 @@ sprites_ball:
   .byte $d0; end of sprites
 
 sprite_data:
-  .byte %00011000
-  .byte %00011000
-  .byte %00011000
-  .byte %00011000
-  .byte %00011000
-  .byte %00011000
-  .byte %00011000
-  .byte %00011000
-  .byte %00011000
-  .byte %00011000
   .byte %00000000
   .byte %00000000
+  .byte %00011000
+  .byte %00011000
+  .byte %00011000
+  .byte %00011000
+  .byte %00011000
+  .byte %00011000
+  .byte %00011000
+  .byte %00011000
+  .byte %00011000
+  .byte %00011000
   .byte %00000000
   .byte %00000000
   .byte %00000000
@@ -686,7 +692,7 @@ sprite_data:
   .byte 0,0,0,0,0,0,0,0
   .byte 0,0,0,0,0,0,0,0
   
-  .byte $18,$18,0,0,0,0,0,0
+  .byte 0,$18,$18,0,0,0,0,0
   .byte 0,0,0,0,0,0,0,0
   .byte 0,0,0,0,0,0,0,0,0
   .byte 0,0,0,0,0,0,0,0,0
@@ -698,14 +704,14 @@ bitmask:
 .macro pixel8 val
     .repeat 1, i
         .if (.strat(val, i) = '#')
-         ;(1<<i)
+         .byte 1<<i
         .endif
     .endrepeat
-;    .byte b
 .endmacro
 
 .data
 digits:
+;pixel8 "####...."
 ;.byte $f8, $88, $88, $88, $88, $88, $88, $f8;
 .byte $f0, $90, $90, $90, $90, $90, $90, $f0;
 ;####....
