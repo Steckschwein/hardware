@@ -87,6 +87,8 @@ kern_init:
 	.byte $d4,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$be,$0a
 	.byte $00
 
+
+
 	SetVector do_upload, retvec ; retvec per default to do_upload. end up in do_upload again, if a program exits safely
 
 	jsr init_sdcard
@@ -343,7 +345,7 @@ krn_display_off:				jmp vdp_display_off
 krn_getkey:						jmp getkey
 
 .export krn_chrout
-krn_chrout:						jmp textui_chrout
+krn_chrout:						jmp ansi_chrout
 .export krn_putchar
 krn_putchar:					jmp textui_put
 

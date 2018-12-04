@@ -2,7 +2,7 @@
 
 .segment "KERNEL"
 .export ansi_chrout
-.import krn_chrout
+.import textui_chrout
 
 
 ESCAPE = 27
@@ -24,7 +24,7 @@ ansi_chrout:
     beq @is_csi
     stz ansi_state
 @out:
-    jmp krn_chrout
+    jmp textui_chrout
 @is_csi:
     ; next bytes will be the ansi sequence
     pha
@@ -77,7 +77,7 @@ ansi_chrout:
     pla
     adc multable,y
     sta ansi_param1,x
-    
+
     bra @end
 @skip:
     pla
