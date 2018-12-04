@@ -2,7 +2,7 @@
 
 .segment "KERNEL"
 .export ansi_chrout
-.import textui_chrout
+.import textui_chrout, textui_update_crs_ptr
 
 
 ESCAPE = 27
@@ -49,12 +49,57 @@ ansi_chrout:
     dec ansi_state
     rts
 @cont:
+    cmp #'A' ; cursor up
+    bne @n1
+    lda crs_y
+    sec
+    sbc ansi_param1
+    sta crs_y
+    bra @seq_end
+@n1:
+    cmp #'B' ; cursor up
+    bne @n2
+    lda crs_y
+    clc
+    adc ansi_param1
+    sta crs_y
+    bra @seq_end
+@n2:
+    cmp #'C' ; cursor right
+    bne @n3
+    lda crs_x
+    sec
+    sbc ansi_param1
+    sta crs_x
+    bra @seq_end
+@n3:
+    cmp #'D' ; cursor left
+    bne @n4
+    lda crs_x
+    clc
+    adc ansi_param1
+    sta crs_x
+    bra @seq_end
+@n4:
+    cmp #'H'
+    bne @n5
+    ; cmp #'f'
+    ; bne @n5
+
+    lda ansi_param1
+    sta crs_x
+    lda ansi_param2
+    sta crs_y
+    bra @seq_end
+@n5:
 
     ; TODO
     ; Is alphanumeric?
     ; end sequence and execute requested action
+@seq_end:
     stz ansi_state
-    rts
+    jmp textui_update_crs_ptr
+    ;rts
 @store:
 
     phx
