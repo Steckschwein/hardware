@@ -760,7 +760,7 @@ U 1 1 5BE208A4
 P 9050 1250
 F 0 "J3" H 9060 1370 50  0000 C CNN
 F 1 "Composite" V 9165 1250 50  0000 C CNN
-F 2 "w_conn_av:rca_yellow" H 9050 1250 50  0001 C CNN
+F 2 "misc:rca" H 9050 1250 50  0001 C CNN
 F 3 "" H 9050 1250 50  0001 C CNN
 	1    9050 1250
 	1    0    0    -1  
