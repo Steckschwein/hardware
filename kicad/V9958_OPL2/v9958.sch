@@ -1092,12 +1092,12 @@ Wire Wire Line
 Wire Wire Line
 	3200 7700 3200 7500
 Wire Wire Line
-	3200 7500 6050 7500
+	3200 7500 6350 7500
 Connection ~ 3400 7500
 Wire Wire Line
 	3200 7100 3200 7200
 Wire Wire Line
-	3200 7200 6050 7200
+	3200 7200 6350 7200
 Connection ~ 3400 7200
 Connection ~ 3700 7200
 Connection ~ 4000 7200
@@ -1590,4 +1590,17 @@ F 3 "" H 6050 7350 50  0001 C CNN
 $EndComp
 Connection ~ 5750 7200
 Connection ~ 5750 7500
+$Comp
+L CP C30
+U 1 1 5C085F77
+P 6350 7350
+F 0 "C30" H 6375 7450 50  0000 L CNN
+F 1 "100µF" H 6375 7250 50  0000 L CNN
+F 2 "" H 6388 7200 50  0001 C CNN
+F 3 "" H 6350 7350 50  0001 C CNN
+	1    6350 7350
+	1    0    0    -1  
+$EndComp
+Connection ~ 6050 7200
+Connection ~ 6050 7500
 $EndSCHEMATC
