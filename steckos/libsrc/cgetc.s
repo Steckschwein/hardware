@@ -5,7 +5,7 @@
         .export         _cgetc
         .import         cursor
 		
-		.include	"kernel_jumptable.inc"
+		.include	"../kernel/kernel_jumptable.inc"
 
 _cgetc: 
 	jsr krn_getkey
