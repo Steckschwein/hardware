@@ -18,8 +18,8 @@ clean:
 	(cd ppmview; make clean)
 
 %.o: %.c
-	cc65 -I ../../cc65 -t none --cpu $(CPU) -O $<
-	ca65 -I ../../cc65 --cpu $(CPU) $(CA65FLAGS) $(@:.o=.s)
+	cc65 -t none --cpu $(CPU) -O $<
+	ca65 --cpu $(CPU) $(CA65FLAGS) $(@:.o=.s)
 
 %.o: %.asm
 	ca65 --cpu $(CPU) $(CA65FLAGS) $(ASM_INCLUDE) $(@:.o=.asm)

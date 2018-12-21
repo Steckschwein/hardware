@@ -5,10 +5,9 @@
 
 .import init_opl2, opl2_delay_data, opl2_delay_register
 
-__LOADADDR__ = $1000
-.export __LOADADDR__
-.segment "LOADADDR"
-.word __LOADADDR__
+.include "appstart.inc"
+appstart $1000
+
 .segment "CODE"
 
 .macro oplSetReg1 reg, val

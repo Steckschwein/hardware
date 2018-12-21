@@ -21,11 +21,11 @@
 ; SOFTWARE.
 
 .setcpu "65c02"
+.include    "system.inc"
 .include    "zeropage.inc"
 .include    "debug.inc"
 
 kernel_start = $e800
-clockspeed   = 8
 user_isr     = $028a
 
 .macro	printstring text

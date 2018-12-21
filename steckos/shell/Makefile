@@ -1,6 +1,5 @@
-CPU=65c02
 ASM_INCLUDE=../asminc
-LDFLAGS=--config ../kernel/steckosapp.cfg
+LDFLAGS=--config ../kernel/steckosapp.cfg --lib ../tools/lib/toollib.a
 #DEBUG=-DDEBUG
 
 .PHONY: all clean
@@ -20,4 +19,4 @@ shell: shell.prg
 	../../transfer.py -s 0xd800 shell.prg
 
 %.o: %.asm
-	ca65 --cpu $(CPU) --target none $(DEBUG) --include-dir $(ASM_INCLUDE)  $<
+	ca65 --target none $(DEBUG) --include-dir $(ASM_INCLUDE)  $<

@@ -27,14 +27,10 @@
 .include "fcntl.inc"
 .include "ym3812.inc"
 
-__LOADADDR__ = $1000
-.export __LOADADDR__
-.segment "LOADADDR"
-.word __LOADADDR__
+.include "appstart.inc"
+appstart $1000
+
 .segment "CODE"
-
-
-
 
 CPU_CLOCK=clockspeed * 1000000
 
@@ -90,15 +86,14 @@ main:
  		beq @l5
 		jmp error
 @l5:
-
+        stx fd
 
 		SetVector imf_data, read_blkptr
 
-		jsr krn_read
+		jsr krn_fread
  		beq @l6
  		jmp error
 @l6:
-
 		jsr krn_getfilesize
 
 		clc
@@ -109,8 +104,6 @@ main:
 
  		adc #>imf_data
  		sta imf_end+1
-
-		jsr krn_close
 
 play:
 		SetVector	imf_data, imf_ptr
@@ -251,7 +244,11 @@ error:
 	jsr krn_primm
 	.asciiz "load error"
 end:
-	jmp (retvec)
+    ldx fd
+    beq :+
+    jsr krn_close
+    
+:	jmp (retvec)
 
 tempo:
  	; tempo is one of 280Hz (DN2), 560Hz (imf), 700Hz (.wlf)
@@ -266,4 +263,7 @@ old_isr:	.word $ffff
 imf_end:	.word $ffff
 ;delayl:		.word $0000
 ;delayh = delayl + 1
+fd: .res 1, 0
+
 imf_data = $1230
+.segment "STARTUP"
