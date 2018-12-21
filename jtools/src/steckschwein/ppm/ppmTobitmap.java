@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
  * @author marko.lauke
  *
  */
-public class ppm2bitmap {
+public class ppmTobitmap {
 
 	static Map<String, Byte> vdpColorMap = new HashMap<String, Byte>();
 	static {

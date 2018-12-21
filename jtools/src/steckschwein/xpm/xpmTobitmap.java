@@ -12,7 +12,7 @@ import java.util.Map;
  * @author marko.lauke
  *
  */
-public class xpm2bitmap {
+public class xpmTobitmap {
 
 	static Map<String, Byte> vdpColorMap = new HashMap<String, Byte>();
 	static {
