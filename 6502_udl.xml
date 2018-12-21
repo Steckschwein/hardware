@@ -24,7 +24,7 @@
             <Keywords name="Folders in comment, open"></Keywords>
             <Keywords name="Folders in comment, middle"></Keywords>
             <Keywords name="Folders in comment, close"></Keywords>
-            <Keywords name="Keywords1">lda ldx ldy adc sbc sta stx sty stz dex dey dec inc inx iny cmp cpx cpy&#x000D;&#x000A;bra bne beq bcc bcs bpl bmi bvc bvs&#x000D;&#x000A;pla plx ply pha phx phy plp php&#x000D;&#x000A;jsr bra jmp rts brk&#x000D;&#x000A;clc cld tax tay tya txa sec sed&#x000D;&#x000A;ora and eor bit&#x000D;&#x000A;ror rol lsr asl&#x000D;&#x000A;sei cli rti&#x000D;&#x000A;nop</Keywords>
+            <Keywords name="Keywords1">lda ldx ldy adc sbc sta stx sty stz dex dey dec inc inx iny cmp cpx cpy&#x000D;&#x000A;bra bne beq bcc bcs bpl bmi bvc bvs&#x000D;&#x000A;pla plx ply pha phx phy plp php&#x000D;&#x000A;jsr bra jmp rts brk&#x000D;&#x000A;trb tsb&#x000D;&#x000A;clc cld tax tay tya txa sec sed txs tsx&#x000D;&#x000A;ora and eor bit&#x000D;&#x000A;ror rol lsr asl&#x000D;&#x000A;sei cli rti&#x000D;&#x000A;nop</Keywords>
             <Keywords name="Keywords2">.</Keywords>
             <Keywords name="Keywords3"># $</Keywords>
             <Keywords name="Keywords4"></Keywords>
