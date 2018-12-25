@@ -15,9 +15,13 @@ clean:
 	(cd imfplayer; make clean)
 	rm -rf dist/*
 
-build:
+lib/steckschwein-kernel.lib:
 	(cd kernel; make )
-	(cd libsrc; make )
+	(cd libsrc ; make )
+
+lib: kernel lib/steckschwein-kernel.lib
+
+build: lib
 	(cd tools/lib; make )
 	(cd shell; make )
 	(cd tools; make )
