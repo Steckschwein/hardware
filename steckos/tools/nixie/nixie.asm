@@ -254,9 +254,8 @@ copy:
 			
 irqsave:	.res 2
 frmcnt:		.res 1, 1
-			
-m_vdp_nopslide
 
+.data			
 digit_offset:
 	.repeat 10, i
 		.byte i*5
@@ -276,3 +275,5 @@ tab_pattern:
 screen_buffer:
 	.res 256,CHAR_BLANK
 	.res 256,CHAR_BLANK
+    
+.segment "STARTUP"
