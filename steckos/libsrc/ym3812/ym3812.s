@@ -66,11 +66,9 @@ opl2_write:
 opl2_delay_data: ; 23000ns / 0
 .repeat opl2_data_delay
 	nop
-    lda opl_stat
 .endrepeat
 opl2_delay_register: ; 3300 ns
 .repeat opl2_reg_delay
 	nop
-    lda opl_stat
 .endrepeat
 	rts

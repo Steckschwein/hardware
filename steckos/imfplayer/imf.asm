@@ -30,7 +30,7 @@
 .include "appstart.inc"
 appstart $1000
 
-.segment "CODE"
+.code
 
 CPU_CLOCK=clockspeed * 1000000
 
@@ -265,5 +265,7 @@ imf_end:	.word $ffff
 ;delayh = delayl + 1
 fd: .res 1, 0
 
-imf_data = $1230
+.data 
+imf_data:
+
 .segment "STARTUP"

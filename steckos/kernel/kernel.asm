@@ -27,9 +27,7 @@
 
 shell_addr	 = $d800
 
-text_mode_40 = 1
-
-;kbd_frame_div  = $01
+;text_mode_40 = 1
 
 .segment "KERNEL"
 
@@ -56,6 +54,8 @@ text_mode_40 = 1
 .import execv
 .import strout, primm
 .import ansi_chrout
+
+.import __rtc_systime_update
 
 kern_init:
 	sei
@@ -148,7 +148,14 @@ do_irq:
 
 	bit	a_vreg
 	bpl @exit	   ; VDP IRQ flag set?
-	jsr	textui_update_screen
+	jsr	textui_update_screen    ; update text ui
+
+    dec frame
+    lda frame
+    and #%00011111              ; every 32 frames we update rtc, gives 640ms clock resolution
+    bne :+
+    jsr __rtc_systime_update    ; update system time, read date time store to rtc_systime_t (see rtc.inc)
+:    
 	jsr call_user_isr
 @exit:
 	restore
@@ -158,6 +165,9 @@ call_user_isr:
 	jmp (user_isr)
 user_isr_default:
 	rts
+
+frame:
+    .res 1
 
 ;----------------------------------------------------------------------------------------------
 ; IO_NMI Routine. Handle NMI
