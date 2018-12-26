@@ -11,7 +11,7 @@ sndtest.prg: sndtest.o
 beep.prg: beep.o
 	cl65 --target none --config ../steckos-c-app.cfg -o $@ beep.o ym3812.o $(LIBS)
 
-%.prg: $(OBJS)
+%.prg: $(OBJS) $(LIBS)
 	cl65 --target none --config ../steckos-c-app.cfg -o $@ $(OBJS) $(LIBS)
 
 %.o: %.asm
