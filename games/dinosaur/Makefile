@@ -15,6 +15,15 @@ all: dinosaur.prg
 	sh xpm2acme8bit.sh dinosaur.chars.4.4px.xpm > dinosaur.chars.4.4px.res
 	sh xpm2acme8bit.sh dinosaur.chars.5.4px.xpm > dinosaur.chars.5.4px.res
 	sh xpm2acme8bit.sh dinosaur.chars.6.4px.xpm > dinosaur.chars.6.4px.res
+    
+	sh xpm2acme8bit.sh dinosaur.chars.1.xmas.xpm > dinosaur.chars.1.xmas.res
+	sh xpm2acme8bit.sh dinosaur.chars.1.4px.xmas.xpm > dinosaur.chars.1.4px.xmas.res
+	sh xpm2acme8bit.sh dinosaur.chars.2.xmas.xpm > dinosaur.chars.2.xmas.res
+	sh xpm2acme8bit.sh dinosaur.chars.2.4px.xmas.xpm > dinosaur.chars.2.4px.xmas.res
+	sh xpm2acme8bit.sh dinosaur.chars.3.xmas.xpm > dinosaur.chars.3.xmas.res
+	sh xpm2acme8bit.sh dinosaur.chars.3.4px.xmas.xpm > dinosaur.chars.3.4px.xmas.res
+	sh xpm2acme8bit.sh dinosaur.chars.4.xmas.xpm > dinosaur.chars.4.xmas.res
+	sh xpm2acme8bit.sh dinosaur.chars.4.4px.xmas.xpm > dinosaur.chars.4.4px.xmas.res
 
 clean:
 	rm -f *.prg *.labels *.res 

@@ -39,12 +39,14 @@ fd_area					= $0380 ; File descriptor area until $0400
 .Y_OFS_GAME_OVER=11
 .screen=$2000
 .dinosaur_color=Dark_Green
+.dinosaur_color_xmas=Dark_Red
 .DINOSAUR_X=20
 .DINOSAUR_Y=125
 .PD_X=$ef	;100
-.PD_Y=120
+.PD_Y=.PD_Y_OFF;120
 .PD_Y_OFF=$bf
 .PD_SPEED=5
+.PD_PTR=64
 .EC_MAX_LEFT_POS=32
 .DINOSAUR_HEIGHT=30
 .DINOSAUR_RUN=1<<0
@@ -54,6 +56,9 @@ fd_area					= $0380 ; File descriptor area until $0400
 .STATUS_PLAY=1<<0
 .STATUS_GAME_OVER=1<<1
 .STATUS_JOY_PRESSED=1<<2
+
+.sprite_empty=96
+
 	jmp main
 !src <t99xx.lib.a>
 
@@ -322,12 +327,16 @@ memctl = $0230
 	bit	#.DINOSAUR_JUMP
 	beq	++
 	+SetVector	.dino_jump, addr
-	jsr	.set_sprite_pointer
+	jsr	.update_sprite_data
 	ldy .sin_tab_offs
-	lda	#.DINOSAUR_Y
-	clc
+	lda	#.DINOSAUR_Y-10
+	sec
 	sbc	(.sin_tab_ptr), y
-	sta	.sprite_tab
+	sta	.sprite_tab+4*4
+	lda	#.DINOSAUR_Y   
+	sec
+	sbc	(.sin_tab_ptr), y
+	sta	.sprite_tab+0*4
 	sta	.sprite_tab+2*4
 	clc
 	adc #16				;+16px y offset for the lower sprites
@@ -344,7 +353,7 @@ memctl = $0230
 ++	bit #.DINOSAUR_DEAD
 	beq	+
 	+SetVector	.dino_dead, addr
-	bra	.set_sprite_pointer
+	bra	.update_sprite_data
 +	lda	.frame_cnt
 	bit	#03
 	bne	-
@@ -355,30 +364,48 @@ memctl = $0230
 	and	#04
 	beq	+
 	+SetVector	.dino_duck_1, addr
-	bra .set_sprite_pointer
+	bra .update_sprite_data
 +	+SetVector	.dino_duck_2, addr
-	bra .set_sprite_pointer
+	bra .update_sprite_data
 ++	lda	.frame_cnt
 	and	#04
 	beq	+
 	+SetVector	.dino_run_1, addr
-	bra .set_sprite_pointer
+	bra .update_sprite_data
 +	+SetVector	.dino_run_2, addr
-	bra .set_sprite_pointer
+	bra .update_sprite_data
 
-.set_sprite_pointer
-	ldy	#$00
+.update_sprite_data
+	ldy	#0
 	lda	(addr),y
-	sta	.sprite_tab+2
+	sta	.sprite_tab+2+0*4
 	iny
 	lda	(addr),y
 	sta	.sprite_tab+2+1*4
+    
+    cmp #36 ;dino head shape ducked
+    beq +
+    lda #.DINOSAUR_X+10     ;.DINOSAUR_Y-10, .DINOSAUR_X+10
+    sta	.sprite_tab+1+4*4   ; x cap sprite
+    lda #-10
+    bra ++
++   lda #.DINOSAUR_X+16;    ;.DINOSAUR_Y+4, .DINOSAUR_X+18
+    sta	.sprite_tab+1+4*4 ; x cap sprite
+    lda #4
+++    
+    clc
+    adc .sprite_tab+0+0*4 ; y dino head
+    sta	.sprite_tab+0+4*4 ; y cap sprite
+    
 	iny
 	lda	(addr),y
 	sta	.sprite_tab+2+2*4
 	iny
 	lda	(addr),y
 	sta	.sprite_tab+2+3*4
+    iny
+	lda	(addr),y
+	sta	.sprite_tab+2+4*4    
 	rts
 
 .animate_enemy
@@ -416,22 +443,22 @@ memctl = $0230
 +	lda	.frame_cnt
 	and	#08
 	beq	+
-	lda	#56
+	lda	#.PD_PTR
 	sta	.sprite_tab_enemy+2
-	lda	#60
+	lda	#.PD_PTR+4
 	sta	.sprite_tab_enemy+2+1*4
-	lda	#64
+	lda	#.PD_PTR+8
 	sta	.sprite_tab_enemy+2+2*4
-	lda	#68
+	lda	#.PD_PTR+12
 	sta	.sprite_tab_enemy+2+3*4
 	rts
-+	lda	#72
++	lda	#.PD_PTR+16
 	sta	.sprite_tab_enemy+2
-	lda	#76
+	lda	#.PD_PTR+20
 	sta	.sprite_tab_enemy+2+1*4
-	lda	#80
+	lda	#.PD_PTR+24
 	sta	.sprite_tab_enemy+2+2*4
-	lda	#84
+	lda	#.PD_PTR+28
 	sta	.sprite_tab_enemy+2+3*4
 	rts
 
@@ -536,12 +563,11 @@ memctl = $0230
 .new_game
 	jsr	.init_screen
 
-	ldx	#$00
+	ldx	#.sprite_init_tab_end-.sprite_init_tab
 -	lda	.sprite_init_tab, x
 	sta .sprite_tab,x
-	inx
-	cpx	#4*4
-	bne	-
+	dex
+	bpl	-
 
 	lda	#.CHAR_BLANK
 	sta adrl
@@ -720,7 +746,7 @@ memctl = $0230
 	+SetVector .sprites, addr
 	lda	#<.A_SP_PAT
 	ldy	#.WRITE_ADDRESS + >.A_SP_PAT
-	ldx	#$03			; 3 pages, 768 sprite bytes
+	ldx	#$04			; sprite patterns
 	jsr	vdp_memcpy
 
 	+SetVector .text_game_label, addr
@@ -803,28 +829,30 @@ memctl = $0230
 	rts
 
 .sprite_tab_enemy_init:
-	!byte	.PD_Y		,.PD_X,	56, Dark_Red
-	!byte	.PD_Y+16	,.PD_X,	60, Dark_Red
-	!byte	.PD_Y		,.PD_X+16,64, Dark_Red
-	!byte	.PD_Y+16	,.PD_X+16,68, Dark_Red
+	!byte	.PD_Y		,.PD_X,	    .PD_PTR+0*4, Dark_Red
+	!byte	.PD_Y+16	,.PD_X,	    .PD_PTR+1*4, Dark_Red
+	!byte	.PD_Y		,.PD_X+16,  .PD_PTR+2*4, Dark_Red
+	!byte	.PD_Y+16	,.PD_X+16,  .PD_PTR+3*4, Dark_Red
 .sprite_init_tab:
 	!byte	.DINOSAUR_Y		,.DINOSAUR_X+16	,0	,.dinosaur_color
 	!byte	.DINOSAUR_Y+16	,.DINOSAUR_X+16	,4	,.dinosaur_color
 	!byte	.DINOSAUR_Y		,.DINOSAUR_X	,8	,.dinosaur_color
 	!byte	.DINOSAUR_Y+16	,.DINOSAUR_X	,28	,.dinosaur_color
+    !byte	.DINOSAUR_Y-10	,.DINOSAUR_X+10	,56	,.dinosaur_color_xmas
+.sprite_init_tab_end:
 .sprite_tab:
-	!fill	4*4, 0
+	!fill	5*4, 0
 .sprite_tab_enemy:
 	!fill	4*4, 0
 .sprite_tab_sky:
-	!byte	40,100,48, White
-	!byte	40,116,52, White
-	!byte	56,30,48, White
-	!byte	56,46,52, White
-	!byte	72,70,48, White
-	!byte	72,86,52, White
-	!byte	98,200,48, White
-	!byte	98,216,52, White
+	!byte	25,100,48, White
+	!byte	25,116,52, White
+	!byte	41,30,48, White
+	!byte	41,46,52, White
+	!byte	57,70,48, White
+	!byte	57,86,52, White
+	!byte	15,200,48, White
+	!byte	15,216,52, White
 	!byte	$d0	; end of sprite table
 .sprite_tab_end
 
@@ -832,17 +860,17 @@ memctl = $0230
 	!fill	4, 0
 
 .dino_run_1
-	!byte 0,4,8,12
+	!byte 0,4,8,12,56
 .dino_run_2
-	!byte 0,4,16,20
+	!byte 0,4,16,20,60
 .dino_duck_1
-	!byte 88,36,88,40
+	!byte .sprite_empty,36,.sprite_empty,40,56
 .dino_duck_2
-	!byte 88,36,88,44
+	!byte .sprite_empty,36,.sprite_empty,44,60
 .dino_jump
-	!byte 0,4,8,28
+	!byte 0,4,8,28,56
 .dino_dead
-	!byte 32,4,8,28
+	!byte 32,4,8,28,60
 
 
 .text_game_label	!text " Verbindung zum Internet konnte  nicht hergestellt werden.",$0
@@ -900,7 +928,6 @@ PI = 3.14159265358979323846
 }
 !byte	$ff
 .sin_tab_short
-	; !src "sintab.short.a"
 !for .i, 0, 23 {
 	!byte sin(float(.i) * 5 * 1.5 * PI/180)*48 + 0.5
 }
@@ -910,21 +937,28 @@ PI = 3.14159265358979323846
 +SpriteLine16start
 !src "dinosaur.sprites.res"
 !src "dinosaur.sprites.pterodactyl.res"
-; the empty sprite
-!fill 32,0
+!fill 64,0 ; the empty sprite
 
 .game_chars
-!src "dinosaur.chars.1.res"
-!src "dinosaur.chars.2.res"
-!src "dinosaur.chars.3.res"
-!src "dinosaur.chars.4.res"
+;!src "dinosaur.chars.1.res"
+;!src "dinosaur.chars.2.res"
+;!src "dinosaur.chars.3.res"
+;!src "dinosaur.chars.4.res"
+!src "dinosaur.chars.1.xmas.res"
+!src "dinosaur.chars.2.xmas.res"
+!src "dinosaur.chars.3.xmas.res"
+!src "dinosaur.chars.4.xmas.res"
 !src "dinosaur.chars.5.res"
 !src "dinosaur.chars.6.res"
 .game_chars_4px
-!src "dinosaur.chars.1.4px.res"
-!src "dinosaur.chars.2.4px.res"
-!src "dinosaur.chars.3.4px.res"
-!src "dinosaur.chars.4.4px.res"
+;!src "dinosaur.chars.1.4px.res"
+;!src "dinosaur.chars.2.4px.res"
+;!src "dinosaur.chars.3.4px.res"
+;!src "dinosaur.chars.4.4px.res"
+!src "dinosaur.chars.1.4px.xmas.res"
+!src "dinosaur.chars.2.4px.xmas.res"
+!src "dinosaur.chars.3.4px.xmas.res"
+!src "dinosaur.chars.4.4px.xmas.res"
 !src "dinosaur.chars.5.4px.res"
 !src "dinosaur.chars.6.4px.res"
 
