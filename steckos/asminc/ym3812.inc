@@ -24,14 +24,15 @@ opl_stat = $0240        ; status register
 opl_sel  = opl_stat		; register select
 opl_data = opl_stat + 1 ; data register (write only)
 
-; opl2_data_delay_time = 23000 ; ns
-; opl2_reg_delay_time = 3300 ; ns
-opl2_data_delay_time = 25000
-opl2_reg_delay_time = 5000
+opl2_data_delay_time = 23000 ; ns
+opl2_reg_delay_time = 3300 ; ns
 
-opl2_data_delay 	= ((opl2_data_delay_time - opl2_reg_delay_time) / (1000/clockspeed)) / 2 -12
-opl2_reg_delay 		= (opl2_reg_delay_time 							/ (1000/clockspeed)) / 2 -12
+opl2_data_delay 	= (((opl2_data_delay_time - opl2_reg_delay_time) / (1000/clockspeed)) -12) / 2
+opl2_reg_delay 		= ((opl2_reg_delay_time 							/ (1000/clockspeed)) -12) / 2 
 
+opl2_reg_timer1 = 2
+opl2_reg_timer2 = 3
+opl2_reg_ctrl   = 4
 
 ;--------------------------------------------------------------------------------------------------------------
 ; For some of the parameters, there is one register per output channel. For those
