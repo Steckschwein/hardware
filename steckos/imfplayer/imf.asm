@@ -30,14 +30,16 @@
 .include "appstart.inc"
 appstart $1000
 
+.importzp   ptr1, tmp1
+
 .code
 
 CPU_CLOCK=clockspeed * 1000000
 
-imf_ptr   = $a0
+imf_ptr   = ptr1
 imf_ptr_h = imf_ptr + 1
 
-delayl    = $a2
+delayl    = tmp1
 delayh    = delayl + 1
 
 .import init_opl2,  opl2_delay_register
@@ -87,16 +89,15 @@ main:
 		jmp error
 @l5:
         stx fd
-
 		SetVector imf_data, read_blkptr
 
-		jsr krn_fread
+		jsr krn_read
  		beq @l6
  		jmp error
 @l6:
 		jsr krn_getfilesize
 
-		clc
+        clc
 		adc #<imf_data
  		sta imf_end
 
@@ -104,7 +105,9 @@ main:
 
  		adc #>imf_data
  		sta imf_end+1
-
+        
+        jsr fclose
+        
 play:
 		SetVector	imf_data, imf_ptr
 		stz delayl
@@ -132,12 +135,12 @@ play:
 		SetVector player_isr, $fffe
 
 		cli
-
+        
 loop:
 		bit state
 		bmi exit
 
-		jsr krn_getkey
+		keyin
 		cmp #$03
 		beq exit
 		cmp #$1b ; escape
@@ -145,27 +148,23 @@ loop:
 
 		bra loop
 
-
 exit:
-	  	jsr init_opl2
-
-		jsr krn_primm
-		.asciiz " done."
-		crlf
-
-		sei
-
-		lda #%01000000
+        jsr krn_primm
+		.byte " done.",$0a,0
+        
+		sei        
+	  
+        lda #%01000000
 		sta via1ier
 
-
 		copypointer old_isr, $fffe
-
 
 		lda via1acr
 		and #%10111111
 		sta via1acr
 
+        jsr init_opl2   ; reset opl
+		
 		cli
 		jmp (retvec)
 
@@ -244,11 +243,15 @@ error:
 	jsr krn_primm
 	.asciiz "load error"
 end:
+    jsr fclose
+	jmp (retvec)
+
+fclose:
     ldx fd
     beq :+
     jsr krn_close
-    
-:	jmp (retvec)
+    stz fd
+:   rts
 
 tempo:
  	; tempo is one of 280Hz (DN2), 560Hz (imf), 700Hz (.wlf)
@@ -258,11 +261,9 @@ tempo:
 temponr:
 	.byte $02
 ;test_filename:  .asciiz "pacman.wlf"
-state:	.byte $00
+state:	    .byte $00
 old_isr:	.word $ffff
 imf_end:	.word $ffff
-;delayl:		.word $0000
-;delayh = delayl + 1
 fd: .res 1, 0
 
 .data 

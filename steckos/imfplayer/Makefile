@@ -17,6 +17,8 @@ beep.prg: beep.o
 %.o: %.asm
 	ca65 $(CA65FLAGS) -o $@ $<
 
+%.dis: %.prg
+	dcc6502 -o 0x0ffe -d -n -c $< > $@
 
 clean:
 	rm -f $(TARGET) $(OBJS)

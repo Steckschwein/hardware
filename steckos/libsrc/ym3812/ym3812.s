@@ -35,39 +35,44 @@
 ; "init" opl2 by writing zeros into all registers
 ;----------------------------------------------------------------------------------------------
 init_opl2:
-    ldx #$F5 ; until reg 245
-@l1:
-    stx opl_stat
-    jsr opl2_delay_register
-    stz opl_data
-    jsr opl2_delay_data
-    dex
-    bne @l1
+    ldx #opl2_reg_ctrl
+    lda #$80
+    jsr opl2_reg_write
+    lda opl_stat        ; have to read status register
+    
+    ldx #5              ; reg 5 until reg 245
+    lda #0
+@l:
+    jsr opl2_reg_write
+    inx
+    cpx #$f5
+    bne @l
     rts
 
 ;
 ; void __fastcall__ opl2_write(unsigned char val, unsigned char reg);
 ;
 opl2_write:
+    tax
+    jsr popa
+opl2_reg_write:
     .import hexout
 ;    jsr hexout
-	sta opl_stat
+	stx opl_stat
     jsr opl2_delay_register
-
-    jsr popa
  ;   jsr hexout
 	sta opl_data
-    jsr opl2_delay_data
-    rts
+    jmp opl2_delay_data
+
     
 ; jsr here: 6 cycles
 ; rts back: 6 cycles
 
-opl2_delay_data: ; 23000ns / 0
+opl2_delay_data: ; 23000ns - 3300ns => 8Mhz/125ns => 157cl => 12cl (jsr/rts) + 145cl (73 nop)
 .repeat opl2_data_delay
 	nop
 .endrepeat
-opl2_delay_register: ; 3300 ns
+opl2_delay_register: ; 3300 ns => 8Mhz/125ns => 26cl => 12cl (jsr/rts) + 14cl (7 nop)
 .repeat opl2_reg_delay
 	nop
 .endrepeat
