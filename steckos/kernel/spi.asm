@@ -19,13 +19,16 @@
 ; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ; SOFTWARE.
-
+.ifdef DEBUG_SPI; enable debug for this module
+	debug_enabled=1
+.endif
 
 .include "kernel.inc"
 .include "via.inc"
 
 .segment "KERNEL"
 .export spi_rw_byte, spi_r_byte, spi_deselect
+.export spi_isbusy
 
 spi_device_deselect=$7e		; deselect any device
 
@@ -34,6 +37,14 @@ spi_deselect:
 spi_select:
 		sta via1portb
 		rts
+ 
+        ; out:
+        ;   Z=1 not busy, Z=0 spi is busy
+spi_isbusy:
+        lda via1portb
+        and #%00001110
+        cmp #%00001110
+        rts
 
 
 ;----------------------------------------------------------------------------------------------

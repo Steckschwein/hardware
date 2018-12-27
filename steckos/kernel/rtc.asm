@@ -20,15 +20,14 @@
 ; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ; SOFTWARE.
 
-; enable debug for this module
-.ifdef DEBUG_RTC
+.ifdef DEBUG_RTC; enable debug for this module
 	debug_enabled=1
 .endif
 
 .include "kernel.inc"
 .include "rtc.inc"
 .include "via.inc"
-.import spi_rw_byte, spi_r_byte, spi_deselect
+.import spi_rw_byte, spi_r_byte, spi_deselect, spi_isbusy
 
 .export init_rtc, spi_select_rtc
 ;kernel api
@@ -38,7 +37,7 @@
 
 .segment "KERNEL"
 
-spi_device_rtc=$76;#%01110110
+spi_device_rtc=%01110110
 
 spi_select_rtc:
 		lda #spi_device_rtc
@@ -73,13 +72,16 @@ rtc_systime:
 		dey
 		bne @cp
 		rts		;exit Z=0 here
-
-
+        
+        
 		;in:
 		;	-
 		;out:
 		;	-
 __rtc_systime_update:
+        jsr spi_isbusy
+        bne __rtc_systime_update_exit ; skip, if busy
+        debug "update systime"
 		jsr	spi_select_rtc
 
 		lda #0				;0 means rtc read, start from first address (seconds)
@@ -117,6 +119,8 @@ __rtc_systime_update:
 		debug32 "rtc0", rtc_systime_t
 		debug32 "rtc1", rtc_systime_t+4
 		jmp spi_deselect
+__rtc_systime_update_exit:
+        rts
 
 ; dec = (((BCD>>4)*10) + (BCD&0xf))
 BCD2dec:tax

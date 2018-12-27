@@ -21,8 +21,6 @@ DEFINES+=-DV9958
 # do not write anything (metadata)
 # DEBUG += -DFAT_NOWRITE
 #DEBUG += -DV9958
-
-#
 #DEBUG += -DDEBUG_EXECV
 
 

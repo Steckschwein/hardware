@@ -150,12 +150,12 @@ do_irq:
 	bpl @exit	   ; VDP IRQ flag set?
 	jsr	textui_update_screen    ; update text ui
 
-    ;dec frame
-    ;lda frame
-    ;and #%00011111              ; every 32 frames we update rtc, gives 640ms clock resolution
-    ;bne :+
-    ;jsr __rtc_systime_update    ; update system time, read date time store to rtc_systime_t (see rtc.inc)
-;:
+    dec frame
+    lda frame
+    and #%00000111              ; every 8 frames we try to update rtc, gives 160ms clock resolution
+    bne :+
+    jsr __rtc_systime_update    ; update system time, read date time store to rtc_systime_t (see rtc.inc)
+:
 	jsr call_user_isr
 @exit:
 	restore

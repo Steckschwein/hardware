@@ -43,7 +43,7 @@ init_via1:
 		lda #%00001100
 		sta via1acr
 
-		; Port b bit 5and 6 input for sdcard and write protect detection, rest all outputs
+		; Port b bit 6 and 5 input for sdcard and write protect detection, rest all outputs
 		lda #%10011111
 		sta via1ddrb
 
