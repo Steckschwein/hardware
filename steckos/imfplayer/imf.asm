@@ -105,9 +105,9 @@ main:
 
  		adc #>imf_data
  		sta imf_end+1
-        
+
         jsr fclose
-        
+
 play:
 		SetVector	imf_data, imf_ptr
 		stz delayl
@@ -135,7 +135,7 @@ play:
 		SetVector player_isr, $fffe
 
 		cli
-        
+
 loop:
 		bit state
 		bmi exit
@@ -151,9 +151,9 @@ loop:
 exit:
         jsr krn_primm
 		.byte " done.",$0a,0
-        
-		sei        
-	  
+
+		sei
+
         lda #%01000000
 		sta via1ier
 
@@ -164,7 +164,7 @@ exit:
 		sta via1acr
 
         jsr init_opl2   ; reset opl
-		
+
 		cli
 		jmp (retvec)
 
@@ -266,7 +266,7 @@ old_isr:	.word $ffff
 imf_end:	.word $ffff
 fd: .res 1, 0
 
-.data 
+.data
 imf_data:
 
 .segment "STARTUP"
