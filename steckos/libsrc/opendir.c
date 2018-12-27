@@ -8,8 +8,8 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <dirent.h>
-#include <string.h> 
-#include "dir.h" 
+#include <string.h>
+#include "dir.h"
 
 #include <conio.h>
 /*****************************************************************************/
@@ -25,7 +25,7 @@ DIR* __fastcall__ opendir (register const char* name)
 		return NULL;
 	}
 */
-	
+
     register DIR* dir;
 
     /* Alloc DIR */
@@ -58,9 +58,9 @@ DIR* __fastcall__ opendir (register const char* name)
             // Skip directory header entry
             //dir->current_entry = 1;
 			memcpy(&dir->name, name, 8+3+1);
-			
+
 //			cprintf("%s", dir->name);
-			
+
             // Return success
             return dir;
         }
@@ -71,10 +71,10 @@ DIR* __fastcall__ opendir (register const char* name)
         // Cleanup directory file
         close (dir->fd);
     }
-	
+
     // Cleanup DIR
     free (dir);
 
     //Return failure
     return NULL;
-} 
+}

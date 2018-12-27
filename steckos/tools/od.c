@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <conio.h> 
+#include <conio.h>
 
 static unsigned char CHARS = 16;
 
@@ -20,7 +20,7 @@ int main (int argc, const char* argv[])
 			format = "%c ";
 			break;
 		}
-	}	
+	}
 	i=0;
 	p=0;
 	while((c = cgetc()) != 0x1b){

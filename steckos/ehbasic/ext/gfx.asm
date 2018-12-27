@@ -88,14 +88,14 @@ GFX_MC_Plot:
 		jmp vdp_mc_set_pixel
 
 GFX_7_Plot:
-		jsr GFX_Plot_Prepare		
+		jsr GFX_Plot_Prepare
 		jsr vdp_gfx7_set_pixel
-		
+
 		sei
 		vdp_wait_l
 		vdp_sreg <.HIWORD(ADDRESS_GFX1_SCREEN<<2), v_reg14
 		cli
-		rts		
+		rts
 
 GFX_Plot_Prepare:
 		JSR LAB_GTBY	; Get byte parameter and ensure numeric type, else do type mismatch error. Return the byte in X.

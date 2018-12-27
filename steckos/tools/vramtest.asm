@@ -71,8 +71,8 @@ l2:
 	ldy adr_h_r
 	vdp_wait_l 12
     jsr set_vaddr
-    ply	
-    vdp_wait_l 8    
+    ply
+    vdp_wait_l 8
 	lda a_vram
 
 	jsr rset_vbank		; reset vbank - TODO FIXME, kernel has to make sure that correct video address is set for all vram operations, use V9958 flag

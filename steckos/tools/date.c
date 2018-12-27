@@ -5,9 +5,9 @@
 int main (void)
 {
     struct timespec ts;
-    
+
     clock_gettime(CLOCK_REALTIME, &ts);
     cprintf ("%s\n", asctime(localtime(&ts.tv_sec)));
-   
+
     return EXIT_SUCCESS;
 }

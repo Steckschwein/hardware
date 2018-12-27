@@ -6,7 +6,7 @@
         .include        "dir.inc"
         .include        "errno.inc"
         .include        "zeropage.inc"
-                             
+
         .import         pushax
         .import         _read
 

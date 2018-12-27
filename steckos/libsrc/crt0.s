@@ -11,7 +11,7 @@
 .import   __RAM_START__, __RAM_SIZE__       ; Linker generated
 
 .import    copydata, zerobss, initlib, donelib
-.import    moveinit, callmain 
+.import    moveinit, callmain
 .import         __MAIN_START__, __MAIN_SIZE__   ; Linker generated
 .import         __STACKSIZE__                   ; from configure file
 .importzp       ST
@@ -40,8 +40,8 @@ _init:
 ;			lda     #<(__MAIN_START__ + __MAIN_SIZE__ + __STACKSIZE__)
 ;			ldx     #>(__MAIN_START__ + __MAIN_SIZE__ + __STACKSIZE__)
 ;			sta     sp
-;			stx     sp+1            ; Set argument stack ptr 
- 
+;			stx     sp+1            ; Set argument stack ptr
+
 ; ---------------------------------------------------------------------------
 ; Initialize memory storage
 			JSR     zerobss              ; Clear BSS segment
@@ -55,6 +55,6 @@ _init:
 ; ---------------------------------------------------------------------------
 ; Back from main (this is also the _exit entry):  force a software break
 
-_exit:    
+_exit:
 			JSR     donelib				; Run destructors
 			jmp     (retvec)				;

@@ -183,11 +183,11 @@ textui_cursor:
         lda screen_frames
         and #$0f
         bne @l_exit
-        
+
         lda screen_status
         and #STATE_CURSOR_OFF
         bne @l_exit
-        
+
         lda #STATE_CURSOR_BLINK
         tsb screen_status
         beq @l1
@@ -256,7 +256,7 @@ textui_scroll_up:
         inx
         cpx #<(COLS * ROWS)
         bne @le
-.endif        
+.endif
 .ifdef COLS80
 @l4:    lda    screen_buffer+$300+COLS,x
         sta    screen_buffer+$300,x

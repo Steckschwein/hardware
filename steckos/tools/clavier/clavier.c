@@ -15,9 +15,9 @@ unsigned char snd08[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 13, 2, 3, 5, 0, 2, 0, 0, 0, 
 unsigned char* sounds[] = {snd01, snd02, snd03, snd04, snd05, snd06, snd07, snd08};
 
 void soundport(char index, char value)
-{	
+{
     opl2_write(value, index);
-/*    
+/*
     asm{
 		mov		dx, 0388h
 		mov		al, index
@@ -25,7 +25,7 @@ void soundport(char index, char value)
 
 		mov		cx, 6
 	}
-    
+
 	loop1:
 	asm{
 		in		al, dx
@@ -81,7 +81,7 @@ void soundall(unsigned char* snd){
     int i;
 //    cprintf("%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d ", snd[0], snd[1], snd[2], snd[3], snd[4], snd[5], snd[6], snd[7], snd[8], snd[9], snd[10], snd[11], snd[12], snd[13], snd[14], snd[15], snd[16], snd[17], snd[18], snd[19]);
     for(i = 0; i < 9; i++)
-	{	
+	{
         soundone(i, snd[0], snd[1], snd[2], snd[3], snd[4], snd[5], snd[6], snd[7], snd[8],
 				 snd[9], snd[10], snd[11], snd[12], snd[13], snd[14], snd[15], snd[16], snd[17], snd[18], snd[19]);
 	}
@@ -93,7 +93,7 @@ void soundall(
 	char ks0, char tl0, char ws0, char avek0,
 	char ar1, char dr1, char sl1, char rr1, char ml1,
 	char ks1, char tl1, char ws1, char avek1, char fb, char c)
-{	
+{
     int i;
     for(i = 0; i < 9; i++)
 	{	soundone(i, ar0, dr0, sl0, rr0, ml0, ks0, tl0, ws0, avek0,
@@ -129,7 +129,7 @@ char txt[] =    "AdLib Clavier by Indrek Pinsel 1993$"
 int main (void)
 {   unsigned char c;
 	unsigned oc = 3;
-    
+
     /*
 	asm{
 		lea		dx, txt1
@@ -142,11 +142,11 @@ int main (void)
     */
     opl2_init();
 	soundall(snd01);//5, 2, 1, 0, 0, 0, 13, 0, 0, 11, 4, 4, 6, 0, 2, 0, 0, 0, 0, 0);
-    
+
     cprintf("snds: %d\n", sizeof(*sounds));
-    
+
     cprintf("%s", txt);
-    
+
 	do
 	{
     /*
@@ -174,29 +174,29 @@ int main (void)
 				}
                 */
 //                switch(c)
-//				{	
+//				{
                     case 0x1f:
 						if(oc > 1) oc--;
 						break;
 					case 0x1e:
 						if(oc < 5) oc++;
-						break;                        
+						break;
 					case 0x21:
 					case 0x22:
 					case 0x24:
 					case 0x25:
 					case 0x26:
 						soundall(sounds[c - 0x21]);
-						break;					
+						break;
 					case 0x15:
 						soundall(sounds[2]);
-						break;					
+						break;
 					case 0x2f:
 						soundall(sounds[7]);
-						break;					
+						break;
 					/*case ' ':
 						soundall(5, 2, 1, 0, 0, 0, 13, 0, 0, 11, 4, 4, 6, 0, 2, 0, 0, 0, 0, 0);
-						break;					
+						break;
                     case ' ':
 						soundall(8, 1, 1, 1, 1, 2, 4, 1, 13, 15, 2, 1, 3, 0, 0, 0, 0, 0, 0, 1);
 						break;
@@ -335,8 +335,8 @@ int main (void)
 				break;
 		}
 	} while(c != 27);
-    
+
     opl2_init();
-    
+
     return EXIT_SUCCESS;
 }

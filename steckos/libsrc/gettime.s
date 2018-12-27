@@ -9,10 +9,10 @@
         .include        "time.inc"
 		.include		"../kernel/kernel_jumptable.inc"
 		.include		"rtc.inc"
-		
+
         .import         pushax, steaxspidx, incsp1, incsp3, return0
         .importzp       ptr1, tmp1, tmp2
-		
+
 ;----------------------------------------------------------------------------
 .code
 
@@ -65,13 +65,13 @@
         jsr steaxspidx          ; Pops address pushed by pushax (s. above)
 
         ; Cleanup stack
-        jsr incsp1              
+        jsr incsp1
 
         ; Return success
         jmp return0
 
 ; dec = (((BCD>>4)*10) + (BCD&0xf))
-BCD2dec: 
+BCD2dec:
         tax
         and     #%00001111
         sta     tmp1
@@ -84,7 +84,7 @@ BCD2dec:
         adc     tmp2            ; = *10
         adc     tmp1
         rts
-        
+
 .endproc
 
 ;----------------------------------------------------------------------------

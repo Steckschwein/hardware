@@ -13,7 +13,7 @@
 
 ;--------------------------------------------------------------------------
 ; Data. We define a fixed utsname struct here and just copy it.
-                                                         
+
 .rodata
 
 utsdata:

@@ -47,11 +47,11 @@ _y=$1
 	lda _y
 	cmp #48
 	bne @loop
-	
+
 	keyin
 									;restore textui
 	sei
-	jsr	krn_display_off			
+	jsr	krn_display_off
 	jsr	krn_textui_init
 	cli
 	jsr	krn_textui_enable

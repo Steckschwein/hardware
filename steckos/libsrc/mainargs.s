@@ -1,7 +1,7 @@
 ; mainargs.s
 
         .constructor    initmainargs, 24
-        .import         __argc, __argv        
+        .import         __argc, __argv
 
 MAXARGS  = 10                   ; Maximum number of arguments allowed
 NAME_LEN = 16                   ; Maximum length of command-name
@@ -32,7 +32,7 @@ L0:     lda     (cmdptr),y
         dey                     ; null-term if overflow
         lda     #0
         sta     INPUT_BUF,y
-L1:		
+L1:
         lda     INPUT_BUF,x
         sta     name,x
         beq     L2
@@ -42,18 +42,18 @@ L1:
         bne     L1              ;overflow is handled above
 L2:     inc     __argc
         bra     done
-        
+
 L3:     lda     #0              ; null term string program name
         sta     name,x
         inc     __argc          ; argc always is equal to, at least, 1
-        
+
 ; Find the next argument
         ldy     #2              ;args from argv[1..n]
 next:   inx
         lda     INPUT_BUF,x
         beq     done            ; End of line reached
         cmp     #' '            ; skip read...
-        beq     next            
+        beq     next
 
         txa                     ; Get low byte
         clc

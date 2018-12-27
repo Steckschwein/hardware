@@ -28,7 +28,7 @@ opl2_data_delay_time = 23000 ; ns
 opl2_reg_delay_time = 3300 ; ns
 
 opl2_data_delay 	= (((opl2_data_delay_time - opl2_reg_delay_time) / (1000/clockspeed)) -12) / 2
-opl2_reg_delay 		= ((opl2_reg_delay_time 							/ (1000/clockspeed)) -12) / 2 
+opl2_reg_delay 		= ((opl2_reg_delay_time 							/ (1000/clockspeed)) -12) / 2
 
 opl2_reg_timer1 = 2
 opl2_reg_timer2 = 3

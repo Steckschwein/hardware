@@ -195,8 +195,8 @@ l_exit:
 	rts
 
 	; recursive inverse a path string where each path segment is separated by a '/'
-	; in: 
-	;	krn_ptr2 - pointer to the result string 
+	; in:
+	;	krn_ptr2 - pointer to the result string
 	;	krn_ptr3	- pointer to originary path we have to inverse
 	; out:
 	;	Y - length of the result string (krn_ptr2)
