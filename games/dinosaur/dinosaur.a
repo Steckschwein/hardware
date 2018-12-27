@@ -1,6 +1,7 @@
 !src "../../steckos/kernel/kernel_jumptable.inc"
 !src "../../steckos/kernel/zeropage.inc"
 !src "../../steckos/asminc/via.inc"
+
 PORT_SEL_2              = !1<<7
 PORT_SEL_1              = 1<<7
 JOY_UP                  = 1<<0
@@ -13,6 +14,8 @@ JOY_FIRE                = 1<<4
 *=appstart
 
 fd_area					= $0380 ; File descriptor area until $0400
+; last known timestamp with date set to 1970-01-01
+rtc_systime_t = $0300
 
 .JOY_PORT=PORT_SEL_1		;port 1
 .enemy_state=$0
@@ -40,7 +43,7 @@ fd_area					= $0380 ; File descriptor area until $0400
 .screen=$2000
 .dinosaur_color=Dark_Green
 .dinosaur_color_xmas=Dark_Red
-.DINOSAUR_X=20
+.DINOSAUR_X=16
 .DINOSAUR_Y=125
 .PD_X=$ef	;100
 .PD_Y=.PD_Y_OFF;120
@@ -57,6 +60,7 @@ fd_area					= $0380 ; File descriptor area until $0400
 .STATUS_GAME_OVER=1<<1
 .STATUS_JOY_PRESSED=1<<2
 
+.dinosaur_cap=56
 .sprite_empty=96
 
 	jmp main
@@ -65,33 +69,32 @@ fd_area					= $0380 ; File descriptor area until $0400
 ENOENT=01
 
 main:
-	lda #<.filename
-   ldx #>.filename
-	ldy #01		;#01 - O_RDONLY
-   jsr krn_open
-	beq +	
-	bra ++ ; not found or other error, dont care...
+    lda #<.filename
+    ldx #>.filename
+    ldy #01		;#01 - O_RDONLY
+    jsr krn_open
+    beq +
+    bra ++ ; not found or other error, dont care...
 +
-	+SetVector score_data, read_blkptr
-   jsr krn_read
-	beq +
-	jmp (retvec)
-+	
-	jsr krn_close
-++	
-	sei
-	
-	lda	a_vreg
-	jsr	vdp_display_off
-	jsr	.init_vram
-	jsr	.init_screen
-;    +jsr krn_via_int_off
-;	+init_joystick
+    +SetVector score_data, read_blkptr
+    jsr krn_read
+    beq +
+    jmp (retvec)
++
+    jsr krn_close
+++
+    sei
+    
+    jsr krn_textui_disable
+    
+    lda	#33
+    sta	.seed
+    
+    jsr	vdp_display_off
+    
+    jsr	.init_vram
 
-	lda	#33
-	sta	.seed
-
-	jsr	.new_game
+    jsr	.new_game
 	lda #.STATUS_GAME_OVER
 	sta	.game_state
 
@@ -103,6 +106,7 @@ memctl = $0230
     lda #ROM_OFF
     sta memctl
 
+;    +copypointer $fffe, .save_isr
 	+SetVector	.game_isr, $fffe
 
 	+vnops
@@ -117,8 +121,39 @@ memctl = $0230
 	jsr	vdp_init_reg
 
 	cli
--	bra	-
+    
+-   jsr krn_getkey
+    cmp #$1b
+ ;   bne -
+ 
+    sei
+;    copypointer .save_isr, $fffe
+    cli
+;    jsr	krn_textui_init
+ ;   jsr krn_textui_enable   
+    ;jmp (retvec)
+-   bra -
+    
+    
 
+isXmas: ; only 24.12-26.12. load xmas gfx
+    lda rtc_systime_t+4
+    cmp #11
+    bne +
+    lda rtc_systime_t+3 ; day
+    cmp #24
+    bcc ++
+    cmp #27
+    bcs +
+    sec    
+    rts
++   clc
+++  rts
+    
+    
+    
+    
+    
 .vdp_init_gfx
 	!byte 0
 	!byte v_reg1_16k|v_reg1_display_on|v_reg1_spr_size|v_reg1_int
@@ -246,9 +281,9 @@ memctl = $0230
 	!byte 0,0,0,0,0,0,1,0,0,0,1,0,2,0,0,0,0,1,0,0,0,2,0,0,1,0,0,0,1,0,0,1,0,0,0,1,0,0,1,2,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,2,0,1,0,0,0,0,2,0,1,0,0,1,$80
 
 ;	detection algorithm - dinosaur is 32*32px, we check only char positions and sprites as follows - cause this best matches the dinosaur shape
-;	 ##		-> ##
-;	 ##		   #
-;	##		  #
+;	 ##	    -> ##
+;	 ##	       #
+;	##         #
 ;	##
 .detect_collision
 	ldx	#(.DINOSAUR_Y-4*8+.DINOSAUR_HEIGHT)		; 4x8px height cacti char
@@ -299,10 +334,7 @@ memctl = $0230
 	lda	#<(.A_GX_SCR + (.Y_OFS_GAME_OVER*32))
 	ldy	#.WRITE_ADDRESS + >(.A_GX_SCR+(.Y_OFS_GAME_OVER*32))
 	jsr .vdp_print
-
-    ;testing purpose
-    ;jmp (retvec)
-
+    
 	rts
 
 .vdp_print
@@ -386,11 +418,11 @@ memctl = $0230
     cmp #36 ;dino head shape ducked
     beq +
     lda #.DINOSAUR_X+10     ;.DINOSAUR_Y-10, .DINOSAUR_X+10
-    sta	.sprite_tab+1+4*4   ; x cap sprite
+    sta	.sprite_tab+1+4*4   ; cap sprite x
     lda #-10
     bra ++
-+   lda #.DINOSAUR_X+16;    ;.DINOSAUR_Y+4, .DINOSAUR_X+18
-    sta	.sprite_tab+1+4*4 ; x cap sprite
++   lda #.DINOSAUR_X+16;    ;.DINOSAUR_Y+4, .DINOSAUR_X+16
+    sta	.sprite_tab+1+4*4   ; cap sprite x
     lda #4
 ++    
     clc
@@ -634,8 +666,6 @@ memctl = $0230
 	stz	.score_value+1
 	stz	.score_value+2
 
-
-
 +	lda	#.STATUS_PLAY
 	sta .game_state
 	rts
@@ -709,14 +739,18 @@ memctl = $0230
 ++	rts
 
 .init_vram
+    jsr isXmas
+    bcc +
+    lda	#Dark_Red
+	sta	.sprite_init_tab+4*4+3
++
+
 	ldx	#$03
 	lda	#.CHAR_BLANK					;fill vram screen with blank
 	sta	adrl
 	lda	#<.A_GX_SCR
 	ldy	#.WRITE_ADDRESS + >.A_GX_SCR
 	jsr	vdp_fill
-
-    ;+krn_bank0_on                       ; to access the charset in bank0
 
 	+SetVector charset, addr			; init 2 game charset with character set
 	lda #<.A_GX_PAT_1
@@ -729,25 +763,32 @@ memctl = $0230
 	ldx	#$08
 	jsr	vdp_memcpy
 
-    ;+krn_restore_memctl
-
-	+SetVector .game_chars, addr		; first game charset
-	lda #<(.A_GX_PAT_1+.GAME_CHAR_OFFS)
-	ldy #.WRITE_ADDRESS + >(.A_GX_PAT_1+.GAME_CHAR_OFFS)
-	ldx	#$03
-	jsr	vdp_memcpy
+    +SetVector .game_chars, addr		; first game charset
+    jsr isXmas
+    bcc +
+    +SetVector .game_chars_xmas, addr		; first game charset
++   lda #<(.A_GX_PAT_1+.GAME_CHAR_OFFS)
+    ldy #.WRITE_ADDRESS + >(.A_GX_PAT_1+.GAME_CHAR_OFFS)
+    ldx	#$03
+    jsr	vdp_memcpy
 
 	+SetVector .game_chars_4px, addr	; 2nd game charset with 4px offset
-	lda #<(.A_GX_PAT_2+.GAME_CHAR_OFFS)
+    jsr isXmas
+    bcc +
+	+SetVector .game_chars_4px_xmas, addr	; 2nd game charset with 4px offset
++   lda #<(.A_GX_PAT_2+.GAME_CHAR_OFFS)
 	ldy #.WRITE_ADDRESS + >(.A_GX_PAT_2+.GAME_CHAR_OFFS)
 	ldx	#$03
 	jsr	vdp_memcpy
 
+    
 	+SetVector .sprites, addr
 	lda	#<.A_SP_PAT
 	ldy	#.WRITE_ADDRESS + >.A_SP_PAT
 	ldx	#$04			; sprite patterns
 	jsr	vdp_memcpy
+    
+    jsr isXmas
 
 	+SetVector .text_game_label, addr
 	lda	#<(.A_GX_SCR + (22*32))
@@ -834,11 +875,11 @@ memctl = $0230
 	!byte	.PD_Y		,.PD_X+16,  .PD_PTR+2*4, Dark_Red
 	!byte	.PD_Y+16	,.PD_X+16,  .PD_PTR+3*4, Dark_Red
 .sprite_init_tab:
-	!byte	.DINOSAUR_Y		,.DINOSAUR_X+16	,0	,.dinosaur_color
-	!byte	.DINOSAUR_Y+16	,.DINOSAUR_X+16	,4	,.dinosaur_color
-	!byte	.DINOSAUR_Y		,.DINOSAUR_X	,8	,.dinosaur_color
-	!byte	.DINOSAUR_Y+16	,.DINOSAUR_X	,28	,.dinosaur_color
-    !byte	.DINOSAUR_Y-10	,.DINOSAUR_X+10	,56	,.dinosaur_color_xmas
+	!byte	.DINOSAUR_Y		,.DINOSAUR_X+16	,0	, .dinosaur_color
+	!byte	.DINOSAUR_Y+16	,.DINOSAUR_X+16	,4	, .dinosaur_color
+	!byte	.DINOSAUR_Y		,.DINOSAUR_X	,8	, .dinosaur_color
+	!byte	.DINOSAUR_Y+16	,.DINOSAUR_X	,28	, .dinosaur_color
+    !byte	.DINOSAUR_Y-10	,.DINOSAUR_X+10	, .dinosaur_cap, Transparent
 .sprite_init_tab_end:
 .sprite_tab:
 	!fill	5*4, 0
@@ -860,18 +901,19 @@ memctl = $0230
 	!fill	4, 0
 
 .dino_run_1
-	!byte 0,4,8,12,56
+	!byte 0,4,8,12,60
 .dino_run_2
-	!byte 0,4,16,20,60
+	!byte 0,4,16,20,.dinosaur_cap
 .dino_duck_1
-	!byte .sprite_empty,36,.sprite_empty,40,56
+	!byte .sprite_empty,36,.sprite_empty,40,60
 .dino_duck_2
-	!byte .sprite_empty,36,.sprite_empty,44,60
+	!byte .sprite_empty,36,.sprite_empty,44,.dinosaur_cap
 .dino_jump
-	!byte 0,4,8,28,56
+	!byte 0,4,8,28,60
 .dino_dead
-	!byte 32,4,8,28,60
+	!byte 32,4,8,28,.dinosaur_cap
 
+.save_isr   !word $ffff
 
 .text_game_label	!text " Verbindung zum Internet konnte  nicht hergestellt werden.",$0
 .text_game_over		!text "           GAME OVER!",$0
@@ -940,27 +982,35 @@ PI = 3.14159265358979323846
 !fill 64,0 ; the empty sprite
 
 .game_chars
-;!src "dinosaur.chars.1.res"
-;!src "dinosaur.chars.2.res"
-;!src "dinosaur.chars.3.res"
-;!src "dinosaur.chars.4.res"
+!src "dinosaur.chars.1.res"
+!src "dinosaur.chars.2.res"
+!src "dinosaur.chars.3.res"
+!src "dinosaur.chars.4.res"
+!src "dinosaur.chars.5.res"
+!src "dinosaur.chars.6.res"
+.game_chars_4px
+!src "dinosaur.chars.1.4px.res"
+!src "dinosaur.chars.2.4px.res"
+!src "dinosaur.chars.3.4px.res"
+!src "dinosaur.chars.4.4px.res"
+!src "dinosaur.chars.5.4px.res"
+!src "dinosaur.chars.6.4px.res"
+
+.game_chars_xmas
 !src "dinosaur.chars.1.xmas.res"
 !src "dinosaur.chars.2.xmas.res"
 !src "dinosaur.chars.3.xmas.res"
 !src "dinosaur.chars.4.xmas.res"
 !src "dinosaur.chars.5.res"
 !src "dinosaur.chars.6.res"
-.game_chars_4px
-;!src "dinosaur.chars.1.4px.res"
-;!src "dinosaur.chars.2.4px.res"
-;!src "dinosaur.chars.3.4px.res"
-;!src "dinosaur.chars.4.4px.res"
+.game_chars_4px_xmas
 !src "dinosaur.chars.1.4px.xmas.res"
 !src "dinosaur.chars.2.4px.xmas.res"
 !src "dinosaur.chars.3.4px.xmas.res"
 !src "dinosaur.chars.4.4px.xmas.res"
 !src "dinosaur.chars.5.4px.res"
 !src "dinosaur.chars.6.4px.res"
+
 
 .frame_cnt	!byte 0
 .filename !text "DINOSAUR.HI",$00
