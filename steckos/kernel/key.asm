@@ -22,23 +22,25 @@
 
 .include "kernel.inc"
 .include "via.inc"
-.import spi_r_byte, spi_deselect
+.import spi_r_byte, spi_deselect, spi_isbusy
 .export getkey
 .segment "KERNEL"
 
 ; Select Keyboard controller on SPI, get byte from buffer
 getkey:
-	phx
+		jsr spi_isbusy
+		bne @l1
+		phx
 
-	lda #%01111010
-	sta via1portb
+		lda #%01111010
+		sta via1portb
 
-	jsr spi_r_byte
+		jsr spi_r_byte
 
-	ldx #%11111110
-	stx via1portb
+		ldx #%11111110
+		stx via1portb
 
-	plx
+		plx
 
         cmp #$00
         beq @l1
