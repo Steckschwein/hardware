@@ -30,8 +30,8 @@ ansi_chrout:
     pha
     lda #$40
     sta ansi_state
-    pla
     stz ansi_index
+    pla
     rts
 @store_csi_byte:
     ; number? $30-$39
@@ -120,7 +120,7 @@ ansi_chrout:
     ldy ansi_param1,x
     clc
     pla
-    adc multable,y
+    adc @multable,y
     sta ansi_param1,x
 
     bra @end
@@ -133,5 +133,5 @@ ansi_chrout:
     ply
     plx
     rts
-multable:
+@multable:
 	.byte 0,10,20,30,40,50,60,70,80,90
