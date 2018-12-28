@@ -140,7 +140,7 @@ loop:
 		bit state
 		bmi exit
 
-		keyin
+		jsr krn_getkey
 		cmp #$03
 		beq exit
 		cmp #$1b ; escape
