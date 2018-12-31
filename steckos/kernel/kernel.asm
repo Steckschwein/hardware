@@ -35,7 +35,7 @@ shell_addr	 = $d800
 .import init_rtc
 .import spi_r_byte, spi_rw_byte, spi_deselect, spi_select_rtc
 .import init_uart, uart_tx, uart_rx, uart_rx_nowait
-.import textui_init0, textui_update_screen, textui_chrout, textui_put
+.import textui_init0, textui_restore, textui_update_screen, textui_chrout, textui_put
 .import getkey
 .import textui_enable, textui_disable, vdp_display_off,  textui_blank, textui_update_crs_ptr, textui_crsxy, textui_scroll_up, textui_cursor_onoff
 
@@ -342,7 +342,7 @@ krn_find_first:				jmp fat_find_first
 .export krn_find_next
 krn_find_next:					jmp fat_find_next
 .export krn_textui_init
-krn_textui_init:				jmp	textui_init0
+krn_textui_init:				jmp	textui_restore
 .export krn_textui_enable
 krn_textui_enable:			jmp	textui_enable
 .export krn_textui_disable
