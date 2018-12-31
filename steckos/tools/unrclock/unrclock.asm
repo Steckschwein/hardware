@@ -52,18 +52,13 @@ main:
         stz clock_update_trigger
         
         jsr	krn_getkey
-        beq @main_loop
-;        cmp #KEY_ESCAPE
- ;       beq exit
-        cmp #' '
         bne exit
-        stz clock_position_trigger
         bra @main_loop
 exit:                
         sei
         copypointer safe_isr, user_isr
 		jsr	krn_textui_init
-        jsr krn_textui_enable
+;        jsr krn_textui_enable
         cli
 
         jmp (retvec)
