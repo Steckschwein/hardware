@@ -46,7 +46,7 @@ STATE_TEXTUI_ENABLED=1<<3
 screen_buffer:      ;.res COLS*ROWS, CURSOR_BLANK
 
 .segment "KERNEL"
-.export textui_init0, textui_restore, textui_update_screen, textui_chrout, textui_put
+.export textui_init0, textui_init, textui_update_screen, textui_chrout, textui_put
 
 .ifdef TEXTUI_STROUT
 .export textui_strout
@@ -141,7 +141,7 @@ textui_init0:
 
         SetVector screen_buffer, crs_ptr    ;set crs ptr initial to screen buffer
         jsr textui_blank                    ;blank screen buffer
-textui_restore:
+textui_init:
         stz screen_write_lock               ;reset write lock
         jsr textui_enable
         jmp vdp_mode_text
