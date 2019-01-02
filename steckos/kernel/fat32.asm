@@ -860,7 +860,7 @@ __fat_find_free_cluster:
 
 		SetVector	block_fat, read_blkptr
 @next_block:
-		debug32 "f_lba", lba_addr
+		debug32 "free_lba", lba_addr
 		jsr __fat_read_block	; read fat block
 		bne @exit
 
@@ -1640,7 +1640,8 @@ fat_getfilesize:
 		;   X - file descriptor (index into fd_area) of the directory
 		;	filenameptr	- with file name to search
 		; out:
-		;	C=1 if found and dirptr is set to the dir entry found, C=0 otherwise
+        ;   Z=1 on success (A=0), Z=0 and A=error code otherwise
+		;	C=1 if found and dirptr is set to the dir entry found (requires Z=1), C=0 otherwise
 fat_find_first:
 		txa										; use the given fd as source (Y)
 		tay
@@ -1673,10 +1674,13 @@ ff_l4:
 		beq fat_find_next
 
 		jsr __fat_matcher						; call matcher strategy
-		bcs ff_end
+		lda #EOK                                ; Z=1 (success) and no error 
+        bcs ff_end                              ; if C=1 we had a match
 
 		; in:
 		;   X - directory fd index into fd_area
+        ; out:
+        ;   Z=1 on success (A=0), Z=0 and A=error code otherwise
 fat_find_next:
 		lda dirptr
 		clc
@@ -1697,10 +1701,11 @@ fat_find_next:
 		jsr __fat_read_cluster_block_and_select
 		bne ff_exit								; read error...
 		bcs ff_exit								; EOC reached?
-		jsr __fat_next_cln					; select next cluster
+		jsr __fat_next_cln                      ; select next cluster
 		bra __fat_find_first					; C=0, go on with next cluster
 ff_exit:
 		clc										; we are at the end, C=0 and return
+        debug "ff_exit"
 ff_end:
 		rts
 

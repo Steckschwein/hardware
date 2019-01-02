@@ -296,7 +296,7 @@ fullblock:
 			; wait for sd card data token
 			lda #sd_data_token
 			jsr sd_wait
-			bne @exit
+            bne @exit
 
 			ldy #$00
 			jsr halfblock
@@ -497,9 +497,9 @@ sd_wait:
 			dey
 			bne @l1
 
-			lda #$01
+			lda #$82
 			rts
-@l2:		lda #$00
+@l2:		lda #0
 			rts
 
 
@@ -531,7 +531,7 @@ sd_busy_wait:
 	       	rts
 
 @err:
-			lda #$01
+			lda #$81
 			rts
 
 ;---------------------------------------------------------------------

@@ -48,9 +48,7 @@ sd_cmd_param 		= $02a0
 sd_cmd_chksum		= sd_cmd_param+4
 
 sd_cmd_response_retries = $08
-sd_data_token_retries = $08 ; increase, card specific and must be larger for "huge" cards
-;TODO FIXME does not work yet
-;sd_busy_retries = $ff
+sd_data_token_retries = $0f ; increase, card specific and must be larger for "huge" cards
 
 ; sd card R1 response status bits
 sd_card_status_idle             = %00000001

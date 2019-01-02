@@ -70,7 +70,9 @@ kern_init:
 	bne @copy
 
 	jsr init_via1
-	jsr init_rtc
+	jsr init_rtc                ;init
+    jsr __rtc_systime_update    ;and update rtc stamp accordingly
+    
 	jsr init_uart
 
 	SetVector user_isr_default, user_isr
