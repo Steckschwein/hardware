@@ -194,8 +194,8 @@ textui_cursor:
         trb screen_status
         lda #CURSOR_CHAR
         bra @l2
-@l1:    lda saved_char
-@l2:    sta (crs_ptr)
+@l1:     lda saved_char
+@l2:     sta (crs_ptr)
         _screen_dirty
 @l_exit:
         rts
@@ -288,12 +288,12 @@ textui_inc_cursor_y:
         cmp    #ROWS-1            ;last line
         bne    @l1
 
-        lda saved_char        ;restore saved char
+        lda saved_char          ;restore saved char
         sta (crs_ptr)
         lda #CURSOR_BLANK
-        sta saved_char         ;reset .saved_char to blank, cause we scrolled up
+        sta saved_char          ;reset saved_char to blank, cause we scrolled up
         lda #STATE_CURSOR_BLINK
-        trb screen_status  ;reset cursor state
+        trb screen_status       ;reset cursor state
         jsr textui_scroll_up    ; scroll and exit
         jmp textui_update_crs_ptr
 @l1:    inc crs_y
@@ -305,6 +305,8 @@ textui_enable:
         rts
 textui_disable:
         stz screen_status
+        lda saved_char          ;restore char
+        sta (crs_ptr)
         rts
 
 textui_cursor_onoff:

@@ -27,6 +27,7 @@ tmp5    = $a2
 prompt  = $af
 
 .include "common.inc"
+.include "rtc.inc"
 .include "../kernel/kernel.inc"
 .include "../kernel/kernel_jumptable.inc"
 
@@ -35,7 +36,6 @@ appstart $d800
 
 ; set attrib mask. hide volume label and hidden files
 dir_attrib_mask		= $0a
-steckos_start 		= appstart
 
 KEY_RETURN 		= $0d
 KEY_BACKSPACE 		= $08
@@ -49,6 +49,8 @@ bufptr			= $d0
 pathptr			= $d2
 ; Address pointers for serial upload
 startaddr		= $d9
+
+SCREENSAVER_TIMEOUT_MINUTES=2
 
 ;---------------------------------------------------------------------------------------------------------
 ; init shell
@@ -66,7 +68,7 @@ init:
 		.include "version.inc"
 		.byte $00
 		crlf
-
+        
 		bra mainloop
 
 exit_from_prg:
@@ -78,8 +80,8 @@ exit_from_prg:
 		; pla
 		; jsr krn_chrout
 
-mainloop:
-		cld
+mainloop:        
+:		cld ; TODO FIXME - Why ?!?
 		crlf
         lda #'['
 		jsr krn_chrout
@@ -107,8 +109,14 @@ mainloop:
 
 		; put input into buffer until return is pressed
 inputloop:
-		keyin
-
+        jsr screensaver_settimeout  ;reset timeout
+@l_input:
+        jsr screensaver_loop
+        
+        jsr krn_getkey
+        bcc @l_input
+		;keyin
+        
 		cmp #KEY_RETURN ; return?
 		beq parse
 
@@ -146,7 +154,7 @@ escape:
 
 terminate:
 		pha
-		lda #$00
+		lda #0
 		sta (bufptr),y
 		pla
 		rts
@@ -498,6 +506,24 @@ dump:
 @l8:	jmp mainloop
 .endif
 
+screensaver_loop:
+        lda rtc_systime_t+time_t::tm_min
+        cmp screensaver_rtc
+        bne l_exit
+        lda #<screensaver_prg
+		ldx #>screensaver_prg
+		jsr krn_execv   ;ignore any errors
+screensaver_settimeout:
+        lda rtc_systime_t+time_t::tm_min
+        clc
+        adc #SCREENSAVER_TIMEOUT_MINUTES
+        cmp #60
+        bcc :+
+        sbc #60
+:       sta screensaver_rtc
+l_exit:
+        rts
+        
 upload:
 		sei
 		jsr upload
@@ -506,8 +532,10 @@ upload:
 		jmp (startaddr)
 
 
-PATH:		.asciiz "./:/bin/:/sbin/:/usr/bin/"
-APPEXT:		.asciiz ".PRG"
+PATH:		    .asciiz "./:/bin/:/sbin/:/usr/bin/"
+APPEXT:		    .asciiz ".PRG"
+screensaver_prg:    .asciiz "/usr/bin/unrclock.prg"
+screensaver_rtc:    .res 1
 tmpbuf:
 buf = tmpbuf + 64
 msgbuf = tmpbuf + buf
