@@ -27,7 +27,7 @@
 
 .import popa
 
-.export init_opl2, opl2_delay_data, opl2_delay_register
+.export init_opl2, opl2_delay_data, opl2_delay_register, opl2_reg_write
 .export _opl2_init=init_opl2
 .export _opl2_write=opl2_write
 
@@ -55,15 +55,16 @@ init_opl2:
 opl2_write:
     tax
     jsr popa
+;
+;   in:
+;       X - opl2 register select
+;       A - opl2 data
+;
 opl2_reg_write:
-    .import hexout
-;    jsr hexout
 	stx opl_stat
     jsr opl2_delay_register
- ;   jsr hexout
 	sta opl_data
     jmp opl2_delay_data
-
     
 ; jsr here: 6 cycles
 ; rts back: 6 cycles
