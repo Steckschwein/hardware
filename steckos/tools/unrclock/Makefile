@@ -1,5 +1,5 @@
 LIBS=../../lib/steckschwein-kernel.lib ../../tools/lib/toollib.a
-CA65FLAGS=--include-dir ../../asminc --include-dir ../../kernel
+CAFLAGS=--include-dir ../../asminc --include-dir ../../kernel
 LDFLAGS=--config ../../steckos-c-app.cfg $(LIBS)
 
 .PHONY: all clean
@@ -10,12 +10,12 @@ clean:
 	rm -f *.prg *.s *.o
 
 %.o: %.asm
-	ca65 $(CA65FLAGS) $(@:.o=.asm)
+	ca65 $(CAFLAGS) $(@:.o=.asm)
 
-%.prg: %.o ../../lib/steckschwein-kernel.lib
+%.prg: %.o $(LIBS)
 	ld65 $< $(LDFLAGS) -o $@
 
-_%.dis: %.prg
+%.dis: %.prg
 	dcc6502 -o 0x0ffe -d -n -c $< > $@
 
 %: %.prg
