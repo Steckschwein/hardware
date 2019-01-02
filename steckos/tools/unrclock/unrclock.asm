@@ -22,13 +22,11 @@ clock_position_trigger=tmp4
 
 color_bg=Transparent
 color_off=Gray
-color_sec=Light_Blue
+color_sec=Dark_Blue
 color_min_l=Magenta
 color_min_h=Medium_Green
-color_hour_l=Dark_Blue
+color_hour_l=Light_Blue
 color_hour_h=Medium_Red
-
-
 
 .code
 main:
@@ -65,14 +63,11 @@ exit:
 
 clock_position:
         lda rtc_systime_t+time_t::tm_sec
-        ;cmp #30;sec 30, change position
-        ;beq @l_update
-        bit #$03
-        bne @l_update
-        bit #$04
-        bne @l_end
+        bit #$0f
+        beq :+
         stz clock_position_trigger
-        bra @l_end        
+:       bit #$0f
+        bne @l_end
 @l_update:
         lda clock_position_trigger
         bne @l_end
@@ -81,6 +76,10 @@ clock_position:
         and #%00000011; multiple of 32
         adc #(WRITE_ADDRESS + >(ADDRESS_GFX_MC_PATTERN))
         sta vaddr_new+1
+        ldx #(last_rtc_end-last_rtc-1)
+@l_clr: stz last_rtc,x
+        dex
+        bpl @l_clr
 @l_end:
         rts
         
@@ -176,7 +175,7 @@ clock_draw_sec:
         sta ptr2
         lda clock_ptr_tab_h_sec, x
         sta ptr2+1        
-        lda #Black<<4|color_sec
+        lda #Transparent<<4|color_sec
         sta (ptr2)
 :        
         dex
@@ -229,6 +228,7 @@ rnd_sequence_h_nibble:
         lsr
         lsr
         
+ ; convert number "n" into a random sequence of 0 and 1 with length "n"
 rnd_sequence:
         cmp last_rtc, y ; has changed?
         beq @l_end
@@ -245,9 +245,8 @@ rnd_sequence:
         dey
         bpl :-       
         
-        cpx #0
-        beq @l_end_restore      ; zero, nothing todo...
-        ; convert number of seconds "n" into a random sequence of 0 and 1 with length "n"
+        cpx #0                  ; zero number?     
+        beq @l_end_restore      ; skip and leave an empty sequence
 @l_rnd:
         jsr rnd
 @l_mod:
@@ -301,7 +300,7 @@ bindech:
         .byte $00,$16,$32,$48,$64,$80,$96 
 
 clock_reset:        
-        lda #Black<<4|color_off
+        lda #Transparent<<4|color_off
         sta color
         ldy #0
         jsr clock_reset_row_upper
@@ -314,7 +313,7 @@ clock_reset:
         ldy #6
         jsr clock_reset_row_upper
         
-        lda #Black<<4|Black
+        lda #Transparent<<4|Transparent
         sta color
         ldy #1
         jsr clock_reset_row_upper  
@@ -335,12 +334,12 @@ clock_reset_row_upper:
         sta clock_data_row1+$10*8,y
         sta clock_data_row1+$12*8,y
         sta clock_data_row1+$14*8,y
-        lda #color_off<<4|Black          ; #.
+        lda #color_off<<4|Transparent          ; #.
         sta clock_data_row1+$01*8,y
         sta clock_data_row1+$11*8,y
         sta clock_data_row1+$13*8,y
         sta clock_data_row1+$15*8,y
-        lda #Black<<4|color_off           ; .#
+        lda #Transparent<<4|color_off           ; .#
         sta clock_data_row1+$02*8,y
         sta clock_data_row1+$04*8,y
         sta clock_data_row1+$06*8,y
@@ -372,12 +371,12 @@ clock_reset_row_lower:
         sta clock_data_row2+$10*8,y
         sta clock_data_row2+$12*8,y
         sta clock_data_row2+$14*8,y
-        lda #color_off<<4|Black          ; #.
+        lda #color_off<<4|Transparent          ; #.
         sta clock_data_row2+$01*8,y
         sta clock_data_row2+$11*8,y
         sta clock_data_row2+$13*8,y
         sta clock_data_row2+$15*8,y
-        lda #Black<<4|color_off           ; .#
+        lda #Transparent<<4|color_off           ; .#
         sta clock_data_row2+$02*8,y
         sta clock_data_row2+$04*8,y
         sta clock_data_row2+$06*8,y
@@ -409,9 +408,9 @@ clock_isr:
         ldy vaddr+1
         cpy vaddr_new+1
         beq @l_update
-@l_erase:
+@l_erase:   ; clear clock at old position
             vdp_sreg
-            lda #Black<<4|Black
+            lda #Transparent<<4|Transparent
             ldx #2
             jsr vdp_fill
             copypointer vaddr_new, vaddr
@@ -428,8 +427,7 @@ clock_isr:
         ldx #<(32*8)
         jsr copy_vram
         
-        lda #Dark_Green<<4| Black
-        ora vaddr
+        lda #Dark_Green<<4| Transparent
         jsr vdp_bgcolor
                 
         
@@ -461,9 +459,9 @@ noEor:
 .data
 clock_data: 
 clock_data_row1:
-        .res 32 * 8,Black<<4|Black   ; 6 mc pixel rows + 2 spacer
+        .res 32 * 8,Transparent<<4|Transparent   ; 6 mc pixel rows + 2 spacer
 clock_data_row2:
-        .res 32 * 8,Black<<4|Black   ; 3 mc pixel rows
+        .res 32 * 8,Transparent<<4|Transparent   ; 3 mc pixel rows
 
 clock_ptr_tab_l_sec:
         .repeat 6, row
@@ -515,12 +513,11 @@ tab_hour_l: .res 9
 tab_hour_h: .res 3
 tab_lights_end:
 
-last_rtc:
-last_sec:       .res 1
-last_min_l:     .res 1
-last_min_h:     .res 1
-last_hour_l:    .res 1
-last_hour_h:    .res 1
+last_rtc:      
+        .res 1 ; sec
+        .res 2 ; min 
+        .res 2 ; hour
+last_rtc_end:
 
 vaddr:       .byte <ADDRESS_GFX_MC_PATTERN, WRITE_ADDRESS + >(ADDRESS_GFX_MC_PATTERN)
 vaddr_new:   .byte <ADDRESS_GFX_MC_PATTERN, WRITE_ADDRESS + >(ADDRESS_GFX_MC_PATTERN)
