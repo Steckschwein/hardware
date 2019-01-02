@@ -1,5 +1,8 @@
 MAKEFILE=Makefile
-DIST_TARGET=/media/dommas/STCKSCHWN/
+ifndef DIST_TARGET
+    DIST_TARGET=/media/dommas/STCKSCHWN/
+endif
+
 all: build
 
 clean:
