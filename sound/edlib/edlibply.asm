@@ -14,7 +14,7 @@
 ;*/
 
 .importzp ptr1,ptr2
-.import opl2_reg_write
+.import opl2_init, opl2_reg_write
 fm_file_base_address = $0002		; word
 fm_file_arrdata = $0008			; word
 
@@ -69,6 +69,7 @@ fm_file_arrdata = $0008			; word
 ;;// JCH_FM_INIT subroutine, this routine needs to be called to initialize the FM music
 ;;// ----------------------------------------------------------------------------------------------------------
 .include "common.inc"
+.include "fcntl.inc"
 .include "kernel.inc"
 .include "kernel_jumptable.inc"
 .include "ym3812.inc"
@@ -971,24 +972,61 @@ loc_10600:;//
 ;// JCH_FM_MUSIC_INIT ;// INITIALIZE PARAMETERS
 ;// ----------------------------------------------------------------------------------------------------------
 jch_fm_music_init:
- 		jsr jch_initialize_fm_music
+ 		;jsr jch_detect_chip
+        ;bcc :+
+        
+        ;jsr krn_primm
+        ;.byte "YM3526/YM3812 not available!",$0a,0
+        ;jmp exit
+        
+        jsr loadfile
+        beq :+
+        jsr krn_primm
+        .byte "i/o error",$0a,0
+        jmp  exit
+        
+:       jsr jch_initialize_fm_music
 		jsr jch_load_fmfile_pointers
         
         sei
         copypointer user_isr, safe_isr
         SetVector jch_fm_play, user_isr
         cli
-:        
-        keyin
+        
+        jsr krn_primm
+        .byte "edlib player v0.2 (somewhat optimized) by mr.mouse/xentax july 2017@",$0a,0
+        
+:       keyin
         cmp #KEY_ESCAPE
         bne :-
         
         sei
         copypointer safe_isr, user_isr
+        jsr opl2_init
+        
         cli
+exit:
         jmp (retvec)
         
 safe_isr:   .res 2
+
+loadfile:
+		lda paramptr
+		ldx paramptr +1
+		ldy #O_RDONLY
+ 		jsr krn_open
+ 		bne @l_exit
+        stx fd
+		SetVector d00file, read_blkptr
+		jsr krn_read
+        pha
+        ldx fd
+        jsr krn_close
+        pla
+        cmp #0
+@l_exit:
+        rts
+fd:     .res 1
 
 ;// ----------------------------------------------------------------------------------------------------------
 ;// JCH_DETECT_CHIP ;// CHECK CHIP EXISTENCE ;// NEED REAL HARDWARE TO WORK (NOT EMULATION)
@@ -1003,7 +1041,7 @@ loc_1062B:
 		ldx #$04							;// set timer control byte to #$80 = clear timers T1 T2 and ignore them
 		lda #$80							;// reset flags for timer 1 & 2, IRQset : all other flags are ignored
 		jsr loc_10600
-		ldy $df60							;// get soundcard/chip status byte
+		ldy opl_stat ;$df60							;// get soundcard/chip status byte
 		sty tread							;// store it
 		ldx #$02							;// Set timer1 to max value
 		lda #$ff
@@ -1011,10 +1049,10 @@ loc_1062B:
 		ldx #$04							;// set timer control byte to #$21 = mask timer2 (ignore bit1) and enable bit0 (load timer1 value and begin increment)
 		lda #$21							;// this should lead to overflow (255) and setting of bits 7 and 6 in status byte (either timer expired, timer1 expired). 
 		jsr loc_10600		
-		ldy #$02
+		ldy #$02*8
 		ldx #$ff							;// wait about 0x200 cycles of loading the status byte
 loc_1064C:		
-		lda $df60							;// status byte is df60 according to discussions
+		lda opl_stat ;$df60							;// status byte is df60 according to discussions
 		dex
 		bne loc_1064C
 		dey
@@ -1526,10 +1564,17 @@ tread: .byte 0
 tpoint1: .word 0 
 tpoint2: .word 0 
 tword1: .word 0
-message: .asciiz "edlib player v0.2 (somewhat optimized) by mr.mouse/xentax july 2017@"
 
 .data
 d00file:
-.incbin "the model (kraftwerk cover).d00"
+;.incbin "hard guitar.d00"
+;.incbin "like galway.d00"
+;.incbin "plasma world.d00"
+;.incbin "the model (kraftwerk cover).d00"
+;.incbin "space13.d00"
+;.incbin "bordella 64 conversion.d00"
+;.incbin "summertime.d00"
+;incbin "hybrid.d00"
+;.incbin "blastersound groove.d00"
 
 .segment "STARTUP"

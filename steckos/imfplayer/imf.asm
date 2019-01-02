@@ -42,7 +42,7 @@ imf_ptr_h = imf_ptr + 1
 delayl    = tmp1
 delayh    = delayl + 1
 
-.import init_opl2,  opl2_delay_register
+.import opl2_init, opl2_delay_register
 
 main:
 ;		jmp play
@@ -113,7 +113,7 @@ play:
 		stz delayl
 		stz delayh
 
-		jsr init_opl2
+		jsr opl2_init
 
 		sei
 
@@ -163,7 +163,7 @@ exit:
 		and #%10111111
 		sta via1acr
 
-        jsr init_opl2   ; reset opl
+        jsr opl2_init   ; reset opl
 
 		cli
 		jmp (retvec)

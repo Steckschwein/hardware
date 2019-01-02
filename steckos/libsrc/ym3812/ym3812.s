@@ -27,14 +27,14 @@
 
 .import popa
 
-.export init_opl2, opl2_delay_data, opl2_delay_register, opl2_reg_write
-.export _opl2_init=init_opl2
+.export opl2_init, opl2_delay_data, opl2_delay_register, opl2_reg_write
+.export _opl2_init=opl2_init
 .export _opl2_write=opl2_write
 
 ;----------------------------------------------------------------------------------------------
 ; "init" opl2 by writing zeros into all registers
 ;----------------------------------------------------------------------------------------------
-init_opl2:
+opl2_init:
     ldx #opl2_reg_ctrl
     lda #$80
     jsr opl2_reg_write
