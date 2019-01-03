@@ -13,10 +13,11 @@
 ;  Variables
 ;*/
 
-.importzp ptr1,ptr2,ptr3
+.importzp ptr1,ptr2,ptr3,ptr4
 .import opl2_init, opl2_reg_write
-fm_file_base_address = $0002		; word
-fm_file_arrdata = $0008			; word
+
+fm_file_base_address = ptr1 ;$0002		; word
+fm_file_arrdata = ptr4      ;$0008		; word
 
 ;/*--------------------------------------------------------------------------------------------------------------------------
 ;	Summary	
@@ -216,10 +217,10 @@ loc_10224: ;// **** set memory locations of current sequence data needing to be 
 		lda fm_opt_seq_pointers, x
 		clc
 		adc fm_position_in_current_seq, y
-		sta $06
+		sta ptr3
 		lda fm_opt_seq_pointers+1, x
 		adc fm_position_in_current_seq+1, y		
-		sta $07		
+		sta ptr3+1		
 loc_1023b: ;// **** DO NEXT VAR_BP (next step in sequence)		
 		clc
 		ldx var_si									;// this is a word!!!
@@ -230,11 +231,11 @@ loc_1023b: ;// **** DO NEXT VAR_BP (next step in sequence)
 		inc fm_position_in_current_seq+1, x
 loc_1023b_a:		
 		ldy #$00		
-		lda ($06), y								;// load the sequence variable in var_ax		
+		lda (ptr3), y								;// load the sequence variable in var_ax		
 		sta var_ax		
 		tax
 		iny		
-		lda ($06), y		
+		lda (ptr3), y		
 		sta var_ax+1		
 		cpx #$ff									;// check for FFFF = END OF SEQUENCE DATA . 
 		bne loc_10257								;// no FFFF? go on
@@ -328,11 +329,11 @@ loc_1029c: ;// **** SEQUENCE COMMANDS: CHECK FOR EFFECT EXXXX = SLIDE DOWN = 0xx
 		sta fm_local_voice_slide+1		
 loc_102af: ;// **** NEXT var_bp (next step in sequence)
 		clc
-		lda $06
+		lda ptr3
 		adc #$02									;// word pointer
-		sta $06									
+		sta ptr3									
 		bcc loc_102af_a	
-		inc $07
+		inc ptr3+1
 loc_102af_a:			
 		jmp loc_1023b			
 loc_102b3: ;// **** SEQUENCE COMMANDS: CHECK FOR EFFECT 6000 = CUT VOICE					
@@ -503,21 +504,21 @@ loc_10398:	;// **** PLAY INSTRUMENT
 		asl											;// times two to get to the right fm_ins position
 		tax
 		lda fm_opt_ins_pointers, x
-		sta $06
+		sta ptr3
 		sta var_bp
 		lda fm_opt_ins_pointers+1, x
-		sta $07
+		sta ptr3+1
 		sta var_bp+1
  		ldy #$07									;// get byte 7 from the base address of this instrument data block : modulator level 												
-		lda ($06), y													
+		lda (ptr3), y													
 		ldx var_bx
 		sta fm_ins_modulator_level, x				;// 898, modulator level													
 		ldy #$0b									;// get byte 0b: note fine tune 											
-		lda ($06), y																	
+		lda (ptr3), y																	
 		sta fm_ins_fine_tune, x						;// 7b6													
 		beq loc_103d1								;// if 0 get out															
 		ldy #$0c									;// get byte 0c: hard restart value 							
-		lda ($06), y															
+		lda (ptr3), y															
 		sta fm_ins_hardrestart, x					;// 7c8															
 		lda #$00
 		sta var_7ad, x
@@ -537,7 +538,7 @@ loc_103d1: ;// **** output register values for voice - NOT THE FREQUENCY, THAT I
 		adc #$60													
 		tax											;// x is attack /decay register for voice			
 		ldy #$00
-		lda ($06), y								;// get value for Attack/Decay										
+		lda (ptr3), y								;// get value for Attack/Decay										
 		jsr jch_set_register											
 		ldx var_bx													
 		lda jch_voice_reg_table, x													
@@ -545,10 +546,10 @@ loc_103d1: ;// **** output register values for voice - NOT THE FREQUENCY, THAT I
 		adc #$80													
 		tax											;// x is attack /decay register for voice			
 		iny
-		lda ($06), y								;// get value for Sustain/Release										
+		lda (ptr3), y								;// get value for Sustain/Release										
 		jsr jch_set_register																								
 		iny 																		
-		lda ($06), y								;// get main volume level /KSL						
+		lda (ptr3), y								;// get main volume level /KSL						
 		ldx var_bx												
 		sta fm_ins_mainvolume_ksl,x					;// set var_878 : fm_ins_mainvolume_ksl
 		lda jch_voice_reg_table, x													
@@ -556,7 +557,7 @@ loc_103d1: ;// **** output register values for voice - NOT THE FREQUENCY, THAT I
 		adc #$20 												
 		tax												
 		iny											;// get AMP/VIB/MOD freq (multipurpose value for carrier)									
-		lda ($06), y												
+		lda (ptr3), y												
 		jsr jch_set_register			
 	    ldx var_bx													
 		lda jch_voice_reg_table, x													
@@ -564,7 +565,7 @@ loc_103d1: ;// **** output register values for voice - NOT THE FREQUENCY, THAT I
 		adc #$e0													
 		tax											;// x is waveform select			
 		iny
-		lda ($06), y								;// get value for voice waveform										
+		lda (ptr3), y								;// get value for voice waveform										
 		jsr jch_set_register							
 	    ldx var_bx													
 		lda jch_voice_reg_table+9, x				;// set to modulator										
@@ -572,7 +573,7 @@ loc_103d1: ;// **** output register values for voice - NOT THE FREQUENCY, THAT I
 		adc #$60													
 		tax											;// attack decay for modulator	
 		iny											;// should be 5 now
-		lda ($06), y								;// get value 										
+		lda (ptr3), y								;// get value 										
 		jsr jch_set_register							
 	    ldx var_bx													
 		lda jch_voice_reg_table+9, x				;// set to modulator										
@@ -580,7 +581,7 @@ loc_103d1: ;// **** output register values for voice - NOT THE FREQUENCY, THAT I
 		adc #$80													
 		tax											;// sustain release for modulator	
 		iny											;// should be 6 now
-		lda ($06), y								;// get value 										
+		lda (ptr3), y								;// get value 										
 		jsr jch_set_register			
 	    ldx var_bx													
 		lda jch_voice_reg_table+9, x				;// set to modulator										
@@ -589,7 +590,7 @@ loc_103d1: ;// **** output register values for voice - NOT THE FREQUENCY, THAT I
 		tax											;// AMP/VIB/MOD freq (multipurpose value for carrier)	
 		iny
 		iny											;// should be 8 now
-		lda ($06), y								;// get value 										
+		lda (ptr3), y								;// get value 										
 		jsr jch_set_register					
 	    ldx var_bx													
 		lda jch_voice_reg_table+9, x				;// set to modulator										
@@ -597,11 +598,11 @@ loc_103d1: ;// **** output register values for voice - NOT THE FREQUENCY, THAT I
 		adc #$e0													
 		tax											;// wave form for modulator	
 		iny											;// should be 9 now
-		lda ($06), y								;// get value 										
+		lda (ptr3), y								;// get value 										
 		jsr jch_set_register					
 		iny											;// should be a(10) now
 		ldx var_bx									
-		lda ($06), y
+		lda (ptr3), y
 		sta fm_ins_feedback_level,x					;// hardware register Bytes C0-C8 - Feedback / Algorithm value
 loc_10449: ;// **** PROCESS VOICE FREQUENCY													
 		ldx var_si									;// get current voice word value for var_765 (fm_voice_slide)
@@ -678,14 +679,14 @@ loc_10498_2:
 		ldy var_si 
 		lda fm_ins_multipurpose, y					;// get multipurpose value: NOTE THIS MAY NOT BE THE RIGHT NAME FOR THE VARIABLE
 		sta var_bp
-		sta $06
+		sta ptr3
 		lda fm_ins_multipurpose+1, y 				
-		sta $07
+		sta ptr3+1
 		sta var_bp+1
 		lda var_7ad, x								;// get 7ad, this will set zero flag if 0
 		bne loc_104ea
 		ldy #$03
-		lda ($06), y 								;// load the offset of bp.. 
+		lda (ptr3), y 								;// load the offset of bp.. 
 		sta var_bp
 		lda #$00
 		sta var_bp+1
@@ -704,27 +705,27 @@ loc_10498_a:
 		lda fm_start_of_arrangement_data			;// now add the base offset of the arrangment data	
 		adc var_bp		
 		sta var_bp
-		sta $06
+		sta ptr3
 		sta fm_ins_multipurpose, y 
 		lda fm_start_of_arrangement_data+1		
 		adc var_bp+1
 		sta var_bp+1							
-		sta $07										;// ***OPT*** do we really need var_bp?
+		sta ptr3+1										;// ***OPT*** do we really need var_bp?
 		sta fm_ins_multipurpose+1, y 				;// fixed
 		ldy #$02
-		lda ($06), y								;// get the second byte starting from this value
+		lda (ptr3), y								;// get the second byte starting from this value
 		clc
 		adc #$01									;// these two are 4 cycles
 		sta var_7ad									;// store at 7ad
 		ldy #$00
-		lda ($06), y								;// was the base address FF? 
+		lda (ptr3), y								;// was the base address FF? 
 		cmp #$ff
 		beq loc_104ea
 		sta fm_ins_modulator_level, x				;// x is still voice counter (single)
 loc_104ea:		
 		dec var_7ad, x		
 		ldy #$01 
-		lda ($06), y								;// $06/$07 = var_bp at this point, so get the by pointed at by bp+1
+		lda (ptr3), y								;// $06/$07 = var_bp at this point, so get the by pointed at by bp+1
 		clc
 		adc fm_ins_modulator_level, x		
 		and #$3f									;// select only the values of the first 6 bits	(volume)
@@ -1106,7 +1107,7 @@ loc_10686:	;// **** load all 9 (voices/channels) pointers to arrangement data fo
 		lda (fm_file_arrdata), y			;// get the low byte of the pointer in the fm music file
 		sta tpoint1
 		iny
-		lda ($08), y						;// get the high byte of the pointer in the fm music file
+		lda (ptr4), y						;// get the high byte of the pointer in the fm music file
 		sta tpoint1+1
 		lda tpoint1							;// check if zero
 		clc
@@ -1117,37 +1118,37 @@ skip:
 		jmp loc_106df						;// if zero then out of here, the voice/channel does not have any arrangement data
 loc_moveon:		
 		lda fm_file_base_address
-		sta $08
+		sta ptr4
 		ldx fm_file_base_address+1
-		stx $09
+		stx ptr4+1
 		clc
 		adc tpoint1 						;// add low byte of rel pointer in fm music file
-		sta $08								;// store low byte
+		sta ptr4								;// store low byte
 		bcc noadd2
-		inc $09								;// carry was set to inc high byte
+		inc ptr4+1								;// carry was set to inc high byte
 noadd2:		 
-		lda $09
+		lda ptr4+1
 		clc
 		adc tpoint1+1						;// add to high byte
-		sta $09								;// okay, should have the adrr there		
+		sta ptr4+1								;// okay, should have the adrr there		
 		ldy #$00		
-		lda ($08), y						;// get the low byte there --> read the channel speed (first word of the arrangement data per voice)
+		lda (ptr4), y						;// get the low byte there --> read the channel speed (first word of the arrangement data per voice)
 		sta tword1
 		iny
-		lda ($08), y						;// get the high byte there
+		lda (ptr4), y						;// get the high byte there
 		sta tword1+1
-		inc $08								;// increase the pointer twice (inc di, inc di)
+		inc ptr4								;// increase the pointer twice (inc di, inc di)
 		bne inc_mov
-		inc $09
+		inc ptr4+1
 inc_mov:		
-		inc $08		
+		inc ptr4		
 		bne inc_mov2		
-		inc $09		
+		inc ptr4+1		
 inc_mov2:		
 		ldy var_si							;// just the low byte needed
-		lda $08								;// store the new pointer elsewhere (pointing to next entry in the table in the music file)
+		lda ptr4								;// store the new pointer elsewhere (pointing to next entry in the table in the music file)
 		sta fm_pt_voice_arrdata, y			;// so table from 72f will list 9 words that are pointers to the start of the arrangement data (minus channel speed)  for each channel/voice
-		lda $09
+		lda ptr4+1
 		sta fm_pt_voice_arrdata+1, y
 		lda var_si							;// move di, si
 		ldx var_si+1
@@ -1195,19 +1196,19 @@ FML5:
 		lda var_bx							;// add 12 to var_bx
 		clc
 		adc #$12
-		sta $08
+		sta ptr4
 		lda var_bx+1
 		adc #$00							;// this will add the carry if needed
-		sta $09
+		sta ptr4+1
 		clc
-		lda $08								;// add var_di low to bx+12 (in 08/09)
+		lda ptr4								;// add var_di low to bx+12 (in 08/09)
 		adc var_di
-		sta $08
-		lda $09
+		sta ptr4
+		lda ptr4+1
 		adc #$00
-		sta $09
+		sta ptr4+1
 		ldy #$00
-		lda ($08), y						;// get value (byte), which is in the arrangement pointer table, after the pointers, 9 more words (unknown what they do yet)
+		lda (ptr4), y						;// get value (byte), which is in the arrangement pointer table, after the pointers, 9 more words (unknown what they do yet)
 		and #$3f							;// this is at least ANDed with 3F and
 		ldy var_di
 		sta fm_channel_volume, y			;// stored in this table. So the second word in the arrangement pointers table per voice/channel is channel volume (00 = max, 3f = silence)
@@ -1220,7 +1221,7 @@ FML5:
 		sta fm_position_in_voice_seqlist, y
 		sta fm_position_in_voice_seqlist+1, y
 		ldy #$00
-		lda ($08), y						;// now check this second word (per channel/voice) in the arrangement pointer data again 
+		lda (ptr4), y						;// now check this second word (per channel/voice) in the arrangement pointer data again 
 		cmp #$80							;// compare with 128 (0x80) (=-1)  >> UNSURE WHAT THIS CHECKS, BUT IF -1 it will not lead to clearing of vars and the voice/channel
 		bcs loc_106df						;// jump if not below, so greater or equal than
 		ldy var_di
@@ -1237,8 +1238,8 @@ FML5:
 loc_106df:		
 		lda var_bx
 		ldx var_bx+1
-		sta $08
-		stx $09
+		sta ptr4
+		stx ptr4+1
 		inc var_si
 		inc var_si
 		lda var_si
@@ -1265,12 +1266,12 @@ jch_initialize_fm_music:
 		clc
 		adc fm_data_st_offset				;// add low byte of start offset to this one
 		sta fm_start_of_arrangement_data	;// store this in the pointer variable
-		sta $04								;// set zero page addr
+		sta ptr2								;// set zero page addr
 		iny									;// increase y to get to the hi byte
 		lda (fm_file_base_address),y		;// get the hi-byte of this relative address
 		adc fm_data_st_offset+1				;// add hi-byte to hi-byte of start offset to this one (c will also be added if needed)
 		sta fm_start_of_arrangement_data+1	;// store this in the pointer address for the hi-byte
-		sta $05								;// set zero page addr
+		sta ptr2+1								;// set zero page addr
 loc_1073C:	
 		lda #$00
 		sta fm_master_volume				;// set master volume to 0 (max) 3F = silence
@@ -1287,19 +1288,19 @@ loc_10743:
 		cpx #$9								;// is it 9 ? 
 		bne loc_10743						;// no ? then loop
 		lda #<fm_voice_instrument			;// reset the table pointers
-		sta $06								;// set zero page
+		sta ptr3								;// set zero page
 		lda #>fm_voice_instrument
-		sta $07								;// set zero page
+		sta ptr3+1								;// set zero page
 		lda #$00							;// reset the counter
 		sta jch_243_tb_cnt
 		lda #$00							;// okay,prepare to wipe the 243 table
 		ldy #$00
 		ldx #$02
 lop2:
-		sta (06), y
-		inc $06
+		sta (ptr3), y
+		inc ptr3
 		bne goon1							;// no zero? (due to inc leading to 0)
-		inc $07
+		inc ptr3+1
 goon1:		
 	 	inc jch_243_tb_cnt					;// increase the counter
 		bne lop2	
@@ -1307,10 +1308,10 @@ goon1:
 		bne lop2							;// no? continue
 		ldx #$43
 lop3:
-		sta ($06), y
-		inc $06
+		sta (ptr3), y
+		inc ptr3
 		bne goon2							;// no zero? (due to inc leading to 0)
-		inc $07
+		inc ptr3+1
 goon2:		
 	 	dex									;// decrease the counter
 		bne lop3			
@@ -1318,12 +1319,12 @@ goon2:
 		lda fm_file_base_address
 		clc
 		adc #$07								;// point to version number of player
-		sta $06
+		sta ptr3
 		lda fm_file_base_address+1												
 		adc #$00								;// will add the extra carry if need be											
-		sta $07			
+		sta ptr3+1		
 		ldy #$00
-		lda ($06), y				
+		lda (ptr3), y				
 		sta fm_version
 		cmp #$04								;// is the version 4?
 		bne set_73								;// no, then set versionn 2 calculation
@@ -1337,58 +1338,58 @@ end_check:
 		lda fm_file_base_address												
 		clc												
 		adc #$6f								;// point to fm file base address + 6f (= pointer to instrument tables)					
-		sta $06												
+		sta ptr3												
 		lda fm_file_base_address+1												
 		adc #$00								;// will add the extra carry if need be											
-		sta $07		
+		sta ptr3+1		
 		ldy #$00
-		lda ($06), y
+		lda (ptr3), y
 		sta var_bp
 		iny
-		lda ($06), y
-		sta $07
+		lda (ptr3), y
+		sta ptr3+1
 		lda var_bp
-		sta $06
+		sta ptr3
 		lda fm_file_base_address												
 		clc												
 end_add:
 		adc #$73								;// point to fm file base address + 73 (= pointer to special fx data, version 2)	or +71 (song descr, version 4)				
-		sta $08												
+		sta ptr4												
 		lda fm_file_base_address+1												
 		adc #$00								;// will add the extra carry if need be											
-		sta $09				
+		sta ptr4+1				
 	    ldy #$00
-		lda ($08), y
+		lda (ptr4), y
 		sta var_bp
 		iny
-		lda ($08), y
-		sta $09
+		lda (ptr4), y
+		sta ptr4+1
 		lda var_bp
-		sta $08
+		sta ptr4
 		sec										;// calculate size of instrument data
-		lda $08
-		sbc $06
-		sta $08
-		lda $09
-		sbc $07
-		sta $09
+		lda ptr4
+		sbc ptr3
+		sta ptr4
+		lda ptr4+1
+		sbc ptr3+1
+		sta ptr4+1
 		clc										;// shift right 4 times (divide by 16) to get the number of instruments
-		lsr $09
-		ror $08
-		lsr $09
-		ror $08
-		lsr $09
-		ror $08
-		lsr $09
-		ror $08
+		lsr ptr4+1
+		ror ptr4
+		lsr ptr4+1
+		ror ptr4
+		lsr ptr4+1
+		ror ptr4
+		lsr ptr4+1
+		ror ptr4
 skip_calculation:
 		lda fm_file_base_address												
 		clc												
-		adc $06								;// point to fm file base address + 6f (= pointer to instrument tables)					
-		sta $06												
+		adc ptr3								;// point to fm file base address + 6f (= pointer to instrument tables)					
+		sta ptr3												
 		lda fm_file_base_address+1												
-		adc $07								;// will add the extra carry if need be											
-		sta $07		
+		adc ptr3+1								;// will add the extra carry if need be											
+		sta ptr3+1		
 		
 		ldy #$00
 		lda #$00				
@@ -1405,18 +1406,18 @@ loc_pointon:
 		rol	var_bp+1								
 		asl var_bp						
 		rol	var_bp+1								
-		lda $06														
+		lda ptr3														
 		clc													
 		adc var_bp													
 		sta fm_opt_ins_pointers, x													
-		lda $07												
+		lda ptr3+1												
 		adc var_bp+1													
 		sta fm_opt_ins_pointers+1, x				
 		clc													
 		inx				
 		inx				
 		iny 
-		cpy $08 				
+		cpy ptr4 				
 		beq loc_pointdone
 ;//		lda $08
 		sty var_bp
@@ -1430,20 +1431,20 @@ loc_pointdone:
 		ldy #$6d							;// get value at address 6d of the fm file = pointer to (first) sequence pointer (list of pointers to sequences)
 		lda (fm_file_base_address), y						;// $02 should have the low byte of the address of the fm file	
 		adc fm_file_base_address
-		sta $06
+		sta ptr3
 		iny 
 		lda (fm_file_base_address), y 		;// get high byte of this address
 		adc fm_file_base_address+1
-		sta $07								;// $06/$07 is now pointing to the sequence pointer list list
+		sta ptr3+1								;//ptr3/$07 is now pointing to the sequence pointer list list
 		lda #$00							;// min out previous sequence check
 		sta var_di					
 		sta var_di+1
 loc_get_next_seq:		
 		ldy #$00							;// get the pointer
-		lda ($06), y		
+		lda (ptr3), y		
 		sta var_bp			
 		iny 		
-		lda ($06), y		
+		lda (ptr3), y		
 		sta var_bp+1		
 		sec		
 		lda var_bp		
@@ -1465,11 +1466,11 @@ loc_save_seq_pointer:
 		inx 		
 		inx		
 		clc		
-		lda $06		
+		lda ptr3		
 		adc #$02		
-		sta $06		
+		sta ptr3		
 		bcc loc_save_seq_noinc		
-		inc $07		
+		inc ptr3+1		
 loc_save_seq_noinc:				
 		jmp loc_get_next_seq
 loc_end_get_next_seq:				
