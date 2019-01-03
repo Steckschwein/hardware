@@ -13,7 +13,7 @@
 ;  Variables
 ;*/
 
-.importzp ptr1,ptr2
+.importzp ptr1,ptr2,ptr3
 .import opl2_init, opl2_reg_write
 fm_file_base_address = $0002		; word
 fm_file_arrdata = $0008			; word
@@ -1003,13 +1003,10 @@ jch_fm_music_init:
         sei
         copypointer safe_isr, user_isr
         jsr opl2_init
-        
         cli
 exit:
         jmp (retvec)
         
-safe_isr:   .res 2
-
 loadfile:
 		lda paramptr
 		ldx paramptr +1
@@ -1565,6 +1562,7 @@ tpoint1: .word 0
 tpoint2: .word 0 
 tword1: .word 0
 
+safe_isr:   .res 2
 .data
 d00file:
 ;.incbin "hard guitar.d00"

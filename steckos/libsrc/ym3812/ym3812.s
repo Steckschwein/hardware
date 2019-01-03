@@ -35,19 +35,18 @@
 ; "init" opl2 by writing zeros into all registers
 ;----------------------------------------------------------------------------------------------
 opl2_init:
-    ldx #opl2_reg_ctrl
-    lda #$80
-    jsr opl2_reg_write
-    lda opl_stat        ; have to read status register
+        ldx #opl2_reg_ctrl
+        lda #$80
+        jsr opl2_reg_write
     
-    ldx #5              ; reg 5 until reg 245
-    lda #0
+        ldx #$f5              ; reg 245
+        lda #0
 @l:
-    jsr opl2_reg_write
-    inx
-    cpx #$f5
-    bne @l
-    rts
+        jsr opl2_reg_write
+        dex
+        cpx #$04
+        bne @l
+        rts
 
 ;
 ; void __fastcall__ opl2_write(unsigned char val, unsigned char reg);
@@ -61,7 +60,7 @@ opl2_write:
 ;       A - opl2 data
 ;
 opl2_reg_write:
-	stx opl_stat
+	stx opl_sel
     jsr opl2_delay_register
 	sta opl_data
     jmp opl2_delay_data
