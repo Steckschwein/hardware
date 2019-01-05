@@ -60,14 +60,14 @@ SCREENSAVER_TIMEOUT_MINUTES=2
 init:
 		SetVector exit_from_prg, retvec
 		SetVector buf, bufptr
-		SetVector msgbuf, msgptr
+		SetVector buf, paramptr ; set param to empty buffer
+        SetVector msgbuf, msgptr
 		SetVector PATH, pathptr
 
 		jsr krn_primm
 		.byte $0a, "steckOS Shell "
 		.include "version.inc"
-		.byte $00
-		crlf
+		.byte $0a,0
         
 		bra mainloop
 
@@ -103,7 +103,7 @@ mainloop:
 		jsr krn_chrout
 
 		; reset input buffer
-		lda #$00
+		lda #0
 		tay
 		sta (bufptr)
 
@@ -115,7 +115,6 @@ inputloop:
         
         jsr krn_getkey
         bcc @l_input
-		;keyin
         
 		cmp #KEY_RETURN ; return?
 		beq parse
@@ -256,7 +255,7 @@ unknown:
 		crlf
 		jmp run
 
-@l1:		jmp mainloop
+@l1:	jmp mainloop
 
 printbuf:
 		ldy #$01
@@ -275,19 +274,16 @@ printbuf:
 
 cmdlist:
 
-		.byte "cd"
-		.byte $00
+		.byte "cd",0
 		.word cd
 
 		.byte "up",0
 		.word krn_upload
 
 .ifdef DEBUG
-		.byte "dump"
-		.byte $00
+		.byte "dump",0
 		.word dump
 .endif
-
 		; End of list
 		.byte $ff
 
@@ -512,7 +508,9 @@ screensaver_loop:
         bne l_exit
         lda #<screensaver_prg
 		ldx #>screensaver_prg
+        phy
 		jsr krn_execv   ;ignore any errors
+        ply
 screensaver_settimeout:
         lda rtc_systime_t+time_t::tm_min
         clc
@@ -524,18 +522,10 @@ screensaver_settimeout:
 l_exit:
         rts
         
-upload:
-		sei
-		jsr upload
-		cli
-		; jump to new code
-		jmp (startaddr)
-
-
 PATH:		    .asciiz "./:/bin/:/sbin/:/usr/bin/"
 APPEXT:		    .asciiz ".PRG"
 screensaver_prg:    .asciiz "/usr/bin/unrclock.prg"
 screensaver_rtc:    .res 1
 tmpbuf:
 buf = tmpbuf + 64
-msgbuf = tmpbuf + buf
+msgbuf = buf + BUF_SIZE
