@@ -80,7 +80,9 @@ rtc_systime:
 		;	-
 __rtc_systime_update:
         jsr spi_isbusy
-        bne __rtc_systime_update_exit ; skip, if busy
+        beq :+
+        rts ;exit if busy
+:
         debug "update systime"
 		jsr	spi_select_rtc
 

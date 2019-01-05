@@ -71,7 +71,7 @@ kern_init:
 
 	jsr init_via1
 	jsr init_rtc                ;init
-    jsr __rtc_systime_update    ;and update rtc stamp accordingly
+    jsr __rtc_systime_update    ;... and update rtc immediately before any program is loaded
     
 	jsr init_uart
 
@@ -88,7 +88,6 @@ kern_init:
 	.byte $20,$b3,$0a
 	.byte $d4,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$cd,$be,$0a
 	.byte $00
-
 
 
 	SetVector do_upload, retvec ; retvec per default to do_upload. end up in do_upload again, if a program exits safely
