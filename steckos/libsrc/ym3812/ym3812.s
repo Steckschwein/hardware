@@ -32,22 +32,19 @@
 .export _opl2_write=opl2_write
 
 ;----------------------------------------------------------------------------------------------
-; "init" opl2 by writing zeros into all registers
+; "init" opl2 by writing zeros into most registers
+;
+; void __fastcall__ opl2_init(void);
 ;----------------------------------------------------------------------------------------------
 opl2_init:
-        ldx #opl2_reg_ctrl
-        lda #$80
-        jsr opl2_reg_write
-    
-        ldx #$f5              ; reg 245
         lda #0
+        ldx #1
 @l:
         jsr opl2_reg_write
-        dex
-        cpx #$04
+        inx
+        cpx #$f6                ; until reg 245
         bne @l
         rts
-
 ;
 ; void __fastcall__ opl2_write(unsigned char val, unsigned char reg);
 ;

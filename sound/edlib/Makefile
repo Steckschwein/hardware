@@ -2,7 +2,7 @@ OBJS=edlibply.o
 TARGET=edlibply.prg
 CAFLAGS=--include-dir ../steckos/kernel --include-dir ../../steckos/asminc --include-dir ../../steckos/kernel
 LDFLAGS=--config ../../steckos/steckos-c-app.cfg
-LIBS=../../steckos/lib/steckschwein-kernel.lib
+LIBS=../../steckos/lib/steckschwein-kernel.lib ../../steckos/tools/lib/toollib.a
 
 .PHONY: all clean
 

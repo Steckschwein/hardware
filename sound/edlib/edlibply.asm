@@ -12,10 +12,6 @@
 ;/*========================================================= SFX Sound Expander =================================================
 ;  Variables
 ;*/
-
-.importzp ptr1,ptr2,ptr3,ptr4
-.import opl2_init, opl2_reg_write
-
 fm_file_base_address = ptr1 ;$0002		; word
 fm_file_arrdata = ptr4      ;$0008		; word
 
@@ -74,9 +70,16 @@ fm_file_arrdata = ptr4      ;$0008		; word
 .include "kernel.inc"
 .include "kernel_jumptable.inc"
 .include "ym3812.inc"
-
+.include "via.inc"
+.include "vdp.inc"
 .include "appstart.inc"
 appstart $1000
+
+.importzp ptr1,ptr2,ptr3,ptr4
+.import opl2_init, opl2_reg_write
+
+.import vdp_bgcolor
+.export char_out=krn_chrout
 
 ;.pc = $1000 "INIT"
 jch_fm_init:
@@ -982,31 +985,85 @@ jch_fm_music_init:
         
         jsr loadfile
         beq :+
+        pha
         jsr krn_primm
-        .byte "i/o error",$0a,0
+        .byte "i/o error occured: ",0
+        pla
+        jsr hexout
+        lda #$0a
+        jsr char_out
         jmp  exit
         
-:       jsr jch_initialize_fm_music
-		jsr jch_load_fmfile_pointers
+:       jsr isD00File
+        beq :+
+        jsr krn_primm
+        .byte "not a D00 file",$0a,0
+        jmp exit
         
-        sei
-        copypointer user_isr, safe_isr
-        SetVector jch_fm_play, user_isr
-        cli
-        
+:       
         jsr krn_primm
         .byte "edlib player v0.2 (somewhat optimized) by mr.mouse/xentax july 2017@",$0a,0
+        jsr printMetaData
+
+        jsr jch_initialize_fm_music
+		jsr jch_load_fmfile_pointers        
+ 
+        ldy #0
+        ldx #0
+:       dex
+        bne :-
+        dey 
+        bne :-
+        
+        sei
+        jsr krn_textui_crs_onoff
+        copypointer $fffe, safe_isr
+        SetVector player_isr, $fffe
+        cli
         
 :       keyin
         cmp #KEY_ESCAPE
         bne :-
         
         sei
-        copypointer safe_isr, user_isr
+        copypointer safe_isr, $fffe
+        jsr krn_textui_init
         jsr opl2_init
         cli
 exit:
         jmp (retvec)
+     
+printMetaData:
+        jsr krn_primm
+        .asciiz "Name: "
+        ldy #$0b
+        jsr printString
+        jsr krn_primm
+        .byte $0a,"Composer: ",0
+        ldy #$2b
+        jmp printString
+
+printString:
+        ldx #$20
+:       lda d00file, y
+        jsr char_out
+        iny 
+        dex
+        bne :- 
+        rts
+        
+isD00File:
+        ldy #0
+:       lda d00file, y
+        cmp d00header,y
+        bne :+
+        iny 
+        cpy #6
+        bne :-
+:       rts
+        
+d00header:
+    .byte "JCH",$26,$2,$66
         
 loadfile:
 		lda paramptr
@@ -1025,6 +1082,50 @@ loadfile:
 @l_exit:
         rts
 fd:     .res 1
+frames: .res 1, 50
+
+player_isr:
+        save
+        cld	;clear decimal flag, maybe an app has modified it during execution
+        bit opl_stat
+        bpl @is_irq_vdp
+        
+        lda #Cyan
+        jsr vdp_bgcolor
+@is_irq_vdp:
+        bit	a_vreg
+        bpl @is_irq_via	   ; VDP IRQ flag set?
+        
+        lda #Dark_Yellow
+        jsr vdp_bgcolor
+
+        dec frames
+        bne @exit
+        lda #50
+        sta frames
+        
+@is_irq_via:        
+        bit via1ifr		; Interrupt from VIA?
+        bpl @exit
+        bit via1t1cl	; Acknowledge timer interrupt
+        
+        lda #<via_counter    
+        sta via1t1cl            ; set low byte of count
+        lda #>via_counter
+        sta via1t1ch            ; set high byte of count
+        
+@exit:
+        jsr jch_fm_play
+        
+        lda #Medium_Green<<4|Transparent
+        jsr vdp_bgcolor
+        
+        restore
+        rti
+ns_cl = 1000 / clockspeed
+ns_sec = 1000000000
+via_counter=clockspeed*1000000 / 70
+            ;8.000.000 / 70 = 114285
 
 ;// ----------------------------------------------------------------------------------------------------------
 ;// JCH_DETECT_CHIP ;// CHECK CHIP EXISTENCE ;// NEED REAL HARDWARE TO WORK (NOT EMULATION)
@@ -1112,7 +1213,7 @@ loc_10686:	;// **** load all 9 (voices/channels) pointers to arrangement data fo
 		lda tpoint1							;// check if zero
 		clc
 		adc tpoint1+1
-		cmp #$00
+		;cmp #$00
 		bne loc_moveon
 skip:
 		jmp loc_106df						;// if zero then out of here, the voice/channel does not have any arrangement data
@@ -1190,8 +1291,10 @@ FML4:	rol tword1
 		inc tword1							;// add one speed unit to slow it down 
 FML5:		 
 		lda tword1							;// load the lowbyte of the tword
-		ldy var_di
-;//		lda #$04							;// DEBUG = SPEED of song, 1 or 0 =  50 hz, 2 = 25hz , 3 = 12,5 hz etc
+		.import hexout
+        ;jsr hexout
+        ldy var_di
+		lda #3							;// DEBUG = SPEED of song, 1 or 0 =  50 hz, 2 = 25hz , 3 = 12,5 hz etc, 4 = 6,25, 5=3,125, 6=1,625, 7=0,8125
 		sta fm_channel_speed_counter, y						;// store at the position in the channel speed table
 		lda var_bx							;// add 12 to var_bx
 		clc
@@ -1546,7 +1649,7 @@ fm_frequency_table: .byte 87, 1, 107, 1, 129, 1, 152, 1, 176, 1, 202, 1, 229, 1,
    .byte 135, 30, 0
 fm_opt_ins_pointers: .res 64, 0 			;// optimization: 32 16-bit pointers to instrument data
 fm_opt_seq_pointers: .res 128, 0 			;// optimization: 64 16-bit pointers to sequence data
-fm_cycle_speed: .byte 0
+fm_cycle_speed: .byte 70 ;d00 files default to 70Hz
 fm_cl_voice_bool: .byte 0
 fm_version: .byte 0
 ;// x86 cross registers
