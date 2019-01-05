@@ -22,7 +22,6 @@
 
 .setcpu "65c02"
 
-.include "system.inc"
 .include "ym3812.inc"
 
 .import popa

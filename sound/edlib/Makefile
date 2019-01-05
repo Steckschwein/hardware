@@ -1,4 +1,3 @@
-OBJS=edlibply.o
 TARGET=edlibply.prg
 CAFLAGS=--include-dir ../steckos/kernel --include-dir ../../steckos/asminc --include-dir ../../steckos/kernel
 LDFLAGS=--config ../../steckos/steckos-c-app.cfg
@@ -11,8 +10,8 @@ all: $(TARGET)
 clean:
 	rm -f *.prg *.s *.o
 
-%.prg: %.o $(LIBS)
-	ld65 $< $(LDFLAGS) $(LIBS) -o $@
+%.prg: %.o edlib.o $(LIBS)
+	ld65 $< edlib.o $(LDFLAGS) $(LIBS) -o $@
 
 %.o: %.asm
 	ca65 $(CAFLAGS) $(@:.o=.asm)

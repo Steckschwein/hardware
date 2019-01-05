@@ -20,6 +20,11 @@
 ; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ; SOFTWARE.
 
+.ifndef _YM3812_INC_
+.define _YM3812_INC_
+
+.include "system.inc"
+
 opl_stat = $0240        ; status register
 opl_sel  = opl_stat		; register select
 opl_data = opl_stat + 1 ; data register (write only)
@@ -132,3 +137,5 @@ opl2_chan8_op2	= opl2_op18
 	dey
 	bne :-
 .endmacro
+
+.endif
