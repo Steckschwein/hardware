@@ -13,7 +13,6 @@
 ;  Variables
 ;*/
 .code
-
 fm_file_base_address = ptr1 ;$0002		; word
 fm_file_arrdata = ptr4      ;$0008		; word
 
@@ -67,10 +66,9 @@ fm_file_arrdata = ptr4      ;$0008		; word
 ;;// ----------------------------------------------------------------------------------------------------------
 ;;// JCH_FM_INIT subroutine, this routine needs to be called to initialize the FM music
 ;;// ----------------------------------------------------------------------------------------------------------
-.include "ym3812.inc"
-
 .importzp ptr1,ptr2,ptr3,ptr4
-.import opl2_init, opl2_reg_write
+.import opl2_reg_write
+.import d00file
 
 .export jch_fm_init, jch_fm_play
 
@@ -952,13 +950,13 @@ jch_set_register:
 loc_105FB: ;//				
 		sta fm_previous_registry_value, x	;// allright, store this new value in the table at pos x
 loc_10600:;//				
+        jsr opl2_reg_write
 ;        stx $df40               			;// select ym3526 register
  ;       nop
   ;      nop
    ;     nop
     ;    nop                     			;// wait 12 cycles for register select
      ;   sta $df50               			;// write to it
-        jsr opl2_reg_write
 ;        ldx #5
 ;lop:    dex
  ;       nop
@@ -992,7 +990,7 @@ loc_1062B:
 		ldx #$04							;// set timer control byte to #$80 = clear timers T1 T2 and ignore them
 		lda #$80							;// reset flags for timer 1 & 2, IRQset : all other flags are ignored
 		jsr loc_10600
-		ldy opl_stat ;$df60							;// get soundcard/chip status byte
+		ldy $df60							;// get soundcard/chip status byte
 		sty tread							;// store it
 		ldx #$02							;// Set timer1 to max value
 		lda #$ff
@@ -1003,7 +1001,7 @@ loc_1062B:
 		ldy #$02*8
 		ldx #$ff							;// wait about 0x200 cycles of loading the status byte
 loc_1064C:		
-		lda opl_stat ;$df60							;// status byte is df60 according to discussions
+		lda $df60							;// status byte is df60 according to discussions
 		dex
 		bne loc_1064C
 		dey
@@ -1146,7 +1144,7 @@ FML5:
 		;.import hexout
         ;jsr hexout
         ldy var_di
-		lda #3							;// DEBUG = SPEED of song, 1 or 0 =  50 hz, 2 = 25hz , 3 = 12,5 hz etc, 4 = 6,25, 5=3,125, 6=1,625, 7=0,8125
+		lda #4							;// DEBUG = SPEED of song, 1 or 0 =  50 hz, 2 = 25hz , 3 = 12,5 hz etc, 4 = 6,25, 5=3,125, 6=1,625, 7=0,8125
 		sta fm_channel_speed_counter, y						;// store at the position in the channel speed table
 		lda var_bx							;// add 12 to var_bx
 		clc
@@ -1517,16 +1515,3 @@ tread: .byte 0
 tpoint1: .word 0 
 tpoint2: .word 0 
 tword1: .word 0
-
-safe_isr:   .res 2
-.data
-d00file:
-;.incbin "hard guitar.d00"
-;.incbin "like galway.d00"
-;.incbin "plasma world.d00"
-;.incbin "the model (kraftwerk cover).d00"
-;.incbin "space13.d00"
-;.incbin "bordella 64 conversion.d00"
-;.incbin "summertime.d00"
-;incbin "hybrid.d00"
-;.incbin "blastersound groove.d00"

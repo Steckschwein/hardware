@@ -1,3 +1,5 @@
+.setcpu "65c02"
+
 .include "common.inc"
 .include "fcntl.inc"
 .include "kernel.inc"
@@ -42,8 +44,6 @@ main:
         jmp exit
         
 :       
-        jsr jch_fm_init
-
         jsr krn_primm
         .byte "edlib player v0.2 (somewhat optimized) by mr.mouse/xentax july 2017@",$0a,0
         jsr printMetaData
@@ -56,7 +56,8 @@ main:
         bne :-
         
         sei
-        jsr krn_textui_crs_onoff
+        jsr opl2_init
+        jsr jch_fm_init
         copypointer $fffe, safe_isr
         SetVector player_isr, $fffe
         cli
@@ -67,7 +68,6 @@ main:
         
         sei
         copypointer safe_isr, $fffe
-        jsr krn_textui_init
         jsr opl2_init
         cli
 exit:
@@ -168,6 +168,7 @@ via_counter=clockspeed*1000000 / 70
             ;8.000.000 / 70 = 114285
 safe_isr:   .res 2
 .data
+.export d00file
 d00file:
 
 .segment "STARTUP"
