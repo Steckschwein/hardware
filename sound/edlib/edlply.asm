@@ -17,6 +17,10 @@ appstart $1000
 
 .export char_out=krn_chrout
 
+.globalzp ptr5
+.zeropage
+ptr5:   .res 2
+
 .code
 main:
  		;jsr jch_detect_chip

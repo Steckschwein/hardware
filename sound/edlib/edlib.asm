@@ -66,7 +66,7 @@ fm_file_arrdata = ptr4      ;$0008		; word
 ;;// ----------------------------------------------------------------------------------------------------------
 ;;// JCH_FM_INIT subroutine, this routine needs to be called to initialize the FM music
 ;;// ----------------------------------------------------------------------------------------------------------
-.importzp ptr1,ptr2,ptr3,ptr4
+.importzp ptr1,ptr2,ptr3,ptr4,ptr5
 .import opl2_reg_write
 .import d00file
 
@@ -96,7 +96,7 @@ loc_10180:
 loc_1018A:
 		ldx var_bx		
 		dec fm_current_channel_speed_counter, x		;// this is reset to 0 by the init routine, so decreasing it will leave ff and overflow/sign? this is the channel speed counter. it starts with 0 since we want the music to start right away
-		bpl loc_10198								;// jnl, jump if not less? this is signed mode. than what actually? jnl checks if overflow flag = sign flag, if first operant of previous cmp instruction is greater or equal
+		bpl loc_10198								;// jnl, jump if not less? this is signed mode. than what actually? jnl checks if overflow flag = sign flag, if first operand of previous cmp instruction is greater or equal
 		lda fm_channel_speed_counter, x				;// channel speed table
 		sta fm_current_channel_speed_counter, x		;// setting the variable to the base case: reset the channel speed counter to restart counting
 loc_10198:		
@@ -130,16 +130,16 @@ loc_101B9:
 		clc											;// opt
 		lda fm_pt_voice_arrdata, y					;// this was done per voice , var_si is used as voice counter : get entry at arrangement pointer (base address)
 		adc fm_position_in_voice_seqlist, y
-		sta $10
+		sta ptr5
 		lda fm_pt_voice_arrdata+1, y		
 		adc fm_position_in_voice_seqlist+1, y		
-		sta $11
+		sta ptr5+1
 		ldy #$00
-		lda ($10), y								;// get the next sequence - low byte
+		lda (ptr5), y								;// get the next sequence - low byte
 		sta var_di
 		tax
 		iny
-		lda ($10), y								;// get the next sequence - high byte
+		lda (ptr5), y								;// get the next sequence - high byte
 		sta var_di+1
 		cpx #$fe									;// check for FFFE = end of arrangement = STOP. 
 		bne loc_101ed		
@@ -162,12 +162,12 @@ loc_101ed:
 		bne loc_101FE								;// no FFFF? go on																		
 		ldy #$02									;// increase pointer by two, since we had a loop counter, which will be followed by the position (word) to loop to
 		ldx var_si
-		lda ($10), y	
+		lda (ptr5), y	
 		clc
 		asl	
 		sta fm_position_in_voice_seqlist, x	
 		iny	
-		lda ($10), y	
+		lda (ptr5), y	
 		rol 	
 		sta fm_position_in_voice_seqlist+1, x	
 		jmp loc_101B9	
@@ -407,16 +407,16 @@ loc_10313: 	;// **** GET NOTE FREQUENCY
 		clc
 		lda #<fm_frequency_table
 		adc var_di
-		sta $10
+		sta ptr5
 		lda #>fm_frequency_table
 		adc var_di+1
-		sta $11
+		sta ptr5+1
 		ldx var_si									
 		ldy #$00
-		lda ($10), y			
+		lda (ptr5), y			
 		sta fm_voice_freq, x						;// store the frequency at 7f5
 		iny
-		lda ($10), y			
+		lda (ptr5), y			
 		sta fm_voice_freq+1, x
 		lda fm_local_voice_slide					;// get global effect E/D (slide) value 
 		sta fm_voice_slide, x						;// and store that at effect E/D value for this voice
@@ -1144,7 +1144,7 @@ FML5:
 		;.import hexout
         ;jsr hexout
         ldy var_di
-		lda #4							;// DEBUG = SPEED of song, 1 or 0 =  50 hz, 2 = 25hz , 3 = 12,5 hz etc, 4 = 6,25, 5=3,125, 6=1,625, 7=0,8125
+		lda #3      						;// DEBUG = SPEED of song, 1 or 0 =  50 hz, 2 = 25hz , 3 = 12,5 hz etc, 4 = 6,25, 5=3,125, 6=1,625, 7=0,8125
 		sta fm_channel_speed_counter, y						;// store at the position in the channel speed table
 		lda var_bx							;// add 12 to var_bx
 		clc

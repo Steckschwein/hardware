@@ -7,6 +7,10 @@
 .export opl2_reg_write
 ;.export char_out=plot
 
+.globalzp ptr5
+.zeropage
+ptr5:   .res 2
+
 .code
 main:
  		;jsr jch_detect_chip
@@ -57,18 +61,16 @@ main:
         sta CIA1_ICR
         sta CIA2_ICR
         
-        ;70Hz
-        ;1000000 / 70 
-        
-        lda #$cd
+        ;70Hz => 1Mhz 1000000 / 70         
+        lda #<(1000000 / 50)
         sta CIA1_TA
-        lda #$37
+        lda #>(1000000 / 50)
         sta CIA1_TA+1
         
         lda #$91
         sta $dc0e
         lda #$81
-        sta $dc0d        
+        sta $dc0d
         
         cli
         
@@ -172,6 +174,11 @@ safe_isr:   .res 2
 .data
 .export d00file
 d00file:
-.incbin "PJO_GALW.D00"
+;.incbin "PJO_GALW.D00"
+;.incbin "PJO_LAL.D00"
+;.incbin "PJO_ARGH.D00"
+;.incbin "PJO_KOER.D00"
+;.incbin "MTL_NM11.D00"
+.incbin "VIB_FIS3.D00"
 
 .segment "STARTUP"
