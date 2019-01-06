@@ -12,6 +12,8 @@
 ;/*========================================================= SFX Sound Expander =================================================
 ;  Variables
 ;*/
+.include "ym3812.inc"
+
 .code
 fm_file_base_address = ptr1 ;$0002		; word
 fm_file_arrdata = ptr4      ;$0008		; word
@@ -70,7 +72,7 @@ fm_file_arrdata = ptr4      ;$0008		; word
 .import opl2_reg_write
 .import d00file
 
-.export jch_fm_init, jch_fm_play
+.export jch_fm_init, jch_fm_play, jch_detect_chip
 
 ;.pc = $1000 "INIT"
 jch_fm_init:
@@ -967,13 +969,6 @@ loc_10600:;//
 ;// JCH_FM_MUSIC_INIT ;// INITIALIZE PARAMETERS
 ;// ----------------------------------------------------------------------------------------------------------
 jch_fm_music_init:
- 		;jsr jch_detect_chip
-        ;bcc :+
-        
-        ;jsr krn_primm
-        ;.byte "YM3526/YM3812 not available!",$0a,0
-        ;jmp exit
-        
         jsr jch_initialize_fm_music
 		jmp jch_load_fmfile_pointers
 
@@ -990,7 +985,7 @@ loc_1062B:
 		ldx #$04							;// set timer control byte to #$80 = clear timers T1 T2 and ignore them
 		lda #$80							;// reset flags for timer 1 & 2, IRQset : all other flags are ignored
 		jsr loc_10600
-		ldy $df60							;// get soundcard/chip status byte
+		ldy opl_stat;$df60							;// get soundcard/chip status byte
 		sty tread							;// store it
 		ldx #$02							;// Set timer1 to max value
 		lda #$ff
@@ -1001,7 +996,7 @@ loc_1062B:
 		ldy #$02*8
 		ldx #$ff							;// wait about 0x200 cycles of loading the status byte
 loc_1064C:		
-		lda $df60							;// status byte is df60 according to discussions
+		lda opl_stat;$df60							;// status byte is df60 according to discussions
 		dex
 		bne loc_1064C
 		dey
@@ -1449,6 +1444,7 @@ loc_end_get_next_seq2:
 ;//----------------------------------------------------------------------------------------------------------------
 fm_voice_has_data: .res 9,0				;// 0 = no data, no playing; 1 = data, process playing. per voice
 fm_local_voice_slide: .word	0				;// note slide counter (word)
+.export fm_master_volume
 fm_master_volume: .byte 0					;// master volume (3f = silence)
 fm_start_of_arrangement_data: .word 0		;// pointer to start of the sequence arrangement (tracks, so you will) 
 fm_voice_instrument: .res 18,0				;// 6D5 = current channel/voice instrument (effect cxxxx)

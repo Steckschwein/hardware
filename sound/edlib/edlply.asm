@@ -12,7 +12,7 @@ appstart $1000
 
 .import vdp_bgcolor
 .import hexout
-.import jch_fm_init, jch_fm_play
+.import jch_fm_init, jch_fm_play, jch_detect_chip
 .import opl2_init
 
 .export char_out=krn_chrout
@@ -23,13 +23,12 @@ ptr5:   .res 2
 
 .code
 main:
-		;jsr jch_detect_chip
-		;bcc :+
-
+;		jsr jch_detect_chip
+		;bcc @load
 		;jsr krn_primm
 		;.byte "YM3526/YM3812 not available!",$0a,0
 		;jmp exit
-
+@load:
 		jsr loadfile
 		beq :+
 		pha
@@ -52,16 +51,9 @@ main:
 		.byte "edlib player v0.2 (somewhat optimized) by mr.mouse/xentax july 2017@",$0a,0
 		jsr printMetaData
 
-		ldy #0
-		ldx #0
-		:       dex
-		bne :-
-		dey 
-		bne :-
+		jsr jch_fm_init
 
 		sei
-		jsr opl2_init
-		jsr jch_fm_init
 		copypointer $fffe, safe_isr
 		SetVector player_isr, $fffe
 		cli
@@ -70,6 +62,20 @@ main:
 		cmp #KEY_ESCAPE
 		bne :-
 
+		;TODO FIXME use ISR
+		ldx #0
+@fadeout:
+		ldy #$40
+:		dex
+		bne :-
+		dey 
+		bne :-
+		.import fm_master_volume
+		inc fm_master_volume
+		lda fm_master_volume
+		cmp #$3f
+		bne @fadeout
+		
 		sei
 		copypointer safe_isr, $fffe
 		jsr opl2_init
@@ -129,6 +135,7 @@ loadfile:
 		rts
 fd:     .res 1
 frames: .res 1, 50
+volume:	.res 1, $3f
 
 player_isr:
 		save
@@ -150,7 +157,7 @@ player_isr:
 		lda #50
 		sta frames
 
-		@is_irq_via:        
+@is_irq_via:        
 		bit via1ifr		; Interrupt from VIA?
 		bpl @exit
 		bit via1t1cl	; Acknowledge timer interrupt

@@ -39,8 +39,6 @@ main:
 		;        lda #01
 		;       sta VIC_IMR
 		;      sta CIA1_ICR
-		lda #$0f
-		sta SID_Amp
 
 		ldx #1
 		lda #$20
