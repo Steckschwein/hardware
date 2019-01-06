@@ -36,40 +36,40 @@
 ; void __fastcall__ opl2_init(void);
 ;----------------------------------------------------------------------------------------------
 opl2_init:
-        ldx #1
-        lda #0
+		ldx #1
+		lda #0
 @l:
-        jsr opl2_reg_write
-        inx
-        cpx #$f6                ; until reg 245
-        bne @l
-        rts
+		jsr opl2_reg_write
+		inx
+		cpx #$f6                ; until reg 245
+		bne @l
+		rts
 ;
 ; void __fastcall__ opl2_write(unsigned char val, unsigned char reg);
 ;
 opl2_write:
-    tax
-    jsr popa
+		tax
+		jsr popa
 ;
 ;   in:
 ;       X - opl2 register select
 ;       A - opl2 data
 ;
 opl2_reg_write:
-	stx opl_sel
-    jsr opl2_delay_register
-	sta opl_data
-    jmp opl2_delay_data
+		stx opl_sel
+		jsr opl2_delay_register
+		sta opl_data
+		jmp opl2_delay_data
     
 ; jsr here: 6 cycles
 ; rts back: 6 cycles
 
 opl2_delay_data: ; 23000ns - 3300ns => 8Mhz/125ns => 157cl => 12cl (jsr/rts) + 145cl (73 nop)
 .repeat opl2_data_delay
-	nop
+		nop
 .endrepeat
 opl2_delay_register: ; 3300 ns => 8Mhz/125ns => 26cl => 12cl (jsr/rts) + 14cl (7 nop)
 .repeat opl2_reg_delay
-	nop
+		nop
 .endrepeat
-	rts
+		rts
