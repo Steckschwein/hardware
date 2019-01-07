@@ -17,3 +17,5 @@ syntax: glob
 *.d
 *.s
 steckos/dist
+*.log
+*.xml
