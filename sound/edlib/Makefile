@@ -1,4 +1,4 @@
-TARGET=edlply.prg edlply64.prg
+TARGET=edlply.prg
 CAFLAGS=--include-dir ../steckos/kernel --include-dir ../../steckos/asminc --include-dir ../../steckos/kernel
 LDFLAGS=--config ../../steckos/steckos-c-app.cfg
 LIBS=../../steckos/lib/steckschwein-kernel.lib ../../steckos/tools/lib/toollib.a
@@ -6,9 +6,11 @@ LIBS=../../steckos/lib/steckschwein-kernel.lib ../../steckos/tools/lib/toollib.a
 C64LIBS=$(CC65_HOME)/lib/c64.lib
 C64LDFLAGS=--config c64-asm.cfg
 
-.PHONY: all clean
+.PHONY: all allall clean
 
 all: $(TARGET)
+
+allall: all edlply64.prg
 
 clean:
 	rm -f *.prg *.s *.o
