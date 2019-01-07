@@ -36,6 +36,11 @@
 ; void __fastcall__ opl2_init(void);
 ;----------------------------------------------------------------------------------------------
 opl2_init:
+		sei
+		ldx #4
+		lda #$80
+		jsr opl2_reg_write
+
 		ldx #1
 		lda #0
 @l:
@@ -43,6 +48,7 @@ opl2_init:
 		inx
 		cpx #$f6                ; until reg 245
 		bne @l
+		cli
 		rts
 ;
 ; void __fastcall__ opl2_write(unsigned char val, unsigned char reg);

@@ -23,11 +23,12 @@ ptr5:   .res 2
 
 .code
 main:
-;		jsr jch_detect_chip
-		;bcc @load
-		;jsr krn_primm
-		;.byte "YM3526/YM3812 not available!",$0a,0
-		;jmp exit
+		jsr opl2_init
+		jsr jch_detect_chip
+		bcc @load
+		jsr krn_primm
+		.byte "YM3526/YM3812 not available!",$0a,0
+		jmp exit
 @load:
 		jsr loadfile
 		beq :+
@@ -51,11 +52,15 @@ main:
 		.byte "edlib player v0.2 (somewhat optimized) by mr.mouse/xentax july 2017@",$0a,0
 		jsr printMetaData
 
+		jsr krn_textui_crs_onoff
 		jsr jch_fm_init
 
 		sei
-		copypointer $fffe, safe_isr
-		SetVector player_isr, $fffe
+;		copypointer $fffe, safe_isr
+;		SetVector player_isr, $fffe
+		copypointer user_isr, safe_isr
+		SetVector player_isr, user_isr
+
 		cli
 
 :       keyin
@@ -77,9 +82,12 @@ main:
 		bne @fadeout
 		
 		sei
-		copypointer safe_isr, $fffe
-		jsr opl2_init
+;		copypointer safe_isr, $fffe
+		copypointer safe_isr, user_isr
 		cli
+		jsr opl2_init
+		
+		jsr krn_textui_init
 exit:
 		jmp (retvec)
 
@@ -91,7 +99,13 @@ printMetaData:
 		jsr krn_primm
 		.byte $0a,"Composer: ",0
 		ldy #$2b
-		jmp printString
+		jsr printString
+;		jsr krn_primm
+;		.byte "/ Hz: ",0
+;		ldy #8
+;		lda d00file,y
+;		jsr hexout		
+		rts
 
 printString:
 		ldx #$20
@@ -145,36 +159,38 @@ player_isr:
 
 		lda #Cyan
 		jsr vdp_bgcolor
-		@is_irq_vdp:
-		bit	a_vreg
-		bpl @is_irq_via	   ; VDP IRQ flag set?
+		bra @exit
+@is_irq_vdp:
+		;bit	a_vreg
+		;bpl @is_irq_via	   ; VDP IRQ flag set?
 
 		lda #Dark_Yellow
 		jsr vdp_bgcolor
-
-		dec frames
-		bne @exit
-		lda #50
-		sta frames
-
+		bra @play
+		
 @is_irq_via:        
 		bit via1ifr		; Interrupt from VIA?
 		bpl @exit
 		bit via1t1cl	; Acknowledge timer interrupt
 
+		lda #Light_Red
+		jsr vdp_bgcolor
+
 		lda #<via_counter    
 		sta via1t1cl            ; set low byte of count
 		lda #>via_counter
 		sta via1t1ch            ; set high byte of count
-
-@exit:
+		bra @exit
+@play:
 		jsr jch_fm_play
+@exit:
 
 		lda #Medium_Green<<4|Transparent
 		jsr vdp_bgcolor
 
 		restore
-		rti
+		rts;rti
+		
 ns_cl = 1000 / clockspeed
 ns_sec = 1000000000
 via_counter=clockspeed*1000000 / 70

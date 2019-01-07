@@ -1455,12 +1455,12 @@ fm_position_in_voice_seqlist: .res 18, 0	;// position counter for the sequence i
 fm_pt_voice_arrdata: .res 18, 0			;// pointers to start of arrangement data per channel/voice (words, 9)
 fm_current_frequency: .res 18, 0			;// fm_current_frequency
 fm_transpose_value: .res 18, 0				;// fm_transpose_value for sequence by voice
-fm_voice_temp_slide: .res 18, 0			;// temporary slide valure storage by voice
+fm_voice_temp_slide: .res 18, 0			;// temporary slide value storage by voice
 var_777: .res 9,0							;// what is this doing?
 fm_cur_vibrato_speed_counter: .res 9,0		;// counter to keep track of the speed of the vibrato
 fm_voice_vibrato_speed: .res 9,0			;// the vibrato speed of the voice
 fm_voice_vibrato_depth: .res 9,0			;// the vibrato depth of the voice
-fm_ins_multipurpose: .res 18, 0			;// value for the multipurpose register of the OPL by voice
+fm_ins_multipurpose: .res 18, 0			;// value for the multi purpose register of the OPL by voice
 var_7ad: .res 9,0							;// what is this doing?
 fm_ins_fine_tune: .res 9,0					;// fine tune value per voice
 fm_temp_ins_hardrestart: .res 9,0			;// temp hard restart value by voice
