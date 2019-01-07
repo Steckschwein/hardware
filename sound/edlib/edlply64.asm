@@ -172,11 +172,11 @@ safe_isr:   .res 2
 .data
 .export d00file
 d00file:
-;.incbin "PJO_GALW.D00"
+.incbin "PJO_GALW.D00"
 ;.incbin "PJO_LAL.D00"
 ;.incbin "PJO_ARGH.D00"
 ;.incbin "PJO_KOER.D00"
 ;.incbin "MTL_NM11.D00"
-.incbin "VIB_FIS3.D00"
+;.incbin "VIB_FIS3.D00"
 
 .segment "STARTUP"
