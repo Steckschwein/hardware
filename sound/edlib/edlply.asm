@@ -12,7 +12,8 @@ appstart $1000
 
 .import vdp_bgcolor
 .import hexout
-.import jch_fm_init, jch_fm_play, jch_detect_chip
+.import jch_fm_init, jch_fm_play
+.import opl2_detect
 .import opl2_init
 
 .export char_out=krn_chrout
@@ -24,7 +25,7 @@ ptr5:   .res 2
 .code
 main:
 		jsr opl2_init
-		jsr jch_detect_chip
+		jsr opl2_detect
 		bcc @load
 		jsr krn_primm
 		.byte "YM3526/YM3812 not available!",$0a,0
@@ -56,8 +57,6 @@ main:
 		jsr jch_fm_init
 
 		sei
-;		copypointer $fffe, safe_isr
-;		SetVector player_isr, $fffe
 		copypointer user_isr, safe_isr
 		SetVector player_isr, user_isr
 
@@ -82,7 +81,6 @@ main:
 		bne @fadeout
 		
 		sei
-;		copypointer safe_isr, $fffe
 		copypointer safe_isr, user_isr
 		cli
 		jsr opl2_init

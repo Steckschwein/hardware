@@ -72,7 +72,7 @@ fm_file_arrdata = ptr4      ;$0008		; word
 .import opl2_reg_write
 .import d00file
 
-.export jch_fm_init, jch_fm_play, jch_detect_chip
+.export jch_fm_init, jch_fm_play
 
 ;.pc = $1000 "INIT"
 jch_fm_init:
@@ -972,52 +972,6 @@ jch_fm_music_init:
         jsr jch_initialize_fm_music
 		jmp jch_load_fmfile_pointers
 
-;// ----------------------------------------------------------------------------------------------------------
-;// JCH_DETECT_CHIP ;// CHECK CHIP EXISTENCE ;// NEED REAL HARDWARE TO WORK (NOT EMULATION)
-;// returns carry set if fail
-;// ----------------------------------------------------------------------------------------------------------
-jch_detect_chip:
-loc_1062B:			
-		sei									;// sure? disable interrupts
-		ldx #$04							;// set timer control byte to #$60 = clear timers T1 T2 and ignore them
-		lda #$60
-		jsr loc_10600
-		ldx #$04							;// set timer control byte to #$80 = clear timers T1 T2 and ignore them
-		lda #$80							;// reset flags for timer 1 & 2, IRQset : all other flags are ignored
-		jsr loc_10600
-		ldy opl_stat;$df60							;// get soundcard/chip status byte
-		sty tread							;// store it
-		ldx #$02							;// Set timer1 to max value
-		lda #$ff
-		jsr loc_10600
-		ldx #$04							;// set timer control byte to #$21 = mask timer2 (ignore bit1) and enable bit0 (load timer1 value and begin increment)
-		lda #$21							;// this should lead to overflow (255) and setting of bits 7 and 6 in status byte (either timer expired, timer1 expired). 
-		jsr loc_10600		
-		ldy #$02*8
-		ldx #$ff							;// wait about 0x200 cycles of loading the status byte
-loc_1064C:		
-		lda opl_stat;$df60							;// status byte is df60 according to discussions
-		dex
-		bne loc_1064C
-		dey
-		bne loc_1064C
-		and #$e0							;// and the value there with e0 (11100000, bits 7, 6 and 5) to make sure all others are 0. 
-		eor #$c0							;// check if bits 7 and 6 are set (should result in 0)
-		bne loc_10663						;// not zero ? jmp to set carry and leave subroutine
-		tay									;// is was zero, no moce a out of the way for a moment
-		lda tread							;// read the previous status byte
-		and #$e0							;// "and" that with e0, ends in zero if no bits are set
-		bne loc_10663						;// was it not zero ? ok, jmp to set carry and leave
-		ldx #$04							;// ok previous status was no timers set. set timer control byte to #$60 = clear timers T1 T2 and ignore them
-		lda #$60							
-		jsr loc_10600		
-		clc									;// clear the carry flag
-		jmp loc_10664						;// leave the subroutine
-loc_10663:				
-		sec									;// set the carry flag
-loc_10664:						
-		cli						 			;// enalble interrupts
-		rts
 loc_10668:				
 		txa									;// in the orignal bl is expected, assuming x for now
 		and #$3f							;// AND this value with 3F
