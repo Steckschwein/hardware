@@ -19,3 +19,4 @@ syntax: glob
 steckos/dist
 *.log
 *.xml
+*.kicad_pcb-bak
