@@ -7,10 +7,6 @@
 .export opl2_reg_write
 ;.export char_out=plot
 
-.globalzp ptr5
-.zeropage
-ptr5:   .res 2
-
 .code
 main:
 		;jsr jch_detect_chip

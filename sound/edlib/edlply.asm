@@ -18,10 +18,6 @@ appstart $1000
 
 .export char_out=krn_chrout
 
-.globalzp ptr5
-.zeropage
-ptr5:   .res 2
-
 .code
 main:
 		jsr opl2_init
@@ -82,8 +78,8 @@ main:
 		
 		sei
 		copypointer safe_isr, user_isr
-		cli
 		jsr opl2_init
+		cli
 		
 		jsr krn_textui_init
 exit:

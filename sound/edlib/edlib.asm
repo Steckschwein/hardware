@@ -13,8 +13,6 @@
 ;  Variables
 ;*/
 .include "ym3812.inc"
-
-.code
 fm_file_base_address = ptr1 ;$0002		; word
 fm_file_arrdata = ptr4      ;$0008		; word
 
@@ -68,7 +66,12 @@ fm_file_arrdata = ptr4      ;$0008		; word
 ;;// ----------------------------------------------------------------------------------------------------------
 ;;// JCH_FM_INIT subroutine, this routine needs to be called to initialize the FM music
 ;;// ----------------------------------------------------------------------------------------------------------
-.importzp ptr1,ptr2,ptr3,ptr4,ptr5
+.globalzp ptr5
+.zeropage
+ptr5:   .res 2
+
+.code
+.importzp ptr1,ptr2,ptr3,ptr4
 .import opl2_reg_write
 .import d00file
 
