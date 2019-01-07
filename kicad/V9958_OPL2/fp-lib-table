@@ -1,0 +1,6 @@
+(fp_lib_table
+  (lib (name mini_din)(type Legacy)(uri /home/dommas/steckschwein-code/kicad/lbr/mini_din.mod)(options "")(descr ""))
+  (lib (name SDIP)(type KiCad)(uri /home/dommas/steckschwein-code/kicad/lbr/SDIP.pretty)(options "")(descr ""))
+  (lib (name w_conn_av)(type KiCad)(uri /home/dommas/steckschwein-code/kicad/lbr/w_conn_av.pretty)(options "")(descr ""))
+  (lib (name misc)(type KiCad)(uri /home/dommas/steckschwein-code/kicad/lbr/misc)(options "")(descr ""))
+)
