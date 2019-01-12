@@ -83,6 +83,9 @@ init_pong:
         sta a_vram
         cpx #32*2
         bne :-
+
+        lda #>digits
+        sta ptr1+1
         
 		rts
 
@@ -118,7 +121,7 @@ RIGHTWALL      = $Fe  ; when ball reaches one of these, do something
 RIGHTWALLOFFS  = PADDLE2X-(2*(3+1)) ; magnified sprite *2, 3 - 3px of '0' in paddle shape and 1px to bring ball exactly on paddle
 
 TOPWALL        = $1
-BOTTOMWALL     = $b8
+BOTTOMWALL     = $b6
 
 BOTTOMWALLOFFS = $a2
 
@@ -180,9 +183,11 @@ ResetGame:
   rts
 
 game_isr:
-;    lda #Dark_Yellow
- ;   jsr vdp_bgcolor
-    
+;        lda #Dark_Yellow
+ ;       jsr vdp_bgcolor
+		lda SYS_IRR
+		bpl l_exit
+		
         inc frame_count
     
         ;;;all graphics updates done by here, run game engine
@@ -201,7 +206,8 @@ game_isr:
         LDA gamestate
         CMP #STATEPLAYING
         BEQ EnginePlaying   ;;game is playing
-        GameEngineDone:  
+
+GameEngineDone:
 
         JSR UpdateSprites  ;;set ball/paddle sprites from positions
 
@@ -216,11 +222,10 @@ game_isr:
 
         JSR DrawScore
 
-;        lda #Medium_Green<<4|Black
- ;       jsr vdp_bgcolor
-
+        lda #Medium_Green<<4|Black
+        jsr vdp_bgcolor
+l_exit:
         rts
-        ;RTI             ; return from interrupt  
 ;;;;;;;;
  
 EngineTitle:
@@ -415,7 +420,7 @@ MovePaddle1Down:
         INC paddle1ytop ;; Decrement position
         dex
         bpl :-
-        
+
 MovePaddle1IncVelo:
         lda frame_count
         and #$1
@@ -565,8 +570,6 @@ draw_digit:
         clc
         adc #<digits
         sta ptr1
-        lda #>digits
-        sta ptr1+1
         
         ldy #0
 @score_l0:
@@ -588,8 +591,8 @@ draw_digit:
         ply
         plx
         inc tmp1
-        inx 
-        cpx #6
+        inx
+        cpx #6  ; pixels in char
         bne @score_l1
         inc tmp2
         iny 
@@ -607,21 +610,18 @@ DrawScore:
         LDX #BG_1
 @NoDigit1:
         pha
-        ;STX $2007             ; write to PPU
         txa
         ldx #18
         ldy #2
         jsr draw_digit
-        
         pla
-
-      ;; Store first digit
+        ;; Store first digit
         ldx #24
         ldy #2
         jsr draw_digit
 
   
-  ;; Draw player 2 score  
+        ;; Draw player 2 score  
         LDX #scoreBackground
         lda score2
         ;; Check if score equals or exceeds 10
@@ -631,18 +631,11 @@ DrawScore:
         LDX #BG_1
 @NoDigit2:
         pha
-        ;STX $2007             ; write to PPU
         txa
         ldx #35
         ldy #2
         jsr draw_digit
-        
         pla
-    ;  STX $2007             ; write to PPU
-
-      ;; Store first digit
-      ;STY $2007
-        ;lda #2    
         ldx #41
         ldy #2
         jsr draw_digit

@@ -56,7 +56,6 @@ exit:
         sei
         copypointer safe_isr, user_isr
 		jsr	krn_textui_init
-;        jsr krn_textui_enable
         cli
 
         jmp (retvec)
@@ -397,8 +396,11 @@ clock_reset_row_lower:
         rts
         
 clock_isr:
+		lda SYS_IRR
+		bpl @l_exit
+		
         lda #Dark_Green<<4 | Cyan
-;        jsr vdp_bgcolor
+		;jsr vdp_bgcolor
 
         inc clock_update_trigger
 
@@ -428,9 +430,8 @@ clock_isr:
         jsr copy_vram
         
         lda #Dark_Green<<4| Transparent
-        jsr vdp_bgcolor
-                
-        
+        jsr vdp_bgcolor               
+@l_exit:
         rts
         
 copy_vram:

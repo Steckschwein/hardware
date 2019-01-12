@@ -24,6 +24,8 @@
 .include "common.inc"
 .include "kernel.inc"
 .include "vdp.inc"
+.include "via.inc"
+.include "ym3812.inc"
 
 shell_addr	 = $d800
 
@@ -144,23 +146,40 @@ do_irq:
 ; system interrupt handler
 ; handle keyboard input and text screen refresh
 @irq:
-	save
-	cld	;clear decimal flag, maybe an app has modified it during execution
+		save
+		cld	;clear decimal flag, maybe an app has modified it during execution
 
-	bit	a_vreg
-	bpl @exit	   ; VDP IRQ flag set?
-	jsr	textui_update_screen    ; update text ui
+		bit a_vreg		; VDP IRQ flag set?
+		bpl @is_irq_snd
+		LDA #IRQ_VDP
+		bra @store_isr
+@is_irq_snd:
+		bit opl_stat
+		bpl @is_irq_via
+		lda #IRQ_SND
+		bra @store_isr
+@is_irq_via:
+		bit via1ifr		; Interrupt from VIA?
+		bpl @user_isr
+		lda #IRQ_VIA
+@store_isr:
+		sta SYS_IRR
+		
+@user_isr:
+		jsr call_user_isr			; user isr first, maybe there timing critical things
+		
+		jsr	textui_update_screen    ; update text ui
 
-    dec frame
-    lda frame
-    and #%00000111              ; every 8 frames we try to update rtc, gives 160ms clock resolution
-    bne :+
-    jsr __rtc_systime_update    ; update system time, read date time store to rtc_systime_t (see rtc.inc)
-:
-	jsr call_user_isr
+		dec frame
+		lda frame
+		and #%00000111              ; every 8 frames we try to update rtc, gives 160ms clock resolution
+		bne @exit
+		jsr __rtc_systime_update    ; update system time, read date time store to rtc_systime_t (see rtc.inc)
+
 @exit:
-	restore
-	rti
+		stz SYS_IRR
+		restore
+		rti
 
 call_user_isr:
 	jmp (user_isr)

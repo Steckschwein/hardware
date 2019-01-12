@@ -55,7 +55,6 @@ main:
 		sei
 		copypointer user_isr, safe_isr
 		SetVector player_isr, user_isr
-
 		cli
 
 :       keyin
@@ -81,7 +80,7 @@ main:
 		jsr opl2_init
 		cli
 		
-		jsr krn_textui_init
+		jsr krn_textui_crs_onoff
 exit:
 		jmp (retvec)
 
@@ -94,11 +93,16 @@ printMetaData:
 		.byte $0a,"Composer: ",0
 		ldy #$2b
 		jsr printString
-;		jsr krn_primm
-;		.byte "/ Hz: ",0
-;		ldy #8
-;		lda d00file,y
-;		jsr hexout		
+		jsr krn_primm
+		.byte $0a,"Irq: ",0
+		ldy #8
+		lda d00file,y
+		jsr hexout
+		jsr krn_primm
+		.byte $0a,"Spd: ",0
+		ldy #8
+		lda d00file,y
+		jsr hexout
 		rts
 
 printString:
@@ -146,8 +150,6 @@ frames: .res 1, 50
 volume:	.res 1, $3f
 
 player_isr:
-		save
-		cld	;clear decimal flag, maybe an app has modified it during execution
 		bit opl_stat
 		bpl @is_irq_vdp
 
@@ -155,26 +157,11 @@ player_isr:
 		jsr vdp_bgcolor
 		bra @exit
 @is_irq_vdp:
-		;bit	a_vreg
-		;bpl @is_irq_via	   ; VDP IRQ flag set?
+		lda SYS_IRR
+		bpl @exit
 
 		lda #Dark_Yellow
 		jsr vdp_bgcolor
-		bra @play
-		
-@is_irq_via:        
-		bit via1ifr		; Interrupt from VIA?
-		bpl @exit
-		bit via1t1cl	; Acknowledge timer interrupt
-
-		lda #Light_Red
-		jsr vdp_bgcolor
-
-		lda #<via_counter    
-		sta via1t1cl            ; set low byte of count
-		lda #>via_counter
-		sta via1t1ch            ; set high byte of count
-		bra @exit
 @play:
 		jsr jch_fm_play
 @exit:
@@ -182,8 +169,7 @@ player_isr:
 		lda #Medium_Green<<4|Transparent
 		jsr vdp_bgcolor
 
-		restore
-		rts;rti
+		rts
 		
 ns_cl = 1000 / clockspeed
 ns_sec = 1000000000

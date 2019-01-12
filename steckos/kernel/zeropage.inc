@@ -66,5 +66,10 @@ ansi_param2         = $fc
 
 lba_addr 			= $0280		; 4 bytes
 blocks				= $0284		; 3 bytes blocks to read, 3 bytes sufficient to address 4GB -> 4294967296 >> 9 = 8388608 ($800000) max blocks/file
-
+SYS_IRR				= $0287		; system interrupt request register - kernel collects all IRQ's of the various hardware and stores them so app's are able to identify thich kind of irq was requested
+	IRQ_VDP			= 1<<7		; irq from video chip
+	IRQ_SND			= 1<<6		; irq from sound card (ym3812)
+	IRQ_VIA			= 1<<5		; irq from VIA (6522)
+	IRQ_IO0			= 1<<4		; i/o port 0
+	;...
 trampolin			= $0010

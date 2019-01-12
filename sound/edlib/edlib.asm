@@ -955,18 +955,7 @@ jch_set_register:
 loc_105FB: ;//				
 		sta fm_previous_registry_value, x	;// allright, store this new value in the table at pos x
 loc_10600:;//				
-        jsr opl2_reg_write
-;        stx $df40               			;// select ym3526 register
- ;       nop
-  ;      nop
-   ;     nop
-    ;    nop                     			;// wait 12 cycles for register select
-     ;   sta $df50               			;// write to it
-;        ldx #5
-;lop:    dex
- ;       nop
-  ;      bne lop                 			;// wait 36 cycles to do the next write
-		rts									;// return from subroutine	
+        jmp opl2_reg_write
 
 ;// ----------------------------------------------------------------------------------------------------------
 ;// JCH_FM_MUSIC_INIT ;// INITIALIZE PARAMETERS
@@ -1026,21 +1015,21 @@ loc_moveon:
 		stx ptr4+1
 		clc
 		adc tpoint1 						;// add low byte of rel pointer in fm music file
-		sta ptr4								;// store low byte
+		sta ptr4							;// store low byte
 		bcc noadd2
-		inc ptr4+1								;// carry was set to inc high byte
+		inc ptr4+1							;// carry was set to inc high byte
 noadd2:		 
 		lda ptr4+1
 		clc
 		adc tpoint1+1						;// add to high byte
-		sta ptr4+1								;// okay, should have the adrr there		
-		ldy #$00		
+		sta ptr4+1							;// okay, should have the addr there
+		ldy #$00
 		lda (ptr4), y						;// get the low byte there --> read the channel speed (first word of the arrangement data per voice)
 		sta tword1
 		iny
 		lda (ptr4), y						;// get the high byte there
 		sta tword1+1
-		inc ptr4								;// increase the pointer twice (inc di, inc di)
+		inc ptr4							;// increase the pointer twice (inc di, inc di)
 		bne inc_mov
 		inc ptr4+1
 inc_mov:		
@@ -1049,7 +1038,7 @@ inc_mov:
 		inc ptr4+1		
 inc_mov2:		
 		ldy var_si							;// just the low byte needed
-		lda ptr4								;// store the new pointer elsewhere (pointing to next entry in the table in the music file)
+		lda ptr4							;// store the new pointer elsewhere (pointing to next entry in the table in the music file)
 		sta fm_pt_voice_arrdata, y			;// so table from 72f will list 9 words that are pointers to the start of the arrangement data (minus channel speed)  for each channel/voice
 		lda ptr4+1
 		sta fm_pt_voice_arrdata+1, y
@@ -1059,14 +1048,14 @@ inc_mov2:
 		stx var_di+1
 		lsr var_di							;// divide by two (shr di, 1)
 
-;//---------------------						;// divide the cycle speed by the channel speed
+;//---------------------					;// divide the cycle speed by the channel speed
 		lda fm_cycle_speed
 		sta tread
 		lda #$0
 		ldx #$08
-		asl tread
+		asl tread	; 01000110 => 10001100 
 FML1:	rol
-		cmp tword1	
+		cmp tword1
 		bcc FML2
 		sbc tword1
 FML2:	rol tread		
@@ -1091,7 +1080,7 @@ FML4:	rol tword1
 		cmp tread							;// compare this with the remainder in A
 		bmi FML5 							;// tread higher ? then no round up
 		inc tword1							;// add one speed unit to slow it down 
-FML5:		 
+FML5:
 		lda tword1							;// load the lowbyte of the tword
 		;.import hexout
         ;jsr hexout
@@ -1106,7 +1095,7 @@ FML5:
 		adc #$00							;// this will add the carry if needed
 		sta ptr4+1
 		clc
-		lda ptr4								;// add var_di low to bx+12 (in 08/09)
+		lda ptr4							;// add var_di low to bx+12 (in 08/09)
 		adc var_di
 		sta ptr4
 		lda ptr4+1
@@ -1148,9 +1137,9 @@ loc_106df:
 		inc var_si
 		inc var_si
 		lda var_si
-		cmp #$12		
+		cmp #$12
 		beq loc_end1
-		jmp loc_10686		
+		jmp loc_10686
 loc_end1:
 		rts		
 ;// ----------------------------------------------------------------------------------------------------------

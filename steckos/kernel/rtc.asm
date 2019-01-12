@@ -71,8 +71,7 @@ rtc_systime:
 		sta (krn_ptr1), y
 		dey
 		bne @cp
-		rts		;exit Z=0 here
-        
+		rts		;exit Z=0 here        
         
 		;in:
 		;	-
