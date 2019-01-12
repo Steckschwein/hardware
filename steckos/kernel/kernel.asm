@@ -149,7 +149,7 @@ do_irq:
 		save
 		cld	;clear decimal flag, maybe an app has modified it during execution
 
-		bit a_vreg		; VDP IRQ flag set?
+		bit a_vreg					; VDP IRQ flag set?
 		bpl @is_irq_snd
 		LDA #IRQ_VDP
 		bra @store_isr
@@ -168,8 +168,11 @@ do_irq:
 @user_isr:
 		jsr call_user_isr			; user isr first, maybe there timing critical things
 		
+		bit SYS_IRR					; vdp irq?
+		bpl @update_rtc
 		jsr	textui_update_screen    ; update text ui
 
+@update_rtc:
 		dec frame
 		lda frame
 		and #%00000111              ; every 8 frames we try to update rtc, gives 160ms clock resolution

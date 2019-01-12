@@ -27,15 +27,39 @@
 .include "via.inc"
 
 .segment "KERNEL"
-.export spi_rw_byte, spi_r_byte, spi_deselect
+.export spi_rw_byte, spi_r_byte, spi_deselect, spi_select_device
 .export spi_isbusy
 
 spi_device_deselect=$7e		; deselect any device
 
 spi_deselect:
+		pha
 		lda #spi_device_deselect
-spi_select:
 		sta via1portb
+		pla
+		rts
+ 
+		; select spi device given in A. the method is aware of the current processor state, especially the interrupt flag
+		; in:
+		;	A = spi device
+		; out:
+		;   Z = 1 spi for rtc could be selected (not busy), Z=0 otherwise
+spi_select_device:
+		php
+		pha
+		sei				;critical section start
+		jsr spi_isbusy	;check busy and select within sei => !ATTENTION! is busy check and spi device select must be "atomic", otherwise the spi state may chane in between
+		bne @l_exit		;busy, leave section, device could not be selected
+		pla
+		;lda #spi_device_rtc
+		sta via1portb
+		plp
+		lda #0			;exit ok
+		rts
+@l_exit:
+		pla
+		plp				;restore P (interrupt flag)
+		lda #$ff
 		rts
  
         ; out:

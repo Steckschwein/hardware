@@ -27,11 +27,11 @@
 .include "kernel.inc"
 .include "rtc.inc"
 .include "via.inc"
-.import spi_rw_byte, spi_r_byte, spi_deselect, spi_isbusy
+.import spi_rw_byte, spi_r_byte, spi_deselect, spi_select_device
 
-.export init_rtc, spi_select_rtc
+.export init_rtc
 ;kernel api
-.export	rtc_systime
+.export	rtc_systime, spi_select_rtc
 ;kernel internal
 .export __rtc_systime_update
 
@@ -39,16 +39,17 @@
 
 spi_device_rtc=%01110110
 
+        ; out:
+        ;   Z=1 spi for rtc could be selected (not busy), Z=0 otherwise
 spi_select_rtc:
 		lda #spi_device_rtc
-		sta via1portb
-		rts
+		jmp spi_select_device
 
 init_rtc:
 		; disable RTC interrupts
 		; Select SPI SS for RTC
-		jsr spi_select_rtc
-
+		lda #spi_device_rtc
+		sta via1portb
 		lda #$8f
 		jsr spi_rw_byte
 		lda #$00
@@ -76,15 +77,12 @@ rtc_systime:
 		;in:
 		;	-
 		;out:
-		;	-
+		;
 __rtc_systime_update:
-        jsr spi_isbusy
-        beq :+
-        rts ;exit if busy
-:
-        debug "update systime"
-		jsr	spi_select_rtc
-
+		jsr spi_select_rtc
+		beq :+
+		rts		
+:		debug "update systime"
 		lda #0				;0 means rtc read, start from first address (seconds)
 		jsr spi_rw_byte
 
@@ -120,8 +118,6 @@ __rtc_systime_update:
 		debug32 "rtc0", rtc_systime_t
 		debug32 "rtc1", rtc_systime_t+4
 		jmp spi_deselect
-__rtc_systime_update_exit:
-        rts
 
 ; dec = (((BCD>>4)*10) + (BCD&0xf))
 BCD2dec:tax
