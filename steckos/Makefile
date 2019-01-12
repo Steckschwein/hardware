@@ -16,6 +16,7 @@ clean:
 	(cd kernel; make clean)
 	(cd ehbasic; make clean)
 	(cd imfplayer; make clean)
+	(cd edlib; make clean)
 	rm -rf dist/*
 
 lib/steckschwein-kernel.lib:
@@ -32,6 +33,7 @@ build: lib
 	(cd tools/xmodem; make )
 	(cd ehbasic; make )
 	(cd imfplayer; make )
+	(cd edlib; make )
 	(cd test; make )
 
 test:
