@@ -29,6 +29,9 @@ a_vreg		= a_vdp+1
 a_vregpal	= a_vdp+2
 a_vregi		= a_vdp+3
 
+s_reg0_F    = 1<<7	; Frame Flag, interrupt flag
+s_reg0_5S   = 1<<6
+s_reg0_C    = 1<<5
 
 v_reg0_m3			= 1<<1
 v_reg0_m4			= 1<<2

@@ -35,8 +35,12 @@ opl2_reg_delay_time = 3300 ; ns
 opl2_data_delay 	= (((opl2_data_delay_time - opl2_reg_delay_time) / (1000/clockspeed)) -12) / 2
 opl2_reg_delay 		= ((opl2_reg_delay_time 							/ (1000/clockspeed)) -12) / 2
 
-opl2_reg_timer1 = 2
-opl2_reg_timer2 = 3
+opl2_s_irq		= 1<<7	; timer irq 
+opl2_s_irq_t1	= 1<<6	; ... irq cause of t1
+opl2_s_irq_t2	= 1<<5	; ... irq cause of t2
+
+opl2_reg_t1 = 2
+opl2_reg_t2 = 3
 opl2_reg_ctrl   = 4
 
 ;--------------------------------------------------------------------------------------------------------------
