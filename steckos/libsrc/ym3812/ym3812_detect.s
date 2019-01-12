@@ -47,10 +47,10 @@ loc_1062B:
 		ldx #$04							;// set timer control byte to #$21 = mask timer2 (ignore bit1) and enable bit0 (load timer1 value and begin increment)
 		lda #$21							;// this should lead to overflow (255) and setting of bits 7 and 6 in status byte (either timer expired, timer1 expired). 
 		jsr opl2_reg_write
-		ldy #$02*8
-		ldx #$ff							;// wait about 0x200 cycles of loading the status byte
+		ldy #$02*clockspeed
+		ldx #$ff							;// wait of loading the status byte
 loc_1064C:		
-		lda opl_stat;$df60							;// status byte is df60 according to discussions
+		lda opl_stat;$df60					;// status byte is df60 according to discussions
 		dex
 		bne loc_1064C
 		dey
@@ -58,7 +58,7 @@ loc_1064C:
 		and #$e0							;// and the value there with e0 (11100000, bits 7, 6 and 5) to make sure all others are 0. 
 		eor #$c0							;// check if bits 7 and 6 are set (should result in 0)
 		bne loc_10663						;// not zero ? jmp to set carry and leave subroutine
-		tay									;// is was zero, no moce a out of the way for a moment
+		tay									;// is was zero, no more a out of the way for a moment
 		lda tmp1							;// read the previous status byte
 		and #$e0							;// "and" that with e0, ends in zero if no bits are set
 		bne loc_10663						;// was it not zero ? ok, jmp to set carry and leave
@@ -70,5 +70,5 @@ loc_1064C:
 loc_10663:				
 		sec									;// set the carry flag
 loc_10664:						
-		cli						 			;// enalble interrupts
+		cli						 			;// enable interrupts
 		rts
