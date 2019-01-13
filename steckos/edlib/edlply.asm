@@ -13,7 +13,7 @@ appstart $1000
 .import vdp_bgcolor
 .import hexout
 .import jch_fm_init, jch_fm_play
-.import opl2_detect, opl2_init, opl2_reg_write
+.import opl2_detect, opl2_init, opl2_reg_write, opl2_delay_register
 
 .export char_out=krn_chrout
 
@@ -56,12 +56,9 @@ main:
 		SetVector player_isr, user_isr
 
 		freq=70
-							; t2 timer value
-		ldx #opl2_reg_t2
-		;320µs => 4Mhz => 12.500
-		;1000000 / 50 = 20000µs
-		;lda #204
-		lda #(255-(1000000 / freq / 300))	; 1s => 1.000.000µs / 70 (Hz) / 320µs = counter value => timer is incremental, irq on overflow so we have to $ff - counter value
+		t2cycles=285
+		ldx #opl2_reg_t2	; t2 timer value
+		lda #($ff-(1000000 / freq / t2cycles))	; 1s => 1.000.000µs / 70 (Hz) / 320µs = counter value => timer is incremental, irq on overflow so we have to $ff - counter value
 		jsr opl2_reg_write
 		jsr reset_irq
 		jsr restart_timer
@@ -172,26 +169,15 @@ volume:	.res 1, $3f
 
 player_isr:
 		bit SYS_IRR
-		bvc @is_irq_vdp		
-		
-		lda #Light_Red
-		jsr vdp_bgcolor
+		bvc @exit
+;		lda #Light_Red
+;		jsr vdp_bgcolor
+		; do write operations on ym3812 within a user isr directly after reading opl_stat here, "is too hard", we have to delay at least register wait ;)
+		jsr opl2_delay_register
 		jsr reset_irq
-		bra @play
-
-@is_irq_vdp:
-		bit SYS_IRR
-		bpl @exit
-
-		lda #Dark_Yellow
-		jsr vdp_bgcolor
-		bra @exit
-@play:
 		jsr restart_timer
 		jsr jch_fm_play
-		
 @exit:
-
 		lda #Medium_Green<<4|Transparent
 		jsr vdp_bgcolor
 

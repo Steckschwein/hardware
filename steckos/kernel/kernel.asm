@@ -165,8 +165,6 @@ do_irq:
 		
 @store_isr:
 		sta SYS_IRR
-		;.import vdp_bgcolor
-		;jsr vdp_bgcolor
 		
 @user_isr:
 		jsr call_user_isr			; user isr first, maybe there timing critical things
@@ -184,8 +182,6 @@ do_irq:
 
 @exit:
 		stz SYS_IRR
-;		lda    #Medium_Green<<4|Black
-;		jsr    vdp_bgcolor
 		restore
 		rti
 
