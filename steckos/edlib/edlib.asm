@@ -954,13 +954,6 @@ jch_set_register:
 		rts									;// equal, so not update needed, return please, x does not change
 loc_105FB: ;//				
 		sta fm_previous_registry_value, x	;// allright, store this new value in the table at pos x
-        cpx #$04
-		bne loc_10600
-		pha
-		jsr hexout
-		txa
-		jsr hexout
-		pla		
 loc_10600:;//				
 		jmp opl2_reg_write
 
@@ -1076,8 +1069,8 @@ FML2:	rol tread
 		inc tread							;// add one speed unit to slow it down 
 FML5:
 		lda tread							;// load the lowbyte of the tread
-		.import hexout
-        jsr hexout
+		;.import hexout
+        ;jsr hexout
 		ldy var_di
         lda tread							;// load the lowbyte of the tread
 		;lda #4      						;// DEBUG = SPEED of song, 1 or 0 =  50 hz, 2 = 25hz , 3 = 12,5 hz etc, 4 = 6,25, 5=3,125, 6=1,625, 7=0,8125
