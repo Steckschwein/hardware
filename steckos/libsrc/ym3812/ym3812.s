@@ -36,19 +36,23 @@
 ; void __fastcall__ opl2_init(void);
 ;----------------------------------------------------------------------------------------------
 opl2_init:
+		php
 		sei
 		ldx #4
+		lda #$60
+		jsr opl2_reg_write
 		lda #$80
 		jsr opl2_reg_write
-
-		ldx #1
+		
+		ldx #8
 		lda #0
 @l:
 		jsr opl2_reg_write
 		inx
 		cpx #$f6                ; until reg 245
 		bne @l
-		cli
+		
+		plp
 		rts
 ;
 ; void __fastcall__ opl2_write(unsigned char val, unsigned char reg);

@@ -954,8 +954,15 @@ jch_set_register:
 		rts									;// equal, so not update needed, return please, x does not change
 loc_105FB: ;//				
 		sta fm_previous_registry_value, x	;// allright, store this new value in the table at pos x
+        cpx #$04
+		bne loc_10600
+		pha
+		jsr hexout
+		txa
+		jsr hexout
+		pla		
 loc_10600:;//				
-        jmp opl2_reg_write
+		jmp opl2_reg_write
 
 ;// ----------------------------------------------------------------------------------------------------------
 ;// JCH_FM_MUSIC_INIT ;// INITIALIZE PARAMETERS
@@ -1062,31 +1069,19 @@ FML2:	rol tread
 		dex		
 		bne FML1		
 ;//--------------------------
-		lda #$32
-		sta tword1
-		lda #$0
-		ldx #$08
-		asl tword1
-FML3:	rol
-		cmp tread	
-		bcc FML4
-		sbc tread
-FML4:	rol tword1		
-		dex		
-		bne FML3	
-;//------------------------		
 		clc
-		lsr tread							;// divide by two 
-		cmp tread							;// compare this with the remainder in A
-		bmi FML5 							;// tread higher ? then no round up
-		inc tword1							;// add one speed unit to slow it down 
+		lsr tword1							;// divide by two 
+		cmp tword1							;// compare this with the remainder in A
+		bcc FML5 							;// tread higher ? then no round up
+		inc tread							;// add one speed unit to slow it down 
 FML5:
-		lda tword1							;// load the lowbyte of the tword
-		;.import hexout
-        ;jsr hexout
-        ldy var_di
-		lda #3      						;// DEBUG = SPEED of song, 1 or 0 =  50 hz, 2 = 25hz , 3 = 12,5 hz etc, 4 = 6,25, 5=3,125, 6=1,625, 7=0,8125
-		sta fm_channel_speed_counter, y						;// store at the position in the channel speed table
+		lda tread							;// load the lowbyte of the tread
+		.import hexout
+        jsr hexout
+		ldy var_di
+        lda tread							;// load the lowbyte of the tread
+		;lda #4      						;// DEBUG = SPEED of song, 1 or 0 =  50 hz, 2 = 25hz , 3 = 12,5 hz etc, 4 = 6,25, 5=3,125, 6=1,625, 7=0,8125
+		sta fm_channel_speed_counter, y		;// store at the position in the channel speed table
 		lda var_bx							;// add 12 to var_bx
 		clc
 		adc #$12
