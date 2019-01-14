@@ -16,8 +16,9 @@ appstart $1000
 .import opl2_detect, opl2_init, opl2_reg_write
 .import opl2_delay_register
 
+.export d00file
 .export char_out=krn_chrout
-
+	
 .code
 main:
 		jsr opl2_detect
@@ -31,7 +32,7 @@ main:
 		beq :+
 		pha
 		jsr krn_primm
-		.byte "i/o error occured: ",0
+		.byte "i/o error occured: ",$0a,0
 		pla
 		jsr hexout
 		lda #$0a
@@ -75,10 +76,10 @@ main:
 		sta player_state
 		beq :+
 		jsr krn_primm
-		.byte $0a,"Pause...",0
+		.byte "Pause...",$0a,0
 		bra @keyin
 :		jsr krn_primm
-		.byte $0a,"Play...",0
+		.byte "Play...",$0a,0
 		bra @keyin
 @key_esc:
 		cmp #KEY_ESCAPE		
@@ -159,8 +160,7 @@ isD00File:
 		bne :-
 :
 		rts
-
-d00header:	
+d00header:
 		.byte "JCH",$26,$2,$66
 
 loadfile:
@@ -179,9 +179,6 @@ loadfile:
 		cmp #0
 @l_exit:
 		rts
-fd:     .res 1
-frames: .res 1, 50
-volume:	.res 1, $3f
 
 player_isr:
 		bit SYS_IRR
@@ -189,7 +186,6 @@ player_isr:
 		; do write operations on ym3812 within a user isr directly after reading opl_stat here, "is too hard", we have to delay at least register wait ;)		
 		jsr opl2_delay_register
 		jsr reset_irq
-;		jsr opl2_delay_register
 		jsr restart_timer
 ;		lda #Light_Red
 ;		jsr vdp_bgcolor
@@ -204,8 +200,9 @@ player_isr:
 		
 safe_isr:   .res 2
 player_state: .res 1,0
+fd:     .res 1
+
 .data
-.export d00file
 d00file:
 
 .segment "STARTUP"

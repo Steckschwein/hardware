@@ -67,12 +67,13 @@ fm_file_arrdata = ptr4      ;$0008		; word
 ;;// JCH_FM_INIT subroutine, this routine needs to be called to initialize the FM music
 ;;// ----------------------------------------------------------------------------------------------------------
 .globalzp ptr5
+.importzp ptr1,ptr2,ptr3,ptr4
 .zeropage
-ptr5:   .res 2
+	ptr5:	.res 2
 
 .code
-.importzp ptr1,ptr2,ptr3,ptr4
 .import opl2_reg_write
+.import hexout
 .import d00file
 
 .export jch_fm_init, jch_fm_play
@@ -83,7 +84,7 @@ jch_fm_init:
 jch_fm_play:
 ;.pc = $1003 "PLAYER" 
 		jmp jch_fm_play_
-fm_data_st_offset: .word d00file							;// location of FM file (D00), any caller must set $1006/$1007 first with the location of the D00 (lowbyte/highbyte)
+fm_data_st_offset: .word d00file					;// location of FM file (D00), any caller must set $1006/$1007 first with the location of the D00 (lowbyte/highbyte)
 ;// ----------------------------------------------------------------------------------------------------------
 ;// JCH_FM_PLAY subroutine, this routine is called on IRQ interrupt, each frame (50 Hz)
 ;// ----------------------------------------------------------------------------------------------------------
@@ -1068,9 +1069,8 @@ FML2:	rol tread
 		bcc FML5 							;// tread higher ? then no round up
 		inc tread							;// add one speed unit to slow it down 
 FML5:
-		lda tread							;// load the lowbyte of the tread
-		;.import hexout
-        ;jsr hexout
+;		lda tread							;// load the lowbyte of the tread
+;		jsr hexout
 		ldy var_di
         lda tread							;// load the lowbyte of the tread
 		;lda #4      						;// DEBUG = SPEED of song, 1 or 0 =  50 hz, 2 = 25hz , 3 = 12,5 hz etc, 4 = 6,25, 5=3,125, 6=1,625, 7=0,8125
@@ -1372,7 +1372,7 @@ loc_end_get_next_seq2:
 		jsr loc_10600						;// set the soundchip register			 	
 		clc
 		rts
-		
+
 ;//----------------------------------------------------------------------------------------------------------------
 ;// FM D00 PLAYER VARIABLE MEMORY BLOCK
 ;//----------------------------------------------------------------------------------------------------------------
