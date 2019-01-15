@@ -44,7 +44,7 @@ KEY_CRSR_DOWN 	 	= $1F
 KEY_CRSR_RIGHT 	 	= $10
 KEY_CRSR_LEFT 	 	= $11
 
-BUF_SIZE		= 32
+BUF_SIZE		= 32 ;TODO FIXME too hard
 bufptr			= $d0
 pathptr			= $d2
 ; Address pointers for serial upload
@@ -61,7 +61,7 @@ init:
 		SetVector exit_from_prg, retvec
 		SetVector buf, bufptr
 		SetVector buf, paramptr ; set param to empty buffer
-        SetVector msgbuf, msgptr
+    SetVector msgbuf, msgptr
 		SetVector PATH, pathptr
 
 		jsr krn_primm
@@ -80,32 +80,31 @@ exit_from_prg:
 		; pla
 		; jsr krn_chrout
 
-mainloop:        
-:		cld ; TODO FIXME - Why ?!?
-		crlf
-        lda #'['
-		jsr krn_chrout
-		; output current path
-		lda	#<msgbuf
-		ldx #>msgbuf
-		ldy	#$ff
-		jsr krn_getcwd
-		bne @nocwd
+mainloop:
+      crlf
+      lda #'['
+      jsr krn_chrout
+      ; output current path
+      lda	#<msgbuf
+      ldx #>msgbuf
+      ldy	#$ff
+      jsr krn_getcwd
+      bne @nocwd
 
-		lda #<msgbuf
-		ldx #>msgbuf
-		jsr krn_strout
-        lda #']'
-		jsr krn_chrout
+      lda #<msgbuf
+      ldx #>msgbuf
+      jsr krn_strout
+      lda #']'
+      jsr krn_chrout
 @nocwd:
-		; output prompt character
-		lda #prompt
-		jsr krn_chrout
+        ; output prompt character
+        lda #prompt
+        jsr krn_chrout
 
-		; reset input buffer
-		lda #0
-		tay
-		sta (bufptr)
+        ; reset input buffer
+        lda #0
+        tay
+        sta (bufptr)
 
 		; put input into buffer until return is pressed
 inputloop:
@@ -115,72 +114,73 @@ inputloop:
         
         jsr krn_getkey
         bcc @l_input
+
+        cmp #KEY_RETURN ; return?
+        beq parse
+
+        cmp #KEY_BACKSPACE
+        beq backspace
+
+        cmp #KEY_ESCAPE
+        beq escape
+
+        ; prevent overflow of input buffer
+        cpy #BUF_SIZE
+        beq inputloop
         
-		cmp #KEY_RETURN ; return?
-		beq parse
-
-		cmp #KEY_BACKSPACE
-		beq backspace
-
-		cmp #KEY_ESCAPE
-		beq escape
-
-		sta (bufptr),y
-		iny
-
+        sta (bufptr),y
+        iny
 line_end:
-		jsr terminate
-		jsr krn_chrout
+        jsr terminate
+        jsr krn_chrout
 
-		; prevent overflow of input buffer
-		cpy #BUF_SIZE
-		beq mainloop
-
-		bra inputloop
+        bra inputloop
 
 backspace:
-		cpy #$00
-		beq inputloop
+        cpy #$00
+        beq inputloop
 
-		dey
+        dey
 
-		bra line_end
+        bra line_end
 
 escape:
-		jsr krn_getkey
-		jsr printbuf
-		bra inputloop
+        jsr krn_getkey
+        jsr printbuf
+        bra inputloop
 
 terminate:
-		pha
-		lda #0
-		sta (bufptr),y
-		pla
-		rts
+        pha
+        lda #0
+        sta (bufptr),y
+        pla
+        rts
 
 parse:
-		copypointer bufptr, cmdptr
+        copypointer bufptr, cmdptr
 
-		; find begin of command word
-@l1:	lda (cmdptr)	; skip non alphanumeric stuff
-		bne @l2
-		jmp mainloop
+      ; find begin of command word
+@l1:
+        lda (cmdptr)	; skip non alphanumeric stuff
+        bne @l2
+        jmp mainloop
 @l2:
-		cmp #$20
-		bne @l3
-		inc cmdptr
-		bra @l1
+        cmp #$20
+        bne @l3
+        inc cmdptr
+        bra @l1
 @l3:
-		copypointer cmdptr, paramptr
+        copypointer cmdptr, paramptr
 
 		; find begin of parameter (everything behind the command word, separated by space)
 		; first, fast forward until space or abort if null (no parameters then)
-@l4:	lda (paramptr)
-		beq @l7
-		cmp #$20
-		beq @l5
-		inc paramptr
-		bra @l4
+@l4:	
+      lda (paramptr)
+      beq @l7
+      cmp #$20
+      beq @l5
+      inc paramptr
+      bra @l4
 @l5:
 		; space found.. fast forward until non space or null
 @l6:	lda (paramptr)
@@ -522,10 +522,12 @@ screensaver_settimeout:
 l_exit:
         rts
         
-PATH:		    .asciiz "./:/bin/:/sbin/:/usr/bin/"
-APPEXT:		    .asciiz ".PRG"
-screensaver_prg:    .asciiz "/usr/bin/unrclock.prg"
-screensaver_rtc:    .res 1
+PATH:     .asciiz "./:/bin/:/sbin/:/usr/bin/"
+APPEXT:   .asciiz ".PRG"
+screensaver_prg:  .asciiz "/usr/bin/unrclock.prg"
+screensaver_rtc:  .res 1
 tmpbuf:
 buf = tmpbuf + 64
 msgbuf = buf + BUF_SIZE
+
+history=msgbuf+$100
