@@ -141,7 +141,6 @@ mem_ok:
 			lda errno
 			beq boot_from_card
 			; display sd card error message
-			jsr print_crlf
 			cmp #$0f
 			bne @l1
 			printstring "Invalid SD card"
