@@ -136,10 +136,10 @@ vdp_detect:
       vdp_sreg
       vnops_l
       lda a_vreg
-      lsr
-      and #$1f
-      clc 
-      adc #'3'        ; if ID# is "0" a 3 is printed for V9938
+      lsr             ; shift right
+      and #$1f        ; and mask chip ID#
+      clc
+      adc #'3'        ; add ascii '3' to ID# value, V9938 ID# = "0", V9958 ID# = "2"
       jsr vdp_chrout
       jsr primm
 			.byte "8 VRAM: ",0      
