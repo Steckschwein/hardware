@@ -43,8 +43,7 @@ read_nvram:
 	restore
 	rts
 @invalid_sig:
-	jsr print_crlf
-	printstring "NVRAM: Invalid signature."
+	printlnstring "NVRAM: Invalid signature."
 	bra @exit
 ; .nvram_crc_error
 ; 	+PrintString .txt_nvram_crc_error

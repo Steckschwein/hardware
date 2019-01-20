@@ -1,5 +1,7 @@
 .segment "BIOS"
-.export init_vdp, vdp_chrout, vdp_scroll_up
+.export vdp_init, vdp_chrout, vdp_scroll_up
+
+.import primm
 
 .ifdef CHAR6x8
 .import charset_6x8
@@ -34,14 +36,13 @@
 .endmacro
 
 ;----------------------------------------------------------------------------------------------
-; init tms9929 into gfx1 mode
+; init tms99xx with gfx1 mode
 ;----------------------------------------------------------------------------------------------
-init_vdp:
-			SyncBlank			;wait blank, display off
-			lda		#v_reg1_16k	;enable 16K/64k ram, disable screen
-			ldy	  	#v_reg1
-			vdp_sreg
-			
+vdp_init:
+      lda #v_reg1_16k	;enable 16K/64k ram, disable screen
+      ldy #v_reg1
+      vdp_sreg
+
 .ifdef V9958
 			; enable V9958 wait state generator
 			lda #1<<2
@@ -52,7 +53,6 @@ init_vdp:
 			ldy #v_reg8
 			vdp_sreg
 .endif
-
 
 			lda	#<ADDRESS_GFX_SPRITE
 			ldy	#(WRITE_ADDRESS + >ADDRESS_GFX_SPRITE)
@@ -127,6 +127,129 @@ init_vdp:
 			bne @l4
 			rts
 
+.export vdp_detect
+vdp_detect:
+			jsr primm
+			.byte "V99",0
+      lda #1          ; select sreg #1
+      ldy #v_reg15
+      vdp_sreg
+      vnops_l
+      lda a_vreg
+      lsr
+      and #$1f
+      clc 
+      adc #'3'        ; if ID# is "0" a 3 is printed for V9938
+      jsr vdp_chrout
+      jsr primm
+			.byte "8 VRAM: ",0      
+      lda #0          ; select sreg #0
+      ldy #v_reg15
+      vdp_sreg
+      
+      ; VRAM detection
+      jsr _vdp_detect_vram
+      
+      ; Ext RAM detection      
+_vdp_detect_ext_ram:
+      jsr primm
+      .asciiz " ExtRAM: "
+      lda #v_reg45_MXC
+      ldy #v_reg45
+      vdp_sreg
+      ldx #4  ;max 4 16k banks
+      jsr _vdp_detect_ram
+      lda #KEY_LF
+			jmp vdp_chrout
+      
+_vdp_detect_vram:
+      ldx #8  ;max 8 16k banks
+      
+_vdp_detect_ram:
+      lda #$ff
+      sta tmp1  ; the bank, start at $0, first inc below
+@l_detect:
+      inc tmp1
+      dex 
+      bmi @l_end    ; we have to break after given amount of banks, otherwise overflow vram address starts from beginning
+      lda tmp1
+      ldy #v_reg14
+      vdp_sreg
+      jsr _vdp_bank_available
+      beq @l_detect
+@l_end:
+      lda #0        ;switch back to bank 0 and vram
+      ldy #v_reg14
+      vdp_sreg
+      lda #0
+      ldy #v_reg45
+      vdp_sreg
+      
+      ldx #$ff
+      lda tmp1
+      beq @l_nc
+@l_shift:
+      inx
+      lsr tmp1
+      bne @l_shift
+      txa
+      sta tmp1
+      asl tmp1
+      adc tmp1
+      tay
+      ldx #3
+:     lda _ram,y
+      jsr vdp_chrout
+      iny
+      dex
+      bne :-
+      jsr primm
+			.byte "KBytes",0
+      rts
+@l_nc:
+      lda #'-'
+      jmp vdp_chrout
+_ram:
+      .byte " 16 32 64128"
+      
+_vdp_bank_available:
+      phx
+      jsr _vdp_r_vram
+      ldx a_vram
+
+      jsr _vdp_w_vram
+      lda tmp1
+      sta a_vram
+      pha
+      vnops_l
+      jsr _vdp_r_vram ; ... read back again
+      pla
+      lda tmp1
+      cmp a_vram
+      bne @invalid
+      jsr _vdp_w_vram
+      txa
+      sta a_vram
+      plx
+      lda #0
+      rts
+@invalid:
+      plx
+      lda #$ff
+      rts
+      
+bank_end = $3fff
+_vdp_w_vram:
+      ldy #(WRITE_ADDRESS | >bank_end)
+      bra _vdp_vram0
+_vdp_r_vram:
+      ldy #>bank_end
+_vdp_vram0:
+      lda #<bank_end
+      vdp_sreg
+      vnops_l
+      rts
+      
 vdp_scroll_up:
 			SetVector	(ADDRESS_GFX1_SCREEN+COLS), ptr1		        ; +COLS - offset second row
 			SetVector	(ADDRESS_GFX1_SCREEN+(WRITE_ADDRESS<<8)), ptr2	; offset first row as "write adress"

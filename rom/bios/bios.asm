@@ -8,7 +8,7 @@
 .import init_uart, upload
 .import init_via1
 .import hexout, primm, print_crlf
-.import init_vdp, vdp_chrout
+.import vdp_init, vdp_chrout, vdp_detect
 .import init_sdcard
 .import fat_mount, fat_read, fat_find_first, calc_lba_addr
 .import read_nvram
@@ -111,22 +111,22 @@ stop:
 
 
 mem_ok:
-		
-			jsr init_vdp
+			jsr vdp_init
 
 			jsr primm
 			.byte "BIOS "
 			.include "version.inc"
-			.byte $00
+			.byte $0a,0
 
-			jsr print_crlf
 			printstring "Memcheck $"
-
-	  		lda ptr1h
+	  	lda ptr1h
 			jsr hexout
-	  		lda ptr1l
+	  	lda ptr1l
 			jsr hexout
-
+      jsr print_crlf
+      
+      jsr vdp_detect
+      
 			jsr init_via1
 
 			SetVector param_defaults, paramvec
@@ -136,7 +136,7 @@ mem_ok:
 			jsr read_nvram
 
 			jsr init_uart
-
+      
 			jsr init_sdcard
 			lda errno
 			beq boot_from_card
@@ -156,7 +156,6 @@ foo:		jsr upload
 			jmp startup
 
 boot_from_card:
-			jsr print_crlf
 			printstring "Boot from SD card.. "
 			jsr fat_mount
 
@@ -182,7 +181,8 @@ boot_from_card:
 			jsr print_crlf
 
 			ldy #$00
-@loop:		lda (ptr1),y
+@loop:
+      lda (ptr1),y
 			jsr vdp_chrout
 			iny
 			cpy #$0b

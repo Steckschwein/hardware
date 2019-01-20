@@ -75,6 +75,11 @@ param_checksum  = $5f ; checksum
 			sta addr+1
 .endmacro
 
+.macro	printlnstring text
+			jsr primm
+			.byte text, $0a, 0
+.endmacro
+
 .macro	printstring text
 			jsr primm
 			.asciiz text

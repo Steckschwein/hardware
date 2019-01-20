@@ -14,6 +14,8 @@ v_reg1_m2			= 1<<3
 v_reg1_spr_size		= 1<<1
 v_reg1_spr_mag		= 1<<0
 
+v_reg45_MXC = 1<<6
+
 v_reg0 	= $80
 v_reg1 	= $81
 v_reg2 	= $82
@@ -23,7 +25,10 @@ v_reg5 	= $85
 v_reg6 	= $86
 v_reg7  = $87
 v_reg8	= $88
-v_reg25 = 128 + 25
+v_reg14	= $80 + 14
+v_reg15	= $80 + 15
+v_reg25 = $80 + 25
+v_reg45 = $80 + 45  ; ext RAM
 
 Transparent    =$00
 Black          =$01
