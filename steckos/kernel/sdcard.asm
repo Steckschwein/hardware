@@ -196,8 +196,6 @@ init_sdcard:
 			lda #$00
 @exit:
 			jmp sd_deselect_card
-;			rts
-
 
 ;---------------------------------------------------------------------
 ; Send SD Card Command
@@ -497,7 +495,7 @@ sd_wait:
 			dey
 			bne @l1
 
-			lda #$82
+			lda #sd_card_error_timeout
 			rts
 @l2:		lda #0
 			rts
@@ -509,6 +507,8 @@ sd_wait:
 sd_select_card:
 			lda #sd_card_sel
 			sta via1portb
+			;TODO FIXME race condition here!
+			
 ; fall through to sd_busy_wait
 
 ;---------------------------------------------------------------------
@@ -531,7 +531,7 @@ sd_busy_wait:
 	       	rts
 
 @err:
-			lda #$81
+			lda #sd_card_error_timeout_busy
 			rts
 
 ;---------------------------------------------------------------------

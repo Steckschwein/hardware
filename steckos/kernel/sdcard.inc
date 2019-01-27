@@ -39,7 +39,7 @@ cmd58	= $40 + 58	; READ_OCR
 acmd41	= $40 + 41	; APP_SEND_OP_COND
 acmd23	= $40 + 23	; SET_WR_BLOCK_ERASE_COUNT - Define number of blocks to pre-erase with next multi-block write command.
 
-sd_card_sel         = %01111100
+sd_card_sel         = %01111100		;spi device number 1100
 
 sd_data_token = $fe
 ;sd_card_status 		= $0298
@@ -58,3 +58,7 @@ sd_card_status_crc_error        = %00001000
 sd_card_status_erase_seq_error  = %00010000
 sd_card_status_address_error    = %00100000
 sd_card_status_parameter_error  = %01000000
+
+sd_card_error_timeout_busy = $c0
+sd_card_error_timeout = $c1
+
