@@ -49,7 +49,6 @@ getkey:
 		beq @l1
 		sec
 		rts
-		@l1:
+@l1:
 		clc
 		rts
-		

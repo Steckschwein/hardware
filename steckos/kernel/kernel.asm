@@ -169,11 +169,9 @@ do_irq:
 @user_isr:
 		jsr call_user_isr			; user isr first, maybe there timing critical things
 		
-		bit SYS_IRR					; vdp irq?
-		bpl @update_rtc
+		bit SYS_IRR					; was vdp irq?
+		bpl @exit
 		jsr	textui_update_screen    ; update text ui
-
-@update_rtc:
 		dec frame
 		lda frame
 		and #%00000111              ; every 8 frames we try to update rtc, gives 160ms clock resolution

@@ -400,11 +400,11 @@ textui_crsxy:
         jmp textui_update_crs_ptr
 
 textui_dispatch_char:
-        cmp    #KEY_CR            ;cariage return?
-        bne    lfeed
+        cmp    #KEY_CR            ;carriage return?
+        bne    @lfeed
         stz    crs_x
         jmp textui_update_crs_ptr
-lfeed:
+@lfeed:
         cmp    #KEY_LF            ;line feed
         bne    @l1
         stz crs_x
@@ -414,7 +414,7 @@ lfeed:
         lda    crs_x
         bne    @l3
         lda    crs_y            ; cursor y=0, no dec
-        beq    lupdate
+        beq    @lupdate
         dec    crs_y
         lda    #(COLS-1)            ; set x to end of line above
         sta    crs_x
@@ -430,11 +430,10 @@ lfeed:
         cmp    #(COLS-1)
         beq @l5
         inc    crs_x
+@lupdate:
         jmp    textui_update_crs_ptr
 @l5:    stz    crs_x
         jmp    textui_inc_cursor_y
-lupdate:
-        jmp    textui_update_crs_ptr
 
 screen_status:       .res 1;screen_buffer + (COLS*(ROWS+1))
 screen_write_lock:   .res 1;screen_status + 1
