@@ -48,7 +48,7 @@ BUF_SIZE		= 32 ;TODO FIXME too hard
 bufptr			= $d0
 pathptr			= $d2
 p_history   = $d4
-
+p_history_e = $d6
 ; Address pointers for serial upload
 startaddr		= $d9
 
@@ -279,7 +279,21 @@ unknown:
 @l1:	jmp mainloop
 
 history_frwd:
+        lda p_history
+        cmp #<(history+$0100)
+        bne @inc_hist_ptr
+        lda p_history+1
+        cmp #>(history+$0100)
+        bne @inc_hist_ptr
         rts
+@inc_hist_ptr:
+        lda p_history
+        clc
+        adc #BUF_SIZE
+        sta p_history
+        bcc history_pop
+        inc p_history+1
+        bra history_pop
         
 history_back:
         lda p_history+1
@@ -300,6 +314,7 @@ history_back:
 history_pop:
         lda crs_x_prompt
         sta crs_x
+        jsr krn_textui_update_crs_ptr
         
         ldy #0
         ldx #BUF_SIZE
@@ -312,19 +327,22 @@ history_pop:
         bpl :-
         
 :       phy       ;safe y pos in buffer
-        ldy crs_x ;safe crs x
+        ldy crs_x ;safe crs_x position after restored cmd to y
         
-        lda #' '
+        lda #' '  ;erase the rest of the line
 :
         jsr char_out
-        dex 
+        dex
         bpl :-
-        sty crs_x        
+        sty crs_x 
         jsr krn_textui_update_crs_ptr
-        ply       ;y buffer index
+        ply       ;restore y buffer index
         rts
         
 history_push:
+        lda #$0a
+        ;jsr char_out
+        
         tya
         tax
         ldy #0
@@ -334,6 +352,9 @@ history_push:
         iny
         dex
         bpl :-
+        
+        lda #$0a
+        ;jsr char_out
         
         lda p_history
         clc

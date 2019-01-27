@@ -1,4 +1,4 @@
-ASM_INCLUDE=../asminc
+CAFLAGS=--include-dir ../asminc --include-dir ../kernel
 LDFLAGS=--config ../kernel/steckosapp.cfg --lib ../tools/lib/toollib.a
 DEBUG=-DDEBUG
 
@@ -19,4 +19,4 @@ shell: shell.prg
 	../../transfer.py -s 0xd800 shell.prg
 
 %.o: %.asm
-	ca65 --target none $(DEBUG) --include-dir $(ASM_INCLUDE)  $<
+	ca65 --target none $(DEBUG) $(CAFLAGS)  $<
