@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 #include <ctype.h>
 #include <conio.h>
 #include <ym3812.h>
@@ -13,6 +14,8 @@ unsigned char snd07[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 13, 2, 3, 5, 0, 2, 0, 0, 0, 
 unsigned char snd08[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 13, 2, 3, 5, 0, 2, 0, 0, 0, 0, 0};
 
 unsigned char* sounds[] = {snd01, snd02, snd03, snd04, snd05, snd06, snd07, snd08};
+
+unsigned char song_ix = 0;
 
 void soundport(char index, char value)
 {
@@ -126,6 +129,46 @@ char txt[] =    "AdLib Clavier by Indrek Pinsel 1993$"
                 "\n\nCrsUp CrsDown - choose octave"
                 "\nShift 1 ... 7 - choose sound";
 
+unsigned char mapping(unsigned char note){
+    switch (note){
+        case 'c': return 'y';
+        case 'd': return 'x';
+        case 'e': return 'c';
+        case 'f': return 'v';
+        case 'g': return 'b';
+        case 'A': return 'n';
+        case 'B': return 'm';
+        case 'C': return ',';
+        case 'D': return '.';
+        case 'E': return '-';        
+    }
+    return 0;
+}
+
+void _sleep(unsigned char s){
+    unsigned long l = 0x2000;
+    while(s>0){
+        while(l>0){
+            --l;
+        }
+        --s;
+    }
+}
+unsigned char* song =   "ggeggegfdfe"
+                        "ggeggegfdfe"
+                        "edddfffeeeA"
+                        "AgggCgegfdc"
+                        ;
+                        
+unsigned char play_song(){
+    if(song_ix == strlen(song)){
+        song_ix = 0;
+        return 0;
+    }
+//    cprintf("%d\n", song_ix, sizeof(song));
+    return mapping(song[song_ix++]);
+}
+	                
 int main (void)
 {   unsigned char c;
 	unsigned oc = 3;
@@ -143,11 +186,10 @@ int main (void)
     opl2_init();
 	soundall(snd01);//5, 2, 1, 0, 0, 0, 13, 0, 0, 11, 4, 4, 6, 0, 2, 0, 0, 0, 0, 0);
 
-    cprintf("snds: %d\n", sizeof(*sounds));
 
     cprintf("%s", txt);
 
-	do
+    do
 	{
     /*
         asm{
@@ -162,9 +204,17 @@ int main (void)
 		cok:
 		c = _AL;
         */
-        c = toupper(cgetc());
+        c = cgetc();
+        if (song_ix>0 || c == 'P'){
+//            cprintf("%d %d\n", song_ix, strlen(song));
+            c = play_song();
+            _sleep(1);
+        }else{
+            c = toupper(c);
 //        cprintf("%c %c %d\n",c, toupper(c), isupper(c));
-		switch(c)
+        }
+        
+        switch(c)
 		{   //case 0:
 				/*
                 asm{
