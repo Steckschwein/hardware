@@ -27,6 +27,8 @@
 .setcpu "65c02"
 .include "common.inc"
 .include "vdp.inc"
+.include "joystick.inc"
+.include "via.inc"
 .include "fat32.inc"
 .include "fcntl.inc"
 .include "zeropage.inc"
@@ -37,7 +39,6 @@
 .import vdp_gfx7_on
 .import vdp_gfx7_blank
 .import vdp_display_off
-.import vdp_mode_sprites_off
 .import vdp_bgcolor
 
 .import krn_open, krn_fread, krn_close
@@ -52,6 +53,9 @@
 .import ppmdata
 .import ppm_width
 .import ppm_height
+
+.import read_joystick
+
 
 .export ppmview_main
 
@@ -213,11 +217,11 @@ wait_key:
 		keyin
 		cmp #'q'
 		beq :+
-        cmp #'s'
-        bne wait_key
-        lda scroll_on
-        eor #$ff
-        sta scroll_on
+;        cmp #'s'
+ ;       bne wait_key
+  ;      lda scroll_on
+   ;     eor #$ff
+    ;    sta scroll_on
         bra wait_key
 :		rts
 		
@@ -372,10 +376,10 @@ scroll:
         lda scroll_x
         bit #7
         bne :+
-        clc
-        adc #8
+        sec
+        sbc #8
         tay
-        adc #8
+        sbc #8
         sta scroll_x
         dey
         tya
@@ -387,8 +391,18 @@ scroll:
         ldy #v_reg26
         vdp_sreg
 
+        
+        lda #JOY_PORT2
+        jsr read_joystick
+        bit #JOY_LEFT
+        bne :+
         dec scroll_x
-       
+        bra @l_exit
+:       bit #JOY_RIGHT
+        bne @l_exit
+        inc scroll_x
+        
+@l_exit:       
         rts
         
 gfxui_on:	
@@ -405,7 +419,8 @@ gfxui_on:
 
         vdp_sreg v_reg25_wait | v_reg25_msk, v_reg25
 
-		stz scroll_on
+        lda #$ff
+		sta scroll_on
         stz scroll_x
         jsr scroll
         
