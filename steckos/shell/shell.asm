@@ -48,7 +48,6 @@ BUF_SIZE		= 32 ;TODO FIXME too hard
 bufptr			= $d0
 pathptr			= $d2
 p_history   = $d4
-p_history_e = $d6
 ; Address pointers for serial upload
 startaddr		= $d9
 
@@ -69,7 +68,6 @@ init:
 		SetVector buf, paramptr ; set param to empty buffer
     SetVector msgbuf, msgptr
 		SetVector PATH, pathptr
-    SetVector history, p_history
 
 		jsr krn_primm
 		.byte $0a, "steckOS Shell "
@@ -280,10 +278,12 @@ unknown:
 
 history_frwd:
         lda p_history
-        cmp #<(history+$0100)
+        ;cmp #<(history+$0100)
+        cmp p_history_end
         bne @inc_hist_ptr
         lda p_history+1
-        cmp #>(history+$0100)
+        ;cmp #>(history+$0100)
+        cmp p_history_end+1
         bne @inc_hist_ptr
         rts
 @inc_hist_ptr:
@@ -291,9 +291,7 @@ history_frwd:
         clc
         adc #BUF_SIZE
         sta p_history
-        bcc history_pop
-        inc p_history+1
-        bra history_pop
+        bra history_peek
         
 history_back:
         lda p_history+1
@@ -307,11 +305,8 @@ history_back:
         sec ;dec hist ptr
         sbc #BUF_SIZE
         sta p_history
-        lda p_history+1
-        sbc #0
-        sta p_history+1
         
-history_pop:
+history_peek:
         lda crs_x_prompt
         sta crs_x
         jsr krn_textui_update_crs_ptr
@@ -356,13 +351,14 @@ history_push:
         lda #$0a
         ;jsr char_out
         
-        lda p_history
+        inc hist_e
+        lda hist_e
+        cmp #
+        lda p_history   ; new end
         clc
         adc #BUF_SIZE
         sta p_history
-        bcc :+
-        inc p_history+1
-:       rts
+        rts
 
 printbuf:
 		ldy #$01
@@ -634,6 +630,9 @@ PATH:     .asciiz "./:/bin/:/sbin/:/usr/bin/"
 APPEXT:   .asciiz ".PRG"
 screensaver_prg:  .asciiz "/usr/bin/unrclock.prg"
 screensaver_rtc:  .res 1
+hist_s  .res 1, 0
+hist_e  .res 1, 0
+hist_r  .res 1, 0
 tmpbuf:
 buf = tmpbuf + 64
 msgbuf = buf + BUF_SIZE
