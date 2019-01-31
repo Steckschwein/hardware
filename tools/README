@@ -1,8 +1,0 @@
-
-apple2 monitor test - refer to http://apple2.info/wiki/index.php?title=System_Monitor
-	- {address}L 				- ok
-	- {address}.{address} 		- ?
-	- {address}: val1 val2		- ?
-
-open issues:
-	- unstable, vdp scroll up, maybe zp clash

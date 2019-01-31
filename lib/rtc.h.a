@@ -1,5 +1,0 @@
-!ifdef rtc_h_a !eof
-rtc_h_a = 1
-
-; rtc spi select
-!src <rtc.inc>
