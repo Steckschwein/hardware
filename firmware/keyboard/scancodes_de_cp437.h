@@ -9,6 +9,7 @@
 #define C_BS  0x08 // Ctrl-H, Backspace
 
 
+// control keys
 #define CRSR_UP 	 0x1E // RS (Record Separator)
 #define CRSR_DOWN 	 0x1F // US (Unit separator)
 #define CRSR_RIGHT 	 0x10 // DLE (Data Link Escape)
@@ -18,21 +19,36 @@
 #define KEY_DEL 	 0x14 // DC4
 #define KEY_ESC		 0x1b // Escape Key
 
+// function keys
+#define FUNC_F1     0xF1
+#define FUNC_F2     0xF2
+#define FUNC_F3     0xF3
+#define FUNC_F4     0xF4
+#define FUNC_F5     0xF5
+#define FUNC_F6     0xF6
+#define FUNC_F7     0xF7
+#define FUNC_F8     0xF8
+#define FUNC_F9     0xF9
+#define FUNC_F10     0xFA
+#define FUNC_F11     0xFB
+#define FUNC_F12     0xFC
+
+
 // Unshifted characters - for a "US QWERTY" keyboard only - Scan Code Set 2
 const unsigned char scancodes[][5] PROGMEM = {
 	/*
 	{scancode, keycode, shifted, ctrl, alt}
 	*/
-	{0x01,' ', ' ', 0, 0} ,// F9
-	{0x03,' ', ' ', 0, 0} ,// F5
-	{0x04,' ', ' ', 0, 0} ,// F3
-	{0x05,' ', ' ', 0, 0} ,// F1
-	{0x06,' ', ' ', 0, 0} ,// F2
-	{0x07,' ', ' ', 0, 0} ,// F12
-	{0x09,' ', ' ', 0, 0} ,// F10
-	{0x0a,' ', ' ', 0, 0} ,// F8
-	{0x0b,' ', ' ', 0, 0} ,// F6
-	{0x0c,' ', ' ', 0, 0} ,// F4
+	{0x01, FUNC_F9,  FUNC_F9, 0, 0} ,// F9
+	{0x03, FUNC_F5,  FUNC_F5, 0, 0} ,// F5
+	{0x04, FUNC_F3,  FUNC_F3, 0, 0} ,// F3
+	{0x05, FUNC_F1,  FUNC_F1, 0, 0} ,// F1
+	{0x06, FUNC_F2,  FUNC_F2, 0, 0} ,// F2
+	{0x07, FUNC_F12, FUNC_F12, 0, 0} ,// F12
+	{0x09, FUNC_F10, FUNC_F10, 0, 0} ,// F10
+	{0x0a, FUNC_F8,  FUNC_F8, 0, 0} ,// F8
+	{0x0b, FUNC_F6,  FUNC_F6, 0, 0} ,// F6
+	{0x0c, FUNC_F4,  FUNC_F4, 0, 0} ,// F4
 	{0x0d,	9,	 9,	9, 9} ,
 	{0x0e,'^', 0xF8, 0, 0}, //°
 	{0x15,'q', 'Q', 0, '@'} ,
@@ -96,13 +112,13 @@ const unsigned char scancodes[][5] PROGMEM = {
 	{0x74,CRSR_RIGHT, CRSR_RIGHT, 0, 0} ,
 	{0x75,CRSR_UP, CRSR_UP, 0, 0} ,
 	{0x76,KEY_ESC, KEY_ESC, 0, 0} ,
-	{0x78,' ', ' ', 0, 0} ,// F11
+	{0x78, FUNC_F11, FUNC_F11, 0, 0} ,// F11
 	{0x79,'+', '+', 0, 0} ,
 	{0x7a,'3', '3', 0, 0} ,
 	{0x7b,'-', '-', 0, 0} ,
 	{0x7c,'*', '*', 0, 0} ,
 	{0x7d,'9', '9', 0, 0} ,
-	{0x83,' ', ' ', 0, 0} ,// F7
+	{0x83, FUNC_F7, FUNC_F7, 0, 0} ,// F7
 //	{0xe0,' ', ' ', 0, 0} ,// Delete
 	{0,0, 0, 0, 0}
 };

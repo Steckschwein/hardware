@@ -7,6 +7,7 @@
 #define C_BEL 0x07 // Ctrl-G, Bell
 #define C_BS  0x08 // Ctrl-H, Backspace
 
+// control keys
 #define CRSR_UP 	 'A' | 0x80
 #define CRSR_DOWN 	 'B' | 0x80
 #define CRSR_RIGHT 	 'C' | 0x80
@@ -14,6 +15,20 @@
 #define KEY_HOME 	 'E' | 0x80
 #define KEY_END 	 'F' | 0x80
 #define KEY_DEL 	 'G' | 0x80
+
+// function keys
+#define FUNC_F1     0xF1
+#define FUNC_F2     0xF2
+#define FUNC_F3     0xF3
+#define FUNC_F4     0xF4
+#define FUNC_F5     0xF5
+#define FUNC_F6     0xF6
+#define FUNC_F7     0xF7
+#define FUNC_F8     0xF8
+#define FUNC_F9     0xF9
+#define FUNC_F10     0xFA
+#define FUNC_F11     0xFB
+#define FUNC_F12     0xFC
 
 // Unshifted characters - for a "US QWERTY" keyboard only - Scan Code Set 2
 const unsigned char scancodes[][5] PROGMEM = {
