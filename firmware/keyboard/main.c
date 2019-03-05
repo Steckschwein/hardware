@@ -52,7 +52,7 @@ Changes by Thomas Woinke <thomas@steckschwein.de>
 -------------------------------------------------------------------*/
 
 
-int __attribute__((OS_main noreturn)) main(void)
+int __attribute__((OS_main)) main(void)
 {
 	uint8_t tmp;
     
