@@ -18,13 +18,13 @@ CFLAGS= -g -Os -Wall -mcall-prologues -mmcu=atmega8  -DF_CPU=$(CPUSPEED) -D__PRO
 #uncomment to trigger host system IRQ line at every keytroke
 #CFLAGS+=-DUSE_IRQ
 
-OBJ2HEX=avr-objcopy
+OBJ2HEX = avr-objcopy
 OBJDUMP = avr-objdump
-LOADER=avrdude -c stk500v2 -P $(SERIALDEVICE) -p m8 -b 19200
+LOADER=avrdude
 BURN=-c stk500v2 -P $(SERIALDEVICE) -p m8 -b 19200 -U flash:w:$(PRG).hex
-#BURN=-c avrispmkII -p m8 -b 19200 -P usb -U flash:w:$(PRG).hex
+#BURN=-c avrispmkII -D -p m8 -U flash:w:$(PRG).hex
 
-#LOADER=stk500
+#LOADER=avrdude
 # -f set fuse bits 16bit value
 # -F verify fuse bits
 # -E set ext fuse, -G verify ext fuse
@@ -59,6 +59,3 @@ burn: $(PRG).elf
 
 fuse:
 	$(LOADER) $(FUSES)
-
-
-
