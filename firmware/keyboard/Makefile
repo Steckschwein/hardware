@@ -24,7 +24,7 @@ LOADER=avrdude
 BURN=-c stk500v2 -P $(SERIALDEVICE) -p m8 -b 19200 -U flash:w:$(PRG).hex
 #BURN=-c avrispmkII -D -p m8 -U flash:w:$(PRG).hex
 
-#LOADER=avrdude
+#LOADER=stk500
 # -f set fuse bits 16bit value
 # -F verify fuse bits
 # -E set ext fuse, -G verify ext fuse
@@ -59,3 +59,6 @@ burn: $(PRG).elf
 
 fuse:
 	$(LOADER) $(FUSES)
+
+
+
