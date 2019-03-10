@@ -23,7 +23,7 @@ OBJ2HEX = avr-objcopy
 OBJDUMP = avr-objdump
 LOADER=avrdude -p $(AVRDEVICE)
 DEVICE=-c stk500v2 -P $(SERIALDEVICE)
-BURN=-U flash:w:$(PRG).hex
+BURN=-U flash:w:$(PRG).elf
 #BURN=-c avrispmkII -D -p m8 -U flash:w:$(PRG).hex
 
 
