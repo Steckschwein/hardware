@@ -1,5 +1,6 @@
 SERIALDEVICE=/dev/ttyACM0
 
+AVRDEVICE=m8
 # 8MHz
 CPUSPEED=8000000
 FUSES=-U lfuse:w:0xc4:m -U hfuse:w:0xd9:m
@@ -20,11 +21,12 @@ CFLAGS= -g -Os -Wall -mcall-prologues -mmcu=atmega8  -DF_CPU=$(CPUSPEED) -D__PRO
 
 OBJ2HEX = avr-objcopy
 OBJDUMP = avr-objdump
-LOADER=avrdude
-BURN=-c stk500v2 -P $(SERIALDEVICE) -p m8 -b 19200 -U flash:w:$(PRG).hex
+LOADER=avrdude -p $(AVRDEVICE)
+DEVICE=-c stk500v2 -P $(SERIALDEVICE)
+BURN=-U flash:w:$(PRG).hex
 #BURN=-c avrispmkII -D -p m8 -U flash:w:$(PRG).hex
 
-#LOADER=stk500
+
 # -f set fuse bits 16bit value
 # -F verify fuse bits
 # -E set ext fuse, -G verify ext fuse
@@ -33,7 +35,7 @@ BURN=-c stk500v2 -P $(SERIALDEVICE) -p m8 -b 19200 -U flash:w:$(PRG).hex
 #BURN=-cUSB -dATmega8 -e -if$(PRG).hex -pf -vf
 
 PRG=keyboard
-OBJ=kb.o spi.o main.o
+OBJ=kb.o spi.o serial.o main.o
 all: $(PRG).elf $(PRG).hex $(PRG).lss $(PRG).eep
 all: $(PRG).elf
 
@@ -55,10 +57,10 @@ clean:
 	rm -f *.hex *.obj *.o *.elf *.eep *.lss
 
 burn: $(PRG).elf
-	$(LOADER) $(BURN)
+	$(LOADER) $(DEVICE) $(BURN)
 
 fuse:
-	$(LOADER) $(FUSES)
+	$(LOADER) $(DEVICE) $(FUSES)
 
 
 
