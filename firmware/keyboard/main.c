@@ -94,7 +94,7 @@ int __attribute__((OS_main)) main(void)
 	//while (PIND & (uint8_t)(1<<PD2)) {};
 
 	init_kb();
-	//spiInitSlave();
+	spiInitSlave();
     init_uart();
 	sei();
 
