@@ -5,6 +5,7 @@
 
 #include "spi.h"
 #include "kb.h"
+#include "serial.h"
 
 
 /* -------------------------------------------------------------------
@@ -12,11 +13,11 @@ Design:
 1. 	INT0 für Tastaturabfrage hat IMMER prio
 	INT0-ISR stopft scancodes in scancode buffer
 
-2. 	Mainloop 
-	- dekodiert Scancodes aus scancode-Buffer 
+2. 	Mainloop
+	- dekodiert Scancodes aus scancode-Buffer
 	- Lookup ASCII Zeichen (decode())
 	- Zeichen in Zeichenpuffer
-	
+
 3.  SPI-Transport in Interrupt
 -------------------------------------------------------------------*/
 
@@ -26,7 +27,7 @@ Design:
 	Atmel application note AVR313 ported for use with GCC
 	by Mike Henning - September 2008
 
-	Changes: 
+	Changes:
 	- Modified to use the ATMEGA16 instead of the obsolete 90S8515.
 	- Changed the scan code table for english keyboards
 	- Baud rate can be set under project configuration in Avr Studio.
@@ -48,15 +49,15 @@ Changes by Thomas Woinke <thomas@steckschwein.de>
 	- scan code table for german layout
 	- Moved the call to decode out of the ISR
 	- PS/2 communication including parity check using AVR USART
-	
+
 -------------------------------------------------------------------*/
 
 
 int __attribute__((OS_main)) main(void)
 {
 	uint8_t tmp;
-    
-    	cli();
+
+    cli();
 
 	// Clock line low
 	//DDRD |= (uint8_t)(1 << PD2) ;
@@ -93,17 +94,15 @@ int __attribute__((OS_main)) main(void)
 	//while (PIND & (uint8_t)(1<<PD2)) {};
 
 	init_kb();
-	spiInitSlave();
+	//spiInitSlave();
+    init_uart();
 	sei();
-	
-	while(1)
-	{		
 
+	while(1)
+	{
 		tmp = get_scanchar();
 		if (tmp != 0)
 		{
-		//	put_kbbuff(tmp);
-
 			decode(tmp);
 		}
 
@@ -114,8 +113,6 @@ int __attribute__((OS_main)) main(void)
 			put_kbbuff(tmp);
 		}
 #endif
-		
+
 	}
 }
-
-

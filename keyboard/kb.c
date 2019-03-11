@@ -3,6 +3,7 @@
 #include <util/delay.h>
 
 #include "kb.h"
+#include "serial.h"
 #include "scancodes_de_cp437.h"
 
 
@@ -37,18 +38,18 @@ void init_kb(void)
 
 #ifdef USART
 	// USART init to 8 bit data, odd parity, 1 stopbit
-	
+
 	UCSRB = (1 << RXCIE) // USART RX Complete Interrupt Enable
 		  | (1 << RXEN); // USART Receiver Enable
 
-	
+
 	UCSRC = (1 << URSEL) // Register select
 		  | (1 << UMSEL) // Select asynchronous mode
 		  | (1 << UPM0)  // Select odd parity
 		  | (1 << UPM1)  // Select odd parity
 		  | (1 << UCSZ0) // Select number of data bits (8)
-		  | (1 << UCSZ1)  
-		  | (1 << UCPOL); // Clock polarity to falling edge 
+		  | (1 << UCSZ1)
+		  | (1 << UCPOL); // Clock polarity to falling edge
 #else
 #ifdef MOUSE
 	MCUCR 	= (1 << ISC01)					  // INT0 interrupt on falling edge
@@ -62,7 +63,7 @@ void init_kb(void)
 	GIMSK	= (1 << INT0);					  // Enable INT0 interrupt
 #endif
 #endif
-	
+
 	// PORTC  	= 3;
 	// DDRC	= (1 << PC0) | (1 << PC1);
 
@@ -81,7 +82,7 @@ ISR (USART_RXC_vect)
 {
 	if (scan_buffcnt < SCAN_BUFF_SIZE)			  // If buffer not full
 	{
-		*scan_inptr++ = UDR;   // Put character into buffer, Increment pointer		
+		*scan_inptr++ = UDR;   // Put character into buffer, Increment pointer
 		scan_buffcnt++;
 
 #ifdef USE_IRQ
@@ -106,7 +107,7 @@ ISR (INT0_vect)
 		data = (data >> 1);
 		if(PIND & (1 << DATAPIN))
 			data = data | 0x80;				  // Store a '1'
-	}     
+	}
 
 	if(--bitcount == 0)						  // All bits received
 	{
@@ -138,7 +139,7 @@ ISR (INT1_vect)
 		data = (data >> 1);
 		if(PIND & (1 << MOUSE_DATAPIN))
 			data = data | 0x80;				  // Store a '1'
-	}     
+	}
 
 	if(--bitcount == 0)						  // All bits received
 	{
@@ -179,7 +180,7 @@ void decode(uint8_t sc)
 				is_up = 1;
 				break;
 			case 0x12:
-			case 0x59:	
+			case 0x59:
 				shift = 1;
 				break;
 			case 0x14:
@@ -193,7 +194,7 @@ void decode(uint8_t sc)
 			default:
 				if(mode == 0 || mode == 3)		  // If ASCII mode
 				{
-					
+
 					if (ctrl && alt && sc == 0x71) // CTRL ALT DEL
 					{
 						pull_line((1 << RESET_TRIG));
@@ -217,7 +218,7 @@ void decode(uint8_t sc)
 					{
 						offs=1;
 					}
-					
+
 					// do a table look-up
 					for(i = 0; (ch = pgm_read_byte(&scancodes[i][0])) != sc && ch; i++);
 					if (ch == sc)
@@ -228,11 +229,12 @@ void decode(uint8_t sc)
 						//     ch &= 0b01111111;
 						// }
 						put_kbbuff(ch);
+                        putchar(ch);
 					}
-				}								  
+				}
 				else // Scan code mode
 				{
-			
+
 				}
 				break;
 		}
@@ -244,7 +246,7 @@ void decode(uint8_t sc)
 		switch (sc)
 		{
 			case 0x12:
-			case 0x59:	
+			case 0x59:
 				shift = 0;
 				break;
 			case 0x14:
@@ -266,7 +268,7 @@ void decode(uint8_t sc)
 
 //-------------------------------------------------------------------
 // Stuff a decoded byte into the keyboard buffer.
-// This routine is currently only called by "decode" which is called 
+// This routine is currently only called by "decode" which is called
 // from within the ISR so atomic precautions are not needed here.
 //-------------------------------------------------------------------
 void put_kbbuff(uint8_t c)
@@ -277,7 +279,7 @@ void put_kbbuff(uint8_t c)
         cli();
 		kb_buffcnt++;
         sei();
-        
+
 		// Pointer wrapping
 		if (kb_inptr >= kb_buffer + KB_BUFF_SIZE)
 			kb_inptr = kb_buffer;
@@ -296,7 +298,7 @@ int get_scanchar(void)
 
 	// Get byte - Increment pointer
 	byte = *scan_outptr++;
-    
+
 	// Pointer wrapping
 	if (scan_outptr >= scan_buffer + SCAN_BUFF_SIZE)
 		scan_outptr = scan_buffer;
@@ -304,7 +306,7 @@ int get_scanchar(void)
     cli();
 	scan_buffcnt--;
     sei();
-    
+
     return byte;
 }
 #ifdef MOUSE
@@ -320,7 +322,7 @@ int get_mousechar(void)
 
 	// Get byte - Increment pointer
 	byte = *mouse_outptr++;
-    
+
 	// Pointer wrapping
 	if (mouse_outptr >= mouse_buffer + SCAN_BUFF_SIZE)
 		mouse_outptr = mouse_buffer;
@@ -328,7 +330,7 @@ int get_mousechar(void)
     cli();
 	mouse_buffcnt--;
     sei();
-    
+
     return byte;
 }
 #endif
