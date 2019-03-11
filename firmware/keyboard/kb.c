@@ -167,7 +167,9 @@ void decode(uint8_t sc)
 	static uint8_t ctrl  = 0;
 	static uint8_t alt   = 0;
 
-	uint8_t i, ch, offs;
+	uint8_t ch, offs;
+
+
 
 	// put_kbbuff(sc);
 	// return;
@@ -204,33 +206,39 @@ void decode(uint8_t sc)
 
 					if(shift)					  // If shift not pressed,
 					{
-						offs=2;
+						offs=1;
 					}
 					else if (ctrl)
 					{
-						offs=3;
+						offs=2;
 					}
 					else if (alt)
 					{
-						offs=4;
+						offs=3;
 					}
 					else
 					{
-						offs=1;
+						offs=0;
 					}
 
 					// do a table look-up
-					for(i = 0; (ch = pgm_read_byte(&scancodes[i][0])) != sc && ch; i++);
-					if (ch == sc)
-					{
-						ch = pgm_read_byte(&scancodes[i][offs]);
+					//for(i = 0; (ch = pgm_read_byte(&scancodes[i])) != sc && ch; i++);
+
+					//if (ch == sc)
+				//	{
+				//		ch = pgm_read_byte(&scancodes[i][1]);
 						// if(ch & 0x80){ //escape sequence?
 						//     put_kbbuff(0x1b);   // put 2 byte to buffer
 						//     ch &= 0b01111111;
 						// }
-						put_kbbuff(ch);
-                        putchar(ch);
-					}
+                        //
+						ch = pgm_read_byte(&scancodes[sc][offs]);
+                        if (ch != 0)
+                        {
+						    put_kbbuff(ch);
+                            putchar(ch);
+                        }
+				//	}
 				}
 				else // Scan code mode
 				{
