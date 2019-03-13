@@ -221,24 +221,12 @@ void decode(uint8_t sc)
 						offs=0;
 					}
 
-					// do a table look-up
-					//for(i = 0; (ch = pgm_read_byte(&scancodes[i])) != sc && ch; i++);
-
-					//if (ch == sc)
-				//	{
-				//		ch = pgm_read_byte(&scancodes[i][1]);
-						// if(ch & 0x80){ //escape sequence?
-						//     put_kbbuff(0x1b);   // put 2 byte to buffer
-						//     ch &= 0b01111111;
-						// }
-                        //
-						ch = pgm_read_byte(&scancodes[sc][offs]);
-                        if (ch != 0)
-                        {
-						    put_kbbuff(ch);
-                            putchar(ch);
-                        }
-				//	}
+                    ch = pgm_read_byte(&scancodes[sc][offs]);
+                    if (ch != 0)
+                    {
+                        put_kbbuff(ch);
+                        putchar(ch);
+                    }
 				}
 				else // Scan code mode
 				{
