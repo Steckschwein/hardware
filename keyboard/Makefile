@@ -19,6 +19,9 @@ CFLAGS= -g -Os -Wall -mcall-prologues -mmcu=atmega8  -DF_CPU=$(CPUSPEED) -D__PRO
 #uncomment to trigger host system IRQ line at every keytroke
 #CFLAGS+=-DUSE_IRQ
 
+#uncomment to enable serial debugging
+CFLAGS+=-DSERIAL_DEBUG
+
 OBJ2HEX = avr-objcopy
 OBJDUMP = avr-objdump
 LOADER=avrdude -p $(AVRDEVICE)

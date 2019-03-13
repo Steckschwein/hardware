@@ -95,7 +95,9 @@ int __attribute__((OS_main)) main(void)
 
 	init_kb();
 	spiInitSlave();
+#ifdef SERIAL_DEBUG
     init_uart();
+#endif
 	sei();
 
 	while(1)

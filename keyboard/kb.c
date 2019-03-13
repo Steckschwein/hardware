@@ -225,7 +225,9 @@ void decode(uint8_t sc)
                     if (ch != 0)
                     {
                         put_kbbuff(ch);
+#ifdef SERIAL_DEBUG
                         putchar(ch);
+#endif
                     }
 				}
 				else // Scan code mode
