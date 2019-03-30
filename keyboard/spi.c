@@ -8,7 +8,7 @@
 
 //SPI Transfer Complete Interrupt starting on page 124 in datasheet
 ISR( SPI_STC_vect)
-{ 
+{
 
 #ifdef USE_IRQ
 	DDRC &= ~(1 << IRQ); // release IRQ line
@@ -16,8 +16,9 @@ ISR( SPI_STC_vect)
 
 	if (SPDR != 0)
 	{
+		SPDR = 0xFF;
 		return;
-	}	
+	}
 
 	if (kb_buffcnt == 0)
 	{

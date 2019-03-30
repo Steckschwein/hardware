@@ -64,16 +64,35 @@ void init_kb(void)
 #endif
 #endif
 
-	// PORTC  	= 3;
-	// DDRC	= (1 << PC0) | (1 << PC1);
-
-	// PORTC	= (1 << PC0) | (1 << PC1) | (1 << PC2);
-	// DDRC	= (1 << PC0) | (1 << PC1) | (1 << PC2);
-
-	// PORTC all input, all low
 	PORTC = 0;
 	DDRC  = 0;
 }
+
+void request_to_send()
+{
+    // Clock line low
+    DDRD |= (1 << CLOCK) ;
+    PORTD &= ~(1<< CLOCK);
+
+    // wait at least 100us
+    _delay_us(101);
+
+    // data line low
+
+    // Set DATAPIN to output
+    DDRD |= (1 << DATAPIN);
+    // Clear bit
+    PORTD &= ~(1<< DATAPIN);
+
+    // clock line back high
+    PORTD |= (1<< CLOCK);
+    DDRD &= ~(1 << CLOCK) ;
+
+
+    // wait for clock to become low
+    while (PIND & (1<<CLOCK)) {};
+}
+
 
 
 
@@ -97,8 +116,32 @@ ISR (USART_RXC_vect)
 #endif
 
 #ifndef USART
+
+
 ISR (INT0_vect)
 {
+	// static uint8_t bitcount = 12;			  // 0 = neg.  1 = pos.
+	// static uint8_t val = 0b10001001;			  // 0 = neg.  1 = pos.
+	//
+    // if (bitcount < 8 && bitcount > 1)
+    // {
+    //     if (val & 0x80)
+    //     {
+    //         PORTD |= (1 << DATAPIN);
+    //     }
+    //     else
+    //     {
+    //         PORTD &= ~(1 << DATAPIN);
+    //     }
+    //     val = (val << 1);
+    // }
+    // if (bitcount-- == 0)
+    // {
+    //     bitcount = 8;
+    //     val = 0b10001001;
+    // }
+    // return;
+
 	static uint8_t data = 0;				  // Holds the received scan code
 	static uint8_t bitcount = 11;			  // 0 = neg.  1 = pos.
 

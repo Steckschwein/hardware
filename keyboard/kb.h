@@ -6,11 +6,13 @@
 // Keyboard konnections
 #define PIN_KB  PIND
 #define PORT_KB PORTD
-#define CLOCK   2
-#define DATAPIN 6
-#define MOUSE_DATAPIN 7
+#define CLOCK   PD2
+#define DATAPIN PD6
+#define MOUSE_DATAPIN PD7
 
 void init_kb(void);
+void request_to_send();
+
 void decode(unsigned char sc);
 void put_kbbuff(unsigned char c);
 // int  get_kbchar(void);
