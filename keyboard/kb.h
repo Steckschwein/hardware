@@ -10,8 +10,18 @@
 #define DATAPIN PD6
 #define MOUSE_DATAPIN PD7
 
+#define MODE_RECEIVE 0
+#define MODE_SEND    1
+
+volatile uint8_t mode;
+volatile uint8_t send_byte;
+
 void init_kb(void);
 void request_to_send();
+uint8_t parity(uint8_t);
+
+
+uint8_t send(uint8_t);
 
 void decode(unsigned char sc);
 void put_kbbuff(unsigned char c);
