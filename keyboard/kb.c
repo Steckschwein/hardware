@@ -79,6 +79,9 @@ void request_to_send()
     // wait at least 100us
     _delay_us(101);
 
+
+	MCUCR 	= (1 << ISC00);					  // INT0 interrupt on rising edge
+    mode = MODE_SEND;
     // data line low
 
     // Set DATAPIN to output
@@ -87,20 +90,18 @@ void request_to_send()
     PORTD &= ~(1<< DATAPIN);
 
     // clock line back high
-    PORTD |= (1<< CLOCK);
     DDRD  &= ~(1 << CLOCK) ;
-
-	MCUCR 	= (1 << ISC00);					  // INT0 interrupt on rising edge
-    mode = MODE_SEND;
+    PORTD |= (1<< CLOCK);
 
 
     // wait for clock to become low
-    while (PIND & (1<<CLOCK)) {};
+    //while (PIND & (1<<CLOCK)) {};
 }
 
 uint8_t send(uint8_t data)
 {
-    send_byte = data;
+    send_data = data;
+    send_parity = !parity(data);
     request_to_send();
 
     while (mode == MODE_SEND) {};
@@ -145,9 +146,9 @@ ISR (INT0_vect)
 	static uint8_t data = 0;				  // Holds the received scan code
 	static uint8_t bitcount = 11;			  // 0 = neg.  1 = pos.
 	static uint8_t send_bitcount = 11;			  // 0 = neg.  1 = pos.
-	static uint8_t shift_data = 0;
+	//static uint8_t shift_data = 0;
+    //static uint8_t p = 0;
     static uint8_t ack = 0;
-    static uint8_t p = 0;
 
 
     if (mode == MODE_SEND)
@@ -156,15 +157,14 @@ ISR (INT0_vect)
         // send start bit (always 0)
         if (send_bitcount == 11)
         {
-            shift_data = send_byte;
-            p = parity(send_byte);
             PORTD &= ~(1 << DATAPIN);
         }
 
 
         if (send_bitcount < 11 && send_bitcount > 3)
         {
-            if (shift_data & 1)
+            send_data = (send_data >> 1);
+            if (send_data & 1)
             {
                 PORTD |= (1 << DATAPIN);
             }
@@ -172,13 +172,12 @@ ISR (INT0_vect)
             {
                 PORTD &= ~(1 << DATAPIN);
             }
-            shift_data = (shift_data >> 1);
         }
 
         // send parity bit
         if (send_bitcount == 3)
         {
-            if (p)
+            if (send_parity)
             {
                 PORTD |= (1 << DATAPIN);
             }

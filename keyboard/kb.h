@@ -14,7 +14,9 @@
 #define MODE_SEND    1
 
 volatile uint8_t mode;
-volatile uint8_t send_byte;
+volatile uint8_t send_data;
+volatile uint8_t send_parity;
+
 
 void init_kb(void);
 void request_to_send();
