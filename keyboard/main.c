@@ -60,8 +60,8 @@ int __attribute__((OS_main)) main(void)
     cli();
 
 	init_kb();
-    /*
 	sei();
+    /*
     send(0xee);
     while(1) {
     };
