@@ -164,7 +164,7 @@ ISR (INT0_vect)
 
         if (send_bitcount < 12 && send_bitcount > 3)
         {
-            if (shift_data & 0x80)
+            if (shift_data & 1)
             {
                 PORTD |= (1 << DATAPIN);
             }
@@ -172,7 +172,7 @@ ISR (INT0_vect)
             {
                 PORTD &= ~(1 << DATAPIN);
             }
-            shift_data = (shift_data << 1);
+            shift_data = (shift_data >> 1);
         }
 
         // send parity bit
