@@ -144,7 +144,7 @@ ISR (INT0_vect)
 {
 	static uint8_t data = 0;				  // Holds the received scan code
 	static uint8_t bitcount = 11;			  // 0 = neg.  1 = pos.
-	static uint8_t send_bitcount = 12;			  // 0 = neg.  1 = pos.
+	static uint8_t send_bitcount = 11;			  // 0 = neg.  1 = pos.
 	static uint8_t shift_data = 0;
     static uint8_t ack = 0;
     static uint8_t p = 0;
@@ -154,7 +154,7 @@ ISR (INT0_vect)
     {
 
         // send start bit (always 0)
-        if (send_bitcount == 12)
+        if (send_bitcount == 11)
         {
             shift_data = send_byte;
             p = parity(send_byte);
@@ -162,7 +162,7 @@ ISR (INT0_vect)
         }
 
 
-        if (send_bitcount < 12 && send_bitcount > 3)
+        if (send_bitcount < 11 && send_bitcount > 3)
         {
             if (shift_data & 1)
             {
@@ -214,8 +214,7 @@ ISR (INT0_vect)
 
         if (send_bitcount-- == 0)
         {
-            send_bitcount = 12;
-            //shift_data = 0b10001001;
+            send_bitcount = 11;
         }
         return;
     }

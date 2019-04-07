@@ -61,11 +61,13 @@ int __attribute__((OS_main)) main(void)
 
 	init_kb();
 	sei();
+
     /*
-    send(0xee);
+    send(0xff);
     while(1) {
     };
     */
+
 	spiInitSlave();
 #ifdef SERIAL_DEBUG
     init_uart();
