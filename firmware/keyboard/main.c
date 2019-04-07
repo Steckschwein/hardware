@@ -60,11 +60,12 @@ int __attribute__((OS_main)) main(void)
     cli();
 
 	init_kb();
-    // request_to_send();
-	//
-	// sei();
-    // while(1) {
-    // };
+    /*
+	sei();
+    send(0xee);
+    while(1) {
+    };
+    */
 	spiInitSlave();
 #ifdef SERIAL_DEBUG
     init_uart();

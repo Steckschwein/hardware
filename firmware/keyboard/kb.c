@@ -53,10 +53,10 @@ void init_kb(void)
 #else
 #ifdef MOUSE
 	MCUCR 	= (1 << ISC01)					  // INT0 interrupt on falling edge
-		| (1 << ISC10);					  // INT1 interrupt on falling edge
+		    | (1 << ISC10);					  // INT1 interrupt on falling edge
 
 	GIMSK	= (1 << INT0)					  // Enable INT0 interrupt
-		| (1 << INT1);					  // Enable INT1 interrupt
+		    | (1 << INT1);					  // Enable INT1 interrupt
 #else
 	MCUCR 	= (1 << ISC01);					  // INT0 interrupt on falling edge
 
@@ -66,12 +66,14 @@ void init_kb(void)
 
 	PORTC = 0;
 	DDRC  = 0;
+
+    mode = MODE_RECEIVE;
 }
 
 void request_to_send()
 {
     // Clock line low
-    DDRD |= (1 << CLOCK) ;
+    DDRD  |= (1 << CLOCK);
     PORTD &= ~(1<< CLOCK);
 
     // wait at least 100us
@@ -80,17 +82,30 @@ void request_to_send()
     // data line low
 
     // Set DATAPIN to output
-    DDRD |= (1 << DATAPIN);
+    DDRD  |= (1 << DATAPIN);
     // Clear bit
     PORTD &= ~(1<< DATAPIN);
 
     // clock line back high
     PORTD |= (1<< CLOCK);
-    DDRD &= ~(1 << CLOCK) ;
+    DDRD  &= ~(1 << CLOCK) ;
+
+	MCUCR 	= (1 << ISC00);					  // INT0 interrupt on rising edge
+    mode = MODE_SEND;
 
 
     // wait for clock to become low
     while (PIND & (1<<CLOCK)) {};
+}
+
+uint8_t send(uint8_t data)
+{
+    send_byte = data;
+    request_to_send();
+
+    while (mode == MODE_SEND) {};
+
+    return 0;
 }
 
 
@@ -117,33 +132,94 @@ ISR (USART_RXC_vect)
 
 #ifndef USART
 
+uint8_t parity(uint8_t x)
+{
+    x = x ^ x >> 4;
+    x = x ^ x >> 2;
+    x = x ^ x >> 1;
+    return x & 1;
+}
 
 ISR (INT0_vect)
 {
-	// static uint8_t bitcount = 12;			  // 0 = neg.  1 = pos.
-	// static uint8_t val = 0b10001001;			  // 0 = neg.  1 = pos.
-	//
-    // if (bitcount < 8 && bitcount > 1)
-    // {
-    //     if (val & 0x80)
-    //     {
-    //         PORTD |= (1 << DATAPIN);
-    //     }
-    //     else
-    //     {
-    //         PORTD &= ~(1 << DATAPIN);
-    //     }
-    //     val = (val << 1);
-    // }
-    // if (bitcount-- == 0)
-    // {
-    //     bitcount = 8;
-    //     val = 0b10001001;
-    // }
-    // return;
-
 	static uint8_t data = 0;				  // Holds the received scan code
 	static uint8_t bitcount = 11;			  // 0 = neg.  1 = pos.
+	static uint8_t send_bitcount = 12;			  // 0 = neg.  1 = pos.
+	static uint8_t shift_data = 0;
+    static uint8_t ack = 0;
+    static uint8_t p = 0;
+
+
+    if (mode == MODE_SEND)
+    {
+
+        // send start bit (always 0)
+        if (send_bitcount == 12)
+        {
+            shift_data = send_byte;
+            p = parity(send_byte);
+            PORTD &= ~(1 << DATAPIN);
+        }
+
+
+        if (send_bitcount < 12 && send_bitcount > 3)
+        {
+            if (shift_data & 0x80)
+            {
+                PORTD |= (1 << DATAPIN);
+            }
+            else
+            {
+                PORTD &= ~(1 << DATAPIN);
+            }
+            shift_data = (shift_data << 1);
+        }
+
+        // send parity bit
+        if (send_bitcount == 3)
+        {
+            if (p)
+            {
+                PORTD |= (1 << DATAPIN);
+            }
+            else
+            {
+                PORTD &= ~(1 << DATAPIN);
+            }
+        }
+
+        // send stop bit (always 1)
+        if (send_bitcount == 2)
+        {
+            PORTD |= (1 << DATAPIN);
+        }
+
+
+        // get ACK bit
+        if (send_bitcount == 1)
+        {
+            DDRD  &= ~(1 << DATAPIN);
+
+            if(PIND & (1 << DATAPIN))
+            {
+                ack == 1;
+                mode = MODE_RECEIVE;
+                MCUCR &= ~(1 << ISC00);
+            }
+            else
+            {
+                ack == 0;
+            }
+        }
+
+        if (send_bitcount-- == 0)
+        {
+            send_bitcount = 12;
+            //shift_data = 0b10001001;
+        }
+        return;
+    }
+
 
 	if(bitcount < 11 && bitcount > 2)		  // Bit 3 to 10 is data. Parity bit,
 	{										  // start and stop bits are ignored.
