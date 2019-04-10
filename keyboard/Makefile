@@ -1,5 +1,3 @@
-SERIALDEVICE=/dev/ttyACM0
-
 AVRDEVICE=m8
 # 8MHz
 CPUSPEED=8000000
@@ -25,10 +23,7 @@ CFLAGS+=-DSERIAL_DEBUG
 OBJ2HEX = avr-objcopy
 OBJDUMP = avr-objdump
 LOADER=avrdude -p $(AVRDEVICE)
-DEVICE=-c stk500v2 -P $(SERIALDEVICE)
 BURN=-U flash:w:$(PRG).elf
-#BURN=-c avrispmkII -D -p m8 -U flash:w:$(PRG).hex
-
 
 # -f set fuse bits 16bit value
 # -F verify fuse bits
@@ -39,10 +34,10 @@ BURN=-U flash:w:$(PRG).elf
 
 PRG=keyboard
 OBJ=kb.o spi.o serial.o main.o
-all: $(PRG).elf $(PRG).hex $(PRG).lss $(PRG).eep
+#all: $(PRG).elf $(PRG).hex $(PRG).lss $(PRG).eep
 all: $(PRG).elf
 
-kb.o: scancodes_de.h
+kb.o: scancodes_de_cp437.h
 
 $(PRG).elf: $(OBJ)
 	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
