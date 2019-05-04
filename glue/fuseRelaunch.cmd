@@ -1,0 +1,1 @@
+-intstyle "ise" -incremental -o "/home/dommas/steckschwein-code/firmware/glue/decoder_test_isim_beh.exe" -prj "/home/dommas/steckschwein-code/firmware/glue/decoder_test_beh.prj" "work.decoder_test" 
