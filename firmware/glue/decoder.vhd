@@ -84,9 +84,7 @@ begin
 								else '0';
 								
 								--or (A = "-00000100---") else '0';	
-	-- CSLORAM = A15
-   --     + /A14 * /A13 * /A12 * /A11 * /A10 * A9 * /A8 * /A7
-	--         10      9      8      7      6    5     4     3 
+
 	CS_HIRAM   	<= '0' when (A = "1-0---------")
 								or --((A(11 downto 10) = "10"))
 									(A = "10----------")
@@ -94,15 +92,15 @@ begin
 								or ((ROMOFF = '1') and (RW = '1') and (A = "111---------"))	-- Reads to $e000-$ffff go to the ROM or to RAM when ROMOFF is low
 							 else '1';	
 
-	CS_UART    	<= '0' when (A = "000000100000") else '1'; -- $0200		
-	CS_VIA     	<= '0' when (A = "000000100001") else '1'; -- $0210
-	CS_VDP		<= '0' when (A = "000000100010") else '1'; -- $0220	
-	MEMCTL		<= '0' when (A = "000000100011") else '1'; -- $0230
-	CS_IO			<= '0' when (A = "000000100100") 
-								or (A = "000000100101")
-								or (A = "000000100110")
-								or (A = "000000100111")
-							 else '1'; -- $0240
+	CS_UART    	<= '0' when (A = "000000100000") else '1'; 	-- $0200		
+	CS_VIA     	<= '0' when (A = "000000100001") else '1'; 	-- $0210
+	CS_VDP		<= '0' when (A = "000000100010") else '1'; 	-- $0220	
+	MEMCTL		<= '0' when (A = "000000100011") else '1'; 	-- $0230
+	CS_IO			<= '0' when (A = "000000100100") 				-- $0240 
+								or (A = "000000100101") 				-- $0250
+								or (A = "000000100110") 				-- $0260
+								or (A = "000000100111") 				-- $0270
+							 else '1'; 
 		
 
 --end process decoder;
