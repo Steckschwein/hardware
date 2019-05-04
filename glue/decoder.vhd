@@ -72,7 +72,21 @@ begin
 --decoder: process(A, RW, ROMOFF)
 --begin
 	CS_ROM	  	<= '0' when (ROMOFF = '0') and (RW = '1') and (A = "111---------") else '1';
-	CS_LORAM   	<= '1' when (A(11) = '1') or ((A = "-00000100---")) else '0';	
+	CS_LORAM   	<= '1' when (A(11) = '1')
+								or (A(10) = '0' 
+								and A(9) = '0' 
+								and A(8) = '0' 
+								and A(7) = '0' 
+								and A(6) = '0'
+								and A(5) = '1'
+								and A(4) = '0'
+								and A(3) = '0')
+								else '0';
+								
+								--or (A = "-00000100---") else '0';	
+	-- CSLORAM = A15
+   --     + /A14 * /A13 * /A12 * /A11 * /A10 * A9 * /A8 * /A7
+	--         10      9      8      7      6    5     4     3 
 	CS_HIRAM   	<= '0' when (A = "1-0---------")
 								or --((A(11 downto 10) = "10"))
 									(A = "10----------")
@@ -84,18 +98,22 @@ begin
 	CS_VIA     	<= '0' when (A = "000000100001") else '1'; -- $0210
 	CS_VDP		<= '0' when (A = "000000100010") else '1'; -- $0220	
 	MEMCTL		<= '0' when (A = "000000100011") else '1'; -- $0230
-	CS_IO			<= '0' when (A = "0000001001--") else '1'; -- $0240
-
+	CS_IO			<= '0' when (A = "000000100100") 
+								or (A = "000000100101")
+								or (A = "000000100110")
+								or (A = "000000100111")
+							 else '1'; -- $0240
+		
 
 --end process decoder;
 
-rdwr: process(RW, RDY, clk)
-begin
+--rdwr: process(RW, clk)
+--begin
 --	RD 			<= RW nand (RDY nand clk);
 --	WR 			<= not RW nand (RDY nand clk);
 	RD 			<= RW nand clk;
 	WR 			<= not RW nand clk;
 	PHI2OUT		<= clk;
-end process rdwr;
+--end process rdwr;
 
 End decoder_arch;
