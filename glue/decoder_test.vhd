@@ -41,6 +41,8 @@ ARCHITECTURE behavior OF decoder_test IS
  
     COMPONENT decoder
     PORT(
+	      RESET : IN  std_logic;
+    
          CLKIN : IN  std_logic;
          PHI2OUT : OUT  std_logic;
          A : IN  std_logic_vector(11 downto 0);
@@ -61,14 +63,15 @@ ARCHITECTURE behavior OF decoder_test IS
     END COMPONENT;
     
 
-   --Inputs
+   --Inputs   
+	signal RESET : std_logic := '0';
    signal CLKIN : std_logic := '0';
    signal A : std_logic_vector(11 downto 0) := (others => '0');
    signal RW : std_logic := '0';
    signal ROMOFF : std_logic := '0';
 
 	--BiDirs
-   signal RDY : std_logic;
+   signal RDY : std_logic := 'Z';
    signal CS_ROM : std_logic;
    signal CS_UART : std_logic;
    signal CS_VDP : std_logic;
@@ -90,6 +93,7 @@ BEGIN
  
 	-- Instantiate the Unit Under Test (UUT)
    uut: decoder PORT MAP (
+			 RESET => RESET,
           CLKIN => CLKIN,
           PHI2OUT => PHI2OUT,
           A => A,
@@ -122,10 +126,14 @@ BEGIN
    stim_proc: process
    begin		
       -- hold reset state for 100 ns.
+		RESET <= '0';
 		RW <= '1';
 		ROMOFF <= '1';
 		
       wait for 100 ns;	
+		RESET <= '1';
+		
+		wait for CLKIN_period/2;
 
       -- wait for CLKIN_period*10;
 
@@ -145,7 +153,7 @@ BEGIN
 		assert CS_ROM		= '1' report "CS_ROM selected but should not" severity error;
 		assert CS_HIRAM	= '1' report "CS_HIRAM selected but should not" severity error;
 
---		wait for CLKIN_period*10;
+		wait for CLKIN_period*10;
 
 
 		A <= "000000011111"; -- $01f0
@@ -160,7 +168,7 @@ BEGIN
 		assert CS_ROM		= '1' report "CS_ROM selected but should not" severity error;
 		assert CS_HIRAM	= '1' report "CS_HIRAM selected but should not" severity error;
 
---		wait for CLKIN_period*10;
+		wait for CLKIN_period*10;
 
 		A <= "000000101000"; -- $0280
 		wait for CLKIN_period/2;
@@ -172,7 +180,8 @@ BEGIN
 		assert CS_IO		= '1' report "CS_IO selected but should not" severity error;
 		assert CS_ROM		= '1' report "CS_ROM selected but should not" severity error;
 		assert CS_HIRAM	= '1' report "CS_HIRAM selected but should not" severity error;
---		wait for CLKIN_period*10;
+		
+		wait for CLKIN_period*10;
 
 
 		A <= "000001111111"; -- $07f0
@@ -186,6 +195,7 @@ BEGIN
 		assert CS_ROM		= '1' report "CS_ROM selected but should not" severity error;
 		assert CS_HIRAM	= '1' report "CS_HIRAM selected but should not" severity error;
 
+		wait for CLKIN_period*10;
 
 		-- Test IO area	
 		-- Select UART ($0200)
@@ -200,7 +210,7 @@ BEGIN
 		assert CS_HIRAM	= '1' report "CS_HIRAM selected but should not" severity error;
 		assert CS_LORAM	= '1' report "CS_LORAM selected but should not" severity error;
 
---		wait for CLKIN_period*10;
+		wait for CLKIN_period*10;
 		
 		-- select VIA ($0210)
 		A <= "000000100001";
@@ -215,7 +225,7 @@ BEGIN
 		assert CS_HIRAM	= '1' report "CS_HIRAM selected but should not" severity error;
 		assert CS_LORAM	= '1' report "CS_LORAM selected but should not" severity error;
 		
---		wait for CLKIN_period*10;
+		wait for CLKIN_period*10;
 		
 		-- select VDP ($0220)
 		A <= "000000100010";
@@ -230,7 +240,7 @@ BEGIN
 		assert CS_HIRAM	= '1' report "CS_HIRAM selected but should not" severity error;
 		assert CS_LORAM	= '1' report "CS_LORAM selected but should not" severity error;
 
---		wait for CLKIN_period*10;
+		wait for CLKIN_period*10;
 		
 		-- select MEMCTL ($0230)
 		A <= "000000100011";
@@ -245,7 +255,7 @@ BEGIN
 		assert CS_HIRAM	= '1' report "CS_HIRAM selected but should not" severity error;
 		assert CS_LORAM	= '1' report "CS_LORAM selected but should not" severity error;
 	
---		wait for CLKIN_period*10;
+		wait for CLKIN_period*10;
 		
 		-- select CS_IO ($0240)
 		A <= "000000100100";
@@ -260,6 +270,8 @@ BEGIN
 		assert CS_HIRAM	= '1' report "CS_HIRAM selected but should not" severity error;
 		assert CS_LORAM	= '1' report "CS_LORAM selected but should not" severity error;
 
+		wait for CLKIN_period*10;
+
 		-- test CS_HIRAM, CS_ROM, ROMOFF
 		-- read from $e000, ROMOFF = 0
 		RW			<= '1'; -- reading
@@ -269,10 +281,14 @@ BEGIN
 		assert CS_ROM		= '0' report "CS_ROM not selected" severity error;
 		assert CS_HIRAM	= '1' report "CS_HIRAM selected but should not" severity error;
 
+		wait for CLKIN_period*10;
+
 		ROMOFF 	<= '1';
 		wait for CLKIN_period/2;
 		assert CS_ROM		= '1' report "CS_ROM selected but should not" severity error;
 		assert CS_HIRAM	= '0' report "CS_HIRAM not selected" severity error;
+
+		wait for CLKIN_period*10;
 	
 		-- test CS_HIRAM, CS_ROM, ROMOFF
 		-- write to $e000, ROMOFF = 0
@@ -283,6 +299,8 @@ BEGIN
 		assert CS_ROM		= '1' report "CS_ROM selected but should not" severity error;
 		assert CS_HIRAM	= '0' report "CS_HIRAM not selected" severity error;	
 
+		wait for CLKIN_period*10;
+
 		-- read from $f000, ROMOFF = 0
 		RW			<= '1'; -- reading
 		ROMOFF 	<= '0'; -- ROM is on
@@ -291,10 +309,14 @@ BEGIN
 		assert CS_ROM		= '0' report "CS_ROM not selected" severity error;
 		assert CS_HIRAM	= '1' report "CS_HIRAM selected but should not" severity error;
 
+		wait for CLKIN_period*10;
+
 		ROMOFF 	<= '1';
 		wait for CLKIN_period/2;
 		assert CS_ROM		= '1' report "CS_ROM selected but should not" severity error;
 		assert CS_HIRAM	= '0' report "CS_HIRAM not selected" severity error;
+
+		wait for CLKIN_period*10;
 	
 		-- test CS_HIRAM, CS_ROM, ROMOFF
 		-- write to $f000, ROMOFF = 0
@@ -304,6 +326,8 @@ BEGIN
 		wait for CLKIN_period/2;
 		assert CS_ROM		= '1' report "CS_ROM selected but should not" severity error;
 		assert CS_HIRAM	= '0' report "CS_HIRAM not selected" severity error;	
+
+	
 		
 
       wait;

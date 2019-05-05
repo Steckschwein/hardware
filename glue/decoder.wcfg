@@ -12,10 +12,18 @@
          </top_modules>
       </db_ref>
    </db_ref_list>
-   <WVObjectSize size="17" />
+   <WVObjectSize size="18" />
+   <wvobject fp_name="/decoder_test/reset" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">reset</obj_property>
+      <obj_property name="ObjectShortName">reset</obj_property>
+   </wvobject>
    <wvobject fp_name="/decoder_test/clkin" type="logic" db_ref_id="1">
       <obj_property name="ElementShortName">clkin</obj_property>
       <obj_property name="ObjectShortName">clkin</obj_property>
+   </wvobject>
+   <wvobject fp_name="/decoder_test/phi2out" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">phi2out</obj_property>
+      <obj_property name="ObjectShortName">phi2out</obj_property>
    </wvobject>
    <wvobject fp_name="/decoder_test/a" type="array" db_ref_id="1">
       <obj_property name="ElementShortName">a[11:0]</obj_property>
@@ -37,6 +45,14 @@
       <obj_property name="ElementShortName">cs_rom</obj_property>
       <obj_property name="ObjectShortName">cs_rom</obj_property>
    </wvobject>
+   <wvobject fp_name="/decoder_test/cs_hiram" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">cs_hiram</obj_property>
+      <obj_property name="ObjectShortName">cs_hiram</obj_property>
+   </wvobject>
+   <wvobject fp_name="/decoder_test/cs_loram" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">cs_loram</obj_property>
+      <obj_property name="ObjectShortName">cs_loram</obj_property>
+   </wvobject>
    <wvobject fp_name="/decoder_test/cs_uart" type="logic" db_ref_id="1">
       <obj_property name="ElementShortName">cs_uart</obj_property>
       <obj_property name="ObjectShortName">cs_uart</obj_property>
@@ -49,14 +65,6 @@
       <obj_property name="ElementShortName">cs_vdp</obj_property>
       <obj_property name="ObjectShortName">cs_vdp</obj_property>
    </wvobject>
-   <wvobject fp_name="/decoder_test/cs_loram" type="logic" db_ref_id="1">
-      <obj_property name="ElementShortName">cs_loram</obj_property>
-      <obj_property name="ObjectShortName">cs_loram</obj_property>
-   </wvobject>
-   <wvobject fp_name="/decoder_test/cs_hiram" type="logic" db_ref_id="1">
-      <obj_property name="ElementShortName">cs_hiram</obj_property>
-      <obj_property name="ObjectShortName">cs_hiram</obj_property>
-   </wvobject>
    <wvobject fp_name="/decoder_test/memctl" type="logic" db_ref_id="1">
       <obj_property name="ElementShortName">memctl</obj_property>
       <obj_property name="ObjectShortName">memctl</obj_property>
@@ -64,10 +72,6 @@
    <wvobject fp_name="/decoder_test/cs_io" type="logic" db_ref_id="1">
       <obj_property name="ElementShortName">cs_io</obj_property>
       <obj_property name="ObjectShortName">cs_io</obj_property>
-   </wvobject>
-   <wvobject fp_name="/decoder_test/phi2out" type="logic" db_ref_id="1">
-      <obj_property name="ElementShortName">phi2out</obj_property>
-      <obj_property name="ObjectShortName">phi2out</obj_property>
    </wvobject>
    <wvobject fp_name="/decoder_test/rd" type="logic" db_ref_id="1">
       <obj_property name="ElementShortName">rd</obj_property>
