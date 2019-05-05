@@ -51,6 +51,7 @@
     <property xil_pn:name="Use Global Output Enables" xil_pn:value="false" xil_pn:valueState="non-default"/>
     <property xil_pn:name="Use Global Set/Reset" xil_pn:value="false" xil_pn:valueState="non-default"/>
     <property xil_pn:name="Working Directory" xil_pn:value="." xil_pn:valueState="non-default"/>
+    <property xil_pn:name="iMPACT Project File" xil_pn:value="decoder.ipf" xil_pn:valueState="non-default"/>
     <!--                                                                                  -->
     <!-- The following properties are for internal use only. These should not be modified.-->
     <!--                                                                                  -->
