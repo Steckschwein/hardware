@@ -103,10 +103,9 @@
       <outfile xil_pn:name="isim.log"/>
       <outfile xil_pn:name="xilinxsim.ini"/>
     </transform>
-    <transform xil_pn:end_ts="1557076193" xil_pn:in_ck="-7393102158963606647" xil_pn:name="TRAN_ISimulateBehavioralModel" xil_pn:prop_ck="-2793067382223545722" xil_pn:start_ts="1557076192">
+    <transform xil_pn:end_ts="1557080459" xil_pn:in_ck="-7393102158963606647" xil_pn:name="TRAN_ISimulateBehavioralModel" xil_pn:prop_ck="-5244753412892824634" xil_pn:start_ts="1557080459">
       <status xil_pn:value="SuccessfullyRun"/>
       <status xil_pn:value="ReadyToRun"/>
-      <status xil_pn:value="OutOfDateForProperties"/>
       <status xil_pn:value="OutOfDateForOutputs"/>
       <status xil_pn:value="OutputChanged"/>
       <outfile xil_pn:name="decoder_test_isim_beh.wdb"/>
@@ -176,6 +175,14 @@
       <status xil_pn:value="SuccessfullyRun"/>
       <status xil_pn:value="ReadyToRun"/>
       <outfile xil_pn:name="decoder.jed"/>
+    </transform>
+    <transform xil_pn:end_ts="1557076861" xil_pn:in_ck="157989556787857015" xil_pn:name="TRAN_impactProgrammingTool_CPLD" xil_pn:prop_ck="1456161220319319587" xil_pn:start_ts="1557076861">
+      <status xil_pn:value="SuccessfullyRun"/>
+      <status xil_pn:value="ReadyToRun"/>
+    </transform>
+    <transform xil_pn:end_ts="1557076815" xil_pn:in_ck="157989556787857015" xil_pn:name="TRAN_configureTargetDevice_CPLD" xil_pn:prop_ck="4862876002815106863" xil_pn:start_ts="1557076809">
+      <status xil_pn:value="SuccessfullyRun"/>
+      <status xil_pn:value="ReadyToRun"/>
     </transform>
     <transform xil_pn:end_ts="1557000666" xil_pn:in_ck="157989556787870301" xil_pn:name="TRAN_timRpt" xil_pn:prop_ck="111903974446" xil_pn:start_ts="1557000665">
       <status xil_pn:value="AbortedRun"/>
