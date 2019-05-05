@@ -13,6 +13,7 @@ Entity decoder is
 		A			 : in std_logic_vector (11 downto 0);	-- Address bus upper 12 std_logics
 		
 		-- control signals
+		RESET     : in std_logic;  -- reset line
 		RW        : in std_logic;  -- RW pin of 6502
 		ROMOFF    : in std_logic;  -- switch off rom from address space, make underlying RAM readable
 		RDY		 : inout std_logic; -- RDY signal for generating wait states
@@ -35,29 +36,28 @@ Entity decoder is
 end;
 
 Architecture decoder_arch of decoder is
---signal cnt: std_logic_vector(0 to 1);
-signal clk: std_logic;
-
-	
-signal temp: STD_LOGIC;
-signal rdyclk: STD_LOGIC;
-signal sigrdy: STD_LOGIC;
-
-
-signal counter : integer range 0 to 3 := 0;
+	signal clk: std_logic;
+	signal temp: STD_LOGIC;
+	signal rdyclk: STD_LOGIC;
+	signal sigrdy: STD_LOGIC;
+	signal counter : integer range 0 to 3 := 0;
 begin
-	frequency_divider: process (CLKIN) begin
-	  if rising_edge(CLKIN) then
+	
+	frequency_divider: process (RESET, CLKIN) begin
+	  if (RESET = '0') then
+			temp <= '0';
+			counter <= 0;
+	  elsif rising_edge(CLKIN) then
 			if (counter = 1) then
 				 temp <= NOT(temp);
 				 counter <= 0;
 			else
 				 counter <= counter + 1;
 			end if;
+			clk <= temp;
 	  end if;
 	end process;
-    
-   clk <= temp;	
+   PHI2OUT <= clk;
 	
 	rdygen: process(clk, rdyclk, CS_ROM, CS_VDP, CS_IO)
 	begin
@@ -66,7 +66,8 @@ begin
 		end if;
 		sigrdy <= ((not rdyclk) and (not CS_ROM or not CS_IO or not CS_VDP));
 	end process;
-	RDY			<= 'Z' when (sigrdy = '1' ) else '0';
+	--RDY			<= 'Z' when (sigrdy = '1' ) else '0';
+	RDY <= sigrdy;
 	
 --decoder: process(A, RW, ROMOFF)
 --begin
@@ -118,7 +119,7 @@ begin
 --	WR 			<= not RW nand (RDY nand clk);
 	RD 			<= RW nand clk;
 	WR 			<= not RW nand clk;
-	PHI2OUT		<= clk;
+--	PHI2OUT		<= clk;
 --end process rdwr;
 
 End decoder_arch;
