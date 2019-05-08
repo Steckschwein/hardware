@@ -25,6 +25,10 @@
       <obj_property name="ElementShortName">phi2out</obj_property>
       <obj_property name="ObjectShortName">phi2out</obj_property>
    </wvobject>
+   <wvobject fp_name="/decoder_test/rdy" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">rdy</obj_property>
+      <obj_property name="ObjectShortName">rdy</obj_property>
+   </wvobject>
    <wvobject fp_name="/decoder_test/a" type="array" db_ref_id="1">
       <obj_property name="ElementShortName">a[11:0]</obj_property>
       <obj_property name="ObjectShortName">a[11:0]</obj_property>
@@ -36,10 +40,6 @@
    <wvobject fp_name="/decoder_test/romoff" type="logic" db_ref_id="1">
       <obj_property name="ElementShortName">romoff</obj_property>
       <obj_property name="ObjectShortName">romoff</obj_property>
-   </wvobject>
-   <wvobject fp_name="/decoder_test/rdy" type="logic" db_ref_id="1">
-      <obj_property name="ElementShortName">rdy</obj_property>
-      <obj_property name="ObjectShortName">rdy</obj_property>
    </wvobject>
    <wvobject fp_name="/decoder_test/cs_rom" type="logic" db_ref_id="1">
       <obj_property name="ElementShortName">cs_rom</obj_property>

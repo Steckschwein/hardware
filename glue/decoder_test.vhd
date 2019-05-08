@@ -87,7 +87,7 @@ ARCHITECTURE behavior OF decoder_test IS
    signal MEMCTL : std_logic;
 
    -- Clock period definitions
-   constant CLKIN_period : time := 32 ns;
+   constant CLKIN_period : time := 64 ns;
  
 BEGIN
  
