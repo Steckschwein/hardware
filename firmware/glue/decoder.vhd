@@ -12,6 +12,9 @@ Entity decoder is
 		-- address bus
 		A			 : in std_logic_vector (11 downto 0);	-- Address bus upper 12 std_logics
 		
+		-- data bus
+--		D			 : inout std_logic_vector (3 downto 0); -- data bus lower 4 bits
+		
 		-- control signals
 		RESET     : in std_logic;  -- reset line
 		RW        : in std_logic;  -- RW pin of 6502
@@ -37,37 +40,32 @@ end;
 
 Architecture decoder_arch of decoder is
 	signal clk: std_logic;
-	signal temp: STD_LOGIC;
 	signal rdyclk: STD_LOGIC;
-	signal sigrdy: STD_LOGIC;
-	signal counter : integer range 0 to 3 := 0;
 begin
 	
 	frequency_divider: process (RESET, CLKIN) begin
 	  if (RESET = '0') then
-			temp <= '0';
-			counter <= 0;
-	  elsif rising_edge(CLKIN) then
-			if (counter = 1) then
-				 temp <= NOT(temp);
-				 counter <= 0;
-			else
-				 counter <= counter + 1;
-			end if;
-			clk <= temp;
+			clk <= '0';
+		elsif rising_edge(CLKIN) then
+			clk <= not(clk);
 	  end if;
 	end process;
    PHI2OUT <= clk;
+	RD 			<= RW nand clk;
+	WR 			<= not RW nand clk;
+
 	
-	rdygen: process(clk, rdyclk, CS_ROM, CS_VDP, CS_IO)
+	rdygen: process(RESET, clk, rdyclk)
 	begin
-		if rising_edge(clk) then
+		if (RESET = '0') then
+			rdyclk <= '0';
+		elsif rising_edge(clk) then
 			rdyclk <= not rdyclk;
 		end if;
-		sigrdy <= ((not rdyclk) and (not CS_ROM or not CS_IO or not CS_VDP));
+		--sigrdy <= ((not rdyclk) and (not CS_ROM or not CS_IO or not CS_VDP));
 	end process;
-	--RDY			<= 'Z' when (sigrdy = '1' ) else '0';
-	RDY <= sigrdy;
+	RDY			<= '0' when (rdyclk = '1' and (CS_ROM = '0' or CS_IO = '0' or CS_VDP = '0') ) else 'Z';
+	--RDY <= rdyclk;
 	
 --decoder: process(A, RW, ROMOFF)
 --begin
@@ -109,17 +107,7 @@ begin
 								or (A = "000000100110") 				-- $0260
 								or (A = "000000100111") 				-- $0270
 							 else '1'; 
-		
 
---end process decoder;
 
---rdwr: process(RW, clk)
---begin
---	RD 			<= RW nand (RDY nand clk);
---	WR 			<= not RW nand (RDY nand clk);
-	RD 			<= RW nand clk;
-	WR 			<= not RW nand clk;
---	PHI2OUT		<= clk;
---end process rdwr;
 
 End decoder_arch;
