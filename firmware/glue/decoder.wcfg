@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="/home/dommas/steckschwein-code/firmware/glue/decoder_test_isim_beh.wdb" id="1" type="auto">
+         <top_modules>
+            <top_module name="decoder_test" />
+            <top_module name="std_logic_1164" />
+            <top_module name="std_logic_arith" />
+            <top_module name="std_logic_unsigned" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <WVObjectSize size="18" />
+   <wvobject fp_name="/decoder_test/reset" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">reset</obj_property>
+      <obj_property name="ObjectShortName">reset</obj_property>
+   </wvobject>
+   <wvobject fp_name="/decoder_test/clkin" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">clkin</obj_property>
+      <obj_property name="ObjectShortName">clkin</obj_property>
+   </wvobject>
+   <wvobject fp_name="/decoder_test/phi2out" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">phi2out</obj_property>
+      <obj_property name="ObjectShortName">phi2out</obj_property>
+   </wvobject>
+   <wvobject fp_name="/decoder_test/a" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">a[11:0]</obj_property>
+      <obj_property name="ObjectShortName">a[11:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/decoder_test/rw" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">rw</obj_property>
+      <obj_property name="ObjectShortName">rw</obj_property>
+   </wvobject>
+   <wvobject fp_name="/decoder_test/romoff" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">romoff</obj_property>
+      <obj_property name="ObjectShortName">romoff</obj_property>
+   </wvobject>
+   <wvobject fp_name="/decoder_test/rdy" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">rdy</obj_property>
+      <obj_property name="ObjectShortName">rdy</obj_property>
+   </wvobject>
+   <wvobject fp_name="/decoder_test/cs_rom" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">cs_rom</obj_property>
+      <obj_property name="ObjectShortName">cs_rom</obj_property>
+   </wvobject>
+   <wvobject fp_name="/decoder_test/cs_hiram" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">cs_hiram</obj_property>
+      <obj_property name="ObjectShortName">cs_hiram</obj_property>
+   </wvobject>
+   <wvobject fp_name="/decoder_test/cs_loram" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">cs_loram</obj_property>
+      <obj_property name="ObjectShortName">cs_loram</obj_property>
+   </wvobject>
+   <wvobject fp_name="/decoder_test/cs_uart" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">cs_uart</obj_property>
+      <obj_property name="ObjectShortName">cs_uart</obj_property>
+   </wvobject>
+   <wvobject fp_name="/decoder_test/cs_via" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">cs_via</obj_property>
+      <obj_property name="ObjectShortName">cs_via</obj_property>
+   </wvobject>
+   <wvobject fp_name="/decoder_test/cs_vdp" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">cs_vdp</obj_property>
+      <obj_property name="ObjectShortName">cs_vdp</obj_property>
+   </wvobject>
+   <wvobject fp_name="/decoder_test/memctl" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">memctl</obj_property>
+      <obj_property name="ObjectShortName">memctl</obj_property>
+   </wvobject>
+   <wvobject fp_name="/decoder_test/cs_io" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">cs_io</obj_property>
+      <obj_property name="ObjectShortName">cs_io</obj_property>
+   </wvobject>
+   <wvobject fp_name="/decoder_test/rd" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">rd</obj_property>
+      <obj_property name="ObjectShortName">rd</obj_property>
+   </wvobject>
+   <wvobject fp_name="/decoder_test/wr" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">wr</obj_property>
+      <obj_property name="ObjectShortName">wr</obj_property>
+   </wvobject>
+   <wvobject fp_name="/decoder_test/clkin_period" type="other" db_ref_id="1">
+      <obj_property name="ElementShortName">clkin_period</obj_property>
+      <obj_property name="ObjectShortName">clkin_period</obj_property>
+   </wvobject>
+</wave_config>

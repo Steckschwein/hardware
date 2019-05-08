@@ -22,43 +22,44 @@
     <file xil_pn:name="decoder.ucf" xil_pn:type="FILE_UCF">
       <association xil_pn:name="Implementation" xil_pn:seqID="0"/>
     </file>
+    <file xil_pn:name="decoder_test.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="2"/>
+      <association xil_pn:name="PostRouteSimulation" xil_pn:seqID="37"/>
+    </file>
   </files>
 
   <properties>
-    <property xil_pn:name="Auto Implementation Top" xil_pn:value="false" xil_pn:valueState="non-default"/>
-    <property xil_pn:name="Create Programmable GND Pins on Unused I/O" xil_pn:value="true" xil_pn:valueState="non-default"/>
-    <property xil_pn:name="Device" xil_pn:value="xc9572xl" xil_pn:valueState="non-default"/>
-    <property xil_pn:name="Device Family" xil_pn:value="XC9500XL CPLDs" xil_pn:valueState="non-default"/>
+    <property xil_pn:name="Custom Waveform Configuration File Behav" xil_pn:value="decoder.wcfg" xil_pn:valueState="non-default"/>
+    <property xil_pn:name="Device" xil_pn:value="xc9572" xil_pn:valueState="non-default"/>
+    <property xil_pn:name="Device Family" xil_pn:value="XC9500 CPLDs" xil_pn:valueState="non-default"/>
+    <property xil_pn:name="Implementation Template" xil_pn:value="Optimize Density" xil_pn:valueState="non-default"/>
     <property xil_pn:name="Implementation Top" xil_pn:value="Architecture|decoder|decoder_arch" xil_pn:valueState="non-default"/>
     <property xil_pn:name="Implementation Top File" xil_pn:value="decoder.vhd" xil_pn:valueState="non-default"/>
     <property xil_pn:name="Implementation Top Instance Path" xil_pn:value="/decoder" xil_pn:valueState="non-default"/>
-    <property xil_pn:name="Logic Optimization" xil_pn:value="Density" xil_pn:valueState="non-default"/>
-    <property xil_pn:name="Max Fanout" xil_pn:value="100000" xil_pn:valueState="non-default"/>
-    <property xil_pn:name="Optimization Goal" xil_pn:value="Area" xil_pn:valueState="non-default"/>
-    <property xil_pn:name="Output Slew Rate" xil_pn:value="Slow" xil_pn:valueState="non-default"/>
-    <property xil_pn:name="Package" xil_pn:value="VQ44" xil_pn:valueState="non-default"/>
-    <property xil_pn:name="Port to be used" xil_pn:value="USB 1" xil_pn:valueState="non-default"/>
-    <property xil_pn:name="Preferred Language" xil_pn:value="VHDL" xil_pn:valueState="default"/>
+    <property xil_pn:name="Package" xil_pn:value="PC44" xil_pn:valueState="default"/>
+    <property xil_pn:name="Preferred Language" xil_pn:value="VHDL" xil_pn:valueState="non-default"/>
     <property xil_pn:name="Property Specification in Project File" xil_pn:value="Store non-default values only" xil_pn:valueState="non-default"/>
-    <property xil_pn:name="Selected Module Instance Name" xil_pn:value="/decoder" xil_pn:valueState="non-default"/>
-    <property xil_pn:name="Selected Simulation Root Source Node Behavioral" xil_pn:value="work.decoder" xil_pn:valueState="non-default"/>
-    <property xil_pn:name="Simulator" xil_pn:value="Modelsim-SE VHDL" xil_pn:valueState="non-default"/>
+    <property xil_pn:name="Run for Specified Time" xil_pn:value="false" xil_pn:valueState="non-default"/>
+    <property xil_pn:name="Selected Module Instance Name" xil_pn:value="/decoder_test" xil_pn:valueState="non-default"/>
+    <property xil_pn:name="Selected Simulation Root Source Node Behavioral" xil_pn:value="work.decoder_test" xil_pn:valueState="non-default"/>
+    <property xil_pn:name="Simulator" xil_pn:value="ISim (VHDL/Verilog)" xil_pn:valueState="default"/>
     <property xil_pn:name="Speed Grade" xil_pn:value="-10" xil_pn:valueState="non-default"/>
     <property xil_pn:name="Synthesis Tool" xil_pn:value="XST (VHDL/Verilog)" xil_pn:valueState="default"/>
-    <property xil_pn:name="Target UCF File Name" xil_pn:value="decoder.ucf" xil_pn:valueState="non-default"/>
     <property xil_pn:name="Top-Level Source Type" xil_pn:value="HDL" xil_pn:valueState="default"/>
-    <property xil_pn:name="User Browsed Strategy Files" xil_pn:value="e:/Xilinx/14.7/ISE_DS/ISE/data/default.xds" xil_pn:valueState="non-default"/>
-    <property xil_pn:name="VHDL Source Analysis Standard" xil_pn:value="VHDL-200X" xil_pn:valueState="non-default"/>
+    <property xil_pn:name="Use Custom Waveform Configuration File Behav" xil_pn:value="true" xil_pn:valueState="non-default"/>
+    <property xil_pn:name="Use Global Clocks" xil_pn:value="false" xil_pn:valueState="non-default"/>
+    <property xil_pn:name="Use Global Output Enables" xil_pn:value="false" xil_pn:valueState="non-default"/>
+    <property xil_pn:name="Use Global Set/Reset" xil_pn:value="false" xil_pn:valueState="non-default"/>
     <property xil_pn:name="Working Directory" xil_pn:value="." xil_pn:valueState="non-default"/>
-    <property xil_pn:name="iMPACT Project File" xil_pn:value="glue.ipf" xil_pn:valueState="non-default"/>
+    <property xil_pn:name="iMPACT Project File" xil_pn:value="decoder.ipf" xil_pn:valueState="non-default"/>
     <!--                                                                                  -->
     <!-- The following properties are for internal use only. These should not be modified.-->
     <!--                                                                                  -->
-    <property xil_pn:name="PROP_BehavioralSimTop" xil_pn:value="Architecture|decoder|decoder_arch" xil_pn:valueState="non-default"/>
+    <property xil_pn:name="PROP_BehavioralSimTop" xil_pn:value="Architecture|decoder_test|behavior" xil_pn:valueState="non-default"/>
     <property xil_pn:name="PROP_DesignName" xil_pn:value="glue" xil_pn:valueState="non-default"/>
-    <property xil_pn:name="PROP_DevFamilyPMName" xil_pn:value="xc9500xl" xil_pn:valueState="default"/>
-    <property xil_pn:name="PROP_intProjectCreationTimestamp" xil_pn:value="2016-12-29T17:08:51" xil_pn:valueState="non-default"/>
-    <property xil_pn:name="PROP_intWbtProjectID" xil_pn:value="7CAA1CE3195D4A10886B44ED4FC52677" xil_pn:valueState="non-default"/>
+    <property xil_pn:name="PROP_DevFamilyPMName" xil_pn:value="xc9500" xil_pn:valueState="default"/>
+    <property xil_pn:name="PROP_intProjectCreationTimestamp" xil_pn:value="2019-05-04T19:03:54" xil_pn:valueState="non-default"/>
+    <property xil_pn:name="PROP_intWbtProjectID" xil_pn:value="454DA30757D12FC06BC046B136744692" xil_pn:valueState="non-default"/>
     <property xil_pn:name="PROP_intWorkingDirLocWRTProjDir" xil_pn:value="Same" xil_pn:valueState="non-default"/>
     <property xil_pn:name="PROP_intWorkingDirUsed" xil_pn:value="No" xil_pn:valueState="non-default"/>
   </properties>

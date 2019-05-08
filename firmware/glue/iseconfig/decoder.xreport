@@ -1,17 +1,17 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <report-views version="2.0" >
  <header>
-  <DateModified>2019-05-01T13:45:39</DateModified>
+  <DateModified>2019-05-05T16:40:05</DateModified>
   <ModuleName>decoder</ModuleName>
-  <SummaryTimeStamp>2019-05-01T11:48:24</SummaryTimeStamp>
+  <SummaryTimeStamp>2019-05-05T14:53:04</SummaryTimeStamp>
   <SavedFilePath>/home/dommas/steckschwein-code/firmware/glue/iseconfig/decoder.xreport</SavedFilePath>
   <ImplementationReportsDirectory>/home/dommas/steckschwein-code/firmware/glue/</ImplementationReportsDirectory>
-  <DateInitialized>2016-12-30T23:34:35</DateInitialized>
+  <DateInitialized>2019-05-04T19:04:24</DateInitialized>
   <EnableMessageFiltering>false</EnableMessageFiltering>
  </header>
  <body>
   <viewgroup label="Design Overview" >
-   <view inputState="Unknown" program="implementation" ExpandErrors="true" ShowPartitionData="false" ExpandConstraints="true" type="FPGASummary" file="decoder_summary.html" label="Summary" ExpandClockNets="true" ExpandWarnings="true" >
+   <view inputState="Unknown" program="implementation" ShowPartitionData="false" type="FPGASummary" file="decoder_summary.html" label="Summary" >
     <toc-item title="Design Overview" target="Design Overview" />
     <toc-item title="Design Utilization Summary" target="Design Utilization Summary" />
     <toc-item title="Performance Summary" target="Performance Summary" />
@@ -42,7 +42,7 @@
   </viewgroup>
   <viewgroup label="Errors and Warnings" >
    <view program="pn" WrapMessages="true" contextTags="EDK_OFF" type="MessageList" hideColumns="Filtered, New" file="_xmsgs/pn_parser.xmsgs" label="Parser Messages" />
-   <view program="xst" WrapMessages="true" contextTags="XST_ONLY,EDK_OFF" hidden="false" type="MessageList" hideColumns="Filtered" collate="0" file="_xmsgs/xst.xmsgs" label="Synthesis Messages" />
+   <view program="xst" WrapMessages="true" contextTags="XST_ONLY,EDK_OFF" hidden="false" type="MessageList" hideColumns="Filtered" file="_xmsgs/xst.xmsgs" label="Synthesis Messages" />
    <view inputState="Synthesized" program="ngdbuild" WrapMessages="true" type="MessageList" hideColumns="Filtered" file="_xmsgs/ngdbuild.xmsgs" label="Translation Messages" />
    <view inputState="Translated" program="map" WrapMessages="true" contextTags="FPGA_ONLY" hidden="true" type="MessageList" hideColumns="Filtered" file="_xmsgs/map.xmsgs" label="Map Messages" />
    <view inputState="Mapped" program="par" WrapMessages="true" contextTags="FPGA_ONLY" hidden="true" type="MessageList" hideColumns="Filtered" file="_xmsgs/par.xmsgs" label="Place and Route Messages" />
