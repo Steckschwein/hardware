@@ -10,7 +10,6 @@ LIBS:cmos4000
 LIBS:adc-dac
 LIBS:memory
 LIBS:xilinx
-LIBS:special
 LIBS:microcontrollers
 LIBS:dsp
 LIBS:microchip
@@ -1751,7 +1750,7 @@ L CP2 C16
 U 1 1 546AA0E1
 P 6650 7200
 F 0 "C16" H 6650 7300 40  0000 L CNN
-F 1 "CP2" H 6656 7115 40  0000 L CNN
+F 1 "100µF" H 6656 7115 40  0000 L CNN
 F 2 "Capacitors_Elko_ThroughHole:Elko_vert_11.2x7.5mm_RM2.5" H 6688 7050 30  0001 C CNN
 F 3 "" H 6650 7200 60  0000 C CNN
 	1    6650 7200
