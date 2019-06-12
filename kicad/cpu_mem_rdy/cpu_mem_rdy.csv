@@ -25,7 +25,8 @@ Id,Designator,Package,Quantity,Designation,Supplier and ref
 25,U12,DIP-20_W7.62mm_LongPads,1,74HCT244,https://www.reichelt.de/octal-bus-puffer-3-state-4-5-5-5-v-dil-20-74hct-244-p3355.html?r=1
 26,U11,DIP-20_W7.62mm_LongPads,1,74HCT273,https://www.reichelt.de/flip-flop-d-type-octal-4-5-5-5-v-dil-20-74hct-273-p3363.html?r=1
 27,U6,DIP-28_W15.24mm_LongPads,1,28C256,https://www.reichelt.de/eeprom-256-kb-32-k-x-8-4-5-5-5-v-pdip-28-28c256-150-p1945.html?r=1
-28,"U8,U7",DIP-28_W15.24mm_LongPads,2,62256 55ns,https://www.reichelt.de/sram-32-kb-4-k-x-8-2-7-5-5-v-dil-28-as-6c62256-55pcn-p146551.html?&trstct=pol_0
+28,"U8,U7",DIP-28_W15.24mm_LongPads,2,62256 55ns,"https://www.reichelt.de/sram-32-kb-4-k-x-8-2-7-5-5-v-dil-28-as-6c62256-55pcn-p146551.html?&trstct=pol_0
+(with adapter)http://www.kessler-electronic.de/Halbleiter/integrierte_Schaltkreise/Speicher/statische_RAMs/SRAMs/62256-LFP45__IS62C256AL-45ULI_i276_14520_0.htm"
 29,J1,USB_B,1,USB,https://www.reichelt.de/usb-einbaukupplung-typ-b-gew-pcb-lum-2411-02-p116160.html?&trstct=pol_0
 30,CON1,BARREL_JACK,1,BARREL_JACK,https://www.reichelt.de/einbaubuchse-innen-2-1-mm-dc-bu21-90-p183502.html?&trstct=pol_5
 31,P6,Pin_Header_Straight_1x02,1,POWER,https://www.reichelt.de/stiftleisten-2-54-mm-1x02-gerade-mpe-087-1-002-p119879.html?&trstct=pol_0
