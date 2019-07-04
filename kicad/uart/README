@@ -1,0 +1,4 @@
+OBSOLETE 
+
+This is the standalone UART board needed with the old I/O-Board under ../io.
+The current revision is ../io_uard and has the uart integrated, so this board is no longer used.
