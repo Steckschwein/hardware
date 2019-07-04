@@ -1,0 +1,6 @@
+the current steckschwein revision consists of three boards found in the directories
+cpu_mem_rdy
+io_uart
+V9958_OPL2
+
+everything else is kept for historical and sentimental reasons.
