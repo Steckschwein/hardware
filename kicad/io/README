@@ -1,0 +1,4 @@
+OBSOLETE
+
+This is the old I/O-board without integrated UART.
+It has been superseded by ../io_uart
