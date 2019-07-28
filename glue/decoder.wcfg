@@ -6,13 +6,14 @@
       <db_ref path="/home/dommas/steckschwein-code/firmware/glue/decoder_test_isim_beh.wdb" id="1" type="auto">
          <top_modules>
             <top_module name="decoder_test" />
+            <top_module name="env" />
             <top_module name="std_logic_1164" />
             <top_module name="std_logic_arith" />
             <top_module name="std_logic_unsigned" />
          </top_modules>
       </db_ref>
    </db_ref_list>
-   <WVObjectSize size="18" />
+   <WVObjectSize size="19" />
    <wvobject fp_name="/decoder_test/reset" type="logic" db_ref_id="1">
       <obj_property name="ElementShortName">reset</obj_property>
       <obj_property name="ObjectShortName">reset</obj_property>
@@ -30,28 +31,50 @@
       <obj_property name="ObjectShortName">rdy</obj_property>
    </wvobject>
    <wvobject fp_name="/decoder_test/a" type="array" db_ref_id="1">
-      <obj_property name="ElementShortName">a[11:0]</obj_property>
-      <obj_property name="ObjectShortName">a[11:0]</obj_property>
+      <obj_property name="ElementShortName">a[15:0]</obj_property>
+      <obj_property name="ObjectShortName">a[15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/decoder_test/ao" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">ao[18:13]</obj_property>
+      <obj_property name="ObjectShortName">ao[18:13]</obj_property>
    </wvobject>
    <wvobject fp_name="/decoder_test/rw" type="logic" db_ref_id="1">
       <obj_property name="ElementShortName">rw</obj_property>
       <obj_property name="ObjectShortName">rw</obj_property>
    </wvobject>
-   <wvobject fp_name="/decoder_test/romoff" type="logic" db_ref_id="1">
-      <obj_property name="ElementShortName">romoff</obj_property>
-      <obj_property name="ObjectShortName">romoff</obj_property>
+   <wvobject fp_name="/decoder_test/rd_opl" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">rd_opl</obj_property>
+      <obj_property name="ObjectShortName">rd_opl</obj_property>
+   </wvobject>
+   <wvobject fp_name="/decoder_test/wr_opl" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">wr_opl</obj_property>
+      <obj_property name="ObjectShortName">wr_opl</obj_property>
+   </wvobject>
+   <wvobject fp_name="/decoder_test/rd" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">rd</obj_property>
+      <obj_property name="ObjectShortName">rd</obj_property>
+   </wvobject>
+   <wvobject fp_name="/decoder_test/wr" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">wr</obj_property>
+      <obj_property name="ObjectShortName">wr</obj_property>
    </wvobject>
    <wvobject fp_name="/decoder_test/cs_rom" type="logic" db_ref_id="1">
       <obj_property name="ElementShortName">cs_rom</obj_property>
       <obj_property name="ObjectShortName">cs_rom</obj_property>
    </wvobject>
-   <wvobject fp_name="/decoder_test/cs_hiram" type="logic" db_ref_id="1">
-      <obj_property name="ElementShortName">cs_hiram</obj_property>
-      <obj_property name="ObjectShortName">cs_hiram</obj_property>
+   <wvobject fp_name="/decoder_test/cs_ram" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">cs_ram</obj_property>
+      <obj_property name="ObjectShortName">cs_ram</obj_property>
    </wvobject>
-   <wvobject fp_name="/decoder_test/cs_loram" type="logic" db_ref_id="1">
-      <obj_property name="ElementShortName">cs_loram</obj_property>
-      <obj_property name="ObjectShortName">cs_loram</obj_property>
+   <wvobject fp_name="/decoder_test/csr_vdp" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">csr_vdp</obj_property>
+      <obj_property name="ObjectShortName">csr_vdp</obj_property>
+   </wvobject>
+   <wvobject fp_name="/decoder_test/csw_vdp" type="logic" db_ref_id="1">
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="ElementShortName">csw_vdp</obj_property>
+      <obj_property name="ObjectShortName">csw_vdp</obj_property>
+      <obj_property name="label">csw_vdp</obj_property>
    </wvobject>
    <wvobject fp_name="/decoder_test/cs_uart" type="logic" db_ref_id="1">
       <obj_property name="ElementShortName">cs_uart</obj_property>
@@ -61,25 +84,9 @@
       <obj_property name="ElementShortName">cs_via</obj_property>
       <obj_property name="ObjectShortName">cs_via</obj_property>
    </wvobject>
-   <wvobject fp_name="/decoder_test/cs_vdp" type="logic" db_ref_id="1">
-      <obj_property name="ElementShortName">cs_vdp</obj_property>
-      <obj_property name="ObjectShortName">cs_vdp</obj_property>
-   </wvobject>
-   <wvobject fp_name="/decoder_test/memctl" type="logic" db_ref_id="1">
-      <obj_property name="ElementShortName">memctl</obj_property>
-      <obj_property name="ObjectShortName">memctl</obj_property>
-   </wvobject>
-   <wvobject fp_name="/decoder_test/cs_io" type="logic" db_ref_id="1">
-      <obj_property name="ElementShortName">cs_io</obj_property>
-      <obj_property name="ObjectShortName">cs_io</obj_property>
-   </wvobject>
-   <wvobject fp_name="/decoder_test/rd" type="logic" db_ref_id="1">
-      <obj_property name="ElementShortName">rd</obj_property>
-      <obj_property name="ObjectShortName">rd</obj_property>
-   </wvobject>
-   <wvobject fp_name="/decoder_test/wr" type="logic" db_ref_id="1">
-      <obj_property name="ElementShortName">wr</obj_property>
-      <obj_property name="ObjectShortName">wr</obj_property>
+   <wvobject fp_name="/decoder_test/cs_opl" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">cs_opl</obj_property>
+      <obj_property name="ObjectShortName">cs_opl</obj_property>
    </wvobject>
    <wvobject fp_name="/decoder_test/clkin_period" type="other" db_ref_id="1">
       <obj_property name="ElementShortName">clkin_period</obj_property>
