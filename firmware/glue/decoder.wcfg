@@ -3,7 +3,7 @@
    <wave_state>
    </wave_state>
    <db_ref_list>
-      <db_ref path="/home/dommas/steckschwein-code/firmware/glue/decoder_test_isim_beh.wdb" id="1" type="auto">
+      <db_ref path="/home/dommas/steckschwein-code/firmware/glue/decoder_test_isim_beh1.wdb" id="1" type="auto">
          <top_modules>
             <top_module name="decoder_test" />
             <top_module name="env" />
@@ -66,6 +66,14 @@
       <obj_property name="ElementShortName">cs_ram</obj_property>
       <obj_property name="ObjectShortName">cs_ram</obj_property>
    </wvobject>
+   <wvobject fp_name="/decoder_test/cs_uart" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">cs_uart</obj_property>
+      <obj_property name="ObjectShortName">cs_uart</obj_property>
+   </wvobject>
+   <wvobject fp_name="/decoder_test/cs_via" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">cs_via</obj_property>
+      <obj_property name="ObjectShortName">cs_via</obj_property>
+   </wvobject>
    <wvobject fp_name="/decoder_test/csr_vdp" type="logic" db_ref_id="1">
       <obj_property name="ElementShortName">csr_vdp</obj_property>
       <obj_property name="ObjectShortName">csr_vdp</obj_property>
@@ -75,14 +83,6 @@
       <obj_property name="ElementShortName">csw_vdp</obj_property>
       <obj_property name="ObjectShortName">csw_vdp</obj_property>
       <obj_property name="label">csw_vdp</obj_property>
-   </wvobject>
-   <wvobject fp_name="/decoder_test/cs_uart" type="logic" db_ref_id="1">
-      <obj_property name="ElementShortName">cs_uart</obj_property>
-      <obj_property name="ObjectShortName">cs_uart</obj_property>
-   </wvobject>
-   <wvobject fp_name="/decoder_test/cs_via" type="logic" db_ref_id="1">
-      <obj_property name="ElementShortName">cs_via</obj_property>
-      <obj_property name="ObjectShortName">cs_via</obj_property>
    </wvobject>
    <wvobject fp_name="/decoder_test/cs_opl" type="logic" db_ref_id="1">
       <obj_property name="ElementShortName">cs_opl</obj_property>

@@ -33,9 +33,9 @@ Entity decoder is
 		-- chip select for peripherals
 		CS_UART   : out std_logic;  	
 		CS_VIA    : out std_logic;  	
-		CSR_VDP   : inout std_logic;  -- VDP read
-		CSW_VDP   : inout std_logic;  -- VDP write
-		CS_OPL    : inout std_logic  	-- OPL2		
+		CSR_VDP   : out std_logic;  -- VDP read
+		CSW_VDP   : out std_logic;  -- VDP write
+		CS_OPL    : out std_logic  	-- OPL2		
 	);
 
 end;
@@ -46,6 +46,14 @@ Architecture decoder_arch of decoder is
 	signal romoff: std_logic;
 	signal rom_bank: std_logic_vector(1 downto 0);
 	signal cs_rom_sig: std_logic;
+	signal cs_ram_sig: std_logic;
+
+	signal cs_uart_sig: std_logic;
+	signal cs_via_sig: std_logic;
+	signal csr_vdp_sig: std_logic;
+	signal csw_vdp_sig: std_logic;
+	signal cs_opl_sig: std_logic;
+	
 	signal reg_select: std_logic;
 	
 begin
@@ -76,34 +84,48 @@ begin
 	end process;
 	
 	
-	RDY				<= '0' when (rdyclk = '1' and (CS_ROM_sig = '0' or CS_OPL = '0' or CSR_VDP = '0' or CSW_VDP = '0') ) else 'Z';
+	RDY				<= '0' when (rdyclk = '1' and (CS_ROM_sig = '0' or CS_OPL_sig = '0' or CSR_VDP_sig = '0' or CSW_VDP_sig = '0') ) else 'Z';
 	
 
 	cs_rom_sig	  	<= '0' when (ROMOFF = '0') and (RW = '1') and (A(15 downto 13) = "111") else '1';
-	CS_ROM 			<= cs_rom_sig;
-	CS_RAM   		<= '1' when (((A(15) = '1')	or A(14 downto 7) = "00000100") 
-									or	(A(15) = '1' and A(13) = '0'))
-									or (((A(15 downto 14) = "10"))
-									or ((RW = '0') and (A(15 downto 12) = "111"))			-- Writes to $e000-$ffff go to the RAM						
-									or ((ROMOFF = '1') and (RW = '1') and (A(15 downto 13) = "111")))	-- Reads to $e000-$ffff go to the ROM or to RAM when ROMOFF is low								 
-								
-								else '0';
+--	cs_loram_sig   		<= '1' when (((A(15) = '1')	or A(14 downto 7) = "00000100") 
+--									or	(A(15) = '1' and A(13) = '0'))
+--								 else '0';
+--	cs_hiram_sig			<= '1' when	(((A(15 downto 14) = "10"))
+--									or ((RW = '0') and (A(15 downto 12) = "111"))			-- Writes to $e000-$ffff go to the RAM						
+--									or ((ROMOFF = '1') and (RW = '1') and (A(15 downto 13) = "111")))	-- Reads to $e000-$ffff go to the ROM or to RAM when ROMOFF is low								 							
+--								else '0';
 							
 
 
-	CS_UART    	<= '0' when (A(15 downto 4) = "000000100000") else '1'; 	-- $0200		
-	CS_VIA     	<= '0' when (A(15 downto 4) = "000000100001") else '1'; 	-- $0210
-	CSR_VDP		<= '0' when (A(15 downto 4) = "000000100010") and (RW = '1') else '1'; 	-- $0220	
-	CSW_VDP		<= '0' when (A(15 downto 4) = "000000100010") and (RW = '0') else '1'; 	-- $0220	
+	CS_UART_sig    	<= '0' when (A(15 downto 4) = "000000100000") else '1'; 	-- $0200		
+	CS_VIA_sig     	<= '0' when (A(15 downto 4) = "000000100001") else '1'; 	-- $0210
+	CSR_VDP_sig		<= '0' when (A(15 downto 4) = "000000100010") and (RW = '1') else '1'; 	-- $0220	
+	CSW_VDP_sig		<= '0' when (A(15 downto 4) = "000000100010") and (RW = '0') else '1'; 	-- $0220	
 	reg_select  <= '1' when (A(15 downto 4) = "000000100011") else '0';	-- $0230
-	CS_OPL		<= '0' when (A(15 downto 4) = "000000100100") else '1';  -- $0240
-							  
+	CS_OPL_sig		<= '0' when (A(15 downto 4) = "000000100100") else '1';  -- $0240
+		
+	cs_ram_sig      <= '0' when (cs_rom_sig = '1' 
+									and CS_UART_sig = '1' 
+									and CS_VIA_sig = '1'
+									and CSW_VDP_sig = '1'
+									and CSR_VDP_sig = '1'
+									and reg_select = '0'
+									and CS_OPL_sig = '1') 
+							 else '1';
+
 	RD_OPL		<= '0' when RW='1' else '1';
 	WR_OPL		<= '0' when RW='0' else '1';
 	--							or (A = "000000100101") 				-- $0250
 	--							or (A = "000000100110") 				-- $0260
 	--							or (A = "000000100111") 				-- $0270
-	
+	cs_uart <= cs_uart_sig;
+	cs_via  <= cs_via_sig;
+	csr_vdp <= csr_vdp_sig;
+	csw_vdp <= csw_vdp_sig;
+	cs_opl  <= cs_opl_sig;
+	CS_ROM  <= cs_rom_sig;
+	cs_ram  <= cs_ram_sig;
 --	AO(15) <= A(15);	
 --	AO(14) <= A(14);
 --	AO(13) <= A(13);
