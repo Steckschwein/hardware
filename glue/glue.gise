@@ -55,6 +55,7 @@
     <file xil_pn:branch="Implementation" xil_pn:fileType="FILE_XST_PROJECT" xil_pn:name="decoder_test_beh.prj"/>
     <file xil_pn:branch="BehavioralSim" xil_pn:fileType="FILE_ISIM_EXE" xil_pn:name="decoder_test_isim_beh.exe"/>
     <file xil_pn:fileType="FILE_ISIM_MISC" xil_pn:name="decoder_test_isim_beh.wdb"/>
+    <file xil_pn:branch="Implementation" xil_pn:fileType="FILE_XST_PROJECT" xil_pn:name="decoder_test_stx_beh.prj"/>
     <file xil_pn:fileType="FILE_XST_PROJECT" xil_pn:name="decoder_vhdl.prj"/>
     <file xil_pn:fileType="FILE_XRPT" xil_pn:name="decoder_xst.xrpt"/>
     <file xil_pn:fileType="FILE_LOG" xil_pn:name="fuse.log"/>
@@ -72,7 +73,7 @@
       <status xil_pn:value="SuccessfullyRun"/>
       <status xil_pn:value="ReadyToRun"/>
     </transform>
-    <transform xil_pn:end_ts="1564421705" xil_pn:in_ck="-7487155902495843893" xil_pn:name="TRAN_copyAbstractToPostAbstractSimulation" xil_pn:start_ts="1564421705">
+    <transform xil_pn:end_ts="1564426357" xil_pn:in_ck="-7487155902495843893" xil_pn:name="TRAN_copyAbstractToPostAbstractSimulation" xil_pn:start_ts="1564426357">
       <status xil_pn:value="SuccessfullyRun"/>
       <status xil_pn:value="ReadyToRun"/>
       <outfile xil_pn:name="decoder.vhd"/>
@@ -82,13 +83,13 @@
       <status xil_pn:value="SuccessfullyRun"/>
       <status xil_pn:value="ReadyToRun"/>
     </transform>
-    <transform xil_pn:end_ts="1564421705" xil_pn:in_ck="-7487155902495843893" xil_pn:name="TRAN_copyPostAbstractToPreSimulation" xil_pn:start_ts="1564421705">
+    <transform xil_pn:end_ts="1564426357" xil_pn:in_ck="-7487155902495843893" xil_pn:name="TRAN_copyPostAbstractToPreSimulation" xil_pn:start_ts="1564426357">
       <status xil_pn:value="SuccessfullyRun"/>
       <status xil_pn:value="ReadyToRun"/>
       <outfile xil_pn:name="decoder.vhd"/>
       <outfile xil_pn:name="decoder_test.vhd"/>
     </transform>
-    <transform xil_pn:end_ts="1564421707" xil_pn:in_ck="-7487155902495843893" xil_pn:name="TRAN_ISimulateBehavioralModelRunFuse" xil_pn:prop_ck="-2714428051205487408" xil_pn:start_ts="1564421705">
+    <transform xil_pn:end_ts="1564426359" xil_pn:in_ck="-7487155902495843893" xil_pn:name="TRAN_ISimulateBehavioralModelRunFuse" xil_pn:prop_ck="-2714428051205487408" xil_pn:start_ts="1564426357">
       <status xil_pn:value="SuccessfullyRun"/>
       <status xil_pn:value="ReadyToRun"/>
       <status xil_pn:value="OutOfDateForOutputs"/>
@@ -100,7 +101,7 @@
       <outfile xil_pn:name="isim.log"/>
       <outfile xil_pn:name="xilinxsim.ini"/>
     </transform>
-    <transform xil_pn:end_ts="1564421707" xil_pn:in_ck="2536355749353966180" xil_pn:name="TRAN_ISimulateBehavioralModel" xil_pn:prop_ck="-5244753412892824634" xil_pn:start_ts="1564421707">
+    <transform xil_pn:end_ts="1564426922" xil_pn:in_ck="2536355749353966180" xil_pn:name="TRAN_ISimulateBehavioralModel" xil_pn:prop_ck="-5244753412892824634" xil_pn:start_ts="1564426921">
       <status xil_pn:value="SuccessfullyRun"/>
       <status xil_pn:value="ReadyToRun"/>
       <outfile xil_pn:name="decoder_test_isim_beh.wdb"/>
@@ -115,7 +116,7 @@
       <status xil_pn:value="SuccessfullyRun"/>
       <status xil_pn:value="ReadyToRun"/>
     </transform>
-    <transform xil_pn:end_ts="1564421686" xil_pn:in_ck="157989556787870182" xil_pn:name="TRANEXT_xstsynthesize_CPLD" xil_pn:prop_ck="-5044948870767633014" xil_pn:start_ts="1564421681">
+    <transform xil_pn:end_ts="1564426341" xil_pn:in_ck="157989556787870182" xil_pn:name="TRANEXT_xstsynthesize_CPLD" xil_pn:prop_ck="-5044948870767633014" xil_pn:start_ts="1564426335">
       <status xil_pn:value="SuccessfullyRun"/>
       <status xil_pn:value="WarningsGenerated"/>
       <status xil_pn:value="ReadyToRun"/>
@@ -130,6 +131,7 @@
       <outfile xil_pn:name="decoder.syr"/>
       <outfile xil_pn:name="decoder.xst"/>
       <outfile xil_pn:name="decoder_test_beh.prj"/>
+      <outfile xil_pn:name="decoder_test_stx_beh.prj"/>
       <outfile xil_pn:name="decoder_xst.xrpt"/>
       <outfile xil_pn:name="webtalk_pn.xml"/>
       <outfile xil_pn:name="xst"/>
@@ -138,7 +140,7 @@
       <status xil_pn:value="SuccessfullyRun"/>
       <status xil_pn:value="ReadyToRun"/>
     </transform>
-    <transform xil_pn:end_ts="1564421691" xil_pn:in_ck="562413007949528894" xil_pn:name="TRAN_ngdbuild" xil_pn:prop_ck="4857968422791268477" xil_pn:start_ts="1564421686">
+    <transform xil_pn:end_ts="1564426345" xil_pn:in_ck="562413007949528894" xil_pn:name="TRAN_ngdbuild" xil_pn:prop_ck="4857968422791268477" xil_pn:start_ts="1564426341">
       <status xil_pn:value="SuccessfullyRun"/>
       <status xil_pn:value="ReadyToRun"/>
       <outfile xil_pn:name="_ngo"/>
@@ -147,7 +149,7 @@
       <outfile xil_pn:name="decoder.ngd"/>
       <outfile xil_pn:name="decoder_ngdbuild.xrpt"/>
     </transform>
-    <transform xil_pn:end_ts="1564421697" xil_pn:in_ck="157989556787861437" xil_pn:name="TRANEXT_vm6File_xc9500" xil_pn:prop_ck="-4419552463647034052" xil_pn:start_ts="1564421691">
+    <transform xil_pn:end_ts="1564426351" xil_pn:in_ck="157989556787861437" xil_pn:name="TRANEXT_vm6File_xc9500" xil_pn:prop_ck="-4419552463647034052" xil_pn:start_ts="1564426345">
       <status xil_pn:value="SuccessfullyRun"/>
       <status xil_pn:value="WarningsGenerated"/>
       <status xil_pn:value="ReadyToRun"/>
@@ -165,7 +167,7 @@
       <outfile xil_pn:name="decoder_html"/>
       <outfile xil_pn:name="decoder_pad.csv"/>
     </transform>
-    <transform xil_pn:end_ts="1564421698" xil_pn:in_ck="157989556787870301" xil_pn:name="TRANEXT_crtProg_xc9500" xil_pn:prop_ck="-9204593535224376705" xil_pn:start_ts="1564421697">
+    <transform xil_pn:end_ts="1564426352" xil_pn:in_ck="157989556787870301" xil_pn:name="TRANEXT_crtProg_xc9500" xil_pn:prop_ck="-9204593535224376705" xil_pn:start_ts="1564426351">
       <status xil_pn:value="SuccessfullyRun"/>
       <status xil_pn:value="ReadyToRun"/>
       <outfile xil_pn:name="decoder.jed"/>
