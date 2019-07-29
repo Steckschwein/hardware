@@ -52,9 +52,9 @@ ARCHITECTURE behavior OF decoder_test IS
          RD : OUT  std_logic;
          WR : OUT  std_logic;
          CS_ROM : INOUT  std_logic;
-         CS_RAM : OUT  std_logic;
+         CS_RAM : INOUT  std_logic;
          CS_UART : INOUT  std_logic;
-         CS_VIA : OUT  std_logic;
+         CS_VIA : INOUT  std_logic;
          CSR_VDP : INOUT  std_logic;
          CSW_VDP : INOUT  std_logic;
          CS_OPL : INOUT  std_logic;
