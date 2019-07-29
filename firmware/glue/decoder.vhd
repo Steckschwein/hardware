@@ -31,10 +31,10 @@ Entity decoder is
 		CS_RAM  	 : out std_logic; 	-- CS for ram 
 		
 		-- chip select for peripherals
-		CS_UART   : out std_logic;  	-- 6551 ACIA   at $d000 ?!?
-		CS_VIA    : out std_logic;  	-- 6522 VIA    at $d100
-		CSR_VDP   : inout std_logic;  	-- VDP read
-		CSW_VDP   : inout std_logic;  	-- VDP write
+		CS_UART   : out std_logic;  	
+		CS_VIA    : out std_logic;  	
+		CSR_VDP   : inout std_logic;  -- VDP read
+		CSW_VDP   : inout std_logic;  -- VDP write
 		CS_OPL    : inout std_logic  	-- OPL2		
 	);
 
@@ -50,17 +50,17 @@ Architecture decoder_arch of decoder is
 	
 begin
 	
-	frequency_divider: process (RESET, CLKIN) begin
-	  if (RESET = '0') then
-			clk <= '0';
-		elsif rising_edge(CLKIN) then
-			clk <= not(clk);
-	  end if;
-	end process;
-	
-   PHI2OUT <= clk;
-	RD 			<= RW nand clk;
-	WR 			<= not RW nand clk;
+--	frequency_divider: process (RESET, CLKIN) begin
+--	  if (RESET = '0') then
+--			clk <= '0';
+--		elsif rising_edge(CLKIN) then
+--			clk <= not(clk);
+--	  end if;
+--	end process;
+	clk		<= CLKIN;
+   PHI2OUT 	<= clk;
+	RD 		<= RW nand clk;
+	WR 		<= not RW nand clk;
 
 
 
@@ -103,9 +103,10 @@ begin
 	--							or (A = "000000100101") 				-- $0250
 	--							or (A = "000000100110") 				-- $0260
 	--							or (A = "000000100111") 				-- $0270
-	AO(15) <= A(15);	
-	AO(14) <= A(14);
-	AO(13) <= A(13);
+	
+--	AO(15) <= A(15);	
+--	AO(14) <= A(14);
+--	AO(13) <= A(13);
 
 -- cpu register section
     -- cpu read
@@ -150,9 +151,9 @@ begin
 				AO(18) <= '0'; -- A18
 				AO(17) <= '0';  -- A17
 				AO(16) <= '0';  -- A16
-				AO(15) <= A(15);	
-				AO(14) <= A(14);
-				AO(13) <= A(13);
+				AO(15) <= '0';	
+				AO(14) <= '0';
+				AO(13) <= '0';
 		elsif (falling_edge(clk) and reg_select='1' and RW='0') then
             case A(0) is
                 when '0' =>         
