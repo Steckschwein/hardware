@@ -294,8 +294,8 @@ BEGIN
 		--ROMOFF 	<= '0'; -- ROM is on
 		A 			<= "1110000000000000" ;-- $E000
 		wait for CLKIN_period/2;
-		assert CS_ROM	= '0' report "CS_ROM not selected" severity error;
-		assert CS_RAM	= '1' report "CS_RAM selected but should not" severity error;
+		assert CS_ROM	= '0' report "CS_ROM not selectedX" severity error;
+		assert CS_RAM	= '1' report "CS_RAM selected but should notY" severity error;
 
 		wait for CLKIN_period*10;
 
