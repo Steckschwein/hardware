@@ -149,12 +149,12 @@ BEGIN
       -- insert stimulus here 
 		-- hold reset state for 100 ns.
  
-		-- Test LORAM
+		-- Test RAM
 		A <= "0000000000000000";
 		wait for CLKIN_period/2;
 
 		assert CS_UART	 	= '1' report "UART selected but should not" severity error;
-		assert CS_RAM		= '0' report "CS_LORAM not selected" severity error;
+		assert CS_RAM		= '0' report "CS_RAM not selected" severity error;
 		assert CS_VIA		= '1' report "CS_VIA selected but should not" severity error;
 		assert CSR_VDP		= '1' report "CS_VDP selected but should not" severity error;
 		assert CSW_VDP		= '1' report "CS_VDP selected but should not" severity error;
@@ -168,7 +168,7 @@ BEGIN
 		wait for CLKIN_period/2;
 
 		assert CS_UART	 	= '1' report "UART selected but should not" severity error;
-		assert CS_RAM		= '0' report "CS_LORAM not selected" severity error;
+		assert CS_RAM		= '0' report "CS_RAM not selected" severity error;
 		assert CS_VIA		= '1' report "CS_VIA selected but should not" severity error;
 		assert CSR_VDP		= '1' report "CS_VDP selected but should not" severity error;
 		assert CSW_VDP		= '1' report "CS_VDP selected but should not" severity error;

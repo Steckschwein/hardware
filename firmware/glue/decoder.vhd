@@ -108,11 +108,18 @@ begin
 
 	cs_rom_sig	  	<= '0' when (ROMOFF = '0') and (RW = '1') and (A(15 downto 13) = "111") else '1';
 	-- FIXME: still broken
-	cs_ram_sig		<= '0' when (not (A(15 downto 7) = "000000100") 											-- io area
-									or ((ROMOFF = '1') and (RW = '1') and (A(15 downto 13) = "111"))	-- read from $e000-$FFFF when rom disabled
-									or ((RW = '0') and (A(15 downto 13) = "111")))							-- write to $e000-$FFFF
-								 else '1';
+--	cs_ram_sig		<= '0' when (
+--										(((ROMOFF = '1') and (RW = '1') and (A(15 downto 13) = "111"))	-- read from $e000-$FFFF when rom disabled
+--								   or ((RW = '0')                    and (A(15 downto 13) = "111"))) -- write to $e000-$FFFF
+--									and (not (A(15 downto 7) = "000000100"))
+--									)	
+--								 else '1';
 
+	cs_ram_sig		<= '1' when (
+								(A(15 downto 7) = "000000100") -- io area $0200 - $027f
+							or cs_rom_sig = '0'
+							
+						) else '0';
 	RD_OPL			<= not RW;
 	WR_OPL			<= RW;
 
