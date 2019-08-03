@@ -191,10 +191,10 @@ begin
 
 
 	cs_rom_sig	  	<= '0' when (ROMOFF = '0') and (RW = '1') and (A(15 downto 13) = "111") else '1';
-	cs_ram_sig		<= '1' when (
-							(A(15 downto 7) = "000000100") -- io area $0200 - $027f
-							or cs_rom_sig='0'
-						) else '0';
+	cs_ram_sig		<= '0' when (
+							not(A(15 downto 7) = "000000100") -- io area $0200 - $027f
+							and cs_rom_sig='1'
+						) else '1';
 						
 	ao_sig(13) 		<= A(13);
 	ao_sig(14) 		<= A(14);

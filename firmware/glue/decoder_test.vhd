@@ -360,8 +360,6 @@ BEGIN
 	
 		RW			<= '0';
 		A 		   <= "0000001000110000";
-		wait for CLKIN_period/2;
-
 		D        <= "00000001";
 
 		wait for CLKIN_period;
@@ -369,8 +367,12 @@ BEGIN
 
 		A 			<= "1111000000000000" ;-- $F000
 		RW			<= '1'; -- read
+		wait for CLKIN_period;
+
 		assert CS_ROM		= '1' report "CS_ROM selected but should not" severity error;
 		assert CS_RAM		= '0' report "CS_RAM not selected" severity error;
+
+		wait for CLKIN_period*10;
 		
 		
 		finish;
