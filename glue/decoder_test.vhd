@@ -41,27 +41,29 @@ ARCHITECTURE behavior OF decoder_test IS
  
     COMPONENT decoder
     PORT(
-	      RESET : IN  std_logic;
-    
-         CLKIN : IN  std_logic;
-         PHI2OUT : OUT  std_logic;
-         A : IN  std_logic_vector(15 downto 0);
-			AO : INOUT std_logic_vector(18 downto 13);
-         RW : IN  std_logic;
-         RDY : INOUT  std_logic;
-         RD : OUT  std_logic;
-         WR : OUT  std_logic;
-         CS_ROM : INOUT  std_logic;
-         CS_RAM : INOUT  std_logic;
-         CS_UART : INOUT  std_logic;
-         CS_VIA : INOUT  std_logic;
-         CSR_VDP : INOUT  std_logic;
-         CSW_VDP : INOUT  std_logic;
-         CS_OPL : INOUT  std_logic;
-			RD_OPL : OUT  std_logic;
-         WR_OPL : OUT  std_logic
-
-        );
+	      RESET 		: IN  	std_logic;
+         CLKIN 		: IN  	std_logic;
+         PHI2OUT 		: OUT  	std_logic;
+			D 				: INOUT 	std_logic_vector(7 downto 0);
+         A 				: IN  	std_logic_vector(15 downto 0);
+			AO 			: OUT 	std_logic_vector(18 downto 13);
+         RW 			: IN  	std_logic;
+         RDY 			: OUT  	std_logic;
+         RD 			: OUT  	std_logic;
+         WR 			: OUT  	std_logic;
+         CS_ROM 		: OUT  	std_logic;
+         CS_RAM 		: OUT 	std_logic;
+         CS_UART 		: OUT  	std_logic;
+         CS_VIA 		: OUT  	std_logic;
+         CSR_VDP 		: OUT  	std_logic;
+         CSW_VDP 		: OUT  	std_logic;
+         CS_OPL 		: OUT  	std_logic;
+			CS_IO01 		: OUT  	std_logic;
+			CS_IO02 		: OUT  	std_logic;
+			CS_IO03 		: OUT  	std_logic;
+			RD_OPL 		: OUT  	std_logic;
+         WR_OPL 		: OUT  	std_logic
+    );
     END COMPONENT;
     
 
@@ -72,17 +74,18 @@ ARCHITECTURE behavior OF decoder_test IS
    signal RW : std_logic := '0';
 
 	--BiDirs
-   signal RDY : std_logic := 'Z';
+	signal D : std_logic_vector(7 downto 0) := (others => 'Z');
+  
+  
+	
+ 	--Outputs
+	signal AO : std_logic_vector(18 downto 13) := (others => '0');
+	signal RDY : std_logic := 'Z';
    signal CS_ROM : std_logic;
    signal CS_UART : std_logic;
    signal CSR_VDP : std_logic;
 	signal CSW_VDP : std_logic;
 	signal CS_OPL : std_logic;
-  
-	
- 	--Outputs
-	signal AO : std_logic_vector(18 downto 13) := (others => '0');
-
    signal PHI2OUT : std_logic;
    signal RD : std_logic;
    signal WR : std_logic;
@@ -90,6 +93,9 @@ ARCHITECTURE behavior OF decoder_test IS
    signal CS_VIA : std_logic;
 	signal RD_OPL : std_logic;
 	signal WR_OPL : std_logic;
+	signal CS_IO01 : std_logic;
+	signal CS_IO02 : std_logic;
+	signal CS_IO03 : std_logic;
 
 
    -- Clock period definitions
@@ -102,6 +108,7 @@ BEGIN
 			 RESET => RESET,
           CLKIN => CLKIN,
           PHI2OUT => PHI2OUT,
+			 D => D,
           A => A,
 			 AO => AO,
           RW => RW,
@@ -116,6 +123,10 @@ BEGIN
           CSW_VDP => CSW_VDP,
   
           CS_OPL => CS_OPL,
+			 CS_IO01 => CS_IO01,
+			 CS_IO02 => CS_IO02,
+			 CS_IO03 => CS_IO03,
+			 
 			 RD_OPL => RD_OPL,
 			 WR_OPL => WR_OPL
 			 
@@ -137,15 +148,15 @@ BEGIN
       -- hold reset state for 100 ns.
 		RESET <= '0';
 		RW <= '1';
---		ROMOFF <= '1';
-		
+--		ROMOFF <= '1';	
+		D <= "00000000";
+
       wait for 100 ns;	
 		RESET <= '1';
 		
 		wait for CLKIN_period/2;
 
-      -- wait for CLKIN_period*10;
-
+	
       -- insert stimulus here 
 		-- hold reset state for 100 ns.
  
@@ -340,13 +351,27 @@ BEGIN
 		report "9. write to $f000";
 
 		RW			<= '0'; -- writing
---		ROMOFF 	<= '0'; -- ROM is ON
 		A 			<= "1111000000000000" ;-- $F000
 		wait for CLKIN_period/2;
 		assert CS_ROM		= '1' report "CS_ROM selected but should not" severity error;
-		assert CS_RAM	= '0' report "CS_RAM not selected" severity error;	
+		assert CS_RAM		= '0' report "CS_RAM not selected" severity error;	
 
+		report "10. write $01 to $0230, enable ROMOFF";
 	
+		RW			<= '0';
+		A 		   <= "0000001000110000";
+		wait for CLKIN_period/2;
+
+		D        <= "00000001";
+
+		wait for CLKIN_period;
+
+
+		A 			<= "1111000000000000" ;-- $F000
+		RW			<= '1'; -- read
+		assert CS_ROM		= '1' report "CS_ROM selected but should not" severity error;
+		assert CS_RAM		= '0' report "CS_RAM not selected" severity error;
+		
 		
 		finish;
    end process;

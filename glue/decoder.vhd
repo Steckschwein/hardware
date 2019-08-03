@@ -35,7 +35,11 @@ Entity decoder is
 		CS_VIA    : out std_logic;  	
 		CSR_VDP   : out std_logic;  -- VDP read
 		CSW_VDP   : out std_logic;  -- VDP write
-		CS_OPL    : out std_logic  	-- OPL2		
+		CS_OPL    : out std_logic;  	-- OPL2		
+		CS_IO01	 : out std_logic;   -- generic IO01
+		CS_IO02	 : out std_logic;   -- generic IO01
+		CS_IO03	 : out std_logic   -- generic IO01
+		
 	);
 
 end;
@@ -52,6 +56,8 @@ Architecture decoder_arch of decoder is
 
 	signal cs_uart_sig: std_logic;
 	signal cs_via_sig: std_logic;
+	signal cs_vdp_sig: std_logic;
+
 	signal csr_vdp_sig: std_logic;
 	signal csw_vdp_sig: std_logic;
 	signal cs_opl_sig: std_logic;
@@ -59,70 +65,28 @@ Architecture decoder_arch of decoder is
 	signal cs_io02_sig: std_logic;
 	signal cs_io03_sig: std_logic;
 	
+	signal d_out: std_logic_vector(7 downto 0);
+	signal d_in:  std_logic_vector(7 downto 0);
 	
 	signal reg_select: std_logic;
-	
-
-	
+	signal is_read: std_logic;
+	signal rdy_sig: std_logic;
 begin
-	
---	frequency_divider: process (RESET, CLKIN) begin
---	  if (RESET = '0') then
---			clk <= '0';
---		elsif rising_edge(CLKIN) then
---			clk <= not(clk);
---	  end if;
---	end process;
+	-- inputs
 	clk		<= CLKIN;
-   PHI2OUT 	<= clk;
+	d_in 		<= D;	
+
+	-- outputs
+	PHI2OUT 	<= clk;
 	RD 		<= RW nand clk;
 	WR 		<= not RW nand clk;
+	RD_OPL	<= not RW;
+	WR_OPL	<= RW;
 
-
-
+	D 			<= d_out when (is_read='1') else (others => 'Z');
+	RDY		<= rdy_sig;
+	AO			<= AO_sig;
 	
-	rdygen: process(RESET, clk, rdyclk)
-	begin
-		if (RESET = '0') then
-			rdyclk <= '0';
-		elsif rising_edge(clk) then
-			rdyclk <= not rdyclk;
-		end if;
-		--sigrdy <= ((not rdyclk) and (not CS_ROM or not CS_IO or not CS_VDP));
-	end process;
-	
-	
-	RDY				<= '0' when (rdyclk = '1' and (CS_ROM_sig = '0' or CS_OPL_sig = '0' or CSR_VDP_sig = '0' or CSW_VDP_sig = '0') ) else 'Z';
-	
-
-	CS_UART_sig    <= '0' when (A(15 downto 4) = "000000100000") else '1'; 						-- $0200		
-	CS_VIA_sig     <= '0' when (A(15 downto 4) = "000000100001") else '1'; 						-- $0210
-	CSR_VDP_sig		<= '0' when (A(15 downto 4) = "000000100010") and (RW = '1') else '1'; 	-- $0220	
-	CSW_VDP_sig		<= '0' when (A(15 downto 4) = "000000100010") and (RW = '0') else '1'; 	-- $0220	
-	reg_select  	<= '1' when (A(15 downto 4) = "000000100011") else '0';						-- $0230
-	CS_OPL_sig		<= '0' when (A(15 downto 4) = "000000100100") else '1';  					-- $0240
-	cs_io01_sig 	<= '0' when (A(15 downto 4) = "000000100101") else '1'; 						-- $0250
-	cs_io02_sig 	<= '0' when (A(15 downto 4) = "000000100110") else '1';						-- $0260
-	cs_io03_sig 	<= '0' when	(A(15 downto 4) = "000000100111") else '1';						-- $0270	
-
-
-	cs_rom_sig	  	<= '0' when (ROMOFF = '0') and (RW = '1') and (A(15 downto 13) = "111") else '1';
-	-- FIXME: still broken
---	cs_ram_sig		<= '0' when (
---										(((ROMOFF = '1') and (RW = '1') and (A(15 downto 13) = "111"))	-- read from $e000-$FFFF when rom disabled
---								   or ((RW = '0')                    and (A(15 downto 13) = "111"))) -- write to $e000-$FFFF
---									and (not (A(15 downto 7) = "000000100"))
---									)	
---								 else '1';
-
-	cs_ram_sig		<= '1' when (
-								(A(15 downto 7) = "000000100") -- io area $0200 - $027f
-							or cs_rom_sig = '0'
-							
-						) else '0';
-	RD_OPL			<= not RW;
-	WR_OPL			<= RW;
-
 	
 	cs_uart 		<= cs_uart_sig;
 	cs_via  		<= cs_via_sig;
@@ -132,72 +96,110 @@ begin
 	CS_ROM  		<= cs_rom_sig;
 	cs_ram  		<= cs_ram_sig;
 	
-	AO		<= AO_sig;
+	
+	cs_IO01		<= romoff;
+	cs_io02		<= rom_bank(0);
+	cs_io03		<= rom_bank(1);
+	
+	
+	-- helpers
+	is_read 		<= reg_select and clk and rw;
+	
+	-- cpu register section
+	-- cpu read
+	cpu_read: process (is_read, A(0), ROMOFF, rom_bank)
+	begin
+		if (is_read = '1') then 
+			case A(0) is
+				when '0' =>        -- read latch
+--					D_out(0)	<= ROMOFF;
+--					D_out(1) 	<= rom_bank(0);
+--					D_out(2) 	<= rom_bank(1);
+--					D_out(3)	<= '0';
+--					D_out(4)	<= '0';
+--					D_out(5)	<= '0';
+--					D_out(6)	<= '0';
+--					D_out(7)	<= '1';
 
-	 -- cpu register section
-    -- cpu read
-    cpu_read: process (RW, reg_select, A(0), ROMOFF, rom_bank)
-    begin
-        if RW = '1' and reg_select = '1' then 
-            case A(0) is
-                when '0' =>        -- read latch
-                    D(0) 	<= ROMOFF;
-						  D(1) 	<= rom_bank(0);
-						  D(2) 	<= rom_bank(1);
-						  D(3)	<= '0';
-						  D(4)	<= '0';
-						  D(5)	<= '0';
-						  D(6)	<= '0';
-						  D(7)	<= '0';
-						
-					 when '1' =>        -- read latch
-                	  D(0)   <= AO_sig(13);
-						  D(1)   <= AO_sig(14);
-						  D(2)   <= AO_sig(15);
-						  D(3)   <= AO_sig(16);
-						  D(4)   <= AO_sig(17);
-						  D(5)   <= AO_sig(18);
-						  D(6)	<= '0';
-						  D(7)	<= '0';
-						  
-                when others => 
-                    D <= (others => '0');
-            end case;
-        else
-            D <= (others => '0');
-        end if;
-    end process;
+					D_out <= "10101010";						  
+				when others => 
+				  D_out <= (others => '0');
+			end case;
+		else
+			D_out <= (others => '0');
+		end if;
+	end process;
 
-    -- cpu write 
-    cpu_write: process(reset, reg_select, A(0), clk, RW, D)
-    begin
-        if (reset = '0') then
-            romoff 		<= '0';
-				rom_bank 	<= "00";
-				AO_sig(18)	<= '0'; -- A18
-				AO_sig(17) 	<= '0'; -- A17
-				AO_sig(16) 	<= '0'; -- A16
-				AO_sig(15) 	<= '0';	
-				AO_sig(14) 	<= '0';
-				AO_sig(13) 	<= '0';
+	-- cpu write 
+	cpu_write: process(reset, reg_select, A(0), clk, RW, D_in)
+	begin
+		if (reset = '0') then
+			romoff 		<= '0';
+			rom_bank 	<= "00";
+			AO_sig(18)	<= '0'; -- A18
+			AO_sig(17) 	<= '0'; -- A17
+			AO_sig(16) 	<= '0'; -- A16
 		elsif (falling_edge(clk) and reg_select='1' and RW='0') then
-            case A(0) is
-                when '0' =>         
-                    romoff <= D(0);
-						  rom_bank(0) <= D(1);
-						  rom_bank(1) <= D(2);
-					 when '1' =>         
-                    AO_sig(13) <= D(0);
-						  AO_sig(14) <= D(1);
-						  AO_sig(15) <= D(2);
-						  AO_sig(16) <= D(3);
-						  AO_sig(17) <= D(4);
-						  AO_sig(18) <= D(5);
-						 
-                when others =>
-            end case;
-        end if;
-    end process;
+			case A(0) is
+				when '0' =>         
+					romoff <= D_in(0);
+					rom_bank(0) <= D_in(1);
+					rom_bank(1) <= D_in(2);				 
+					AO_sig(16) 	<= D_in(3); -- A16
+					AO_sig(17) 	<= D_in(4); -- A17
+					AO_sig(18)	<= D_in(5); -- A18
+				when others =>
+			end case;
+		end if;
+	end process;
+	
+--	frequency_divider: process (RESET, CLKIN) begin
+--	  if (RESET = '0') then
+--			clk <= '0';
+--		elsif rising_edge(CLKIN) then
+--			clk <= not(clk);
+--	  end if;
+--	end process;
 
+
+ 
+	-- wait state generator
+	rdygen: process(RESET, clk, rdyclk)
+	begin
+		if (RESET = '0') then
+			rdyclk <= '0';
+		elsif rising_edge(clk) then
+			rdyclk <= not rdyclk;
+		end if;
+	end process;
+	
+	
+	rdy_sig			<= '0' when (rdyclk = '1' and (CS_ROM_sig = '0' or CS_OPL_sig = '0' or CSR_VDP_sig = '0' or CSW_VDP_sig = '0') ) else 'Z';
+	
+	-- io area decoding
+	
+	CS_UART_sig    <= '0' when (A(15 downto 4) = "000000100000") else '1'; 						-- $0200		
+	CS_VIA_sig     <= '0' when (A(15 downto 4) = "000000100001") else '1'; 						-- $0210
+	
+	CSR_VDP_sig		<= '0' when (A(15 downto 4) = "000000100010") and (RW = '1') else '1'; 	-- $0220	
+	CSW_VDP_sig		<= '0' when (A(15 downto 4) = "000000100010") and (RW = '0') else '1'; 	-- $0220	
+	reg_select  	<= '1' when (A(15 downto 4) = "000000100011") else '0';							-- $0230
+	CS_OPL_sig		<= '0' when (A(15 downto 4) = "000000100100") else '1';  					-- $0240
+	cs_io01_sig 	<= '0' when (A(15 downto 4) = "000000100101") else '1'; 						-- $0250
+	cs_io02_sig 	<= '0' when (A(15 downto 4) = "000000100110") else '1';						-- $0260
+	cs_io03_sig 	<= '0' when	(A(15 downto 4) = "000000100111") else '1';						-- $0270	
+
+
+	cs_rom_sig	  	<= '0' when (ROMOFF = '0') and (RW = '1') and (A(15 downto 13) = "111") else '1';
+	cs_ram_sig		<= '1' when (
+							(A(15 downto 7) = "000000100") -- io area $0200 - $027f
+							or cs_rom_sig='0'
+						) else '0';
+						
+	ao_sig(13) 		<= A(13);
+	ao_sig(14) 		<= A(14);
+	ao_sig(15) 		<= A(15);
+	
+	
 
 End decoder_arch;

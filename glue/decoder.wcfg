@@ -3,7 +3,7 @@
    <wave_state>
    </wave_state>
    <db_ref_list>
-      <db_ref path="/home/dommas/steckschwein-code/firmware/glue/decoder_test_isim_beh1.wdb" id="1" type="auto">
+      <db_ref path="/home/dommas/steckschwein-code/firmware/glue/decoder_test_isim_beh.wdb" id="1" type="auto">
          <top_modules>
             <top_module name="decoder_test" />
             <top_module name="env" />
@@ -13,7 +13,7 @@
          </top_modules>
       </db_ref>
    </db_ref_list>
-   <WVObjectSize size="19" />
+   <WVObjectSize size="22" />
    <wvobject fp_name="/decoder_test/reset" type="logic" db_ref_id="1">
       <obj_property name="ElementShortName">reset</obj_property>
       <obj_property name="ObjectShortName">reset</obj_property>
@@ -30,9 +30,15 @@
       <obj_property name="ElementShortName">rdy</obj_property>
       <obj_property name="ObjectShortName">rdy</obj_property>
    </wvobject>
+   <wvobject fp_name="/decoder_test/d" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">d[7:0]</obj_property>
+      <obj_property name="ObjectShortName">d[7:0]</obj_property>
+      <obj_property name="Radix">BINARYRADIX</obj_property>
+   </wvobject>
    <wvobject fp_name="/decoder_test/a" type="array" db_ref_id="1">
       <obj_property name="ElementShortName">a[15:0]</obj_property>
       <obj_property name="ObjectShortName">a[15:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
    </wvobject>
    <wvobject fp_name="/decoder_test/ao" type="array" db_ref_id="1">
       <obj_property name="ElementShortName">ao[18:13]</obj_property>
@@ -88,8 +94,16 @@
       <obj_property name="ElementShortName">cs_opl</obj_property>
       <obj_property name="ObjectShortName">cs_opl</obj_property>
    </wvobject>
-   <wvobject fp_name="/decoder_test/clkin_period" type="other" db_ref_id="1">
-      <obj_property name="ElementShortName">clkin_period</obj_property>
-      <obj_property name="ObjectShortName">clkin_period</obj_property>
+   <wvobject fp_name="/decoder_test/cs_io01" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">cs_io01</obj_property>
+      <obj_property name="ObjectShortName">cs_io01</obj_property>
+   </wvobject>
+   <wvobject fp_name="/decoder_test/cs_io02" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">cs_io02</obj_property>
+      <obj_property name="ObjectShortName">cs_io02</obj_property>
+   </wvobject>
+   <wvobject fp_name="/decoder_test/cs_io03" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">cs_io03</obj_property>
+      <obj_property name="ObjectShortName">cs_io03</obj_property>
    </wvobject>
 </wave_config>
