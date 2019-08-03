@@ -22,6 +22,11 @@ Entity decoder is
 		RDY		 : out std_logic; 	-- RDY signal for generating wait states
 		RD			 : out std_logic; 	-- read access
 		WR			 : out std_logic; 	-- write access
+		--CPU
+		CPU_vp	 : in std_logic;
+		CPU_be	 : out std_logic;
+		CPU_sync	 : in std_logic;
+		
 		
 		-- chip select for memory
 		CS_ROM    : out std_logic; 	-- CS signal for ROM at $e000-$ffff 
@@ -35,7 +40,6 @@ Entity decoder is
 		CS_OPL    : out std_logic;  	-- OPL2		
 		CS_IO01	 : out std_logic;   -- generic IO01
 		CS_IO02	 : out std_logic;   -- generic IO01
-		CS_IO03	 : out std_logic;   -- generic IO01
 		
 		RD_OPL	 : out std_logic;
 		WR_OPL	 : out std_logic
@@ -138,6 +142,7 @@ begin
 	cpu_write: process(reset, reg_select, reg_addr, clk, RW, D_in)
 	begin
 		if (reset = '0') then
+			CPU_be		<= '1';
 			romoff 		<= '0';
 			rom_bank 	<= "00";
 			AO_sig(18)	<= '0'; -- A18
@@ -146,7 +151,7 @@ begin
 		elsif (falling_edge(clk) and reg_select='1' and RW='0') then
 			case reg_addr is
 				when '0' =>         
-					romoff <= D_in(0);
+					romoff 		<= D_in(0);
 					rom_bank(0) <= D_in(1);
 					rom_bank(1) <= D_in(2);				 
 					AO_sig(16) 	<= D_in(3); -- A16

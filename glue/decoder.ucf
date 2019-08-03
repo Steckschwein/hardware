@@ -34,10 +34,9 @@ NET "RD"        LOC = "P40"  ; #
 NET "WR"        LOC = "P41"  ; #
 NET "PHI2OUT"   LOC = "P43"  ; #
 NET "CS_IO02"	 LOC = "P44"  ; #
-NET "CS_IO03"   LOC = "P45"  ; #
-#NET "AO<2>"   		LOC = "P46"  ; #
-#NET "AO<3>"   		LOC = "P47"  ; #
-#NET "AO<4>"   		LOC = "P48"  ; #
+NET "CPU_vp"    LOC = "P45"  ; #
+NET "CPU_be"    LOC = "P46"  ; #
+NET "CPU_sync"  LOC = "P47"  ; #		
 
 NET "D<0>"      LOC = "P50"  ; # D0
 NET "D<1>"      LOC = "P51"  ; # D1
