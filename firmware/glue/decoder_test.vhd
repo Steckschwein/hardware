@@ -373,6 +373,59 @@ BEGIN
 		assert CS_RAM		= '0' report "CS_RAM not selected" severity error;
 
 		wait for CLKIN_period*10;
+
+		A 			<= "1110000000000001" ;-- $e001
+		RW			<= '1'; -- read
+		wait for CLKIN_period;
+
+		assert CS_ROM		= '1' report "CS_ROM selected but should not" severity error;
+		assert CS_RAM		= '0' report "CS_RAM not selected" severity error;
+
+		wait for CLKIN_period*10;
+		
+		report "11. write $06 to $0230, disable ROMOFF";
+	
+		RW			<= '0';
+		A 		   <= "0000001000110000";
+		D        <= "00000110";
+
+		wait for CLKIN_period;
+		
+		A 			<= "1110000000000001" ;-- $e001
+		RW			<= '1'; -- read
+		wait for CLKIN_period;
+	
+		assert CS_ROM		= '0' report "CS_ROM not selected" severity error;
+		assert CS_RAM		= '1' report "CS_RAM selected but should not" severity error;
+	
+		
+		wait for CLKIN_period*10;
+		
+		report "12. read from $0230";
+		RW	<= '1'; -- read
+		A 		   <= "0000001000110000";
+	
+		wait for CLKIN_period;
+		
+		assert D		= "00000110" report "register read failed" severity error;
+	
+		
+		wait for CLKIN_period*10;
+		
+		wait for CLKIN_period*10;
+		
+		report "13. write $06 to $0230, disable ROMOFF";
+	
+		RW			<= '0';
+		A 		   <= "0000001000110000";
+		D        <= "00111001";
+
+		wait for CLKIN_period;
+	
+		
+
+	
+		
 		
 		
 		finish;

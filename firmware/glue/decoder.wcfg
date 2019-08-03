@@ -13,7 +13,7 @@
          </top_modules>
       </db_ref>
    </db_ref_list>
-   <WVObjectSize size="22" />
+   <WVObjectSize size="21" />
    <wvobject fp_name="/decoder_test/reset" type="logic" db_ref_id="1">
       <obj_property name="ElementShortName">reset</obj_property>
       <obj_property name="ObjectShortName">reset</obj_property>
@@ -101,9 +101,5 @@
    <wvobject fp_name="/decoder_test/cs_io02" type="logic" db_ref_id="1">
       <obj_property name="ElementShortName">cs_io02</obj_property>
       <obj_property name="ObjectShortName">cs_io02</obj_property>
-   </wvobject>
-   <wvobject fp_name="/decoder_test/cs_io03" type="logic" db_ref_id="1">
-      <obj_property name="ElementShortName">cs_io03</obj_property>
-      <obj_property name="ObjectShortName">cs_io03</obj_property>
    </wvobject>
 </wave_config>

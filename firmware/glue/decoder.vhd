@@ -23,9 +23,6 @@ Entity decoder is
 		RD			 : out std_logic; 	-- read access
 		WR			 : out std_logic; 	-- write access
 		
-		RD_OPL	 : out std_logic;
-		WR_OPL	 : out std_logic;
-		
 		-- chip select for memory
 		CS_ROM    : out std_logic; 	-- CS signal for ROM at $e000-$ffff 
 		CS_RAM  	 : out std_logic; 	-- CS for ram 
@@ -38,7 +35,10 @@ Entity decoder is
 		CS_OPL    : out std_logic;  	-- OPL2		
 		CS_IO01	 : out std_logic;   -- generic IO01
 		CS_IO02	 : out std_logic;   -- generic IO01
-		CS_IO03	 : out std_logic   -- generic IO01
+		CS_IO03	 : out std_logic;   -- generic IO01
+		
+		RD_OPL	 : out std_logic;
+		WR_OPL	 : out std_logic
 		
 	);
 
@@ -63,12 +63,12 @@ Architecture decoder_arch of decoder is
 	signal cs_opl_sig: std_logic;
 	signal cs_io01_sig: std_logic;
 	signal cs_io02_sig: std_logic;
-	signal cs_io03_sig: std_logic;
 	
 	signal d_out: std_logic_vector(7 downto 0);
 	signal d_in:  std_logic_vector(7 downto 0);
 	
 	signal reg_select: std_logic;
+	signal reg_addr: std_logic;
 	signal is_read: std_logic;
 	signal rdy_sig: std_logic;
 begin
@@ -76,18 +76,19 @@ begin
 	clk		<= CLKIN;
 	d_in 		<= D;	
 
+	-- bidirectional
+	-- make data bus output tristate when not a qualified read
+	D 			<= d_out when (is_read='1') else (others => 'Z');
+	
 	-- outputs
 	PHI2OUT 	<= clk;
 	RD 		<= RW nand clk;
 	WR 		<= not RW nand clk;
 	RD_OPL	<= not RW;
 	WR_OPL	<= RW;
-
-	D 			<= d_out when (is_read='1') else (others => 'Z');
 	RDY		<= rdy_sig;
 	AO			<= AO_sig;
-	
-	
+		
 	cs_uart 		<= cs_uart_sig;
 	cs_via  		<= cs_via_sig;
 	csr_vdp 		<= csr_vdp_sig;
@@ -95,33 +96,36 @@ begin
 	cs_opl  		<= cs_opl_sig;
 	CS_ROM  		<= cs_rom_sig;
 	cs_ram  		<= cs_ram_sig;
-	
-	
-	cs_IO01		<= romoff;
-	cs_io02		<= rom_bank(0);
-	cs_io03		<= rom_bank(1);
+
+	cs_io01		<= cs_io01_sig;
+	cs_io02		<= cs_io02_sig;
 	
 	
 	-- helpers
+	-- qualified read?
 	is_read 		<= reg_select and clk and rw;
+	
+	-- internal register selected ($0230 - $023f)
+	reg_select  	<= '1' when (A(15 downto 4) = "000000100011") else '0';						-- $0230
+	
+	reg_addr 		<= A(0);
 	
 	-- cpu register section
 	-- cpu read
-	cpu_read: process (is_read, A(0), ROMOFF, rom_bank)
+	cpu_read: process (is_read, reg_addr, ROMOFF, rom_bank)
 	begin
 		if (is_read = '1') then 
-			case A(0) is
+			case reg_addr is
 				when '0' =>        -- read latch
---					D_out(0)	<= ROMOFF;
---					D_out(1) 	<= rom_bank(0);
---					D_out(2) 	<= rom_bank(1);
---					D_out(3)	<= '0';
---					D_out(4)	<= '0';
---					D_out(5)	<= '0';
---					D_out(6)	<= '0';
---					D_out(7)	<= '1';
+					D_out(0)	<= ROMOFF;
+					D_out(1) <= rom_bank(0);
+					D_out(2) <= rom_bank(1);
+					D_out(3)	<= '0';
+					D_out(4)	<= '0';
+					D_out(5)	<= '0';
+					D_out(6)	<= '0';
+					D_out(7)	<= '0';
 
-					D_out <= "10101010";						  
 				when others => 
 				  D_out <= (others => '0');
 			end case;
@@ -131,7 +135,7 @@ begin
 	end process;
 
 	-- cpu write 
-	cpu_write: process(reset, reg_select, A(0), clk, RW, D_in)
+	cpu_write: process(reset, reg_select, reg_addr, clk, RW, D_in)
 	begin
 		if (reset = '0') then
 			romoff 		<= '0';
@@ -140,7 +144,7 @@ begin
 			AO_sig(17) 	<= '0'; -- A17
 			AO_sig(16) 	<= '0'; -- A16
 		elsif (falling_edge(clk) and reg_select='1' and RW='0') then
-			case A(0) is
+			case reg_addr is
 				when '0' =>         
 					romoff <= D_in(0);
 					rom_bank(0) <= D_in(1);
@@ -183,11 +187,9 @@ begin
 	
 	CSR_VDP_sig		<= '0' when (A(15 downto 4) = "000000100010") and (RW = '1') else '1'; 	-- $0220	
 	CSW_VDP_sig		<= '0' when (A(15 downto 4) = "000000100010") and (RW = '0') else '1'; 	-- $0220	
-	reg_select  	<= '1' when (A(15 downto 4) = "000000100011") else '0';							-- $0230
 	CS_OPL_sig		<= '0' when (A(15 downto 4) = "000000100100") else '1';  					-- $0240
 	cs_io01_sig 	<= '0' when (A(15 downto 4) = "000000100101") else '1'; 						-- $0250
 	cs_io02_sig 	<= '0' when (A(15 downto 4) = "000000100110") else '1';						-- $0260
-	cs_io03_sig 	<= '0' when	(A(15 downto 4) = "000000100111") else '1';						-- $0270	
 
 
 	cs_rom_sig	  	<= '0' when (ROMOFF = '0') and (RW = '1') and (A(15 downto 13) = "111") else '1';
@@ -196,8 +198,9 @@ begin
 							and cs_rom_sig='1'
 						) else '1';
 						
-	ao_sig(13) 		<= A(13);
-	ao_sig(14) 		<= A(14);
+	ao_sig(13) 		<= rom_bank(0) when cs_rom_sig = '0' else A(13);
+	ao_sig(14) 		<= rom_bank(1) when cs_rom_sig = '0' else A(14);
+	
 	ao_sig(15) 		<= A(15);
 	
 	
