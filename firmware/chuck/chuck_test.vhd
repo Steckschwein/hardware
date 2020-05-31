@@ -296,8 +296,7 @@ BEGIN
 	
 		-- test CS_RAM, CS_ROM
 		-- read from $e000
-		report "test CS_RAM, CS_ROM, ROMOFF";
-		report "7. test CS_RAM, CS_ROM";
+		report "6. read from $e000 - test CS_RAM, CS_ROM";
 
 		CPU_rw			<= '1'; -- reading
 		CPU_a 			<= "1110000000000000" ;-- $E000
@@ -306,20 +305,36 @@ BEGIN
 		assert CS_RAM	= '1' report "CS_RAM selected but should notY" severity error;
 
 		wait for CLKIN_period*10;
-		finish;
+		
+		report "7. write $04 to $0203, reconfigure slot 3";
 
---		ROMOFF 	<= '1';
---		wait for CLKIN_period/2;
+	
+		CPU_a <= X"0233";
+		CPU_d <= X"04";
+		CPU_rw <= '0'; -- writing
+		wait for CLKIN_period*2;
+		CPU_rw <= '1'; -- reading
+		
 --		assert CS_ROM		= '1' report "CS_ROM selected but should not" severity error;
 --		assert CS_RAM	= '0' report "CS_RAM not selected" severity error;
 
 		wait for CLKIN_period*10;
+
+		report "6. read from $e000 - test CS_RAM, CS_ROM";
 	
-		-- test CS_RAM, CS_ROM, ROMOFF
-		-- write to $e000, ROMOFF = 0
+		CPU_a 			<= "1110000000000000" ;-- $E000
+		wait for CLKIN_period/10;
+		assert CS_RAM	= '0' report "CS_RAM not selected" severity error;
+		assert CS_ROM	= '1' report "CS_ROM selected but should not" severity error;
+	
+		
+		finish;
+		
+		
+		-- test CS_RAM, CS_ROM
+		-- write to $e000
 		report "8. write to $e000";
 		CPU_rw			<= '0'; -- writing
---		ROMOFF 	<= '0'; -- ROM is ON
 		CPU_a		<= "1110000000000000" ;-- $E000
 		wait for CLKIN_period/2;
 		assert CS_ROM		= '1' 	report "CS_ROM selected but should not" severity error;
@@ -327,25 +342,18 @@ BEGIN
 
 		wait for CLKIN_period*10;
 
-		-- read from $f000, ROMOFF = 0
+		-- read from $f000
 		CPU_rw			<= '1'; -- reading
-		--ROMOFF 	<= '0'; -- ROM is on
 		CPU_a 			<= "1111000000000000" ;-- $F000
---		wait for CLKIN_period/2;
---		assert CS_ROM		= '0' 	report "CS_ROM not selected" severity error;
---		assert CS_RAM		= '1' 	report "CS_RAM selected but should not" severity error;
+		wait for CLKIN_period/2;
+		assert CS_ROM		= '0' 	report "CS_ROM not selected" severity error;
+		assert CS_RAM		= '1' 	report "CS_RAM selected but should not" severity error;
 
---		wait for CLKIN_period*10;
-
---		ROMOFF 	<= '1';
---		wait for CLKIN_period/2;
---		assert CS_ROM		= '1' report "CS_ROM selected but should not" severity error;
---		assert CS_RAM	= '0' report "CS_RAM not selected" severity error;
-
---		wait for CLKIN_period*10;
+		finish;
+		wait for CLKIN_period*10;
 	
 		-- test CS_RAM, CS_ROM, ROMOFF
-		-- write to $f000, ROMOFF = 0
+		-- write to $f000
 		report "9. write to $f000";
 
 		CPU_rw			<= '0'; -- writing
