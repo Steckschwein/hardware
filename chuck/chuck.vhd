@@ -55,7 +55,7 @@ end;
 Architecture chuck_arch of chuck is
 	signal clk: std_logic;
 	
-	type t_banktable is array (0 to 3) of std_logic_vector(6 downto 0);
+	type t_banktable is array (0 to 3) of std_logic_vector(7 downto 0);
 	signal INT_banktable : t_banktable;
 	
 	signal rdyclk: std_logic;
@@ -70,8 +70,8 @@ Architecture chuck_arch of chuck is
 	signal csr_vdp_sig: std_logic;
 	signal csw_vdp_sig: std_logic;
 	signal cs_opl_sig: std_logic;
-	signal cs_io01_sig: std_logic;
-	signal cs_io02_sig: std_logic;
+--	signal cs_io01_sig: std_logic;
+--	signal cs_io02_sig: std_logic;
 	
 	signal d_out: std_logic_vector(7 downto 0);
 	signal d_in:  std_logic_vector(7 downto 0);
@@ -130,8 +130,10 @@ begin
 	cpu_read: process (is_read, reg_addr, INT_banktable )
 	begin
 		if (is_read = '1') then 
-			D_out(5 downto 0) <= INT_banktable(conv_integer(reg_addr))(5 downto 0);
-			D_out(7) 			<= INT_banktable(conv_integer(reg_addr))(6);
+		
+			D_out <= INT_banktable(conv_integer(reg_addr));
+--			D_out(5 downto 0) <= INT_banktable(conv_integer(reg_addr))(5 downto 0);
+--			D_out(7) 			<= INT_banktable(conv_integer(reg_addr))(6);
 		else
 			D_out <= (others => '0');
 		end if;
@@ -142,14 +144,15 @@ begin
 	begin
 		if (reset = '0') then
 --			CPU_be		<= '1';
-			INT_banktable(0) <= "0000000"; -- Bank $00
-			INT_banktable(1) <= "0000001"; -- Bank $01
-			INT_banktable(2) <= "0000010"; -- Bank $02
-			INT_banktable(3) <= "1000000"; -- Bank $80 (ROM)
+			INT_banktable(0) <= "00000000"; -- Bank $00
+			INT_banktable(1) <= "00000001"; -- Bank $01
+			INT_banktable(2) <= "00000010"; -- Bank $02
+			INT_banktable(3) <= "10000000"; -- Bank $80 (ROM)
 
 		elsif (falling_edge(clk) and reg_select='1' and CPU_rw='0') then
-			INT_banktable(conv_integer(reg_addr))(5 downto 0) <= D_in(5 downto 0);
-			INT_banktable(conv_integer(reg_addr))(6) <= D_in(7);
+			INT_banktable(conv_integer(reg_addr)) <= D_in;
+			--INT_banktable(conv_integer(reg_addr))(5 downto 0) <= D_in(5 downto 0);
+			--INT_banktable(conv_integer(reg_addr))(6) <= D_in(7);
 		end if;
 	end process;
 	
@@ -188,7 +191,7 @@ begin
 
 	-- extended address bus
 	EXT_a_sig 		<= INT_banktable(conv_integer(CPU_a(15 downto 14)))(5 downto 0);
-	cs_rom_sig		<= '0' when io_select = '0' and INT_banktable(conv_integer(CPU_a(15 downto 14)))(6) = '1' else '1';
-	cs_ram_sig		<= '0' when io_select = '0' and INT_banktable(conv_integer(CPU_a(15 downto 14)))(6) = '0' else '1';
+	cs_rom_sig		<= '0' when io_select = '0' and INT_banktable(conv_integer(CPU_a(15 downto 14)))(7) = '1' else '1';
+	cs_ram_sig		<= '0' when io_select = '0' and INT_banktable(conv_integer(CPU_a(15 downto 14)))(7) = '0' else '1';
 
 End chuck_arch;
