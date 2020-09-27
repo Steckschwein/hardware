@@ -26,7 +26,6 @@
 #define KBD_DATAPIN PD6
 #define MOUSE_DATAPIN PD7
 
-
 // Bits im Keyboard-Status-Register
 #define	KBD_SHIFT		1		// SHIFT is held down
 #define	KBD_CTRL		2		// CTRL is held down
@@ -46,10 +45,8 @@
 #define KBD_CMD_RESET		0xff
 #define KBD_CMD_RESEND		0xfe	//
 #define KBD_CMD_IDENTIFY	0xf2
-
-
 #define KBD_CMD_SCAN_ON		0xF4	// enable send scan codes
-#define KBD_CMD_SCAN_OFF	0xF5
+#define KBD_CMD_SCAN_OFF	0xf5
 
 #define KBD_LED_SCRLCK 1<<0
 #define KBD_LED_NUMLCK 1<<1
