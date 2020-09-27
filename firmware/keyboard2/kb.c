@@ -10,11 +10,7 @@
 volatile uint8_t	kbd_bit_n = 1;
 volatile uint8_t	kbd_bitcnt = 0;
 volatile uint8_t	kbd_buffer = 0;
-volatile uint8_t	kbd_queue[KBD_BUFSIZE + 1];
-volatile uint8_t	kbd_queue_idx = 0;
 volatile uint16_t	kbd_status = 0;
-
-
 
 inline void kbd_clock_high(){
 	KBD_CLOCK_DDR &= ~(1<<KBD_CLOCK_PIN);//input
