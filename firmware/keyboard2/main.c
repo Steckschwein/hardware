@@ -71,6 +71,7 @@ int main(void)
 	sei();
 
 	kbd_send(KBD_CMD_RESET);// send reset, BAT ok is handled in get_scancode()
+	_delay_ms(500);
 	kbd_update_leds();// will set all LED's off
 	kbd_identify();
 	

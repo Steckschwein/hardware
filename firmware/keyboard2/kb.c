@@ -201,6 +201,35 @@ ISR(KBD_INT)
 	kbd_bit_n++;
 }
 
+/*
+	0 to 4	Repeat rate (00000b = 30 Hz, ..., 11111b = 2 Hz)
+	5 to 6	Delay before keys repeat (00b = 250 ms, 01b = 500 ms, 10b = 750 ms, 11b = 1000 ms)
+*/
+uint8_t kbd_command(uint8_t code){
+	
+	static uint8_t cmd = 0;
+	
+	uint8_t ret = 0xff;
+	
+	switch (code)
+	{
+		case KBD_CMD_TYPEMATIC:
+		case KBD_CMD_LEDS:
+			cmd = code;
+			ret = KBD_RET_ACK;
+			break;
+		default:
+			if(cmd != 0){
+				kbd_send(cmd);
+				cmd = 0;
+				kbd_send(code);
+				ret = KBD_RET_ACK;
+			}
+		
+	}
+	return ret;
+}
+
 #ifdef MOUSE
 ISR (INT1_vect)
 {
@@ -246,11 +275,7 @@ void decode(unsigned char sc)
 {
 							
 	static uint8_t mode=0;
-	static uint8_t is_up = 0;
-	static uint8_t shift = 0;
-	static uint8_t ctrl  = 0;
-	static uint8_t alt   = 0;
-
+	
 	uint8_t ch, offs;
 
 	if(sc == KBD_RET_ACK){ 
@@ -261,22 +286,26 @@ void decode(unsigned char sc)
 		// bat ok, ignore
 		kbd_status |= KBD_BAT_PASSED;
 	}
-	else if (!is_up)								  // Last data received was the up-key identifier 0xf0
+	else if (!(kbd_status & KBD_BREAK))								  // Last data received was the up-key identifier 0xf0
 	{
 		switch (sc)
 		{
+			case 0xe0:
+				kbd_status |= KBD_EX;// extended code
+				break;
 			case 0xF0:
-				is_up = 1;// break (key release)
+				kbd_status |= KBD_BREAK;// break (key release)
 				break;
 			case 0x12:
 			case 0x59:
-				shift = 1;
+				kbd_status |= KBD_SHIFT;
 				break;
 			case 0x14:
-				ctrl = 1;
+				kbd_status |= KBD_CTRL;
 				break;
 			case 0x11:
-				alt = 1;
+				kbd_status |= KBD_ALT;				
+//				kbd_status |= KBD_ALT_GR;
 				break;
 			case 0x77: // num lock
 				if(!(kbd_status & KBD_LOCKED)){
@@ -303,21 +332,24 @@ void decode(unsigned char sc)
 				if(mode == 0 || mode == 3)		  // If ASCII mode
 				{
 
-					if (ctrl && alt && sc == 0x71) // CTRL ALT DEL
+					if (kbd_status & KBD_CTRL && kbd_status & KBD_ALT && sc == 0x71) // CTRL ALT DEL
 					{
 						pull_line((1 << RESET_TRIG));
 						return;
 					}
 
-					if(shift)					  // If shift pressed,
+					if(kbd_status & KBD_SHIFT)					  // If shift pressed,
 					{
-						offs=1;
+						if(kbd_status & KBD_CAPS)	// and also caps lock set, than cancel each other
+							offs=0;
+						else
+							offs=1;
 					}
-					else if (ctrl)
+					else if (kbd_status & KBD_CTRL)
 					{
 						offs=2;
 					}
-					else if (alt)
+					else if (kbd_status & KBD_ALT)
 					{
 						offs=3;
 					}
@@ -335,7 +367,7 @@ void decode(unsigned char sc)
 #endif
                     }
 				}
-				else // Scan code mode
+				else // Scan code mode TODO ?!? what?
 				{
 
 				}
@@ -344,18 +376,18 @@ void decode(unsigned char sc)
 	}
 	else
 	{
-		is_up = 0;							  // Two 0xF0 in a row not allowed
+		kbd_status &= ~KBD_BREAK;							  // Two 0xF0 in a row not allowed
 		switch (sc)
 		{
 			case 0x12:
 			case 0x59:
-				shift = 0;
+				kbd_status &= ~KBD_SHIFT;
 				break;
 			case 0x14:
-				ctrl = 0;
+				kbd_status &= ~KBD_CTRL;
 				break;
 			case 0x11:
-				alt = 0;
+				kbd_status &= ~KBD_ALT;
 				break;
 			case 0x58:
 			case 0x77:	// Caps lock, num lock or scroll lock
