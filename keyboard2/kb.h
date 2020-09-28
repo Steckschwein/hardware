@@ -45,6 +45,7 @@
 #define KBD_CMD_RESET		0xff
 #define KBD_CMD_RESEND		0xfe	//
 #define KBD_CMD_IDENTIFY	0xf2
+#define KBD_CMD_TYPEMATIC	0xf3
 #define KBD_CMD_SCAN_ON		0xF4	// enable send scan codes
 #define KBD_CMD_SCAN_OFF	0xf5
 
@@ -72,6 +73,8 @@ void decode(unsigned char sc);
 void put_kbbuff(unsigned char c);
 void put_scanbuff(unsigned char c);
 uint8_t get_scancode(void);
+
+uint8_t kbd_command(uint8_t code);
 
 #define SCAN_BUFF_SIZE 12
 uint8_t scan_buffer[SCAN_BUFF_SIZE];
