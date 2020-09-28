@@ -211,22 +211,26 @@ uint8_t kbd_command(uint8_t code){
 	
 	uint8_t ret = 0xff;
 	
-	switch (code)
-	{
-		case KBD_CMD_TYPEMATIC:
-		case KBD_CMD_LEDS:
-			cmd = code;
-			ret = KBD_RET_ACK;
-			break;
-		default:
-			if(cmd != 0){
-				kbd_send(cmd);
-				cmd = 0;
+	if(cmd == 0){
+		switch (code)
+		{
+			case KBD_CMD_SCAN_ON:
+			case KBD_CMD_SCAN_OFF:
 				kbd_send(code);
 				ret = KBD_RET_ACK;
-			}
-		
-	}
+				break;
+			case KBD_CMD_TYPEMATIC:
+			case KBD_CMD_LEDS:
+				cmd = code;
+				ret = KBD_RET_ACK;
+				break;
+		}
+	}else{
+		kbd_send(cmd);
+		kbd_send(code);
+		ret = KBD_RET_ACK;
+		cmd = 0;
+	}		
 	return ret;
 }
 
@@ -454,7 +458,7 @@ uint8_t waitAck(){
 	while(c-->0 && (sc = get_scancode()) != KBD_RET_ACK) {
 		_delay_us(30);	// (PS/2 10-16,7Khz 30-50µs delay)
 	}
-	return sc == KBD_RET_ACK;
+	return c > 0;// c>0 we got an ACK, otherwise time out
 }
 
 #ifdef MOUSE
