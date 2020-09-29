@@ -83,6 +83,8 @@ int main(void)
 			decode(c);
 		}
 		
+		kbd_process_command();
+		
 #ifdef MOUSE
 		c = get_mousechar();
 		if (c != 0)

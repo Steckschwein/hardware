@@ -74,7 +74,8 @@ void put_kbbuff(unsigned char c);
 void put_scanbuff(unsigned char c);
 uint8_t get_scancode(void);
 
-uint8_t kbd_command(uint8_t code);
+uint8_t kbd_receive_command(uint8_t code);
+void kbd_process_command();
 
 #define SCAN_BUFF_SIZE 12
 uint8_t scan_buffer[SCAN_BUFF_SIZE];
