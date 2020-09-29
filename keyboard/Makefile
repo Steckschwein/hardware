@@ -20,17 +20,16 @@ CFLAGS= -g -Os -Wall -mcall-prologues -mmcu=atmega8  -DF_CPU=$(CPUSPEED) -D__PRO
 #CFLAGS+=-DUSE_IRQ
 
 #uncomment to enable serial debugging
-CFLAGS+=-DSERIAL_DEBUG
+#CFLAGS+=-DSERIAL_DEBUG
 
 OBJ2HEX = avr-objcopy
 OBJDUMP = avr-objdump
 LOADER=avrdude -p $(AVRDEVICE)
-BURN=-U flash:w:$(PRG).elf -D # --verify
+BURN=-U flash:w:$(PRG).hex -v # -e -D
 
-# avrispmkII usb avrdude
+# avrispmkII usb with avrdude
 #
-# DEVICE=-c stk500 -P usb
-# BURN=-D -U flash:w:$(PRG).hex
+#DEVICE=-c avrispmkII -P usb
 
 # avrispmk2 atprogram (atmel studio 7)
 #
@@ -47,7 +46,7 @@ BURN=-U flash:w:$(PRG).elf -D # --verify
 
 OBJ=kb.o spi.o serial.o main.o
 #all: $(PRG).elf $(PRG).hex $(PRG).lss $(PRG).eep
-all: $(PRG).elf
+all: $(PRG).hex
 
 kb.o: scancodes_de_cp437.h
 
@@ -66,7 +65,7 @@ $(PRG).lss: $(PRG).elf
 clean:
 	rm -f *.hex *.obj *.o *.elf *.eep *.lss
 
-burn: $(PRG).elf
+burn: $(PRG).hex
 	$(LOADER) $(DEVICE) $(BURN)
 
 fuse:

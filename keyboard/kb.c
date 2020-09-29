@@ -211,6 +211,7 @@ uint8_t kbd_command(uint8_t code){
 
 	uint8_t ret = 0xff;
 
+	//TODO FIXME we cannot send command here directly if called from SPI ISR - must be queued ...
 	if(cmd == 0){
 		switch (code)
 		{
