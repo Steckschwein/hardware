@@ -25,7 +25,7 @@ CFLAGS+=-DSERIAL_DEBUG
 OBJ2HEX = avr-objcopy
 OBJDUMP = avr-objdump
 LOADER=avrdude -p $(AVRDEVICE)
-BURN=-U flash:w:$(PRG).elf -e # --verify
+BURN=-U flash:w:$(PRG).elf -D # --verify
 
 # avrispmkII usb avrdude
 #
@@ -35,7 +35,7 @@ BURN=-U flash:w:$(PRG).elf -e # --verify
 # avrispmk2 atprogram (atmel studio 7)
 #
 #LOADER=atprogram -t avrispmk2 -i ISP
-#BURN=program --flash -f $(PRG).elf -c # --verify 
+#BURN=program --flash -f $(PRG).elf -c # --verify
 #DEVICE=-d ATmega8
 
 # -f set fuse bits 16bit value
@@ -71,6 +71,3 @@ burn: $(PRG).elf
 
 fuse:
 	$(LOADER) $(DEVICE) $(FUSES)
-
-
-

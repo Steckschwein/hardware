@@ -33,10 +33,10 @@ inline void kbd_data_low(){
 
 
 void kbd_init(void)
-{	
+{
 	kbd_clock_high();
 	kbd_data_high();
-	
+
 	scan_inptr = scan_buffer;				   // Initialize buffer
 	scan_outptr = scan_buffer;
 	scan_buffcnt = 0;
@@ -51,7 +51,7 @@ void kbd_init(void)
 	kb_inptr =  kb_buffer;					  // Initialize buffer
 	kb_outptr = kb_buffer;
 	kb_buffcnt = 0;
-	
+
 #ifdef USART
 	// USART init to 8 bit data, odd parity, 1 stopbit
 
@@ -78,7 +78,7 @@ void kbd_init(void)
 	GICR	|= (1 << INT0);					  // Enable INT0 interrupt
 #endif
 #endif
-	
+
 	PORTC = 0;
 	DDRC  = 0;
 }
@@ -87,7 +87,7 @@ uint8_t waitAck();
 void kbd_identify(){
 	kbd_send(KBD_CMD_SCAN_OFF);
 	if(waitAck()){
-		kbd_send(KBD_CMD_IDENTIFY);	
+		kbd_send(KBD_CMD_IDENTIFY);
 		if(waitAck()){
 //			while(get_scancode() == 0) _delay_us(30);
 		}
@@ -123,7 +123,7 @@ void kbd_update_leds()
 	if(kbd_status & KBD_CAPS) val |= 0x04;
 	if(kbd_status & KBD_NUMLOCK) val |= 0x02;
 	if(kbd_status & KBD_SCROLL) val |= 0x01;
-	
+
 	kbd_send(KBD_CMD_LEDS);
 	kbd_send(val);
 }
@@ -132,7 +132,7 @@ void kbd_send(uint8_t data)
 {
 	// still sending? - we must wait until keyboard has send ACK before starting new send(), otherwise the current (command) byte is dropped entirely
 	while(kbd_status & KBD_SEND) _delay_ms(5);
-	
+
 	// Initiate request-to-send, the actual sending of the data is handled in the ISR.
 	kbd_clock_low();//pull clock
 	_delay_us(100);// and wait
@@ -151,7 +151,7 @@ ISR(KBD_INT)
 		// Send data
 		if(kbd_bit_n == 9)				// Parity bit - 0xed 1110 1101 => 1011 0111
 		{
-			if(kbd_bitcnt & 0x01)	   
+			if(kbd_bitcnt & 0x01)
 				KBD_DATA_PORT &= ~(1<<KBD_DATA_PIN);
 			else
 				KBD_DATA_PORT |= (1<<KBD_DATA_PIN);
@@ -170,7 +170,7 @@ ISR(KBD_INT)
 			{
 				KBD_DATA_PORT |= (1<<KBD_DATA_PIN);
 				kbd_bitcnt++;
-			} else {			
+			} else {
 				KBD_DATA_PORT &= ~(1<<KBD_DATA_PIN);
 			}
 		}
@@ -206,11 +206,11 @@ ISR(KBD_INT)
 	5 to 6	Delay before keys repeat (00b = 250 ms, 01b = 500 ms, 10b = 750 ms, 11b = 1000 ms)
 */
 uint8_t kbd_command(uint8_t code){
-	
+
 	static uint8_t cmd = 0;
-	
+
 	uint8_t ret = 0xff;
-	
+
 	if(cmd == 0){
 		switch (code)
 		{
@@ -230,7 +230,7 @@ uint8_t kbd_command(uint8_t code){
 		kbd_send(code);
 		ret = KBD_RET_ACK;
 		cmd = 0;
-	}		
+	}
 	return ret;
 }
 
@@ -277,16 +277,16 @@ void pull_line(uint8_t line)
 
 void decode(unsigned char sc)
 {
-							
+
 	static uint8_t mode=0;
-	
+
 	uint8_t ch, offs;
 
-	if(sc == KBD_RET_ACK){ 
+	if(sc == KBD_RET_ACK){
 		// command acknowledge, ignore
-	} 
+	}
 	else if(sc == KBD_RET_BAT_OK)
-	{ 
+	{
 		// bat ok, ignore
 		kbd_status |= KBD_BAT_PASSED;
 	}
@@ -308,7 +308,7 @@ void decode(unsigned char sc)
 				kbd_status |= KBD_CTRL;
 				break;
 			case 0x11:
-				kbd_status |= KBD_ALT;				
+				kbd_status |= KBD_ALT;
 //				kbd_status |= KBD_ALT_GR;
 				break;
 			case 0x77: // num lock
@@ -446,17 +446,17 @@ uint8_t get_scancode(void)
     cli();
 	scan_buffcnt--;
     sei();
-	
+
 	return sc;
 }
 
 uint8_t waitAck(){
-	
+
 	uint8_t c = 8;
 	uint8_t sc;
-	
+
 	while(c-->0 && (sc = get_scancode()) != KBD_RET_ACK) {
-		_delay_us(30);	// (PS/2 10-16,7Khz 30-50µs delay)
+		_delay_us(30);	// (PS/2 10-16,7Khz 30-50ï¿½s delay)
 	}
 	return c > 0;// c>0 we got an ACK, otherwise time out
 }
