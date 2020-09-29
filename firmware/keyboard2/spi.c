@@ -19,10 +19,9 @@ ISR(SPI_STC_vect)
 	if (code != 0)
 	{
 		SPDR = kbd_command(code);
-		
 		return;
 	}
-	
+
 	// read
 	if (kb_buffcnt == 0)
 	{
