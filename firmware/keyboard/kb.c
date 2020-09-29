@@ -343,9 +343,11 @@ void decode(unsigned char sc)
 						return;
 					}
 
-					if(kbd_status & KBD_SHIFT)					  // If shift pressed,
+					if(kbd_status & KBD_SHIFT)// shift pressed
+						offs=1;
+					if(kbd_status & KBD_CAPS) // caps lock
 					{
-						if(kbd_status & KBD_CAPS)	// and also caps lock set, than cancel each other
+						if(kbd_status & KBD_SHIFT)	// and also shift, than cancel each other
 							offs=0;
 						else
 							offs=1;
