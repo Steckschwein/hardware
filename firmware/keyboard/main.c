@@ -1,7 +1,7 @@
+#include <avr/interrupt.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <util/delay.h>
-
 
 #include "spi.h"
 #include "kb.h"
@@ -53,38 +53,42 @@ Changes by Thomas Woinke <thomas@steckschwein.de>
 -------------------------------------------------------------------*/
 
 
-int __attribute__((OS_main)) main(void)
+int main(void)
 {
-	uint8_t tmp;
-
-    cli();
-
-	init_kb();
-	sei();
-    // send(0xee);
-
-
+	uint8_t c;
+	
+	cli();
+	
 	spiInitSlave();
 #ifdef SERIAL_DEBUG
-    init_uart();
+	init_uart();
 #endif
+	
+	_delay_ms(500);// wait keyboard reset
+	
+	kbd_init();
+	
 	sei();
 
+	kbd_send(KBD_CMD_RESET);// send reset, BAT ok is handled in get_scancode()
+	_delay_ms(500);
+	kbd_update_leds();// will set all LED's off
+	kbd_identify();
+	
 	while(1)
-	{
-		tmp = get_scanchar();
-		if (tmp != 0)
+	{		
+		c = get_scancode();
+		if (c != 0)
 		{
-			decode(tmp);
+			decode(c);
 		}
-
+		
 #ifdef MOUSE
-		tmp = get_mousechar();
-		if (tmp != 0)
+		c = get_mousechar();
+		if (c != 0)
 		{
-			put_kbbuff(tmp);
+			put_kbbuff(c);
 		}
 #endif
-
 	}
 }

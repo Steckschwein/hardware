@@ -3,44 +3,87 @@
 #ifndef __KB_INCLUDED
 #define __KB_INCLUDED
 
-// Keyboard konnections
-#define PIN_KB  PIND
-#define PORT_KB PORTD
-#define CLOCK   PD2
-#define DATAPIN PD6
+#include <stdint.h>
+#include <avr/sfr_defs.h>
+
+// Keyboard connections
+#define PS2_IN PIND
+#define PS2_PORT PORTD
+#define PS2_DDR DDRD
+
+#define	KBD_DATA_PORT	PS2_PORT				// für den DATA Pin genutzer Port
+#define	KBD_DATA_DDR	PS2_DDR
+#define	KBD_DATA_IN		PS2_IN
+#define	KBD_DATA_PIN	PD6					// für den DATA Pin genutzer Pin
+
+#define	KBD_CLOCK_PORT	PS2_PORT				// für den CLOCK Pin genutzer Port
+#define	KBD_CLOCK_DDR	PS2_DDR
+#define	KBD_CLOCK_PIN	PD2					// für den CLOCK Pin genutzer PIN (muss Interruptfähig sein!)
+#define KBD_INT INT0_vect
+#define	KBD_BUFSIZE	8
+
+#define PS2_CLOCK_PIN PD2
+#define KBD_DATAPIN PD6
 #define MOUSE_DATAPIN PD7
 
-#define MODE_RECEIVE 0
-#define MODE_SEND    1
+// Bits im Keyboard-Status-Register
+#define	KBD_SHIFT		1		// SHIFT is held down
+#define	KBD_CTRL		2		// CTRL is held down
+#define KBD_ALT			4		// ALT is held down
+#define KBD_ALT_GR		8		// ALT-GR (right ALT) is held down
+#define	KBD_EX			16		// extended code
+#define	KBD_NUMLOCK		32		// NUM LOCK is activated
+#define	KBD_BREAK		64		// UP Code was sent
+#define	KBD_EX_2		1024	// second extended code
+#define	KBD_LOCKED		128		// NUM / CAPS / SCROLL is activated
+#define	KBD_BAT_PASSED	256		// Keyboard passed its BAT test
+#define	KBD_SEND		512		// This and the next bits are for internal use
+#define	KBD_CAPS		2048	// CAPS LOCK is activated
+#define	KBD_SCROLL		4096	// SCROLL LOCK is activated
 
-volatile uint8_t mode;
-volatile uint8_t send_data;
-volatile uint8_t send_parity;
+#define KBD_CMD_LEDS		0xed	// 
+#define KBD_CMD_RESET		0xff
+#define KBD_CMD_RESEND		0xfe	//
+#define KBD_CMD_IDENTIFY	0xf2
+#define KBD_CMD_TYPEMATIC	0xf3
+#define KBD_CMD_SCAN_ON		0xF4	// enable send scan codes
+#define KBD_CMD_SCAN_OFF	0xf5
+
+#define KBD_LED_SCRLCK 1<<0
+#define KBD_LED_NUMLCK 1<<1
+#define KBD_LED_CAPLCK 1<<2
+
+#define KBD_RET_ACK		 0xfa	// 1111 1010
+#define KBD_RET_BAT_OK	 0xaa	// 
+#define KBD_RET_BAT_FAIL 0xfc	// 1111 1100
 
 
-void init_kb(void);
-void request_to_send();
-uint8_t parity(uint8_t);
+void kbd_clock_high();
+void kbd_clock_low();
+void kbd_data_high();
+void kbd_data_low();
 
-
-uint8_t send(uint8_t);
+void kbd_init(void);
+void kbd_send(uint8_t data);
+void kbd_update_leds();
+void kbd_identify();
 
 void decode(unsigned char sc);
+
 void put_kbbuff(unsigned char c);
-// int  get_kbchar(void);
-
 void put_scanbuff(unsigned char c);
-int  get_scanchar(void);
+uint8_t get_scancode(void);
 
-int  get_mousechar(void);
+uint8_t kbd_command(uint8_t code);
 
 #define SCAN_BUFF_SIZE 12
- uint8_t scan_buffer[SCAN_BUFF_SIZE];
- uint8_t *scan_inptr;
- uint8_t *scan_outptr;
- uint8_t scan_buffcnt;
+uint8_t scan_buffer[SCAN_BUFF_SIZE];
+uint8_t *scan_inptr;
+uint8_t *scan_outptr;
+uint8_t scan_buffcnt;
 
 #ifdef MOUSE
+ int get_mousechar(void);
 #define MOUSE_BUFF_SIZE 12
  uint8_t mouse_buffer[SCAN_BUFF_SIZE];
  uint8_t *mouse_inptr;

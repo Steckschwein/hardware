@@ -7,23 +7,25 @@
 #include "kb.h"
 
 //SPI Transfer Complete Interrupt starting on page 124 in datasheet
-ISR( SPI_STC_vect)
+ISR(SPI_STC_vect)
 {
 
 #ifdef USE_IRQ
 	DDRC &= ~(1 << IRQ); // release IRQ line
 #endif
 
-	if (SPDR != 0)
+	// write
+	uint8_t code = SPDR;
+	if (code != 0)
 	{
-		SPDR = 0xFF;
+		SPDR = kbd_command(code);
 		return;
 	}
 
+	// read
 	if (kb_buffcnt == 0)
 	{
-		// SPDR;   //read and forget
-	        SPDR = 0;
+        SPDR = 0;
 	}
 	else
 	{
@@ -49,5 +51,4 @@ void spiInitSlave()
 	DDR_SPI = (1<<DD_MISO);
 	/* Enable SPI with Interrupt */
 	SPCR = (1<<SPE | 1<<SPIE);
-	spiin = 0;
 }

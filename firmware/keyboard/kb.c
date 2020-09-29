@@ -7,20 +7,36 @@
 #include "scancodes_de_cp437.h"
 
 
+volatile uint8_t	kbd_bit_n = 1;
+volatile uint8_t	kbd_bitcnt = 0;
+volatile uint8_t	kbd_buffer = 0;
+volatile uint16_t	kbd_status = 0;
 
-
-void __attribute__((naked)) pull_line(uint8_t line)
-{
-	DDRC |= line;
-	// PORTC &= ~line;
-	_delay_us(50);
-	// PORTC |= line;
-	DDRC &= ~line;
-	return;
+inline void kbd_clock_high(){
+	KBD_CLOCK_DDR &= ~(1<<KBD_CLOCK_PIN);//input
+	KBD_CLOCK_PORT |= (1<<KBD_CLOCK_PIN);
 }
 
-void init_kb(void)
+inline void kbd_clock_low(){
+	KBD_CLOCK_DDR |= (1<<KBD_CLOCK_PIN);// output
+	KBD_CLOCK_PORT &= ~(1<<KBD_CLOCK_PIN);
+}
+
+inline void kbd_data_high(){
+	KBD_DATA_DDR &= ~(1<<KBD_DATA_PIN);
+	KBD_DATA_PORT |= (1<<KBD_DATA_PIN);
+}
+inline void kbd_data_low(){
+	KBD_DATA_DDR |= (1<<KBD_DATA_PIN);// output
+	KBD_DATA_PORT &= ~(1<<KBD_DATA_PIN);
+}
+
+
+void kbd_init(void)
 {
+	kbd_clock_high();
+	kbd_data_high();
+
 	scan_inptr = scan_buffer;				   // Initialize buffer
 	scan_outptr = scan_buffer;
 	scan_buffcnt = 0;
@@ -55,62 +71,29 @@ void init_kb(void)
 	MCUCR 	= (1 << ISC01)					  // INT0 interrupt on falling edge
 		    | (1 << ISC10);					  // INT1 interrupt on falling edge
 
-	GIMSK	= (1 << INT0)					  // Enable INT0 interrupt
+	GICR	= (1 << INT0)					  // Enable INT0 interrupt
 		    | (1 << INT1);					  // Enable INT1 interrupt
 #else
-	MCUCR 	= (1 << ISC01);					  // INT0 interrupt on falling edge
-
-	GIMSK	= (1 << INT0);					  // Enable INT0 interrupt
+	MCUCR 	|= (1 << ISC01);				  // INT0 interrupt on falling edge
+	GICR	|= (1 << INT0);					  // Enable INT0 interrupt
 #endif
 #endif
 
 	PORTC = 0;
 	DDRC  = 0;
-
-    mode = MODE_RECEIVE;
 }
+uint8_t waitAck();
 
-void request_to_send()
-{
-    // Clock line low
-    DDRD  |= (1 << CLOCK);
-    PORTD &= ~(1<< CLOCK);
-
-    // wait at least 100us
-    _delay_us(101);
-
-
-	MCUCR 	= (1 << ISC00);					  // INT0 interrupt on rising edge
-    mode = MODE_SEND;
-    // data line low
-
-    // Set DATAPIN to output
-    DDRD  |= (1 << DATAPIN);
-    // Clear bit
-    PORTD &= ~(1<< DATAPIN);
-
-    // clock line back high
-    DDRD  &= ~(1 << CLOCK) ;
-    PORTD |= (1<< CLOCK);
-
-
-    // wait for clock to become low
-    //while (PIND & (1<<CLOCK)) {};
+void kbd_identify(){
+	kbd_send(KBD_CMD_SCAN_OFF);
+	if(waitAck()){
+		kbd_send(KBD_CMD_IDENTIFY);
+		if(waitAck()){
+//			while(get_scancode() == 0) _delay_us(30);
+		}
+	}
+	kbd_send(KBD_CMD_SCAN_ON);
 }
-
-uint8_t send(uint8_t data)
-{
-    send_data = data;
-    send_parity = !parity(data);
-    request_to_send();
-
-    while (mode == MODE_SEND) {};
-
-    return 0;
-}
-
-
-
 
 #ifdef USART
 ISR (USART_RXC_vect)
@@ -133,116 +116,122 @@ ISR (USART_RXC_vect)
 
 #ifndef USART
 
-uint8_t parity(uint8_t x)
+void kbd_update_leds()
 {
-    x = x ^ x >> 4;
-    x = x ^ x >> 2;
-    x = x ^ x >> 1;
-    return x & 1;
+	uint8_t	val = 0;
+
+	if(kbd_status & KBD_CAPS) val |= 0x04;
+	if(kbd_status & KBD_NUMLOCK) val |= 0x02;
+	if(kbd_status & KBD_SCROLL) val |= 0x01;
+
+	kbd_send(KBD_CMD_LEDS);
+	kbd_send(val);
 }
 
-ISR (INT0_vect)
+void kbd_send(uint8_t data)
 {
-	static uint8_t data = 0;				  // Holds the received scan code
-	static uint8_t bitcount = 11;			  // 0 = neg.  1 = pos.
-	static uint8_t send_bitcount = 11;			  // 0 = neg.  1 = pos.
-	//static uint8_t shift_data = 0;
-    //static uint8_t p = 0;
-    static uint8_t ack = 0;
+	// still sending? - we must wait until keyboard has send ACK before starting new send(), otherwise the current (command) byte is dropped entirely
+	while(kbd_status & KBD_SEND) _delay_ms(5);
 
+	// Initiate request-to-send, the actual sending of the data is handled in the ISR.
+	kbd_clock_low();//pull clock
+	_delay_us(100);// and wait
+	kbd_bit_n = 1;
+	kbd_bitcnt = 0;
+	kbd_buffer = data;
+	kbd_status |= KBD_SEND;
+	kbd_data_low();
+	kbd_clock_high();//release clock, device should start now with "send byte" clock pulses
+}
 
-    if (mode == MODE_SEND)
-    {
-
-        // send start bit (always 0)
-        if (send_bitcount == 11)
-        {
-            PORTD &= ~(1 << DATAPIN);
-        }
-
-
-        if (send_bitcount < 11 && send_bitcount > 3)
-        {
-            send_data = (send_data >> 1);
-            if (send_data & 1)
-            {
-                PORTD |= (1 << DATAPIN);
-            }
-            else
-            {
-                PORTD &= ~(1 << DATAPIN);
-            }
-        }
-
-        // send parity bit
-        if (send_bitcount == 3)
-        {
-            if (send_parity)
-            {
-                PORTD |= (1 << DATAPIN);
-            }
-            else
-            {
-                PORTD &= ~(1 << DATAPIN);
-            }
-        }
-
-        // send stop bit (always 1)
-        if (send_bitcount == 2)
-        {
-            PORTD |= (1 << DATAPIN);
-        }
-
-
-        // get ACK bit
-        if (send_bitcount == 1)
-        {
-            DDRD  &= ~(1 << DATAPIN);
-
-            if(PIND & (1 << DATAPIN))
-            {
-                ack == 1;
-                mode = MODE_RECEIVE;
-                MCUCR &= ~(1 << ISC00);
-            }
-            else
-            {
-                ack == 0;
-            }
-        }
-
-        if (send_bitcount-- == 0)
-        {
-            send_bitcount = 11;
-        }
-        return;
-    }
-
-
-	if(bitcount < 11 && bitcount > 2)		  // Bit 3 to 10 is data. Parity bit,
-	{										  // start and stop bits are ignored.
-		data = (data >> 1);
-		if(PIND & (1 << DATAPIN))
-			data = data | 0x80;				  // Store a '1'
-	}
-
-	if(--bitcount == 0)						  // All bits received
+ISR(KBD_INT)
+{
+	if(kbd_status & KBD_SEND)
 	{
-		bitcount = 11;
-
-		if (scan_buffcnt < SCAN_BUFF_SIZE)			  // If buffer not full
+		// Send data
+		if(kbd_bit_n == 9)				// Parity bit - 0xed 1110 1101 => 1011 0111
 		{
-			*scan_inptr++ = data;   // Put character into buffer, Increment pointer
-			scan_buffcnt++;
+			if(kbd_bitcnt & 0x01)
+				KBD_DATA_PORT &= ~(1<<KBD_DATA_PIN);
+			else
+				KBD_DATA_PORT |= (1<<KBD_DATA_PIN);
+		} else if(kbd_bit_n == 10)		// Stop bit
+		{
+			KBD_DATA_PORT |= (1<<KBD_DATA_PIN);
+		} else if(kbd_bit_n == 11) 	// ACK bit, set by device
+		{
+			kbd_buffer = 0;
+			kbd_bit_n = 0;
+			kbd_status &= ~KBD_SEND;
+			kbd_data_high();
+		} else	// Data bits
+		{
+			if(kbd_buffer & (1 << (kbd_bit_n - 1)))
+			{
+				KBD_DATA_PORT |= (1<<KBD_DATA_PIN);
+				kbd_bitcnt++;
+			} else {
+				KBD_DATA_PORT &= ~(1<<KBD_DATA_PIN);
+			}
+		}
+	} else
+	{
+		// Receive data
+		if(kbd_bit_n > 1 && kbd_bit_n < 10)		// Ignore start, parity & stop bit
+		{
+			if(KBD_DATA_IN & (1<<KBD_DATA_PIN))
+				kbd_buffer |= (1 << (kbd_bit_n - 2));
+		} else if(kbd_bit_n == 11)
+		{
+			if (scan_buffcnt < SCAN_BUFF_SIZE)			  // If buffer not full
+			{
+				*scan_inptr++ = kbd_buffer;   // Put character into buffer, Increment pointer
+				scan_buffcnt++;
 #ifdef USE_IRQ
-		DDRC |= (1 << IRQ);		// pull IRQ line
+				DDRC |= (1 << IRQ);		// pull IRQ line
 #endif
-
-			// Pointer wrapping
-			if (scan_inptr >= scan_buffer + SCAN_BUFF_SIZE)
-				scan_inptr = scan_buffer;
+				// Pointer wrapping
+				if (scan_inptr >= scan_buffer + SCAN_BUFF_SIZE)
+					scan_inptr = scan_buffer;
+			}
+			kbd_buffer = 0;
+			kbd_bit_n = 0;
 		}
 	}
+	kbd_bit_n++;
+}
+
+/*
+	0 to 4	Repeat rate (00000b = 30 Hz, ..., 11111b = 2 Hz)
+	5 to 6	Delay before keys repeat (00b = 250 ms, 01b = 500 ms, 10b = 750 ms, 11b = 1000 ms)
+*/
+uint8_t kbd_command(uint8_t code){
+
+	static uint8_t cmd = 0;
+
+	uint8_t ret = 0xff;
+
+	if(cmd == 0){
+		switch (code)
+		{
+			case KBD_CMD_SCAN_ON:
+			case KBD_CMD_SCAN_OFF:
+				kbd_send(code);
+				ret = KBD_RET_ACK;
+				break;
+			case KBD_CMD_TYPEMATIC:
+			case KBD_CMD_LEDS:
+				cmd = code;
+				ret = KBD_RET_ACK;
+				break;
+		}
+	}else{
+		kbd_send(cmd);
+		kbd_send(code);
+		ret = KBD_RET_ACK;
+		cmd = 0;
+	}
+	return ret;
 }
 
 #ifdef MOUSE
@@ -254,7 +243,7 @@ ISR (INT1_vect)
 	if(bitcount < 11 && bitcount > 2)		  // Bit 3 to 10 is data. Parity bit,
 	{										  // start and stop bits are ignored.
 		data = (data >> 1);
-		if(PIND & (1 << MOUSE_DATAPIN))
+		if(PS2_IN & (1 << MOUSE_DATAPIN))
 			data = data | 0x80;				  // Store a '1'
 	}
 
@@ -277,59 +266,94 @@ ISR (INT1_vect)
 #endif
 #endif
 
-void decode(uint8_t sc)
+void pull_line(uint8_t line)
 {
-	static uint8_t is_up = 0, mode = 0;
-	static uint8_t shift = 0;
-	static uint8_t ctrl  = 0;
-	static uint8_t alt   = 0;
+	DDRC |= line;
+	_delay_us(50);
+	DDRC &= ~line;
+	return;
+}
+
+
+void decode(unsigned char sc)
+{
+
+	static uint8_t mode=0;
 
 	uint8_t ch, offs;
 
-
-
-	// put_kbbuff(sc);
-	// return;
-
-	if (!is_up)								  // Last data received was the up-key identifier
+	if(sc == KBD_RET_ACK){
+		// command acknowledge, ignore
+	}
+	else if(sc == KBD_RET_BAT_OK)
+	{
+		// bat ok, ignore
+		kbd_status |= KBD_BAT_PASSED;
+	}
+	else if (!(kbd_status & KBD_BREAK))								  // Last data received was the up-key identifier 0xf0
 	{
 		switch (sc)
 		{
+			case 0xe0:
+				kbd_status |= KBD_EX;// extended code
+				break;
 			case 0xF0:
-				is_up = 1;
+				kbd_status |= KBD_BREAK;// break (key release)
 				break;
 			case 0x12:
 			case 0x59:
-				shift = 1;
+				kbd_status |= KBD_SHIFT;
 				break;
 			case 0x14:
-				ctrl = 1;
+				kbd_status |= KBD_CTRL;
 				break;
 			case 0x11:
-				alt = 1;
+				kbd_status |= KBD_ALT;
+//				kbd_status |= KBD_ALT_GR;
 				break;
-			case 0xAA:
+			case 0x77: // num lock
+				if(!(kbd_status & KBD_LOCKED)){
+					kbd_status |= KBD_LOCKED;
+					kbd_status = (kbd_status & KBD_NUMLOCK) ? kbd_status & ~KBD_NUMLOCK : kbd_status | KBD_NUMLOCK;
+					kbd_update_leds();
+				}
+				break;
+			case 0x58: // caps lock
+				if(!(kbd_status & KBD_LOCKED)){
+					kbd_status |= KBD_LOCKED;
+					kbd_status = (kbd_status & KBD_CAPS) ? kbd_status & ~KBD_CAPS : kbd_status | KBD_CAPS;
+					kbd_update_leds();
+				}
+				break;
+			case 0x7e: // Scroll lock
+				if(!(kbd_status & KBD_LOCKED)){
+					kbd_status |= KBD_LOCKED;
+					kbd_status = (kbd_status & KBD_SCROLL) ? kbd_status & ~KBD_SCROLL : kbd_status | KBD_SCROLL;
+					kbd_update_leds();
+				}
 				break;
 			default:
 				if(mode == 0 || mode == 3)		  // If ASCII mode
 				{
 
-					if (ctrl && alt && sc == 0x71) // CTRL ALT DEL
+					if (kbd_status & KBD_CTRL && kbd_status & KBD_ALT && sc == 0x71) // CTRL ALT DEL
 					{
 						pull_line((1 << RESET_TRIG));
 						return;
 					}
 
-
-					if(shift)					  // If shift not pressed,
+					if(kbd_status & KBD_SHIFT)					  // If shift pressed,
 					{
-						offs=1;
+						if(kbd_status & KBD_CAPS)	// and also caps lock set, than cancel each other
+							offs=0;
+						else
+							offs=1;
 					}
-					else if (ctrl)
+					else if (kbd_status & KBD_CTRL)
 					{
 						offs=2;
 					}
-					else if (alt)
+					else if (kbd_status & KBD_ALT)
 					{
 						offs=3;
 					}
@@ -347,7 +371,7 @@ void decode(uint8_t sc)
 #endif
                     }
 				}
-				else // Scan code mode
+				else // Scan code mode TODO ?!? what?
 				{
 
 				}
@@ -356,23 +380,24 @@ void decode(uint8_t sc)
 	}
 	else
 	{
-		is_up = 0;							  // Two 0xF0 in a row not allowed
-
+		kbd_status &= ~KBD_BREAK;							  // Two 0xF0 in a row not allowed
 		switch (sc)
 		{
 			case 0x12:
 			case 0x59:
-				shift = 0;
+				kbd_status &= ~KBD_SHIFT;
 				break;
 			case 0x14:
-				ctrl = 0;
+				kbd_status &= ~KBD_CTRL;
 				break;
 			case 0x11:
-				alt = 0;
+				kbd_status &= ~KBD_ALT;
 				break;
-			case 0xAA:
+			case 0x58:
+			case 0x77:	// Caps lock, num lock or scroll lock
+			case 0x7e:
+				kbd_status &= ~KBD_LOCKED; //
 				break;
-
 			case 0x84: // SYSRQ
 				pull_line((1 << NMI));
 				return;
@@ -401,9 +426,9 @@ void put_kbbuff(uint8_t c)
 	}
 }
 
-int get_scanchar(void)
+uint8_t get_scancode(void)
 {
-	uint8_t byte;
+	uint8_t sc = 0;
 
 	// Wait for data
 	if (scan_buffcnt == 0)
@@ -411,8 +436,8 @@ int get_scanchar(void)
 		return 0;
 	}
 
-	// Get byte - Increment pointer
-	byte = *scan_outptr++;
+	// Get scan byte - Increment pointer
+	sc = *scan_outptr++;
 
 	// Pointer wrapping
 	if (scan_outptr >= scan_buffer + SCAN_BUFF_SIZE)
@@ -422,8 +447,20 @@ int get_scanchar(void)
 	scan_buffcnt--;
     sei();
 
-    return byte;
+	return sc;
 }
+
+uint8_t waitAck(){
+
+	uint8_t c = 8;
+	uint8_t sc;
+
+	while(c-->0 && (sc = get_scancode()) != KBD_RET_ACK) {
+		_delay_us(30);	// (PS/2 10-16,7Khz 30-50�s delay)
+	}
+	return c > 0;// c>0 we got an ACK, otherwise time out
+}
+
 #ifdef MOUSE
 int get_mousechar(void)
 {
