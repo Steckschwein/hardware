@@ -201,25 +201,27 @@ ISR(KBD_INT)
 	kbd_bit_n++;
 }
 
+uint8_t cmd = 0;
+uint8_t cmd_value = 0;
+uint8_t cmd_req = 0;
+
 /*
 	0 to 4	Repeat rate (00000b = 30 Hz, ..., 11111b = 2 Hz)
 	5 to 6	Delay before keys repeat (00b = 250 ms, 01b = 500 ms, 10b = 750 ms, 11b = 1000 ms)
 */
-uint8_t kbd_command(uint8_t code){
-
-	static uint8_t cmd = 0;
-
+uint8_t kbd_receive_command(uint8_t code){
+	
 	uint8_t ret = 0xff;
 
-	//TODO FIXME we cannot send command here directly if called from SPI ISR - must be queued ...
+	//TODO FIXME we cannot send commands directly if called from SPI ISR - must be queued ...
+	if(cmd_req)
+		return ret;
+		
 	if(cmd == 0){
 		switch (code)
 		{
 			case KBD_CMD_SCAN_ON:
 			case KBD_CMD_SCAN_OFF:
-				kbd_send(code);
-				ret = KBD_RET_ACK;
-				break;
 			case KBD_CMD_TYPEMATIC:
 			case KBD_CMD_LEDS:
 				cmd = code;
@@ -227,12 +229,21 @@ uint8_t kbd_command(uint8_t code){
 				break;
 		}
 	}else{
-		kbd_send(cmd);
-		kbd_send(code);
+		cmd_value = code;
+		cmd_req = 1;
 		ret = KBD_RET_ACK;
-		cmd = 0;
 	}
 	return ret;
+}
+
+void kbd_process_command(){
+	if(cmd_req){
+		kbd_send(cmd);
+		kbd_send(cmd_value);
+		cmd_req = 0;
+		cmd = 0;
+		cmd_value = 0;
+	}
 }
 
 #ifdef MOUSE
@@ -278,7 +289,6 @@ void pull_line(uint8_t line)
 
 void decode(unsigned char sc)
 {
-
 	static uint8_t mode=0;
 
 	uint8_t ch, offs;
@@ -288,8 +298,8 @@ void decode(unsigned char sc)
 	}
 	else if(sc == KBD_RET_BAT_OK)
 	{
-		// bat ok, ignore
-		kbd_status |= KBD_BAT_PASSED;
+		kbd_status |= KBD_BAT_PASSED; // bat ok, ignore
+
 	}
 	else if (!(kbd_status & KBD_BREAK))								  // Last data received was the up-key identifier 0xf0
 	{

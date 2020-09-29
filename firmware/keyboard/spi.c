@@ -18,7 +18,7 @@ ISR(SPI_STC_vect)
 	uint8_t code = SPDR;
 	if (code != 0)
 	{
-		SPDR = kbd_command(code);
+		SPDR = kbd_receive_command(code);
 		return;
 	}
 
