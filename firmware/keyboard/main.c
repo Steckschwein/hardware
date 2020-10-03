@@ -63,14 +63,14 @@ int main(void)
 #ifdef SERIAL_DEBUG
 	init_uart();
 #endif
-	
+
 	_delay_ms(500);// wait keyboard reset
 	
 	kbd_init();
-	
+		
 	sei();
 
-	kbd_send(KBD_CMD_RESET);// send reset, BAT ok is handled in get_scancode()
+	kbd_send(KBD_CMD_RESET);// send reset, return cide is handled in decode()
 	_delay_ms(500);
 	kbd_update_leds();// will set all LED's off
 	kbd_identify();

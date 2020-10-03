@@ -6,11 +6,12 @@
 #include "serial.h"
 #include "scancodes_de_cp437.h"
 
-
 volatile uint8_t	kbd_bit_n = 1;
 volatile uint8_t	kbd_bitcnt = 0;
 volatile uint8_t	kbd_buffer = 0;
 volatile uint16_t	kbd_status = 0;
+
+volatile uint8_t kbd_statusbuffer[5] = { 0xaa, 0, 0, 0, 0 };
 
 inline void kbd_clock_high(){
 	KBD_CLOCK_DDR &= ~(1<<KBD_CLOCK_PIN);//input
@@ -82,16 +83,32 @@ void kbd_init(void)
 	PORTC = 0;
 	DDRC  = 0;
 }
-uint8_t waitAck();
 
-void kbd_identify(){
-	kbd_send(KBD_CMD_SCAN_OFF);
-	if(waitAck()){
-		kbd_send(KBD_CMD_IDENTIFY);
-		if(waitAck()){
-//			while(get_scancode() == 0) _delay_us(30);
-		}
+uint8_t waitScancode(){
+	
+	uint8_t cnt = 8;
+	uint8_t sc = 0;
+
+	while(cnt-->0 && (sc = get_scancode()) == 0) {
+		_delay_us(30);	// (PS/2 10-16,7Khz 30-50µs delay)
 	}
+	return sc;
+}
+
+uint8_t waitResponse(){
+
+	if(waitScancode() == KBD_RET_ACK){// wait ack
+		return waitScancode(); // wait response
+	}
+	return 0;
+}
+
+
+void kbd_identify(){ // TODO FIXME
+	kbd_send(KBD_CMD_SCAN_OFF);
+	kbd_send(KBD_CMD_IDENTIFY);
+	kbd_statusbuffer[2] = waitResponse();
+	kbd_statusbuffer[1] = waitResponse();
 	kbd_send(KBD_CMD_SCAN_ON);
 }
 
@@ -201,10 +218,10 @@ ISR(KBD_INT)
 	kbd_bit_n++;
 }
 
-uint8_t cmd = 0;
-uint8_t cmd_value = 0;
-uint8_t cmd_req = 0;
-
+volatile uint8_t cmd = 0;
+volatile uint8_t cmd_value = 0;
+volatile uint8_t cmd_req = 0;
+volatile uint8_t cmd_res = 0;
 /*
 	0 to 4	Repeat rate (00000b = 30 Hz, ..., 11111b = 2 Hz)
 	5 to 6	Delay before keys repeat (00b = 250 ms, 01b = 500 ms, 10b = 750 ms, 11b = 1000 ms)
@@ -213,24 +230,36 @@ uint8_t kbd_receive_command(uint8_t code){
 	
 	uint8_t ret = 0xff;
 
-	//TODO FIXME we cannot send commands directly if called from SPI ISR - must be queued ...
 	if(cmd_req)
 		return ret;
 		
 	if(cmd == 0){
 		switch (code)
 		{
+			case KBD_CMD_STATUS:
+				if(cmd_res == 0){
+					kbd_statusbuffer[sizeof(kbd_statusbuffer)-1] = kbd_status & 0xff;//status low/high byte, we respond inverse
+					kbd_statusbuffer[sizeof(kbd_statusbuffer)-2] = kbd_status>>8;
+					cmd_res = sizeof(kbd_statusbuffer);
+					ret = KBD_RET_ACK;
+				}else if (cmd_res-- > 0) {
+					ret = kbd_statusbuffer[cmd_res];
+				}
+				break;
 			case KBD_CMD_SCAN_ON:
 			case KBD_CMD_SCAN_OFF:
+				cmd_req = 1; // no value command, trigger immediately
 			case KBD_CMD_TYPEMATIC:
 			case KBD_CMD_LEDS:
-				cmd = code;
+				cmd = code; 
 				ret = KBD_RET_ACK;
 				break;
+			default:
+				cmd_res = 0;// reset out buffer if host does not send enough KBD_CMD_STATUS
 		}
 	}else{
 		cmd_value = code;
-		cmd_req = 1;
+		cmd_req = 2; // set command trigger for kbd_process_command
 		ret = KBD_RET_ACK;
 	}
 	return ret;
@@ -239,7 +268,9 @@ uint8_t kbd_receive_command(uint8_t code){
 void kbd_process_command(){
 	if(cmd_req){
 		kbd_send(cmd);
-		kbd_send(cmd_value);
+		if(cmd_req > 1){ // command with value, so send them
+			kbd_send(cmd_value);
+		}
 		cmd_req = 0;
 		cmd = 0;
 		cmd_value = 0;
@@ -294,12 +325,18 @@ void decode(unsigned char sc)
 	uint8_t ch, offs;
 
 	if(sc == KBD_RET_ACK){
-		// command acknowledge, ignore
+		// command acknowledge, TODO maybe resend
 	}
+	else if(sc == KBD_RET_BAT_FAIL1 || sc == KBD_RET_BAT_FAIL2)
+	{
+		kbd_status &= ~KBD_BAT_PASSED; // bat ok, ignore
+	}	
 	else if(sc == KBD_RET_BAT_OK)
 	{
 		kbd_status |= KBD_BAT_PASSED; // bat ok, ignore
-
+	}
+	else if (sc == KBD_RET_ECHO){
+		// TODO - keyboard detection - echo failed, retry several times, send resets afterwards, wait on BAT
 	}
 	else if (!(kbd_status & KBD_BREAK))								  // Last data received was the up-key identifier 0xf0
 	{
@@ -461,17 +498,6 @@ uint8_t get_scancode(void)
     sei();
 
 	return sc;
-}
-
-uint8_t waitAck(){
-
-	uint8_t c = 8;
-	uint8_t sc;
-
-	while(c-->0 && (sc = get_scancode()) != KBD_RET_ACK) {
-		_delay_us(30);	// (PS/2 10-16,7Khz 30-50�s delay)
-	}
-	return c > 0;// c>0 we got an ACK, otherwise time out
 }
 
 #ifdef MOUSE

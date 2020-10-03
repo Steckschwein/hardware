@@ -34,13 +34,15 @@
 #define	KBD_EX			16		// extended code
 #define	KBD_NUMLOCK		32		// NUM LOCK is activated
 #define	KBD_BREAK		64		// UP Code was sent
-#define	KBD_EX_2		1024	// second extended code
 #define	KBD_LOCKED		128		// NUM / CAPS / SCROLL is activated
 #define	KBD_BAT_PASSED	256		// Keyboard passed its BAT test
 #define	KBD_SEND		512		// This and the next bits are for internal use
+#define	KBD_EX_2		1024	// second extended code
 #define	KBD_CAPS		2048	// CAPS LOCK is activated
 #define	KBD_SCROLL		4096	// SCROLL LOCK is activated
 
+
+#define KBD_CMD_STATUS		0xe0	// NOT a real ps/2 command, it's used to answer the keyboard status
 #define KBD_CMD_LEDS		0xed	// 
 #define KBD_CMD_RESET		0xff
 #define KBD_CMD_RESEND		0xfe	//
@@ -54,9 +56,12 @@
 #define KBD_LED_CAPLCK 1<<2
 
 #define KBD_RET_ACK		 0xfa	// 1111 1010
+#define KBD_RET_RESEND	 0xfe	// 1111 1010
+#define KBD_RET_ECHO	 0xee	// 
 #define KBD_RET_BAT_OK	 0xaa	// 
-#define KBD_RET_BAT_FAIL 0xfc	// 1111 1100
-
+#define KBD_RET_BAT_FAIL1 0xfc	// 1111 1100
+#define KBD_RET_BAT_FAIL2 0xfd	// 1111 1100
+#define KBD_RET_ERROR	 0xff
 
 void kbd_clock_high();
 void kbd_clock_low();
@@ -67,6 +72,7 @@ void kbd_init(void);
 void kbd_send(uint8_t data);
 void kbd_update_leds();
 void kbd_identify();
+uint8_t waitAck();
 
 void decode(unsigned char sc);
 
