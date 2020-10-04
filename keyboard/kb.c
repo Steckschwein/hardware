@@ -85,7 +85,7 @@ void kbd_init(void)
 }
 
 uint8_t waitScancode(){
-	
+
 	uint8_t cnt = 8;
 	uint8_t sc = 0;
 
@@ -227,12 +227,12 @@ volatile uint8_t cmd_res = 0;
 	5 to 6	Delay before keys repeat (00b = 250 ms, 01b = 500 ms, 10b = 750 ms, 11b = 1000 ms)
 */
 uint8_t kbd_receive_command(uint8_t code){
-	
+
 	uint8_t ret = 0xff;
 
 	if(cmd_req)
 		return ret;
-		
+
 	if(cmd == 0){
 		switch (code)
 		{
@@ -251,7 +251,7 @@ uint8_t kbd_receive_command(uint8_t code){
 				cmd_req = 1; // no value command, trigger immediately
 			case KBD_CMD_TYPEMATIC:
 			case KBD_CMD_LEDS:
-				cmd = code; 
+				cmd = code;
 				ret = KBD_RET_ACK;
 				break;
 			default:
@@ -330,7 +330,7 @@ void decode(unsigned char sc)
 	else if(sc == KBD_RET_BAT_FAIL1 || sc == KBD_RET_BAT_FAIL2)
 	{
 		kbd_status &= ~KBD_BAT_PASSED; // bat ok, ignore
-	}	
+	}
 	else if(sc == KBD_RET_BAT_OK)
 	{
 		kbd_status |= KBD_BAT_PASSED; // bat ok, ignore
@@ -390,14 +390,16 @@ void decode(unsigned char sc)
 						return;
 					}
 
-					if(kbd_status & KBD_SHIFT)// shift pressed
-						offs=1;
 					if(kbd_status & KBD_CAPS) // caps lock
 					{
 						if(kbd_status & KBD_SHIFT)	// and also shift, than cancel each other
 							offs=0;
 						else
 							offs=1;
+					}
+					else if(kbd_status & KBD_SHIFT) // shift pressed
+					{
+						offs=1;
 					}
 					else if (kbd_status & KBD_CTRL)
 					{
