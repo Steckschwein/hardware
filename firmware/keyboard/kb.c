@@ -383,7 +383,6 @@ void decode(unsigned char sc)
 			default:
 				if(mode == 0 || mode == 3)		  // If ASCII mode
 				{
-
 					if (kbd_status & KBD_CTRL && kbd_status & KBD_ALT && sc == 0x71) // CTRL ALT DEL
 					{
 						pull_line((1 << RESET_TRIG));
@@ -393,9 +392,13 @@ void decode(unsigned char sc)
 					if(kbd_status & KBD_CAPS) // caps lock
 					{
 						if(kbd_status & KBD_SHIFT)	// and also shift, than cancel each other
+						{
 							offs=0;
+						}
 						else
+						{
 							offs=1;
+						}
 					}
 					else if(kbd_status & KBD_SHIFT) // shift pressed
 					{
