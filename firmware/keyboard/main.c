@@ -56,35 +56,38 @@ Changes by Thomas Woinke <thomas@steckschwein.de>
 int main(void)
 {
 	uint8_t c;
-	
+
 	cli();
-	
+
 	spiInitSlave();
 #ifdef SERIAL_DEBUG
 	init_uart();
 #endif
 
 	_delay_ms(500);// wait keyboard reset
-	
+
 	kbd_init();
-		
+
 	sei();
 
 	kbd_send(KBD_CMD_RESET);// send reset, return cide is handled in decode()
 	_delay_ms(500);
 	kbd_update_leds();// will set all LED's off
 	kbd_identify();
+#ifdef USE_IRQ
+	DDRC &= ~(1 << IRQ); // release IRQ line
+#endif
 	
 	while(1)
-	{		
+	{
 		c = get_scancode();
 		if (c != 0)
 		{
 			decode(c);
 		}
-		
+
 		kbd_process_command();
-		
+
 #ifdef MOUSE
 		c = get_mousechar();
 		if (c != 0)
