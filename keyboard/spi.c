@@ -10,9 +10,7 @@
 ISR(SPI_STC_vect)
 {
 
-#ifdef USE_IRQ
-	DDRC &= ~(1 << IRQ); // release IRQ line
-#endif
+
 
 	// write
 	uint8_t code = SPDR;
@@ -39,6 +37,9 @@ ISR(SPI_STC_vect)
 		// Decrement buffer count
 		kb_buffcnt--;
 	}
+#ifdef USE_IRQ
+	DDRC &= ~(1 << IRQ); // release IRQ line
+#endif
 }
 
 
