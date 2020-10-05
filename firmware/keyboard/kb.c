@@ -6,12 +6,13 @@
 #include "serial.h"
 #include "scancodes_de_cp437.h"
 
+// volatile - due to "concurrent" access by isr and main program
 volatile uint8_t	kbd_bit_n = 1;
 volatile uint8_t	kbd_bitcnt = 0;
 volatile uint8_t	kbd_buffer = 0;
 volatile uint16_t	kbd_status = 0;
 
-volatile uint8_t kbd_statusbuffer[5] = { 0xaa, 0, 0, 0, 0 };
+uint8_t kbd_statusbuffer[5] = { 0xaa, 0, 0, 0, 0 };
 
 inline void kbd_clock_high(){
 	KBD_CLOCK_DDR &= ~(1<<KBD_CLOCK_PIN);//input
@@ -32,7 +33,6 @@ inline void kbd_data_low(){
 	KBD_DATA_PORT &= ~(1<<KBD_DATA_PIN);
 }
 
-
 void kbd_init(void)
 {
 	kbd_clock_high();
@@ -47,7 +47,6 @@ void kbd_init(void)
 	mouse_outptr = mouse_buffer;
 	mouse_buffcnt = 0;
 #endif
-
 
 	kb_inptr =  kb_buffer;					  // Initialize buffer
 	kb_outptr = kb_buffer;
@@ -218,44 +217,46 @@ ISR(KBD_INT)
 	kbd_bit_n++;
 }
 
-volatile uint8_t cmd = 0;
-volatile uint8_t cmd_value = 0;
-volatile uint8_t cmd_req = 0;
-volatile uint8_t cmd_res = 0;
+uint8_t cmd = 0;
+uint8_t cmd_value = 0;
+uint8_t cmd_req = 0;
+uint8_t cmd_timeout = 0xff;//255 loops
+
 /*
 	0 to 4	Repeat rate (00000b = 30 Hz, ..., 11111b = 2 Hz)
 	5 to 6	Delay before keys repeat (00b = 250 ms, 01b = 500 ms, 10b = 750 ms, 11b = 1000 ms)
 */
 uint8_t kbd_receive_command(uint8_t code){
 
+	static uint8_t cmd_res = 0;
+
 	uint8_t ret = 0xff;
 
-	if(cmd_req)
+	if(cmd_req)//ignore if cmd in progress, not finished yet
 		return ret;
 
 	if(cmd == 0){
-		switch (code)
-		{
+		switch (code) {
 			case KBD_CMD_STATUS:
 				if(cmd_res == 0){
 					kbd_statusbuffer[sizeof(kbd_statusbuffer)-1] = kbd_status & 0xff;//status low/high byte, we respond inverse
 					kbd_statusbuffer[sizeof(kbd_statusbuffer)-2] = kbd_status>>8;
 					cmd_res = sizeof(kbd_statusbuffer);
 					ret = KBD_RET_ACK;
-				}else if (cmd_res-- > 0) {
-					ret = kbd_statusbuffer[cmd_res];
+				}else {
+					ret = kbd_statusbuffer[--cmd_res];
 				}
 				break;
 			case KBD_CMD_SCAN_ON:
 			case KBD_CMD_SCAN_OFF:
-				cmd_req = 1; // no value command, trigger immediately
+				cmd_req = 1; // command without value, trigger immediately
 			case KBD_CMD_TYPEMATIC:
 			case KBD_CMD_LEDS:
-				cmd = code;
+				cmd = code; // save command code, we have to capture a value before sending it to keyboard
 				ret = KBD_RET_ACK;
 				break;
 			default:
-				cmd_res = 0;// reset out buffer if host does not send enough KBD_CMD_STATUS
+				cmd_res = 0;// ...otherwise make sure out buffer is reset
 		}
 	}else{
 		cmd_value = code;
@@ -265,15 +266,23 @@ uint8_t kbd_receive_command(uint8_t code){
 	return ret;
 }
 
+static void kbd_cmd_reset(){
+	cmd = 0;
+	cmd_value = 0;
+	cmd_req = 0;
+	cmd_timeout = 0xff;
+}
+
 void kbd_process_command(){
+	
 	if(cmd_req){
 		kbd_send(cmd);
-		if(cmd_req > 1){ // command with value, so send them
+		if(cmd_req > 1){ // command with value, so send the value too
 			kbd_send(cmd_value);
 		}
-		cmd_req = 0;
-		cmd = 0;
-		cmd_value = 0;
+		kbd_cmd_reset();
+	}else if(cmd != 0 && cmd_timeout-- == 0){
+		kbd_cmd_reset();
 	}
 }
 
