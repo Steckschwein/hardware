@@ -33,9 +33,9 @@ BURN=-U flash:w:$(PRG).hex -v # -e -D
 
 # avrispmk2 atprogram (atmel studio 7)
 #
-#LOADER=atprogram -t avrispmk2 -i ISP
-#BURN=program --flash -f $(PRG).hex -c # --verify
-#DEVICE=-d ATmega8
+LOADER=atprogram -t avrispmk2 -i ISP
+BURN=program --flash -f $(PRG).hex -c # --verify
+DEVICE=-d ATmega8
 
 # -f set fuse bits 16bit value
 # -F verify fuse bits
