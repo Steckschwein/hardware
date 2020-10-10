@@ -87,7 +87,9 @@ int main(void)
 		}
 
 		kbd_process_command();
-
+		
+		kbd_watchdog();
+		
 #ifdef MOUSE
 		c = get_mousechar();
 		if (c != 0)
