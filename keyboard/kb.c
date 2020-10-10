@@ -83,31 +83,56 @@ void kbd_init(void)
 	DDRC  = 0;
 }
 
+
+
+void kbd_watchdog(){
+
+	static uint8_t wtd_cnt_echo = 3;
+	static uint16_t wtd_cnt_down = 0xffff;
+	
+	if(wtd_cnt_down == 0){
+		if(kbd_status & KBD_ECHO_PASSED){//echo received ? (updated during decode())
+			kbd_status &= ~KBD_ECHO_PASSED;
+			wtd_cnt_echo = 3;//reset echo counter
+		}else{
+			if(kbd_status & KBD_BAT_PASSED){
+				if(wtd_cnt_echo == 0){//echo counter is zero, but no echo received yet
+					kbd_status &= ~KBD_BAT_PASSED; // reset BAT status
+					wtd_cnt_echo = 3;
+				}else{
+					wtd_cnt_echo--;
+					kbd_send(KBD_CMD_ECHO);//bat passed, just send ECHO
+				}
+			}else{
+				kbd_send(KBD_CMD_RESET);// try reset
+			}
+		}
+		wtd_cnt_down = 0xffff;
+	}
+	wtd_cnt_down--;
+}
+
 uint8_t waitScancode(){
 
-	uint8_t cnt = 8;
+	uint8_t cnt = 100;
 	uint8_t sc = 0;
 
-	while(cnt-->0 && (sc = get_scancode()) == 0) {
-		_delay_us(30);	// (PS/2 10-16,7Khz 30-50µs delay)
+	while((kbd_status & KBD_SEND) || (cnt-->0 && (sc = get_scancode()) == 0)) {
+		_delay_ms(1);	// (PS/2 10-16,7Khz 30-50µs delay)
 	}
 	return sc;
 }
 
-uint8_t waitResponse(){
-
-	if(waitScancode() == KBD_RET_ACK){// wait ack
-		return waitScancode(); // wait response
-	}
-	return 0;
-}
-
-
-void kbd_identify(){ // TODO FIXME
+void kbd_identify(){
 	kbd_send(KBD_CMD_SCAN_OFF);
+	while(get_scancode());//critical, flush scan code buffer immediately to be ready for ack
+	
+	waitScancode();//wait response
 	kbd_send(KBD_CMD_IDENTIFY);
-	kbd_statusbuffer[2] = waitResponse();
-	kbd_statusbuffer[1] = waitResponse();
+	if(waitScancode() == KBD_RET_ACK){
+		kbd_statusbuffer[2] = waitScancode();
+		kbd_statusbuffer[1] = waitScancode();
+	}
 	kbd_send(KBD_CMD_SCAN_ON);
 }
 
@@ -327,22 +352,28 @@ void pull_line(uint8_t line)
 }
 
 
-void decode(unsigned char sc)
+void decode(uint8_t sc)
 {
 	static uint8_t mode=0;
 
 	uint8_t ch, offs;
 
 	if(sc == KBD_RET_ACK){
-		// command acknowledge, TODO maybe resend
+		// command acknowledge, ignore
+	}
+	else if(sc== KBD_RET_RESEND){
+		// TODO maybe resend
+	}
+	else if(sc== KBD_RET_ECHO){
+		kbd_status |= KBD_ECHO_PASSED;
 	}
 	else if(sc == KBD_RET_BAT_FAIL1 || sc == KBD_RET_BAT_FAIL2)
 	{
-		kbd_status &= ~KBD_BAT_PASSED; // bat ok, ignore
+		kbd_status &= ~KBD_BAT_PASSED; // bat failed, update status, ignore sc
 	}
 	else if(sc == KBD_RET_BAT_OK)
 	{
-		kbd_status |= KBD_BAT_PASSED; // bat ok, ignore
+		kbd_status |= KBD_BAT_PASSED; // bat ok, update status, ignore sc
 	}
 	else if (sc == KBD_RET_ECHO){
 		// TODO - keyboard detection - echo failed, retry several times, send resets afterwards, wait on BAT
@@ -480,9 +511,7 @@ void put_kbbuff(uint8_t c)
 	if (kb_buffcnt < KB_BUFF_SIZE)			  // If buffer not full
 	{
 		*kb_inptr++ = c;    // Put character into buffer, Increment pointer
-        cli();
 		kb_buffcnt++;
-        sei();
 
 		// Pointer wrapping
 		if (kb_inptr >= kb_buffer + KB_BUFF_SIZE)
@@ -490,7 +519,7 @@ void put_kbbuff(uint8_t c)
 	}
 }
 
-uint8_t get_scancode(void)
+uint8_t get_scancode()
 {
 	uint8_t sc = 0;
 
@@ -499,16 +528,16 @@ uint8_t get_scancode(void)
 	{
 		return 0;
 	}
-
+	
 	// Get scan byte - Increment pointer
 	sc = *scan_outptr++;
 
 	// Pointer wrapping
 	if (scan_outptr >= scan_buffer + SCAN_BUFF_SIZE)
 		scan_outptr = scan_buffer;
-	// Decrement buffer count
+	
     cli();
-	scan_buffcnt--;
+	scan_buffcnt--;// Decrement buffer count
     sei();
 
 	return sc;
@@ -532,9 +561,7 @@ int get_mousechar(void)
 	if (mouse_outptr >= mouse_buffer + SCAN_BUFF_SIZE)
 		mouse_outptr = mouse_buffer;
 	// Decrement buffer count
-    cli();
 	mouse_buffcnt--;
-    sei();
 
     return byte;
 }
