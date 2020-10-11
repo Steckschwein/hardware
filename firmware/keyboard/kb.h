@@ -40,9 +40,10 @@
 #define	KBD_EX_2		1024	// second extended code
 #define	KBD_CAPS		2048	// CAPS LOCK is activated
 #define	KBD_SCROLL		4096	// SCROLL LOCK is activated
-
+#define	KBD_ECHO_PASSED 8192	// ECHO received
 
 #define KBD_CMD_STATUS		0xe0	// NOT a real ps/2 command, it's used to answer the keyboard status
+#define KBD_CMD_ECHO		0xee	// echo
 #define KBD_CMD_LEDS		0xed	// 
 #define KBD_CMD_RESET		0xff
 #define KBD_CMD_RESEND		0xfe	//
@@ -72,33 +73,32 @@ void kbd_init(void);
 void kbd_send(uint8_t data);
 void kbd_update_leds();
 void kbd_identify();
-uint8_t waitAck();
+void kbd_watchdog();
 
-void decode(unsigned char sc);
+void decode(uint8_t sc);
 
 void put_kbbuff(unsigned char c);
 void put_scanbuff(unsigned char c);
 uint8_t get_scancode(void);
-
 uint8_t kbd_receive_command(uint8_t code);
 void kbd_process_command();
 
-#define SCAN_BUFF_SIZE 12
+#define SCAN_BUFF_SIZE 16
 uint8_t scan_buffer[SCAN_BUFF_SIZE];
 uint8_t *scan_inptr;
 uint8_t *scan_outptr;
-uint8_t scan_buffcnt;
+volatile uint8_t scan_buffcnt;//volatile - main loop / isr modified
 
 #ifdef MOUSE
  int get_mousechar(void);
-#define MOUSE_BUFF_SIZE 12
+#define MOUSE_BUFF_SIZE 16
  uint8_t mouse_buffer[SCAN_BUFF_SIZE];
  uint8_t *mouse_inptr;
  uint8_t *mouse_outptr;
  uint8_t mouse_buffcnt;
 #endif
 
-#define KB_BUFF_SIZE 8
+#define KB_BUFF_SIZE 16
  uint8_t kb_buffer[KB_BUFF_SIZE];
  uint8_t *kb_inptr;
  uint8_t *kb_outptr;
