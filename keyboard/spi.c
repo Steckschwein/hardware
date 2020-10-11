@@ -38,7 +38,7 @@ ISR(SPI_STC_vect)
 		kb_buffcnt--;
 	}
 #ifdef USE_IRQ
-	DDRC &= ~(1 << IRQ); // release IRQ line
+	// DDRC &= ~(1 << IRQ); // release IRQ line
 #endif
 }
 

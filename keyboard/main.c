@@ -63,7 +63,7 @@ int main(void)
 #ifdef SERIAL_DEBUG
 	init_uart();
 #endif
-		
+
 	_delay_ms(500);// wait keyboard reset
 
 	kbd_init();
@@ -77,7 +77,7 @@ int main(void)
 #ifdef USE_IRQ
 	DDRC &= ~(1 << IRQ); // release IRQ line
 #endif
-	
+
 	while(1)
 	{
 		c = get_scancode();
@@ -87,6 +87,17 @@ int main(void)
 		}
 
 		kbd_process_command();
+
+#ifdef USE_IRQ
+		if (kb_buffcnt > 0)
+		{
+			DDRC |= (1 << IRQ);		// pull IRQ line
+		}
+		else
+		{
+			DDRC &= ~(1 << IRQ); // release IRQ line
+		}
+#endif
 
 #ifdef MOUSE
 		c = get_mousechar();
