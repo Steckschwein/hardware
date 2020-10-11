@@ -120,7 +120,7 @@ ISR (USART_RXC_vect)
 		scan_buffcnt++;
 
 #ifdef USE_IRQ
-		DDRC |= (1 << IRQ);		// pull IRQ line
+		// DDRC |= (1 << IRQ);		// pull IRQ line
 #endif
 		// Pointer wrapping
 		if (scan_inptr >= scan_buffer + SCAN_BUFF_SIZE)
@@ -204,7 +204,7 @@ ISR(KBD_INT)
 				*scan_inptr++ = kbd_buffer;   // Put character into buffer, Increment pointer
 				scan_buffcnt++;
 #ifdef USE_IRQ
-				DDRC |= (1 << IRQ);		// pull IRQ line
+				// DDRC |= (1 << IRQ);		// pull IRQ line
 #endif
 				// Pointer wrapping
 				if (scan_inptr >= scan_buffer + SCAN_BUFF_SIZE)
@@ -274,7 +274,7 @@ static void kbd_cmd_reset(){
 }
 
 void kbd_process_command(){
-	
+
 	if(cmd_req){
 		kbd_send(cmd);
 		if(cmd_req > 1){ // command with value, so send the value too

@@ -16,8 +16,8 @@ CFLAGS= -g -Os -Wall -mcall-prologues -mmcu=atmega8  -DF_CPU=$(CPUSPEED) -D__PRO
 #uncomment to use mouse on INT1
 #CFLAGS+=-DMOUSE
 
-#uncomment to trigger host system IRQ line at every keystroke
-#CFLAGS+=-DUSE_IRQ
+#uncomment to trigger host system IRQ line when buffer contains > 0 bytes
+# CFLAGS+=-DUSE_IRQ
 
 #uncomment to enable serial debugging
 #CFLAGS+=-DSERIAL_DEBUG
@@ -33,9 +33,9 @@ BURN=-U flash:w:$(PRG).hex -v # -e -D
 
 # avrispmk2 atprogram (atmel studio 7)
 #
-LOADER=atprogram -t avrispmk2 -i ISP
-BURN=program --flash -f $(PRG).hex -c # --verify
-DEVICE=-d ATmega8
+#LOADER=atprogram -t avrispmk2 -i ISP
+#BURN=program --flash -f $(PRG).hex -c # --verify
+#DEVICE=-d ATmega8
 
 # -f set fuse bits 16bit value
 # -F verify fuse bits
