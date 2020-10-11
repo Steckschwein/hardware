@@ -23,5 +23,9 @@ $stimulate kbd_ack.stim
 $stimulate kbd_ack.stim
 #80000
 $stimulate kbd_ack.stim
+#80000
+$stimulate kbd_ack.stim
+#80000
+$stimulate kbd_ack.stim
 $break
 // $stimulate kbd_cmd.stim

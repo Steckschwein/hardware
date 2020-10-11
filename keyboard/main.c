@@ -86,8 +86,6 @@ int main(void)
 			decode(c);
 		}
 
-		kbd_process_command();
-
 #ifdef USE_IRQ
 		if (kb_buffcnt > 0)
 		{
@@ -98,6 +96,10 @@ int main(void)
 			DDRC &= ~(1 << IRQ); // release IRQ line
 		}
 #endif
+
+		kbd_process_command();
+
+		kbd_watchdog();
 
 #ifdef MOUSE
 		c = get_mousechar();
