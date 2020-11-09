@@ -17,7 +17,7 @@ CFLAGS= -g -Os -Wall -mcall-prologues -mmcu=atmega8  -DF_CPU=$(CPUSPEED) -D__PRO
 #CFLAGS+=-DMOUSE
 
 #uncomment to trigger host system IRQ line when buffer contains > 0 bytes
-# CFLAGS+=-DUSE_IRQ
+CFLAGS+=-DUSE_IRQ
 
 #uncomment to enable serial debugging
 #CFLAGS+=-DSERIAL_DEBUG
