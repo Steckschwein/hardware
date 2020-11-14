@@ -33,10 +33,35 @@ inline void kbd_data_low(){
 	KBD_DATA_PORT &= ~(1<<KBD_DATA_PIN);
 }
 
+void wait_status(uint16_t flag) {
+	uint8_t c = 250;
+	while(!(kbd_status & flag) && c-- > 0){
+		// wait for flag, or max 500ms
+		decode(get_scancode());
+		_delay_ms(2);
+	}
+}
+
+void kbd_reset(void) {
+	wait_status(KBD_BAT_PASSED);
+	if(!(kbd_status & KBD_BAT_PASSED)){//no BAT, try reset
+		kbd_send(KBD_CMD_RESET);// send reset, return code is handled in decode()
+	}		
+	wait_status(KBD_BAT_PASSED);
+	
+	kbd_update_leds();// will set all LED's off
+	kbd_identify();	
+}
+
 void kbd_init(void)
 {
 	kbd_clock_high();
 	kbd_data_high();
+
+	kbd_bit_n = 1;
+	kbd_bitcnt = 0;
+	kbd_buffer = 0;
+	kbd_status = 0;
 
 	scan_inptr = scan_buffer;				   // Initialize buffer
 	scan_outptr = scan_buffer;
@@ -183,6 +208,10 @@ void kbd_send(uint8_t data)
 	kbd_status |= KBD_SEND;
 	kbd_data_low();
 	kbd_clock_high();//release clock, device should start now with "send byte" clock pulses
+}
+
+inline uint16_t kbd_get_status(void){
+	return kbd_status;
 }
 
 ISR(KBD_INT)
@@ -346,7 +375,7 @@ ISR (INT1_vect)
 void pull_line(uint8_t line)
 {
 	DDRC |= line;
-	_delay_us(50);
+	_delay_us(500);
 	DDRC &= ~line;
 	return;
 }
@@ -365,7 +394,7 @@ void decode(uint8_t sc)
 		// TODO maybe resend
 	}
 	else if(sc== KBD_RET_ECHO){
-		kbd_status |= KBD_ECHO_PASSED;
+		kbd_status |= KBD_ECHO_PASSED;//required by watchdog
 	}
 	else if(sc == KBD_RET_BAT_FAIL1 || sc == KBD_RET_BAT_FAIL2)
 	{
@@ -374,9 +403,6 @@ void decode(uint8_t sc)
 	else if(sc == KBD_RET_BAT_OK)
 	{
 		kbd_status |= KBD_BAT_PASSED; // bat ok, update status, ignore sc
-	}
-	else if (sc == KBD_RET_ECHO){
-		// TODO - keyboard detection - echo failed, retry several times, send resets afterwards, wait on BAT
 	}
 	else if (!(kbd_status & KBD_BREAK))								  // Last data received was the up-key identifier 0xf0
 	{
