@@ -9,9 +9,6 @@
 //SPI Transfer Complete Interrupt starting on page 124 in datasheet
 ISR(SPI_STC_vect)
 {
-
-
-
 	// write
 	uint8_t code = SPDR;
 	if (code != 0)
@@ -21,7 +18,7 @@ ISR(SPI_STC_vect)
 	}
 
 	// read
-	if (kb_buffcnt == 0)
+	if (kb_buffcnt == 0 || !(kbd_get_status() & KBD_BAT_PASSED))
 	{
         SPDR = 0;
 	}
@@ -37,9 +34,6 @@ ISR(SPI_STC_vect)
 		// Decrement buffer count
 		kb_buffcnt--;
 	}
-#ifdef USE_IRQ
-	// DDRC &= ~(1 << IRQ); // release IRQ line
-#endif
 }
 
 

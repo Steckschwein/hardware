@@ -59,21 +59,17 @@ int main(void)
 
 	cli();
 
+	kbd_init(); //init avr for ps/2
+
 	spiInitSlave();
 #ifdef SERIAL_DEBUG
 	init_uart();
 #endif
-
-	_delay_ms(500);// wait keyboard reset
-
-	kbd_init();
-
+	
 	sei();
 
-	kbd_send(KBD_CMD_RESET);// send reset, return code is handled in decode()
-	_delay_ms(500);
-	kbd_update_leds();// will set all LED's off
-	kbd_identify();
+	kbd_reset();//keyboard reset sequence
+	
 #ifdef USE_IRQ
 	DDRC &= ~(1 << IRQ); // release IRQ line
 #endif
@@ -89,7 +85,7 @@ int main(void)
 #ifdef USE_IRQ
 		if (kb_buffcnt > 0)
 		{
-			DDRC |= (1 << IRQ);		// pull IRQ line
+			DDRC |= (1 << IRQ);	// pull IRQ line
 		}
 		else
 		{

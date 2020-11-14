@@ -70,7 +70,9 @@ void kbd_data_high();
 void kbd_data_low();
 
 void kbd_init(void);
+void kbd_reset(void);//reset sequence to keyboard
 void kbd_send(uint8_t data);
+uint16_t kbd_get_status(void);
 void kbd_update_leds();
 void kbd_identify();
 void kbd_watchdog();

@@ -29,12 +29,12 @@ BURN=-U flash:w:$(PRG).hex -v # -e -D
 
 # avrispmkII usb with avrdude
 #
-#DEVICE=-c avrispmkII -P usb
+# DEVICE=-c avrispmkII -P usb
 
 # avrispmk2 atprogram (atmel studio 7)
 #
 #LOADER=atprogram -t avrispmk2 -i ISP
-#BURN=program --flash -f $(PRG).hex -c # --verify
+#BURN=program -f $(PRG).hex --flash # -c  # --verify
 #DEVICE=-d ATmega8
 
 # -f set fuse bits 16bit value
@@ -45,12 +45,16 @@ BURN=-U flash:w:$(PRG).hex -v # -e -D
 #BURN=-cUSB -dATmega8 -e -if$(PRG).hex -pf -vf
 
 OBJ=kb.o spi.o serial.o main.o
+INCLUDE=kb.h
+INCLUDE+=spi.h
+INCLUDE+=serial.h
+
 #all: $(PRG).elf $(PRG).hex $(PRG).lss $(PRG).eep
 all: $(PRG).hex
 
 kb.o: scancodes_de_cp437.h
 
-$(PRG).elf: $(OBJ)
+$(PRG).elf: $(OBJ) $(INCLUDE)
 	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
 
 $(PRG).hex: $(PRG).elf
