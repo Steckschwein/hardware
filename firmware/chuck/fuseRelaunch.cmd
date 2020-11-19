@@ -1,1 +1,0 @@
--intstyle "ise" -incremental -o "/home/dommas/steckschwein-code/firmware/chuck/chuck_test_isim_beh.exe" -prj "/home/dommas/steckschwein-code/firmware/chuck/chuck_test_beh.prj" "work.chuck_test" 
