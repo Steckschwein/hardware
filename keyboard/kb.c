@@ -7,12 +7,15 @@
 #include "scancodes_de_cp437.h"
 
 // volatile - due to "concurrent" access by isr and main program
-volatile uint8_t	kbd_bit_n = 1;
-volatile uint8_t	kbd_bitcnt = 0;
-volatile uint8_t	kbd_buffer = 0;
-volatile uint16_t	kbd_status = 0;
+volatile uint8_t	kbd_bit_n;
+volatile uint8_t	kbd_bitcnt;
+volatile uint8_t	kbd_buffer;
+volatile uint8_t cmd;// volatile - isr/main access
+volatile uint8_t cmd_value;
 
 uint8_t kbd_statusbuffer[5] = { 0xaa, 0, 0, 0, 0 };
+uint16_t cmd_timeout;
+uint16_t kbd_status;
 
 inline void kbd_clock_high(){
 	KBD_CLOCK_DDR &= ~(1<<KBD_CLOCK_PIN);//input
@@ -34,31 +37,140 @@ inline void kbd_data_low(){
 }
 
 void wait_status(uint16_t flag) {
-	uint8_t c = 250;
-	while(!(kbd_status & flag) && c-- > 0){
-		// wait for flag, or max 500ms
-		decode(get_scancode());
+	uint16_t c = KBD_RESET_DELAY_MILLIS;
+	while(!(kbd_status & flag) && (c-- > 0)){ // wait for flag, or max 500ms
+		decode();
 		_delay_ms(2);
 	}
 }
 
-void kbd_reset(void) {
-	wait_status(KBD_BAT_PASSED);
-	if(!(kbd_status & KBD_BAT_PASSED)){//no BAT, try reset
-		kbd_send(KBD_CMD_RESET);// send reset, return code is handled in decode()
-	}		
-	wait_status(KBD_BAT_PASSED);
-	
-	kbd_update_leds();// will set all LED's off
-	kbd_identify();	
+uint8_t waitScancode(){
+
+	uint8_t cnt = 250;
+	uint8_t sc = 0;
+
+	while((kbd_status & KBD_SEND) || (cnt-- > 0 && (sc = get_scancode()) == 0)) {
+		_delay_ms(2);	// (PS/2 10-16,7Khz 30-50µs delay)
+	}
+	return sc;
 }
 
-void kbd_init(void)
+void waitIdle(){
+    while(waitScancode() != 0);
+}
+
+uint8_t kbd_send_wait(uint8_t data){
+    kbd_send(data);
+    return waitScancode();
+}
+
+void kbd_send(uint8_t data)
+{
+    uint8_t c = 16;
+	// still sending? - we must wait until keyboard has send ACK before starting new send(), otherwise the current (command) byte is dropped entirely
+	while((kbd_status & KBD_SEND) && (c-- > 0)) {
+        _delay_ms(5);
+    }
+    if(c == 0){// send failed, maybe the device did not send any clock pulses
+        kbd_init();// ... init again
+        kbd_reset();
+    }
+
+	// Initiate request-to-send, the actual sending of the data is handled in the ISR.
+	kbd_clock_low();//pull clock
+	_delay_us(100);// and wait
+	kbd_bit_n = 1;
+	kbd_bitcnt = 0;
+	kbd_buffer = data;
+	kbd_status |= KBD_SEND;
+	kbd_data_low();
+	kbd_clock_high();//release clock, device should start now with "send byte" clock pulses
+}
+
+/*
+	0 to 4	Repeat rate (00000b = 30 Hz, ..., 11111b = 2 Hz)
+	5 to 6	Delay before keys repeat (00b = 250 ms, 01b = 500 ms, 10b = 750 ms, 11b = 1000 ms)
+*/
+uint8_t kbd_receive_command(uint8_t code){
+
+	static uint8_t cmd_res = 0;
+
+	uint8_t ret = 0xff;
+
+	if(kbd_status & KBD_HOST_CMD)//ignore if cmd in progress, not finished yet
+		return ret;
+
+	if(cmd == 0){
+		switch (code) {
+			case KBD_CMD_STATUS:
+				if(cmd_res == 0){
+					kbd_statusbuffer[sizeof(kbd_statusbuffer)-1] = kbd_status & 0xff;//status low/high byte, we respond inverse
+					kbd_statusbuffer[sizeof(kbd_statusbuffer)-2] = kbd_status>>8;
+					cmd_res = sizeof(kbd_statusbuffer)-1;
+					ret = KBD_RET_ACK;
+				}else {
+					ret = kbd_statusbuffer[cmd_res];
+                    cmd_res--;
+				}
+				break;
+			case KBD_CMD_RESET:
+			case KBD_CMD_SCAN_ON:
+			case KBD_CMD_SCAN_OFF:
+			    kbd_status |= KBD_HOST_CMD; // keyboard command without value received, we can send it immediately
+			case KBD_CMD_TYPEMATIC:
+			case KBD_CMD_LEDS:
+				cmd = code; // save command code, we have to capture a value before sending it to keyboard
+				ret = KBD_RET_ACK;
+				break;
+			default:
+				cmd_res = 0;// ...otherwise make sure cmd buffer is reset
+		}
+	}else{
+		cmd_value = code;
+		kbd_status |= KBD_HOST_CMD;
+        kbd_status |= KBD_HOST_CMD_VALUE; // set command trigger for kbd_process_command()
+		ret = KBD_RET_ACK;
+	}
+	return ret;
+}
+
+void kbd_identify(){
+    waitIdle();
+    kbd_send_wait(KBD_CMD_SCAN_OFF);
+	if(kbd_send_wait(KBD_CMD_IDENTIFY) == KBD_RET_ACK){
+		kbd_statusbuffer[2] = waitScancode();//capture id bytes
+		kbd_statusbuffer[1] = waitScancode();
+	}
+    kbd_send_wait(KBD_CMD_SCAN_ON);
+}
+
+void kbd_cmd_reset(){
+	cmd = 0;
+	cmd_value = 0;
+    kbd_status &= ~KBD_HOST_CMD;
+    kbd_status &= ~KBD_HOST_CMD_VALUE;
+	cmd_timeout = 0xffff;
+}
+
+void kbd_reset() {
+    wait_status(KBD_BAT_PASSED);
+	if(!(kbd_status & KBD_BAT_PASSED)){//no BAT, try reset
+		kbd_send(KBD_CMD_RESET);// send reset, return code is handled in decode()
+    	wait_status(KBD_BAT_PASSED);
+	}
+    kbd_update_leds();// will set all LED's off
+	kbd_identify();
+    kbd_cmd_reset();
+}
+
+void kbd_init()
 {
 	kbd_clock_high();
 	kbd_data_high();
 
-	kbd_bit_n = 1;
+    _delay_ms(250);
+
+    kbd_bit_n = 1;
 	kbd_bitcnt = 0;
 	kbd_buffer = 0;
 	kbd_status = 0;
@@ -99,7 +211,7 @@ void kbd_init(void)
 	GICR	= (1 << INT0)					  // Enable INT0 interrupt
 		    | (1 << INT1);					  // Enable INT1 interrupt
 #else
-	MCUCR 	|= (1 << ISC01);				  // INT0 interrupt on falling edge
+	MCUCR 	|= (1 << ISC01);				  // INT0 interrupt on falling edge (ps/2 clock line)
 	GICR	|= (1 << INT0);					  // Enable INT0 interrupt
 #endif
 #endif
@@ -108,12 +220,25 @@ void kbd_init(void)
 	DDRC  = 0;
 }
 
+void kbd_process_command(){
+	if(kbd_status & KBD_HOST_CMD){
+		kbd_send(cmd);
+		if(kbd_status & KBD_HOST_CMD_VALUE){ // command with value, so send the value too
+		    kbd_send(cmd_value);
+		}
+		kbd_cmd_reset();
+	}else if(cmd != 0 && cmd_timeout-- == 0){
+		kbd_cmd_reset();
+	}
+}
 
+
+#define WD_LOOP_CNT 0x1000
 
 void kbd_watchdog(){
 
 	static uint8_t wtd_cnt_echo = 3;
-	static uint16_t wtd_cnt_down = 0xffff;
+	static uint16_t wtd_cnt_down = WD_LOOP_CNT;
 	
 	if(wtd_cnt_down == 0){
 		if(kbd_status & KBD_ECHO_PASSED){//echo received ? (updated during decode())
@@ -132,34 +257,11 @@ void kbd_watchdog(){
 				kbd_send(KBD_CMD_RESET);// try reset
 			}
 		}
-		wtd_cnt_down = 0xffff;
+		wtd_cnt_down = WD_LOOP_CNT;
 	}
 	wtd_cnt_down--;
 }
 
-uint8_t waitScancode(){
-
-	uint8_t cnt = 100;
-	uint8_t sc = 0;
-
-	while((kbd_status & KBD_SEND) || (cnt-->0 && (sc = get_scancode()) == 0)) {
-		_delay_ms(1);	// (PS/2 10-16,7Khz 30-50µs delay)
-	}
-	return sc;
-}
-
-void kbd_identify(){
-	kbd_send(KBD_CMD_SCAN_OFF);
-	while(get_scancode());//critical, flush scan code buffer immediately to be ready for ack
-	
-	waitScancode();//wait response
-	kbd_send(KBD_CMD_IDENTIFY);
-	if(waitScancode() == KBD_RET_ACK){
-		kbd_statusbuffer[2] = waitScancode();
-		kbd_statusbuffer[1] = waitScancode();
-	}
-	kbd_send(KBD_CMD_SCAN_ON);
-}
 
 #ifdef USART
 ISR (USART_RXC_vect)
@@ -169,9 +271,6 @@ ISR (USART_RXC_vect)
 		*scan_inptr++ = UDR;   // Put character into buffer, Increment pointer
 		scan_buffcnt++;
 
-#ifdef USE_IRQ
-		// DDRC |= (1 << IRQ);		// pull IRQ line
-#endif
 		// Pointer wrapping
 		if (scan_inptr >= scan_buffer + SCAN_BUFF_SIZE)
 			scan_inptr = scan_buffer;
@@ -194,23 +293,7 @@ void kbd_update_leds()
 	kbd_send(val);
 }
 
-void kbd_send(uint8_t data)
-{
-	// still sending? - we must wait until keyboard has send ACK before starting new send(), otherwise the current (command) byte is dropped entirely
-	while(kbd_status & KBD_SEND) _delay_ms(5);
-
-	// Initiate request-to-send, the actual sending of the data is handled in the ISR.
-	kbd_clock_low();//pull clock
-	_delay_us(100);// and wait
-	kbd_bit_n = 1;
-	kbd_bitcnt = 0;
-	kbd_buffer = data;
-	kbd_status |= KBD_SEND;
-	kbd_data_low();
-	kbd_clock_high();//release clock, device should start now with "send byte" clock pulses
-}
-
-inline uint16_t kbd_get_status(void){
+uint16_t kbd_get_status(void){
 	return kbd_status;
 }
 
@@ -257,9 +340,6 @@ ISR(KBD_INT)
 			{
 				*scan_inptr++ = kbd_buffer;   // Put character into buffer, Increment pointer
 				scan_buffcnt++;
-#ifdef USE_IRQ
-				// DDRC |= (1 << IRQ);		// pull IRQ line
-#endif
 				// Pointer wrapping
 				if (scan_inptr >= scan_buffer + SCAN_BUFF_SIZE)
 					scan_inptr = scan_buffer;
@@ -269,75 +349,6 @@ ISR(KBD_INT)
 		}
 	}
 	kbd_bit_n++;
-}
-
-uint8_t cmd = 0;
-uint8_t cmd_value = 0;
-uint8_t cmd_req = 0;
-uint8_t cmd_timeout = 0xff;//255 loops
-
-/*
-	0 to 4	Repeat rate (00000b = 30 Hz, ..., 11111b = 2 Hz)
-	5 to 6	Delay before keys repeat (00b = 250 ms, 01b = 500 ms, 10b = 750 ms, 11b = 1000 ms)
-*/
-uint8_t kbd_receive_command(uint8_t code){
-
-	static uint8_t cmd_res = 0;
-
-	uint8_t ret = 0xff;
-
-	if(cmd_req)//ignore if cmd in progress, not finished yet
-		return ret;
-
-	if(cmd == 0){
-		switch (code) {
-			case KBD_CMD_STATUS:
-				if(cmd_res == 0){
-					kbd_statusbuffer[sizeof(kbd_statusbuffer)-1] = kbd_status & 0xff;//status low/high byte, we respond inverse
-					kbd_statusbuffer[sizeof(kbd_statusbuffer)-2] = kbd_status>>8;
-					cmd_res = sizeof(kbd_statusbuffer);
-					ret = KBD_RET_ACK;
-				}else {
-					ret = kbd_statusbuffer[--cmd_res];
-				}
-				break;
-			case KBD_CMD_SCAN_ON:
-			case KBD_CMD_SCAN_OFF:
-				cmd_req = 1; // command without value, trigger immediately
-			case KBD_CMD_TYPEMATIC:
-			case KBD_CMD_LEDS:
-				cmd = code; // save command code, we have to capture a value before sending it to keyboard
-				ret = KBD_RET_ACK;
-				break;
-			default:
-				cmd_res = 0;// ...otherwise make sure out buffer is reset
-		}
-	}else{
-		cmd_value = code;
-		cmd_req = 2; // set command trigger for kbd_process_command
-		ret = KBD_RET_ACK;
-	}
-	return ret;
-}
-
-static void kbd_cmd_reset(){
-	cmd = 0;
-	cmd_value = 0;
-	cmd_req = 0;
-	cmd_timeout = 0xff;
-}
-
-void kbd_process_command(){
-
-	if(cmd_req){
-		kbd_send(cmd);
-		if(cmd_req > 1){ // command with value, so send the value too
-			kbd_send(cmd_value);
-		}
-		kbd_cmd_reset();
-	}else if(cmd != 0 && cmd_timeout-- == 0){
-		kbd_cmd_reset();
-	}
 }
 
 #ifdef MOUSE
@@ -375,34 +386,41 @@ ISR (INT1_vect)
 void pull_line(uint8_t line)
 {
 	DDRC |= line;
-	_delay_us(500);
+	_delay_us(200);
 	DDRC &= ~line;
 	return;
 }
 
 
-void decode(uint8_t sc)
+void decode()
 {
 	static uint8_t mode=0;
-
 	uint8_t ch, offs;
+
+    uint8_t sc = get_scancode();
+
+    if(sc == 0) return;//0x00 - TODO FIXME maybe the KBD_OVERRUN CODE
 
 	if(sc == KBD_RET_ACK){
 		// command acknowledge, ignore
 	}
-	else if(sc== KBD_RET_RESEND){
-		// TODO maybe resend
+	else if(sc == KBD_RET_RESEND){
+		// TODO impl. resend
 	}
-	else if(sc== KBD_RET_ECHO){
+	else if(sc == KBD_RET_ECHO){
 		kbd_status |= KBD_ECHO_PASSED;//required by watchdog
 	}
 	else if(sc == KBD_RET_BAT_FAIL1 || sc == KBD_RET_BAT_FAIL2)
 	{
 		kbd_status &= ~KBD_BAT_PASSED; // bat failed, update status, ignore sc
+//        kbd_status &= ~KBD_NUMLOCK;
+  //      kbd_update_leds();
 	}
 	else if(sc == KBD_RET_BAT_OK)
 	{
 		kbd_status |= KBD_BAT_PASSED; // bat ok, update status, ignore sc
+    //    kbd_status |= KBD_NUMLOCK;
+      //  kbd_update_leds();
 	}
 	else if (!(kbd_status & KBD_BREAK))								  // Last data received was the up-key identifier 0xf0
 	{
@@ -439,7 +457,7 @@ void decode(uint8_t sc)
 					kbd_update_leds();
 				}
 				break;
-			case 0x7e: // Scroll lock
+			case 0x7e: // scroll lock
 				if(!(kbd_status & KBD_LOCKED)){
 					kbd_status |= KBD_LOCKED;
 					kbd_status = (kbd_status & KBD_SCROLL) ? kbd_status & ~KBD_SCROLL : kbd_status | KBD_SCROLL;

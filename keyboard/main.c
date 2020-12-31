@@ -55,32 +55,26 @@ Changes by Thomas Woinke <thomas@steckschwein.de>
 
 int main(void)
 {
-	uint8_t c;
-
 	cli();
-
+   
 	kbd_init(); //init avr for ps/2
 
 	spiInitSlave();
 #ifdef SERIAL_DEBUG
 	init_uart();
 #endif
-	
+
 	sei();
 
-	kbd_reset();//keyboard reset sequence
+    kbd_reset();//keyboard reset sequence
 	
 #ifdef USE_IRQ
 	DDRC &= ~(1 << IRQ); // release IRQ line
 #endif
-
+    
 	while(1)
 	{
-		c = get_scancode();
-		if (c != 0)
-		{
-			decode(c);
-		}
+        decode();
 
 #ifdef USE_IRQ
 		if (kb_buffcnt > 0)
@@ -98,11 +92,8 @@ int main(void)
 		kbd_watchdog();
 
 #ifdef MOUSE
-		c = get_mousechar();
-		if (c != 0)
-		{
-			put_kbbuff(c);
-		}
+        //TODO FIXME
+        put_kbbuff(get_mousechar());
 #endif
 	}
 }
