@@ -42,11 +42,13 @@
 #define	KBD_CAPS		(1<<11)	// CAPS LOCK is activated
 #define	KBD_SCROLL		(1<<12)	// SCROLL LOCK is activated
 #define	KBD_ECHO_PASSED (1<<13)	// ECHO received
-#define	KBD_HOST_CMD    (1<<14)	// host cmd received
-#define	KBD_HOST_CMD_VALUE   (1<<15)	// host cmd with value received
+#define	KBD_HOST_CMD        (1<<14)	// host cmd received
+#define	KBD_HOST_CMD_SEND   (1<<15)	// host cmd send to keybpard
 
 
-#define KBD_CMD_STATUS		0xe0	// NOT a real ps/2 command, it's used to answer the keyboard status
+#define KBD_HOST_CMD_KBD_STATUS	0x1	// host command to read kbd status
+#define KBD_HOST_CMD_CMD_STATUS	0x2 // host command to read status last cmd
+
 #define KBD_CMD_ECHO		0xee	// echo
 #define KBD_CMD_LEDS		0xed	// 
 #define KBD_CMD_RESET		0xff
@@ -55,10 +57,6 @@
 #define KBD_CMD_TYPEMATIC	0xf3
 #define KBD_CMD_SCAN_ON		0xF4	// enable send scan codes
 #define KBD_CMD_SCAN_OFF	0xf5
-
-#define KBD_LED_SCRLCK 1<<0
-#define KBD_LED_NUMLCK 1<<1
-#define KBD_LED_CAPLCK 1<<2
 
 #define KBD_RET_ACK		 0xfa	// 1111 1010
 #define KBD_RET_RESEND	 0xfe	// 1111 1010
@@ -76,7 +74,7 @@ void kbd_data_low();
 void kbd_init();
 void kbd_reset();//reset sequence to keyboard
 void kbd_send(uint8_t);
-uint16_t kbd_get_status();
+volatile uint16_t kbd_get_status();
 void kbd_update_leds();
 void kbd_watchdog();
 uint8_t get_scancode();
@@ -97,7 +95,7 @@ volatile uint8_t scan_buffcnt;//volatile - main loop / isr modified
 uint8_t kb_buffer[KB_BUFF_SIZE];
 uint8_t *kb_inptr;
 uint8_t *kb_outptr;
-uint8_t kb_buffcnt;
+volatile uint8_t kb_buffcnt;
 
 #define RESET_TRIG 	PC0
 #define NMI			PC1

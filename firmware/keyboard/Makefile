@@ -1,7 +1,7 @@
 AVRDEVICE=m8
 # 8MHz
 CPUSPEED=8000000
-FUSES=-U lfuse:w:0xc4:m -U hfuse:w:0xd9:m
+FUSES=-U lfuse:w:0xd4:m -U hfuse:w:0xd9:m
 #avr-tools
 #FUSES=-cUSB -dATmega8 -Fd9c4	#8Mhz
 

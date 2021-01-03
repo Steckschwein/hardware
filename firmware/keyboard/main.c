@@ -67,11 +67,7 @@ int main(void)
 	sei();
 
     kbd_reset();//keyboard reset sequence
-	
-#ifdef USE_IRQ
-	DDRC &= ~(1 << IRQ); // release IRQ line
-#endif
-    
+	    
 	while(1)
 	{
         decode();
@@ -85,11 +81,10 @@ int main(void)
 		{
 			DDRC &= ~(1 << IRQ); // release IRQ line
 		}
-#endif
-
+#endif		
 		kbd_process_command();
-
-		kbd_watchdog();
+		
+        kbd_watchdog();
 
 #ifdef MOUSE
         //TODO FIXME
