@@ -3,15 +3,14 @@
 NET CLKIN PERIOD = 125 ;
 #TIMESPEC TS01 = PERIOD registers_50mhz 20 ;
 
-#
-NET "CPU_d<0>"      LOC = "FB1_2"  ; # D0
-NET "CPU_d<1>"      LOC = "FB1_5"  ; # D1
+NET "CPU_d<0>"      LOC = "FB1_17"  ; # D0
+NET "CPU_d<1>"      LOC = "FB1_3"  ; # D1
 NET "CPU_d<2>"      LOC = "FB1_6"  ; # D2
-NET "CPU_d<3>"      LOC = "FB1_1"  ; # D3
-NET "CPU_d<4>"      LOC = "FB1_3"  ; # D4
-NET "CPU_d<5>"      LOC = "FB1_8"  ; # D5
-NET "CPU_d<6>"      LOC = "FB1_11"  ; # D6
-NET "CPU_d<7>"      LOC = "FB1_4"  ; # D7
+NET "CPU_d<3>"      LOC = "FB1_8"  ; # D3
+NET "CPU_d<4>"      LOC = "FB3_3"  ; # D4
+NET "CPU_d<5>"      LOC = "FB1_15"  ; # D5
+NET "CPU_d<6>"      LOC = "FB1_12"  ; # D6
+NET "CPU_d<7>"      LOC = "FB4_13"  ; # D7
 #
 NET "CLKIN"     LOC = "FB1_9"  ; # -- global clock: Pin 9,10,12###
 #
@@ -32,7 +31,6 @@ NET "CPU_a<13>"     LOC = "FB3_13"  ;
 NET "CPU_a<14>"     LOC = "FB4_2"  ; 
 NET "CPU_a<15>"     LOC = "FB3_16"  ; 
 
-#NET "EXT_a<13>"	  LOC = "FB2_17"  ; # AO13
 NET "EXT_a<14>"     LOC = "FB2_15"  ; # AO14
 NET "EXT_a<15>"     LOC = "FB2_16"  ; # AO15
 NET "EXT_a<16>"     LOC = "FB2_14"  ; # AO16
@@ -41,33 +39,16 @@ NET "EXT_a<18>"     LOC = "FB2_12"  ; # AO18
 
 NET "CS_OPL"   	  LOC = "FB4_12"  ; #
 NET "CS_VIA"        LOC = "FB4_10"  ; #
-NET "CSW_VDP"       LOC = "FB4_14"  ; #
-NET "CSR_VDP"       LOC = "FB4_7"  ; #
+NET "CS_VDP"       LOC = "FB4_7"  ; #
 NET "CS_UART"       LOC = "FB4_6"  ; #
 NET "CS_ROM"        LOC = "FB4_11"  ; #
 NET "CS_RAM"        LOC = "FB4_4"  ; #
 
+NET "CPU_rw"    	  LOC = "FB4_9"  ; #
+NET "RD"        	  LOC = "FB4_8"  ; #
+NET "WR"    	     LOC = "FB4_5"  ; #
+NET "CPU_phi2"      LOC = "FB4_3"  ; #
 
-##NET "RD_OPL"    LOC = "P35"  ; #
-##NET "WR_OPL"    LOC = "P36"  ; #
-NET "CPU_rw"    LOC = "FB4_9"  ; #
-NET "RD"        LOC = "FB4_8"  ; #
-NET "WR"    	 LOC = "FB4_5"  ; #
-NET "CPU_phi2"  LOC = "FB4_3"  ; #
-#
-##NET "CS_IO01"   LOC = "P37"  ; #
-##NET "CS_IO02"	 LOC = "P44"  ; #
-#NET "CPU_vp"    LOC = "P45"  ; #
-##NET "CPU_be"    LOC = "P46"  ; #
-##NET "CPU_sync"  LOC = "P47"  ; #		
-#
-
-
-
-##NET "CPU_irq"   			LOC = "P71"  ; 
-##NET "CPU_nmi"   			LOC = "P72"  ; 
-#
-#
 NET "RESET"     LOC = "FB2_9"  ; # -- global reset: Pin 74
 NET "CPU_rdy"   LOC = "FB4_1"  ;
  # -- Global Tri state: Pin 76, 77
