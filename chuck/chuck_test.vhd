@@ -380,7 +380,6 @@ BEGIN
 
 		
 		
-		finish;
 		wait for CLKIN_period*10;
 	
 		-- test CS_RAM, CS_ROM, ROMOFF
