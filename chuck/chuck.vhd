@@ -32,8 +32,7 @@ Entity chuck is
 		-- chip select for peripherals
 		CS_UART   : out std_logic;  	
 		CS_VIA    : out std_logic;  	
-		CSR_VDP   : out std_logic;  -- VDP read
-		CSW_VDP   : out std_logic;  -- VDP write
+		CS_VDP   : out std_logic;  -- VDP 
 		CS_OPL    : out std_logic  -- OPL2			
 	);
 
@@ -52,13 +51,8 @@ Architecture chuck_arch of chuck is
 
 	signal cs_uart_sig: std_logic;
 	signal cs_via_sig: std_logic;
---	signal cs_vdp_sig: std_logic;
-
-	signal csr_vdp_sig: std_logic;
-	signal csw_vdp_sig: std_logic;
+	signal cs_vdp_sig: std_logic;
 	signal cs_opl_sig: std_logic;
-	signal cs_io01_sig: std_logic;
-	signal cs_io02_sig: std_logic;
 	
 	signal d_out: std_logic_vector(7 downto 0);
 	signal d_in:  std_logic_vector(7 downto 0);
@@ -91,10 +85,9 @@ begin
 	
 	cs_uart 		<= cs_uart_sig;
 	cs_via  		<= cs_via_sig;
-	csr_vdp 		<= csr_vdp_sig;
-	csw_vdp 		<= csw_vdp_sig;
+	cs_vdp 		<= cs_vdp_sig;
 	cs_opl  		<= cs_opl_sig;
-	CS_ROM  		<= cs_rom_sig;
+	cs_rom  		<= cs_rom_sig;
 	cs_ram  		<= cs_ram_sig;
 	
 	-- helpers
@@ -146,16 +139,14 @@ begin
 		end if;
 	end process;
 	
-	rdy_sig			<= '0' when (rdyclk = '1' and (CS_ROM_sig = '0' or CS_OPL_sig = '0' or CSR_VDP_sig = '0' or CSW_VDP_sig = '0') ) else 'Z';
+	rdy_sig			<= '0' when (rdyclk = '1' and (CS_ROM_sig = '0' or CS_OPL_sig = '0' or CS_VDP_sig = '0' ) ) else 'Z';
 
 		
 	-- io area decoding
 	
 	CS_UART_sig    <= '0' when (CPU_a(15 downto 4) = "000000100000") else '1'; 					-- $0200		
 	CS_VIA_sig     <= '0' when (CPU_a(15 downto 4) = "000000100001") else '1'; 					-- $0210
-	
-	CSR_VDP_sig		<= '0' when (CPU_a(15 downto 4) = "000000100010") and (CPU_rw = '1') else '1'; 	-- $0220	
-	CSW_VDP_sig		<= '0' when (CPU_a(15 downto 4) = "000000100010") and (CPU_rw = '0') else '1'; 	-- $0220	
+	CS_VDP_sig		<= '0' when (CPU_a(15 downto 4) = "000000100010") else '1'; 					-- $0220	
 	CS_OPL_sig		<= '0' when (CPU_a(15 downto 4) = "000000100100") else '1';  					-- $0240
 	
 	-- extended address bus
