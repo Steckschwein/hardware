@@ -12,8 +12,10 @@ NET "CPU_d<7>"      LOC = "P79"  ;
 
 NET "CPU_a<0>"      LOC = "P81"  ;
 NET "CPU_a<1>"      LOC = "P15"  ; 
-#NET "CPU_a<2>"      LOC = ""  ; 
-#NET "CPU_a<3>"      LOC = ""  ; 
+
+NET "CPU_a<2>"      LOC = "P16"  ; 
+NET "CPU_a<3>"      LOC = "P20"  ; 
+
 NET "CPU_a<4>"      LOC = "P48"  ; 
 NET "CPU_a<5>"      LOC = "P70"  ; 
 NET "CPU_a<6>"      LOC = "P53"  ;
