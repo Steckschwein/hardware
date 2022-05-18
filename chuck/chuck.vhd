@@ -31,8 +31,9 @@ Entity chuck is
 		
 		-- chip select for peripherals
 		CS_UART   : out std_logic;  	
+		CS_UART2  : out std_logic;  	
 		CS_VIA    : out std_logic;  	
-		CS_VDP   : out std_logic;  -- VDP 
+		CS_VDP    : out std_logic;  -- VDP 
 		CS_OPL    : out std_logic  -- OPL2			
 	);
 
@@ -50,6 +51,8 @@ Architecture chuck_arch of chuck is
 	signal cs_ram_sig: std_logic;
 
 	signal cs_uart_sig: std_logic;
+	signal cs_uart2_sig: std_logic;
+	
 	signal cs_via_sig: std_logic;
 	signal cs_vdp_sig: std_logic;
 	signal cs_opl_sig: std_logic;
@@ -84,6 +87,7 @@ begin
 	CPU_rdy		<= rdy_sig;
 	
 	cs_uart 		<= cs_uart_sig;
+	cs_uart2 	<= cs_uart2_sig;
 	cs_via  		<= cs_via_sig;
 	cs_vdp 		<= cs_vdp_sig;
 	cs_opl  		<= cs_opl_sig;
@@ -148,6 +152,7 @@ begin
 	CS_VIA_sig     <= '0' when (CPU_a(15 downto 4) = "000000100001") else '1'; 					-- $0210
 	CS_VDP_sig		<= '0' when (CPU_a(15 downto 4) = "000000100010") else '1'; 					-- $0220	
 	CS_OPL_sig		<= '0' when (CPU_a(15 downto 4) = "000000100100") else '1';  					-- $0240
+	CS_UART2_sig	<= '0' when (CPU_a(15 downto 4) = "000000100101") else '1';  					-- $0250
 	
 	-- extended address bus
 	EXT_a_sig 		<= INT_banktable(conv_integer(CPU_a(15 downto 14)))(4 downto 0);
