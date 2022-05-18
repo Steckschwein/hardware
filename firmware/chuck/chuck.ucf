@@ -39,6 +39,7 @@ NET "CS_OPL"   	  LOC = "P35"  ;
 NET "CS_VIA"        LOC = "P43"  ; 
 NET "CS_VDP"        LOC = "P33"  ; 
 NET "CS_UART"       LOC = "P26"  ; 
+NET "CS_UART2"      LOC = "P32"  ; 
 NET "CS_ROM"        LOC = "P31"  ; 
 NET "CS_RAM"        LOC = "P25"  ; 
 
