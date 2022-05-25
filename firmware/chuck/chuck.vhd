@@ -148,11 +148,11 @@ begin
 		
 	-- io area decoding
 	
-	CS_UART_sig    <= '0' when (CPU_a(15 downto 4) = "000000100000") else '1'; 					-- $0200		
+	CS_UART2_sig    <= '0' when (CPU_a(15 downto 4) = "000000100000") else '1'; 					-- $0200		
 	CS_VIA_sig     <= '0' when (CPU_a(15 downto 4) = "000000100001") else '1'; 					-- $0210
 	CS_VDP_sig		<= '0' when (CPU_a(15 downto 4) = "000000100010") else '1'; 					-- $0220	
 	CS_OPL_sig		<= '0' when (CPU_a(15 downto 4) = "000000100100") else '1';  					-- $0240
-	CS_UART2_sig	<= '0' when (CPU_a(15 downto 4) = "000000100101") else '1';  					-- $0250
+	CS_UART_sig	<= '0' when (CPU_a(15 downto 4) = "000000100101") else '1';  					-- $0250
 	
 	-- extended address bus
 	EXT_a_sig 		<= INT_banktable(conv_integer(CPU_a(15 downto 14)))(4 downto 0);
