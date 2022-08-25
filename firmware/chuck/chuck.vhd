@@ -134,17 +134,17 @@ begin
  
 	-- wait state generator
 	
-	rdygen: process(RESET, clk, rdyclk)
-	begin
-		if (RESET = '0') then
-			rdyclk <= '0';
-		elsif rising_edge(clk) then
-			rdyclk <= not rdyclk;
-		end if;
-	end process;
+--	rdygen: process(RESET, clk, rdyclk)
+--	begin
+--		if (RESET = '0') then
+--			rdyclk <= '0';
+--		elsif rising_edge(clk) then
+--			rdyclk <= not rdyclk;
+--		end if;
+--	end process;
 	
-	rdy_sig			<= '0' when (rdyclk = '1' and (CS_ROM_sig = '0' or CS_OPL_sig = '0' or CS_VDP_sig = '0' ) ) else 'Z';
-
+--	rdy_sig			<= '0' when (rdyclk = '1' and (CS_ROM_sig = '0' or CS_OPL_sig = '0' or CS_VDP_sig = '0' ) ) else 'Z';
+	rdy_sig <= 'Z';
 		
 	-- io area decoding
 	
@@ -152,7 +152,7 @@ begin
 	CS_VIA_sig     <= '0' when (CPU_a(15 downto 4) = "000000100001") else '1'; 					-- $0210
 	CS_VDP_sig		<= '0' when (CPU_a(15 downto 4) = "000000100010") else '1'; 					-- $0220	
 	CS_OPL_sig		<= '0' when (CPU_a(15 downto 4) = "000000100100") else '1';  					-- $0240
-	CS_UART_sig	<= '0' when (CPU_a(15 downto 4) = "000000100101") else '1';  					-- $0250
+	CS_UART_sig		<= '0' when (CPU_a(15 downto 4) = "000000100101") else '1';  					-- $0250
 	
 	-- extended address bus
 	EXT_a_sig 		<= INT_banktable(conv_integer(CPU_a(15 downto 14)))(4 downto 0);
