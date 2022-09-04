@@ -75,10 +75,18 @@ begin
 	-- bidirectional
 	-- make data bus output tristate when not a qualified read
 	CPU_d 	<= d_out when (is_read='1') else (others => 'Z');
-
 	
 	-- outputs
-	EXT_a(18 downto 14) <= EXT_a_sig;
+	EXT_a(15) <= CPU_a(15);
+	EXT_a(14) <= CPU_a(14);
+	
+	EXT_a(18) <= '0';
+	EXT_a(17) <= '0';
+	EXT_a(16) <= '0';
+	
+	
+	
+	--EXT_a(18 downto 14) <= EXT_a_sig;
 	CPU_phi2		<= clk;
 	
 	RD 			<= CPU_rw nand clk;
@@ -98,7 +106,9 @@ begin
 	-- qualified read?
 	is_read 		<= reg_select and clk and CPU_rw;
 	
-	io_select	<= '1' when (CPU_a(15 downto 8)) = "00000010" and CPU_a(7) = '0' else '0';				-- $0200 - $027f
+	--io_select	<= '1' when (CPU_a(15 downto 8)) = "00000010" and CPU_a(7) = '0' else '0';				-- $0200 - $027f
+	io_select	<= '1' when (CPU_a(15 downto 7)) = "000000100" else '0';				-- $0200 - $027f
+	
 	-- internal register selected ($0230 - $023f)
 	reg_select  <= '1' when (CPU_a(15 downto 4) = "000000100011") else '0';						-- $0230
 	
@@ -148,15 +158,18 @@ begin
 		
 	-- io area decoding
 	
-	CS_UART2_sig    <= '0' when (CPU_a(15 downto 4) = "000000100000") else '1'; 					-- $0200		
+	CS_UART_sig   <= '0' when (CPU_a(15 downto 4) = "000000100000") else '1'; 					-- $0200		
 	CS_VIA_sig     <= '0' when (CPU_a(15 downto 4) = "000000100001") else '1'; 					-- $0210
 	CS_VDP_sig		<= '0' when (CPU_a(15 downto 4) = "000000100010") else '1'; 					-- $0220	
 	CS_OPL_sig		<= '0' when (CPU_a(15 downto 4) = "000000100100") else '1';  					-- $0240
-	CS_UART_sig		<= '0' when (CPU_a(15 downto 4) = "000000100101") else '1';  					-- $0250
+	CS_UART2_sig		<= '0' when (CPU_a(15 downto 4) = "000000100101") else '1';  					-- $0250
 	
 	-- extended address bus
 	EXT_a_sig 		<= INT_banktable(conv_integer(CPU_a(15 downto 14)))(4 downto 0);
-	cs_rom_sig		<= '0' when io_select = '0' and INT_banktable(conv_integer(CPU_a(15 downto 14)))(5) = '1' else '1';
-	cs_ram_sig		<= '0' when io_select = '0' and INT_banktable(conv_integer(CPU_a(15 downto 14)))(5) = '0' else '1';
-
+--	cs_rom_sig		<= '0' when io_select = '0' and INT_banktable(conv_integer(CPU_a(15 downto 14)))(5) = '1' else '1';
+--	cs_ram_sig		<= '0' when io_select = '0' and INT_banktable(conv_integer(CPU_a(15 downto 14)))(5) = '0' else '1';
+	
+	cs_rom_sig 		<= '0' when io_select = '0' and CPU_a(15 downto 13) = "111" else '1';
+	cs_ram_sig 		<= '0' when io_select = '0' and CPU_a(15) = '0' else '1';	
+	
 End chuck_arch;
