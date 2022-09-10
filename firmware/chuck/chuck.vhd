@@ -47,6 +47,8 @@ Architecture chuck_arch of chuck is
 	
 	signal rdyclk: std_logic;
 	
+	signal rd_sig: std_logic;
+	
 	signal cs_rom_sig: std_logic;
 	signal cs_ram_sig: std_logic;
 
@@ -71,26 +73,29 @@ begin
 	-- inputs
  	clk		<= CLKIN;
 	d_in 		<= CPU_d;	
-
+	RD			<= rd_sig;
 	-- bidirectional
 	-- make data bus output tristate when not a qualified read
 	CPU_d 	<= d_out when (is_read='1') else (others => 'Z');
-	
+	-- CPU_d <= d_out;
 	-- outputs
-	EXT_a(15) <= CPU_a(15);
-	EXT_a(14) <= CPU_a(14);
+	
+	
+	
+--	EXT_a(18 downto 14) <= EXT_a_sig;
 	
 	EXT_a(18) <= '0';
 	EXT_a(17) <= '0';
 	EXT_a(16) <= '0';
 	
+	EXT_a(15) <= CPU_A(15);
+	EXT_a(14) <= CPU_A(14);
 	
-	
-	--EXT_a(18 downto 14) <= EXT_a_sig;
 	CPU_phi2		<= clk;
 	
-	RD 			<= CPU_rw nand clk;
-	WR 			<= not CPU_rw nand clk;
+	RD_sig 		<= not CPU_rw nand clk;	
+	
+	WR 			<= CPU_rw nand clk;
 	
 	CPU_rdy		<= rdy_sig;
 	
@@ -103,28 +108,31 @@ begin
 	cs_ram  		<= cs_ram_sig;
 	
 	-- helpers
+	
+	-- internal register selected ($0230 - $023f)
+	reg_select  <= '1' when (CPU_a(15 downto 4) = "000000100011") else '0';						-- $0230
+	
 	-- qualified read?
-	is_read 		<= reg_select and clk and CPU_rw;
+	is_read 		<= reg_select and not rd_sig;
 	
 	--io_select	<= '1' when (CPU_a(15 downto 8)) = "00000010" and CPU_a(7) = '0' else '0';				-- $0200 - $027f
 	io_select	<= '1' when (CPU_a(15 downto 7)) = "000000100" else '0';				-- $0200 - $027f
 	
-	-- internal register selected ($0230 - $023f)
-	reg_select  <= '1' when (CPU_a(15 downto 4) = "000000100011") else '0';						-- $0230
 	
 	reg_addr 	<= CPU_a(1 downto 0);
 	
 	-- cpu register section
 	-- cpu read
-	cpu_read: process (is_read, reg_addr, INT_banktable )
-	begin
-		if (is_read = '1') then 
-			D_out(4 downto 0) <= INT_banktable(conv_integer(reg_addr))(4 downto 0);
-			D_out(7) 			<= INT_banktable(conv_integer(reg_addr))(5);
-		else
-			D_out <= (others => '0');
-		end if;
-	end process;
+	
+--	cpu_read: process (is_read, reg_addr, INT_banktable )
+--	begin
+--		if (is_read = '1') then 
+--			D_out(4 downto 0) <= INT_banktable(conv_integer(reg_addr))(4 downto 0);
+--			D_out(7) 			<= INT_banktable(conv_integer(reg_addr))(5);
+--		else
+--			D_out <= (others => '0');
+--		end if;
+--	end process;
 
 	-- cpu write 
 	cpu_write: process(reset, reg_select, reg_addr, clk, CPU_rw, D_in)
@@ -133,7 +141,8 @@ begin
 			INT_banktable(0) <= "000000"; -- Bank $00
 			INT_banktable(1) <= "000001"; -- Bank $01
 			INT_banktable(2) <= "000010"; -- Bank $02
-			INT_banktable(3) <= "100000"; -- Bank $80 (ROM)
+--			INT_banktable(3) <= "100000"; -- Bank $80 (ROM)
+			INT_banktable(3) <= "100001"; -- Bank $81 (ROM)
 			
 		elsif (falling_edge(clk) and reg_select='1' and CPU_rw='0') then
 			INT_banktable(conv_integer(reg_addr))(4 downto 0) <= D_in(4 downto 0);
@@ -158,18 +167,35 @@ begin
 		
 	-- io area decoding
 	
-	CS_UART_sig   <= '0' when (CPU_a(15 downto 4) = "000000100000") else '1'; 					-- $0200		
-	CS_VIA_sig     <= '0' when (CPU_a(15 downto 4) = "000000100001") else '1'; 					-- $0210
-	CS_VDP_sig		<= '0' when (CPU_a(15 downto 4) = "000000100010") else '1'; 					-- $0220	
-	CS_OPL_sig		<= '0' when (CPU_a(15 downto 4) = "000000100100") else '1';  					-- $0240
-	CS_UART2_sig		<= '0' when (CPU_a(15 downto 4) = "000000100101") else '1';  					-- $0250
+--	CS_UART_sig   <= '0' when (CPU_a(15 downto 4) = "000000100000") else '1'; 					-- $0200		
+--	CS_VIA_sig     <= '0' when (CPU_a(15 downto 4) = "000000100001") else '1'; 					-- $0210
+--	CS_VDP_sig		<= '0' when (CPU_a(15 downto 4) = "000000100010") else '1'; 					-- $0220	
+--	CS_OPL_sig		<= '0' when (CPU_a(15 downto 4) = "000000100100") else '1';  					-- $0240
+--	CS_UART2_sig		<= '0' when (CPU_a(15 downto 4) = "000000100101") else '1';  					-- $0250
+	
+	cs_uart_sig <= '1';
+	cs_via_sig <= '1';
+	cs_vdp_sig <= '1';
+	cs_opl_sig <= '1';
+	cs_uart2_sig <= '1';
 	
 	-- extended address bus
 	EXT_a_sig 		<= INT_banktable(conv_integer(CPU_a(15 downto 14)))(4 downto 0);
 --	cs_rom_sig		<= '0' when io_select = '0' and INT_banktable(conv_integer(CPU_a(15 downto 14)))(5) = '1' else '1';
 --	cs_ram_sig		<= '0' when io_select = '0' and INT_banktable(conv_integer(CPU_a(15 downto 14)))(5) = '0' else '1';
 	
-	cs_rom_sig 		<= '0' when io_select = '0' and CPU_a(15 downto 13) = "111" else '1';
-	cs_ram_sig 		<= '0' when io_select = '0' and CPU_a(15) = '0' else '1';	
+
 	
+--	cs_rom_sig 		<= '0' when io_select = '0' and CPU_a(15 downto 14) = "11" else '1';
+--	cs_ram_sig 		<= '0' when io_select = '0' and CPU_a(15) = '0' else '1';	
+
+
+--	cs_rom_sig		<= '0' when CPU_a(15) = '1' else '1';
+--	cs_ram_sig		<= '0' when CPU_a(15) = '0' else '1'; 
+	
+	cs_ram_sig		<= '1';
+	cs_rom_sig		<= '0';
+	
+	
+		
 End chuck_arch;
