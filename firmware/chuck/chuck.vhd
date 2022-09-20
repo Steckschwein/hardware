@@ -47,7 +47,7 @@ Architecture chuck_arch of chuck is
 	
 	signal rdyclk: std_logic;
 	
-	signal rd_sig: std_logic;
+	-- signal rd_sig: std_logic;
 	
 	signal cs_rom_sig: std_logic;
 	signal cs_ram_sig: std_logic;
@@ -73,7 +73,7 @@ begin
 	-- inputs
  	clk		<= CLKIN;
 	d_in 		<= CPU_d;	
-	RD			<= rd_sig;
+	--RD			<= rd_sig;
 	-- bidirectional
 	-- make data bus output tristate when not a qualified read
 	CPU_d 	<= d_out when (is_read='1') else (others => 'Z');
@@ -93,9 +93,14 @@ begin
 	
 	CPU_phi2		<= clk;
 	
-	RD_sig 		<= not CPU_rw nand clk;	
 	
-	WR 			<= CPU_rw nand clk;
+	rdwr: process(CPU_rw, clk)
+	begin
+		if rising_edge(clk) then
+			RD		 		<= CPU_rw nand clk;	
+			WR 			<= not CPU_rw nand clk;
+		end if;
+	end process;
 	
 	CPU_rdy		<= rdy_sig;
 	
@@ -113,7 +118,7 @@ begin
 	reg_select  <= '1' when (CPU_a(15 downto 4) = "000000100011") else '0';						-- $0230
 	
 	-- qualified read?
-	is_read 		<= reg_select and not rd_sig;
+	is_read 		<= reg_select and (not CPU_rw nand clk);
 	
 	--io_select	<= '1' when (CPU_a(15 downto 8)) = "00000010" and CPU_a(7) = '0' else '0';				-- $0200 - $027f
 	io_select	<= '1' when (CPU_a(15 downto 7)) = "000000100" else '0';				-- $0200 - $027f
