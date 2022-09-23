@@ -1,6 +1,5 @@
 
-
-NET CLKIN PERIOD = 125 ;
+# NET CLKIN PERIOD = 125;
 NET "CPU_d<0>"      LOC = "P1"  ; 
 NET "CPU_d<1>"      LOC = "P2"  ; 
 NET "CPU_d<2>"      LOC = "P46"  ; 
@@ -44,8 +43,8 @@ NET "CS_ROM"        LOC = "P31"  ;
 NET "CS_RAM"        LOC = "P25"  ; 
 
 NET "CPU_rw"    	  LOC = "P71"; 
-NET "RD"        	  LOC = "P37"; 
-NET "WR"    	     LOC = "P39"; 
+NET "OE"        	  LOC = "P37"; 
+NET "WE"    	     LOC = "P39"; 
 NET "CPU_phi2"      LOC = "P19"; 
 
 NET "CPU_rdy"   LOC = "P14"  ;
