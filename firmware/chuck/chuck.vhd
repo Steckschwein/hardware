@@ -21,8 +21,8 @@ Entity chuck is
 		RESET     : in std_logic;  	-- reset line
 		CPU_rw    : in std_logic;  	-- RW pin of 6502
 		CPU_rdy	 : out std_logic; 	-- RDY signal for generating wait states
-		RD			 : out std_logic; 	-- read access
-		WR			 : out std_logic; 	-- write access
+		OE		 : out std_logic; 	-- read access
+		WE		 : out std_logic; 	-- write access
 		
 		
 		-- chip select for memory
@@ -76,7 +76,7 @@ begin
 	--RD			<= rd_sig;
 	-- bidirectional
 	-- make data bus output tristate when not a qualified read
-	CPU_d 	<= d_out when (is_read='1') else (others => 'Z');
+	-- CPU_d 	<= d_out when (is_read='1') else (others => 'Z');
 	-- CPU_d <= d_out;
 	-- outputs
 	
@@ -92,15 +92,18 @@ begin
 	EXT_a(14) <= CPU_A(14);
 	
 	CPU_phi2		<= clk;
-	
-	
-	rdwr: process(CPU_rw, clk)
-	begin
-		if rising_edge(clk) then
-			RD		 		<= CPU_rw nand clk;	
-			WR 			<= not CPU_rw nand clk;
-		end if;
-	end process;
+
+
+--	rdwr: process(CPU_rw, clk)
+--	begin
+--		if rising_edge(clk) then
+--			RD 		<= CPU_rw nand clk;	
+--			WR		<= not CPU_rw nand clk;
+--		end if;
+--	end process;
+
+	OE 			<= CPU_rw NAND clk;	
+	WE 			<= (NOT CPU_rw) NAND clk;
 	
 	CPU_rdy		<= rdy_sig;
 	
@@ -168,7 +171,7 @@ begin
 --	end process;
 	
 --	rdy_sig			<= '0' when (rdyclk = '1' and (CS_ROM_sig = '0' or CS_OPL_sig = '0' or CS_VDP_sig = '0' ) ) else 'Z';
-	rdy_sig <= 'Z';
+	rdy_sig <= '1';
 		
 	-- io area decoding
 	
@@ -195,11 +198,11 @@ begin
 --	cs_ram_sig 		<= '0' when io_select = '0' and CPU_a(15) = '0' else '1';	
 
 
---	cs_rom_sig		<= '0' when CPU_a(15) = '1' else '1';
---	cs_ram_sig		<= '0' when CPU_a(15) = '0' else '1'; 
+	cs_rom_sig		<= NOT CPU_a(15);
+	cs_ram_sig		<= CPU_a(15); 
 	
-	cs_ram_sig		<= '1';
-	cs_rom_sig		<= '0';
+--	cs_ram_sig		<= '1';
+--	cs_rom_sig		<= '0';
 	
 	
 		
