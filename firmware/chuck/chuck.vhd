@@ -106,7 +106,20 @@ begin
 	-- helpers
 	
 	-- internal register selected ($0230 - $023f)
-	reg_select  <= '1' when (CPU_a(15 downto 4) = "000000100011") else '0';						-- $0230
+	-- reg_select  <= '1' when (CPU_a(15 downto 4) = "000000100011") else '0';						-- $0230
+	reg_select  <= '1' when CPU_a(15) = '0'
+							  and CPU_a(14) = '0'
+							  and CPU_a(13) = '0'
+							  and CPU_a(12) = '0'
+							  and CPU_a(11) = '0'
+							  and CPU_a(10) = '0'
+							  and CPU_a(9)  = '1'
+							  and CPU_a(8)  = '0'
+							  and CPU_a(7)  = '0'
+							  and CPU_a(6)  = '0'
+							  and CPU_a(5)  = '1'
+							  and CPU_a(4)  = '1'
+							 else '0';	-- $0230
 	
 	-- qualified read?
 	is_read 		<= reg_select and (not CPU_rw nand clk);
