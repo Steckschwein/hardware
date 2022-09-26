@@ -178,6 +178,19 @@ begin
 --	CS_VDP_sig		<= '0' when (CPU_a(15 downto 4) = "000000100010") else '1'; 					-- $0220	
 --	CS_OPL_sig		<= '0' when (CPU_a(15 downto 4) = "000000100100") else '1';  					-- $0240
 --	CS_UART2_sig		<= '0' when (CPU_a(15 downto 4) = "000000100101") else '1';  					-- $0250
+	CS_UART2_sig		<= '0' when CPU_a(15) = '0'
+								and CPU_a(14) = '0'
+								and CPU_a(13) = '0'
+								and CPU_a(12) = '0'
+								and CPU_a(11) = '0'
+								and CPU_a(10) = '0'
+								and CPU_a(9) = '1'
+								and CPU_a(8) = '0'
+								and CPU_a(7) = '0'
+								and CPU_a(6) = '1'
+								and CPU_a(5) = '0'
+								and CPU_a(4) = '1'
+							  else '1';  					-- $0250
 
 -- CS_UART_sig <= '0' when (CPU_a(15 downto 4) = 0000100101) OR (CPU_a(15 downto 4) = "000000100000") else '1';
 	
@@ -193,7 +206,7 @@ begin
 	cs_via_sig <= '1';
 	cs_vdp_sig <= '1';
 	cs_opl_sig <= '1';
-	cs_uart2_sig <= '1';
+--	cs_uart2_sig <= '1';
 	
 	-- extended address bus
 	EXT_a_sig 		<= INT_banktable(conv_integer(CPU_a(15 downto 14)))(4 downto 0);
