@@ -112,8 +112,18 @@ begin
 	is_read 		<= reg_select and (not CPU_rw nand clk);
 	
 	--io_select	<= '1' when (CPU_a(15 downto 8)) = "00000010" and CPU_a(7) = '0' else '0';				-- $0200 - $027f
-	io_select	<= '1' when (CPU_a(15 downto 7)) = "000000100" else '0';				-- $0200 - $027f
-	
+	--io_select	<= '1' when (CPU_a(15 downto 7)) = "000000100" else '0';				-- $0200 - $027f
+	io_select 	<= '1' when CPU_a(15) = '0'
+						and CPU_a(14) = '0'
+						and CPU_a(13) = '0'
+						and CPU_a(12) = '0'
+						and CPU_a(11) = '0'
+						and CPU_a(10) = '0'
+						and CPU_a(9)  = '1'
+						and CPU_a(8)  = '0'
+						and CPU_a(7)  = '0'
+					   else '0';
+
 	
 	reg_addr 	<= CPU_a(1 downto 0);
 	
