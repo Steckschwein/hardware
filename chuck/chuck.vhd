@@ -191,7 +191,7 @@ begin
 --	CS_VDP_sig		<= '0' when (CPU_a(15 downto 4) = "000000100010") else '1'; 					-- $0220	
 --	CS_OPL_sig		<= '0' when (CPU_a(15 downto 4) = "000000100100") else '1';  					-- $0240
 --	CS_UART2_sig		<= '0' when (CPU_a(15 downto 4) = "000000100101") else '1';  					-- $0250
-	CS_UART2_sig		<= '0' when CPU_a(15) = '0'
+	CS_UART_sig    <= '0' when CPU_a(15) = '0'
 								and CPU_a(14) = '0'
 								and CPU_a(13) = '0'
 								and CPU_a(12) = '0'
@@ -204,16 +204,6 @@ begin
 								and CPU_a(5) = '0'
 								and CPU_a(4) = '1'
 							  else '1';  					-- $0250
-
--- CS_UART_sig <= '0' when (CPU_a(15 downto 4) = 0000100101) OR (CPU_a(15 downto 4) = "000000100000") else '1';
-	
-	decoder: process(CPU_a)
-	begin
-		case CPU_a(15 downto 4) is
-			when "000000100101" => CS_UART_sig <= '0';
-			when others => CS_UART_sig <= '1';
-		end case;
-	end process;
 	
 --	cs_uart_sig <= '1';
 	cs_via_sig <= '1';
@@ -233,7 +223,7 @@ begin
 
 
 	cs_rom_sig		<= NOT CPU_a(15);
-	cs_ram_sig		<= CPU_a(15) OR (NOT CS_UART_sig); 
+	cs_ram_sig		<= CPU_a(15) OR io_select; 
 	
 --	cs_ram_sig		<= '1';
 --	cs_rom_sig		<= '0';
