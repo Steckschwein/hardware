@@ -44,7 +44,7 @@ Architecture chuck_arch of chuck is
 	
 	type t_banktable is array (0 to 3) of std_logic_vector(5 downto 0);
 	signal INT_banktable : t_banktable;
-	
+
 	signal rdyclk: std_logic;
 	
 	-- signal rd_sig: std_logic;
@@ -91,41 +91,15 @@ begin
 	
 	CPU_phi2		<= clk;
 
-
---	rdwr: process(CPU_rw, clk)
---	begin
---		if rising_edge(clk) then
---			RD 		<= CPU_rw nand clk;	
---			WR		<= not CPU_rw nand clk;
---		end if;
---	end process;
-
 	OE 			<= CPU_rw NAND clk;	
-	WE 			<= (NOT CPU_rw) NAND clk;
-		
-	-- helpers
-	
-	-- internal register selected ($0230 - $023f)
-	-- reg_select  <= '1' when (CPU_a(15 downto 4) = "000000100011") else '0';						-- $0230
-	reg_select  <= '1' when CPU_a(15) = '0'
-							  and CPU_a(14) = '0'
-							  and CPU_a(13) = '0'
-							  and CPU_a(12) = '0'
-							  and CPU_a(11) = '0'
-							  and CPU_a(10) = '0'
-							  and CPU_a(9)  = '1'
-							  and CPU_a(8)  = '0'
-							  and CPU_a(7)  = '0'
-							  and CPU_a(6)  = '0'
-							  and CPU_a(5)  = '1'
-							  and CPU_a(4)  = '1'
-							 else '0';	-- $0230
-	
+	WE 			<= (NOT CPU_rw) NAND clk;	
+
 	-- qualified read?
 	is_read 		<= reg_select and (not CPU_rw nand clk);
 	
-	--io_select	<= '1' when (CPU_a(15 downto 8)) = "00000010" and CPU_a(7) = '0' else '0';				-- $0200 - $027f
-	--io_select	<= '1' when (CPU_a(15 downto 7)) = "000000100" else '0';				-- $0200 - $027f
+	-- helpers
+	
+	-- $0200 - $027x
 	io_select 	<= '1' when CPU_a(15) = '0'
 						and CPU_a(14) = '0'
 						and CPU_a(13) = '0'
@@ -135,9 +109,8 @@ begin
 						and CPU_a(9)  = '1'
 						and CPU_a(8)  = '0'
 						and CPU_a(7)  = '0'
-					   else '0';
-
-	
+					   else '0';	
+		
 	reg_addr 	<= CPU_a(1 downto 0);
 	
 	-- cpu register section
@@ -185,72 +158,42 @@ begin
 		
 	-- io area decoding
 	
---	CS_UART_sig <= '0' when (CPU_a(15 downto 4) = "000000100000") else '1'; 					-- $0200		
-	CS_UART_sig    <= '0' when CPU_a(15) = '0'
-								and CPU_a(14) = '0'
-								and CPU_a(13) = '0'
-								and CPU_a(12) = '0'
-								and CPU_a(11) = '0'
-								and CPU_a(10) = '0'
-								and CPU_a(9) = '1'
-								and CPU_a(8) = '0'
-								and CPU_a(7) = '0'
+	--	$0200 - $020f
+	CS_UART2_sig   <= '0' when io_select = '1'
 								and CPU_a(6) = '0'
 								and CPU_a(5) = '0'
 								and CPU_a(4) = '0'
-							  else '1';  					-- $0250
---	CS_VIA_sig     <= '0' when (CPU_a(15 downto 4) = "000000100001") else '1'; 					-- $0210
-	CS_VIA_sig     <= '0' when CPU_a(15) = '0'
-								and CPU_a(14) = '0'
-								and CPU_a(13) = '0'
-								and CPU_a(12) = '0'
-								and CPU_a(11) = '0'
-								and CPU_a(10) = '0'
-								and CPU_a(9) = '1'
-								and CPU_a(8) = '0'
-								and CPU_a(7) = '0'
+							  else '1';
+
+	--	$0210 - $021f
+	CS_VIA_sig     <= '0' when io_select = '1'
 								and CPU_a(6) = '0'
 								and CPU_a(5) = '0'
 								and CPU_a(4) = '1'
-							  else '1';  					-- $0250
---	CS_VDP_sig		<= '0' when (CPU_a(15 downto 4) = "000000100010") else '1'; 					-- $0220	
-	CS_VDP_sig     <= '0' when CPU_a(15) = '0'
-								and CPU_a(14) = '0'
-								and CPU_a(13) = '0'
-								and CPU_a(12) = '0'
-								and CPU_a(11) = '0'
-								and CPU_a(10) = '0'
-								and CPU_a(9) = '1'
-								and CPU_a(8) = '0'
-								and CPU_a(7) = '0'
+							  else '1';
+	--	$0220 - $022f
+	CS_VDP_sig     <= '0' when io_select = '1'
 								and CPU_a(6) = '0'
 								and CPU_a(5) = '1'
 								and CPU_a(4) = '0'
-							  else '1';  					-- $0250
---	CS_OPL_sig		<= '0' when (CPU_a(15 downto 4) = "000000100100") else '1';  					-- $0240
-	CS_OPL_sig     <= '0' when CPU_a(15) = '0'
-								and CPU_a(14) = '0'
-								and CPU_a(13) = '0'
-								and CPU_a(12) = '0'
-								and CPU_a(11) = '0'
-								and CPU_a(10) = '0'
-								and CPU_a(9) = '1'
-								and CPU_a(8) = '0'
-								and CPU_a(7) = '0'
+							  else '1';
+
+	-- internal register selected ($0230 - $023f)
+	reg_select  <= '1' when io_select = '1'
+							  and CPU_a(6)  = '0'
+							  and CPU_a(5)  = '1'
+							  and CPU_a(4)  = '1'
+							 else '0';
+
+	--	$0240 - $024f
+	CS_OPL_sig     <= '0' when io_select = '1'
 								and CPU_a(6) = '1'
 								and CPU_a(5) = '0'
 								and CPU_a(4) = '0'
-							  else '1';  					-- $0250
---	CS_UART2_sig		<= '0' when (CPU_a(15 downto 4) = "000000100101") else '1';  					-- $0250
-	CS_UART2_sig    <= '0' when CPU_a(15) = '0'
-								and CPU_a(14) = '0'
-								and CPU_a(13) = '0'
-								and CPU_a(12) = '0'
-								and CPU_a(11) = '0'
-								and CPU_a(10) = '0'
-								and CPU_a(9) = '1'
-								and CPU_a(8) = '0'
-								and CPU_a(7) = '0'
+							  else '1';
+							  
+	--	$0250 - $025f uart "on board"
+	CS_UART_sig    <= '0' when io_select = '1'
 								and CPU_a(6) = '1'
 								and CPU_a(5) = '0'
 								and CPU_a(4) = '1'
@@ -261,17 +204,8 @@ begin
 --	cs_rom_sig		<= '0' when io_select = '0' and INT_banktable(conv_integer(CPU_a(15 downto 14)))(5) = '1' else '1';
 --	cs_ram_sig		<= '0' when io_select = '0' and INT_banktable(conv_integer(CPU_a(15 downto 14)))(5) = '0' else '1';
 	
-
-	
---	cs_rom_sig 		<= '0' when io_select = '0' and CPU_a(15 downto 14) = "11" else '1';
---	cs_ram_sig 		<= '0' when io_select = '0' and CPU_a(15) = '0' else '1';	
-
-
 	cs_rom_sig		<= NOT CPU_a(15);
 	cs_ram_sig		<= CPU_a(15) OR io_select; 
-	
---	cs_ram_sig		<= '1';
---	cs_rom_sig		<= '0';
 
 	CPU_rdy		<= rdy_sig;
 	CS_UART 		<= CS_UART_sig;
