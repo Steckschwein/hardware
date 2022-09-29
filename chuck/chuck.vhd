@@ -100,16 +100,7 @@ begin
 	-- helpers
 	
 	-- $0200 - $027x
-	io_select 	<= '1' when CPU_a(15) = '0'
-						and CPU_a(14) = '0'
-						and CPU_a(13) = '0'
-						and CPU_a(12) = '0'
-						and CPU_a(11) = '0'
-						and CPU_a(10) = '0'
-						and CPU_a(9)  = '1'
-						and CPU_a(8)  = '0'
-						and CPU_a(7)  = '0'
-					   else '0';	
+	io_select 	<= '1' when CPU_a(15 downto 7) = "000000100" else '0';
 		
 	reg_addr 	<= CPU_a(1 downto 0);
 	
@@ -159,48 +150,26 @@ begin
 	-- io area decoding
 	
 	--	$0200 - $020f
-	CS_UART2_sig   <= '0' when io_select = '1'
-								and CPU_a(6) = '0'
-								and CPU_a(5) = '0'
-								and CPU_a(4) = '0'
-							  else '1';
+	CS_UART2_sig   <= '0' when io_select = '1' and CPU_a(6 downto 4) = "000" else '1';
 
 	--	$0210 - $021f
-	CS_VIA_sig     <= '0' when io_select = '1'
-								and CPU_a(6) = '0'
-								and CPU_a(5) = '0'
-								and CPU_a(4) = '1'
-							  else '1';
+	CS_VIA_sig     <= '0' when io_select = '1' and CPU_a(6 downto 4) = "001" else '1';
+	
 	--	$0220 - $022f
-	CS_VDP_sig     <= '0' when io_select = '1'
-								and CPU_a(6) = '0'
-								and CPU_a(5) = '1'
-								and CPU_a(4) = '0'
-							  else '1';
+	CS_VDP_sig     <= '0' when io_select = '1' and CPU_a(6 downto 4) = "010" else '1';
 
 	-- internal register selected ($0230 - $023f)
-	reg_select  <= '1' when io_select = '1'
-							  and CPU_a(6)  = '0'
-							  and CPU_a(5)  = '1'
-							  and CPU_a(4)  = '1'
-							 else '0';
+	reg_select  <= '1' when io_select = '1' and CPU_a(6 downto 4) = "011" else '1';
 
 	--	$0240 - $024f
-	CS_OPL_sig     <= '0' when io_select = '1'
-								and CPU_a(6) = '1'
-								and CPU_a(5) = '0'
-								and CPU_a(4) = '0'
-							  else '1';
+	CS_OPL_sig     <= '0' when io_select = '1' and CPU_a(6 downto 4) = "100" else '1';
 							  
 	--	$0250 - $025f uart "on board"
-	CS_UART_sig    <= '0' when io_select = '1'
-								and CPU_a(6) = '1'
-								and CPU_a(5) = '0'
-								and CPU_a(4) = '1'
-							  else '1';  					-- $0250
+	CS_UART_sig    <= '0' when io_select = '1' and CPU_a(6 downto 4) = "101" else '1';
 	
 	-- extended address bus
 	EXT_a_sig 		<= INT_banktable(conv_integer(CPU_a(15 downto 14)))(4 downto 0);
+
 --	cs_rom_sig		<= '0' when io_select = '0' and INT_banktable(conv_integer(CPU_a(15 downto 14)))(5) = '1' else '1';
 --	cs_ram_sig		<= '0' when io_select = '0' and INT_banktable(conv_integer(CPU_a(15 downto 14)))(5) = '0' else '1';
 	
