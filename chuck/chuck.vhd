@@ -18,16 +18,16 @@ Entity chuck is
       CPU_d          : inout std_logic_vector (7 downto 0); 
       
       -- control signals
-      RESET     : in std_logic;     -- reset line
-      CPU_rw    : in std_logic;     -- RW pin of 6502
-      CPU_rdy    : out std_logic;    -- RDY signal for generating wait states
+      RESET    : in std_logic;     -- reset line
+      CPU_rw   : in std_logic;     -- RW pin of 6502
+      CPU_rdy  : out std_logic;    -- RDY signal for generating wait states
       OE       : out std_logic;    -- read access
       WE       : out std_logic;    -- write access
       
       
       -- chip select for memory
       CS_ROM    : out std_logic;    -- CS signal for ROM at $e000-$ffff 
-      CS_RAM      : out std_logic;    -- CS for ram 
+      CS_RAM    : out std_logic;    -- CS for ram 
       
       -- chip select for peripherals
       CS_UART   : out std_logic;     
@@ -61,8 +61,8 @@ Architecture chuck_arch of chuck is
    signal rdy_sig: std_logic;
 begin
    -- inputs
-    clk      <= CLKIN;
-   d_in       <= CPU_d;   
+   clk   <= CLKIN;
+   d_in  <= CPU_d;   
    --RD         <= rd_sig;
    -- bidirectional
    -- make data bus output tristate when not a qualified read
@@ -90,7 +90,7 @@ begin
    -- helpers
    
    -- $0200 - $027x
-   io_select    <= '1' when CPU_a(15 downto 7) = "000000100" else '0';
+   io_select   <= '1' when CPU_a(15 downto 7) = "000000100" else '0';
       
    reg_addr    <= CPU_a(1 downto 0);
    
@@ -149,7 +149,7 @@ begin
    CS_VDP     <= '0' when io_select = '1' and CPU_a(6 downto 4) = "010" else '1';
 
    -- internal register selected ($0230 - $023f)
-   reg_select     <= '1' when io_select = '1' and CPU_a(6 downto 4) = "011" else '1';
+   reg_select <= '1' when io_select = '1' and CPU_a(6 downto 4) = "011" else '1';
 
    --   $0240 - $024f
    CS_OPL     <= '0' when io_select = '1' and CPU_a(6 downto 4) = "100" else '1';
@@ -164,7 +164,7 @@ begin
 --   cs_ram_sig      <= '0' when io_select = '0' and INT_banktable(conv_integer(CPU_a(15 downto 14)))(5) = '0' else '1';
    
    CS_ROM      <= NOT CPU_a(15);
-   CS_RAM      <= CPU_a(15) OR io_select; 
+   CS_RAM      <= CPU_a(15) OR io_select;
 
    CPU_rdy     <= rdy_sig;
 
