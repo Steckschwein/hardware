@@ -1,58 +1,58 @@
 
 # NET CLKIN PERIOD = 125;
-NET "CPU_d<0>"      LOC = "P1";
-NET "CPU_d<1>"      LOC = "P2";
-NET "CPU_d<2>"      LOC = "P46";
-NET "CPU_d<3>"      LOC = "P72";
-NET "CPU_d<4>"      LOC = "P68";
-NET "CPU_d<5>"      LOC = "P82";
-NET "CPU_d<6>"      LOC = "P23";
-NET "CPU_d<7>"      LOC = "P79";
+NET CPU_d<0>      LOC = P1;
+NET CPU_d<1>      LOC = P2;
+NET CPU_d<2>      LOC = P46;
+NET CPU_d<3>      LOC = P72;
+NET CPU_d<4>      LOC = P68;
+NET CPU_d<5>      LOC = P82;
+NET CPU_d<6>      LOC = P23;
+NET CPU_d<7>      LOC = P79;
 
-NET "CPU_a<0>"      LOC = "P81";
-NET "CPU_a<1>"      LOC = "P15";
+NET CPU_a<0>      LOC = P81;
+NET CPU_a<1>      LOC = P15;
 
-# NET "CPU_a<2>"      LOC = "P16";
-# NET "CPU_a<3>"      LOC = "P20";
+# NET CPU_a<2>      LOC = P16;
+# NET CPU_a<3>      LOC = P20;
 
-NET "CPU_a<4>"      LOC = "P48";
-NET "CPU_a<5>"      LOC = "P70";
-NET "CPU_a<6>"      LOC = "P53";
-NET "CPU_a<7>"      LOC = "P83";
-NET "CPU_a<8>"      LOC = "P17";
-NET "CPU_a<9>"      LOC = "P44";
-NET "CPU_a<10>"     LOC = "P65";
-NET "CPU_a<11>"     LOC = "P66";
-NET "CPU_a<12>"     LOC = "P56";
-NET "CPU_a<13>"     LOC = "P84";
-NET "CPU_a<14>"     LOC = "P13";
-NET "CPU_a<15>"     LOC = "P3";
+NET CPU_a<4>      LOC = P48;
+NET CPU_a<5>      LOC = P70;
+NET CPU_a<6>      LOC = P53;
+NET CPU_a<7>      LOC = P83;
+NET CPU_a<8>      LOC = P17;
+NET CPU_a<9>      LOC = P44;
+NET CPU_a<10>     LOC = P65;
+NET CPU_a<11>     LOC = P66;
+NET CPU_a<12>     LOC = P56;
+NET CPU_a<13>     LOC = P84;
+NET CPU_a<14>     LOC = P13;
+NET CPU_a<15>     LOC = P3;
 
-NET "EXT_a<14>"     LOC = "P5";
-NET "EXT_a<15>"     LOC = "P18";
-NET "EXT_a<16>"     LOC = "P47";
-NET "EXT_a<17>"     LOC = "P52";
-NET "EXT_a<18>"     LOC = "P61";
+NET EXT_a<14>     LOC = P5;
+NET EXT_a<15>     LOC = P18;
+NET EXT_a<16>     LOC = P47;
+NET EXT_a<17>     LOC = P52;
+NET EXT_a<18>     LOC = P61;
 
-NET "CS_OPL"   	  LOC = "P35";
-NET "CS_VIA"        LOC = "P43";
-NET "CS_VDP"        LOC = "P33";
+NET CS_OPL   	  LOC = P35;
+NET CS_VIA        LOC = P43;
+NET CS_VDP        LOC = P33;
 # UART cpu board
-NET "CS_UART"       LOC = "P26";
+NET CS_UART       LOC = P26;
 # UART i/o board
-NET "CS_UART2"      LOC = "P32";
-NET "CS_ROM"        LOC = "P31";
-NET "CS_RAM"        LOC = "P25";
+NET CS_UART2      LOC = P32;
+NET CS_ROM        LOC = P31;
+NET CS_RAM        LOC = P25;
 
-NET "CPU_rw"    	  LOC = "P71"; 
-NET "OE"        	  LOC = "P37"; 
-NET "WE"    	     LOC = "P39"; 
-NET "CPU_phi2"      LOC = "P19"; 
+NET CPU_rw    	  LOC = P71; 
+NET OE        	  LOC = P37; 
+NET WE    	     LOC = P39; 
+NET CPU_phi2      LOC = P19; 
 
-NET "CPU_rdy"   LOC = "P14";
+NET CPU_rdy   LOC = P14;
 
-NET "CLKIN"     LOC = "P9";# -- global clock: Pin 9,10,12###
-NET "RESET"     LOC = "P74";# -- global reset: Pin 74
+NET CLKIN     LOC = P9;# -- global clock: Pin 9,10,12###
+NET RESET     LOC = P74;# -- global reset: Pin 74
 
 
 #Signal               Total Total Loc     Pin  Pin     Pin     Pwr  Slew Reg Init
