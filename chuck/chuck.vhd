@@ -22,8 +22,7 @@ Entity chuck is
       CPU_rw   : in std_logic;     -- RW pin of 6502
       CPU_rdy  : out std_logic;    -- RDY signal for generating wait states
       OE       : out std_logic;    -- read access
-      WE       : out std_logic;    -- write access
-      
+      WE       : out std_logic;    -- write access      
       
       -- chip select for memory
       CS_ROM    : out std_logic;    -- CS signal for ROM at $e000-$ffff 
@@ -40,6 +39,7 @@ Entity chuck is
 end;
 
 Architecture chuck_arch of chuck is
+
    signal clk: std_logic;
    
    type t_banktable is array (0 to 3) of std_logic_vector(5 downto 0);
@@ -47,8 +47,6 @@ Architecture chuck_arch of chuck is
 
    signal rdyclk: std_logic;
    
-   -- signal rd_sig: std_logic;
-      
    signal d_out: std_logic_vector(7 downto 0);
    signal d_in:  std_logic_vector(7 downto 0);
    
@@ -63,12 +61,6 @@ begin
    -- inputs
    clk   <= CLKIN;
    d_in  <= CPU_d;   
-   --RD         <= rd_sig;
-   -- bidirectional
-   -- make data bus output tristate when not a qualified read
-   -- CPU_d    <= d_out when (is_read='1') else (others => 'Z');
-   -- CPU_d <= d_out;
-   -- outputs
    
 --   EXT_a(18 downto 14) <= EXT_a_sig;
    
@@ -83,45 +75,50 @@ begin
 
    OE          <= CPU_rw NAND clk;   
    WE          <= (NOT CPU_rw) NAND clk;   
-
-   -- qualified read?
-   is_read       <= reg_select and (not CPU_rw nand clk);
-   
    -- helpers
    
    -- $0200 - $027x
    io_select   <= '1' when CPU_a(15 downto 7) = "000000100" else '0';
-      
+   
+   -- register address denoted by address bit 0,1
    reg_addr    <= CPU_a(1 downto 0);
    
-   -- cpu register section
-   -- cpu read
-   
---   cpu_read: process (is_read, reg_addr, INT_banktable )
---   begin
---      if (is_read = '1') then 
---         D_out(4 downto 0) <= INT_banktable(conv_integer(reg_addr))(4 downto 0);
---         D_out(7)          <= INT_banktable(conv_integer(reg_addr))(5);
---      else
---         D_out <= (others => '0');
---      end if;
---   end process;
+   -- internal register selected ($0230 - $023f)
+   reg_select <= '1' when io_select = '1' and CPU_a(6 downto 4) = "011" else '0';
 
-   -- cpu write 
-   cpu_write: process(reset, reg_select, reg_addr, clk, CPU_rw, D_in)
+   -- qualified register read?
+   is_read <= reg_select AND (CPU_rw NAND clk);
+
+   -- cpu register section
+   
+   -- cpu read from CPLD register
+   cpu_read: process (is_read, reg_addr, INT_banktable, d_in)
    begin
-      if (reset = '0') then
+      d_out <= (others => '0');
+      if (is_read = '1') then
+         d_out(7)          <= INT_banktable(conv_integer(reg_addr))(5);
+         d_out(4 downto 0) <= INT_banktable(conv_integer(reg_addr))(4 downto 0);
+      end if;
+   end process;
+
+   -- cpu write to CPLD register
+   cpu_write: process(RESET, reg_select, reg_addr, clk, CPU_rw, d_in)
+   begin
+      if (RESET ='0') then
          INT_banktable(0) <= "000000"; -- Bank $00
          INT_banktable(1) <= "000001"; -- Bank $01
          INT_banktable(2) <= "000010"; -- Bank $02
          INT_banktable(3) <= "100001"; -- Bank $81 (ROM)
          
       elsif (falling_edge(clk) and reg_select='1' and CPU_rw='0') then
-         INT_banktable(conv_integer(reg_addr))(4 downto 0) <= D_in(4 downto 0);
-         INT_banktable(conv_integer(reg_addr))(5) <= D_in(7);
+         INT_banktable(conv_integer(reg_addr))(4 downto 0) <= d_in(4 downto 0);
+         INT_banktable(conv_integer(reg_addr))(5) <= d_in(7);
       end if;
    end process;
 
+   -- make data bus output tristate when not a qualified read
+   CPU_d <= "10000110" when is_read = '1' else (others => 'Z');
+--   CPU_d <= d_out when is_read = '1' else (others => 'Z');
  
    -- wait state generator
    
@@ -147,9 +144,6 @@ begin
    
    --   $0220 - $022f
    CS_VDP     <= '0' when io_select = '1' and CPU_a(6 downto 4) = "010" else '1';
-
-   -- internal register selected ($0230 - $023f)
-   reg_select <= '1' when io_select = '1' and CPU_a(6 downto 4) = "011" else '1';
 
    --   $0240 - $024f
    CS_OPL     <= '0' when io_select = '1' and CPU_a(6 downto 4) = "100" else '1';
