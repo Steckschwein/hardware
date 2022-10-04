@@ -40,28 +40,39 @@ end;
 
 Architecture chuck_arch of chuck is
 
+--   attribute keep : string;
+
    signal clk: std_logic;
    
    type t_banktable is array (0 to 3) of std_logic_vector(5 downto 0);
    signal INT_banktable : t_banktable;
 
+--   attribute keep of INT_banktable : signal is "true";
+
    signal rdyclk: std_logic;
    
    signal d_out: std_logic_vector(7 downto 0);
-   signal d_in:  std_logic_vector(7 downto 0);
+   signal d_in: std_logic_vector(7 downto 0);
+
+--   attribute keep of d_in : signal is "true";
    
    signal EXT_a_sig: std_logic_vector(18 downto 14); 
    
    signal reg_select: std_logic;
    signal io_select: std_logic;
    signal reg_addr: std_logic_vector(1 downto 0);
-   signal is_read: std_logic;
+   signal reg_read: std_logic;
    signal rdy_sig: std_logic;
+   
+   signal read_sig: std_logic;
+   signal write_sig: std_logic;
+   signal reset_sig: std_logic;
+   
 begin
    -- inputs
    clk   <= CLKIN;
-   d_in  <= CPU_d;   
    
+   reset_sig <= not RESET;
 --   EXT_a(18 downto 14) <= EXT_a_sig;
    
    EXT_a(18) <= '0';
@@ -73,8 +84,9 @@ begin
    
    CPU_phi2    <= clk;
 
-   OE          <= CPU_rw NAND clk;   
-   WE          <= (NOT CPU_rw) NAND clk;   
+   read_sig    <= CPU_rw NAND clk;
+   write_sig   <= (NOT CPU_rw) NAND clk;
+   
    -- helpers
    
    -- $0200 - $027x
@@ -87,13 +99,20 @@ begin
    reg_select  <= '1' when io_select = '1' and CPU_a(6 downto 4) = "011" else '0';
 
    -- qualified register read?
-   is_read <= reg_select AND (CPU_rw NAND clk);
+   reg_read <= reg_select AND CPU_rw AND clk;
 
+   d_in <= CPU_d;
+   
+   -- outputs
+   
+   -- make data bus output tristate when not a qualified read
+   CPU_d <= d_out when reg_read = '1' else (others => 'Z');
+   
    -- cpu register section   
    -- cpu read from CPLD register
-   cpu_read: process (is_read, reg_addr, INT_banktable, d_out)
+   cpu_read: process (reg_read, reg_addr, INT_banktable, d_out)
    begin
-      if (is_read = '1') then
+      if (reg_read = '1') then
          d_out(7)          <= INT_banktable(conv_integer(reg_addr))(5);
          d_out(6 downto 5) <= "00";
          d_out(4 downto 0) <= INT_banktable(conv_integer(reg_addr))(4 downto 0);
@@ -101,19 +120,19 @@ begin
    end process;
 
    -- cpu write to CPLD register
-   cpu_write: process(RESET, reg_select, reg_addr, clk, CPU_rw, d_in)
+   cpu_write: process(reset_sig, clk, reg_select, reg_addr, CPU_rw, d_in)
    begin
-      if (RESET = '0') then
+      if (reset_sig = '1') then
          INT_banktable(0) <= "000000"; -- Bank $00
          INT_banktable(1) <= "000001"; -- Bank $01
          INT_banktable(2) <= "000010"; -- Bank $02
-         INT_banktable(3) <= "100001"; -- Bank $81 (ROM)
-         
---      elsif (falling_edge(clk) and reg_select='1' and CPU_rw='0') then
+         INT_banktable(3) <= "100001"; -- Bank $81 (ROM)         
+--      elsif (falling_edge(clk) and CPU_rw = '0' and reg_select = '1') then
   --       INT_banktable(conv_integer(reg_addr))(4 downto 0) <= d_in(4 downto 0);
     --     INT_banktable(conv_integer(reg_addr))(5) <= d_in(7);
       end if;
    end process;
+
 
    -- wait state generator
    
@@ -147,7 +166,7 @@ begin
    CS_UART    <= '0' when io_select = '1' and CPU_a(6 downto 4) = "101" else '1';
    
    -- extended address bus
-   EXT_a_sig   <= INT_banktable(conv_integer(CPU_a(15 downto 14)))(4 downto 0);
+--   EXT_a_sig   <= INT_banktable(conv_integer(CPU_a(15 downto 14)))(4 downto 0);
 
 --   cs_rom_sig      <= '0' when io_select = '0' and INT_banktable(conv_integer(CPU_a(15 downto 14)))(5) = '1' else '1';
 --   cs_ram_sig      <= '0' when io_select = '0' and INT_banktable(conv_integer(CPU_a(15 downto 14)))(5) = '0' else '1';
@@ -157,8 +176,7 @@ begin
 
    CPU_rdy     <= rdy_sig;
 
-   -- make data bus output tristate when not a qualified read
---   CPU_d <= "10000110" when is_read = '1' else (others => 'Z');
-   CPU_d <= d_out when is_read = '1' else (others => 'Z');
+   OE          <= read_sig;
+   WE          <= write_sig;
 
 End chuck_arch;
