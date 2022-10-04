@@ -127,9 +127,9 @@ begin
          INT_banktable(1) <= "000001"; -- Bank $01
          INT_banktable(2) <= "000010"; -- Bank $02
          INT_banktable(3) <= "100001"; -- Bank $81 (ROM)         
---      elsif (falling_edge(clk) and CPU_rw = '0' and reg_select = '1') then
-  --       INT_banktable(conv_integer(reg_addr))(4 downto 0) <= d_in(4 downto 0);
-    --     INT_banktable(conv_integer(reg_addr))(5) <= d_in(7);
+      elsif (falling_edge(clk) and CPU_rw = '0' and reg_select = '1') then
+         INT_banktable(conv_integer(reg_addr))(4 downto 0) <= "01101"; -- d_in(4 downto 0);
+         INT_banktable(conv_integer(reg_addr))(5) <= '1'; -- d_in(7);
       end if;
    end process;
 
