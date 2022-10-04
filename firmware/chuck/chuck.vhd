@@ -101,12 +101,14 @@ begin
    -- qualified register read?
    reg_read <= reg_select AND CPU_rw AND clk;
 
-   d_in <= CPU_d;
-   
+   d_in <= CPU_d when (reg_select AND NOT(CPU_rw)) = '1' else
+            (others => '0');
+
    -- outputs
-   
    -- make data bus output tristate when not a qualified read
-   CPU_d <= d_out when reg_read = '1' else (others => 'Z');
+   CPU_d <= d_out when (reg_select AND CPU_rw) = '1' else 
+            CPU_d when (reg_select AND NOT(CPU_rw)) = '1' else
+            (others => 'Z');
    
    -- cpu register section   
    -- cpu read from CPLD register
@@ -128,8 +130,8 @@ begin
          INT_banktable(2) <= "000010"; -- Bank $02
          INT_banktable(3) <= "100001"; -- Bank $81 (ROM)         
       elsif (falling_edge(clk) and CPU_rw = '0' and reg_select = '1') then
-         INT_banktable(conv_integer(reg_addr))(4 downto 0) <= "01101"; -- d_in(4 downto 0);
-         INT_banktable(conv_integer(reg_addr))(5) <= '1'; -- d_in(7);
+         INT_banktable(conv_integer(reg_addr))(4 downto 0) <= d_in(4 downto 0); -- "01101";
+         INT_banktable(conv_integer(reg_addr))(5) <= d_in(7); -- '1';
       end if;
    end process;
 
