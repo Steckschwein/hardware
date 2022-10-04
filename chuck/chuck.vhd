@@ -107,10 +107,9 @@ begin
    -- outputs
    -- make data bus output tristate when not a qualified read
    CPU_d <= d_out when (reg_select AND CPU_rw) = '1' else 
-            CPU_d when (reg_select AND NOT(CPU_rw)) = '1' else
             (others => 'Z');
    
-   -- cpu register section   
+   -- cpu register section
    -- cpu read from CPLD register
    cpu_read: process (reg_read, reg_addr, INT_banktable, d_out)
    begin
