@@ -73,14 +73,6 @@ begin
    clk   <= CLKIN;
    
    reset_sig <= not RESET;
---   EXT_a(18 downto 14) <= EXT_a_sig;
-   
-   EXT_a(18) <= '0';
-   EXT_a(17) <= '0';
-   EXT_a(16) <= '0';
-   
-   EXT_a(15) <= CPU_A(15);
-   EXT_a(14) <= CPU_A(14);
    
    CPU_phi2    <= clk;
 
@@ -126,7 +118,7 @@ begin
       if (reset_sig = '1') then
          INT_banktable(0) <= "000000"; -- Bank $00
          INT_banktable(1) <= "000001"; -- Bank $01
-         INT_banktable(2) <= "000010"; -- Bank $02
+         INT_banktable(2) <= "100000"; -- Bank $80 (ROM)
          INT_banktable(3) <= "100001"; -- Bank $81 (ROM)         
       elsif (falling_edge(clk) and CPU_rw = '0' and reg_select = '1') then
          INT_banktable(conv_integer(reg_addr))(4 downto 0) <= d_in(4 downto 0); -- "01101";
@@ -167,13 +159,14 @@ begin
    CS_UART    <= '0' when io_select = '1' and CPU_a(6 downto 4) = "101" else '1';
    
    -- extended address bus
---   EXT_a_sig   <= INT_banktable(conv_integer(CPU_a(15 downto 14)))(4 downto 0);
+   EXT_a_sig   <= INT_banktable(conv_integer(CPU_a(15 downto 14)))(4 downto 0);
 
---   cs_rom_sig      <= '0' when io_select = '0' and INT_banktable(conv_integer(CPU_a(15 downto 14)))(5) = '1' else '1';
---   cs_ram_sig      <= '0' when io_select = '0' and INT_banktable(conv_integer(CPU_a(15 downto 14)))(5) = '0' else '1';
-   
-   CS_ROM      <= NOT CPU_a(15);
-   CS_RAM      <= CPU_a(15) OR io_select;
+   EXT_a(18 downto 14) <= EXT_a_sig;
+
+   -- CS_RAM      <= CPU_a(15) OR io_select;
+   CS_RAM      <= INT_banktable(conv_integer(CPU_a(15 downto 14)))(5) OR io_select;
+   -- CS_ROM      <= NOT CPU_a(15);
+   CS_ROM      <= NOT(INT_banktable(conv_integer(CPU_a(15 downto 14)))(5)) OR io_select;
 
    CPU_rdy     <= rdy_sig;
 
