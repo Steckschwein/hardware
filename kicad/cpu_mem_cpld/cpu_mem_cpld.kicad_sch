@@ -6109,7 +6109,7 @@
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid 8099aea7-db34-4d1a-a8a6-c7bdac06a60f)
   )
-  (label "~{CSR_VDP}" (at 388.62 66.04 0)
+  (label "~{CS_VDP}" (at 388.62 66.04 0)
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid 82d5d804-02ce-4e3b-b104-7c603f471bce)
   )
