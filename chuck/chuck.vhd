@@ -1,6 +1,5 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
--- use IEEE.STD_LOGIC_ARITH.ALL;
 use IEEE.STD_LOGIC_UNSIGNED.ALL;
 USE ieee.numeric_std.ALL; 
 
@@ -45,7 +44,7 @@ Architecture chuck_arch of chuck is
    type t_banktable is array (0 to 3) of std_logic_vector(5 downto 0);
    signal INT_banktable : t_banktable;
 
-   signal clk_div: std_logic_vector(1 downto 0):= "00";
+   signal clk_div: std_logic_vector(2 downto 0):= "000";
    
    signal d_out: std_logic_vector(7 downto 0);
    signal d_in: std_logic_vector(7 downto 0);
@@ -131,19 +130,19 @@ begin
          
    -- io area decoding   
    --   $0200 - $020f
-   CS_UART2   <= '0' when io_select = '1' and CPU_a(6 downto 4) = "000" else '1';
+   CS_UART2    <= '0' when io_select = '1' and CPU_a(6 downto 4) = "000" else '1';
 
    --   $0210 - $021f
-   CS_VIA     <= '0' when io_select = '1' and CPU_a(6 downto 4) = "001" else '1';
+   CS_VIA      <= '0' when io_select = '1' and CPU_a(6 downto 4) = "001" else '1';
    
    --   $0220 - $022f
-   CS_VDP     <= '0' when io_select = '1' and CPU_a(6 downto 4) = "010" else '1';
+   CS_VDP      <= '0' when io_select = '1' and CPU_a(6 downto 4) = "010" else '1';
 
    --   $0240 - $024f
-   CS_OPL     <= '0' when io_select = '1' and CPU_a(6 downto 4) = "100" else '1';
+   CS_OPL      <= '0' when io_select = '1' and CPU_a(6 downto 4) = "100" else '1';
                        
    --   $0250 - $025f uart "on board"
-   CS_UART    <= '0' when io_select = '1' and CPU_a(6 downto 4) = "101" else '1';
+   CS_UART     <= '0' when io_select = '1' and CPU_a(6 downto 4) = "101" else '1';
    
    -- extended address bus
    EXT_a(18 downto 14) <= INT_banktable(conv_integer(CPU_a(15 downto 14)))(4 downto 0);
@@ -153,7 +152,7 @@ begin
    CS_RAM      <= INT_banktable(conv_integer(CPU_a(15 downto 14)))(5) OR io_select;
    CS_ROM      <= NOT(sig_cs_rom);
 
-   CPU_rdy     <= '0' when ((clk_div(0) NAND sig_cs_rom) = '0') else 'Z';
+   CPU_rdy     <= '0' when ((clk_div(2) AND sig_cs_rom) = '1') else 'Z';
    
    OE          <= read_sig;
    WE          <= write_sig;
