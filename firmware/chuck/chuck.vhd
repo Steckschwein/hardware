@@ -54,7 +54,6 @@ Architecture chuck_arch of chuck is
    signal io_select: std_logic;
    signal reg_addr: std_logic_vector(1 downto 0);
    signal reg_read: std_logic;
-   signal rdy_sig: std_logic;
    
    signal read_sig: std_logic;
    signal write_sig: std_logic;
@@ -135,7 +134,7 @@ begin
    CS_UART2   <= '0' when io_select = '1' and CPU_a(6 downto 4) = "000" else '1';
 
    --   $0210 - $021f
-   -- CS_VIA     <= '0' when io_select = '1' and CPU_a(6 downto 4) = "001" else '1';
+   CS_VIA     <= '0' when io_select = '1' and CPU_a(6 downto 4) = "001" else '1';
    
    --   $0220 - $022f
    CS_VDP     <= '0' when io_select = '1' and CPU_a(6 downto 4) = "010" else '1';
@@ -151,14 +150,11 @@ begin
 
    sig_cs_rom  <= INT_banktable(conv_integer(CPU_a(15 downto 14)))(5) AND NOT io_select;
 
-   rdy_sig      <= clk_div(0) NAND sig_cs_rom;
-   -- rdy_sig <= 'Z';
-
    CS_RAM      <= INT_banktable(conv_integer(CPU_a(15 downto 14)))(5) OR io_select;
-   CS_ROM      <= NOT(sig_cs_rom); -- INT_banktable(conv_integer(CPU_a(15 downto 14)))(5)) OR io_select;
+   CS_ROM      <= NOT(sig_cs_rom);
 
-   CPU_rdy     <= rdy_sig;
-
+   CPU_rdy     <= '0' when ((clk_div(0) NAND sig_cs_rom) = '0') else 'Z';
+   
    OE          <= read_sig;
    WE          <= write_sig;
 
