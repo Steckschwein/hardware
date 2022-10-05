@@ -40,23 +40,15 @@ end;
 
 Architecture chuck_arch of chuck is
 
---   attribute keep : string;
-
    signal clk: std_logic;
    
    type t_banktable is array (0 to 3) of std_logic_vector(5 downto 0);
    signal INT_banktable : t_banktable;
 
---   attribute keep of INT_banktable : signal is "true";
-
    signal rdyclk: std_logic;
    
    signal d_out: std_logic_vector(7 downto 0);
    signal d_in: std_logic_vector(7 downto 0);
-
---   attribute keep of d_in : signal is "true";
-   
-   signal EXT_a_sig: std_logic_vector(18 downto 14); 
    
    signal reg_select: std_logic;
    signal io_select: std_logic;
@@ -67,6 +59,10 @@ Architecture chuck_arch of chuck is
    signal read_sig: std_logic;
    signal write_sig: std_logic;
    signal reset_sig: std_logic;
+   
+   signal sig_cs_rom: std_logic;
+   signal sig_cs_vdp: std_logic;
+   signal sig_cs_snd: std_logic;
    
 begin
    -- inputs
@@ -96,6 +92,9 @@ begin
    d_in <= CPU_d when (reg_select AND NOT(CPU_rw)) = '1' else
             (others => '0');
 
+--   waits_en
+   --------
+   
    -- outputs
    -- make data bus output tristate when not a qualified read
    CPU_d <= d_out when (reg_select AND CPU_rw) = '1' else 
@@ -121,25 +120,27 @@ begin
          INT_banktable(2) <= "100000"; -- Bank $80 (ROM)
          INT_banktable(3) <= "100001"; -- Bank $81 (ROM)         
       elsif (falling_edge(clk) and CPU_rw = '0' and reg_select = '1') then
-         INT_banktable(conv_integer(reg_addr))(4 downto 0) <= d_in(4 downto 0); -- "01101";
-         INT_banktable(conv_integer(reg_addr))(5) <= d_in(7); -- '1';
+         INT_banktable(conv_integer(reg_addr))(4 downto 0) <= d_in(4 downto 0);
+         INT_banktable(conv_integer(reg_addr))(5) <= d_in(7);
       end if;
    end process;
 
 
    -- wait state generator
+   rdygen: process(reset_sig, clk, rdyclk, sig_cs_rom)
+   begin
+      if rising_edge(clk) then
+         if (sig_cs_rom = '1') then
+            rdyclk <= '1';
+         else
+            rdyclk <= not rdyclk;
+         end if;
+      end if;
+   end process;
    
---   rdygen: process(RESET, clk, rdyclk)
---   begin
---      if (RESET = '0') then
---         rdyclk <= '0';
---      elsif rising_edge(clk) then
---         rdyclk <= not rdyclk;
---      end if;
---   end process;
-   
---   rdy_sig         <= '0' when (rdyclk = '1' and (CS_ROM_sig = '0' or CS_OPL_sig = '0' or CS_VDP_sig = '0' ) ) else 'Z';
-   rdy_sig <= '1';
+--   rdy_sig         <= '0' when (rdyclk = '1' and (CS_ROM = '0' or CS_OPL = '0' or CS_VDP_sig = '0' ) ) else 'Z';
+   rdy_sig     <= '0' when (sig_cs_rom OR rdyclk) = '1' else 'Z';
+   -- rdy_sig <= '1';
       
    -- io area decoding
    
@@ -159,14 +160,12 @@ begin
    CS_UART    <= '0' when io_select = '1' and CPU_a(6 downto 4) = "101" else '1';
    
    -- extended address bus
-   EXT_a_sig   <= INT_banktable(conv_integer(CPU_a(15 downto 14)))(4 downto 0);
+   EXT_a(18 downto 14) <= INT_banktable(conv_integer(CPU_a(15 downto 14)))(4 downto 0);
 
-   EXT_a(18 downto 14) <= EXT_a_sig;
-
-   -- CS_RAM      <= CPU_a(15) OR io_select;
+   sig_cs_rom  <= INT_banktable(conv_integer(CPU_a(15 downto 14)))(5) AND NOT io_select;
+   
    CS_RAM      <= INT_banktable(conv_integer(CPU_a(15 downto 14)))(5) OR io_select;
-   -- CS_ROM      <= NOT CPU_a(15);
-   CS_ROM      <= NOT(INT_banktable(conv_integer(CPU_a(15 downto 14)))(5)) OR io_select;
+   CS_ROM      <= NOT(sig_cs_rom); -- INT_banktable(conv_integer(CPU_a(15 downto 14)))(5)) OR io_select;
 
    CPU_rdy     <= rdy_sig;
 
