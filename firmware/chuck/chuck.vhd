@@ -45,7 +45,7 @@ Architecture chuck_arch of chuck is
    type t_banktable is array (0 to 3) of std_logic_vector(5 downto 0);
    signal INT_banktable : t_banktable;
 
-   signal rdyclk: std_logic;
+   signal clk_div: std_logic_vector(1 downto 0):= "00";
    
    signal d_out: std_logic_vector(7 downto 0);
    signal d_in: std_logic_vector(7 downto 0);
@@ -66,9 +66,9 @@ Architecture chuck_arch of chuck is
    
 begin
    -- inputs
-   clk   <= CLKIN;
+   clk         <= CLKIN;
    
-   reset_sig <= not RESET;
+   reset_sig   <= not RESET;
    
    CPU_phi2    <= clk;
 
@@ -91,9 +91,6 @@ begin
 
    d_in <= CPU_d when (reg_select AND NOT(CPU_rw)) = '1' else
             (others => '0');
-
---   waits_en
-   --------
    
    -- outputs
    -- make data bus output tristate when not a qualified read
@@ -125,30 +122,20 @@ begin
       end if;
    end process;
 
-
    -- wait state generator
-   rdygen: process(reset_sig, clk, rdyclk, sig_cs_rom)
+   process(clk, clk_div)
    begin
-      if rising_edge(clk) then
-         if (sig_cs_rom = '1') then
-            rdyclk <= '1';
-         else
-            rdyclk <= not rdyclk;
-         end if;
+      if (rising_edge(clk)) then
+         clk_div <= clk_div + '1';
       end if;
    end process;
-   
---   rdy_sig         <= '0' when (rdyclk = '1' and (CS_ROM = '0' or CS_OPL = '0' or CS_VDP_sig = '0' ) ) else 'Z';
-   rdy_sig     <= '0' when (sig_cs_rom OR rdyclk) = '1' else 'Z';
-   -- rdy_sig <= '1';
-      
-   -- io area decoding
-   
+         
+   -- io area decoding   
    --   $0200 - $020f
    CS_UART2   <= '0' when io_select = '1' and CPU_a(6 downto 4) = "000" else '1';
 
    --   $0210 - $021f
-   CS_VIA     <= '0' when io_select = '1' and CPU_a(6 downto 4) = "001" else '1';
+   -- CS_VIA     <= '0' when io_select = '1' and CPU_a(6 downto 4) = "001" else '1';
    
    --   $0220 - $022f
    CS_VDP     <= '0' when io_select = '1' and CPU_a(6 downto 4) = "010" else '1';
@@ -163,7 +150,10 @@ begin
    EXT_a(18 downto 14) <= INT_banktable(conv_integer(CPU_a(15 downto 14)))(4 downto 0);
 
    sig_cs_rom  <= INT_banktable(conv_integer(CPU_a(15 downto 14)))(5) AND NOT io_select;
-   
+
+   rdy_sig      <= clk_div(0) NAND sig_cs_rom;
+   -- rdy_sig <= 'Z';
+
    CS_RAM      <= INT_banktable(conv_integer(CPU_a(15 downto 14)))(5) OR io_select;
    CS_ROM      <= NOT(sig_cs_rom); -- INT_banktable(conv_integer(CPU_a(15 downto 14)))(5)) OR io_select;
 
