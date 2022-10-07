@@ -39,11 +39,11 @@ end;
 
 Architecture chuck_arch of chuck is
 
-   signal clk: std_logic;
-   
+   -- define bank table type array of 6 bit vectors
    type t_banktable is array (0 to 3) of std_logic_vector(5 downto 0);
    signal INT_banktable : t_banktable;
 
+   signal clk: std_logic;
    signal clk_div: std_logic_vector(2 downto 0):= "000";
    
    signal d_out: std_logic_vector(7 downto 0);
