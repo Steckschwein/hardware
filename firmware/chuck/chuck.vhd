@@ -161,7 +161,7 @@ begin
    CS_VDP      <= NOT(sig_cs_vdp);
    CS_OPL      <= NOT(sig_cs_opl);
 
-   CPU_rdy     <= '0' when (clk_div <= 2 and rdy_en) else 'Z';
+   CPU_rdy     <= '0' when (clk_div <= 3 and rdy_en) else 'Z';
    
    OE          <= read_sig;
    WE          <= write_sig;
