@@ -45,6 +45,7 @@ Architecture chuck_arch of chuck is
 
    signal clk: std_logic;
    signal clk_div: std_logic_vector(2 downto 0):= "000";
+   signal rdy_en: boolean;
    
    signal d_out: std_logic_vector(7 downto 0);
    signal d_in: std_logic_vector(7 downto 0);
@@ -60,7 +61,7 @@ Architecture chuck_arch of chuck is
    
    signal sig_cs_rom: std_logic;
    signal sig_cs_vdp: std_logic;
-   signal sig_cs_snd: std_logic;
+   signal sig_cs_opl: std_logic;
    
 begin
    -- inputs
@@ -74,6 +75,8 @@ begin
    write_sig   <= (NOT CPU_rw) NAND clk;
    
    -- helpers
+   
+   rdy_en      <= (sig_cs_rom or sig_cs_vdp or sig_cs_opl) = '1';
    
    -- $0200 - $027x
    io_select   <= '1' when CPU_a(15 downto 7) = "000000100" else '0';
@@ -121,10 +124,14 @@ begin
    end process;
 
    -- wait state generator
-   process(clk, clk_div)
+   process(clk, clk_div, rdy_en)
    begin
       if (rising_edge(clk)) then
-         clk_div <= clk_div + '1';
+         if(rdy_en) then
+            clk_div <= clk_div + '1';
+         else 
+            clk_div <= (others => '0');
+         end if;
       end if;
    end process;
          
@@ -136,10 +143,10 @@ begin
    CS_VIA      <= '0' when io_select = '1' and CPU_a(6 downto 4) = "001" else '1';
    
    --   $0220 - $022f
-   CS_VDP      <= '0' when io_select = '1' and CPU_a(6 downto 4) = "010" else '1';
+   sig_cs_vdp  <= '1' when io_select = '1' and CPU_a(6 downto 4) = "010" else '0';
 
    --   $0240 - $024f
-   CS_OPL      <= '0' when io_select = '1' and CPU_a(6 downto 4) = "100" else '1';
+   sig_cs_opl  <= '1' when io_select = '1' and CPU_a(6 downto 4) = "100" else '0';
                        
    --   $0250 - $025f uart "on board"
    CS_UART     <= '0' when io_select = '1' and CPU_a(6 downto 4) = "101" else '1';
@@ -151,8 +158,10 @@ begin
 
    CS_RAM      <= INT_banktable(conv_integer(CPU_a(15 downto 14)))(5) OR io_select;
    CS_ROM      <= NOT(sig_cs_rom);
+   CS_VDP      <= NOT(sig_cs_vdp);
+   CS_OPL      <= NOT(sig_cs_opl);
 
-   CPU_rdy     <= '0' when ((clk_div(2) AND sig_cs_rom) = '1') else 'Z';
+   CPU_rdy     <= '0' when (clk_div <= 2 and rdy_en) else 'Z';
    
    OE          <= read_sig;
    WE          <= write_sig;
