@@ -44,7 +44,7 @@ Architecture chuck_arch of chuck is
    signal INT_banktable : t_banktable;
 
    signal clk: std_logic;
-   signal clk_div: std_logic_vector(2 downto 0):= "000";
+   signal clk_div: std_logic_vector(3 downto 0);
    signal rdy_en: boolean;
    
    signal d_out: std_logic_vector(7 downto 0);
@@ -126,12 +126,12 @@ begin
    -- wait state generator
    process(clk, clk_div, rdy_en)
    begin
-      if (rising_edge(clk)) then
-         if(rdy_en) then
+      if(rdy_en) then
+         if (rising_edge(clk)) then
             clk_div <= clk_div + '1';
-         else 
-            clk_div <= (others => '0');
          end if;
+      else
+         clk_div <= (others => '0');
       end if;
    end process;
          
@@ -161,7 +161,7 @@ begin
    CS_VDP      <= NOT(sig_cs_vdp);
    CS_OPL      <= NOT(sig_cs_opl);
 
-   CPU_rdy     <= '0' when (clk_div <= 3 and rdy_en) else 'Z';
+   CPU_rdy     <= '0' when (clk_div <= 4 and rdy_en) else 'Z';
    
    OE          <= read_sig;
    WE          <= write_sig;
