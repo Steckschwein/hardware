@@ -32,7 +32,9 @@ Entity chuck is
       CS_UART2  : out std_logic;     
       CS_VIA    : out std_logic;     
       CS_VDP    : out std_logic;  -- VDP 
-      CS_OPL    : out std_logic  -- OPL2         
+      CS_OPL    : out std_logic;  -- OPL2   
+      CS_BUFFER : out std_logic  -- Data bus transceiver enable 
+      
    );
 
 end;
@@ -62,6 +64,10 @@ Architecture chuck_arch of chuck is
    signal sig_cs_rom: std_logic;
    signal sig_cs_vdp: std_logic;
    signal sig_cs_opl: std_logic;
+	signal sig_cs_via: std_logic;
+	signal sig_cs_uart2: std_logic;
+	
+	
    
 begin
    -- inputs
@@ -137,10 +143,12 @@ begin
          
    -- io area decoding   
    --   $0200 - $020f
-   CS_UART2    <= '0' when io_select = '1' and CPU_a(6 downto 4) = "000" else '1';
+   --CS_UART2    <= '0' when io_select = '1' and CPU_a(6 downto 4) = "000" else '1';
+   sig_cs_uart2  <= '1' when io_select = '1' and CPU_a(6 downto 4) = "000" else '0';
 
    --   $0210 - $021f
-   CS_VIA      <= '0' when io_select = '1' and CPU_a(6 downto 4) = "001" else '1';
+   --CS_VIA      <= '0' when io_select = '1' and CPU_a(6 downto 4) = "001" else '1';
+   sig_cs_via    <= '1' when io_select = '1' and CPU_a(6 downto 4) = "001" else '0';
    
    --   $0220 - $022f
    sig_cs_vdp  <= '1' when io_select = '1' and CPU_a(6 downto 4) = "010" else '0';
@@ -160,6 +168,10 @@ begin
    CS_ROM      <= NOT(sig_cs_rom);
    CS_VDP      <= NOT(sig_cs_vdp);
    CS_OPL      <= NOT(sig_cs_opl);
+	CS_VIA		<= NOT(sig_cs_via);
+	CS_UART2		<= NOT(sig_cs_uart2);
+	
+	CS_BUFFER 	<= '0' when clk = '1' and (sig_cs_vdp = '1' or sig_cs_opl = '1' or sig_cs_via = '1' or sig_cs_uart2 = '1') else '1';
 
    CPU_rdy     <= '0' when (clk_div <= 4 and rdy_en) else 'Z';
    
