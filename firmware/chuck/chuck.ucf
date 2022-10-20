@@ -43,7 +43,7 @@ NET CS_UART       LOC = P26;
 NET CS_UART2      LOC = P32;
 NET CS_ROM        LOC = P31;
 NET CS_RAM        LOC = P25;
-NET CS_BUFFER     LOC = P63;
+NET CS_BUFFER     LOC = P62;
 
 
 NET CPU_rw    	  LOC = P71; 
