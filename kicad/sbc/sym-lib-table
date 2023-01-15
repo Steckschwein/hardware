@@ -1,0 +1,6 @@
+(sym_lib_table
+  (lib (name "xo-14s")(type "Legacy")(uri "${KIPRJMOD}/../lbr/clock_oscillator_x014s/xo-14s.lib")(options "")(descr ""))
+  (lib (name "osc")(type "Legacy")(uri "${KIPRJMOD}/../lbr/osc.lib")(options "")(descr ""))
+  (lib (name "65xx")(type "Legacy")(uri "${KIPRJMOD}/../lbr/6502-kicad-library/65xx.lib")(options "")(descr ""))
+  (lib (name "UART")(type "KiCad")(uri "${KIPRJMOD}/../lbr/UART.kicad_sym")(options "")(descr ""))
+)
