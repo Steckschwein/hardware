@@ -66,6 +66,7 @@ Architecture chuck_arch of chuck is
    signal sig_cs_opl: std_logic;
 	signal sig_cs_via: std_logic;
 	signal sig_cs_uart2: std_logic;
+	signal sig_cs_buffer: std_logic;
 
 
 
@@ -157,6 +158,8 @@ begin
    --   $0250 - $025f uart "on board"
    CS_UART     <= '0' when io_select = '1' and CPU_a(6 downto 4) = "101" else '1';
 
+	sig_cs_buffer 	<= '1' when sig_cs_vdp = '1' or sig_cs_opl = '1' or sig_cs_via = '1' or sig_cs_uart2 = '1' else '0';
+
    -- extended address bus
    EXT_a(18 downto 14) <= INT_banktable(conv_integer(CPU_a(15 downto 14)))(4 downto 0);
 
@@ -168,8 +171,8 @@ begin
    CS_OPL      <= NOT(sig_cs_opl);
    CS_VIA		<= NOT(sig_cs_via);
    CS_UART2		<= NOT(sig_cs_uart2);
+   CS_BUFFER   <= NOT(sig_cs_buffer);
 
-	 CS_BUFFER 	<= '0' when clk = '1' and (sig_cs_vdp = '1' or sig_cs_opl = '1' or sig_cs_via = '1' or sig_cs_uart2 = '1') else '1';
 
    CPU_rdy     <= '0' when (clk_div <= 4 and rdy_en) else 'Z';
 
