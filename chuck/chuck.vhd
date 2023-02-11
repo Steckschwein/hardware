@@ -34,7 +34,6 @@ Entity chuck is
       CS_VDP    : out std_logic;  -- VDP
       CS_OPL    : out std_logic;  -- OPL2
       CS_BUFFER : out std_logic  -- Data bus transceiver enable
-
    );
 
 end;
@@ -144,19 +143,19 @@ begin
 
    -- io area decoding
    --   $0200 - $020f
-   sig_cs_uart2  <= '1' when io_select = '1' and CPU_a(6 downto 4) = "000" else '0';
+   sig_cs_uart2   <= '1' when io_select = '1' and CPU_a(6 downto 4) = "000" else '0';
 
    --   $0210 - $021f
-   sig_cs_via    <= '1' when io_select = '1' and CPU_a(6 downto 4) = "001" else '0';
+   sig_cs_via     <= '1' when io_select = '1' and CPU_a(6 downto 4) = "001" else '0';
 
    --   $0220 - $022f
-   sig_cs_vdp  <= '1' when io_select = '1' and CPU_a(6 downto 4) = "010" else '0';
+   sig_cs_vdp     <= '1' when io_select = '1' and CPU_a(6 downto 4) = "010" else '0';
 
    --   $0240 - $024f
-   sig_cs_opl  <= '1' when io_select = '1' and CPU_a(6 downto 4) = "100" else '0';
+   sig_cs_opl     <= '1' when io_select = '1' and CPU_a(6 downto 4) = "100" else '0';
 
    --   $0250 - $025f uart "on board"
-   CS_UART     <= '0' when io_select = '1' and CPU_a(6 downto 4) = "101" else '1';
+   CS_UART        <= '0' when io_select = '1' and CPU_a(6 downto 4) = "101" else '1';
 
 	sig_cs_buffer 	<= '1' when sig_cs_vdp = '1' or sig_cs_opl = '1' or sig_cs_via = '1' or sig_cs_uart2 = '1' else '0';
 
