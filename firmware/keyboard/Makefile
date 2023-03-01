@@ -18,7 +18,7 @@ CFLAGS+=-Os
 #CFLAGS+=-DMOUSE
 
 #uncomment to trigger host system IRQ line when buffer contains > 0 bytes
-CFLAGS+=-DUSE_IRQ
+# CFLAGS+=-DUSE_IRQ
 
 #uncomment to enable serial debugging
 #CFLAGS+=-DSERIAL_DEBUG
@@ -55,8 +55,8 @@ all: $(PRG).hex
 
 kb.o: scancodes_de_cp437.h
 
-$(PRG).elf: $(OBJ) $(INCLUDE)
-	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
+$(PRG).elf: $(OBJ)
+	$(CC) $(CFLAGS) $(LIBS) $^ -o $@
 
 $(PRG).hex: $(PRG).elf
 	$(OBJ2HEX) -j .text -j .data -O ihex $< $@
