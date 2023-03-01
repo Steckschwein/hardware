@@ -56,7 +56,7 @@ Changes by Thomas Woinke <thomas@steckschwein.de>
 int main(void)
 {
 	cli();
-   
+
 	kbd_init(); //init avr for ps/2
 
 	spiInitSlave();
@@ -67,7 +67,7 @@ int main(void)
 	sei();
 
     kbd_reset();//keyboard reset sequence
-	    
+
 	while(1)
 	{
         decode();
@@ -81,14 +81,14 @@ int main(void)
 		{
 			DDRC &= ~(1 << IRQ); // release IRQ line
 		}
-#endif		
-		kbd_process_command();
-		
-        kbd_watchdog();
+#endif
+    kbd_process_command();
+
+    kbd_watchdog();
 
 #ifdef MOUSE
-        //TODO FIXME
-        put_kbbuff(get_mousechar());
+    //TODO FIXME
+    put_kbbuff(get_mousechar());
 #endif
 	}
 }
