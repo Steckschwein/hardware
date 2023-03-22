@@ -1,106 +1,51 @@
-
-# NET CLKIN PERIOD = 125;
-NET CPU_d<0>      LOC = P1;
-NET CPU_d<1>      LOC = P2;
-NET CPU_d<2>      LOC = P46;
-NET CPU_d<3>      LOC = P72;
-NET CPU_d<4>      LOC = P68;
-NET CPU_d<5>      LOC = P82;
-NET CPU_d<6>      LOC = P23;
-NET CPU_d<7>      LOC = P79;
-
-NET CPU_a<0>      LOC = P81;
-NET CPU_a<1>      LOC = P15;
-
-# NET CPU_a<2>      LOC = P16;
-# NET CPU_a<3>      LOC = P20;
-
-NET CPU_a<4>      LOC = P48;
-NET CPU_a<5>      LOC = P70;
-NET CPU_a<6>      LOC = P53;
-NET CPU_a<7>      LOC = P83;
-NET CPU_a<8>      LOC = P17;
-NET CPU_a<9>      LOC = P44;
-NET CPU_a<10>     LOC = P65;
-NET CPU_a<11>     LOC = P66;
-NET CPU_a<12>     LOC = P56;
-NET CPU_a<13>     LOC = P84;
-NET CPU_a<14>     LOC = P13;
-NET CPU_a<15>     LOC = P3;
-
-NET EXT_a<14>     LOC = P5;
-NET EXT_a<15>     LOC = P18;
-NET EXT_a<16>     LOC = P47;
-NET EXT_a<17>     LOC = P52;
-NET EXT_a<18>     LOC = P61;
-
-NET CS_OPL   	  LOC = P35;
-NET CS_VIA        LOC = P43;
-NET CS_VDP        LOC = P33;
-# UART cpu board
-NET CS_UART       LOC = P26;
-# UART i/o board
-NET CS_UART2      LOC = P32;
-NET CS_ROM        LOC = P31;
+#
+## NET CLKIN PERIOD = 125;
+NET CPU_d<7>      LOC = P63;
+NET CPU_d<6>      LOC = P62;
+NET CPU_d<5>      LOC = P61;
+NET CPU_d<4>      LOC = P58;
+NET CPU_d<3>      LOC = P57;
+NET CPU_d<2>      LOC = P56;
+NET CPU_d<1>      LOC = P55;
+NET CPU_d<0>      LOC = P54;
+#
+NET CPU_a<0>      LOC = P65;
+NET CPU_a<1>      LOC = P66;
+#
+NET CPU_a<4>      LOC = P67;
+NET CPU_a<5>      LOC = P68;
+NET CPU_a<6>      LOC = P69;
+NET CPU_a<7>      LOC = P70;
+NET CPU_a<8>      LOC = P71;
+NET CPU_a<9>      LOC = P72;
+NET CPU_a<10>     LOC = P75;
+NET CPU_a<11>     LOC = P76;
+NET CPU_a<12>     LOC = P77;
+NET CPU_a<13>     LOC = P79;
+NET CPU_a<14>     LOC = P80;
+NET CPU_a<15>     LOC = P81;
+#
+NET EXT_a<14>     LOC = P82;
+NET EXT_a<15>     LOC = P83;
+NET EXT_a<16>     LOC = P84;
+NET EXT_a<17>     LOC = P1;
+NET EXT_a<18>     LOC = P2;
+#
+NET CS_OPL   	  LOC = P3;
+NET CS_VIA        LOC = P5;
+NET CS_VDP        LOC = P14;
+NET CS_UART       LOC = P13;
+NET CS_ROM        LOC = P32;
 NET CS_RAM        LOC = P25;
-NET CS_BUFFER     LOC = P75;
-
-
-NET CPU_rw    	  LOC = P71; 
-NET OE        	  LOC = P37; 
-NET WE    	     LOC = P39; 
-NET CPU_phi2      LOC = P19; 
-
-NET CPU_rdy   LOC = P14;
-
+NET CS_BUFFER     LOC = P4;
+#
+#
+NET CPU_rw    	  LOC = P44; 
+NET OE        	  LOC = P43; 
+NET WE    	     LOC = P45; 
+NET CPU_phi2      LOC = P35; 
+#
+NET CPU_rdy   LOC = P40;
+#
 NET CLKIN     LOC = P9;# -- global clock: Pin 9,10,12###
 NET RESET     LOC = P74;# -- global reset: Pin 74
-
-
-#Signal               Total Total Loc     Pin  Pin     Pin     Pwr  Slew Reg Init
-#Name                 Pts   Inps          No.  Type    Use     Mode Rate State
-#CPU_d<0>             5     20    FB1_2   1    I/O     I/O     STD  SLOW 
-#CPU_d<1>             5     20    FB1_5   2    I/O     I/O     STD  SLOW 
-#EXT_a<14>            4     6     FB1_8   5    I/O     O       STD  SLOW 
-#EXT_a<15>            4     6     FB1_12  18   I/O     O       STD  SLOW 
-#CPU_rdy              1     1     FB1_15  14   I/O     O       STD  SLOW 
-#CPU_d<6>             1     14    FB1_16  23   I/O     O       STD  SLOW 
-#CPU_d<4>             5     20    FB2_4   68   I/O     I/O     STD  SLOW 
-#CPU_d<3>             5     20    FB2_8   72   I/O     I/O     STD  SLOW 
-#CPU_d<7>             5     20    FB2_12  79   I/O     I/O     STD  SLOW 
-#CPU_d<5>             1     14    FB2_16  82   I/O     O       STD  SLOW 
-#CS_RAM               5     13    FB3_1   25   I/O     O       STD  SLOW 
-#CS_ROM               5     13    FB3_3   31   I/O     O       STD  SLOW 
-#CPU_phi2             1     1     FB3_5   19   I/O     O       STD  SLOW 
-#CS_OPL               1     12    FB3_7   35   I/O     O       STD  SLOW 
-#CS_UART              1     12    FB3_9   26   I/O     O       STD  SLOW 
-#CS_VDP               1     12    FB3_11  33   I/O     O       STD  SLOW 
-#CS_VIA               1     12    FB3_13  43   I/O     O       STD  SLOW 
-#RD                   1     2     FB3_15  37   I/O     O       STD  SLOW 
-#WR                   1     2     FB3_17  39   I/O     O       STD  SLOW 
-#CPU_d<2>             5     20    FB4_1   46   I/O     I/O     STD  SLOW 
-#EXT_a<16>            4     6     FB4_5   47   I/O     O       STD  SLOW 
-#EXT_a<17>            4     6     FB4_9   50   I/O     O       STD  SLOW 
-#EXT_a<18>            4     6     FB4_13  61   I/O     O       STD  SLOW 
-#Signal               Loc     Pin  Pin     Pin     
-#Name                         No.  Type    Use     
-#CPU_a<15>            FB1_6   3    I/O     I
-#CLKIN                FB1_9   9~   GCK/I/O GCK/I
-#CPU_a<14>            FB1_10  13   I/O     I
-#CPU_a<1>             FB1_17  15   I/O     I
-#CPU_a<5>             FB2_5   70   I/O     I
-#CPU_rw               FB2_6   71   I/O     I
-#RESET                FB2_9   74~  GSR/I/O GSR
-#CPU_a<0>             FB2_14  81   I/O     I
-#CPU_a<7>             FB2_15  83   I/O     I
-#CPU_a<13>            FB2_17  84   I/O     I
-#CPU_a<8>             FB3_2   17   I/O     I
-#CPU_a<9>             FB4_2   44   I/O     I
-#CPU_a<4>             FB4_8   48   I/O     I
-#CPU_a<6>             FB4_11  53   I/O     I
-#CPU_a<12>            FB4_14  56   I/O     I
-#CPU_a<10>            FB4_15  65   I/O     I
-#CPU_a<11>            FB4_17  66   I/O     I
-
-#TIMESPEC TS01 = PERIOD registers_50mhz 20 ;
-
