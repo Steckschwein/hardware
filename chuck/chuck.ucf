@@ -31,19 +31,21 @@ NET EXT_a<16>     LOC = P84;
 NET EXT_a<17>     LOC = P1;
 NET EXT_a<18>     LOC = P2;
 #
-NET CS_OPL   	  LOC = P3;
-NET CS_VIA        LOC = P5;
-NET CS_VDP        LOC = P14;
-NET CS_UART       LOC = P13;
-NET CS_ROM        LOC = P32;
-NET CS_RAM        LOC = P25;
-NET CS_BUFFER     LOC = P4;
+NET CS_OPL   	  	LOC = P35;
+NET CS_VIA        LOC = P51;
+NET CS_SLOT1      LOC = P50;
+NET CS_SLOT0      LOC = P39;
+NET CS_VDP        LOC = P47;
+NET CS_UART       LOC = P48;
+NET CS_ROM        LOC = P4;
+NET CS_RAM        LOC = P5;
+NET CS_BUFFER     LOC = P52;
 #
 #
 NET CPU_rw    	  LOC = P44; 
-NET OE        	  LOC = P43; 
-NET WE    	     LOC = P45; 
-NET CPU_phi2      LOC = P35; 
+NET OE        	  LOC = P6; 
+NET WE    	     LOC = P7; 
+NET CPU_phi2      LOC = P3; 
 #
 NET CPU_rdy   LOC = P40;
 #
