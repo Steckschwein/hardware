@@ -29,11 +29,16 @@ Entity chuck is
 
       -- chip select for peripherals
       CS_UART   : out std_logic;
-      CS_UART2  : out std_logic;
+    --  CS_UART2  : out std_logic;
       CS_VIA    : out std_logic;
       CS_VDP    : out std_logic;  -- VDP
       CS_OPL    : out std_logic;  -- OPL2
-      CS_BUFFER : out std_logic  -- Data bus transceiver enable
+      
+		CS_SLOT0	 : out std_logic;
+		CS_SLOT1	 : out std_logic;
+		
+		CS_BUFFER : out std_logic  -- Data bus transceiver enable
+		
    );
 
 end;
@@ -64,7 +69,11 @@ Architecture chuck_arch of chuck is
    signal sig_cs_vdp: std_logic;
    signal sig_cs_opl: std_logic;
 	signal sig_cs_via: std_logic;
-	signal sig_cs_uart2: std_logic;
+	signal sig_cs_uart: std_logic;
+	signal sig_cs_slot0: std_logic;
+	signal sig_cs_slot1: std_logic;
+	
+	
 	signal sig_cs_buffer: std_logic;
 
 
@@ -143,7 +152,7 @@ begin
 
    -- io area decoding
    --   $0200 - $020f
-   sig_cs_uart2   <= '1' when io_select = '1' and CPU_a(6 downto 4) = "000" else '0';
+   sig_cs_uart   <= '1' when io_select = '1' and CPU_a(6 downto 4) = "000" else '0';
 
    --   $0210 - $021f
    sig_cs_via     <= '1' when io_select = '1' and CPU_a(6 downto 4) = "001" else '0';
@@ -154,10 +163,18 @@ begin
    --   $0240 - $024f
    sig_cs_opl     <= '1' when io_select = '1' and CPU_a(6 downto 4) = "100" else '0';
 
-   --   $0250 - $025f uart "on board"
-   CS_UART        <= '0' when io_select = '1' and CPU_a(6 downto 4) = "101" else '1';
-
-	sig_cs_buffer 	<= '1' when sig_cs_vdp = '1' or sig_cs_opl = '1' or sig_cs_via = '1' or sig_cs_uart2 = '1' else '0';
+   --   $0250 - $025f expansion slot 0
+	sig_cs_slot0     <= '1' when io_select = '1' and CPU_a(6 downto 4) = "101" else '0';
+	--   $0260 - $026f expansion slot 1
+	sig_cs_slot1     <= '1' when io_select = '1' and CPU_a(6 downto 4) = "110" else '0';
+	
+	sig_cs_buffer 	<= '1' when sig_cs_vdp = '1' 
+									or sig_cs_opl = '1' 
+									or sig_cs_via = '1' 
+									or sig_cs_uart = '1' 
+									or sig_cs_slot0 = '1' 
+									or sig_cs_slot1 = '1' 
+								else '0';
 
    -- extended address bus
    EXT_a(18 downto 14) <= INT_banktable(conv_integer(CPU_a(15 downto 14)))(4 downto 0);
@@ -169,7 +186,10 @@ begin
    CS_VDP      <= NOT(sig_cs_vdp);
    CS_OPL      <= NOT(sig_cs_opl);
    CS_VIA		<= NOT(sig_cs_via);
-   CS_UART2		<= NOT(sig_cs_uart2);
+   CS_UART		<= NOT(sig_cs_uart);
+	CS_SLOT0		<= NOT(sig_cs_slot0);
+	CS_SLOT1		<= NOT(sig_cs_slot1);
+	
    CS_BUFFER   <= NOT(sig_cs_buffer);
 
 
