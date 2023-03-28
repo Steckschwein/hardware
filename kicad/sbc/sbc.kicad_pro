@@ -34,9 +34,9 @@
         "other_text_thickness": 0.15,
         "other_text_upright": false,
         "pads": {
-          "drill": 0.762,
-          "height": 1.524,
-          "width": 1.524
+          "drill": 3.0,
+          "height": 6.0,
+          "width": 6.0
         },
         "silk_line_width": 0.15,
         "silk_text_italic": false,
@@ -46,7 +46,7 @@
         "silk_text_upright": false,
         "zones": {
           "45_degree_only": false,
-          "min_clearance": 0.508
+          "min_clearance": 0.25
         }
       },
       "diff_pair_dimensions": [
@@ -432,23 +432,6 @@
         "via_diameter": 0.889,
         "via_drill": 0.635,
         "wire_width": 6
-      },
-      {
-        "bus_width": 12,
-        "clearance": 0.1,
-        "diff_pair_gap": 0.25,
-        "diff_pair_via_gap": 0.25,
-        "diff_pair_width": 0.2,
-        "line_style": 0,
-        "microvia_diameter": 0.508,
-        "microvia_drill": 0.127,
-        "name": "VCC",
-        "pcb_color": "rgba(0, 0, 0, 0.000)",
-        "schematic_color": "rgba(0, 0, 0, 0.000)",
-        "track_width": 0.25,
-        "via_diameter": 0.889,
-        "via_drill": 0.635,
-        "wire_width": 6
       }
     ],
     "meta": {
@@ -529,6 +512,26 @@
     [
       "28a4b651-8375-4e62-9061-4149cd570bf0",
       "Video_Audio"
+    ],
+    [
+      "e7f38d32-6065-4631-8bb6-9c6bd361904e",
+      "Audio_analog"
+    ],
+    [
+      "731cd2f3-5c05-4e00-bfb3-627f05512aca",
+      "Video_analog"
+    ],
+    [
+      "ed21330b-597f-40ab-85f1-2b6eb55707bf",
+      "Kbd_controller"
+    ],
+    [
+      "0f24dfcc-37e3-472e-9893-5f46a59ef91b",
+      "Joysticks"
+    ],
+    [
+      "fe2f3103-6209-4021-9455-fda781985721",
+      "RTC"
     ]
   ],
   "text_variables": {}
