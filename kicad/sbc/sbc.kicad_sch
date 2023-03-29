@@ -8421,7 +8421,7 @@
     (property "Value" "SW_PUSH" (at 85.598 265.43 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Footprint" "Button_Switch_THT:Push_E-Switch_KS01Q01" (at 87.63 265.43 0)
+    (property "Footprint" "Button_Switch_THT:SW_SPST_Omron_B3F-315x_Angled" (at 87.63 265.43 0)
       (effects (font (size 1.524 1.524)) hide)
     )
     (property "Datasheet" "~" (at 87.63 265.43 0)
