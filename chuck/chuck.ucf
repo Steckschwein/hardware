@@ -1,7 +1,7 @@
 #
 ## NET CLKIN PERIOD = 125;
-NET CPU_d<7>      LOC = P63;
-NET CPU_d<6>      LOC = P62;
+NET CPU_d<7>      LOC = P62;
+NET CPU_d<6>      LOC = P63;
 NET CPU_d<5>      LOC = P61;
 NET CPU_d<4>      LOC = P58;
 NET CPU_d<3>      LOC = P57;
