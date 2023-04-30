@@ -129,6 +129,8 @@ begin
          d_out(7)          <= INT_banktable(conv_integer(reg_addr))(5);
          d_out(6 downto 5) <= "00";
          d_out(4 downto 0) <= INT_banktable(conv_integer(reg_addr))(4 downto 0);
+		else
+		   d_out <= "00000000";
       end if;
    end process;
 
@@ -177,6 +179,7 @@ begin
 	--   $0260 - $026f expansion slot 1
 	sig_cs_slot1     <= '1' when io_select = '1' and CPU_a(6 downto 4) = "110" else '0';
 	
+	
 	sig_cs_buffer 	<= '1' when sig_csw_vdp = '1'
 									or sig_csr_vdp = '1'
 									or sig_cs_opl = '1' 
@@ -193,8 +196,8 @@ begin
 
    CS_RAM      <= INT_banktable(conv_integer(CPU_a(15 downto 14)))(5) OR io_select;
    CS_ROM      <= NOT(sig_cs_rom);
-   CSR_VDP      <= NOT(sig_csr_vdp);
-	CSW_VDP      <= NOT(sig_csw_vdp);
+   CSR_VDP     <= NOT(sig_csr_vdp);
+	CSW_VDP     <= NOT(sig_csw_vdp);
 	
    CS_OPL      <= NOT(sig_cs_opl);
    CS_VIA		<= NOT(sig_cs_via);
