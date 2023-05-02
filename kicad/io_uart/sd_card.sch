@@ -1,42 +1,5 @@
-EESchema Schematic File Version 2
-LIBS:io-rescue
-LIBS:power
-LIBS:device
-LIBS:transistors
-LIBS:conn
-LIBS:linear
-LIBS:regul
-LIBS:74xx
-LIBS:cmos4000
-LIBS:adc-dac
-LIBS:memory
-LIBS:xilinx
-LIBS:microcontrollers
-LIBS:dsp
-LIBS:microchip
-LIBS:analog_switches
-LIBS:motorola
-LIBS:texas
-LIBS:intel
-LIBS:audio
-LIBS:interface
-LIBS:digital-audio
-LIBS:philips
-LIBS:display
-LIBS:cypress
-LIBS:siliconi
-LIBS:opto
-LIBS:atmel
-LIBS:contrib
-LIBS:valves
-LIBS:65xxx
-LIBS:ttl_ieee
-LIBS:mini_din
-LIBS:dallas-rtc
-LIBS:lp2950l
-LIBS:osc
-LIBS:io-cache
-EELAYER 25 0
+EESchema Schematic File Version 4
+EELAYER 30 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
@@ -51,7 +14,7 @@ Comment3 ""
 Comment4 ""
 $EndDescr
 $Comp
-L 7407 U6
+L io-rescue:7407 U6
 U 4 1 542928D0
 P 1900 3600
 F 0 "U6" H 2050 3950 60  0000 C CNN
@@ -62,7 +25,7 @@ F 3 "" H 1900 3600 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L 7407 U6
+L io-rescue:7407 U6
 U 6 1 542928D7
 P 1900 2200
 F 0 "U6" H 2050 2550 60  0000 C CNN
@@ -73,7 +36,7 @@ F 3 "" H 1900 2200 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L 7407 U6
+L io-rescue:7407 U6
 U 5 1 542928DE
 P 1900 2900
 F 0 "U6" H 2050 3250 60  0000 C CNN
@@ -84,7 +47,7 @@ F 3 "" H 1900 2900 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L R R1
+L io-rescue:R R1
 U 1 1 542928E5
 P 2700 1700
 F 0 "R1" V 2780 1700 40  0000 C CNN
@@ -95,7 +58,7 @@ F 3 "" H 2700 1700 30  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L 74125 U4
+L io-rescue:74125 U4
 U 3 1 54292908
 P 1850 4400
 F 0 "U4" H 2100 4650 50  0000 L BNN
@@ -106,7 +69,7 @@ F 3 "" H 1850 4400 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L LP2950 U5
+L io-rescue:LP2950 U5
 U 1 1 54292916
 P 1900 1400
 F 0 "U5" H 2050 1204 60  0000 C CNN
@@ -119,7 +82,7 @@ $EndComp
 Text HLabel 1150 3600 0    60   Input ~ 0
 SPI_CLK
 $Comp
-L GND #PWR017
+L io-rescue:GND #PWR017
 U 1 1 54292A1E
 P 1450 1900
 F 0 "#PWR017" H 1450 1900 30  0001 C CNN
@@ -130,7 +93,7 @@ F 3 "" H 1450 1900 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L VCC #PWR018
+L io-rescue:VCC #PWR018
 U 1 1 54292A61
 P 1450 1200
 F 0 "#PWR018" H 1450 1300 30  0001 C CNN
@@ -147,7 +110,7 @@ SPI_MISO
 Text HLabel 1100 2200 0    60   Input ~ 0
 SPI_SS1
 $Comp
-L R R2
+L io-rescue:R R2
 U 1 1 542931DC
 P 2900 1700
 F 0 "R2" V 2980 1700 40  0000 C CNN
@@ -158,7 +121,7 @@ F 3 "" H 2900 1700 30  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L R R3
+L io-rescue:R R3
 U 1 1 54293212
 P 3100 1700
 F 0 "R3" V 3180 1700 40  0000 C CNN
@@ -169,7 +132,7 @@ F 3 "" H 3100 1700 30  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L GND #PWR019
+L io-rescue:GND #PWR019
 U 1 1 54293655
 P 5050 3250
 F 0 "#PWR019" H 5050 3250 30  0001 C CNN
@@ -180,7 +143,7 @@ F 3 "" H 5050 3250 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L C C7
+L io-rescue:C C7
 U 1 1 542937DA
 P 2400 1550
 F 0 "C7" H 2400 1650 40  0000 L CNN
@@ -191,7 +154,7 @@ F 3 "" H 2400 1550 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L CP C6
+L io-rescue:CP C6
 U 1 1 542939AF
 P 1450 1550
 F 0 "C6" H 1450 1650 40  0000 L CNN
@@ -202,7 +165,7 @@ F 3 "" H 1450 1550 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L C C9
+L io-rescue:C C9
 U 1 1 5429B6F0
 P 5750 7050
 F 0 "C9" H 5750 7150 40  0000 L CNN
@@ -213,7 +176,7 @@ F 3 "" H 5750 7050 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L C C10
+L io-rescue:C C10
 U 1 1 5429B734
 P 6050 7050
 F 0 "C10" H 6050 7150 40  0000 L CNN
@@ -224,7 +187,7 @@ F 3 "" H 6050 7050 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L VCC #PWR020
+L io-rescue:VCC #PWR020
 U 1 1 5429B75D
 P 5500 6800
 F 0 "#PWR020" H 5500 6900 30  0001 C CNN
@@ -235,7 +198,7 @@ F 3 "" H 5500 6800 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L GND #PWR021
+L io-rescue:GND #PWR021
 U 1 1 5429B775
 P 5500 7400
 F 0 "#PWR021" H 5500 7400 30  0001 C CNN
@@ -246,7 +209,7 @@ F 3 "" H 5500 7400 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L R R5
+L io-rescue:R R5
 U 1 1 54B01F31
 P 4300 1700
 F 0 "R5" V 4380 1700 40  0000 C CNN
@@ -257,7 +220,7 @@ F 3 "" H 4300 1700 30  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L R R4
+L io-rescue:R R4
 U 1 1 54B02039
 P 4100 1700
 F 0 "R4" V 4180 1700 40  0000 C CNN
@@ -369,7 +332,7 @@ Wire Wire Line
 Wire Wire Line
 	4300 2100 4300 1850
 $Comp
-L C C8
+L io-rescue:C C8
 U 1 1 54B2DE3A
 P 5050 1650
 F 0 "C8" H 5050 1750 40  0000 L CNN
@@ -386,7 +349,7 @@ Wire Wire Line
 Connection ~ 4600 1350
 Connection ~ 5050 2400
 $Comp
-L SD_Card SDCARD1
+L io-rescue:SD_Card SDCARD1
 U 1 1 54C3AF89
 P 6200 2500
 F 0 "SDCARD1" H 5550 3050 50  0000 C CNN

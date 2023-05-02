@@ -1,42 +1,5 @@
-EESchema Schematic File Version 2
-LIBS:io-rescue
-LIBS:power
-LIBS:device
-LIBS:transistors
-LIBS:conn
-LIBS:linear
-LIBS:regul
-LIBS:74xx
-LIBS:cmos4000
-LIBS:adc-dac
-LIBS:memory
-LIBS:xilinx
-LIBS:microcontrollers
-LIBS:dsp
-LIBS:microchip
-LIBS:analog_switches
-LIBS:motorola
-LIBS:texas
-LIBS:intel
-LIBS:audio
-LIBS:interface
-LIBS:digital-audio
-LIBS:philips
-LIBS:display
-LIBS:cypress
-LIBS:siliconi
-LIBS:opto
-LIBS:atmel
-LIBS:contrib
-LIBS:valves
-LIBS:65xxx
-LIBS:ttl_ieee
-LIBS:mini_din
-LIBS:dallas-rtc
-LIBS:lp2950l
-LIBS:osc
-LIBS:io-cache
-EELAYER 25 0
+EESchema Schematic File Version 4
+EELAYER 30 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
@@ -176,7 +139,7 @@ Text GLabel 4800 4150 0    60   Input ~ 0
 Text GLabel 4800 4250 0    60   Input ~ 0
 PHI2
 $Comp
-L VCC #PWR01
+L io-rescue:VCC #PWR01
 U 1 1 5428C2B0
 P 4850 4550
 F 0 "#PWR01" H 4850 4650 30  0001 C CNN
@@ -187,7 +150,7 @@ F 3 "" H 4850 4550 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L GND #PWR02
+L io-rescue:GND #PWR02
 U 1 1 5428C330
 P 4850 5150
 F 0 "#PWR02" H 4850 5150 30  0001 C CNN
@@ -198,7 +161,7 @@ F 3 "" H 4850 5150 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L VCC #PWR03
+L io-rescue:VCC #PWR03
 U 1 1 5428C3FC
 P 4350 6950
 F 0 "#PWR03" H 4350 7050 30  0001 C CNN
@@ -209,7 +172,7 @@ F 3 "" H 4350 6950 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L GND #PWR04
+L io-rescue:GND #PWR04
 U 1 1 5428C42D
 P 4350 7400
 F 0 "#PWR04" H 4350 7400 30  0001 C CNN
@@ -220,7 +183,7 @@ F 3 "" H 4350 7400 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L C C1
+L io-rescue:C C1
 U 1 1 5428C484
 P 4350 7150
 F 0 "C1" H 4350 7250 40  0000 L CNN
@@ -231,7 +194,7 @@ F 3 "" H 4350 7150 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L VCC #PWR05
+L io-rescue:VCC #PWR05
 U 1 1 5428D273
 P 6250 4900
 F 0 "#PWR05" H 6250 5000 30  0001 C CNN
@@ -266,7 +229,7 @@ SPI_MOSI
 Text Label 6650 4750 0    60   ~ 0
 SPI_MISO
 $Comp
-L C C2
+L io-rescue:C C2
 U 1 1 545C1C49
 P 4650 7150
 F 0 "C2" H 4650 7250 40  0000 L CNN
@@ -279,7 +242,7 @@ $EndComp
 Text Label 6500 3750 0    60   ~ 0
 ~SPI_SS3
 $Comp
-L C C3
+L io-rescue:C C3
 U 1 1 548DF92D
 P 4950 7150
 F 0 "C3" H 4950 7250 40  0000 L CNN
@@ -300,7 +263,7 @@ Text Label 6900 3950 0    60   ~ 0
 Text Label 6900 4050 0    60   ~ 0
 ~SD_CARD_DETECT
 $Comp
-L CP C4
+L io-rescue:CP C4
 U 1 1 54B14D65
 P 5250 7150
 F 0 "C4" H 5250 7250 40  0000 L CNN
@@ -311,7 +274,7 @@ F 3 "" H 5250 7150 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L CONN_02X03 P2
+L io-rescue:CONN_02X03 P2
 U 1 1 54B176A0
 P 1600 4950
 F 0 "P2" H 1600 5150 50  0000 C CNN
@@ -322,7 +285,7 @@ F 3 "" H 1600 3750 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L VCC #PWR06
+L io-rescue:VCC #PWR06
 U 1 1 54B17C97
 P 1950 4700
 F 0 "#PWR06" H 1950 4800 30  0001 C CNN
@@ -333,7 +296,7 @@ F 3 "" H 1950 4700 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L GND #PWR07
+L io-rescue:GND #PWR07
 U 1 1 54B17DD5
 P 1950 5150
 F 0 "#PWR07" H 1950 5150 30  0001 C CNN
@@ -350,7 +313,7 @@ SPI_CLK
 Text Label 1000 5050 0    60   ~ 0
 ~SPI_SS4
 $Comp
-L C C5
+L io-rescue:C C5
 U 1 1 54B17E82
 P 5550 7150
 F 0 "C5" H 5550 7250 40  0000 L CNN
@@ -361,7 +324,7 @@ F 3 "" H 5550 7150 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L G65SC22P-RESCUE-io U1
+L io-rescue:G65SC22P-RESCUE-io U1
 U 1 1 542879F7
 P 5500 3550
 F 0 "U1" H 5500 3550 50  0000 L BNN
@@ -449,7 +412,7 @@ F7 "/JOYPORT_ENABLE" I L 8300 6000 60
 F8 "JOYPORT_SELECT" I L 8300 6200 60 
 $EndSheet
 $Comp
-L GND #PWR08
+L io-rescue:GND #PWR08
 U 1 1 58E66B3D
 P 9600 6250
 F 0 "#PWR08" H 9600 6000 50  0001 C CNN
@@ -484,7 +447,7 @@ CA1
 Text Label 6850 4450 0    60   ~ 0
 CA2
 $Comp
-L VCC #PWR09
+L io-rescue:VCC #PWR09
 U 1 1 58E539E2
 P 11100 5450
 F 0 "#PWR09" H 11100 5550 30  0001 C CNN
@@ -558,7 +521,7 @@ RESET_TRIG
 Text Label 7850 5450 0    60   ~ 0
 PA2
 $Comp
-L R R19
+L io-rescue:R R19
 U 1 1 58E602B4
 P 6550 4450
 F 0 "R19" V 6550 4400 50  0000 C CNN
@@ -569,7 +532,7 @@ F 3 "" H 6550 4450 50  0000 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L R R18
+L io-rescue:R R18
 U 1 1 58E60166
 P 6550 4350
 F 0 "R18" V 6550 4300 50  0000 C CNN
@@ -580,7 +543,7 @@ F 3 "" H 6550 4350 50  0000 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L R R15
+L io-rescue:R R15
 U 1 1 58E6A856
 P 6550 4050
 F 0 "R15" V 6550 4000 50  0000 C CNN
@@ -591,7 +554,7 @@ F 3 "" H 6550 4050 50  0000 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L R R14
+L io-rescue:R R14
 U 1 1 58E69E9D
 P 6550 3950
 F 0 "R14" V 6550 3900 50  0000 C CNN
@@ -608,7 +571,7 @@ Wire Wire Line
 Wire Wire Line
 	6100 3550 6900 3550
 Wire Wire Line
-	6100 3450 6900 3450
+	6100 3450 6250 3450
 Connection ~ 4350 7300
 Connection ~ 4650 7300
 Connection ~ 4950 7300
@@ -616,9 +579,9 @@ Connection ~ 4950 7000
 Connection ~ 4650 7000
 Connection ~ 4350 7000
 Wire Wire Line
-	4350 7300 5550 7300
+	4350 7300 4650 7300
 Wire Wire Line
-	4350 7000 5550 7000
+	4350 7000 4650 7000
 Wire Wire Line
 	6100 5050 6350 5050
 Wire Wire Line
@@ -653,8 +616,6 @@ Wire Wire Line
 	4800 3550 4900 3550
 Wire Wire Line
 	4800 3450 4900 3450
-Wire Bus Line
-	4700 3250 4700 3750
 Wire Wire Line
 	4900 3250 4800 3250
 Wire Wire Line
@@ -671,8 +632,6 @@ Wire Wire Line
 	4900 2650 4800 2650
 Wire Wire Line
 	4800 2550 4900 2550
-Wire Bus Line
-	4700 2350 4700 3150
 Wire Wire Line
 	10300 2500 10200 2500
 Wire Wire Line
@@ -689,8 +648,6 @@ Wire Wire Line
 	10300 1900 10200 1900
 Wire Wire Line
 	10200 1800 10300 1800
-Wire Bus Line
-	10100 1600 10100 2400
 Wire Wire Line
 	10200 1050 10300 1050
 Wire Wire Line
@@ -699,8 +656,6 @@ Wire Wire Line
 	10200 850  10300 850 
 Wire Wire Line
 	10200 750  10300 750 
-Wire Bus Line
-	10100 550  10100 1050
 Wire Wire Line
 	6250 4650 6250 3450
 Connection ~ 6250 3450
@@ -736,23 +691,6 @@ Wire Wire Line
 	950  5050 1350 5050
 Connection ~ 5250 7000
 Connection ~ 5250 7300
-Connection ~ 4900 2550
-Connection ~ 4900 2650
-Connection ~ 4900 2750
-Connection ~ 4900 2850
-Connection ~ 4900 2950
-Connection ~ 4900 3050
-Connection ~ 4900 3150
-Connection ~ 4900 3250
-Connection ~ 4900 3450
-Connection ~ 4900 3550
-Connection ~ 4900 3650
-Connection ~ 4900 3750
-Connection ~ 4900 3950
-Connection ~ 4900 4050
-Connection ~ 4900 4150
-Connection ~ 4900 4250
-Connection ~ 4900 4650
 Wire Wire Line
 	8050 2300 7950 2300
 Wire Wire Line
@@ -769,16 +707,12 @@ Wire Wire Line
 	8050 1700 7950 1700
 Wire Wire Line
 	7950 1600 8050 1600
-Wire Bus Line
-	7850 1400 7850 2200
 Wire Wire Line
 	8050 1000 7950 1000
 Wire Wire Line
 	7950 900  8050 900 
 Wire Wire Line
 	7950 800  8050 800 
-Wire Bus Line
-	7850 600  7850 1100
 Wire Wire Line
 	8050 1250 7200 1250
 Wire Wire Line
@@ -874,7 +808,7 @@ Wire Wire Line
 Wire Wire Line
 	11100 5850 11100 5450
 $Comp
-L R R13
+L io-rescue:R R13
 U 1 1 58E6001B
 P 6550 3250
 F 0 "R13" V 6550 3200 50  0000 C CNN
@@ -885,7 +819,7 @@ F 3 "" H 6550 3250 50  0000 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L R R12
+L io-rescue:R R12
 U 1 1 58E5FED7
 P 6550 3150
 F 0 "R12" V 6550 3100 50  0000 C CNN
@@ -896,7 +830,7 @@ F 3 "" H 6550 3150 50  0000 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L R R11
+L io-rescue:R R11
 U 1 1 58E5FD96
 P 6550 3050
 F 0 "R11" V 6550 3000 50  0000 C CNN
@@ -907,7 +841,7 @@ F 3 "" H 6550 3050 50  0000 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L R R10
+L io-rescue:R R10
 U 1 1 58E5FA24
 P 6550 2950
 F 0 "R10" V 6550 2900 50  0000 C CNN
@@ -918,7 +852,7 @@ F 3 "" H 6550 2950 50  0000 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L R R9
+L io-rescue:R R9
 U 1 1 58E5F8E9
 P 6550 2850
 F 0 "R9" V 6550 2800 50  0000 C CNN
@@ -929,7 +863,7 @@ F 3 "" H 6550 2850 50  0000 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L R R8
+L io-rescue:R R8
 U 1 1 58E5F7AD
 P 6550 2750
 F 0 "R8" V 6550 2700 50  0000 C CNN
@@ -940,7 +874,7 @@ F 3 "" H 6550 2750 50  0000 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L R R7
+L io-rescue:R R7
 U 1 1 58E5F674
 P 6550 2650
 F 0 "R7" V 6550 2600 50  0000 C CNN
@@ -951,7 +885,7 @@ F 3 "" H 6550 2650 50  0000 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L R R6
+L io-rescue:R R6
 U 1 1 58E669F9
 P 6550 2550
 F 0 "R6" V 6550 2500 50  0000 C CNN
@@ -962,7 +896,7 @@ F 3 "" H 6550 2550 50  0000 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L CONN_02X08 P1
+L io-rescue:CONN_02X08 P1
 U 1 1 58E669F2
 P 10450 5800
 F 0 "P1" H 10450 6150 50  0000 C CNN
@@ -1026,4 +960,30 @@ Text GLabel 10100 6050 0    60   Input ~ 0
 /RESET
 Text GLabel 10900 6050 2    60   Input ~ 0
 /IRQ
+Wire Wire Line
+	4650 7300 4950 7300
+Wire Wire Line
+	4950 7300 5250 7300
+Wire Wire Line
+	4950 7000 5250 7000
+Wire Wire Line
+	4650 7000 4950 7000
+Wire Wire Line
+	6250 3450 6900 3450
+Wire Wire Line
+	5250 7000 5550 7000
+Wire Wire Line
+	5250 7300 5550 7300
+Wire Bus Line
+	4700 3250 4700 3750
+Wire Bus Line
+	10100 550  10100 1050
+Wire Bus Line
+	7850 600  7850 1100
+Wire Bus Line
+	4700 2350 4700 3150
+Wire Bus Line
+	10100 1600 10100 2400
+Wire Bus Line
+	7850 1400 7850 2200
 $EndSCHEMATC

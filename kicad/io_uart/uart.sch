@@ -1,42 +1,5 @@
-EESchema Schematic File Version 2
-LIBS:io-rescue
-LIBS:power
-LIBS:device
-LIBS:transistors
-LIBS:conn
-LIBS:linear
-LIBS:regul
-LIBS:74xx
-LIBS:cmos4000
-LIBS:adc-dac
-LIBS:memory
-LIBS:xilinx
-LIBS:microcontrollers
-LIBS:dsp
-LIBS:microchip
-LIBS:analog_switches
-LIBS:motorola
-LIBS:texas
-LIBS:intel
-LIBS:audio
-LIBS:interface
-LIBS:digital-audio
-LIBS:philips
-LIBS:display
-LIBS:cypress
-LIBS:siliconi
-LIBS:opto
-LIBS:atmel
-LIBS:contrib
-LIBS:valves
-LIBS:65xxx
-LIBS:ttl_ieee
-LIBS:mini_din
-LIBS:dallas-rtc
-LIBS:lp2950l
-LIBS:osc
-LIBS:io-cache
-EELAYER 25 0
+EESchema Schematic File Version 4
+EELAYER 30 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
@@ -51,9 +14,11 @@ Comment3 ""
 Comment4 ""
 $EndDescr
 $Comp
-L 16550 U10
+L io-rescue:16550 U10
 U 1 1 5421EE7A
 P 5650 2800
+AR Path="/5421EE7A" Ref="U10"  Part="1" 
+AR Path="/58B9FFEA/5421EE7A" Ref="U10"  Part="1" 
 F 0 "U10" H 5650 2900 70  0000 C CNN
 F 1 "16550" H 5650 2700 70  0000 C CNN
 F 2 "Housings_DIP:DIP-40_W15.24mm_LongPads" H 5650 2800 60  0001 C CNN
@@ -62,7 +27,7 @@ F 3 "" H 5650 2800 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L MAX232 U11
+L io-rescue:MAX232 U11
 U 1 1 54220929
 P 8900 2650
 F 0 "U11" H 8900 3500 70  0000 C CNN
@@ -75,7 +40,7 @@ $EndComp
 Wire Wire Line
 	3550 3000 4650 3000
 $Comp
-L 74LS06 U9
+L io-rescue:74LS06 U9
 U 2 1 54221469
 P 2800 4950
 F 0 "U9" H 2995 5065 60  0000 C CNN
@@ -86,8 +51,8 @@ F 3 "" H 2800 4950 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L 74LS06 U9
-U 1 1 542214FD
+L io-rescue:74LS06 U9
+U 1 1 613C2558
 P 2800 4100
 F 0 "U9" H 2995 4215 60  0000 C CNN
 F 1 "74LS06" H 2990 3975 60  0000 C CNN
@@ -97,10 +62,10 @@ F 3 "" H 2800 4100 60  0000 C CNN
 	-1   0    0    1   
 $EndComp
 Wire Wire Line
-	3250 4950 4050 4950
+	3250 4950 3350 4950
 $Comp
-L R R16
-U 1 1 54221CC2
+L io-rescue:R R16
+U 1 1 613C2559
 P 3350 4650
 F 0 "R16" V 3430 4650 40  0000 C CNN
 F 1 "4k7" V 3357 4651 40  0000 C CNN
@@ -113,8 +78,8 @@ Wire Wire Line
 	3350 4800 3350 4950
 Connection ~ 3350 4950
 $Comp
-L VCC #PWR022
-U 1 1 54221EBE
+L io-rescue:VCC #PWR022
+U 1 1 613C255A
 P 3350 4350
 F 0 "#PWR022" H 3350 4450 30  0001 C CNN
 F 1 "VCC" H 3350 4450 30  0000 C CNN
@@ -124,14 +89,14 @@ F 3 "" H 3350 4350 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	3350 4350 3350 4500
+	3350 4350 3350 4400
 Text GLabel 2200 4950 0    60   Input ~ 0
 /RESET
 Wire Wire Line
 	2200 4950 2350 4950
 $Comp
-L VCC #PWR023
-U 1 1 54222387
+L io-rescue:VCC #PWR023
+U 1 1 613C255B
 P 1900 2900
 F 0 "#PWR023" H 1900 3000 30  0001 C CNN
 F 1 "VCC" H 1900 3000 30  0000 C CNN
@@ -145,8 +110,8 @@ Wire Wire Line
 Wire Wire Line
 	1900 3000 2150 3000
 $Comp
-L GND #PWR024
-U 1 1 54222454
+L io-rescue:GND #PWR024
+U 1 1 613C255C
 P 1900 3400
 F 0 "#PWR024" H 1900 3400 30  0001 C CNN
 F 1 "GND" H 1900 3330 30  0001 C CNN
@@ -173,10 +138,9 @@ Wire Wire Line
 Wire Wire Line
 	4650 3700 3900 3700
 Wire Wire Line
-	3900 3700 3900 3950
-Connection ~ 3900 3900
+	3900 3700 3900 3800
 $Comp
-L GND #PWR025
+L io-rescue:GND #PWR025
 U 1 1 54222AA1
 P 3900 3950
 F 0 "#PWR025" H 3900 3950 30  0001 C CNN
@@ -189,11 +153,11 @@ $EndComp
 Wire Wire Line
 	4300 2700 4650 2700
 Wire Wire Line
-	4300 2550 4300 2700
+	4300 2550 4300 2600
 Wire Wire Line
 	4300 2600 4650 2600
 $Comp
-L VCC #PWR026
+L io-rescue:VCC #PWR026
 U 1 1 54222D33
 P 4300 2550
 F 0 "#PWR026" H 4300 2650 30  0001 C CNN
@@ -204,8 +168,6 @@ F 3 "" H 4300 2550 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 Connection ~ 4300 2600
-Wire Bus Line
-	4400 2200 4400 2450
 Text Label 4050 2200 0    60   ~ 0
 A[0..15]
 Entry Wire Line
@@ -230,8 +192,6 @@ Text Label 4500 2400 0    60   ~ 0
 A1
 Text Label 4500 2500 0    60   ~ 0
 A2
-Wire Bus Line
-	4400 1300 4400 2100
 Entry Wire Line
 	4400 1300 4500 1400
 Entry Wire Line
@@ -285,7 +245,7 @@ D[0..7]
 Wire Wire Line
 	4450 3600 4650 3600
 $Comp
-L VCC #PWR027
+L io-rescue:VCC #PWR027
 U 1 1 54225DED
 P 10250 1750
 F 0 "#PWR027" H 10250 1850 30  0001 C CNN
@@ -296,7 +256,7 @@ F 3 "" H 10250 1750 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L GND #PWR028
+L io-rescue:GND #PWR028
 U 1 1 54225E5B
 P 10150 2950
 F 0 "#PWR028" H 10150 2950 30  0001 C CNN
@@ -309,11 +269,11 @@ $EndComp
 Wire Wire Line
 	9500 2550 10150 2550
 Wire Wire Line
-	10150 2550 10150 2950
+	10150 2550 10150 2850
 Wire Wire Line
 	9500 1950 10250 1950
 $Comp
-L CP C15
+L io-rescue:CP C15
 U 1 1 54226126
 P 7900 2150
 F 0 "C15" H 7900 2250 40  0000 L CNN
@@ -326,7 +286,7 @@ $EndComp
 Wire Wire Line
 	7900 1950 8300 1950
 $Comp
-L CP C18
+L io-rescue:CP C18
 U 1 1 542263C2
 P 10250 2150
 F 0 "C18" H 10250 2250 40  0000 L CNN
@@ -341,7 +301,7 @@ Wire Wire Line
 Wire Wire Line
 	7900 2350 8300 2350
 $Comp
-L CP C16
+L io-rescue:CP C16
 U 1 1 542269E5
 P 7900 2650
 F 0 "C16" H 7900 2750 40  0000 L CNN
@@ -356,8 +316,8 @@ Wire Wire Line
 Wire Wire Line
 	7900 2850 8300 2850
 $Comp
-L CP C17
-U 1 1 54226B00
+L io-rescue:CP C17
+U 1 1 613C2564
 P 9950 2850
 F 0 "C17" H 9950 2950 40  0000 L CNN
 F 1 "1µF" H 9956 2765 40  0000 L CNN
@@ -395,8 +355,8 @@ Wire Wire Line
 Wire Wire Line
 	6900 3000 6650 3000
 $Comp
-L GND #PWR029
-U 1 1 542273C0
+L io-rescue:GND #PWR029
+U 1 1 613C2565
 P 10600 4250
 F 0 "#PWR029" H 10600 4250 30  0001 C CNN
 F 1 "GND" H 10600 4180 30  0001 C CNN
@@ -422,8 +382,8 @@ Wire Wire Line
 Wire Wire Line
 	9850 3350 9850 4200
 $Comp
-L R R17
-U 1 1 5422799C
+L io-rescue:R R17
+U 1 1 613C2566
 P 10250 3500
 F 0 "R17" V 10330 3500 40  0000 C CNN
 F 1 "3k3" V 10257 3501 40  0000 C CNN
@@ -433,13 +393,13 @@ F 3 "" H 10250 3500 30  0000 C CNN
 	-1   0    0    1   
 $EndComp
 Wire Wire Line
-	10250 1750 10250 2000
+	10250 1750 10250 1950
 Wire Wire Line
-	10250 2300 10250 3350
+	10250 2300 10250 2350
 Connection ~ 10250 2350
 $Comp
-L GND #PWR030
-U 1 1 54228E3C
+L io-rescue:GND #PWR030
+U 1 1 613C2567
 P 3250 6600
 F 0 "#PWR030" H 3250 6600 30  0001 C CNN
 F 1 "GND" H 3250 6530 30  0001 C CNN
@@ -449,8 +409,8 @@ F 3 "" H 3250 6600 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L VCC #PWR031
-U 1 1 54228E53
+L io-rescue:VCC #PWR031
+U 1 1 613C2568
 P 2750 6000
 F 0 "#PWR031" H 2750 6100 30  0001 C CNN
 F 1 "VCC" H 2750 6100 30  0000 C CNN
@@ -460,14 +420,14 @@ F 3 "" H 2750 6000 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	2750 6000 3250 6000
+	2750 6000 3000 6000
 Wire Wire Line
-	3250 6400 3250 6600
+	3250 6400 3250 6500
 Wire Wire Line
-	2750 6500 3250 6500
+	2750 6500 3000 6500
 $Comp
-L C C11
-U 1 1 542290E2
+L io-rescue:C C11
+U 1 1 613C2569
 P 2750 6250
 F 0 "C11" H 2750 6350 40  0000 L CNN
 F 1 "100nF" H 2756 6165 40  0000 L CNN
@@ -477,8 +437,8 @@ F 3 "" H 2750 6250 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L C C12
-U 1 1 54229166
+L io-rescue:C C12
+U 1 1 613C256A
 P 3000 6250
 F 0 "C12" H 3000 6350 40  0000 L CNN
 F 1 "100nF" H 3006 6165 40  0000 L CNN
@@ -488,8 +448,8 @@ F 3 "" H 3000 6250 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L CP C13
-U 1 1 54229266
+L io-rescue:CP C13
+U 1 1 613C256B
 P 3250 6250
 F 0 "C13" H 3250 6350 40  0000 L CNN
 F 1 "1µF" H 3256 6165 40  0000 L CNN
@@ -504,10 +464,9 @@ Wire Wire Line
 	2750 6500 2750 6400
 Wire Wire Line
 	3250 6000 3250 6100
-Connection ~ 3250 6000
 Connection ~ 3250 6500
 $Comp
-L OSC X2
+L io-rescue:OSC X2
 U 1 1 54229F47
 P 2850 3150
 F 0 "X2" H 2850 3450 70  0000 C CNN
@@ -518,7 +477,7 @@ F 3 "" H 2850 3150 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L VCC #PWR032
+L io-rescue:VCC #PWR032
 U 1 1 5422A742
 P 5650 950
 F 0 "#PWR032" H 5650 1050 30  0001 C CNN
@@ -529,8 +488,8 @@ F 3 "" H 5650 950 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L GND #PWR033
-U 1 1 5422AA07
+L io-rescue:GND #PWR033
+U 1 1 613C256E
 P 5650 4650
 F 0 "#PWR033" H 5650 4650 30  0001 C CNN
 F 1 "GND" H 5650 4580 30  0001 C CNN
@@ -552,7 +511,7 @@ Wire Wire Line
 Wire Wire Line
 	6650 1600 6750 1600
 Wire Wire Line
-	6750 1000 6750 1800
+	6750 1000 6750 1600
 Connection ~ 6750 1700
 Connection ~ 6750 1600
 Wire Wire Line
@@ -566,8 +525,8 @@ Wire Wire Line
 Wire Wire Line
 	2750 4400 2750 4850
 $Comp
-L GND #PWR034
-U 1 1 5422EB32
+L io-rescue:GND #PWR034
+U 1 1 613C256F
 P 2750 5200
 F 0 "#PWR034" H 2750 5200 30  0001 C CNN
 F 1 "GND" H 2750 5130 30  0001 C CNN
@@ -594,9 +553,11 @@ Wire Wire Line
 Wire Wire Line
 	4050 4200 4650 4200
 $Comp
-L DB9 J1
+L io-rescue:DB9 J1
 U 1 1 54AFFFDE
 P 10050 4650
+AR Path="/54AFFFDE" Ref="J1"  Part="1" 
+AR Path="/58B9FFEA/54AFFFDE" Ref="J1"  Part="1" 
 F 0 "J1" H 10050 5200 70  0000 C CNN
 F 1 "DB9" H 10050 4100 70  0000 C CNN
 F 2 "Connect:DB9MC" H 10050 4650 60  0001 C CNN
@@ -630,17 +591,15 @@ Wire Wire Line
 Wire Wire Line
 	7900 2450 7900 2500
 Wire Wire Line
-	5650 950  5650 1100
+	5650 950  5650 1000
 Wire Wire Line
 	6750 1000 5650 1000
 Connection ~ 5650 1000
 Wire Wire Line
-	5650 4500 5650 4650
+	5650 4500 5650 4550
 Wire Wire Line
 	4400 4550 5650 4550
 Connection ~ 5650 4550
-Wire Bus Line
-	1400 1700 1400 1950
 Text Label 1050 1700 0    60   ~ 0
 A[0..15]
 Entry Wire Line
@@ -661,8 +620,6 @@ Text Label 1500 1900 0    60   ~ 0
 A1
 Text Label 1500 2000 0    60   ~ 0
 A2
-Wire Bus Line
-	1400 800  1400 1600
 Entry Wire Line
 	1400 800  1500 900 
 Entry Wire Line
@@ -737,4 +694,40 @@ Text HLabel 1650 2000 2    60   Input ~ 0
 A2
 Text HLabel 6650 2200 2    60   Output ~ 0
 /OUT1
+Wire Wire Line
+	3350 4950 4050 4950
+Wire Wire Line
+	4300 2600 4300 2700
+Wire Wire Line
+	10250 1950 10250 2000
+Wire Wire Line
+	10150 2850 10150 2950
+Wire Wire Line
+	10250 2350 10250 3350
+Wire Wire Line
+	3250 6500 3250 6600
+Wire Wire Line
+	6750 1700 6750 1800
+Wire Wire Line
+	6750 1600 6750 1700
+Wire Wire Line
+	3000 6000 3250 6000
+Wire Wire Line
+	3000 6500 3250 6500
+Wire Wire Line
+	3350 4400 3350 4500
+Wire Wire Line
+	5650 1000 5650 1100
+Wire Wire Line
+	5650 4550 5650 4650
+Wire Wire Line
+	3900 3800 3900 3950
+Wire Bus Line
+	4400 2200 4400 2450
+Wire Bus Line
+	1400 1700 1400 1950
+Wire Bus Line
+	4400 1300 4400 2100
+Wire Bus Line
+	1400 800  1400 1600
 $EndSCHEMATC

@@ -1,42 +1,5 @@
-EESchema Schematic File Version 2
-LIBS:io-rescue
-LIBS:power
-LIBS:device
-LIBS:transistors
-LIBS:conn
-LIBS:linear
-LIBS:regul
-LIBS:74xx
-LIBS:cmos4000
-LIBS:adc-dac
-LIBS:memory
-LIBS:xilinx
-LIBS:microcontrollers
-LIBS:dsp
-LIBS:microchip
-LIBS:analog_switches
-LIBS:motorola
-LIBS:texas
-LIBS:intel
-LIBS:audio
-LIBS:interface
-LIBS:digital-audio
-LIBS:philips
-LIBS:display
-LIBS:cypress
-LIBS:siliconi
-LIBS:opto
-LIBS:atmel
-LIBS:contrib
-LIBS:valves
-LIBS:65xxx
-LIBS:ttl_ieee
-LIBS:mini_din
-LIBS:dallas-rtc
-LIBS:lp2950l
-LIBS:osc
-LIBS:io-cache
-EELAYER 25 0
+EESchema Schematic File Version 4
+EELAYER 30 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
@@ -51,7 +14,7 @@ Comment3 ""
 Comment4 ""
 $EndDescr
 $Comp
-L CONN_02X25 P5
+L io-rescue:CONN_02X25 P5
 U 1 1 542071FB
 P 5550 3750
 F 0 "P5" H 5550 5050 50  0000 C CNN
@@ -62,7 +25,7 @@ F 3 "" H 5550 3000 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L VCC #PWR010
+L io-rescue:VCC #PWR010
 U 1 1 54207202
 P 5200 2400
 F 0 "#PWR010" H 5200 2500 30  0001 C CNN
@@ -163,7 +126,7 @@ Wire Wire Line
 Wire Wire Line
 	4750 3950 5300 3950
 $Comp
-L GND #PWR011
+L io-rescue:GND #PWR011
 U 1 1 54207240
 P 4700 4100
 F 0 "#PWR011" H 4700 4100 30  0001 C CNN
@@ -178,7 +141,7 @@ Wire Wire Line
 Wire Wire Line
 	4700 4050 5300 4050
 $Comp
-L GND #PWR012
+L io-rescue:GND #PWR012
 U 1 1 54207248
 P 6350 4100
 F 0 "#PWR012" H 6350 4100 30  0001 C CNN
@@ -376,7 +339,7 @@ Entry Wire Line
 Text Label 4750 3750 0    60   ~ 0
 A5
 $Comp
-L GND #PWR013
+L io-rescue:GND #PWR013
 U 1 1 5436D639
 P 5250 5150
 F 0 "#PWR013" H 5250 5150 30  0001 C CNN
@@ -394,7 +357,7 @@ Wire Wire Line
 	5300 4950 5250 4950
 Connection ~ 5250 4950
 $Comp
-L VCC #PWR014
+L io-rescue:VCC #PWR014
 U 1 1 5436D6BC
 P 5950 4550
 F 0 "#PWR014" H 5950 4650 30  0001 C CNN
@@ -422,7 +385,7 @@ Wire Wire Line
 	5950 4750 5800 4750
 Connection ~ 5950 4650
 $Comp
-L VCC #PWR015
+L io-rescue:VCC #PWR015
 U 1 1 5436D806
 P 5150 4550
 F 0 "#PWR015" H 5150 4650 30  0001 C CNN
@@ -453,7 +416,7 @@ NoConn ~ 5300 2750
 Text HLabel 5900 4350 2    60   Input ~ 0
 RESET_TRIG
 $Comp
-L GND #PWR016
+L io-rescue:GND #PWR016
 U 1 1 54BC2AE5
 P 4700 4300
 F 0 "#PWR016" H 4700 4300 30  0001 C CNN

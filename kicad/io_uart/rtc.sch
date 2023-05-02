@@ -1,42 +1,5 @@
-EESchema Schematic File Version 2
-LIBS:io-rescue
-LIBS:power
-LIBS:device
-LIBS:transistors
-LIBS:conn
-LIBS:linear
-LIBS:regul
-LIBS:74xx
-LIBS:cmos4000
-LIBS:adc-dac
-LIBS:memory
-LIBS:xilinx
-LIBS:microcontrollers
-LIBS:dsp
-LIBS:microchip
-LIBS:analog_switches
-LIBS:motorola
-LIBS:texas
-LIBS:intel
-LIBS:audio
-LIBS:interface
-LIBS:digital-audio
-LIBS:philips
-LIBS:display
-LIBS:cypress
-LIBS:siliconi
-LIBS:opto
-LIBS:atmel
-LIBS:contrib
-LIBS:valves
-LIBS:65xxx
-LIBS:ttl_ieee
-LIBS:mini_din
-LIBS:dallas-rtc
-LIBS:lp2950l
-LIBS:osc
-LIBS:io-cache
-EELAYER 25 0
+EESchema Schematic File Version 4
+EELAYER 30 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
@@ -51,7 +14,7 @@ Comment3 ""
 Comment4 ""
 $EndDescr
 $Comp
-L DS1306-RESCUE-io U7
+L io-rescue:DS1306-RESCUE-io U7
 U 1 1 58E7934B
 P 4850 3400
 AR Path="/58E7934B" Ref="U7"  Part="1" 
@@ -64,7 +27,7 @@ F 3 "" H 4850 3400 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L Crystal X1
+L io-rescue:Crystal X1
 U 1 1 58E79352
 P 3750 3100
 F 0 "X1" H 3750 3190 30  0000 C CNN
@@ -75,7 +38,7 @@ F 3 "" H 3750 3100 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L GND #PWR037
+L io-rescue:GND #PWR037
 U 1 1 58E79359
 P 4200 4300
 F 0 "#PWR037" H 4200 4300 30  0001 C CNN
@@ -86,7 +49,7 @@ F 3 "" H 4200 4300 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L GND #PWR038
+L io-rescue:GND #PWR038
 U 1 1 58E7935F
 P 4150 2750
 F 0 "#PWR038" H 4150 2750 30  0001 C CNN
@@ -97,7 +60,7 @@ F 3 "" H 4150 2750 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L VCC #PWR039
+L io-rescue:VCC #PWR039
 U 1 1 58E79365
 P 5650 2500
 F 0 "#PWR039" H 5650 2600 30  0001 C CNN
@@ -108,7 +71,7 @@ F 3 "" H 5650 2500 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L Battery BT1
+L io-rescue:Battery BT1
 U 1 1 58E7936D
 P 3900 2900
 F 0 "BT1" H 3900 3100 50  0000 C CNN
@@ -119,7 +82,7 @@ F 3 "" H 3900 2900 60  0000 C CNN
 	0    1    1    0   
 $EndComp
 $Comp
-L GND #PWR040
+L io-rescue:GND #PWR040
 U 1 1 58E79374
 P 3500 2950
 F 0 "#PWR040" H 3500 2950 30  0001 C CNN
@@ -133,7 +96,7 @@ NoConn ~ 4250 3700
 NoConn ~ 4250 3900
 NoConn ~ 5450 2900
 $Comp
-L 7400 U2
+L io-rescue:7400 U2
 U 4 1 58E7937F
 P 6500 3900
 F 0 "U2" H 6500 3950 60  0000 C CNN

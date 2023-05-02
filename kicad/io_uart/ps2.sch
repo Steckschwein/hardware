@@ -1,42 +1,5 @@
-EESchema Schematic File Version 2
-LIBS:io-rescue
-LIBS:power
-LIBS:device
-LIBS:transistors
-LIBS:conn
-LIBS:linear
-LIBS:regul
-LIBS:74xx
-LIBS:cmos4000
-LIBS:adc-dac
-LIBS:memory
-LIBS:xilinx
-LIBS:microcontrollers
-LIBS:dsp
-LIBS:microchip
-LIBS:analog_switches
-LIBS:motorola
-LIBS:texas
-LIBS:intel
-LIBS:audio
-LIBS:interface
-LIBS:digital-audio
-LIBS:philips
-LIBS:display
-LIBS:cypress
-LIBS:siliconi
-LIBS:opto
-LIBS:atmel
-LIBS:contrib
-LIBS:valves
-LIBS:65xxx
-LIBS:ttl_ieee
-LIBS:mini_din
-LIBS:dallas-rtc
-LIBS:lp2950l
-LIBS:osc
-LIBS:io-cache
-EELAYER 25 0
+EESchema Schematic File Version 4
+EELAYER 30 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
@@ -51,7 +14,7 @@ Comment3 ""
 Comment4 ""
 $EndDescr
 $Comp
-L VCC #PWR041
+L io-rescue:VCC #PWR041
 U 1 1 58E7EA2A
 P 4150 1650
 F 0 "#PWR041" H 4150 1750 30  0001 C CNN
@@ -64,7 +27,7 @@ $EndComp
 Text GLabel 5450 3300 2    60   Output ~ 0
 /NMI
 $Comp
-L ATMEGA8-P IC1
+L io-rescue:ATMEGA8-P IC1
 U 1 1 58E7EA33
 P 4150 3600
 F 0 "IC1" H 3400 4900 40  0000 L BNN
@@ -75,7 +38,7 @@ F 3 "" H 4150 3600 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L GND #PWR042
+L io-rescue:GND #PWR042
 U 1 1 58E7EA3A
 P 8300 4800
 F 0 "#PWR042" H 8300 4800 30  0001 C CNN
@@ -94,7 +57,7 @@ NoConn ~ 5150 3600
 NoConn ~ 5150 3700
 NoConn ~ 5150 4400
 $Comp
-L CONN_02X03 P3
+L io-rescue:CONN_02X03 P3
 U 1 1 58E7EA4D
 P 6300 3000
 F 0 "P3" H 6300 3200 50  0000 C CNN
@@ -105,7 +68,7 @@ F 3 "" H 6300 1800 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L GND #PWR043
+L io-rescue:GND #PWR043
 U 1 1 58E7EA54
 P 6700 3300
 F 0 "#PWR043" H 6700 3300 30  0001 C CNN
@@ -116,7 +79,7 @@ F 3 "" H 6700 3300 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L MINI_DIN_6 P4
+L io-rescue:MINI_DIN_6 P4
 U 1 1 58E7EA5A
 P 7450 4250
 F 0 "P4" H 7050 4775 50  0000 L BNN
@@ -244,7 +207,7 @@ Text GLabel 5650 3400 2    60   Input ~ 0
 Wire Wire Line
 	5150 3400 5650 3400
 $Comp
-L GND #PWR044
+L io-rescue:GND #PWR044
 U 1 1 58E7EAAB
 P 4150 5150
 F 0 "#PWR044" H 4150 5150 30  0001 C CNN
@@ -273,7 +236,7 @@ Wire Wire Line
 Wire Wire Line
 	5150 4600 6500 4600
 $Comp
-L CONN_01X03 P?
+L io-rescue:CONN_01X03 P?
 U 1 1 5A100B9F
 P 5700 3900
 F 0 "P?" H 5700 4100 50  0000 C CNN
@@ -288,7 +251,7 @@ Wire Wire Line
 Wire Wire Line
 	5150 4000 5500 4000
 $Comp
-L GND #PWR045
+L io-rescue:GND #PWR045
 U 1 1 5A100CA1
 P 5350 3800
 F 0 "#PWR045" H 5350 3800 30  0001 C CNN

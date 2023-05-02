@@ -1,42 +1,5 @@
-EESchema Schematic File Version 2
-LIBS:io-rescue
-LIBS:power
-LIBS:device
-LIBS:transistors
-LIBS:conn
-LIBS:linear
-LIBS:regul
-LIBS:74xx
-LIBS:cmos4000
-LIBS:adc-dac
-LIBS:memory
-LIBS:xilinx
-LIBS:microcontrollers
-LIBS:dsp
-LIBS:microchip
-LIBS:analog_switches
-LIBS:motorola
-LIBS:texas
-LIBS:intel
-LIBS:audio
-LIBS:interface
-LIBS:digital-audio
-LIBS:philips
-LIBS:display
-LIBS:cypress
-LIBS:siliconi
-LIBS:opto
-LIBS:atmel
-LIBS:contrib
-LIBS:valves
-LIBS:65xxx
-LIBS:ttl_ieee
-LIBS:mini_din
-LIBS:dallas-rtc
-LIBS:lp2950l
-LIBS:osc
-LIBS:io-cache
-EELAYER 25 0
+EESchema Schematic File Version 4
+EELAYER 30 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
@@ -51,7 +14,7 @@ Comment3 ""
 Comment4 ""
 $EndDescr
 $Comp
-L DB9 Port1
+L io-rescue:DB9 Port1
 U 1 1 54318EBC
 P 10750 2900
 F 0 "Port1" H 10750 3450 70  0000 C CNN
@@ -62,7 +25,7 @@ F 3 "" H 10750 2900 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L DB9 Port2
+L io-rescue:DB9 Port2
 U 1 1 54318F7A
 P 10750 4400
 F 0 "Port2" H 10750 4950 70  0000 C CNN
@@ -85,7 +48,7 @@ J_Fire
 Text Notes 4950 1350 0    60   ~ 0
 1,2V U_Fwd. + 0,7V U_Sperr + 0,1V U_CE = 2V \n5V - 2V = 3V --> R=U/I \n-> R_max = 3V/0,005A I_Fwd. = 600 Ohm\n-> R_min = 3V/0,05A I_CE_max = 60 Ohm
 $Comp
-L 7400 U2
+L io-rescue:7400 U2
 U 1 1 58E419A1
 P 2400 3850
 F 0 "U2" H 2400 3900 50  0000 C CNN
@@ -96,7 +59,7 @@ F 3 "" H 2400 3850 50  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L 7400 U2
+L io-rescue:7400 U2
 U 2 1 58E41A5A
 P 3750 3200
 F 0 "U2" H 3750 3250 50  0000 C CNN
@@ -107,7 +70,7 @@ F 3 "" H 3750 3200 50  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L 7400 U2
+L io-rescue:7400 U2
 U 3 1 58E41B17
 P 3750 3750
 F 0 "U2" H 3750 3800 50  0000 C CNN
@@ -118,7 +81,7 @@ F 3 "" H 3750 3750 50  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L 74LS244 U3
+L io-rescue:74LS244 U3
 U 1 1 58E41D13
 P 6650 3800
 F 0 "U3" H 6700 3600 50  0000 C CNN
@@ -129,7 +92,7 @@ F 3 "" H 6650 3800 50  0000 C CNN
 	-1   0    0    1   
 $EndComp
 $Comp
-L 74125 U4
+L io-rescue:74125 U4
 U 1 1 58E447D4
 P 6600 2800
 F 0 "U4" H 6850 3050 50  0000 L BNN
@@ -140,7 +103,7 @@ F 3 "" H 6600 2800 60  0000 C CNN
 	-1   0    0    1   
 $EndComp
 $Comp
-L 74125 U4
+L io-rescue:74125 U4
 U 2 1 58E44BAD
 P 6600 4800
 F 0 "U4" H 6850 5050 50  0000 L BNN
@@ -151,7 +114,7 @@ F 3 "" H 6600 4800 60  0000 C CNN
 	-1   0    0    1   
 $EndComp
 $Comp
-L GND #PWR035
+L io-rescue:GND #PWR035
 U 1 1 58E4818B
 P 8500 5000
 F 0 "#PWR035" H 8500 4750 50  0001 C CNN
@@ -166,7 +129,7 @@ Text HLabel 2800 3450 0    60   Input ~ 0
 Text HLabel 1600 3750 0    60   Input ~ 0
 JOYPORT_SELECT
 $Comp
-L VCC #PWR036
+L io-rescue:VCC #PWR036
 U 1 1 58E55481
 P 8400 2150
 F 0 "#PWR036" H 8400 2000 50  0001 C CNN
@@ -177,7 +140,7 @@ F 3 "" H 8400 2150 50  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L RR8 RR1
+L io-rescue:RR8 RR1
 U 1 1 597CB088
 P 8950 2000
 F 0 "RR1" H 9000 2550 50  0000 C CNN
@@ -188,7 +151,7 @@ F 3 "" H 8950 2000 50  0000 C CNN
 	0    -1   -1   0   
 $EndComp
 $Comp
-L R R20
+L io-rescue:R R20
 U 1 1 597DB3E5
 P 8600 5400
 F 0 "R20" V 8680 5400 50  0000 C CNN
@@ -199,7 +162,7 @@ F 3 "" H 8600 5400 50  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L R R21
+L io-rescue:R R21
 U 1 1 597DB45C
 P 8700 5400
 F 0 "R21" V 8780 5400 50  0000 C CNN
