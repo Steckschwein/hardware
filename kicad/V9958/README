@@ -1,4 +1,0 @@
-OBSOLETE
-
-This is the first prototype board for the new video chip V9958.
-This board has been superseded by ../V9958_OPL2 which adds another 64k DRAM as extended RAM and the OPL2 sound chip
