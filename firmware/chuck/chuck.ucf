@@ -31,7 +31,7 @@ NET EXT_a<16>     LOC = P84;
 NET EXT_a<17>     LOC = P1;
 NET EXT_a<18>     LOC = P2;
 #
-NET CS_OPL   	  	LOC = P35;
+NET CS_OPL   	  	LOC = P53;
 NET CS_VIA        LOC = P51;
 NET CS_SLOT1      LOC = P50;
 NET CS_SLOT0      LOC = P39;
