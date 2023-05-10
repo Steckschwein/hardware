@@ -3068,7 +3068,6 @@
     (uuid fff6b87d-5901-4f3c-b717-5684aef428e2)
   )
 
-  (no_connect (at 166.37 133.35) (uuid 1066b8fe-d861-42cc-a550-d17bbb6e1cba))
   (no_connect (at 166.37 107.95) (uuid 11bdf754-bee8-4ff5-9c2d-8aca6317e8a6))
   (no_connect (at 30.48 44.45) (uuid 172aec7c-42d3-4a6a-af19-18812da7f8f1))
   (no_connect (at 166.37 67.31) (uuid 192ef20e-c76a-491d-83e3-7c8bcc06393f))
@@ -6670,6 +6669,10 @@
   (label "CPU_D7" (at 264.16 87.63 180) (fields_autoplaced)
     (effects (font (size 1.27 1.27)) (justify right bottom))
     (uuid 4660b09d-9f6c-4f1a-8a91-520aeb70e83e)
+  )
+  (label "CPU_R~{W}" (at 166.37 133.35 0) (fields_autoplaced)
+    (effects (font (size 1.27 1.27)) (justify left bottom))
+    (uuid 496c8a20-6f98-4d4d-99af-035163e049c2)
   )
   (label "BUF_A3" (at 289.56 133.35 0) (fields_autoplaced)
     (effects (font (size 1.27 1.27)) (justify left bottom))
