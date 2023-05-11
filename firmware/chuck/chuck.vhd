@@ -32,16 +32,16 @@ Entity chuck is
 
       -- chip select for peripherals
       CS_UART   : out std_logic;
-    --  CS_UART2  : out std_logic;
       CS_VIA    : out std_logic;
-      CSR_VDP    : out std_logic;  -- VDP read
-		CSW_VDP    : out std_logic;  -- VDP write
-		
+      CSR_VDP   : out std_logic;  -- VDP read
+		CSW_VDP   : out std_logic;  -- VDP write
       CS_OPL    : out std_logic;  -- OPL2
-      
+		
+      -- chip select for expansion ports
 		CS_SLOT0	 : out std_logic;
 		CS_SLOT1	 : out std_logic;
 		
+		-- chip select for data bus buffer
 		CS_BUFFER : out std_logic  -- Data bus transceiver enable
 		
    );
