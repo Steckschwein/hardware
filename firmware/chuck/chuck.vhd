@@ -130,7 +130,7 @@ begin
          d_out(6 downto 5) <= "00";
          d_out(4 downto 0) <= INT_banktable(conv_integer(reg_addr))(4 downto 0);
 		else
-		   d_out <= "00000000";
+--		   d_out <= "00000000";
       end if;
    end process;
 
