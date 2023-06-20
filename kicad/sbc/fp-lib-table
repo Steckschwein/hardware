@@ -1,8 +1,4 @@
 (fp_lib_table
   (version 7)
-  (lib (name "SDIP")(type "KiCad")(uri "/home/dommas/steckschwein-hardware/kicad/lbr/SDIP.pretty")(options "")(descr ""))
-  (lib (name "W_CONN_AV")(type "KiCad")(uri "/home/dommas/steckschwein-hardware/kicad/lbr/w_conn_av.pretty")(options "")(descr ""))
-  (lib (name "DIN")(type "KiCad")(uri "/home/dommas/steckschwein-hardware/kicad/lbr/DIN.pretty")(options "")(descr ""))
-  (lib (name "minidin")(type "KiCad")(uri "${KIPRJMOD}/minidin.pretty")(options "")(descr ""))
   (lib (name "steckschwein")(type "KiCad")(uri "${KIPRJMOD}/lib/fp/steckschwein.pretty")(options "")(descr ""))
 )
