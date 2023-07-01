@@ -151,34 +151,36 @@ begin
    process_genclk: process(CLKIN, reset_sig)
    begin
       if (reset_sig = '1') then
-         clk <= '0';
+         clk_div <= "0000";
       elsif (rising_edge(CLKIN)) then
-         clk <= NOT (clk);
+         clk_div <= clk_div + 1;
       end if;
    end process;
+	
+	clk <= clk_div(2) AND '1'; 
    
    -- wait state generator
-   process(clk, clk_div, rdy_en)
-   begin
-      if(rdy_en) then
-         if (rising_edge(clk)) then
-            clk_div <= clk_div + '1';
-         end if;
-      else
-         clk_div <= (others => '0');
-      end if;
-   end process;
+   --process(clk, clk_div, rdy_en)
+   --begin
+   --   if(rdy_en) then
+    --     if (rising_edge(clk)) then
+   --         clk_div <= clk_div + '1';
+   --      end if;
+   --   else
+   --      clk_div <= (others => '0');
+   --   end if;
+   --end process;
 
    -- io area decoding
    --   $0200 - $020f
-   sig_cs_uart   <= '1' when io_select = '1' and CPU_a(6 downto 4) = "000" else '0';
+   sig_cs_uart   <= '1' when clk = '1' and io_select = '1' and CPU_a(6 downto 4) = "000" else '0';
 
    --   $0210 - $021f
    sig_cs_via     <= '1' when io_select = '1' and CPU_a(6 downto 4) = "001" else '0';
 
    --   $0220 - $022f
-   sig_csr_vdp     <= '1' when io_select = '1' and CPU_rw = '1' and CPU_a(6 downto 4) = "010" else '0';
-   sig_csw_vdp     <= '1' when io_select = '1' and CPU_rw = '0' and CPU_a(6 downto 4) = "010" else '0';
+   sig_csr_vdp     <= '1' when clk = '1' and io_select = '1' and CPU_rw = '1' and CPU_a(6 downto 4) = "010" else '0';
+   sig_csw_vdp     <= '1' when clk = '1' and io_select = '1' and CPU_rw = '0' and CPU_a(6 downto 4) = "010" else '0';
 
    --   $0240 - $024f
    sig_cs_opl     <= '1' when io_select = '1' and CPU_a(6 downto 4) = "100" else '0';
@@ -218,7 +220,7 @@ begin
    CS_BUFFER   <= NOT(sig_cs_buffer);
 
 
-   CPU_rdy     <= '0' when (clk_div <= 4 and rdy_en) else 'Z';
+   CPU_rdy     <= 'Z'; --'0' when (clk_div <= 4 and rdy_en) else 'Z';
 
    OE          <= read_sig;
    WE          <= write_sig;
