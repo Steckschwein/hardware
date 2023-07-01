@@ -55,6 +55,7 @@ Architecture chuck_arch of chuck is
    signal INT_banktable : t_banktable;
 
    signal clk: std_logic;
+   
    signal clk_div: std_logic_vector(3 downto 0);
    signal rdy_en: boolean;
 
@@ -86,7 +87,7 @@ Architecture chuck_arch of chuck is
 
 begin
    -- inputs
-   clk         <= CLKIN;
+   --clk         <= CLKIN;
 
    reset_sig   <= not RESET;
 
@@ -99,7 +100,7 @@ begin
 
    -- helpers
 
-   rdy_en      <= (sig_cs_rom or sig_csw_vdp or sig_csr_vdp or sig_cs_opl) = '1';
+   rdy_en      <= false; -- (sig_cs_rom or sig_csw_vdp or sig_csr_vdp or sig_cs_opl) = '1';
 
    -- $0200 - $027x
    io_select   <= '1' when CPU_a(15 downto 7) = "000000100" else '0';
@@ -129,8 +130,6 @@ begin
          d_out(7)          <= INT_banktable(conv_integer(reg_addr))(5);
          d_out(6 downto 5) <= "00";
          d_out(4 downto 0) <= INT_banktable(conv_integer(reg_addr))(4 downto 0);
-		else
---		   d_out <= "00000000";
       end if;
    end process;
 
@@ -148,6 +147,16 @@ begin
       end if;
    end process;
 
+   --clock divider
+   process_genclk: process(CLKIN, reset_sig)
+   begin
+      if (reset_sig = '1') then
+         clk <= '0';
+      elsif (rising_edge(CLKIN)) then
+         clk <= NOT (clk);
+      end if;
+   end process;
+   
    -- wait state generator
    process(clk, clk_div, rdy_en)
    begin
@@ -180,13 +189,14 @@ begin
 	sig_cs_slot1     <= '1' when io_select = '1' and CPU_a(6 downto 4) = "110" else '0';
 	
 	
-	sig_cs_buffer 	<= '1' when sig_csw_vdp = '1'
+	sig_cs_buffer 	<= '1' when 
+                             sig_csw_vdp = '1'
 									or sig_csr_vdp = '1'
-									or sig_cs_opl = '1' 
-									or sig_cs_via = '1' 
-									or sig_cs_uart = '1' 
-									or sig_cs_slot0 = '1' 
-									or sig_cs_slot1 = '1' 
+                           or sig_cs_opl = '1' 
+									-- or sig_cs_via = '1' 
+									or sig_cs_uart = '1'
+--									or sig_cs_slot0 = '1' 
+	--								or sig_cs_slot1 = '1' 
 								else '0';
 
    -- extended address bus
