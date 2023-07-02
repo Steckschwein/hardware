@@ -2003,7 +2003,7 @@
     (property "Value" "SD_Card" (at 175.26 53.205 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Footprint" "" (at 175.26 67.31 0)
+    (property "Footprint" "steckschwein:SD_Kyocera_145638009511859+" (at 175.26 67.31 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "http://portal.fciconnect.com/Comergent//fci/drawing/10067847.pdf" (at 175.26 67.31 0)
