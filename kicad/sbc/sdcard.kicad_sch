@@ -1184,7 +1184,7 @@
     (uuid f46afbd5-8673-43b5-8e9c-d198c858cd72)
   )
 
-  (hierarchical_label "SPI_SS1" (shape input) (at 45.72 59.69 180) (fields_autoplaced)
+  (hierarchical_label "SPI_SS" (shape input) (at 45.72 59.69 180) (fields_autoplaced)
     (effects (font (size 1.524 1.524)) (justify right))
     (uuid 23574d00-6a2f-4a27-b1a6-2798e957df32)
   )
