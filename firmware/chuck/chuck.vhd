@@ -50,42 +50,42 @@ end;
 
 Architecture chuck_arch of chuck is
 
-   -- calculation constant
-   constant HW_CLOCK:      integer := 16; -- board input clock (oszi)
-   constant SYS_CLOCK:     integer := 2; -- desired system clock (cpu)
+   -- calculation constants
+   constant HW_CLOCK:         integer := 16; -- board input clock (oszi)
+   constant SYS_CLOCK:        integer := 2; -- desired system clock (cpu)
    
-   constant CLOCK_DIV:        integer := HW_CLOCK/2/SYS_CLOCK; -- clock divider
-   constant CLOCK_DIV_BITS:   integer := integer(log2(real(HW_CLOCK/2)))-1; -- amount of bits for the clock divider
+   constant CLOCK_DIV:        integer := HW_CLOCK/2; -- clock resolution from input clock - clk_div counter is always /2
+   constant CLOCK_DIV_BITS:   integer := integer(log2(real(CLOCK_DIV))); -- amount of bits required to build the sys clock divider
+   constant SYS_CLOCK_DIV:    integer := CLOCK_DIV/SYS_CLOCK; -- clock divider to get the desired sys clock
 
    -- define bank table type array of 6 bit vectors
-   type t_banktable is array (0 to 3) of std_logic_vector(5 downto 0);
-   signal INT_banktable : t_banktable;
+  type t_banktable is array (0 to 3) of std_logic_vector(5 downto 0);
+  signal INT_banktable : t_banktable;
 
-   signal clk: std_logic;
+  signal clk: std_logic;
 
-   signal clk_div: std_logic_vector(CLOCK_DIV_BITS downto 0); -- n bit counter
-   signal rdy_en: boolean;
+  signal clk_div: std_logic_vector((CLOCK_DIV_BITS-1) downto 0); -- n bit counter
+  signal rdy_en: boolean;
 
-   signal d_out: std_logic_vector(7 downto 0);
-   signal d_in: std_logic_vector(7 downto 0);
+  signal d_out: std_logic_vector(7 downto 0);
+  signal d_in: std_logic_vector(7 downto 0);
 
-   signal reg_select: std_logic;
-   signal io_select: std_logic;
-   signal reg_addr: std_logic_vector(1 downto 0);
-   signal reg_read: std_logic;
+  signal reg_select: std_logic;
+  signal io_select: std_logic;
+  signal reg_addr: std_logic_vector(1 downto 0);
+  signal reg_read: std_logic;
 
-   signal read_sig: std_logic;
-   signal write_sig: std_logic;
-   signal reset_sig: std_logic;
+  signal read_sig: std_logic;
+  signal write_sig: std_logic;
+  signal reset_sig: std_logic;
 
-	signal sig_acs: std_logic; -- access time frame
+  signal sig_acs: std_logic; -- access time frame
 
-
-   signal sig_cs_rom: std_logic;
-   signal sig_csr_vdp: std_logic;
+  signal sig_cs_rom: std_logic;
+  signal sig_csr_vdp: std_logic;
 	signal sig_csw_vdp: std_logic;
-   signal sig_cs_vdp: std_logic;
-   signal sig_cs_opl: std_logic;
+  signal sig_cs_vdp: std_logic;
+  signal sig_cs_opl: std_logic;
 	signal sig_cs_via: std_logic;
 	signal sig_cs_uart: std_logic;
 	signal sig_cs_slot0: std_logic;
@@ -168,9 +168,9 @@ begin
       end if;
    end process;
 
-	clk <= clk_div(integer(log2(real(CLOCK_DIV))));
+  clk <= clk_div(integer(log2(real(SYS_CLOCK_DIV)))-1);
 
-   sig_acs <= '1' when conv_integer(clk_div)/CLOCK_DIV < (SYS_CLOCK-1) else '0';
+  sig_acs <= '1' when conv_integer(clk_div) < (CLOCK_DIV-1) else '0';
 
    -- wait state generator
    --process(clk, clk_div, rdy_en)
