@@ -84,6 +84,8 @@ Architecture chuck_arch of chuck is
    signal sig_cs_rom: std_logic;
    signal sig_csr_vdp: std_logic;
    signal sig_csw_vdp: std_logic;
+   signal sig_read_acs: std_logic;
+   signal sig_write_acs: std_logic;
    signal sig_cs_vdp: std_logic;
    signal sig_cs_opl: std_logic;
    signal sig_cs_via: std_logic;
@@ -101,13 +103,17 @@ begin
 
    CPU_phi2    <= clk;
 
-   read_sig    <= CPU_rw NAND clk;
-   write_sig   <= (NOT CPU_rw) NAND clk;
+   read_sig    <= CPU_rw NAND clk;   -- TODO FIXME - signal, should be positive logic
+   write_sig   <= (NOT CPU_rw) NAND clk;  -- TODO FIXME - signal, should be positive logic
 
-   R				<= CPU_rw nand sig_acs;
-   W				<= (not CPU_rw) nand sig_acs;
+   sig_read_acs   <= CPU_rw and sig_acs;
+   sig_write_acs  <= not(CPU_rw) and sig_acs;
 
    -- helpers
+   clk <= clk_div(integer(log2(real(SYS_CLOCK_DIV)))-1);
+
+   sig_acs <= '1' when conv_integer(clk_div) < (CLOCK_DIV-2) else '0';
+
 
    rdy_en      <= false; -- (sig_cs_rom or sig_cs_vdp or sig_cs_opl) = '1';
 
@@ -168,10 +174,6 @@ begin
       end if;
    end process;
 
-  clk <= clk_div(integer(log2(real(SYS_CLOCK_DIV)))-1);
-
-  sig_acs <= '1' when conv_integer(clk_div) < (CLOCK_DIV-2) else '0';
-
    -- wait state generator
    --process(clk, clk_div, rdy_en)
    --begin
@@ -193,8 +195,8 @@ begin
 
    --   $0220 - $022f
    sig_cs_vdp        <= '1' when io_select = '1' and CPU_a(6 downto 4) = "010" else '0';
-   sig_csr_vdp       <= '1' when sig_acs = '1' and sig_cs_vdp = '1' and CPU_rw = '1' else '0';
-   sig_csw_vdp       <= '1' when sig_acs = '1' and sig_cs_vdp = '1' and CPU_rw = '0' else '0';
+   sig_csr_vdp       <= '1' when sig_cs_vdp = '1' and sig_read_acs = '1' else '0';
+   sig_csw_vdp       <= '1' when sig_cs_vdp = '1' and sig_write_acs = '1' else '0';
 
    --   $0240 - $024f
    sig_cs_opl        <= '1' when io_select = '1' and CPU_a(6 downto 4) = "100" else '0';
@@ -233,6 +235,8 @@ begin
 
    CPU_rdy     <= 'Z'; --'0' when (clk_div <= 4 and rdy_en) else 'Z';
 
+   R           <= NOT(sig_read_acs);
+   W           <= NOT(sig_write_acs);
    OE          <= read_sig;
    WE          <= write_sig;
 
