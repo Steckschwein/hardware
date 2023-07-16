@@ -51,12 +51,11 @@ end;
 Architecture chuck_arch of chuck is
 
    -- calculation constants
-   constant HW_CLOCK:         integer := 32; -- board input clock (oszi)
-   constant SYS_CLOCK:        integer := 2; -- desired system clock (cpu)
+   constant HW_CLOCK:         integer := 16; -- board input clock (oszi)
+   constant SYS_CLOCK:        integer := 8; -- desired system clock (cpu)
    
-   constant CLOCK_DIV:        integer := HW_CLOCK/2; -- clock resolution from input clock - clk_div counter is always /2
+   constant CLOCK_DIV:        integer := HW_CLOCK/SYS_CLOCK; -- clock divider to get the desired sys clock
    constant CLOCK_DIV_BITS:   integer := integer(log2(real(CLOCK_DIV))); -- amount of bits required to build the sys clock divider
-   constant SYS_CLOCK_DIV:    integer := CLOCK_DIV/SYS_CLOCK; -- clock divider to get the desired sys clock
 
    -- define bank table type array of 6 bit vectors
    type t_banktable is array (0 to 3) of std_logic_vector(5 downto 0);
@@ -64,7 +63,9 @@ Architecture chuck_arch of chuck is
 
    signal clk: std_logic;
 
+   signal ws_cnt: std_logic_vector(1 downto 0); -- ws 2 bit counter
    signal clk_div: std_logic_vector((CLOCK_DIV_BITS-1) downto 0); -- n bit counter
+--   signal clk_div: std_logic_vector(2 downto 0); -- n bit counter
    signal rdy_en: boolean;
 
    signal d_out: std_logic_vector(7 downto 0);
@@ -97,25 +98,23 @@ Architecture chuck_arch of chuck is
 
 begin
    -- inputs
-   --clk         <= CLKIN;
 
    reset_sig   <= not RESET;
 
    CPU_phi2    <= clk;
 
-   read_sig    <= CPU_rw NAND clk;   -- TODO FIXME - signal, should be positive logic
-   write_sig   <= (NOT CPU_rw) NAND clk;  -- TODO FIXME - signal, should be positive logic
+   read_sig    <= CPU_rw and clk;   -- TODO FIXME - signal, should be positive logic
+   write_sig   <= not(CPU_rw) and clk;  -- TODO FIXME - signal, should be positive logic
 
    sig_read_acs   <= CPU_rw and sig_acs;
    sig_write_acs  <= not(CPU_rw) and sig_acs;
 
    -- helpers
-   clk <= clk_div(integer(log2(real(SYS_CLOCK_DIV)))-1);
+   clk <= clk_div(integer(log2(real(CLOCK_DIV)))-1);
 
-   sig_acs <= '1' when conv_integer(clk_div) < (CLOCK_DIV-2) else '0';
+   sig_acs <= '1' when rdy_en else '0';
 
-
-   rdy_en      <= false; -- (sig_cs_rom or sig_cs_vdp or sig_cs_opl) = '1';
+   rdy_en      <= (sig_cs_rom or sig_cs_vdp or sig_cs_opl) = '1';
 
    -- $0200 - $027x
    io_select   <= '1' when CPU_a(15 downto 7) = "000000100" else '0';
@@ -165,26 +164,26 @@ begin
    end process;
 
    --clock divider
-   process_genclk: process(CLKIN, reset_sig)
+   process_genclk: process(CLKIN, clk_div, reset_sig)
    begin
-      if (reset_sig = '1') then
-         clk_div <= (others => '0');
+      if reset_sig = '1' then -- TODO or conv_integer(clk_div) = CLOCK_DIV then
+         clk_div <= (others => '1');
       elsif rising_edge(CLKIN) then
-         clk_div <= clk_div + 1;
+         clk_div <= clk_div - 1;
       end if;
    end process;
 
    -- wait state generator
-   --process(clk, clk_div, rdy_en)
-   --begin
-   --   if(rdy_en) then
-    --     if (rising_edge(clk)) then
-   --         clk_div <= clk_div + '1';
-   --      end if;
-   --   else
-   --      clk_div <= (others => '0');
-   --   end if;
-   --end process;
+   process(clk, ws_cnt, rdy_en)
+   begin
+      if(rdy_en) then
+         if (rising_edge(clk)) then
+            ws_cnt <= ws_cnt - '1';
+          end if;
+      else
+         ws_cnt <= (others => '1');
+      end if;
+   end process;
 
    -- io area decoding
    --   $0200 - $020f
@@ -233,11 +232,11 @@ begin
    CS_BUFFER   <= NOT(sig_cs_buffer);
 
 
-   CPU_rdy     <= 'Z'; --'0' when (clk_div <= 4 and rdy_en) else 'Z';
+   CPU_rdy     <= '0' when rdy_en and conv_integer(ws_cnt) /= 0 else '1';
 
    R           <= NOT(sig_read_acs);
    W           <= NOT(sig_write_acs);
-   OE          <= read_sig;
-   WE          <= write_sig;
+   OE          <= not(read_sig);
+   WE          <= not(write_sig);
 
 End chuck_arch;
