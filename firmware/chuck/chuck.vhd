@@ -65,7 +65,6 @@ Architecture chuck_arch of chuck is
 
    signal ws_cnt: std_logic_vector(1 downto 0); -- ws 2 bit counter
    signal clk_div: std_logic_vector((CLOCK_DIV_BITS-1) downto 0); -- n bit counter
---   signal clk_div: std_logic_vector(2 downto 0); -- n bit counter
    signal rdy_en: boolean;
 
    signal d_out: std_logic_vector(7 downto 0);
@@ -76,9 +75,9 @@ Architecture chuck_arch of chuck is
    signal reg_addr: std_logic_vector(1 downto 0);
    signal reg_read: std_logic;
 
-   signal read_sig: std_logic;
-   signal write_sig: std_logic;
-   signal reset_sig: std_logic;
+   signal sig_read: std_logic;
+   signal sig_write: std_logic;
+   signal sig_reset: std_logic;
 
    signal sig_acs: std_logic; -- access time frame
 
@@ -99,13 +98,13 @@ Architecture chuck_arch of chuck is
 begin
    -- inputs
 
-   reset_sig   <= not RESET;
+   sig_reset      <= not RESET;
 
-   CPU_phi2    <= clk;
+   CPU_phi2       <= clk;
 
-   read_sig    <= CPU_rw and clk;   -- TODO FIXME - signal, should be positive logic
-   write_sig   <= not(CPU_rw) and clk;  -- TODO FIXME - signal, should be positive logic
-
+   sig_read       <= CPU_rw and clk;
+   sig_write      <= not(CPU_rw) and clk;
+   
    sig_read_acs   <= CPU_rw and sig_acs;
    sig_write_acs  <= not(CPU_rw) and sig_acs;
 
@@ -150,9 +149,9 @@ begin
    end process;
 
    -- cpu write to CPLD register
-   cpu_write: process(reset_sig, clk, reg_select, reg_addr, CPU_rw, d_in)
+   cpu_write: process(sig_reset, clk, reg_select, reg_addr, CPU_rw, d_in)
    begin
-      if (reset_sig = '1') then
+      if (sig_reset = '1') then
          INT_banktable(0) <= "000000"; -- Bank $00
          INT_banktable(1) <= "000001"; -- Bank $01
          INT_banktable(2) <= "100000"; -- Bank $80 (ROM)
@@ -164,9 +163,9 @@ begin
    end process;
 
    --clock divider
-   process_genclk: process(CLKIN, clk_div, reset_sig)
+   process_genclk: process(CLKIN, sig_reset)
    begin
-      if reset_sig = '1' then -- TODO or conv_integer(clk_div) = CLOCK_DIV then
+      if sig_reset = '1' then
          clk_div <= (others => '1');
       elsif rising_edge(CLKIN) then
          clk_div <= clk_div - 1;
@@ -174,7 +173,7 @@ begin
    end process;
 
    -- wait state generator
-   process(clk, ws_cnt, rdy_en)
+   process(clk, rdy_en)
    begin
       if(rdy_en) then
          if (rising_edge(clk)) then
@@ -236,7 +235,7 @@ begin
 
    R           <= NOT(sig_read_acs);
    W           <= NOT(sig_write_acs);
-   OE          <= not(read_sig);
-   WE          <= not(write_sig);
+   OE          <= not(sig_read);
+   WE          <= not(sig_write);
 
 End chuck_arch;
