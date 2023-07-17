@@ -230,8 +230,8 @@ begin
 
    CS_BUFFER   <= NOT(sig_cs_buffer);
 
-
-   CPU_rdy     <= '0' when rdy_en and conv_integer(ws_cnt) /= 0 else '1';
+   -- C_vdp = 50pF, C_cpld = 10pF, t=12ns, R = (t / 0.4 x CT) = 12E-9s / (0.4 * 60E-12F) = 500Ohm
+   CPU_rdy     <= '0' when rdy_en and conv_integer(ws_cnt) /= 0 else 'Z';
 
    R           <= NOT(sig_read_acs);
    W           <= NOT(sig_write_acs);
