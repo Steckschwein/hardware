@@ -79,13 +79,10 @@ Architecture chuck_arch of chuck is
    signal sig_write: std_logic;
    signal sig_reset: std_logic;
 
-   signal sig_acs: std_logic; -- access time frame
-
+   signal sig_cs_ram: std_logic;
    signal sig_cs_rom: std_logic;
    signal sig_csr_vdp: std_logic;
    signal sig_csw_vdp: std_logic;
-   signal sig_read_acs: std_logic;
-   signal sig_write_acs: std_logic;
    signal sig_cs_vdp: std_logic;
    signal sig_cs_opl: std_logic;
    signal sig_cs_via: std_logic;
@@ -102,18 +99,13 @@ begin
 
    CPU_phi2       <= clk;
 
-   sig_read       <= CPU_rw and clk;
-   sig_write      <= not(CPU_rw) and clk;
+   sig_read       <= CPU_rw;
+   sig_write      <= not(CPU_rw);
    
-   sig_read_acs   <= CPU_rw and sig_acs;
-   sig_write_acs  <= not(CPU_rw) and sig_acs;
-
    -- helpers
    clk <= clk_div(integer(log2(real(CLOCK_DIV)))-1);
 
-   sig_acs <= '1' when rdy_en else '0';
-
-   rdy_en      <= (sig_cs_rom or sig_cs_vdp or sig_cs_opl) = '1';
+   rdy_en      <= (sig_cs_rom or sig_cs_uart or sig_cs_vdp or sig_cs_opl) = '1';
 
    -- $0200 - $027x
    io_select   <= '1' when CPU_a(15 downto 7) = "000000100" else '0';
@@ -193,8 +185,8 @@ begin
 
    --   $0220 - $022f
    sig_cs_vdp        <= '1' when io_select = '1' and CPU_a(6 downto 4) = "010" else '0';
-   sig_csr_vdp       <= '1' when sig_cs_vdp = '1' and sig_read_acs = '1' else '0';
-   sig_csw_vdp       <= '1' when sig_cs_vdp = '1' and sig_write_acs = '1' else '0';
+   sig_csr_vdp       <= '1' when sig_cs_vdp = '1' and sig_read = '1' else '0';
+   sig_csw_vdp       <= '1' when sig_cs_vdp = '1' and sig_write = '1' else '0';
 
    --   $0240 - $024f
    sig_cs_opl        <= '1' when io_select = '1' and CPU_a(6 downto 4) = "100" else '0';
@@ -216,8 +208,9 @@ begin
    EXT_a(18 downto 14) <= INT_banktable(conv_integer(CPU_a(15 downto 14)))(4 downto 0);
 
    sig_cs_rom  <= INT_banktable(conv_integer(CPU_a(15 downto 14)))(5) AND NOT io_select;
+   sig_cs_ram  <= not(INT_banktable(conv_integer(CPU_a(15 downto 14)))(5)) AND NOT io_select;
 
-   CS_RAM      <= INT_banktable(conv_integer(CPU_a(15 downto 14)))(5) OR io_select;
+   CS_RAM      <= sig_cs_ram NAND clk;
    CS_ROM      <= NOT(sig_cs_rom);
    CSR_VDP     <= NOT(sig_csr_vdp);
    CSW_VDP     <= NOT(sig_csw_vdp);
@@ -233,8 +226,8 @@ begin
    -- C_vdp = 50pF, C_cpld = 10pF, t=12ns, R = (t / 0.4 x CT) = 12E-9s / (0.4 * 60E-12F) = 500Ohm
    CPU_rdy     <= '0' when rdy_en and conv_integer(ws_cnt) /= 0 else 'Z';
 
-   R           <= NOT(sig_read_acs);
-   W           <= NOT(sig_write_acs);
+   R           <= NOT(sig_read);
+   W           <= NOT(sig_write);
    OE          <= not(sig_read);
    WE          <= not(sig_write);
 
