@@ -2,6 +2,8 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.STD_LOGIC_UNSIGNED.ALL;
 USE ieee.numeric_std.ALL;
+USE ieee.math_real.log2;
+
 
 Entity chuck is
    Port (
@@ -48,13 +50,21 @@ end;
 
 Architecture chuck_arch of chuck is
 
+   -- calculation constants
+   constant HW_CLOCK:         integer := 32; -- board input clock (oszi)
+   constant SYS_CLOCK:        integer := 2; -- desired system clock (cpu)
+   
+   constant CLOCK_DIV:        integer := HW_CLOCK/2; -- clock resolution from input clock - clk_div counter is always /2
+   constant CLOCK_DIV_BITS:   integer := integer(log2(real(CLOCK_DIV))); -- amount of bits required to build the sys clock divider
+   constant SYS_CLOCK_DIV:    integer := CLOCK_DIV/SYS_CLOCK; -- clock divider to get the desired sys clock
+
    -- define bank table type array of 6 bit vectors
    type t_banktable is array (0 to 3) of std_logic_vector(5 downto 0);
    signal INT_banktable : t_banktable;
 
    signal clk: std_logic;
 
-   signal clk_div: std_logic_vector(2 downto 0);
+   signal clk_div: std_logic_vector((CLOCK_DIV_BITS-1) downto 0); -- n bit counter
    signal rdy_en: boolean;
 
    signal d_out: std_logic_vector(7 downto 0);
@@ -69,18 +79,21 @@ Architecture chuck_arch of chuck is
    signal write_sig: std_logic;
    signal reset_sig: std_logic;
 
+   signal sig_acs: std_logic; -- access time frame
+
    signal sig_cs_rom: std_logic;
    signal sig_csr_vdp: std_logic;
-	signal sig_csw_vdp: std_logic;
+   signal sig_csw_vdp: std_logic;
+   signal sig_read_acs: std_logic;
+   signal sig_write_acs: std_logic;
    signal sig_cs_vdp: std_logic;
    signal sig_cs_opl: std_logic;
-	signal sig_cs_via: std_logic;
-	signal sig_cs_uart: std_logic;
-	signal sig_cs_slot0: std_logic;
-	signal sig_cs_slot1: std_logic;
+   signal sig_cs_via: std_logic;
+   signal sig_cs_uart: std_logic;
+   signal sig_cs_slot0: std_logic;
+   signal sig_cs_slot1: std_logic;
 
-
-	signal sig_cs_buffer: std_logic;
+   signal sig_cs_buffer: std_logic;
 
 begin
    -- inputs
@@ -90,14 +103,19 @@ begin
 
    CPU_phi2    <= clk;
 
-   read_sig    <= CPU_rw NAND clk;
-   write_sig   <= (NOT CPU_rw) NAND clk;
-   R				<= CPU_rw;
-   W				<= NOT CPU_rw;
+   read_sig    <= CPU_rw NAND clk;   -- TODO FIXME - signal, should be positive logic
+   write_sig   <= (NOT CPU_rw) NAND clk;  -- TODO FIXME - signal, should be positive logic
+
+   sig_read_acs   <= CPU_rw and sig_acs;
+   sig_write_acs  <= not(CPU_rw) and sig_acs;
 
    -- helpers
+   clk <= clk_div(integer(log2(real(SYS_CLOCK_DIV)))-1);
 
-   rdy_en      <= false; -- (sig_cs_rom or sig_csw_vdp or sig_csr_vdp or sig_cs_opl) = '1';
+   sig_acs <= '1' when conv_integer(clk_div) < (CLOCK_DIV-2) else '0';
+
+
+   rdy_en      <= false; -- (sig_cs_rom or sig_cs_vdp or sig_cs_opl) = '1';
 
    -- $0200 - $027x
    io_select   <= '1' when CPU_a(15 downto 7) = "000000100" else '0';
@@ -127,6 +145,8 @@ begin
          d_out(7)          <= INT_banktable(conv_integer(reg_addr))(5);
          d_out(6 downto 5) <= "00";
          d_out(4 downto 0) <= INT_banktable(conv_integer(reg_addr))(4 downto 0);
+      else
+         d_out <= (others => 'Z');
       end if;
    end process;
 
@@ -148,13 +168,11 @@ begin
    process_genclk: process(CLKIN, reset_sig)
    begin
       if (reset_sig = '1') then
-         clk_div <= "000";
-      elsif (rising_edge(CLKIN)) then
+         clk_div <= (others => '0');
+      elsif rising_edge(CLKIN) then
          clk_div <= clk_div + 1;
       end if;
    end process;
-
-	clk <= clk_div(2) AND '1';
 
    -- wait state generator
    --process(clk, clk_div, rdy_en)
@@ -176,27 +194,25 @@ begin
    sig_cs_via     <= '1' when io_select = '1' and CPU_a(6 downto 4) = "001" else '0';
 
    --   $0220 - $022f
-   sig_cs_vdp      <= '1' when io_select = '1' and CPU_a(6 downto 4) = "010" else '0';
-   sig_csr_vdp     <= '1' when sig_cs_vdp = '1' and CPU_rw = '1' else '0';
-   sig_csw_vdp     <= '1' when (conv_integer(clk_div) >= 1 and conv_integer(clk_div) <= 6)
-                               and sig_cs_vdp = '1' and CPU_rw = '0' else '0';
+   sig_cs_vdp        <= '1' when io_select = '1' and CPU_a(6 downto 4) = "010" else '0';
+   sig_csr_vdp       <= '1' when sig_cs_vdp = '1' and sig_read_acs = '1' else '0';
+   sig_csw_vdp       <= '1' when sig_cs_vdp = '1' and sig_write_acs = '1' else '0';
 
    --   $0240 - $024f
-   sig_cs_opl     <= '1' when io_select = '1' and CPU_a(6 downto 4) = "100" else '0';
+   sig_cs_opl        <= '1' when io_select = '1' and CPU_a(6 downto 4) = "100" else '0';
 
    --   $0250 - $025f expansion slot 0
-	sig_cs_slot0     <= '1' when io_select = '1' and CPU_a(6 downto 4) = "101" else '0';
+	sig_cs_slot0      <= '1' when io_select = '1' and CPU_a(6 downto 4) = "101" else '0';
 	--   $0260 - $026f expansion slot 1
-	sig_cs_slot1     <= '1' when io_select = '1' and CPU_a(6 downto 4) = "110" else '0';
+	sig_cs_slot1      <= '1' when io_select = '1' and CPU_a(6 downto 4) = "110" else '0';
 
 
-	sig_cs_buffer 	<= '1' when
-                           sig_cs_vdp = '1'
+	sig_cs_buffer 	<= '1' when sig_cs_vdp = '1'
                            or sig_cs_opl = '1'
-									or sig_cs_uart = '1'
-									or sig_cs_slot0 = '1'
-									or sig_cs_slot1 = '1'
-								else '0';
+                           or sig_cs_uart = '1'
+                           or sig_cs_slot0 = '1'
+                           or sig_cs_slot1 = '1'
+                        else '0';
 
    -- extended address bus
    EXT_a(18 downto 14) <= INT_banktable(conv_integer(CPU_a(15 downto 14)))(4 downto 0);
@@ -219,6 +235,8 @@ begin
 
    CPU_rdy     <= 'Z'; --'0' when (clk_div <= 4 and rdy_en) else 'Z';
 
+   R           <= NOT(sig_read_acs);
+   W           <= NOT(sig_write_acs);
    OE          <= read_sig;
    WE          <= write_sig;
 
