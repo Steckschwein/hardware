@@ -2062,7 +2062,7 @@
     (property "Reference" "X2" (at 34.29 81.28 0)
       (effects (font (size 1.778 1.778)))
     )
-    (property "Value" "OSC" (at 34.29 88.9 0)
+    (property "Value" "1.832MHz" (at 34.29 88.9 0)
       (effects (font (size 1.778 1.778)))
     )
     (property "Footprint" "steckschwein:Oscillator_DIP-14_LargePads" (at 34.29 88.9 0)
