@@ -40,25 +40,46 @@ ARCHITECTURE behavior OF chuck_test IS
     -- Component Declaration for the Unit Under Test (UUT)
  
     COMPONENT chuck
-    PORT(
-	      RESET 		: IN  	std_logic;
-         CLKIN 		: IN  	std_logic;
-         CPU_phi2		: OUT  	std_logic;
-			CPU_d			: INOUT 	std_logic_vector(7 downto 0);
-         CPU_a			: IN  	std_logic_vector(15 downto 0);
-			EXT_a			: OUT 	std_logic_vector(18 downto 14);
-         CPU_rw 		: IN  	std_logic;
-         CPU_rdy		: OUT  	std_logic;
-         RD 			: OUT  	std_logic;
-         WR 			: OUT  	std_logic;
-         CS_ROM 		: OUT  	std_logic;
-         CS_RAM 		: OUT 	std_logic;
-         CS_UART 		: OUT  	std_logic;
-         CS_VIA 		: OUT  	std_logic;
-         CS_VDP 		: OUT  	std_logic;
-         CS_OPL 		: OUT  	std_logic
-	 );
-    END COMPONENT;
+    Port (
+      -- system clock
+      CLKIN       : in std_logic;
+      CPU_phi2    : out std_logic;
+
+      -- address bus
+      CPU_a          : in std_logic_vector (15 downto 0);   -- Address bus
+      EXT_a          : out std_logic_vector(18 downto 14);   -- extended address bus EXT_a14-EXT_a18
+
+      -- data bus
+      CPU_d          : inout std_logic_vector (7 downto 0);
+
+      -- control signals
+      RESET    : in std_logic;     -- reset line
+      CPU_rw   : in std_logic;     -- RW pin of 6502
+      CPU_rdy  : out std_logic;    -- RDY signal for generating wait states
+      OE       : out std_logic;    -- read access
+      WE       : out std_logic;    -- write access
+      R			: out std_logic;	  -- CPU read w/o phi2
+      W			: out std_logic;	  -- CPU write w/o phi2
+
+      -- chip select for memory
+      CS_ROM    : out std_logic;    -- CS signal for ROM at $e000-$ffff
+      CS_RAM    : out std_logic;    -- CS for ram
+
+      -- chip select for peripherals
+      CS_UART   : out std_logic;
+      CS_VIA    : out std_logic;
+      CSR_VDP   : out std_logic;  -- VDP read
+      CSW_VDP   : out std_logic;  -- VDP write
+      CS_OPL    : out std_logic;  -- OPL2
+
+      -- chip select for expansion ports
+      CS_SLOT0	 : out std_logic;
+      CS_SLOT1	 : out std_logic;
+
+      -- chip select for data bus buffer
+      CS_BUFFER : out std_logic  -- Data bus transceiver enable
+   );    
+   END COMPONENT;
     
 
    --Inputs   
@@ -75,16 +96,17 @@ ARCHITECTURE behavior OF chuck_test IS
 	signal CPU_rdy : std_logic := 'Z';
    signal CS_ROM : std_logic;
    signal CS_UART : std_logic;
-   signal CS_VDP : std_logic;
+   signal CSW_VDP : std_logic;
+   signal CSR_VDP : std_logic;
 	signal CS_OPL : std_logic;
    signal CPU_phi2 : std_logic;
-   signal RD : std_logic;
-   signal WR : std_logic;
+   signal R : std_logic;
+   signal W : std_logic;
    signal CS_RAM : std_logic;
    signal CS_VIA : std_logic;
 
    -- Clock period definitions
-   constant CLKIN_period : time := 64 ns;
+   constant CLKIN_period : time := 63ns;
  
 BEGIN
  
@@ -98,13 +120,14 @@ BEGIN
 			 EXT_a => EXT_a,
           CPU_rw => CPU_rw,
           CPU_rdy => CPU_rdy,
-          RD => RD,
-          WR => WR,
+          R => R,
+          W => W,
           CS_ROM => CS_ROM,
           CS_RAM => CS_RAM,
           CS_UART => CS_UART,
           CS_VIA => CS_VIA,
-          CS_VDP => CS_VDP,
+          CSW_VDP => CSW_VDP,
+          CSR_VDP => CSR_VDP,
           CS_OPL => CS_OPL
         );
 
@@ -131,10 +154,7 @@ BEGIN
       wait for 100 ns;	
 		RESET <= '1';
 		
-		wait for CLKIN_period/2;
-
-	
- 
+		wait for CLKIN_period/2; 
 			
  		report "1. checking initial state of banking registers";
 		report "1a. checking $0230 , should be $00";
@@ -255,7 +275,8 @@ BEGIN
 		assert CS_UART	 	= '1' report "UART selected but should not" severity error;
 		assert CS_RAM		= '0' report "CS_RAM not selected" severity error;
 		assert CS_VIA		= '1' report "CS_VIA selected but should not" severity error;
-		assert CS_VDP		= '1' report "CS_VDP selected but should not" severity error;
+		assert CSR_VDP		= '1' report "CS_VDP selected but should not" severity error;
+		assert CSW_VDP		= '1' report "CS_VDP selected but should not" severity error;
 		assert CS_OPL		= '1' report "CS_IO selected but should not" severity error;
 		assert CS_ROM		= '1' report "CS_ROM selected but should not" severity error;
 	
@@ -269,7 +290,8 @@ BEGIN
 		assert CS_UART	 	= '1' report "UART selected but should not" severity error;
 		assert CS_RAM		= '0' report "CS_RAM not selected" severity error;
 		assert CS_VIA		= '1' report "CS_VIA selected but should not" severity error;
-		assert CS_VDP		= '1' report "CS_VDP selected but should not" severity error;
+		assert CSR_VDP		= '1' report "CS_VDP selected but should not" severity error;
+		assert CSW_VDP		= '1' report "CS_VDP selected but should not" severity error;
 		assert CS_OPL		= '1' report "CS_IO selected but should not" severity error;
 		assert CS_ROM		= '1' report "CS_ROM selected but should not" severity error;
 		
@@ -281,7 +303,8 @@ BEGIN
 		assert CS_UART	 	= '1' report "UART selected but should not" severity error;
 		assert CS_RAM		= '0' report "CS_RAM not selected" severity error;
 		assert CS_VIA		= '1' report "CS_VIA selected but should not" severity error;
-		assert CS_VDP		= '1' report "CS_VDP selected but should not" severity error;
+		assert CSR_VDP		= '1' report "CS_VDP selected but should not" severity error;
+		assert CSW_VDP		= '1' report "CS_VDP selected but should not" severity error;
 		assert CS_OPL		= '1' report "CS_IO selected but should not" severity error;
 		assert CS_ROM		= '1' report "CS_ROM selected but should not" severity error;
 		
@@ -294,7 +317,8 @@ BEGIN
 		assert CS_UART	 	= '1' report "UART selected but should not" severity error;
 		assert CS_RAM		= '0' report "CS_LORAM not selected" severity error;
 		assert CS_VIA		= '1' report "CS_VIA selected but should not" severity error;
-		assert CS_VDP		= '1' report "CS_VDP selected but should not" severity error;
+		assert CSR_VDP		= '1' report "CS_VDP selected but should not" severity error;
+		assert CSW_VDP		= '1' report "CS_VDP selected but should not" severity error;
 		assert CS_OPL		= '1' report "CS_IO selected but should not" severity error;
 		assert CS_ROM		= '1' report "CS_ROM selected but should not" severity error;
 
@@ -314,7 +338,8 @@ BEGIN
 		assert CS_UART	 	= '0' report "UART not selected" severity error;
 		assert CS_RAM		= '1' report "CS_RAM selected but should not" severity error;
 		assert CS_VIA		= '1' report "CS_VIA selected but should not" severity error;
-		assert CS_VDP		= '1' report "CS_VDP selected but should not" severity error;
+		assert CSR_VDP		= '1' report "CS_VDP selected but should not" severity error;
+		assert CSW_VDP		= '1' report "CS_VDP selected but should not" severity error;
 		assert CS_OPL		= '1' report "CS_IO selected but should not" severity error;
 		assert CS_ROM		= '1' report "CS_ROM selected but should not" severity error;
 
@@ -333,7 +358,8 @@ BEGIN
 		assert CS_VIA		= '0' report "CS_VIA not selected" severity error;
 		assert CS_ROM		= '1' report "CS_ROM selected but should not" severity error;
 		assert CS_RAM		= '1' report "CS_RAM selected but should not" severity error;
-		assert CS_VDP		= '1' report "CS_VDP selected but should not" severity error;
+		assert CSR_VDP		= '1' report "CS_VDP selected but should not" severity error;
+		assert CSW_VDP		= '1' report "CS_VDP selected but should not" severity error;
 		assert CS_OPL		= '1' report "CS_IO selected but should not" severity error;
 		assert CS_ROM		= '1' report "CS_ROM selected but should not" severity error;
 	
@@ -353,7 +379,8 @@ BEGIN
 
 		assert CS_UART	 	= '1' report "UART selected but should not" severity error;
 		assert CS_VIA		= '1' report "CS_VIA selected but should not" severity error;
-		assert CS_VDP		= '0' report "CS_VDP not selected" severity error;
+		assert CSR_VDP		= '0' report "CS_VDP not selected" severity error;
+		assert CSW_VDP		= '1' report "CS_VDP selected but should not" severity error;
 		assert CS_OPL		= '1' report "CS_IO selected but should not" severity error;
 		assert CS_ROM		= '1' report "CS_ROM selected but should not" severity error;
 		assert CS_RAM		= '1' report "CS_RAM selected but should not" severity error;
@@ -369,7 +396,8 @@ BEGIN
 
 		assert CS_UART	 	= '1' report "UART selected but should not" severity error;
 		assert CS_VIA		= '1' report "CS_VIA selected but should not" severity error;
-		assert CS_VDP		= '1' report "CS_VDP selected but should not" severity error;
+		assert CSR_VDP		= '1' report "CS_VDP not selected" severity error;
+		assert CSW_VDP		= '1' report "CS_VDP selected but should not" severity error;
 		assert CS_OPL		= '0' report "CS_IO not selected" severity error;
 		assert CS_ROM		= '1' report "CS_ROM selected but should not" severity error;
 		assert CS_RAM		= '1' report "CS_RAM selected but should not" severity error;
