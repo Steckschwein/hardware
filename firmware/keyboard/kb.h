@@ -5,6 +5,9 @@
 
 #include <stdint.h>
 #include <avr/sfr_defs.h>
+#include <avr/pgmspace.h>
+#include <avr/interrupt.h>
+#include <util/delay.h>
 
 // Keyboard connections
 #define PS2_IN PIND
@@ -50,7 +53,7 @@
 #define KBD_HOST_CMD_CMD_STATUS	0x2 // host command to read status last cmd
 
 #define KBD_CMD_ECHO		0xee	// echo
-#define KBD_CMD_LEDS		0xed	// 
+#define KBD_CMD_LEDS		0xed	//
 #define KBD_CMD_RESET		0xff
 #define KBD_CMD_RESEND		0xfe	//
 #define KBD_CMD_IDENTIFY	0xf2
@@ -60,8 +63,8 @@
 
 #define KBD_RET_ACK		 0xfa	// 1111 1010
 #define KBD_RET_RESEND	 0xfe	// 1111 1010
-#define KBD_RET_ECHO	 0xee	// 
-#define KBD_RET_BAT_OK	 0xaa	// 
+#define KBD_RET_ECHO	 0xee	//
+#define KBD_RET_BAT_OK	 0xaa	//
 #define KBD_RET_BAT_FAIL1 0xfc	// 1111 1100
 #define KBD_RET_BAT_FAIL2 0xfd	// 1111 1100
 #define KBD_RET_ERROR	 0xff
