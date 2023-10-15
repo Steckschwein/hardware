@@ -105,8 +105,8 @@ ARCHITECTURE behavior OF chuck_test IS
    signal CS_RAM : std_logic;
    signal CS_VIA : std_logic;
 
-   -- Clock period definitions
-   constant CLKIN_period : time := 63ns;
+   -- Clock period definitions - Mhz
+   constant CLKIN_period : time := 50ns;
  
 BEGIN
  

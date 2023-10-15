@@ -51,8 +51,8 @@ end;
 Architecture chuck_arch of chuck is
 
    -- calculation constants
-   constant HW_CLOCK:         integer := 16; -- board input clock (oszi)
-   constant SYS_CLOCK:        integer := 8; -- desired system clock (cpu)
+   constant HW_CLOCK:         integer := 20; -- board input clock (oszi)
+   constant SYS_CLOCK:        integer := 10; -- desired system clock (cpu)
    
    constant CLOCK_DIV:        integer := HW_CLOCK/SYS_CLOCK; -- clock divider to get the desired sys clock
    constant CLOCK_DIV_BITS:   integer := integer(log2(real(CLOCK_DIV))); -- amount of bits required to build the sys clock divider
@@ -63,7 +63,7 @@ Architecture chuck_arch of chuck is
 
    signal clk: std_logic;
 
-   signal ws_cnt: std_logic_vector(1 downto 0); -- ws 2 bit counter
+   signal ws_cnt: std_logic_vector(2 downto 0); -- ws "n" bit counter
    signal clk_div: std_logic_vector((CLOCK_DIV_BITS-1) downto 0); -- n bit counter
    signal rdy_en: boolean;
 
@@ -104,7 +104,7 @@ begin
    
    -- helpers
    clk <= clk_div(integer(log2(real(CLOCK_DIV)))-1);
-
+   
    rdy_en      <= (sig_cs_rom or sig_cs_uart or sig_cs_vdp or sig_cs_opl) = '1';
 
    -- $0200 - $027x
@@ -162,7 +162,7 @@ begin
       elsif rising_edge(CLKIN) then
          clk_div <= clk_div - 1;
       end if;
-   end process;
+    end process;
 
    -- wait state generator
    process(clk, rdy_en)
@@ -172,7 +172,9 @@ begin
             ws_cnt <= ws_cnt - '1';
           end if;
       else
-         ws_cnt <= (others => '1');
+         ws_cnt(0) <= '0'; -- init with 4
+         ws_cnt(1) <= '0';
+         ws_cnt(2) <= '1';
       end if;
    end process;
 
