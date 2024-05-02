@@ -24,8 +24,8 @@ Entity chuck is
       CPU_rdy  : out std_logic;    -- RDY signal for generating wait states
       OE       : out std_logic;    -- read access
       WE       : out std_logic;    -- write access
-      R			: out std_logic;	  -- CPU read w/o phi2
-      W			: out std_logic;	  -- CPU write w/o phi2
+      R      : out std_logic;    -- CPU read w/o phi2
+      W      : out std_logic;    -- CPU write w/o phi2
 
       -- chip select for memory
       CS_ROM    : out std_logic;    -- CS signal for ROM at $e000-$ffff
@@ -39,8 +39,8 @@ Entity chuck is
       CS_OPL    : out std_logic;  -- OPL2
 
       -- chip select for expansion ports
-      CS_SLOT0	 : out std_logic;
-      CS_SLOT1	 : out std_logic;
+      CS_SLOT0   : out std_logic;
+      CS_SLOT1   : out std_logic;
 
       -- chip select for data bus buffer
       CS_BUFFER : out std_logic  -- Data bus transceiver enable
@@ -53,7 +53,7 @@ Architecture chuck_arch of chuck is
    -- calculation constants
    constant HW_CLOCK:         integer := 20; -- board input clock (oszi)
    constant SYS_CLOCK:        integer := 10; -- desired system clock (cpu)
-   
+
    constant CLOCK_DIV:        integer := HW_CLOCK/SYS_CLOCK; -- clock divider to get the desired sys clock
    constant CLOCK_DIV_BITS:   integer := integer(log2(real(CLOCK_DIV))); -- amount of bits required to build the sys clock divider
 
@@ -101,10 +101,10 @@ begin
 
    sig_read       <= CPU_rw;
    sig_write      <= not(CPU_rw);
-   
+
    -- helpers
    clk <= clk_div(integer(log2(real(CLOCK_DIV)))-1);
-   
+
    rdy_en      <= (sig_cs_rom or sig_cs_uart or sig_cs_vdp or sig_cs_opl) = '1';
 
    -- $0200 - $027x
@@ -194,12 +194,12 @@ begin
    sig_cs_opl        <= '1' when io_select = '1' and CPU_a(6 downto 4) = "100" else '0';
 
    --   $0250 - $025f expansion slot 0
-	sig_cs_slot0      <= '1' when io_select = '1' and CPU_a(6 downto 4) = "101" else '0';
-	--   $0260 - $026f expansion slot 1
-	sig_cs_slot1      <= '1' when io_select = '1' and CPU_a(6 downto 4) = "110" else '0';
+  sig_cs_slot0      <= '1' when io_select = '1' and CPU_a(6 downto 4) = "101" else '0';
+  --   $0260 - $026f expansion slot 1
+  sig_cs_slot1      <= '1' when io_select = '1' and CPU_a(6 downto 4) = "110" else '0';
 
 
-	sig_cs_buffer 	<= '1' when sig_cs_vdp = '1'
+  sig_cs_buffer   <= '1' when sig_cs_vdp = '1'
                            or sig_cs_opl = '1'
                            or sig_cs_uart = '1'
                            or sig_cs_slot0 = '1'
@@ -218,10 +218,10 @@ begin
    CSW_VDP     <= NOT(sig_csw_vdp);
 
    CS_OPL      <= NOT(sig_cs_opl);
-   CS_VIA		<= NOT(sig_cs_via);
-   CS_UART		<= NOT(sig_cs_uart);
-	CS_SLOT0		<= NOT(sig_cs_slot0);
-	CS_SLOT1		<= NOT(sig_cs_slot1);
+   CS_VIA    <= NOT(sig_cs_via);
+   CS_UART    <= NOT(sig_cs_uart);
+  CS_SLOT0    <= NOT(sig_cs_slot0);
+  CS_SLOT1    <= NOT(sig_cs_slot1);
 
    CS_BUFFER   <= NOT(sig_cs_buffer);
 
