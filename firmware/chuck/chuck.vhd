@@ -94,18 +94,16 @@ Architecture chuck_arch of chuck is
 
 begin
    -- inputs
-
    sig_reset      <= not RESET;
-
    CPU_phi2       <= clk;
 
    sig_read       <= CPU_rw;
    sig_write      <= not(CPU_rw);
 
    -- helpers
-   clk <= clk_div(integer(log2(real(CLOCK_DIV)))-1);
-
-   rdy_en      <= (sig_cs_rom or sig_cs_uart or sig_cs_vdp or sig_cs_opl) = '1';
+   clk         <= clk_div(integer(log2(real(CLOCK_DIV)))-1);
+   
+   rdy_en      <= (sig_cs_rom or sig_cs_uart or sig_cs_vdp or sig_cs_opl or sig_cs_slot0 or sig_cs_slot1) = '1';
 
    -- $0200 - $027x
    io_select   <= '1' when CPU_a(15 downto 7) = "000000100" else '0';
@@ -162,7 +160,7 @@ begin
       elsif rising_edge(CLKIN) then
          clk_div <= clk_div - 1;
       end if;
-    end process;
+   end process;
 
    -- wait state generator
    process(clk, rdy_en)
@@ -172,9 +170,11 @@ begin
             ws_cnt <= ws_cnt - '1';
           end if;
       else
-         ws_cnt(0) <= '0'; -- init with 4
-         ws_cnt(1) <= '0';
-         ws_cnt(2) <= '1';
+         --ws_cnt(0) <= '0'; 
+         --ws_cnt(1) <= '0';
+         --ws_cnt(2) <= '1';
+         -- init with 4
+         ws_cnt <= "100";
       end if;
    end process;
 
@@ -227,7 +227,7 @@ begin
 
    -- C_vdp = 50pF, C_cpld = 10pF, t=12ns, R = (t / 0.4 x CT) = 12E-9s / (0.4 * 60E-12F) = 500Ohm
    CPU_rdy     <= '0' when rdy_en and conv_integer(ws_cnt) /= 0 else 'Z';
-
+   
    R           <= NOT(sig_read);
    W           <= NOT(sig_write);
    OE          <= not(sig_read);
