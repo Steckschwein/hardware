@@ -129,7 +129,9 @@ begin
 			
 	diag <= '0'; --shifting2; --shiftdone; --shiftcnt(2);
 	
-	cpu_phi2 <= not(cpu_Nphi2);
+	--cpu_phi2 <= not(cpu_Nphi2);
+   cpu_phi2 <= cpu_Nphi2;
+   
 	
 	--------------------------
 	
@@ -229,7 +231,7 @@ begin
 		-- start shifting
 		if (reset='1' or shiftdone='1') then
 			start_shifting <= '0';
-		elsif (falling_edge(cpu_phi2) and selected='1' and cpu_a="00" and (frx='1' or cpu_rnw='0')) then
+		elsif (rising_edge(cpu_phi2) and selected='1' and cpu_a="00" and (frx='1' or cpu_rnw='0')) then
 			-- access to register 00, either write (cpu_rnw=0) or fast receive bit set (frx)
 			-- then both types of access (write but also read)
 			start_shifting <= '1';
@@ -294,7 +296,7 @@ begin
 	begin
 		if (shiftdone = '1') then
 			tc <= '1';
-		elsif (falling_edge(cpu_phi2) and selected='1' and cpu_a="00" 
+		elsif (rising_edge(cpu_phi2) and selected='1' and cpu_a="00" 
 				--and cpu_rnw='1'		-- both reads _and_ writes clear the interrupt
 				) then
 			tc <= '0';
@@ -338,8 +340,9 @@ begin
 	end process;
 
 	-- cpu write 
+   
 	cpu_write: process(reset, selected, cpu_phi2, cpu_rnw, cpu_a, int_din)
-	begin
+   begin
 		if (reset = '1') then
 			cpha <= '0';
 			cpol <= '0';
@@ -350,7 +353,9 @@ begin
 			slavesel <= (others => '1');
 			slaveinten <= (others => '0');
 			divisor <= (others => '0');
+         
 		elsif (falling_edge(cpu_phi2) and selected='1' and cpu_rnw='0') then
+
 			case cpu_a is
 				when "00" =>		-- write SPI data out (see other process above)
 					spidataout <= int_din;
