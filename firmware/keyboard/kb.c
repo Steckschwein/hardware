@@ -1,7 +1,3 @@
-#include <avr/pgmspace.h>
-#include <avr/interrupt.h>
-#include <util/delay.h>
-
 #include "kb.h"
 #include "serial.h"
 #include "scancodes_de_cp437.h"
