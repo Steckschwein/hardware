@@ -44,8 +44,8 @@ NET CS_BUFFER     LOC = P52;
 NET CPU_rw    	  LOC = P44; 
 NET OE        	  LOC = P6; 
 NET WE    	  LOC = P7; 
-NET W		  LOC = P11;
-NET R		  LOC = P26;
+# NET W		  LOC = P11;
+# NET R		  LOC = P26;
 NET CPU_phi2      LOC = P3; 
 #
 NET CPU_rdy       LOC = P40;
