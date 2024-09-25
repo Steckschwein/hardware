@@ -215,27 +215,24 @@ begin
    sig_cs_rom  <=     sig_rom  AND NOT io_select;
    sig_cs_ram  <= not(sig_rom) AND NOT io_select;
 
-   CS_RAM      <= sig_cs_ram NAND clk;
-   CS_ROM      <= sig_cs_rom NAND clk;   
---   CS_ROM      <= NOT(sig_cs_rom) AND NOT(clk);
---   CS_ROM      <= NOT(sig_cs_rom);
+   CS_RAM      <= NOT(sig_cs_ram);
+   CS_ROM      <= NOT(sig_cs_rom);
+
    CSR_VDP     <= NOT(sig_csr_vdp);
    CSW_VDP     <= NOT(sig_csw_vdp);
 
    CS_OPL      <= NOT(sig_cs_opl);
-   CS_VIA    <= NOT(sig_cs_via);
-   CS_UART    <= NOT(sig_cs_uart);
-  CS_SLOT0    <= NOT(sig_cs_slot0);
-  CS_SLOT1    <= NOT(sig_cs_slot1);
+   CS_VIA      <= NOT(sig_cs_via);
+   CS_UART     <= NOT(sig_cs_uart);
+   CS_SLOT0    <= NOT(sig_cs_slot0);
+   CS_SLOT1    <= NOT(sig_cs_slot1);
 
    CS_BUFFER   <= NOT(sig_cs_buffer);
 
    -- C_vdp = 50pF, C_cpld = 10pF, t=12ns, R = (t / 0.4 x CT) = 12E-9s / (0.4 * 60E-12F) = 500Ohm
    CPU_rdy     <= '0' when rdy_en and conv_integer(ws_cnt) /= 0 else 'Z';
 
---   R           <= NOT(sig_read);
-  -- W           <= NOT(sig_write);
    OE          <= not(sig_read);
-   WE          <= not(sig_write);
+   WE          <= not(sig_write) when io_select = '1' else (sig_write nand clk);
 
 End chuck_arch;
