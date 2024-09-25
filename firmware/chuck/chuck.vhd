@@ -232,7 +232,7 @@ begin
    -- C_vdp = 50pF, C_cpld = 10pF, t=12ns, R = (t / 0.4 x CT) = 12E-9s / (0.4 * 60E-12F) = 500Ohm
    CPU_rdy     <= '0' when rdy_en and conv_integer(ws_cnt) /= 0 else 'Z';
 
-   OE          <= not(sig_read);
+   OE          <= not(sig_read)  when io_select = '1' else (sig_read nand clk);
    WE          <= not(sig_write) when io_select = '1' else (sig_write nand clk);
 
 End chuck_arch;
