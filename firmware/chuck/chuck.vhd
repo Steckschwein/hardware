@@ -24,12 +24,10 @@ Entity chuck is
       CPU_rdy  : out std_logic;    -- RDY signal for generating wait states
       OE       : out std_logic;    -- read access
       WE       : out std_logic;    -- write access
---      R        : out std_logic;    -- CPU read w/o phi2
-  --    W        : out std_logic;    -- CPU write w/o phi2
 
       -- chip select for memory
-      CS_ROM    : out std_logic;    -- CS signal for ROM at $e000-$ffff
-      CS_RAM    : out std_logic;    -- CS for ram
+      CS_ROM    : out std_logic;    -- CS signal for ROM 
+      CS_RAM    : out std_logic;    -- CS signal for RAM
 
       -- chip select for peripherals
       CS_UART   : out std_logic;
