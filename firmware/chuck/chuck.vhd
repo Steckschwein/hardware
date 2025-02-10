@@ -22,14 +22,12 @@ Entity chuck is
       RESET    : in std_logic;     -- reset line
       CPU_rw   : in std_logic;     -- RW pin of 6502
       CPU_rdy  : out std_logic;    -- RDY signal for generating wait states
---      OE       : out std_logic;    -- read access
---      WE       : out std_logic;    -- write access
-      R      : out std_logic;    -- CPU read w/o phi2
-      W      : out std_logic;    -- CPU write w/o phi2
+      OE       : out std_logic;    -- read access
+      WE       : out std_logic;    -- write access
 
       -- chip select for memory
-      CS_ROM    : out std_logic;    -- CS signal for ROM at $e000-$ffff
-      CS_RAM    : out std_logic;    -- CS for ram
+      CS_ROM    : out std_logic;    -- CS signal for ROM
+      CS_RAM    : out std_logic;    -- CS signal for RAM
 
       -- chip select for peripherals
       CS_UART   : out std_logic;
@@ -78,7 +76,7 @@ Architecture chuck_arch of chuck is
    signal sig_read: std_logic;
    signal sig_write: std_logic;
    signal sig_reset: std_logic;
-
+   signal sig_rom: std_logic;
    signal sig_cs_ram: std_logic;
    signal sig_cs_rom: std_logic;
    signal sig_csr_vdp: std_logic;
@@ -103,7 +101,8 @@ begin
    -- helpers
    clk         <= CLKIN; -- clk_div(integer(log2(real(CLOCK_DIV)))-1);
 
-   rdy_en      <= (sig_cs_rom or sig_cs_uart or sig_cs_vdp or sig_cs_opl or sig_cs_slot0) = '1'; -- or sig_cs_slot1) = '1';
+   rdy_en      <= (sig_cs_uart or sig_cs_vdp or sig_cs_opl or sig_cs_slot0) = '1'; -- or sig_cs_slot1) = '1';
+--   rdy_en      <= (sig_cs_uart or sig_cs_vdp or sig_cs_opl) = '1';
 
    -- $0200 - $027x
    io_select   <= '1' when CPU_a(15 downto 7) = "000000100" else '0';
@@ -211,28 +210,29 @@ begin
   -- extended address bus
   EXT_a(18 downto 14) <= INT_banktable(conv_integer(CPU_a(15 downto 14)))(4 downto 0);
 
-  sig_cs_rom  <= INT_banktable(conv_integer(CPU_a(15 downto 14)))(5) AND NOT io_select;
-  sig_cs_ram  <= not(INT_banktable(conv_integer(CPU_a(15 downto 14)))(5)) AND NOT io_select;
+   sig_rom     <=     INT_banktable(conv_integer(CPU_a(15 downto 14)))(5);
 
-  CS_RAM      <= sig_cs_ram NAND clk;
-  CS_ROM      <= NOT(sig_cs_rom);
-  CSR_VDP     <= NOT(sig_csr_vdp);
-  CSW_VDP     <= NOT(sig_csw_vdp);
+   sig_cs_rom  <=     sig_rom  AND NOT io_select;
+   sig_cs_ram  <= not(sig_rom) AND NOT io_select;
 
-  CS_OPL      <= NOT(sig_cs_opl);
-  CS_VIA    <= NOT(sig_cs_via);
-  CS_UART    <= NOT(sig_cs_uart);
-  CS_SLOT0    <= NOT(sig_cs_slot0);
-  -- CS_SLOT1    <= NOT(sig_cs_slot1);
+   CS_RAM      <= NOT(sig_cs_ram);
+   CS_ROM      <= NOT(sig_cs_rom);
+
+   CSR_VDP     <= NOT(sig_csr_vdp);
+   CSW_VDP     <= NOT(sig_csw_vdp);
+
+   CS_OPL      <= NOT(sig_cs_opl);
+   CS_VIA      <= NOT(sig_cs_via);
+   CS_UART     <= NOT(sig_cs_uart);
+   CS_SLOT0    <= NOT(sig_cs_slot0);
+   CS_SLOT1    <= NOT(sig_cs_slot1);
 
   CS_BUFFER   <= NOT(sig_cs_buffer);
 
    -- C_vdp = 50pF, C_cpld = 10pF, t=12ns, R = (t / 0.4 x CT) = 12E-9s / (0.4 * 60E-12F) = 500Ohm
-  CPU_rdy     <= '0' when rdy_en and conv_integer(ws_cnt) /= 0 else 'Z';
+   CPU_rdy     <= '0' when rdy_en and conv_integer(ws_cnt) /= 0 else 'Z';
 
-  R           <= NOT(sig_read);
-  W           <= NOT(sig_write);
---  OE          <= not(sig_read);
---  WE          <= not(sig_write);
+   OE          <= not(sig_read)  when io_select = '1' else (sig_read nand clk);
+   WE          <= not(sig_write) when io_select = '1' else (sig_write nand clk);
 
 End chuck_arch;
