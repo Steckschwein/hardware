@@ -102,7 +102,6 @@ begin
    clk         <= CLKIN; -- clk_div(integer(log2(real(CLOCK_DIV)))-1);
 
    rdy_en      <= (sig_cs_uart or sig_cs_vdp or sig_cs_opl or sig_cs_slot0) = '1'; -- or sig_cs_slot1) = '1';
---   rdy_en      <= (sig_cs_uart or sig_cs_vdp or sig_cs_opl) = '1';
 
    -- $0200 - $027x
    io_select   <= '1' when CPU_a(15 downto 7) = "000000100" else '0';
@@ -225,7 +224,7 @@ begin
    CS_VIA      <= NOT(sig_cs_via);
    CS_UART     <= NOT(sig_cs_uart);
    CS_SLOT0    <= NOT(sig_cs_slot0);
-   CS_SLOT1    <= NOT(sig_cs_slot1);
+--   CS_SLOT1    <= NOT(sig_cs_slot1);
 
   CS_BUFFER   <= NOT(sig_cs_buffer);
 
