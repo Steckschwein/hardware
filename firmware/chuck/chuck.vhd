@@ -3,8 +3,6 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.STD_LOGIC_UNSIGNED.ALL;
 USE ieee.numeric_std.ALL;
 USE ieee.math_real.log2;
-
-
 Entity chuck is
    Port (
       -- system clock
@@ -48,13 +46,7 @@ end;
 
 Architecture chuck_arch of chuck is
 
-   -- calculation constants
-   constant HW_CLOCK:         integer := 20; -- board input clock (oszi)
-   constant SYS_CLOCK:        integer := 10; -- desired system clock (cpu)
-
-   constant CLOCK_DIV:        integer := HW_CLOCK/SYS_CLOCK; -- clock divider to get the desired sys clock
-   constant CLOCK_DIV_BITS:   integer := integer(log2(real(CLOCK_DIV))); -- amount of bits required to build the sys clock divider
-
+  
    -- define bank table type array of 6 bit vectors
    type t_banktable is array (0 to 3) of std_logic_vector(5 downto 0);
    signal INT_banktable : t_banktable;
@@ -62,7 +54,6 @@ Architecture chuck_arch of chuck is
    signal clk: std_logic;
 
    signal ws_cnt: std_logic_vector(2 downto 0); -- ws "n" bit counter
-   signal clk_div: std_logic_vector((CLOCK_DIV_BITS-1) downto 0); -- n bit counter
    signal rdy_en: boolean;
 
    signal d_out: std_logic_vector(7 downto 0);
@@ -87,22 +78,18 @@ Architecture chuck_arch of chuck is
    signal sig_cs_uart: std_logic;
    signal sig_cs_slot0: std_logic;
    signal sig_cs_slot1: std_logic;
-
    signal sig_cs_buffer: std_logic;
 
 begin
    -- inputs
    sig_reset      <= not RESET;
+   clk            <= CLKIN;
    CPU_phi2       <= clk;
 
    sig_read       <= CPU_rw;
    sig_write      <= not(CPU_rw);
 
-   -- helpers
-   clk         <= clk_div(integer(log2(real(CLOCK_DIV)))-1);
-
    rdy_en      <= (sig_cs_uart or sig_cs_vdp or sig_cs_opl or sig_cs_slot0 or sig_cs_slot1) = '1';
---   rdy_en      <= (sig_cs_uart or sig_cs_vdp or sig_cs_opl) = '1';
 
    -- $0200 - $027x
    io_select   <= '1' when CPU_a(15 downto 7) = "000000100" else '0';
@@ -151,18 +138,8 @@ begin
       end if;
    end process;
 
-   --clock divider
-   process_genclk: process(CLKIN, sig_reset)
-   begin
-      if sig_reset = '1' then
-         clk_div <= (others => '1');
-      elsif rising_edge(CLKIN) then
-         clk_div <= clk_div - 1;
-      end if;
-   end process;
-
    -- wait state generator
-   process(clk, rdy_en)
+   ws_gen:process(clk, rdy_en)
    begin
       if(rdy_en) then
          if (rising_edge(clk)) then
@@ -179,7 +156,7 @@ begin
 
    -- io area decoding
    --   $0200 - $020f
-   sig_cs_uart   <= '1' when io_select = '1' and CPU_a(6 downto 4) = "000" else '0';
+   sig_cs_uart    <= '1' when io_select = '1' and CPU_a(6 downto 4) = "000" else '0';
 
    --   $0210 - $021f
    sig_cs_via     <= '1' when io_select = '1' and CPU_a(6 downto 4) = "001" else '0';
