@@ -19,7 +19,9 @@ FIT_OPTIONS+=-wysiwyg
 
 #UNUSED_PIN_OPTION=float
 #PIN_TERMINATION=float
+#INTSTYLE=ise
 INTSTYLE=silent
+
 #chainLoc=0
 
 xstFile=$(project).xst
@@ -39,7 +41,7 @@ CMD_HPR=$(BINDIR)/hprep6
 CMD_IMP=$(BINDIR)/impact
 
 
-.PHONY: all clean
+.PHONY: all clean prog
 
 all: $(project).jed 
 
@@ -56,7 +58,7 @@ all: $(project).jed
 %.nga: 
 	$(CMD_SIM) -intstyle $(INTSTYLE) $(project) $@
 
-%.jed: %.vm6 
+%.jed: %.vm6 %.vhd 
 	$(CMD_HPR) -s IEEE1149 -n $(project) -i $<
 
 prog: all
