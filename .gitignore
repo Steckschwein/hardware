@@ -1,0 +1,23 @@
+syntax: glob
+*.bld 
+*.gyd
+*.lso 
+*.mfd 
+*.ng?
+*.pad
+*.pnx 
+*.rpt 
+*.vm6
+*.syr
+*.xml 
+*_ngdbuild.xrpt 
+*_pad.csv 
+*_xst.xrpt 
+*.jed 
+tmperr.err 
+*.log
+
+_ngo/ 
+xlnx_auto_0_xdb/
+_xmsgs/
+xst/
