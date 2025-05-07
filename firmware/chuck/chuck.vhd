@@ -146,11 +146,8 @@ begin
             ws_cnt <= ws_cnt - '1';
           end if;
       else
-         --ws_cnt(0) <= '0';
-         --ws_cnt(1) <= '0';
-         --ws_cnt(2) <= '1';
-         -- init with 4
-         ws_cnt <= "100";
+         -- init with 6
+         ws_cnt <= "110";
       end if;
    end process;
 
