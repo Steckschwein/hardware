@@ -8,7 +8,7 @@ FUSES=-U lfuse:w:0xd4:m -U hfuse:w:0xd9:m
 PRG=keyboard
 
 CC=avr-gcc
-CFLAGS= -g -Wall -mcall-prologues -mmcu=atmega8  -DF_CPU=$(CPUSPEED) -D__PROG_TYPES_COMPAT__ -std=gnu99
+CFLAGS= -g -Wall -mcall-prologues -mmcu=atmega168  -DF_CPU=$(CPUSPEED) -D__PROG_TYPES_COMPAT__ -std=gnu99
 CFLAGS+=-Os
 
 #uncomment to use ATmega USART
