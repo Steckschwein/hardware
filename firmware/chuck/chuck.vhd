@@ -32,6 +32,7 @@ Entity chuck is
       CS_VIA    : out std_logic;
       CSR_VDP   : out std_logic;  -- VDP read
       CSW_VDP   : out std_logic;  -- VDP write
+      VDP_wait  : in std_logic;
       CS_OPL    : out std_logic;  -- OPL2
 
       -- chip select for expansion ports
@@ -79,17 +80,19 @@ Architecture chuck_arch of chuck is
    signal sig_cs_slot0: std_logic;
    signal sig_cs_slot1: std_logic;
    signal sig_cs_buffer: std_logic;
+   signal sig_vdp_wait: std_logic;
 
 begin
    -- inputs
    sig_reset      <= not RESET;
    clk            <= CLKIN;
    CPU_phi2       <= clk;
+   sig_vdp_wait   <= not(VDP_wait);
 
    sig_read       <= CPU_rw;
    sig_write      <= not(CPU_rw);
 
-   rdy_en      <= (sig_cs_uart or sig_cs_vdp or sig_cs_opl or sig_cs_slot0 or sig_cs_slot1) = '1';
+   rdy_en      <= (sig_cs_uart or sig_cs_vdp or sig_cs_opl or sig_cs_slot0 or sig_cs_slot1 or sig_vdp_wait) = '1';
 
    -- $0200 - $027x
    io_select   <= '1' when CPU_a(15 downto 7) = "000000100" else '0';
@@ -202,7 +205,7 @@ begin
    CS_BUFFER   <= NOT(sig_cs_buffer);
 
    -- C_vdp = 50pF, C_cpld = 10pF, t=12ns, R = (t / 0.4 x CT) = 12E-9s / (0.4 * 60E-12F) = 500Ohm
-   CPU_rdy     <= '0' when rdy_en and conv_integer(ws_cnt) /= 0 else 'Z';
+   CPU_rdy     <= '0' when rdy_en and conv_integer(ws_cnt) /= 0 else '1';
 
    OE          <= not(sig_read)  when io_select = '1' else (sig_read nand clk);
    WE          <= not(sig_write) when io_select = '1' else (sig_write nand clk);
