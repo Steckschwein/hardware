@@ -91,7 +91,7 @@ begin
    sig_read       <= CPU_rw;
    sig_write      <= not(CPU_rw);
    
-   rdy_en      <= (sig_cs_uart or sig_cs_vdp or sig_cs_opl or sig_cs_slot0 or sig_cs_slot1) = '1';
+   rdy_en      <= (sig_cs_vdp or sig_cs_opl or sig_cs_slot0 or sig_cs_slot1) = '1';
    -- C_vdp = 50pF, C_cpld = 10pF, t=12ns, R = (t / 0.4 x CT) = 12E-9s / (0.4 * 60E-12F) = 500Ohm
    sig_wait    <= '0' when (rdy_en and conv_integer(ws_cnt) /= 0) or VDP_wait = '0' else '1';
    CPU_rdy     <= sig_wait;    
